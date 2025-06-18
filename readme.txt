@@ -18,3 +18,6 @@ A powerful suite of WordPress enhancements including admin tools, frontend optim
 == Changelog ==
 = 1.0.0 =
 * Initial release.
+
+== Testing ==
+For contributing and running the automated test suite, see `CONTRIBUTING.md` for detailed setup instructions.
