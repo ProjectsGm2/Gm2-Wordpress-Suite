@@ -3,7 +3,7 @@ jQuery(function($){
         e.preventDefault();
         var data = {
             action: 'gm2_add_tariff',
-            _ajax_nonce: $('#gm2_add_tariff_nonce').val(),
+            _ajax_nonce: gm2Tariff.nonce,
             tariff_name: $('#tariff_name').val(),
             tariff_percentage: $('#tariff_percentage').val(),
             tariff_status: $('#tariff_status').is(':checked') ? 'enabled' : 'disabled'
