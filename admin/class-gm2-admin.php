@@ -30,7 +30,7 @@ class Gm2_Admin {
         );
 
         add_submenu_page(
-            'gm2',
+            'gm2-tariff',
             'Add Tariff',
             'Add Tariff',
             'manage_options',
@@ -99,7 +99,10 @@ class Gm2_Admin {
 
         $tariffs = $manager->get_tariffs();
 
-        echo '<div class="wrap"><h1>Tariffs</h1>';
+        $add_url = admin_url('admin.php?page=gm2-add-tariff');
+        echo '<div class="wrap"><h1 class="wp-heading-inline">Tariffs</h1>';
+        echo ' <a href="' . esc_url($add_url) . '" class="page-title-action">Add Tariff</a>';
+        echo '<hr class="wp-header-end">';
         echo '<table class="widefat"><thead><tr><th>Name</th><th>Percentage</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
         if ($tariffs) {
             foreach ($tariffs as $tariff) {
