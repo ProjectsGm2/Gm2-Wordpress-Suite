@@ -3,7 +3,7 @@ Contributors: gm2team
 Tags: admin, tools, suite, performance
 Requires at least: 5.6
 Tested up to: 6.5
-Stable tag: 1.0.0
+Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -16,6 +16,8 @@ A powerful suite of WordPress enhancements including admin tools, frontend optim
 3. Use the Gm2 Suite menu in the admin sidebar to configure settings.
 
 == Changelog ==
+= 1.1.0 =
+* Added Tariff management and WooCommerce checkout integration.
 = 1.0.0 =
 * Initial release.
 

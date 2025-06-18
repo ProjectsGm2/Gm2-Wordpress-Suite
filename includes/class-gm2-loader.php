@@ -14,6 +14,7 @@ class Gm2_Loader {
     private function load_dependencies() {
         require_once GM2_PLUGIN_DIR . 'admin/class-gm2-admin.php';
         require_once GM2_PLUGIN_DIR . 'public/class-gm2-public.php';
+        require_once GM2_PLUGIN_DIR . 'includes/class-gm2-tariff-manager.php';
     }
 
     public function run() {
