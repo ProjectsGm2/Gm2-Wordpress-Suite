@@ -41,9 +41,15 @@ class Gm2_Admin {
 
         check_ajax_referer('gm2_add_tariff');
 
-        $name       = sanitize_text_field($_POST['tariff_name'] ?? '');
-        $percentage = floatval($_POST['tariff_percentage'] ?? 0);
-        $status     = ($_POST['tariff_status'] ?? '') === 'enabled' ? 'enabled' : 'disabled';
+        $name = sanitize_text_field($_POST['tariff_name'] ?? '');
+        $percentage_raw = $_POST['tariff_percentage'] ?? '';
+
+        if (!is_numeric($percentage_raw) || floatval($percentage_raw) < 0) {
+            wp_send_json_error('Tariff percentage must be a non-negative number');
+        }
+
+        $percentage = floatval($percentage_raw);
+        $status = ($_POST['tariff_status'] ?? '') === 'enabled' ? 'enabled' : 'disabled';
 
         $manager = new Gm2_Tariff_Manager();
         $id      = $manager->add_tariff([
