@@ -27,9 +27,16 @@ class Gm2_Tariff_Manager {
 
     public function add_tariff($data) {
         $tariffs = $this->get_tariffs();
-        $data['id'] = time();
+
+        if (function_exists('wp_generate_uuid4')) {
+            $data['id'] = wp_generate_uuid4();
+        } else {
+            $data['id'] = uniqid('', true);
+        }
+
         $tariffs[] = $data;
         update_option($this->option_name, $tariffs);
+
         return $data['id'];
     }
 
