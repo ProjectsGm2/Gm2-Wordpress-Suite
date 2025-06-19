@@ -172,6 +172,7 @@ class Gm2_Admin {
         echo '<hr class="wp-header-end">';
 
         echo '<h2>Add Tariff</h2>';
+        echo '<div class="notice notice-success hidden" id="gm2-tariff-msg"></div>';
         echo '<form id="gm2-add-tariff-form">';
         wp_nonce_field('gm2_add_tariff', 'gm2_add_tariff_nonce');
         echo '<table class="form-table"><tbody>';
