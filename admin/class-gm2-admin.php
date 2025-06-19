@@ -197,7 +197,7 @@ class Gm2_Admin {
                 echo '<td>' . esc_html($tariff['name']) . '</td>';
                 echo '<td>' . esc_html($tariff['percentage']) . '%</td>';
                 echo '<td>' . esc_html(ucfirst($tariff['status'])) . '</td>';
-                echo '<td><a href="' . $edit_url . '">View</a> | <a href="' . $edit_url . '">Edit</a> | <a href="' . $delete_url . '" onclick="return confirm(\'Are you sure?\');">Delete</a></td>';
+                echo '<td><a href="' . esc_url( $edit_url ) . '">View</a> | <a href="' . esc_url( $edit_url ) . '">Edit</a> | <a href="' . esc_url( $delete_url ) . '" onclick="return confirm(\'Are you sure?\');">Delete</a></td>';
                 echo '</tr>';
             }
         } else {
