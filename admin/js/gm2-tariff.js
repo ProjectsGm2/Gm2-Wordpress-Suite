@@ -11,6 +11,7 @@ jQuery(function($){
 
         var data = {
             action: 'gm2_add_tariff',
+            // Nonce provided via wp_localize_script
             _ajax_nonce: gm2Tariff.nonce,
             tariff_name: $('#tariff_name').val(),
             tariff_percentage: $('#tariff_percentage').val(),
