@@ -20,7 +20,8 @@ jQuery(function($){
                 $('#gm2-tariff-table tbody').append(row);
                 $('#gm2-add-tariff-form')[0].reset();
             } else {
-                alert(response.data || 'Error');
+                var msg = response.data && response.data.message ? response.data.message : response.data;
+                alert(msg || 'Error');
             }
         });
     });
