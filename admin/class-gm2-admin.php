@@ -28,6 +28,7 @@ class Gm2_Admin {
             'gm2-tariff',
             'gm2Tariff',
             [
+                // Fresh nonce for each page load
                 'nonce'    => wp_create_nonce('gm2_add_tariff'),
                 'ajax_url' => admin_url('admin-ajax.php'),
             ]
@@ -182,7 +183,6 @@ class Gm2_Admin {
         echo '<h2>Add Tariff</h2>';
         echo '<div class="notice notice-success hidden" id="gm2-tariff-msg"></div>';
         echo '<form id="gm2-add-tariff-form">';
-        wp_nonce_field('gm2_add_tariff', 'gm2_add_tariff_nonce');
         echo '<table class="form-table"><tbody>';
         echo '<tr><th scope="row"><label for="tariff_name">Name</label></th><td><input name="tariff_name" type="text" id="tariff_name" class="regular-text" required></td></tr>';
         echo '<tr><th scope="row"><label for="tariff_percentage">Percentage</label></th><td><input name="tariff_percentage" type="number" step="0.01" id="tariff_percentage" class="regular-text" required></td></tr>';
