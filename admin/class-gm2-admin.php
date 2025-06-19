@@ -114,7 +114,7 @@ class Gm2_Admin {
             ];
 
             if (!empty($_POST['tariff_id'])) {
-                $manager->update_tariff(intval($_POST['tariff_id']), $data);
+                $manager->update_tariff(sanitize_text_field($_POST['tariff_id']), $data);
             } else {
                 $manager->add_tariff($data);
             }
@@ -128,13 +128,13 @@ class Gm2_Admin {
         $tariff = false;
         if (!empty($_GET['id'])) {
             $manager = new Gm2_Tariff_Manager();
-            $tariff  = $manager->get_tariff(intval($_GET['id']));
+            $tariff  = $manager->get_tariff(sanitize_text_field($_GET['id']));
         }
 
         $name       = $tariff ? esc_attr($tariff['name']) : '';
         $percentage = $tariff ? esc_attr($tariff['percentage']) : '';
         $status     = $tariff ? $tariff['status'] : 'enabled';
-        $id_field   = $tariff ? '<input type="hidden" name="tariff_id" value="' . intval($tariff['id']) . '" />' : '';
+        $id_field   = $tariff ? '<input type="hidden" name="tariff_id" value="' . esc_attr($tariff['id']) . '" />' : '';
 
         echo '<div class="wrap"><h1>Edit Tariff</h1>';
         echo '<form method="post">';
@@ -153,8 +153,9 @@ class Gm2_Admin {
         $manager = new Gm2_Tariff_Manager();
 
         if (!empty($_GET['action']) && $_GET['action'] === 'delete' && !empty($_GET['id'])) {
-            check_admin_referer('gm2_delete_tariff_' . intval($_GET['id']));
-            $manager->delete_tariff(intval($_GET['id']));
+            $id = sanitize_text_field($_GET['id']);
+            check_admin_referer('gm2_delete_tariff_' . $id);
+            $manager->delete_tariff($id);
             echo '<div class="updated"><p>Tariff deleted.</p></div>';
         }
 
