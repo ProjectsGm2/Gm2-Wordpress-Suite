@@ -17,7 +17,7 @@ jQuery(function($){
             tariff_status: $('#tariff_status').is(':checked') ? 'enabled' : 'disabled'
         };
 
-        $.post(gm2Tariff.ajax_url, data)
+      $.post(gm2Tariff.ajax_url, data)
             .done(function(response){
                 if(response.success){
                     var t = response.data;

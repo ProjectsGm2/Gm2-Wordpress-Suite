@@ -42,6 +42,10 @@ class Gm2_Admin {
         check_ajax_referer('gm2_add_tariff');
 
         $name = sanitize_text_field($_POST['tariff_name'] ?? '');
+        if ($name === '') {
+            wp_send_json_error('Tariff name is required');
+        }
+
         $percentage_raw = $_POST['tariff_percentage'] ?? '';
 
         if (!is_numeric($percentage_raw) || floatval($percentage_raw) < 0) {
