@@ -12,6 +12,7 @@ class Gm2_SEO_Admin {
         add_action('admin_post_gm2_meta_tags_settings', [$this, 'handle_meta_tags_form']);
         add_action('admin_post_gm2_schema_settings', [$this, 'handle_schema_form']);
         add_action('admin_post_gm2_performance_settings', [$this, 'handle_performance_form']);
+        add_action('admin_post_gm2_redirects', [$this, 'handle_redirects_form']);
 
         add_action('add_attachment', [$this, 'auto_fill_alt_on_upload']);
         add_action('save_post', [$this, 'auto_fill_product_alt'], 20, 3);
@@ -180,7 +181,64 @@ class Gm2_SEO_Admin {
     }
 
     public function display_redirects_page() {
-        echo '<div class="wrap"><h1>Redirects</h1><p>Manage URL redirects.</p></div>';
+        $redirects = get_option('gm2_redirects', []);
+
+        if (!empty($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
+            $id = absint($_GET['id']);
+            check_admin_referer('gm2_delete_redirect_' . $id);
+            if (isset($redirects[$id])) {
+                unset($redirects[$id]);
+                update_option('gm2_redirects', array_values($redirects));
+                echo '<div class="updated"><p>Redirect deleted.</p></div>';
+                $redirects = array_values($redirects);
+            }
+        }
+
+        $source_prefill = isset($_GET['source']) ? esc_url_raw($_GET['source']) : '';
+
+        echo '<div class="wrap"><h1>Redirects</h1>';
+        if (!empty($_GET['updated'])) {
+            echo '<div class="updated notice"><p>Redirect saved.</p></div>';
+        }
+        echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
+        wp_nonce_field('gm2_redirects_save', 'gm2_redirects_nonce');
+        echo '<input type="hidden" name="action" value="gm2_redirects" />';
+        echo '<table class="form-table"><tbody>';
+        echo '<tr><th scope="row"><label for="gm2_redirect_source">Source URL</label></th><td><input name="gm2_redirect_source" type="text" id="gm2_redirect_source" value="' . esc_attr($source_prefill) . '" class="regular-text" required></td></tr>';
+        echo '<tr><th scope="row"><label for="gm2_redirect_target">Target URL</label></th><td><input name="gm2_redirect_target" type="url" id="gm2_redirect_target" class="regular-text" required></td></tr>';
+        echo '<tr><th scope="row"><label for="gm2_redirect_type">Type</label></th><td><select name="gm2_redirect_type" id="gm2_redirect_type"><option value="301">301</option><option value="302">302</option></select></td></tr>';
+        echo '</tbody></table>';
+        submit_button('Add Redirect');
+        echo '</form>';
+
+        echo '<h2>Existing Redirects</h2>';
+        echo '<table class="widefat"><thead><tr><th>Source</th><th>Target</th><th>Type</th><th>Actions</th></tr></thead><tbody>';
+        if ($redirects) {
+            foreach ($redirects as $index => $r) {
+                $delete_url = wp_nonce_url(admin_url('admin.php?page=gm2-redirects&action=delete&id=' . $index), 'gm2_delete_redirect_' . $index);
+                echo '<tr>';
+                echo '<td>' . esc_html($r['source']) . '</td>';
+                echo '<td>' . esc_html($r['target']) . '</td>';
+                echo '<td>' . esc_html($r['type']) . '</td>';
+                echo '<td><a href="' . esc_url($delete_url) . '" onclick="return confirm(\'Are you sure?\');">Delete</a></td>';
+                echo '</tr>';
+            }
+        } else {
+            echo '<tr><td colspan="4">No redirects found.</td></tr>';
+        }
+        echo '</tbody></table>';
+
+        $logs = get_option('gm2_404_logs', []);
+        if ($logs) {
+            echo '<h2>404 Logs</h2>';
+            echo '<table class="widefat"><thead><tr><th>URL</th></tr></thead><tbody>';
+            foreach ($logs as $log) {
+                $link = admin_url('admin.php?page=gm2-redirects&source=' . urlencode($log));
+                echo '<tr><td><a href="' . esc_url($link) . '">' . esc_html($log) . '</a></td></tr>';
+            }
+            echo '</tbody></table>';
+        }
+        echo '</div>';
     }
 
     public function display_performance_page() {
@@ -382,6 +440,41 @@ class Gm2_SEO_Admin {
         update_option('gm2_compression_api_key', $api_key);
 
         wp_redirect(admin_url('admin.php?page=gm2-performance&updated=1'));
+        exit;
+    }
+
+    public function handle_redirects_form() {
+        if (!current_user_can('manage_options')) {
+            wp_die('Permission denied');
+        }
+
+        if (!isset($_POST['gm2_redirects_nonce']) || !wp_verify_nonce($_POST['gm2_redirects_nonce'], 'gm2_redirects_save')) {
+            wp_die('Invalid nonce');
+        }
+
+        $source = isset($_POST['gm2_redirect_source']) ? sanitize_text_field($_POST['gm2_redirect_source']) : '';
+        $target = isset($_POST['gm2_redirect_target']) ? esc_url_raw($_POST['gm2_redirect_target']) : '';
+        $type   = ($_POST['gm2_redirect_type'] ?? '301') === '302' ? '302' : '301';
+
+        if ($source && $target) {
+            $redirects   = get_option('gm2_redirects', []);
+            $redirects[] = [
+                'source' => untrailingslashit(parse_url($source, PHP_URL_PATH)),
+                'target' => $target,
+                'type'   => $type,
+            ];
+            update_option('gm2_redirects', $redirects);
+
+            $logs = get_option('gm2_404_logs', []);
+            $path = untrailingslashit(parse_url($source, PHP_URL_PATH));
+            $index = array_search($path, $logs, true);
+            if ($index !== false) {
+                unset($logs[$index]);
+                update_option('gm2_404_logs', array_values($logs));
+            }
+        }
+
+        wp_redirect(admin_url('admin.php?page=gm2-redirects&updated=1'));
         exit;
     }
 
