@@ -126,41 +126,6 @@ class Gm2_Admin {
             [$this, 'display_tariff_page']
         );
 
-        add_submenu_page(
-            'gm2',
-            'SEO',
-            'SEO',
-            'manage_options',
-            'gm2-seo',
-            [$this, 'display_seo_dashboard']
-        );
-
-        add_submenu_page(
-            'gm2-seo',
-            'Meta Tags',
-            'Meta Tags',
-            'manage_options',
-            'gm2-meta-tags',
-            [$this, 'display_meta_tags_page']
-        );
-
-        add_submenu_page(
-            'gm2-seo',
-            'Sitemap',
-            'Sitemap',
-            'manage_options',
-            'gm2-sitemap',
-            [$this, 'display_sitemap_page']
-        );
-
-        add_submenu_page(
-            'gm2-seo',
-            'Redirects',
-            'Redirects',
-            'manage_options',
-            'gm2-redirects',
-            [$this, 'display_redirects_page']
-        );
 
         // The add tariff form is now part of the Tariff page. The following
         // submenu is kept for editing existing tariffs but hidden from the
@@ -270,27 +235,4 @@ class Gm2_Admin {
         echo '</tbody></table></div>';
     }
 
-    public function display_seo_dashboard() {
-        echo '<div class="wrap">';
-        echo '<h1 class="wp-heading-inline">SEO Dashboard</h1>';
-        echo '<hr class="wp-header-end">';
-        echo '<ul>';
-        echo '<li><a href="' . admin_url('admin.php?page=gm2-meta-tags') . '">Meta Tags</a></li>';
-        echo '<li><a href="' . admin_url('admin.php?page=gm2-sitemap') . '">Sitemap</a></li>';
-        echo '<li><a href="' . admin_url('admin.php?page=gm2-redirects') . '">Redirects</a></li>';
-        echo '</ul>';
-        echo '</div>';
-    }
-
-    public function display_meta_tags_page() {
-        echo '<div class="wrap"><h1>Meta Tags</h1><p>Manage your site\'s meta tags here.</p></div>';
-    }
-
-    public function display_sitemap_page() {
-        echo '<div class="wrap"><h1>Sitemap</h1><p>Generate and manage your sitemap.</p></div>';
-    }
-
-    public function display_redirects_page() {
-        echo '<div class="wrap"><h1>Redirects</h1><p>Configure URL redirects.</p></div>';
-    }
 }
