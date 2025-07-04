@@ -12,6 +12,8 @@ class Gm2_SEO_Public {
         add_action('template_redirect', [$this, 'log_404_url'], 99);
         add_action('wp_head', [$this, 'output_canonical_url'], 5);
         add_action('wp_head', [$this, 'output_meta_tags']);
+        add_action('wp_head', [$this, 'output_search_console_meta']);
+        add_action('wp_head', [$this, 'output_ga_tracking_code']);
         add_action('wp_head', [$this, 'output_product_schema'], 20);
         add_action('wp_head', [$this, 'output_brand_schema'], 20);
         add_action('wp_head', [$this, 'output_breadcrumb_schema'], 20);
@@ -402,6 +404,21 @@ class Gm2_SEO_Public {
         $canonical = $data['canonical'];
         if ($canonical) {
             echo '<link rel="canonical" href="' . esc_url($canonical) . '" />' . "\n";
+        }
+    }
+
+    public function output_search_console_meta() {
+        $code = get_option('gm2_search_console_verification', '');
+        if ($code) {
+            echo '<meta name="google-site-verification" content="' . esc_attr($code) . '" />' . "\n";
+        }
+    }
+
+    public function output_ga_tracking_code() {
+        $id = trim(get_option('gm2_ga_measurement_id', ''));
+        if ($id) {
+            echo '<script async src="https://www.googletagmanager.com/gtag/js?id=' . esc_attr($id) . '"></script>' . "\n";
+            echo '<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag(\'js\', new Date());gtag(\'config\', \'' . esc_js($id) . '\');</script>' . "\n";
         }
     }
 }
