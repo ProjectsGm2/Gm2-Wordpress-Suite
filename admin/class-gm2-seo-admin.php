@@ -8,6 +8,9 @@ class Gm2_SEO_Admin {
         add_action('admin_menu', [$this, 'add_settings_pages']);
         add_action('add_meta_boxes', [$this, 'register_meta_boxes']);
         add_action('save_post', [$this, 'save_post_meta']);
+        add_action('admin_post_gm2_sitemap_settings', [$this, 'handle_sitemap_form']);
+
+        add_action('save_post', 'gm2_generate_sitemap');
 
         $taxonomies = $this->get_supported_taxonomies();
         foreach ($taxonomies as $tax) {
@@ -15,6 +18,9 @@ class Gm2_SEO_Admin {
             add_action("{$tax}_edit_form_fields", [$this, 'render_taxonomy_meta_box']);
             add_action("create_{$tax}", [$this, 'save_taxonomy_meta']);
             add_action("edited_{$tax}", [$this, 'save_taxonomy_meta']);
+            add_action("created_{$tax}", 'gm2_generate_sitemap');
+            add_action("edited_{$tax}", 'gm2_generate_sitemap');
+            add_action("delete_{$tax}", 'gm2_generate_sitemap');
         }
     }
 
@@ -96,7 +102,28 @@ class Gm2_SEO_Admin {
     }
 
     public function display_sitemap_page() {
-        echo '<div class="wrap"><h1>Sitemap</h1><p>Configure sitemap settings.</p></div>';
+        $enabled = get_option('gm2_sitemap_enabled', '1');
+        $frequency = get_option('gm2_sitemap_frequency', 'daily');
+
+        echo '<div class="wrap"><h1>Sitemap</h1>';
+        if (!empty($_GET['updated'])) {
+            echo '<div class="updated notice"><p>Settings saved.</p></div>';
+        }
+        echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
+        wp_nonce_field('gm2_sitemap_save', 'gm2_sitemap_nonce');
+        echo '<input type="hidden" name="action" value="gm2_sitemap_settings" />';
+        echo '<table class="form-table"><tbody>';
+        echo '<tr><th scope="row">Enable Sitemap</th><td><input type="checkbox" name="gm2_sitemap_enabled" value="1" ' . checked($enabled, '1', false) . '></td></tr>';
+        echo '<tr><th scope="row">Update Frequency</th><td><select name="gm2_sitemap_frequency">';
+        $options = ["daily", "weekly", "monthly"];
+        foreach ($options as $opt) {
+            echo '<option value="' . esc_attr($opt) . '" ' . selected($frequency, $opt, false) . '>' . esc_html(ucfirst($opt)) . '</option>';
+        }
+        echo '</select></td></tr>';
+        echo '</tbody></table>';
+        submit_button('Save Settings');
+        echo '<input type="submit" name="gm2_regenerate" class="button" value="Regenerate Sitemap" />';
+        echo '</form></div>';
     }
 
     public function display_redirects_page() {
@@ -172,5 +199,28 @@ class Gm2_SEO_Admin {
         $description = isset($_POST['gm2_seo_description']) ? sanitize_textarea_field($_POST['gm2_seo_description']) : '';
         update_term_meta($term_id, '_gm2_title', $title);
         update_term_meta($term_id, '_gm2_description', $description);
+    }
+
+    public function handle_sitemap_form() {
+        if (!current_user_can('manage_options')) {
+            wp_die('Permission denied');
+        }
+
+        if (!isset($_POST['gm2_sitemap_nonce']) || !wp_verify_nonce($_POST['gm2_sitemap_nonce'], 'gm2_sitemap_save')) {
+            wp_die('Invalid nonce');
+        }
+
+        $enabled = isset($_POST['gm2_sitemap_enabled']) ? '1' : '0';
+        update_option('gm2_sitemap_enabled', $enabled);
+
+        $frequency = isset($_POST['gm2_sitemap_frequency']) ? sanitize_text_field($_POST['gm2_sitemap_frequency']) : 'daily';
+        update_option('gm2_sitemap_frequency', $frequency);
+
+        if (isset($_POST['gm2_regenerate'])) {
+            gm2_generate_sitemap();
+        }
+
+        wp_redirect(admin_url('admin.php?page=gm2-sitemap&updated=1'));
+        exit;
     }
 }

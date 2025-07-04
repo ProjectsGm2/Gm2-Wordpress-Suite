@@ -5,10 +5,29 @@ if (!defined('ABSPATH')) {
 
 class Gm2_SEO_Public {
     public function run() {
+        add_action('init', [$this, 'add_sitemap_rewrite']);
+        add_filter('query_vars', [$this, 'add_query_vars']);
+        add_action('template_redirect', [$this, 'maybe_output_sitemap']);
         add_action('wp_head', [$this, 'output_canonical_url'], 5);
         add_action('wp_head', [$this, 'output_meta_tags']);
         add_action('wp_head', [$this, 'output_structured_data'], 20);
         add_action('wp_footer', [$this, 'output_breadcrumbs']);
+    }
+
+    public function add_sitemap_rewrite() {
+        add_rewrite_rule('sitemap\\.xml$', 'index.php?gm2_sitemap=1', 'top');
+    }
+
+    public function add_query_vars($vars) {
+        $vars[] = 'gm2_sitemap';
+        return $vars;
+    }
+
+    public function maybe_output_sitemap() {
+        if (get_query_var('gm2_sitemap')) {
+            $s = new Gm2_Sitemap();
+            $s->output();
+        }
     }
 
     private function get_seo_meta() {
