@@ -170,6 +170,7 @@ class Gm2_SEO_Admin {
         $brand      = get_option('gm2_schema_brand', '1');
         $breadcrumbs = get_option('gm2_schema_breadcrumbs', '1');
         $review     = get_option('gm2_schema_review', '1');
+        $footer_bc  = get_option('gm2_show_footer_breadcrumbs', '1');
 
         echo '<div class="wrap"><h1>Structured Data</h1>';
         if (!empty($_GET['updated'])) {
@@ -182,6 +183,7 @@ class Gm2_SEO_Admin {
         echo '<tr><th scope="row">Product Schema</th><td><input type="checkbox" name="gm2_schema_product" value="1" ' . checked($product, '1', false) . '></td></tr>';
         echo '<tr><th scope="row">Brand Schema</th><td><input type="checkbox" name="gm2_schema_brand" value="1" ' . checked($brand, '1', false) . '></td></tr>';
         echo '<tr><th scope="row">Breadcrumb Schema</th><td><input type="checkbox" name="gm2_schema_breadcrumbs" value="1" ' . checked($breadcrumbs, '1', false) . '></td></tr>';
+        echo '<tr><th scope="row">Show Breadcrumbs in Footer</th><td><input type="checkbox" name="gm2_show_footer_breadcrumbs" value="1" ' . checked($footer_bc, '1', false) . '></td></tr>';
         echo '<tr><th scope="row">Review Schema</th><td><input type="checkbox" name="gm2_schema_review" value="1" ' . checked($review, '1', false) . '></td></tr>';
         echo '</tbody></table>';
         submit_button('Save Settings');
@@ -438,6 +440,9 @@ class Gm2_SEO_Admin {
 
         $breadcrumbs = isset($_POST['gm2_schema_breadcrumbs']) ? '1' : '0';
         update_option('gm2_schema_breadcrumbs', $breadcrumbs);
+
+        $footer_bc = isset($_POST['gm2_show_footer_breadcrumbs']) ? '1' : '0';
+        update_option('gm2_show_footer_breadcrumbs', $footer_bc);
 
         $review     = isset($_POST['gm2_schema_review']) ? '1' : '0';
         update_option('gm2_schema_review', $review);
