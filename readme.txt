@@ -3,7 +3,7 @@ Contributors: gm2team
 Tags: admin, tools, suite, performance
 Requires at least: 5.6
 Tested up to: 6.5
-Stable tag: 1.2.0
+Stable tag: 1.3.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -16,6 +16,9 @@ A powerful suite of WordPress enhancements including admin tools, frontend optim
 3. Use the Gm2 Suite menu in the admin sidebar to configure settings.
 
 == Changelog ==
+= 1.3.0 =
+* Option to auto-fill missing image alt text with product titles.
+* Fields for external image compression API keys.
 = 1.2.0 =
 * Added robots and canonical controls in meta boxes.
 * Optional settings to noindex product variants and out-of-stock items.
