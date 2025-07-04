@@ -35,11 +35,6 @@ class Gm2_Admin {
 
         $seo_pages = [
             'gm2_page_gm2-seo',
-            'gm2_page_gm2-meta-tags',
-            'gm2_page_gm2-sitemap',
-            'gm2_page_gm2-redirects',
-            'gm2_page_gm2-schema',
-            'gm2_page_gm2-performance',
         ];
 
         if (in_array($hook, $seo_pages, true)) {
