@@ -8,6 +8,7 @@ class Gm2_SEO_Admin {
         add_action('admin_menu', [$this, 'add_settings_pages']);
         add_action('add_meta_boxes', [$this, 'register_meta_boxes']);
         add_action('save_post', [$this, 'save_post_meta']);
+        add_action('admin_enqueue_scripts', [$this, 'enqueue_editor_scripts']);
         add_action('admin_post_gm2_sitemap_settings', [$this, 'handle_sitemap_form']);
         add_action('admin_post_gm2_meta_tags_settings', [$this, 'handle_meta_tags_form']);
         add_action('admin_post_gm2_schema_settings', [$this, 'handle_schema_form']);
@@ -270,6 +271,14 @@ class Gm2_SEO_Admin {
                 'normal',
                 'high'
             );
+            add_meta_box(
+                'gm2_content_analysis_' . $type,
+                'Content Analysis',
+                [$this, 'render_content_analysis_meta_box'],
+                $type,
+                'side',
+                'default'
+            );
         }
     }
 
@@ -522,5 +531,56 @@ class Gm2_SEO_Admin {
                 }
             }
         }
+    }
+
+    public function enqueue_editor_scripts($hook) {
+        global $typenow;
+        if (!in_array($hook, ['post.php', 'post-new.php'], true)) {
+            return;
+        }
+        if (!in_array($typenow, $this->get_supported_post_types(), true)) {
+            return;
+        }
+
+        wp_enqueue_script(
+            'gm2-content-analysis',
+            GM2_PLUGIN_URL . 'admin/js/gm2-content-analysis.js',
+            ['jquery', 'wp-data'],
+            GM2_VERSION,
+            true
+        );
+
+        $current = isset($_GET['post']) ? absint($_GET['post']) : 0;
+        $posts    = get_posts([
+            'post_type'   => $this->get_supported_post_types(),
+            'post_status' => 'publish',
+            'numberposts' => -1,
+            'fields'      => 'ids',
+        ]);
+        $list = [];
+        foreach ($posts as $id) {
+            if ($id === $current) {
+                continue;
+            }
+            $list[] = [
+                'title' => get_the_title($id),
+                'link'  => get_permalink($id),
+            ];
+        }
+        wp_localize_script(
+            'gm2-content-analysis',
+            'gm2ContentAnalysisData',
+            ['posts' => $list]
+        );
+    }
+
+    public function render_content_analysis_meta_box($post) {
+        echo '<div id="gm2-content-analysis">';
+        echo '<p>Word Count: <span id="gm2-content-analysis-word-count">0</span></p>';
+        echo '<p>Top Keyword: <span id="gm2-content-analysis-keyword"></span></p>';
+        echo '<p>Keyword Density: <span id="gm2-content-analysis-density">0</span>%</p>';
+        echo '<p>Readability: <span id="gm2-content-analysis-readability">0</span></p>';
+        echo '<p>Suggested Links:</p><ul id="gm2-content-analysis-links"></ul>';
+        echo '</div>';
     }
 }
