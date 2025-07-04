@@ -15,6 +15,8 @@ class Gm2_SEO_Public {
         add_action('wp_head', [$this, 'output_breadcrumb_schema'], 20);
         add_action('wp_head', [$this, 'output_review_schema'], 20);
         add_action('wp_footer', [$this, 'output_breadcrumbs']);
+        add_shortcode('gm2_breadcrumbs', [$this, 'gm2_breadcrumbs_shortcode']);
+        add_action('init', [$this, 'register_breadcrumb_block']);
     }
 
     public function add_sitemap_rewrite() {
@@ -31,6 +33,59 @@ class Gm2_SEO_Public {
             $s = new Gm2_Sitemap();
             $s->output();
         }
+    }
+
+    private function get_breadcrumb_items() {
+        $breadcrumbs   = [];
+        $breadcrumbs[] = [
+            'name' => get_bloginfo('name'),
+            'url'  => home_url('/'),
+        ];
+
+        if (is_front_page() || is_home()) {
+            return $breadcrumbs;
+        }
+
+        if (is_singular()) {
+            $post      = get_queried_object();
+            $ancestors = get_post_ancestors($post);
+            $ancestors = array_reverse($ancestors);
+            foreach ($ancestors as $ancestor) {
+                $breadcrumbs[] = [
+                    'name' => get_the_title($ancestor),
+                    'url'  => get_permalink($ancestor),
+                ];
+            }
+            $breadcrumbs[] = [
+                'name' => get_the_title($post),
+                'url'  => get_permalink($post),
+            ];
+        } elseif (is_tax() || is_category() || is_tag()) {
+            $term      = get_queried_object();
+            if ($term && !is_wp_error($term)) {
+                $ancestors = array_reverse(get_ancestors($term->term_id, $term->taxonomy));
+                foreach ($ancestors as $ancestor_id) {
+                    $ancestor = get_term($ancestor_id, $term->taxonomy);
+                    if ($ancestor && !is_wp_error($ancestor)) {
+                        $breadcrumbs[] = [
+                            'name' => $ancestor->name,
+                            'url'  => get_term_link($ancestor),
+                        ];
+                    }
+                }
+                $breadcrumbs[] = [
+                    'name' => $term->name,
+                    'url'  => get_term_link($term),
+                ];
+            }
+        } else {
+            $breadcrumbs[] = [
+                'name' => wp_get_document_title(),
+                'url'  => home_url(add_query_arg([], $GLOBALS['wp']->request)),
+            ];
+        }
+
+        return $breadcrumbs;
     }
 
     private function get_seo_meta() {
@@ -182,46 +237,21 @@ class Gm2_SEO_Public {
         if (get_option('gm2_schema_breadcrumbs', '1') !== '1') {
             return;
         }
-
-        $items = [];
-        $items[] = [
-            '@type'    => 'ListItem',
-            'position' => 1,
-            'name'     => get_bloginfo('name'),
-            'item'     => home_url('/'),
-        ];
-
-        $position = 2;
-        if (is_singular()) {
+        $items    = [];
+        $position = 1;
+        foreach ($this->get_breadcrumb_items() as $crumb) {
             $items[] = [
                 '@type'    => 'ListItem',
-                'position' => $position,
-                'name'     => get_the_title(),
-                'item'     => get_permalink(),
-            ];
-        } elseif (is_tax() || is_category() || is_tag()) {
-            $term = get_queried_object();
-            if ($term && !is_wp_error($term)) {
-                $items[] = [
-                    '@type'    => 'ListItem',
-                    'position' => $position,
-                    'name'     => $term->name,
-                    'item'     => get_term_link($term),
-                ];
-            }
-        } else {
-            $items[] = [
-                '@type'    => 'ListItem',
-                'position' => $position,
-                'name'     => wp_get_document_title(),
-                'item'     => home_url(add_query_arg([], $GLOBALS['wp']->request)),
+                'position' => $position++,
+                'name'     => wp_strip_all_tags($crumb['name']),
+                'item'     => $crumb['url'],
             ];
         }
 
         $data = [
-            '@context'         => 'https://schema.org',
-            '@type'            => 'BreadcrumbList',
-            'itemListElement'  => $items,
+            '@context'        => 'https://schema.org',
+            '@type'           => 'BreadcrumbList',
+            'itemListElement' => $items,
         ];
 
         echo '<script type="application/ld+json">' . wp_json_encode($data) . "</script>\n";
@@ -263,12 +293,72 @@ class Gm2_SEO_Public {
         echo '<script type="application/ld+json">' . wp_json_encode($data) . "</script>\n";
     }
 
+    public function gm2_breadcrumbs_shortcode() {
+        $breadcrumbs = $this->get_breadcrumb_items();
+        if (empty($breadcrumbs)) {
+            return '';
+        }
+
+        $html  = '<nav class="gm2-breadcrumbs" aria-label="Breadcrumb"><ol>';
+        $total = count($breadcrumbs);
+        $i     = 0;
+        foreach ($breadcrumbs as $crumb) {
+            $i++;
+            if ($i === $total) {
+                $html .= '<li class="current">' . esc_html($crumb['name']) . '</li>';
+            } else {
+                $html .= '<li><a href="' . esc_url($crumb['url']) . '">' . esc_html($crumb['name']) . '</a></li>';
+            }
+        }
+        $html .= '</ol></nav>';
+
+        $items    = [];
+        $position = 1;
+        foreach ($breadcrumbs as $crumb) {
+            $items[] = [
+                '@type'    => 'ListItem',
+                'position' => $position++,
+                'name'     => wp_strip_all_tags($crumb['name']),
+                'item'     => $crumb['url'],
+            ];
+        }
+        $data = [
+            '@context'        => 'https://schema.org',
+            '@type'           => 'BreadcrumbList',
+            'itemListElement' => $items,
+        ];
+        $html .= '<script type="application/ld+json">' . wp_json_encode($data) . '</script>';
+
+        return $html;
+    }
+
+    public function register_breadcrumb_block() {
+        if (!function_exists('register_block_type')) {
+            return;
+        }
+
+        wp_register_script(
+            'gm2-breadcrumb-block',
+            GM2_PLUGIN_URL . 'public/js/breadcrumb-block.js',
+            ['wp-blocks', 'wp-element'],
+            GM2_VERSION,
+            true
+        );
+
+        register_block_type('gm2/breadcrumbs', [
+            'editor_script'   => 'gm2-breadcrumb-block',
+            'render_callback' => function () {
+                return do_shortcode('[gm2_breadcrumbs]');
+            },
+        ]);
+    }
+
     public function output_structured_data() {
         echo "<!-- Structured data placeholder -->\n";
     }
 
     public function output_breadcrumbs() {
-        echo "<!-- Breadcrumbs placeholder -->\n";
+        echo do_shortcode('[gm2_breadcrumbs]');
     }
 
     public function output_canonical_url() {
