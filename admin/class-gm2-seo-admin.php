@@ -289,6 +289,9 @@ class Gm2_SEO_Admin {
     public function display_performance_page() {
         $auto_fill = get_option('gm2_auto_fill_alt', '0');
         $api_key   = get_option('gm2_compression_api_key', '');
+        $min_html  = get_option('gm2_minify_html', '0');
+        $min_css   = get_option('gm2_minify_css', '0');
+        $min_js    = get_option('gm2_minify_js', '0');
 
         echo '<div class="wrap"><h1>Performance</h1>';
         if (!empty($_GET['updated'])) {
@@ -300,6 +303,9 @@ class Gm2_SEO_Admin {
         echo '<table class="form-table"><tbody>';
         echo '<tr><th scope="row">Auto-fill missing alt text</th><td><label><input type="checkbox" name="gm2_auto_fill_alt" value="1" ' . checked($auto_fill, '1', false) . '> Use product title</label></td></tr>';
         echo '<tr><th scope="row">Compression API Key</th><td><input type="text" name="gm2_compression_api_key" value="' . esc_attr($api_key) . '" class="regular-text" /></td></tr>';
+        echo '<tr><th scope="row">Minify HTML</th><td><label><input type="checkbox" name="gm2_minify_html" value="1" ' . checked($min_html, '1', false) . '></label></td></tr>';
+        echo '<tr><th scope="row">Minify CSS</th><td><label><input type="checkbox" name="gm2_minify_css" value="1" ' . checked($min_css, '1', false) . '></label></td></tr>';
+        echo '<tr><th scope="row">Minify JS</th><td><label><input type="checkbox" name="gm2_minify_js" value="1" ' . checked($min_js, '1', false) . '></label></td></tr>';
         echo '</tbody></table>';
         submit_button('Save Settings');
         echo '</form></div>';
@@ -491,6 +497,15 @@ class Gm2_SEO_Admin {
 
         $api_key = isset($_POST['gm2_compression_api_key']) ? sanitize_text_field($_POST['gm2_compression_api_key']) : '';
         update_option('gm2_compression_api_key', $api_key);
+
+        $min_html = isset($_POST['gm2_minify_html']) ? '1' : '0';
+        update_option('gm2_minify_html', $min_html);
+
+        $min_css = isset($_POST['gm2_minify_css']) ? '1' : '0';
+        update_option('gm2_minify_css', $min_css);
+
+        $min_js = isset($_POST['gm2_minify_js']) ? '1' : '0';
+        update_option('gm2_minify_js', $min_js);
 
         wp_redirect(admin_url('admin.php?page=gm2-performance&updated=1'));
         exit;
