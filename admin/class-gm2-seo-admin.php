@@ -302,16 +302,19 @@ class Gm2_SEO_Admin {
     }
 
     public function render_post_meta_box($post) {
-        $title       = get_post_meta($post->ID, '_gm2_title', true);
-        $description = get_post_meta($post->ID, '_gm2_description', true);
-        $noindex     = get_post_meta($post->ID, '_gm2_noindex', true);
-        $nofollow    = get_post_meta($post->ID, '_gm2_nofollow', true);
-        $canonical   = get_post_meta($post->ID, '_gm2_canonical', true);
+        $title          = get_post_meta($post->ID, '_gm2_title', true);
+        $description    = get_post_meta($post->ID, '_gm2_description', true);
+        $noindex        = get_post_meta($post->ID, '_gm2_noindex', true);
+        $nofollow       = get_post_meta($post->ID, '_gm2_nofollow', true);
+        $canonical      = get_post_meta($post->ID, '_gm2_canonical', true);
+        $focus_keywords = get_post_meta($post->ID, '_gm2_focus_keywords', true);
         wp_nonce_field('gm2_save_seo_meta', 'gm2_seo_nonce');
         echo '<p><label for="gm2_seo_title">SEO Title</label>';
         echo '<input type="text" id="gm2_seo_title" name="gm2_seo_title" value="' . esc_attr($title) . '" class="widefat" /></p>';
         echo '<p><label for="gm2_seo_description">SEO Description</label>';
         echo '<textarea id="gm2_seo_description" name="gm2_seo_description" class="widefat" rows="3">' . esc_textarea($description) . '</textarea></p>';
+        echo '<p><label for="gm2_focus_keywords">Focus Keywords (comma separated)</label>';
+        echo '<input type="text" id="gm2_focus_keywords" name="gm2_focus_keywords" value="' . esc_attr($focus_keywords) . '" class="widefat" /></p>';
         echo '<p><label><input type="checkbox" name="gm2_noindex" value="1" ' . checked($noindex, '1', false) . '> noindex</label></p>';
         echo '<p><label><input type="checkbox" name="gm2_nofollow" value="1" ' . checked($nofollow, '1', false) . '> nofollow</label></p>';
         echo '<p><label for="gm2_canonical_url">Canonical URL</label>';
@@ -323,13 +326,15 @@ class Gm2_SEO_Admin {
         $description = '';
         $noindex = '';
         $nofollow = '';
-        $canonical = '';
+        $canonical      = '';
+        $focus_keywords = '';
         if (is_object($term)) {
             $title       = get_term_meta($term->term_id, '_gm2_title', true);
             $description = get_term_meta($term->term_id, '_gm2_description', true);
             $noindex     = get_term_meta($term->term_id, '_gm2_noindex', true);
             $nofollow    = get_term_meta($term->term_id, '_gm2_nofollow', true);
             $canonical   = get_term_meta($term->term_id, '_gm2_canonical', true);
+            $focus_keywords = get_term_meta($term->term_id, '_gm2_focus_keywords', true);
         }
         wp_nonce_field('gm2_save_seo_meta', 'gm2_seo_nonce');
 
@@ -338,12 +343,14 @@ class Gm2_SEO_Admin {
             echo '<tr class="form-field"><th scope="row"><label for="gm2_seo_description">SEO Description</label></th><td><textarea name="gm2_seo_description" id="gm2_seo_description" rows="5" class="large-text">' . esc_textarea($description) . '</textarea></td></tr>';
             echo '<tr class="form-field"><th scope="row">Robots</th><td><label><input type="checkbox" name="gm2_noindex" value="1" ' . checked($noindex, '1', false) . '> noindex</label><br/><label><input type="checkbox" name="gm2_nofollow" value="1" ' . checked($nofollow, '1', false) . '> nofollow</label></td></tr>';
             echo '<tr class="form-field"><th scope="row"><label for="gm2_canonical_url">Canonical URL</label></th><td><input name="gm2_canonical_url" id="gm2_canonical_url" type="url" value="' . esc_attr($canonical) . '" class="regular-text" /></td></tr>';
+            echo '<tr class="form-field"><th scope="row"><label for="gm2_focus_keywords">Focus Keywords (comma separated)</label></th><td><input name="gm2_focus_keywords" id="gm2_focus_keywords" type="text" value="' . esc_attr($focus_keywords) . '" class="regular-text" /></td></tr>';
         } else {
             echo '<div class="form-field"><label for="gm2_seo_title">SEO Title</label><input type="text" name="gm2_seo_title" id="gm2_seo_title" value="" /></div>';
             echo '<div class="form-field"><label for="gm2_seo_description">SEO Description</label><textarea name="gm2_seo_description" id="gm2_seo_description" rows="5"></textarea></div>';
             echo '<div class="form-field"><label><input type="checkbox" name="gm2_noindex" value="1"> noindex</label></div>';
             echo '<div class="form-field"><label><input type="checkbox" name="gm2_nofollow" value="1"> nofollow</label></div>';
             echo '<div class="form-field"><label for="gm2_canonical_url">Canonical URL</label><input type="url" name="gm2_canonical_url" id="gm2_canonical_url" /></div>';
+            echo '<div class="form-field"><label for="gm2_focus_keywords">Focus Keywords (comma separated)</label><input type="text" name="gm2_focus_keywords" id="gm2_focus_keywords" /></div>';
         }
     }
 
@@ -361,12 +368,14 @@ class Gm2_SEO_Admin {
         $description = isset($_POST['gm2_seo_description']) ? sanitize_textarea_field($_POST['gm2_seo_description']) : '';
         $noindex     = isset($_POST['gm2_noindex']) ? '1' : '0';
         $nofollow    = isset($_POST['gm2_nofollow']) ? '1' : '0';
-        $canonical   = isset($_POST['gm2_canonical_url']) ? esc_url_raw($_POST['gm2_canonical_url']) : '';
+        $canonical      = isset($_POST['gm2_canonical_url']) ? esc_url_raw($_POST['gm2_canonical_url']) : '';
+        $focus_keywords = isset($_POST['gm2_focus_keywords']) ? sanitize_text_field($_POST['gm2_focus_keywords']) : '';
         update_post_meta($post_id, '_gm2_title', $title);
         update_post_meta($post_id, '_gm2_description', $description);
         update_post_meta($post_id, '_gm2_noindex', $noindex);
         update_post_meta($post_id, '_gm2_nofollow', $nofollow);
         update_post_meta($post_id, '_gm2_canonical', $canonical);
+        update_post_meta($post_id, '_gm2_focus_keywords', $focus_keywords);
     }
 
     public function save_taxonomy_meta($term_id) {
@@ -377,12 +386,14 @@ class Gm2_SEO_Admin {
         $description = isset($_POST['gm2_seo_description']) ? sanitize_textarea_field($_POST['gm2_seo_description']) : '';
         $noindex     = isset($_POST['gm2_noindex']) ? '1' : '0';
         $nofollow    = isset($_POST['gm2_nofollow']) ? '1' : '0';
-        $canonical   = isset($_POST['gm2_canonical_url']) ? esc_url_raw($_POST['gm2_canonical_url']) : '';
+        $canonical      = isset($_POST['gm2_canonical_url']) ? esc_url_raw($_POST['gm2_canonical_url']) : '';
+        $focus_keywords = isset($_POST['gm2_focus_keywords']) ? sanitize_text_field($_POST['gm2_focus_keywords']) : '';
         update_term_meta($term_id, '_gm2_title', $title);
         update_term_meta($term_id, '_gm2_description', $description);
         update_term_meta($term_id, '_gm2_noindex', $noindex);
         update_term_meta($term_id, '_gm2_nofollow', $nofollow);
         update_term_meta($term_id, '_gm2_canonical', $canonical);
+        update_term_meta($term_id, '_gm2_focus_keywords', $focus_keywords);
     }
 
     public function handle_sitemap_form() {
@@ -610,6 +621,7 @@ class Gm2_SEO_Admin {
         echo '<p>Word Count: <span id="gm2-content-analysis-word-count">0</span></p>';
         echo '<p>Top Keyword: <span id="gm2-content-analysis-keyword"></span></p>';
         echo '<p>Keyword Density: <span id="gm2-content-analysis-density">0</span>%</p>';
+        echo '<p>Focus Keyword Density:</p><ul id="gm2-focus-keyword-density"></ul>';
         echo '<p>Readability: <span id="gm2-content-analysis-readability">0</span></p>';
         echo '<p>Suggested Links:</p><ul id="gm2-content-analysis-links"></ul>';
         echo '</div>';
