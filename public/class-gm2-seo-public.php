@@ -18,7 +18,9 @@ class Gm2_SEO_Public {
         add_action('wp_head', [$this, 'output_brand_schema'], 20);
         add_action('wp_head', [$this, 'output_breadcrumb_schema'], 20);
         add_action('wp_head', [$this, 'output_review_schema'], 20);
-        add_action('wp_footer', [$this, 'output_breadcrumbs']);
+        if (get_option('gm2_show_footer_breadcrumbs', '1') === '1') {
+            add_action('wp_footer', [$this, 'output_breadcrumbs']);
+        }
         add_shortcode('gm2_breadcrumbs', [$this, 'gm2_breadcrumbs_shortcode']);
         add_action('init', [$this, 'register_breadcrumb_block']);
 
