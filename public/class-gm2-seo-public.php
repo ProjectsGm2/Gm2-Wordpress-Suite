@@ -21,6 +21,10 @@ class Gm2_SEO_Public {
         add_action('wp_footer', [$this, 'output_breadcrumbs']);
         add_shortcode('gm2_breadcrumbs', [$this, 'gm2_breadcrumbs_shortcode']);
         add_action('init', [$this, 'register_breadcrumb_block']);
+
+        add_action('template_redirect', [$this, 'maybe_buffer_output'], 1);
+        add_action('shutdown', [$this, 'maybe_flush_buffer'], 0);
+        add_action('send_headers', [$this, 'send_cache_headers']);
     }
 
     public function add_sitemap_rewrite() {
@@ -420,5 +424,46 @@ class Gm2_SEO_Public {
             echo '<script async src="https://www.googletagmanager.com/gtag/js?id=' . esc_attr($id) . '"></script>' . "\n";
             echo '<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag(\'js\', new Date());gtag(\'config\', \'' . esc_js($id) . '\');</script>' . "\n";
         }
+    }
+
+    public function maybe_buffer_output() {
+        $html = get_option('gm2_minify_html', '0');
+        $css  = get_option('gm2_minify_css', '0');
+        $js   = get_option('gm2_minify_js', '0');
+        if ($html === '1' || $css === '1' || $js === '1') {
+            ob_start([$this, 'minify_output']);
+        }
+    }
+
+    public function maybe_flush_buffer() {
+        if (ob_get_level() > 0) {
+            ob_end_flush();
+        }
+    }
+
+    public function minify_output($html) {
+        if (get_option('gm2_minify_html', '0') === '1') {
+            $html = preg_replace('/>\s+</', '><', $html);
+            $html = preg_replace('/\s+/', ' ', $html);
+        }
+        if (get_option('gm2_minify_css', '0') === '1') {
+            $html = preg_replace_callback('#<style[^>]*>(.*?)</style>#s', function ($m) {
+                $css = preg_replace('!\s+!', ' ', $m[1]);
+                $css = preg_replace('!/\*.*?\*/!s', '', $css);
+                return '<style>' . trim($css) . '</style>';
+            }, $html);
+        }
+        if (get_option('gm2_minify_js', '0') === '1') {
+            $html = preg_replace_callback('#<script[^>]*>(.*?)</script>#s', function ($m) {
+                $js = preg_replace('!\s+!', ' ', $m[1]);
+                $js = preg_replace('!/\*.*?\*/!s', '', $js);
+                return '<script>' . trim($js) . '</script>';
+            }, $html);
+        }
+        return $html;
+    }
+
+    public function send_cache_headers() {
+        do_action('gm2_set_cache_headers');
     }
 }

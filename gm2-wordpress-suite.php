@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Gm2 WordPress Suite
  * Description:       A powerful suite of tools and features for WordPress, by Gm2.
- * Version:           1.3.0
+ * Version:           1.4.0
  * Author:            Your Name or Team Gm2
  * Author URI:        https://yourwebsite.com
  * License:           GPL-2.0+
@@ -14,7 +14,7 @@
 defined('ABSPATH') or die('No script kiddies please!');
 
 // Define constants
-define('GM2_VERSION', '1.3.0');
+define('GM2_VERSION', '1.4.0');
 define('GM2_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('GM2_PLUGIN_URL', plugin_dir_url(__FILE__));
 

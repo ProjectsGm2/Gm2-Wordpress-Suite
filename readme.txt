@@ -3,7 +3,7 @@ Contributors: gm2team
 Tags: admin, tools, suite, performance
 Requires at least: 5.6
 Tested up to: 6.5
-Stable tag: 1.3.0
+Stable tag: 1.4.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -15,7 +15,14 @@ A powerful suite of WordPress enhancements including admin tools, frontend optim
 2. Activate the plugin through the 'Plugins' screen in WordPress.
 3. Use the Gm2 Suite menu in the admin sidebar to configure settings.
 
+== Caching ==
+Enable HTML, CSS, and JavaScript minification from the SEO &gt; Performance
+screen. For full page caching, hook into the `gm2_set_cache_headers` action
+to configure headers or integrate your preferred caching plugin.
+
 == Changelog ==
+= 1.4.0 =
+* Basic HTML/CSS/JS minification options and hooks for caching.
 = 1.3.0 =
 * Option to auto-fill missing image alt text with product titles.
 * Fields for external image compression API keys.
