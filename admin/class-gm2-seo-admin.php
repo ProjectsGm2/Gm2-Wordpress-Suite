@@ -9,6 +9,7 @@ class Gm2_SEO_Admin {
         add_action('add_meta_boxes', [$this, 'register_meta_boxes']);
         add_action('save_post', [$this, 'save_post_meta']);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_editor_scripts']);
+        add_action('admin_init', [$this, 'register_settings']);
         add_action('admin_post_gm2_sitemap_settings', [$this, 'handle_sitemap_form']);
         add_action('admin_post_gm2_meta_tags_settings', [$this, 'handle_meta_tags_form']);
         add_action('admin_post_gm2_schema_settings', [$this, 'handle_schema_form']);
@@ -110,8 +111,51 @@ class Gm2_SEO_Admin {
         );
     }
 
+    public function register_settings() {
+        register_setting('gm2_seo_options', 'gm2_ga_measurement_id', [
+            'sanitize_callback' => 'sanitize_text_field',
+        ]);
+        register_setting('gm2_seo_options', 'gm2_search_console_verification', [
+            'sanitize_callback' => 'sanitize_text_field',
+        ]);
+
+        add_settings_section(
+            'gm2_seo_main',
+            '',
+            '__return_false',
+            'gm2_seo'
+        );
+
+        add_settings_field(
+            'gm2_ga_measurement_id',
+            'Google Analytics Measurement ID',
+            function () {
+                $value = get_option('gm2_ga_measurement_id', '');
+                echo '<input type="text" name="gm2_ga_measurement_id" value="' . esc_attr($value) . '" class="regular-text" />';
+            },
+            'gm2_seo',
+            'gm2_seo_main'
+        );
+
+        add_settings_field(
+            'gm2_search_console_verification',
+            'Search Console Verification Code',
+            function () {
+                $value = get_option('gm2_search_console_verification', '');
+                echo '<input type="text" name="gm2_search_console_verification" value="' . esc_attr($value) . '" class="regular-text" />';
+            },
+            'gm2_seo',
+            'gm2_seo_main'
+        );
+    }
+
     public function display_dashboard() {
-        echo '<div class="wrap"><h1>SEO Settings</h1></div>';
+        echo '<div class="wrap"><h1>SEO Settings</h1>';
+        echo '<form method="post" action="options.php">';
+        settings_fields('gm2_seo_options');
+        do_settings_sections('gm2_seo');
+        submit_button();
+        echo '</form></div>';
     }
 
     public function display_meta_tags_page() {
