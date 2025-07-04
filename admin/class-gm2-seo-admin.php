@@ -9,6 +9,7 @@ class Gm2_SEO_Admin {
         add_action('add_meta_boxes', [$this, 'register_meta_boxes']);
         add_action('save_post', [$this, 'save_post_meta']);
         add_action('admin_post_gm2_sitemap_settings', [$this, 'handle_sitemap_form']);
+        add_action('admin_post_gm2_meta_tags_settings', [$this, 'handle_meta_tags_form']);
 
         add_action('save_post', 'gm2_generate_sitemap');
 
@@ -98,7 +99,22 @@ class Gm2_SEO_Admin {
     }
 
     public function display_meta_tags_page() {
-        echo '<div class="wrap"><h1>Meta Tags</h1><p>Manage meta tags here.</p></div>';
+        $variants = get_option('gm2_noindex_variants', '0');
+        $oos      = get_option('gm2_noindex_oos', '0');
+
+        echo '<div class="wrap"><h1>Meta Tags</h1>';
+        if (!empty($_GET['updated'])) {
+            echo '<div class="updated notice"><p>Settings saved.</p></div>';
+        }
+        echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
+        wp_nonce_field('gm2_meta_tags_save', 'gm2_meta_tags_nonce');
+        echo '<input type="hidden" name="action" value="gm2_meta_tags_settings" />';
+        echo '<table class="form-table"><tbody>';
+        echo '<tr><th scope="row">Noindex product variants</th><td><input type="checkbox" name="gm2_noindex_variants" value="1" ' . checked($variants, '1', false) . '></td></tr>';
+        echo '<tr><th scope="row">Noindex out-of-stock products</th><td><input type="checkbox" name="gm2_noindex_oos" value="1" ' . checked($oos, '1', false) . '></td></tr>';
+        echo '</tbody></table>';
+        submit_button('Save Settings');
+        echo '</form></div>';
     }
 
     public function display_sitemap_page() {
@@ -150,28 +166,46 @@ class Gm2_SEO_Admin {
     public function render_post_meta_box($post) {
         $title       = get_post_meta($post->ID, '_gm2_title', true);
         $description = get_post_meta($post->ID, '_gm2_description', true);
+        $noindex     = get_post_meta($post->ID, '_gm2_noindex', true);
+        $nofollow    = get_post_meta($post->ID, '_gm2_nofollow', true);
+        $canonical   = get_post_meta($post->ID, '_gm2_canonical', true);
         wp_nonce_field('gm2_save_seo_meta', 'gm2_seo_nonce');
         echo '<p><label for="gm2_seo_title">SEO Title</label>';
         echo '<input type="text" id="gm2_seo_title" name="gm2_seo_title" value="' . esc_attr($title) . '" class="widefat" /></p>';
         echo '<p><label for="gm2_seo_description">SEO Description</label>';
         echo '<textarea id="gm2_seo_description" name="gm2_seo_description" class="widefat" rows="3">' . esc_textarea($description) . '</textarea></p>';
+        echo '<p><label><input type="checkbox" name="gm2_noindex" value="1" ' . checked($noindex, '1', false) . '> noindex</label></p>';
+        echo '<p><label><input type="checkbox" name="gm2_nofollow" value="1" ' . checked($nofollow, '1', false) . '> nofollow</label></p>';
+        echo '<p><label for="gm2_canonical_url">Canonical URL</label>';
+        echo '<input type="url" id="gm2_canonical_url" name="gm2_canonical_url" value="' . esc_attr($canonical) . '" class="widefat" /></p>';
     }
 
     public function render_taxonomy_meta_box($term) {
         $title = '';
         $description = '';
+        $noindex = '';
+        $nofollow = '';
+        $canonical = '';
         if (is_object($term)) {
             $title       = get_term_meta($term->term_id, '_gm2_title', true);
             $description = get_term_meta($term->term_id, '_gm2_description', true);
+            $noindex     = get_term_meta($term->term_id, '_gm2_noindex', true);
+            $nofollow    = get_term_meta($term->term_id, '_gm2_nofollow', true);
+            $canonical   = get_term_meta($term->term_id, '_gm2_canonical', true);
         }
         wp_nonce_field('gm2_save_seo_meta', 'gm2_seo_nonce');
 
         if (is_object($term)) {
             echo '<tr class="form-field"><th scope="row"><label for="gm2_seo_title">SEO Title</label></th><td><input name="gm2_seo_title" id="gm2_seo_title" type="text" value="' . esc_attr($title) . '" class="regular-text" /></td></tr>';
             echo '<tr class="form-field"><th scope="row"><label for="gm2_seo_description">SEO Description</label></th><td><textarea name="gm2_seo_description" id="gm2_seo_description" rows="5" class="large-text">' . esc_textarea($description) . '</textarea></td></tr>';
+            echo '<tr class="form-field"><th scope="row">Robots</th><td><label><input type="checkbox" name="gm2_noindex" value="1" ' . checked($noindex, '1', false) . '> noindex</label><br/><label><input type="checkbox" name="gm2_nofollow" value="1" ' . checked($nofollow, '1', false) . '> nofollow</label></td></tr>';
+            echo '<tr class="form-field"><th scope="row"><label for="gm2_canonical_url">Canonical URL</label></th><td><input name="gm2_canonical_url" id="gm2_canonical_url" type="url" value="' . esc_attr($canonical) . '" class="regular-text" /></td></tr>';
         } else {
             echo '<div class="form-field"><label for="gm2_seo_title">SEO Title</label><input type="text" name="gm2_seo_title" id="gm2_seo_title" value="" /></div>';
             echo '<div class="form-field"><label for="gm2_seo_description">SEO Description</label><textarea name="gm2_seo_description" id="gm2_seo_description" rows="5"></textarea></div>';
+            echo '<div class="form-field"><label><input type="checkbox" name="gm2_noindex" value="1"> noindex</label></div>';
+            echo '<div class="form-field"><label><input type="checkbox" name="gm2_nofollow" value="1"> nofollow</label></div>';
+            echo '<div class="form-field"><label for="gm2_canonical_url">Canonical URL</label><input type="url" name="gm2_canonical_url" id="gm2_canonical_url" /></div>';
         }
     }
 
@@ -187,8 +221,14 @@ class Gm2_SEO_Admin {
         }
         $title       = isset($_POST['gm2_seo_title']) ? sanitize_text_field($_POST['gm2_seo_title']) : '';
         $description = isset($_POST['gm2_seo_description']) ? sanitize_textarea_field($_POST['gm2_seo_description']) : '';
+        $noindex     = isset($_POST['gm2_noindex']) ? '1' : '0';
+        $nofollow    = isset($_POST['gm2_nofollow']) ? '1' : '0';
+        $canonical   = isset($_POST['gm2_canonical_url']) ? esc_url_raw($_POST['gm2_canonical_url']) : '';
         update_post_meta($post_id, '_gm2_title', $title);
         update_post_meta($post_id, '_gm2_description', $description);
+        update_post_meta($post_id, '_gm2_noindex', $noindex);
+        update_post_meta($post_id, '_gm2_nofollow', $nofollow);
+        update_post_meta($post_id, '_gm2_canonical', $canonical);
     }
 
     public function save_taxonomy_meta($term_id) {
@@ -197,8 +237,14 @@ class Gm2_SEO_Admin {
         }
         $title       = isset($_POST['gm2_seo_title']) ? sanitize_text_field($_POST['gm2_seo_title']) : '';
         $description = isset($_POST['gm2_seo_description']) ? sanitize_textarea_field($_POST['gm2_seo_description']) : '';
+        $noindex     = isset($_POST['gm2_noindex']) ? '1' : '0';
+        $nofollow    = isset($_POST['gm2_nofollow']) ? '1' : '0';
+        $canonical   = isset($_POST['gm2_canonical_url']) ? esc_url_raw($_POST['gm2_canonical_url']) : '';
         update_term_meta($term_id, '_gm2_title', $title);
         update_term_meta($term_id, '_gm2_description', $description);
+        update_term_meta($term_id, '_gm2_noindex', $noindex);
+        update_term_meta($term_id, '_gm2_nofollow', $nofollow);
+        update_term_meta($term_id, '_gm2_canonical', $canonical);
     }
 
     public function handle_sitemap_form() {
@@ -221,6 +267,25 @@ class Gm2_SEO_Admin {
         }
 
         wp_redirect(admin_url('admin.php?page=gm2-sitemap&updated=1'));
+        exit;
+    }
+
+    public function handle_meta_tags_form() {
+        if (!current_user_can('manage_options')) {
+            wp_die('Permission denied');
+        }
+
+        if (!isset($_POST['gm2_meta_tags_nonce']) || !wp_verify_nonce($_POST['gm2_meta_tags_nonce'], 'gm2_meta_tags_save')) {
+            wp_die('Invalid nonce');
+        }
+
+        $variants = isset($_POST['gm2_noindex_variants']) ? '1' : '0';
+        update_option('gm2_noindex_variants', $variants);
+
+        $oos = isset($_POST['gm2_noindex_oos']) ? '1' : '0';
+        update_option('gm2_noindex_oos', $oos);
+
+        wp_redirect(admin_url('admin.php?page=gm2-meta-tags&updated=1'));
         exit;
     }
 }
