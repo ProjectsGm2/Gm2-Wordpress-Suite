@@ -19,7 +19,7 @@ class Gm2_SEO_Admin {
         add_action('add_attachment', [$this, 'auto_fill_alt_on_upload']);
         add_action('save_post', [$this, 'auto_fill_product_alt'], 20, 3);
 
-        add_action('save_post', 'gm2_generate_sitemap');
+        add_action('transition_post_status', [$this, 'maybe_generate_sitemap'], 10, 3);
 
         $taxonomies = $this->get_supported_taxonomies();
         foreach ($taxonomies as $tax) {
@@ -30,6 +30,12 @@ class Gm2_SEO_Admin {
             add_action("created_{$tax}", 'gm2_generate_sitemap');
             add_action("edited_{$tax}", 'gm2_generate_sitemap');
             add_action("delete_{$tax}", 'gm2_generate_sitemap');
+        }
+    }
+
+    public function maybe_generate_sitemap($new_status, $old_status, $post) {
+        if ($new_status === 'publish' || $old_status === 'publish') {
+            gm2_generate_sitemap();
         }
     }
 
