@@ -178,7 +178,8 @@ class Gm2_SEO_Public {
             if (is_singular()) {
                 $canonical = get_permalink();
             } elseif (is_category() || is_tag() || is_tax()) {
-                $canonical = get_term_link(get_queried_object());
+                $term_link = get_term_link(get_queried_object());
+                $canonical = !is_wp_error($term_link) ? $term_link : home_url();
             } else {
                 $canonical = home_url();
             }
