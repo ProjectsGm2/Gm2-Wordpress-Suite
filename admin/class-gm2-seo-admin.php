@@ -70,51 +70,6 @@ class Gm2_SEO_Admin {
             'gm2-seo',
             [$this, 'display_dashboard']
         );
-
-        add_submenu_page(
-            'gm2-seo',
-            'Meta Tags',
-            'Meta Tags',
-            'manage_options',
-            'gm2-meta-tags',
-            [$this, 'display_meta_tags_page']
-        );
-
-        add_submenu_page(
-            'gm2-seo',
-            'Sitemap',
-            'Sitemap',
-            'manage_options',
-            'gm2-sitemap',
-            [$this, 'display_sitemap_page']
-        );
-
-        add_submenu_page(
-            'gm2-seo',
-            'Redirects',
-            'Redirects',
-            'manage_options',
-            'gm2-redirects',
-            [$this, 'display_redirects_page']
-        );
-
-        add_submenu_page(
-            'gm2-seo',
-            'Structured Data',
-            'Structured Data',
-            'manage_options',
-            'gm2-schema',
-            [$this, 'display_schema_page']
-        );
-
-        add_submenu_page(
-            'gm2-seo',
-            'Performance',
-            'Performance',
-            'manage_options',
-            'gm2-performance',
-            [$this, 'display_performance_page']
-        );
     }
 
     public function register_settings() {
@@ -156,168 +111,174 @@ class Gm2_SEO_Admin {
     }
 
     public function display_dashboard() {
-        echo '<div class="wrap"><h1>SEO Settings</h1>';
-        echo '<form method="post" action="options.php">';
-        settings_fields('gm2_seo_options');
-        do_settings_sections('gm2_seo');
-        submit_button();
-        echo '</form></div>';
-    }
+        $tabs = [
+            'general'     => 'General',
+            'meta'        => 'Meta Tags',
+            'sitemap'     => 'Sitemap',
+            'redirects'   => 'Redirects',
+            'schema'      => 'Structured Data',
+            'performance' => 'Performance',
+        ];
 
-    public function display_meta_tags_page() {
-        $variants = get_option('gm2_noindex_variants', '0');
-        $oos      = get_option('gm2_noindex_oos', '0');
-
-        echo '<div class="wrap"><h1>Meta Tags</h1>';
-        if (!empty($_GET['updated'])) {
-            echo '<div class="updated notice"><p>Settings saved.</p></div>';
+        $active = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : 'general';
+        if (!isset($tabs[$active])) {
+            $active = 'general';
         }
-        echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
-        wp_nonce_field('gm2_meta_tags_save', 'gm2_meta_tags_nonce');
-        echo '<input type="hidden" name="action" value="gm2_meta_tags_settings" />';
-        echo '<table class="form-table"><tbody>';
-        echo '<tr><th scope="row">Noindex product variants</th><td><input type="checkbox" name="gm2_noindex_variants" value="1" ' . checked($variants, '1', false) . '></td></tr>';
-        echo '<tr><th scope="row">Noindex out-of-stock products</th><td><input type="checkbox" name="gm2_noindex_oos" value="1" ' . checked($oos, '1', false) . '></td></tr>';
-        echo '</tbody></table>';
-        submit_button('Save Settings');
-        echo '</form></div>';
-    }
 
-    public function display_sitemap_page() {
-        $enabled = get_option('gm2_sitemap_enabled', '1');
-        $frequency = get_option('gm2_sitemap_frequency', 'daily');
-
-        echo '<div class="wrap"><h1>Sitemap</h1>';
-        if (!empty($_GET['updated'])) {
-            echo '<div class="updated notice"><p>Settings saved.</p></div>';
+        echo '<div class="wrap">';
+        echo '<h1>SEO Settings</h1>';
+        echo '<h2 class="nav-tab-wrapper">';
+        foreach ($tabs as $slug => $label) {
+            $class = $active === $slug ? ' nav-tab-active' : '';
+            $url   = admin_url('admin.php?page=gm2-seo&tab=' . $slug);
+            echo '<a href="' . esc_url($url) . '" class="nav-tab' . $class . '">' . esc_html($label) . '</a>';
         }
-        echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
-        wp_nonce_field('gm2_sitemap_save', 'gm2_sitemap_nonce');
-        echo '<input type="hidden" name="action" value="gm2_sitemap_settings" />';
-        echo '<table class="form-table"><tbody>';
-        echo '<tr><th scope="row">Enable Sitemap</th><td><input type="checkbox" name="gm2_sitemap_enabled" value="1" ' . checked($enabled, '1', false) . '></td></tr>';
-        echo '<tr><th scope="row">Update Frequency</th><td><select name="gm2_sitemap_frequency">';
-        $options = ["daily", "weekly", "monthly"];
-        foreach ($options as $opt) {
-            echo '<option value="' . esc_attr($opt) . '" ' . selected($frequency, $opt, false) . '>' . esc_html(ucfirst($opt)) . '</option>';
-        }
-        echo '</select></td></tr>';
-        echo '</tbody></table>';
-        submit_button('Save Settings');
-        echo '<input type="submit" name="gm2_regenerate" class="button" value="Regenerate Sitemap" />';
-        echo '</form></div>';
-    }
+        echo '</h2>';
 
-    public function display_schema_page() {
-        $product    = get_option('gm2_schema_product', '1');
-        $brand      = get_option('gm2_schema_brand', '1');
-        $breadcrumbs = get_option('gm2_schema_breadcrumbs', '1');
-        $review     = get_option('gm2_schema_review', '1');
-        $footer_bc  = get_option('gm2_show_footer_breadcrumbs', '1');
-
-        echo '<div class="wrap"><h1>Structured Data</h1>';
-        if (!empty($_GET['updated'])) {
-            echo '<div class="updated notice"><p>Settings saved.</p></div>';
-        }
-        echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
-        wp_nonce_field('gm2_schema_save', 'gm2_schema_nonce');
-        echo '<input type="hidden" name="action" value="gm2_schema_settings" />';
-        echo '<table class="form-table"><tbody>';
-        echo '<tr><th scope="row">Product Schema</th><td><input type="checkbox" name="gm2_schema_product" value="1" ' . checked($product, '1', false) . '></td></tr>';
-        echo '<tr><th scope="row">Brand Schema</th><td><input type="checkbox" name="gm2_schema_brand" value="1" ' . checked($brand, '1', false) . '></td></tr>';
-        echo '<tr><th scope="row">Breadcrumb Schema</th><td><input type="checkbox" name="gm2_schema_breadcrumbs" value="1" ' . checked($breadcrumbs, '1', false) . '></td></tr>';
-        echo '<tr><th scope="row">Show Breadcrumbs in Footer</th><td><input type="checkbox" name="gm2_show_footer_breadcrumbs" value="1" ' . checked($footer_bc, '1', false) . '></td></tr>';
-        echo '<tr><th scope="row">Review Schema</th><td><input type="checkbox" name="gm2_schema_review" value="1" ' . checked($review, '1', false) . '></td></tr>';
-        echo '</tbody></table>';
-        submit_button('Save Settings');
-        echo '</form></div>';
-    }
-
-    public function display_redirects_page() {
-        $redirects = get_option('gm2_redirects', []);
-
-        if (!empty($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
-            $id = absint($_GET['id']);
-            check_admin_referer('gm2_delete_redirect_' . $id);
-            if (isset($redirects[$id])) {
-                unset($redirects[$id]);
-                update_option('gm2_redirects', array_values($redirects));
-                echo '<div class="updated"><p>Redirect deleted.</p></div>';
-                $redirects = array_values($redirects);
+        if ($active === 'meta') {
+            $variants = get_option('gm2_noindex_variants', '0');
+            $oos      = get_option('gm2_noindex_oos', '0');
+            if (!empty($_GET['updated'])) {
+                echo '<div class="updated notice"><p>Settings saved.</p></div>';
             }
-        }
-
-        $source_prefill = isset($_GET['source']) ? esc_url_raw($_GET['source']) : '';
-
-        echo '<div class="wrap"><h1>Redirects</h1>';
-        if (!empty($_GET['updated'])) {
-            echo '<div class="updated notice"><p>Redirect saved.</p></div>';
-        }
-        echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
-        wp_nonce_field('gm2_redirects_save', 'gm2_redirects_nonce');
-        echo '<input type="hidden" name="action" value="gm2_redirects" />';
-        echo '<table class="form-table"><tbody>';
-        echo '<tr><th scope="row"><label for="gm2_redirect_source">Source URL</label></th><td><input name="gm2_redirect_source" type="text" id="gm2_redirect_source" value="' . esc_attr($source_prefill) . '" class="regular-text" required></td></tr>';
-        echo '<tr><th scope="row"><label for="gm2_redirect_target">Target URL</label></th><td><input name="gm2_redirect_target" type="url" id="gm2_redirect_target" class="regular-text" required></td></tr>';
-        echo '<tr><th scope="row"><label for="gm2_redirect_type">Type</label></th><td><select name="gm2_redirect_type" id="gm2_redirect_type"><option value="301">301</option><option value="302">302</option></select></td></tr>';
-        echo '</tbody></table>';
-        submit_button('Add Redirect');
-        echo '</form>';
-
-        echo '<h2>Existing Redirects</h2>';
-        echo '<table class="widefat"><thead><tr><th>Source</th><th>Target</th><th>Type</th><th>Actions</th></tr></thead><tbody>';
-        if ($redirects) {
-            foreach ($redirects as $index => $r) {
-                $delete_url = wp_nonce_url(admin_url('admin.php?page=gm2-redirects&action=delete&id=' . $index), 'gm2_delete_redirect_' . $index);
-                echo '<tr>';
-                echo '<td>' . esc_html($r['source']) . '</td>';
-                echo '<td>' . esc_html($r['target']) . '</td>';
-                echo '<td>' . esc_html($r['type']) . '</td>';
-                echo '<td><a href="' . esc_url($delete_url) . '" onclick="return confirm(\'Are you sure?\');">Delete</a></td>';
-                echo '</tr>';
+            echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
+            wp_nonce_field('gm2_meta_tags_save', 'gm2_meta_tags_nonce');
+            echo '<input type="hidden" name="action" value="gm2_meta_tags_settings" />';
+            echo '<table class="form-table"><tbody>';
+            echo '<tr><th scope="row">Noindex product variants</th><td><input type="checkbox" name="gm2_noindex_variants" value="1" ' . checked($variants, '1', false) . '></td></tr>';
+            echo '<tr><th scope="row">Noindex out-of-stock products</th><td><input type="checkbox" name="gm2_noindex_oos" value="1" ' . checked($oos, '1', false) . '></td></tr>';
+            echo '</tbody></table>';
+            submit_button('Save Settings');
+            echo '</form>';
+        } elseif ($active === 'sitemap') {
+            $enabled   = get_option('gm2_sitemap_enabled', '1');
+            $frequency = get_option('gm2_sitemap_frequency', 'daily');
+            if (!empty($_GET['updated'])) {
+                echo '<div class="updated notice"><p>Settings saved.</p></div>';
             }
-        } else {
-            echo '<tr><td colspan="4">No redirects found.</td></tr>';
-        }
-        echo '</tbody></table>';
+            echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
+            wp_nonce_field('gm2_sitemap_save', 'gm2_sitemap_nonce');
+            echo '<input type="hidden" name="action" value="gm2_sitemap_settings" />';
+            echo '<table class="form-table"><tbody>';
+            echo '<tr><th scope="row">Enable Sitemap</th><td><input type="checkbox" name="gm2_sitemap_enabled" value="1" ' . checked($enabled, '1', false) . '></td></tr>';
+            echo '<tr><th scope="row">Update Frequency</th><td><select name="gm2_sitemap_frequency">';
+            $options = ["daily", "weekly", "monthly"];
+            foreach ($options as $opt) {
+                echo '<option value="' . esc_attr($opt) . '" ' . selected($frequency, $opt, false) . '>' . esc_html(ucfirst($opt)) . '</option>';
+            }
+            echo '</select></td></tr>';
+            echo '</tbody></table>';
+            submit_button('Save Settings');
+            echo '<input type="submit" name="gm2_regenerate" class="button" value="Regenerate Sitemap" />';
+            echo '</form>';
+        } elseif ($active === 'schema') {
+            $product     = get_option('gm2_schema_product', '1');
+            $brand       = get_option('gm2_schema_brand', '1');
+            $breadcrumbs = get_option('gm2_schema_breadcrumbs', '1');
+            $review      = get_option('gm2_schema_review', '1');
+            $footer_bc   = get_option('gm2_show_footer_breadcrumbs', '1');
+            if (!empty($_GET['updated'])) {
+                echo '<div class="updated notice"><p>Settings saved.</p></div>';
+            }
+            echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
+            wp_nonce_field('gm2_schema_save', 'gm2_schema_nonce');
+            echo '<input type="hidden" name="action" value="gm2_schema_settings" />';
+            echo '<table class="form-table"><tbody>';
+            echo '<tr><th scope="row">Product Schema</th><td><input type="checkbox" name="gm2_schema_product" value="1" ' . checked($product, '1', false) . '></td></tr>';
+            echo '<tr><th scope="row">Brand Schema</th><td><input type="checkbox" name="gm2_schema_brand" value="1" ' . checked($brand, '1', false) . '></td></tr>';
+            echo '<tr><th scope="row">Breadcrumb Schema</th><td><input type="checkbox" name="gm2_schema_breadcrumbs" value="1" ' . checked($breadcrumbs, '1', false) . '></td></tr>';
+            echo '<tr><th scope="row">Show Breadcrumbs in Footer</th><td><input type="checkbox" name="gm2_show_footer_breadcrumbs" value="1" ' . checked($footer_bc, '1', false) . '></td></tr>';
+            echo '<tr><th scope="row">Review Schema</th><td><input type="checkbox" name="gm2_schema_review" value="1" ' . checked($review, '1', false) . '></td></tr>';
+            echo '</tbody></table>';
+            submit_button('Save Settings');
+            echo '</form>';
+        } elseif ($active === 'redirects') {
+            $redirects = get_option('gm2_redirects', []);
+            if (!empty($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
+                $id = absint($_GET['id']);
+                check_admin_referer('gm2_delete_redirect_' . $id);
+                if (isset($redirects[$id])) {
+                    unset($redirects[$id]);
+                    update_option('gm2_redirects', array_values($redirects));
+                    echo '<div class="updated"><p>Redirect deleted.</p></div>';
+                    $redirects = array_values($redirects);
+                }
+            }
 
-        $logs = get_option('gm2_404_logs', []);
-        if ($logs) {
-            echo '<h2>404 Logs</h2>';
-            echo '<table class="widefat"><thead><tr><th>URL</th></tr></thead><tbody>';
-            foreach ($logs as $log) {
-                $link = admin_url('admin.php?page=gm2-redirects&source=' . urlencode($log));
-                echo '<tr><td><a href="' . esc_url($link) . '">' . esc_html($log) . '</a></td></tr>';
+            $source_prefill = isset($_GET['source']) ? esc_url_raw($_GET['source']) : '';
+            if (!empty($_GET['updated'])) {
+                echo '<div class="updated notice"><p>Redirect saved.</p></div>';
+            }
+            echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
+            wp_nonce_field('gm2_redirects_save', 'gm2_redirects_nonce');
+            echo '<input type="hidden" name="action" value="gm2_redirects" />';
+            echo '<table class="form-table"><tbody>';
+            echo '<tr><th scope="row"><label for="gm2_redirect_source">Source URL</label></th><td><input name="gm2_redirect_source" type="text" id="gm2_redirect_source" value="' . esc_attr($source_prefill) . '" class="regular-text" required></td></tr>';
+            echo '<tr><th scope="row"><label for="gm2_redirect_target">Target URL</label></th><td><input name="gm2_redirect_target" type="url" id="gm2_redirect_target" class="regular-text" required></td></tr>';
+            echo '<tr><th scope="row"><label for="gm2_redirect_type">Type</label></th><td><select name="gm2_redirect_type" id="gm2_redirect_type"><option value="301">301</option><option value="302">302</option></select></td></tr>';
+            echo '</tbody></table>';
+            submit_button('Add Redirect');
+            echo '</form>';
+
+            echo '<h2>Existing Redirects</h2>';
+            echo '<table class="widefat"><thead><tr><th>Source</th><th>Target</th><th>Type</th><th>Actions</th></tr></thead><tbody>';
+            if ($redirects) {
+                foreach ($redirects as $index => $r) {
+                    $delete_url = wp_nonce_url(admin_url('admin.php?page=gm2-seo&tab=redirects&action=delete&id=' . $index), 'gm2_delete_redirect_' . $index);
+                    echo '<tr>';
+                    echo '<td>' . esc_html($r['source']) . '</td>';
+                    echo '<td>' . esc_html($r['target']) . '</td>';
+                    echo '<td>' . esc_html($r['type']) . '</td>';
+                    echo '<td><a href="' . esc_url($delete_url) . '" onclick="return confirm(\'Are you sure?\');">Delete</a></td>';
+                    echo '</tr>';
+                }
+            } else {
+                echo '<tr><td colspan="4">No redirects found.</td></tr>';
             }
             echo '</tbody></table>';
+
+            $logs = get_option('gm2_404_logs', []);
+            if ($logs) {
+                echo '<h2>404 Logs</h2>';
+                echo '<table class="widefat"><thead><tr><th>URL</th></tr></thead><tbody>';
+                foreach ($logs as $log) {
+                    $link = admin_url('admin.php?page=gm2-seo&tab=redirects&source=' . urlencode($log));
+                    echo '<tr><td><a href="' . esc_url($link) . '">' . esc_html($log) . '</a></td></tr>';
+                }
+                echo '</tbody></table>';
+            }
+        } elseif ($active === 'performance') {
+            $auto_fill = get_option('gm2_auto_fill_alt', '0');
+            $api_key   = get_option('gm2_compression_api_key', '');
+            $min_html  = get_option('gm2_minify_html', '0');
+            $min_css   = get_option('gm2_minify_css', '0');
+            $min_js    = get_option('gm2_minify_js', '0');
+            if (!empty($_GET['updated'])) {
+                echo '<div class="updated notice"><p>Settings saved.</p></div>';
+            }
+            echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
+            wp_nonce_field('gm2_performance_save', 'gm2_performance_nonce');
+            echo '<input type="hidden" name="action" value="gm2_performance_settings" />';
+            echo '<table class="form-table"><tbody>';
+            echo '<tr><th scope="row">Auto-fill missing alt text</th><td><label><input type="checkbox" name="gm2_auto_fill_alt" value="1" ' . checked($auto_fill, '1', false) . '> Use product title</label></td></tr>';
+            echo '<tr><th scope="row">Compression API Key</th><td><input type="text" name="gm2_compression_api_key" value="' . esc_attr($api_key) . '" class="regular-text" /></td></tr>';
+            echo '<tr><th scope="row">Minify HTML</th><td><label><input type="checkbox" name="gm2_minify_html" value="1" ' . checked($min_html, '1', false) . '></label></td></tr>';
+            echo '<tr><th scope="row">Minify CSS</th><td><label><input type="checkbox" name="gm2_minify_css" value="1" ' . checked($min_css, '1', false) . '></label></td></tr>';
+            echo '<tr><th scope="row">Minify JS</th><td><label><input type="checkbox" name="gm2_minify_js" value="1" ' . checked($min_js, '1', false) . '></label></td></tr>';
+            echo '</tbody></table>';
+            submit_button('Save Settings');
+            echo '</form>';
+        } else {
+            echo '<form method="post" action="options.php">';
+            settings_fields('gm2_seo_options');
+            do_settings_sections('gm2_seo');
+            submit_button();
+            echo '</form>';
         }
+
         echo '</div>';
     }
 
-    public function display_performance_page() {
-        $auto_fill = get_option('gm2_auto_fill_alt', '0');
-        $api_key   = get_option('gm2_compression_api_key', '');
-        $min_html  = get_option('gm2_minify_html', '0');
-        $min_css   = get_option('gm2_minify_css', '0');
-        $min_js    = get_option('gm2_minify_js', '0');
-
-        echo '<div class="wrap"><h1>Performance</h1>';
-        if (!empty($_GET['updated'])) {
-            echo '<div class="updated notice"><p>Settings saved.</p></div>';
-        }
-        echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
-        wp_nonce_field('gm2_performance_save', 'gm2_performance_nonce');
-        echo '<input type="hidden" name="action" value="gm2_performance_settings" />';
-        echo '<table class="form-table"><tbody>';
-        echo '<tr><th scope="row">Auto-fill missing alt text</th><td><label><input type="checkbox" name="gm2_auto_fill_alt" value="1" ' . checked($auto_fill, '1', false) . '> Use product title</label></td></tr>';
-        echo '<tr><th scope="row">Compression API Key</th><td><input type="text" name="gm2_compression_api_key" value="' . esc_attr($api_key) . '" class="regular-text" /></td></tr>';
-        echo '<tr><th scope="row">Minify HTML</th><td><label><input type="checkbox" name="gm2_minify_html" value="1" ' . checked($min_html, '1', false) . '></label></td></tr>';
-        echo '<tr><th scope="row">Minify CSS</th><td><label><input type="checkbox" name="gm2_minify_css" value="1" ' . checked($min_css, '1', false) . '></label></td></tr>';
-        echo '<tr><th scope="row">Minify JS</th><td><label><input type="checkbox" name="gm2_minify_js" value="1" ' . checked($min_js, '1', false) . '></label></td></tr>';
-        echo '</tbody></table>';
-        submit_button('Save Settings');
-        echo '</form></div>';
-    }
 
     public function register_meta_boxes() {
         foreach ($this->get_supported_post_types() as $type) {
@@ -443,7 +404,7 @@ class Gm2_SEO_Admin {
             gm2_generate_sitemap();
         }
 
-        wp_redirect(admin_url('admin.php?page=gm2-sitemap&updated=1'));
+        wp_redirect(admin_url('admin.php?page=gm2-seo&tab=sitemap&updated=1'));
         exit;
     }
 
@@ -462,7 +423,7 @@ class Gm2_SEO_Admin {
         $oos = isset($_POST['gm2_noindex_oos']) ? '1' : '0';
         update_option('gm2_noindex_oos', $oos);
 
-        wp_redirect(admin_url('admin.php?page=gm2-meta-tags&updated=1'));
+        wp_redirect(admin_url('admin.php?page=gm2-seo&tab=meta&updated=1'));
         exit;
     }
 
@@ -490,7 +451,7 @@ class Gm2_SEO_Admin {
         $review     = isset($_POST['gm2_schema_review']) ? '1' : '0';
         update_option('gm2_schema_review', $review);
 
-        wp_redirect(admin_url('admin.php?page=gm2-schema&updated=1'));
+        wp_redirect(admin_url('admin.php?page=gm2-seo&tab=schema&updated=1'));
         exit;
     }
 
@@ -518,7 +479,7 @@ class Gm2_SEO_Admin {
         $min_js = isset($_POST['gm2_minify_js']) ? '1' : '0';
         update_option('gm2_minify_js', $min_js);
 
-        wp_redirect(admin_url('admin.php?page=gm2-performance&updated=1'));
+        wp_redirect(admin_url('admin.php?page=gm2-seo&tab=performance&updated=1'));
         exit;
     }
 
@@ -553,7 +514,7 @@ class Gm2_SEO_Admin {
             }
         }
 
-        wp_redirect(admin_url('admin.php?page=gm2-redirects&updated=1'));
+        wp_redirect(admin_url('admin.php?page=gm2-seo&tab=redirects&updated=1'));
         exit;
     }
 
