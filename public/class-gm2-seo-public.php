@@ -111,16 +111,22 @@ class Gm2_SEO_Public {
                 foreach ($ancestors as $ancestor_id) {
                     $ancestor = get_term($ancestor_id, $term->taxonomy);
                     if ($ancestor && !is_wp_error($ancestor)) {
-                        $breadcrumbs[] = [
-                            'name' => $ancestor->name,
-                            'url'  => get_term_link($ancestor),
-                        ];
+                        $ancestor_link = get_term_link($ancestor);
+                        if (!is_wp_error($ancestor_link)) {
+                            $breadcrumbs[] = [
+                                'name' => $ancestor->name,
+                                'url'  => $ancestor_link,
+                            ];
+                        }
                     }
                 }
-                $breadcrumbs[] = [
-                    'name' => $term->name,
-                    'url'  => get_term_link($term),
-                ];
+                $term_link = get_term_link($term);
+                if (!is_wp_error($term_link)) {
+                    $breadcrumbs[] = [
+                        'name' => $term->name,
+                        'url'  => $term_link,
+                    ];
+                }
             }
         } else {
             $breadcrumbs[] = [
