@@ -10,7 +10,10 @@ class Gm2_SEO_Public {
         add_action('template_redirect', [$this, 'maybe_output_sitemap']);
         add_action('wp_head', [$this, 'output_canonical_url'], 5);
         add_action('wp_head', [$this, 'output_meta_tags']);
-        add_action('wp_head', [$this, 'output_structured_data'], 20);
+        add_action('wp_head', [$this, 'output_product_schema'], 20);
+        add_action('wp_head', [$this, 'output_brand_schema'], 20);
+        add_action('wp_head', [$this, 'output_breadcrumb_schema'], 20);
+        add_action('wp_head', [$this, 'output_review_schema'], 20);
         add_action('wp_footer', [$this, 'output_breadcrumbs']);
     }
 
@@ -117,6 +120,147 @@ class Gm2_SEO_Public {
         echo '<meta name="twitter:card" content="summary" />' . "\n";
         echo '<meta name="twitter:title" content="' . esc_attr($title) . '" />' . "\n";
         echo '<meta name="twitter:description" content="' . esc_attr($description) . '" />' . "\n";
+    }
+
+    public function output_product_schema() {
+        if (get_option('gm2_schema_product', '1') !== '1') {
+            return;
+        }
+        if (!class_exists('WooCommerce') || !function_exists('is_product') || !is_product()) {
+            return;
+        }
+
+        $product = wc_get_product(get_the_ID());
+        if (!$product) {
+            return;
+        }
+
+        $data = [
+            '@context' => 'https://schema.org/',
+            '@type'    => 'Product',
+            'name'     => get_the_title(),
+            'image'    => wp_get_attachment_url($product->get_image_id()),
+            'description' => wp_strip_all_tags($product->get_description()),
+            'sku'      => $product->get_sku(),
+            'offers'   => [
+                '@type'         => 'Offer',
+                'priceCurrency' => get_woocommerce_currency(),
+                'price'         => $product->get_price(),
+                'availability'  => $product->is_in_stock() ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+                'url'           => get_permalink(),
+            ],
+        ];
+
+        echo '<script type="application/ld+json">' . wp_json_encode($data) . "</script>\n";
+    }
+
+    public function output_brand_schema() {
+        if (get_option('gm2_schema_brand', '1') !== '1') {
+            return;
+        }
+
+        if (!is_tax(['brand', 'product_brand'])) {
+            return;
+        }
+
+        $term = get_queried_object();
+        if (!$term || is_wp_error($term)) {
+            return;
+        }
+
+        $data = [
+            '@context' => 'https://schema.org/',
+            '@type'    => 'Brand',
+            'name'     => $term->name,
+            'description' => wp_strip_all_tags(term_description($term->term_id, $term->taxonomy)),
+        ];
+
+        echo '<script type="application/ld+json">' . wp_json_encode($data) . "</script>\n";
+    }
+
+    public function output_breadcrumb_schema() {
+        if (get_option('gm2_schema_breadcrumbs', '1') !== '1') {
+            return;
+        }
+
+        $items = [];
+        $items[] = [
+            '@type'    => 'ListItem',
+            'position' => 1,
+            'name'     => get_bloginfo('name'),
+            'item'     => home_url('/'),
+        ];
+
+        $position = 2;
+        if (is_singular()) {
+            $items[] = [
+                '@type'    => 'ListItem',
+                'position' => $position,
+                'name'     => get_the_title(),
+                'item'     => get_permalink(),
+            ];
+        } elseif (is_tax() || is_category() || is_tag()) {
+            $term = get_queried_object();
+            if ($term && !is_wp_error($term)) {
+                $items[] = [
+                    '@type'    => 'ListItem',
+                    'position' => $position,
+                    'name'     => $term->name,
+                    'item'     => get_term_link($term),
+                ];
+            }
+        } else {
+            $items[] = [
+                '@type'    => 'ListItem',
+                'position' => $position,
+                'name'     => wp_get_document_title(),
+                'item'     => home_url(add_query_arg([], $GLOBALS['wp']->request)),
+            ];
+        }
+
+        $data = [
+            '@context'         => 'https://schema.org',
+            '@type'            => 'BreadcrumbList',
+            'itemListElement'  => $items,
+        ];
+
+        echo '<script type="application/ld+json">' . wp_json_encode($data) . "</script>\n";
+    }
+
+    public function output_review_schema() {
+        if (get_option('gm2_schema_review', '1') !== '1') {
+            return;
+        }
+
+        if (!class_exists('WooCommerce') || !function_exists('is_product') || !is_product()) {
+            return;
+        }
+
+        $product = wc_get_product(get_the_ID());
+        if (!$product) {
+            return;
+        }
+
+        $rating = $product->get_average_rating();
+        if (!$rating) {
+            return;
+        }
+
+        $data = [
+            '@context'      => 'https://schema.org/',
+            '@type'         => 'Review',
+            'itemReviewed'  => [
+                '@type' => 'Product',
+                'name'  => get_the_title(),
+            ],
+            'reviewRating'  => [
+                '@type'       => 'Rating',
+                'ratingValue' => $rating,
+                'bestRating'  => '5',
+            ],
+        ];
+
+        echo '<script type="application/ld+json">' . wp_json_encode($data) . "</script>\n";
     }
 
     public function output_structured_data() {

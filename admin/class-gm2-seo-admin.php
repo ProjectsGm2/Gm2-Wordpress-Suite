@@ -10,6 +10,7 @@ class Gm2_SEO_Admin {
         add_action('save_post', [$this, 'save_post_meta']);
         add_action('admin_post_gm2_sitemap_settings', [$this, 'handle_sitemap_form']);
         add_action('admin_post_gm2_meta_tags_settings', [$this, 'handle_meta_tags_form']);
+        add_action('admin_post_gm2_schema_settings', [$this, 'handle_schema_form']);
 
         add_action('save_post', 'gm2_generate_sitemap');
 
@@ -77,6 +78,15 @@ class Gm2_SEO_Admin {
 
         add_submenu_page(
             'gm2-seo',
+            'Structured Data',
+            'Structured Data',
+            'manage_options',
+            'gm2-schema',
+            [$this, 'display_schema_page']
+        );
+
+        add_submenu_page(
+            'gm2-seo',
             'Redirects',
             'Redirects',
             'manage_options',
@@ -139,6 +149,29 @@ class Gm2_SEO_Admin {
         echo '</tbody></table>';
         submit_button('Save Settings');
         echo '<input type="submit" name="gm2_regenerate" class="button" value="Regenerate Sitemap" />';
+        echo '</form></div>';
+    }
+
+    public function display_schema_page() {
+        $product    = get_option('gm2_schema_product', '1');
+        $brand      = get_option('gm2_schema_brand', '1');
+        $breadcrumbs = get_option('gm2_schema_breadcrumbs', '1');
+        $review     = get_option('gm2_schema_review', '1');
+
+        echo '<div class="wrap"><h1>Structured Data</h1>';
+        if (!empty($_GET['updated'])) {
+            echo '<div class="updated notice"><p>Settings saved.</p></div>';
+        }
+        echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
+        wp_nonce_field('gm2_schema_save', 'gm2_schema_nonce');
+        echo '<input type="hidden" name="action" value="gm2_schema_settings" />';
+        echo '<table class="form-table"><tbody>';
+        echo '<tr><th scope="row">Product Schema</th><td><input type="checkbox" name="gm2_schema_product" value="1" ' . checked($product, '1', false) . '></td></tr>';
+        echo '<tr><th scope="row">Brand Schema</th><td><input type="checkbox" name="gm2_schema_brand" value="1" ' . checked($brand, '1', false) . '></td></tr>';
+        echo '<tr><th scope="row">Breadcrumb Schema</th><td><input type="checkbox" name="gm2_schema_breadcrumbs" value="1" ' . checked($breadcrumbs, '1', false) . '></td></tr>';
+        echo '<tr><th scope="row">Review Schema</th><td><input type="checkbox" name="gm2_schema_review" value="1" ' . checked($review, '1', false) . '></td></tr>';
+        echo '</tbody></table>';
+        submit_button('Save Settings');
         echo '</form></div>';
     }
 
@@ -286,6 +319,31 @@ class Gm2_SEO_Admin {
         update_option('gm2_noindex_oos', $oos);
 
         wp_redirect(admin_url('admin.php?page=gm2-meta-tags&updated=1'));
+        exit;
+    }
+
+    public function handle_schema_form() {
+        if (!current_user_can('manage_options')) {
+            wp_die('Permission denied');
+        }
+
+        if (!isset($_POST['gm2_schema_nonce']) || !wp_verify_nonce($_POST['gm2_schema_nonce'], 'gm2_schema_save')) {
+            wp_die('Invalid nonce');
+        }
+
+        $product    = isset($_POST['gm2_schema_product']) ? '1' : '0';
+        update_option('gm2_schema_product', $product);
+
+        $brand      = isset($_POST['gm2_schema_brand']) ? '1' : '0';
+        update_option('gm2_schema_brand', $brand);
+
+        $breadcrumbs = isset($_POST['gm2_schema_breadcrumbs']) ? '1' : '0';
+        update_option('gm2_schema_breadcrumbs', $breadcrumbs);
+
+        $review     = isset($_POST['gm2_schema_review']) ? '1' : '0';
+        update_option('gm2_schema_review', $review);
+
+        wp_redirect(admin_url('admin.php?page=gm2-schema&updated=1'));
         exit;
     }
 }
