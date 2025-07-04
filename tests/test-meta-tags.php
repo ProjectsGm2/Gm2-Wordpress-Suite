@@ -36,5 +36,47 @@ class MetaTagsTest extends WP_UnitTestCase {
         $this->assertStringNotContainsString('<title>Custom Title</title>', $output);
         $this->assertStringContainsString('content="Custom Description"', $output);
     }
+
+    public function test_output_meta_tags_for_product_post() {
+        register_post_type('product');
+        $post_id = self::factory()->post->create([
+            'post_type'    => 'product',
+            'post_title'   => 'Product Sample',
+            'post_content' => 'Content',
+        ]);
+        update_post_meta($post_id, '_gm2_title', 'Product Title');
+        update_post_meta($post_id, '_gm2_description', 'Product Description');
+
+        $seo = new Gm2_SEO_Public();
+        $this->go_to(get_permalink($post_id));
+        setup_postdata(get_post($post_id));
+        ob_start();
+        $seo->output_meta_tags();
+        $output = ob_get_clean();
+
+        $this->assertStringContainsString('<meta property="og:title" content="Product Title"', $output);
+        $this->assertStringContainsString('<meta name="twitter:title" content="Product Title"', $output);
+        $this->assertStringContainsString('content="Product Description"', $output);
+    }
+
+    public function test_output_meta_tags_for_brand_term() {
+        register_taxonomy('brand', 'post');
+        $term_id = self::factory()->term->create([
+            'taxonomy' => 'brand',
+            'name'     => 'Brand One',
+        ]);
+        update_term_meta($term_id, '_gm2_title', 'Brand Title');
+        update_term_meta($term_id, '_gm2_description', 'Brand Description');
+
+        $seo = new Gm2_SEO_Public();
+        $this->go_to(get_term_link($term_id, 'brand'));
+        ob_start();
+        $seo->output_meta_tags();
+        $output = ob_get_clean();
+
+        $this->assertStringContainsString('<meta property="og:title" content="Brand Title"', $output);
+        $this->assertStringContainsString('<meta name="twitter:title" content="Brand Title"', $output);
+        $this->assertStringContainsString('content="Brand Description"', $output);
+    }
 }
 

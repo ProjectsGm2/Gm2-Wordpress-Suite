@@ -138,6 +138,21 @@ class Gm2_SEO_Public {
         return $breadcrumbs;
     }
 
+    /**
+     * Retrieve SEO metadata for the current query.
+     *
+     * For singular screens this pulls post meta which includes custom post
+     * types such as `product`. When viewing taxonomy archives term meta is
+     * used, covering taxonomies like `product_cat` and `brand`.
+     *
+     * @return array{
+     *     title:string,
+     *     description:string,
+     *     noindex:string,
+     *     nofollow:string,
+     *     canonical:string
+     * }
+     */
     private function get_seo_meta() {
         $title       = '';
         $description = '';
