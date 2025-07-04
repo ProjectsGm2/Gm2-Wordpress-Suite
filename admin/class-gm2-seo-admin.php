@@ -56,33 +56,6 @@ class Gm2_SEO_Admin {
     }
 
     public function add_settings_pages() {
-        add_menu_page(
-            'SEO',
-            'SEO',
-            'manage_options',
-            'gm2-seo',
-            [$this, 'display_dashboard'],
-            'dashicons-chart-line'
-        );
-
-        add_submenu_page(
-            'gm2-seo',
-            'Meta Tags',
-            'Meta Tags',
-            'manage_options',
-            'gm2-meta-tags',
-            [$this, 'display_meta_tags_page']
-        );
-
-        add_submenu_page(
-            'gm2-seo',
-            'Sitemap',
-            'Sitemap',
-            'manage_options',
-            'gm2-sitemap',
-            [$this, 'display_sitemap_page']
-        );
-
         add_submenu_page(
             'gm2-seo',
             'Structured Data',
@@ -91,16 +64,6 @@ class Gm2_SEO_Admin {
             'gm2-schema',
             [$this, 'display_schema_page']
         );
-
-        add_submenu_page(
-            'gm2-seo',
-            'Redirects',
-            'Redirects',
-            'manage_options',
-            'gm2-redirects',
-            [$this, 'display_redirects_page']
-        );
-
         add_submenu_page(
             'gm2-seo',
             'Performance',
