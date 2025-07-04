@@ -11,6 +11,10 @@ class Gm2_SEO_Admin {
         add_action('admin_post_gm2_sitemap_settings', [$this, 'handle_sitemap_form']);
         add_action('admin_post_gm2_meta_tags_settings', [$this, 'handle_meta_tags_form']);
         add_action('admin_post_gm2_schema_settings', [$this, 'handle_schema_form']);
+        add_action('admin_post_gm2_performance_settings', [$this, 'handle_performance_form']);
+
+        add_action('add_attachment', [$this, 'auto_fill_alt_on_upload']);
+        add_action('save_post', [$this, 'auto_fill_product_alt'], 20, 3);
 
         add_action('save_post', 'gm2_generate_sitemap');
 
@@ -180,7 +184,22 @@ class Gm2_SEO_Admin {
     }
 
     public function display_performance_page() {
-        echo '<div class="wrap"><h1>Performance</h1><p>Performance settings.</p></div>';
+        $auto_fill = get_option('gm2_auto_fill_alt', '0');
+        $api_key   = get_option('gm2_compression_api_key', '');
+
+        echo '<div class="wrap"><h1>Performance</h1>';
+        if (!empty($_GET['updated'])) {
+            echo '<div class="updated notice"><p>Settings saved.</p></div>';
+        }
+        echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
+        wp_nonce_field('gm2_performance_save', 'gm2_performance_nonce');
+        echo '<input type="hidden" name="action" value="gm2_performance_settings" />';
+        echo '<table class="form-table"><tbody>';
+        echo '<tr><th scope="row">Auto-fill missing alt text</th><td><label><input type="checkbox" name="gm2_auto_fill_alt" value="1" ' . checked($auto_fill, '1', false) . '> Use product title</label></td></tr>';
+        echo '<tr><th scope="row">Compression API Key</th><td><input type="text" name="gm2_compression_api_key" value="' . esc_attr($api_key) . '" class="regular-text" /></td></tr>';
+        echo '</tbody></table>';
+        submit_button('Save Settings');
+        echo '</form></div>';
     }
 
     public function register_meta_boxes() {
@@ -345,5 +364,70 @@ class Gm2_SEO_Admin {
 
         wp_redirect(admin_url('admin.php?page=gm2-schema&updated=1'));
         exit;
+    }
+
+    public function handle_performance_form() {
+        if (!current_user_can('manage_options')) {
+            wp_die('Permission denied');
+        }
+
+        if (!isset($_POST['gm2_performance_nonce']) || !wp_verify_nonce($_POST['gm2_performance_nonce'], 'gm2_performance_save')) {
+            wp_die('Invalid nonce');
+        }
+
+        $auto_fill = isset($_POST['gm2_auto_fill_alt']) ? '1' : '0';
+        update_option('gm2_auto_fill_alt', $auto_fill);
+
+        $api_key = isset($_POST['gm2_compression_api_key']) ? sanitize_text_field($_POST['gm2_compression_api_key']) : '';
+        update_option('gm2_compression_api_key', $api_key);
+
+        wp_redirect(admin_url('admin.php?page=gm2-performance&updated=1'));
+        exit;
+    }
+
+    public function auto_fill_alt_on_upload($attachment_id) {
+        if (get_option('gm2_auto_fill_alt', '0') !== '1') {
+            return;
+        }
+
+        $alt = get_post_meta($attachment_id, '_wp_attachment_image_alt', true);
+        if ($alt === '') {
+            $title = get_post($attachment_id)->post_title;
+            update_post_meta($attachment_id, '_wp_attachment_image_alt', sanitize_text_field($title));
+        }
+    }
+
+    public function auto_fill_product_alt($post_id, $post, $update) {
+        if (get_option('gm2_auto_fill_alt', '0') !== '1') {
+            return;
+        }
+
+        if ($post->post_type !== 'product') {
+            return;
+        }
+
+        if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+            return;
+        }
+
+        $title = get_the_title($post_id);
+        $thumb_id = get_post_thumbnail_id($post_id);
+        if ($thumb_id) {
+            $alt = get_post_meta($thumb_id, '_wp_attachment_image_alt', true);
+            if ($alt === '') {
+                update_post_meta($thumb_id, '_wp_attachment_image_alt', sanitize_text_field($title));
+            }
+        }
+
+        $gallery = get_post_meta($post_id, '_product_image_gallery', true);
+        if ($gallery) {
+            $ids = array_filter(array_map('trim', explode(',', $gallery)));
+            foreach ($ids as $id) {
+                $alt = get_post_meta($id, '_wp_attachment_image_alt', true);
+                if ($alt === '') {
+                    update_post_meta($id, '_wp_attachment_image_alt', sanitize_text_field($title));
+                }
+            }
+        }
     }
 }
