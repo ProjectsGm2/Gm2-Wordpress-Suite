@@ -7,7 +7,9 @@ class Gm2_SEO_Public {
     public function run() {
         add_action('init', [$this, 'add_sitemap_rewrite']);
         add_filter('query_vars', [$this, 'add_query_vars']);
+        add_action('template_redirect', [$this, 'maybe_apply_redirects'], 0);
         add_action('template_redirect', [$this, 'maybe_output_sitemap']);
+        add_action('template_redirect', [$this, 'log_404_url'], 99);
         add_action('wp_head', [$this, 'output_canonical_url'], 5);
         add_action('wp_head', [$this, 'output_meta_tags']);
         add_action('wp_head', [$this, 'output_product_schema'], 20);
@@ -32,6 +34,40 @@ class Gm2_SEO_Public {
         if (get_query_var('gm2_sitemap')) {
             $s = new Gm2_Sitemap();
             $s->output();
+        }
+    }
+
+    public function maybe_apply_redirects() {
+        if (is_admin()) {
+            return;
+        }
+
+        $redirects = get_option('gm2_redirects', []);
+        if (empty($redirects)) {
+            return;
+        }
+
+        $current = untrailingslashit(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
+        foreach ($redirects as $r) {
+            $source = untrailingslashit(parse_url($r['source'], PHP_URL_PATH));
+            if ($source === $current) {
+                wp_redirect($r['target'], intval($r['type']));
+                exit;
+            }
+        }
+    }
+
+    public function log_404_url() {
+        if (is_404()) {
+            $logs  = get_option('gm2_404_logs', []);
+            $path  = untrailingslashit($_SERVER['REQUEST_URI']);
+            if (!in_array($path, $logs, true)) {
+                $logs[] = $path;
+                if (count($logs) > 100) {
+                    array_shift($logs);
+                }
+                update_option('gm2_404_logs', $logs);
+            }
         }
     }
 
