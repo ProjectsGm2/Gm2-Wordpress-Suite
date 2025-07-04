@@ -14,25 +14,47 @@ class Gm2_Admin {
     }
 
     public function enqueue_admin_scripts($hook) {
-        if ($hook !== 'gm2_page_gm2-tariff') {
-            return;
+        if ($hook === 'gm2_page_gm2-tariff') {
+            wp_enqueue_script(
+                'gm2-tariff',
+                GM2_PLUGIN_URL . 'admin/js/gm2-tariff.js',
+                ['jquery'],
+                GM2_VERSION,
+                true
+            );
+            wp_localize_script(
+                'gm2-tariff',
+                'gm2Tariff',
+                [
+                    // Fresh nonce for each page load
+                    'nonce'    => wp_create_nonce('gm2_add_tariff'),
+                    'ajax_url' => admin_url('admin-ajax.php'),
+                ]
+            );
         }
-        wp_enqueue_script(
-            'gm2-tariff',
-            GM2_PLUGIN_URL . 'admin/js/gm2-tariff.js',
-            ['jquery'],
-            GM2_VERSION,
-            true
-        );
-        wp_localize_script(
-            'gm2-tariff',
-            'gm2Tariff',
-            [
-                // Fresh nonce for each page load
-                'nonce'    => wp_create_nonce('gm2_add_tariff'),
-                'ajax_url' => admin_url('admin-ajax.php'),
-            ]
-        );
+
+        $seo_pages = [
+            'gm2_page_gm2-seo',
+            'gm2_page_gm2-meta-tags',
+            'gm2_page_gm2-sitemap',
+            'gm2_page_gm2-redirects',
+        ];
+
+        if (in_array($hook, $seo_pages, true)) {
+            wp_enqueue_style(
+                'gm2-seo-style',
+                GM2_PLUGIN_URL . 'admin/css/gm2-seo.css',
+                [],
+                GM2_VERSION
+            );
+            wp_enqueue_script(
+                'gm2-seo',
+                GM2_PLUGIN_URL . 'admin/js/gm2-seo.js',
+                ['jquery'],
+                GM2_VERSION,
+                true
+            );
+        }
     }
 
     public function ajax_add_tariff() {
@@ -100,6 +122,42 @@ class Gm2_Admin {
             'manage_options',
             'gm2-tariff',
             [$this, 'display_tariff_page']
+        );
+
+        add_submenu_page(
+            'gm2',
+            'SEO',
+            'SEO',
+            'manage_options',
+            'gm2-seo',
+            [$this, 'display_seo_dashboard']
+        );
+
+        add_submenu_page(
+            'gm2-seo',
+            'Meta Tags',
+            'Meta Tags',
+            'manage_options',
+            'gm2-meta-tags',
+            [$this, 'display_meta_tags_page']
+        );
+
+        add_submenu_page(
+            'gm2-seo',
+            'Sitemap',
+            'Sitemap',
+            'manage_options',
+            'gm2-sitemap',
+            [$this, 'display_sitemap_page']
+        );
+
+        add_submenu_page(
+            'gm2-seo',
+            'Redirects',
+            'Redirects',
+            'manage_options',
+            'gm2-redirects',
+            [$this, 'display_redirects_page']
         );
 
         // The add tariff form is now part of the Tariff page. The following
@@ -208,5 +266,29 @@ class Gm2_Admin {
             echo '<tr><td colspan="4">No tariffs found.</td></tr>';
         }
         echo '</tbody></table></div>';
+    }
+
+    public function display_seo_dashboard() {
+        echo '<div class="wrap">';
+        echo '<h1 class="wp-heading-inline">SEO Dashboard</h1>';
+        echo '<hr class="wp-header-end">';
+        echo '<ul>';
+        echo '<li><a href="' . admin_url('admin.php?page=gm2-meta-tags') . '">Meta Tags</a></li>';
+        echo '<li><a href="' . admin_url('admin.php?page=gm2-sitemap') . '">Sitemap</a></li>';
+        echo '<li><a href="' . admin_url('admin.php?page=gm2-redirects') . '">Redirects</a></li>';
+        echo '</ul>';
+        echo '</div>';
+    }
+
+    public function display_meta_tags_page() {
+        echo '<div class="wrap"><h1>Meta Tags</h1><p>Manage your site\'s meta tags here.</p></div>';
+    }
+
+    public function display_sitemap_page() {
+        echo '<div class="wrap"><h1>Sitemap</h1><p>Generate and manage your sitemap.</p></div>';
+    }
+
+    public function display_redirects_page() {
+        echo '<div class="wrap"><h1>Redirects</h1><p>Configure URL redirects.</p></div>';
     }
 }

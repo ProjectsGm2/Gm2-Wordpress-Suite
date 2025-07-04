@@ -1,0 +1,1 @@
+// Admin SEO functionality placeholder
