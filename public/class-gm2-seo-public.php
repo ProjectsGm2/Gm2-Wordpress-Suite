@@ -211,7 +211,7 @@ class Gm2_SEO_Public {
         $robots[]    = ($data['nofollow'] === '1') ? 'nofollow' : 'follow';
         $canonical   = $data['canonical'];
 
-        if (!wp_get_theme_support('title-tag')) {
+        if (!current_theme_supports('title-tag')) {
             echo '<title>' . esc_html($title) . "</title>\n";
         }
         echo '<meta name="description" content="' . esc_attr($description) . '" />' . "\n";
