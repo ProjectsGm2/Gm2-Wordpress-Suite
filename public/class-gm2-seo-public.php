@@ -203,7 +203,9 @@ class Gm2_SEO_Public {
         $robots[]    = ($data['nofollow'] === '1') ? 'nofollow' : 'follow';
         $canonical   = $data['canonical'];
 
-        echo '<title>' . esc_html($title) . "</title>\n";
+        if (!wp_get_theme_support('title-tag')) {
+            echo '<title>' . esc_html($title) . "</title>\n";
+        }
         echo '<meta name="description" content="' . esc_attr($description) . '" />' . "\n";
         echo '<meta name="robots" content="' . esc_attr(implode(',', $robots)) . '" />' . "\n";
 
