@@ -17,6 +17,8 @@ class Gm2_SEO_Admin {
         add_action('admin_post_gm2_redirects', [$this, 'handle_redirects_form']);
         add_action('admin_post_gm2_content_rules', [$this, 'handle_content_rules_form']);
 
+        add_action('wp_ajax_gm2_check_rules', [$this, 'ajax_check_rules']);
+
         add_action('add_attachment', [$this, 'auto_fill_alt_on_upload']);
         add_action('add_attachment', [$this, 'compress_image_on_upload'], 20);
         add_action('save_post', [$this, 'auto_fill_product_alt'], 20, 3);
@@ -656,6 +658,29 @@ class Gm2_SEO_Admin {
                 }
             }
         }
+    }
+
+    public function ajax_check_rules() {
+        if (!current_user_can('edit_posts')) {
+            wp_send_json_error('permission denied', 403);
+        }
+
+        $title       = isset($_POST['title']) ? sanitize_text_field(wp_unslash($_POST['title'])) : '';
+        $description = isset($_POST['description']) ? sanitize_textarea_field(wp_unslash($_POST['description'])) : '';
+        $focus       = isset($_POST['focus']) ? sanitize_text_field(wp_unslash($_POST['focus'])) : '';
+        $content     = isset($_POST['content']) ? wp_unslash($_POST['content']) : '';
+
+        $text       = wp_strip_all_tags($content);
+        $word_count = str_word_count($text);
+
+        $results = [
+            'title'       => mb_strlen($title) >= 30 && mb_strlen($title) <= 60,
+            'description' => mb_strlen($description) >= 50 && mb_strlen($description) <= 160,
+            'focus'       => trim($focus) !== '',
+            'content'     => $word_count >= 300,
+        ];
+
+        wp_send_json_success($results);
     }
 
     public function enqueue_editor_scripts($hook) {

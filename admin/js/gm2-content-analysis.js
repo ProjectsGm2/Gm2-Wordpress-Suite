@@ -50,6 +50,31 @@
         return result;
     }
 
+    function applyRuleResults(results){
+        const keys = ['title','description','focus','content'];
+        $('.gm2-analysis-rules li').each(function(i){
+            const pass = results[keys[i]];
+            if(typeof pass === 'undefined') return;
+            $(this).toggleClass('pass', pass).toggleClass('fail', !pass)
+                .find('.dashicons').removeClass('dashicons-no dashicons-yes')
+                .addClass(pass ? 'dashicons-yes' : 'dashicons-no');
+        });
+    }
+
+    function checkRules(content, title, description, focus){
+        $.post(ajaxurl, {
+            action: 'gm2_check_rules',
+            content: content,
+            title: title,
+            description: description,
+            focus: focus
+        }, function(resp){
+            if(resp && resp.success){
+                applyRuleResults(resp.data);
+            }
+        });
+    }
+
     function update(){
         if(typeof wp === 'undefined' || !wp.data) return;
         const content = wp.data.select('core/editor').getEditedPostContent();
@@ -81,6 +106,8 @@
         suggestions.slice(0,5).forEach(function(p){
             $('<li>').append($('<a>').attr('href', p.link).text(p.title)).appendTo(list);
         });
+
+        checkRules(content, $('#gm2_seo_title').val() || '', $('#gm2_seo_description').val() || '', kwInput);
     }
 
     $(document).ready(function(){
