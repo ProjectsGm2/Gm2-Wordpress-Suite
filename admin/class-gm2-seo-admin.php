@@ -15,6 +15,7 @@ class Gm2_SEO_Admin {
         add_action('admin_post_gm2_schema_settings', [$this, 'handle_schema_form']);
         add_action('admin_post_gm2_performance_settings', [$this, 'handle_performance_form']);
         add_action('admin_post_gm2_redirects', [$this, 'handle_redirects_form']);
+        add_action('admin_post_gm2_content_rules', [$this, 'handle_content_rules_form']);
 
         add_action('add_attachment', [$this, 'auto_fill_alt_on_upload']);
         add_action('add_attachment', [$this, 'compress_image_on_upload'], 20);
@@ -124,6 +125,7 @@ class Gm2_SEO_Admin {
             'redirects'   => 'Redirects',
             'schema'      => 'Structured Data',
             'performance' => 'Performance',
+            'rules'       => 'Content Rules',
         ];
 
         $active = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : 'general';
@@ -277,6 +279,31 @@ class Gm2_SEO_Admin {
             echo '<tr><th scope="row">Minify JS</th><td><label><input type="checkbox" name="gm2_minify_js" value="1" ' . checked($min_js, '1', false) . '></label></td></tr>';
             echo '</tbody></table>';
             submit_button('Save Settings');
+            echo '</form>';
+        } elseif ($active === 'rules') {
+            $all_rules = get_option('gm2_content_rules', []);
+            if (!empty($_GET['updated'])) {
+                echo '<div class="updated notice"><p>Rules saved.</p></div>';
+            }
+            echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
+            wp_nonce_field('gm2_content_rules_save', 'gm2_content_rules_nonce');
+            echo '<input type="hidden" name="action" value="gm2_content_rules" />';
+            echo '<table class="form-table"><tbody>';
+            foreach ($this->get_supported_post_types() as $pt) {
+                $label = get_post_type_object($pt)->labels->singular_name ?? ucfirst($pt);
+                $val   = $all_rules['post_' . $pt] ?? '';
+                echo '<tr><th scope="row"><label for="gm2_rule_post_' . esc_attr($pt) . '">' . esc_html($label) . '</label></th>';
+                echo '<td><textarea id="gm2_rule_post_' . esc_attr($pt) . '" name="gm2_content_rules[post_' . esc_attr($pt) . ']" rows="3" class="large-text">' . esc_textarea($val) . '</textarea></td></tr>';
+            }
+            foreach ($this->get_supported_taxonomies() as $tax) {
+                $tax_obj = get_taxonomy($tax);
+                $label   = $tax_obj ? $tax_obj->labels->singular_name : $tax;
+                $val     = $all_rules['tax_' . $tax] ?? '';
+                echo '<tr><th scope="row"><label for="gm2_rule_tax_' . esc_attr($tax) . '">' . esc_html($label) . '</label></th>';
+                echo '<td><textarea id="gm2_rule_tax_' . esc_attr($tax) . '" name="gm2_content_rules[tax_' . esc_attr($tax) . ']" rows="3" class="large-text">' . esc_textarea($val) . '</textarea></td></tr>';
+            }
+            echo '</tbody></table>';
+            submit_button('Save Rules');
             echo '</form>';
         } else {
             echo '<form method="post" action="options.php">';
@@ -518,6 +545,27 @@ class Gm2_SEO_Admin {
         exit;
     }
 
+    public function handle_content_rules_form() {
+        if (!current_user_can('manage_options')) {
+            wp_die('Permission denied');
+        }
+
+        if (!isset($_POST['gm2_content_rules_nonce']) || !wp_verify_nonce($_POST['gm2_content_rules_nonce'], 'gm2_content_rules_save')) {
+            wp_die('Invalid nonce');
+        }
+
+        $rules = [];
+        if (isset($_POST['gm2_content_rules']) && is_array($_POST['gm2_content_rules'])) {
+            foreach ($_POST['gm2_content_rules'] as $k => $v) {
+                $rules[$k] = sanitize_textarea_field($v);
+            }
+        }
+        update_option('gm2_content_rules', $rules);
+
+        wp_redirect(admin_url('admin.php?page=gm2-seo&tab=rules&updated=1'));
+        exit;
+    }
+
     public function auto_fill_alt_on_upload($attachment_id) {
         if (get_option('gm2_auto_fill_alt', '0') !== '1') {
             return;
@@ -657,10 +705,18 @@ class Gm2_SEO_Admin {
                 'link'  => get_permalink($id),
             ];
         }
+        $all_rules    = get_option('gm2_content_rules', []);
+        $current_rules = [];
+        if (isset($all_rules['post_' . $typenow])) {
+            $current_rules = array_filter(array_map('trim', explode("\n", $all_rules['post_' . $typenow])));
+        }
         wp_localize_script(
             'gm2-content-analysis',
             'gm2ContentAnalysisData',
-            ['posts' => $list]
+            [
+                'posts' => $list,
+                'rules' => $current_rules,
+            ]
         );
     }
 
@@ -695,10 +751,22 @@ class Gm2_SEO_Admin {
 
         echo '<div id="gm2-content-analysis" class="gm2-tab-panel">';
         echo '<ul class="gm2-analysis-rules">';
-        echo '<li id="gm2-rule-title"><span class="dashicons dashicons-no"></span> Title length between 30 and 60 characters</li>';
-        echo '<li id="gm2-rule-description"><span class="dashicons dashicons-no"></span> Description length between 50 and 160 characters</li>';
-        echo '<li id="gm2-rule-focus"><span class="dashicons dashicons-no"></span> At least one focus keyword</li>';
-        echo '<li id="gm2-rule-content"><span class="dashicons dashicons-no"></span> Content has at least 300 words</li>';
+        $rules_option = get_option('gm2_content_rules', []);
+        $rule_lines = [];
+        if (isset($rules_option['post_' . $post->post_type])) {
+            $rule_lines = array_filter(array_map('trim', explode("\n", $rules_option['post_' . $post->post_type])));
+        }
+        if (!$rule_lines) {
+            $rule_lines = [
+                'Title length between 30 and 60 characters',
+                'Description length between 50 and 160 characters',
+                'At least one focus keyword',
+                'Content has at least 300 words',
+            ];
+        }
+        foreach ($rule_lines as $idx => $text) {
+            echo '<li><span class="dashicons dashicons-no"></span> ' . esc_html($text) . '</li>';
+        }
         echo '</ul>';
         echo '<div id="gm2-content-analysis">';
         echo '<p>Word Count: <span id="gm2-content-analysis-word-count">0</span></p>';
