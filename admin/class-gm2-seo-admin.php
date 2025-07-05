@@ -9,6 +9,7 @@ class Gm2_SEO_Admin {
         add_action('add_meta_boxes', [$this, 'register_meta_boxes']);
         add_action('save_post', [$this, 'save_post_meta']);
         add_action('enqueue_block_editor_assets', [$this, 'enqueue_editor_scripts']);
+        add_action('admin_enqueue_scripts', [$this, 'enqueue_taxonomy_scripts']);
         add_action('admin_init', [$this, 'register_settings']);
         add_action('admin_post_gm2_sitemap_settings', [$this, 'handle_sitemap_form']);
         add_action('admin_post_gm2_meta_tags_settings', [$this, 'handle_meta_tags_form']);
@@ -334,36 +335,77 @@ class Gm2_SEO_Admin {
 
 
     public function render_taxonomy_meta_box($term) {
-        $title = '';
-        $description = '';
-        $noindex = '';
-        $nofollow = '';
+        $title          = '';
+        $description    = '';
+        $noindex        = '';
+        $nofollow       = '';
         $canonical      = '';
         $focus_keywords = '';
-        if (is_object($term)) {
-            $title       = get_term_meta($term->term_id, '_gm2_title', true);
-            $description = get_term_meta($term->term_id, '_gm2_description', true);
-            $noindex     = get_term_meta($term->term_id, '_gm2_noindex', true);
-            $nofollow    = get_term_meta($term->term_id, '_gm2_nofollow', true);
-            $canonical   = get_term_meta($term->term_id, '_gm2_canonical', true);
-            $focus_keywords = get_term_meta($term->term_id, '_gm2_focus_keywords', true);
-        }
-        wp_nonce_field('gm2_save_seo_meta', 'gm2_seo_nonce');
+        $taxonomy       = is_object($term) ? $term->taxonomy : (string) $term;
 
         if (is_object($term)) {
-            echo '<tr class="form-field"><th scope="row"><label for="gm2_seo_title">SEO Title</label></th><td><input name="gm2_seo_title" id="gm2_seo_title" type="text" value="' . esc_attr($title) . '" class="regular-text" /></td></tr>';
-            echo '<tr class="form-field"><th scope="row"><label for="gm2_seo_description">SEO Description</label></th><td><textarea name="gm2_seo_description" id="gm2_seo_description" rows="5" class="large-text">' . esc_textarea($description) . '</textarea></td></tr>';
-            echo '<tr class="form-field"><th scope="row">Robots</th><td><label><input type="checkbox" name="gm2_noindex" value="1" ' . checked($noindex, '1', false) . '> noindex</label><br/><label><input type="checkbox" name="gm2_nofollow" value="1" ' . checked($nofollow, '1', false) . '> nofollow</label></td></tr>';
-            echo '<tr class="form-field"><th scope="row"><label for="gm2_canonical_url">Canonical URL</label></th><td><input name="gm2_canonical_url" id="gm2_canonical_url" type="url" value="' . esc_attr($canonical) . '" class="regular-text" /></td></tr>';
-            echo '<tr class="form-field"><th scope="row"><label for="gm2_focus_keywords">Focus Keywords (comma separated)</label></th><td><input name="gm2_focus_keywords" id="gm2_focus_keywords" type="text" value="' . esc_attr($focus_keywords) . '" class="regular-text" /></td></tr>';
-        } else {
-            echo '<div class="form-field"><label for="gm2_seo_title">SEO Title</label><input type="text" name="gm2_seo_title" id="gm2_seo_title" value="" /></div>';
-            echo '<div class="form-field"><label for="gm2_seo_description">SEO Description</label><textarea name="gm2_seo_description" id="gm2_seo_description" rows="5"></textarea></div>';
-            echo '<div class="form-field"><label><input type="checkbox" name="gm2_noindex" value="1"> noindex</label></div>';
-            echo '<div class="form-field"><label><input type="checkbox" name="gm2_nofollow" value="1"> nofollow</label></div>';
-            echo '<div class="form-field"><label for="gm2_canonical_url">Canonical URL</label><input type="url" name="gm2_canonical_url" id="gm2_canonical_url" /></div>';
-            echo '<div class="form-field"><label for="gm2_focus_keywords">Focus Keywords (comma separated)</label><input type="text" name="gm2_focus_keywords" id="gm2_focus_keywords" /></div>';
+            $title          = get_term_meta($term->term_id, '_gm2_title', true);
+            $description    = get_term_meta($term->term_id, '_gm2_description', true);
+            $noindex        = get_term_meta($term->term_id, '_gm2_noindex', true);
+            $nofollow       = get_term_meta($term->term_id, '_gm2_nofollow', true);
+            $canonical      = get_term_meta($term->term_id, '_gm2_canonical', true);
+            $focus_keywords = get_term_meta($term->term_id, '_gm2_focus_keywords', true);
         }
+
+        wp_nonce_field('gm2_save_seo_meta', 'gm2_seo_nonce');
+
+        $rules_option = get_option('gm2_content_rules', []);
+        $rule_lines   = [];
+        if (isset($rules_option['tax_' . $taxonomy])) {
+            $rule_lines = array_filter(array_map('trim', explode("\n", $rules_option['tax_' . $taxonomy])));
+        }
+        if (!$rule_lines) {
+            $rule_lines = [
+                'Title length between 30 and 60 characters',
+                'Description length between 50 and 160 characters',
+            ];
+        }
+
+        $wrapper_start = $wrapper_end = '';
+        if (is_object($term)) {
+            $wrapper_start = '<tr class="form-field"><th colspan="2">';
+            $wrapper_end   = '</th></tr>';
+        } else {
+            $wrapper_start = '<div class="form-field">';
+            $wrapper_end   = '</div>';
+        }
+
+        echo $wrapper_start;
+        echo '<div class="gm2-seo-tabs">';
+        echo '<nav class="gm2-nav-tabs">';
+        echo '<a href="#" class="gm2-nav-tab active" data-tab="gm2-seo-settings">SEO Settings</a>';
+        echo '<a href="#" class="gm2-nav-tab" data-tab="gm2-content-analysis">Content Analysis</a>';
+        echo '</nav>';
+
+        echo '<div id="gm2-seo-settings" class="gm2-tab-panel active">';
+        echo '<p><label for="gm2_seo_title">SEO Title</label>';
+        echo '<input type="text" id="gm2_seo_title" name="gm2_seo_title" value="' . esc_attr($title) . '" class="widefat" /></p>';
+        echo '<p><label for="gm2_seo_description">SEO Description</label>';
+        echo '<textarea id="gm2_seo_description" name="gm2_seo_description" class="widefat" rows="3">' . esc_textarea($description) . '</textarea></p>';
+        echo '<p><label for="gm2_focus_keywords">Focus Keywords (comma separated)</label>';
+        echo '<input type="text" id="gm2_focus_keywords" name="gm2_focus_keywords" value="' . esc_attr($focus_keywords) . '" class="widefat" /></p>';
+        echo '<p><label><input type="checkbox" name="gm2_noindex" value="1" ' . checked($noindex, '1', false) . '> noindex</label></p>';
+        echo '<p><label><input type="checkbox" name="gm2_nofollow" value="1" ' . checked($nofollow, '1', false) . '> nofollow</label></p>';
+        echo '<p><label for="gm2_canonical_url">Canonical URL</label>';
+        echo '<input type="url" id="gm2_canonical_url" name="gm2_canonical_url" value="' . esc_attr($canonical) . '" class="widefat" /></p>';
+        echo '</div>';
+
+        echo '<div id="gm2-content-analysis" class="gm2-tab-panel">';
+        echo '<ul class="gm2-analysis-rules">';
+        foreach ($rule_lines as $text) {
+            $key = sanitize_title($text);
+            echo '<li data-key="' . esc_attr($key) . '"><span class="dashicons dashicons-no"></span> ' . esc_html($text) . '</li>';
+        }
+        echo '</ul>';
+        echo '</div>';
+
+        echo '</div>';
+        echo $wrapper_end;
     }
 
     public function save_post_meta($post_id) {
@@ -780,6 +822,33 @@ class Gm2_SEO_Admin {
                 'postType' => $typenow,
                 'nonce' => wp_create_nonce('gm2_check_rules'),
             ]
+        );
+    }
+
+    public function enqueue_taxonomy_scripts($hook) {
+        if ($hook !== 'edit-tags.php') {
+            return;
+        }
+        $screen = get_current_screen();
+        if (!$screen || empty($screen->taxonomy)) {
+            return;
+        }
+        if (!in_array($screen->taxonomy, $this->get_supported_taxonomies(), true)) {
+            return;
+        }
+
+        wp_enqueue_script(
+            'gm2-seo-tabs',
+            GM2_PLUGIN_URL . 'admin/js/gm2-seo.js',
+            ['jquery'],
+            GM2_VERSION,
+            true
+        );
+        wp_enqueue_style(
+            'gm2-seo-style',
+            GM2_PLUGIN_URL . 'admin/css/gm2-seo.css',
+            [],
+            GM2_VERSION
         );
     }
 
