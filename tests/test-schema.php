@@ -4,7 +4,7 @@ class SchemaOutputTest extends WP_UnitTestCase {
         parent::setUp();
         // Stub WooCommerce environment if needed
         if (!class_exists('WooCommerce')) {
-            class WooCommerce {}
+            eval('class WooCommerce {}');
         }
         if (!function_exists('is_product')) {
             function is_product() {
@@ -12,14 +12,14 @@ class SchemaOutputTest extends WP_UnitTestCase {
             }
         }
         if (!class_exists('WC_Product_Stub')) {
-            class WC_Product_Stub {
+            eval('class WC_Product_Stub {
                 public function get_image_id() { return 0; }
-                public function get_description() { return 'Sample description'; }
-                public function get_sku() { return 'SKU'; }
-                public function get_price() { return '10'; }
+                public function get_description() { return "Sample description"; }
+                public function get_sku() { return "SKU"; }
+                public function get_price() { return "10"; }
                 public function is_in_stock() { return true; }
                 public function get_average_rating() { return 4; }
-            }
+            }');
         }
         if (!function_exists('wc_get_product')) {
             function wc_get_product($id) {
