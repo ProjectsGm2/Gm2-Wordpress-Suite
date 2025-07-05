@@ -293,43 +293,16 @@ class Gm2_SEO_Admin {
     public function register_meta_boxes() {
         foreach ($this->get_supported_post_types() as $type) {
             add_meta_box(
-                'gm2_seo_' . $type . '_meta',
-                'SEO Settings',
-                [$this, 'render_post_meta_box'],
+                'gm2_seo_tabs',
+                'SEO',
+                [$this, 'render_seo_tabs_meta_box'],
                 $type,
                 'normal',
                 'high'
             );
-            add_meta_box(
-                'gm2_content_analysis_' . $type,
-                'Content Analysis',
-                [$this, 'render_content_analysis_meta_box'],
-                $type,
-                'side',
-                'default'
-            );
         }
     }
 
-    public function render_post_meta_box($post) {
-        $title          = get_post_meta($post->ID, '_gm2_title', true);
-        $description    = get_post_meta($post->ID, '_gm2_description', true);
-        $noindex        = get_post_meta($post->ID, '_gm2_noindex', true);
-        $nofollow       = get_post_meta($post->ID, '_gm2_nofollow', true);
-        $canonical      = get_post_meta($post->ID, '_gm2_canonical', true);
-        $focus_keywords = get_post_meta($post->ID, '_gm2_focus_keywords', true);
-        wp_nonce_field('gm2_save_seo_meta', 'gm2_seo_nonce');
-        echo '<p><label for="gm2_seo_title">SEO Title</label>';
-        echo '<input type="text" id="gm2_seo_title" name="gm2_seo_title" value="' . esc_attr($title) . '" class="widefat" /></p>';
-        echo '<p><label for="gm2_seo_description">SEO Description</label>';
-        echo '<textarea id="gm2_seo_description" name="gm2_seo_description" class="widefat" rows="3">' . esc_textarea($description) . '</textarea></p>';
-        echo '<p><label for="gm2_focus_keywords">Focus Keywords (comma separated)</label>';
-        echo '<input type="text" id="gm2_focus_keywords" name="gm2_focus_keywords" value="' . esc_attr($focus_keywords) . '" class="widefat" /></p>';
-        echo '<p><label><input type="checkbox" name="gm2_noindex" value="1" ' . checked($noindex, '1', false) . '> noindex</label></p>';
-        echo '<p><label><input type="checkbox" name="gm2_nofollow" value="1" ' . checked($nofollow, '1', false) . '> nofollow</label></p>';
-        echo '<p><label for="gm2_canonical_url">Canonical URL</label>';
-        echo '<input type="url" id="gm2_canonical_url" name="gm2_canonical_url" value="' . esc_attr($canonical) . '" class="widefat" /></p>';
-    }
 
     public function render_taxonomy_meta_box($term) {
         $title = '';
@@ -653,6 +626,19 @@ class Gm2_SEO_Admin {
             GM2_VERSION,
             true
         );
+        wp_enqueue_script(
+            'gm2-seo-tabs',
+            GM2_PLUGIN_URL . 'admin/js/gm2-seo.js',
+            ['jquery'],
+            GM2_VERSION,
+            true
+        );
+        wp_enqueue_style(
+            'gm2-seo-style',
+            GM2_PLUGIN_URL . 'admin/css/gm2-seo.css',
+            [],
+            GM2_VERSION
+        );
 
         $current = isset($_GET['post']) ? absint($_GET['post']) : 0;
         $posts    = get_posts([
@@ -678,7 +664,42 @@ class Gm2_SEO_Admin {
         );
     }
 
-    public function render_content_analysis_meta_box($post) {
+    public function render_seo_tabs_meta_box($post) {
+        $title          = get_post_meta($post->ID, '_gm2_title', true);
+        $description    = get_post_meta($post->ID, '_gm2_description', true);
+        $noindex        = get_post_meta($post->ID, '_gm2_noindex', true);
+        $nofollow       = get_post_meta($post->ID, '_gm2_nofollow', true);
+        $canonical      = get_post_meta($post->ID, '_gm2_canonical', true);
+        $focus_keywords = get_post_meta($post->ID, '_gm2_focus_keywords', true);
+
+        wp_nonce_field('gm2_save_seo_meta', 'gm2_seo_nonce');
+
+        echo '<div class="gm2-seo-tabs">';
+        echo '<nav class="gm2-nav-tabs">';
+        echo '<a href="#" class="gm2-nav-tab active" data-tab="gm2-seo-settings">SEO Settings</a>';
+        echo '<a href="#" class="gm2-nav-tab" data-tab="gm2-content-analysis">Content Analysis</a>';
+        echo '</nav>';
+
+        echo '<div id="gm2-seo-settings" class="gm2-tab-panel active">';
+        echo '<p><label for="gm2_seo_title">SEO Title</label>';
+        echo '<input type="text" id="gm2_seo_title" name="gm2_seo_title" value="' . esc_attr($title) . '" class="widefat" /></p>';
+        echo '<p><label for="gm2_seo_description">SEO Description</label>';
+        echo '<textarea id="gm2_seo_description" name="gm2_seo_description" class="widefat" rows="3">' . esc_textarea($description) . '</textarea></p>';
+        echo '<p><label for="gm2_focus_keywords">Focus Keywords (comma separated)</label>';
+        echo '<input type="text" id="gm2_focus_keywords" name="gm2_focus_keywords" value="' . esc_attr($focus_keywords) . '" class="widefat" /></p>';
+        echo '<p><label><input type="checkbox" name="gm2_noindex" value="1" ' . checked($noindex, '1', false) . '> noindex</label></p>';
+        echo '<p><label><input type="checkbox" name="gm2_nofollow" value="1" ' . checked($nofollow, '1', false) . '> nofollow</label></p>';
+        echo '<p><label for="gm2_canonical_url">Canonical URL</label>';
+        echo '<input type="url" id="gm2_canonical_url" name="gm2_canonical_url" value="' . esc_attr($canonical) . '" class="widefat" /></p>';
+        echo '</div>';
+
+        echo '<div id="gm2-content-analysis" class="gm2-tab-panel">';
+        echo '<ul class="gm2-analysis-rules">';
+        echo '<li id="gm2-rule-title"><span class="dashicons dashicons-no"></span> Title length between 30 and 60 characters</li>';
+        echo '<li id="gm2-rule-description"><span class="dashicons dashicons-no"></span> Description length between 50 and 160 characters</li>';
+        echo '<li id="gm2-rule-focus"><span class="dashicons dashicons-no"></span> At least one focus keyword</li>';
+        echo '<li id="gm2-rule-content"><span class="dashicons dashicons-no"></span> Content has at least 300 words</li>';
+        echo '</ul>';
         echo '<div id="gm2-content-analysis">';
         echo '<p>Word Count: <span id="gm2-content-analysis-word-count">0</span></p>';
         echo '<p>Top Keyword: <span id="gm2-content-analysis-keyword"></span></p>';
@@ -686,6 +707,8 @@ class Gm2_SEO_Admin {
         echo '<p>Focus Keyword Density:</p><ul id="gm2-focus-keyword-density"></ul>';
         echo '<p>Readability: <span id="gm2-content-analysis-readability">0</span></p>';
         echo '<p>Suggested Links:</p><ul id="gm2-content-analysis-links"></ul>';
+        echo '</div>';
+        echo '</div>';
         echo '</div>';
     }
 }
