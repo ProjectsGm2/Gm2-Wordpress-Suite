@@ -688,7 +688,7 @@ class Gm2_SEO_Admin {
         if (!in_array($hook, ['post.php', 'post-new.php'], true)) {
             return;
         }
-        if (!in_array($typenow, ['post', 'product'], true)) {
+        if (!in_array($typenow, $this->get_supported_post_types(), true)) {
             return;
         }
 
