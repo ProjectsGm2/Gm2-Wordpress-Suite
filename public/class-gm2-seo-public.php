@@ -226,6 +226,9 @@ class Gm2_SEO_Public {
         $robots[]    = ($data['nofollow'] === '1') ? 'nofollow' : 'follow';
         $canonical   = $data['canonical'];
 
+        // Output the canonical link tag first.
+        $this->output_canonical_url();
+
         if (!current_theme_supports('title-tag')) {
             echo '<title>' . esc_html($title) . "</title>\n";
         }
