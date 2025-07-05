@@ -20,6 +20,10 @@ Enable HTML, CSS, and JavaScript minification from the SEO &gt; Performance
 screen. For full page caching, hook into the `gm2_set_cache_headers` action
 to configure headers or integrate your preferred caching plugin.
 
+== Image Optimization ==
+Enter your compression API key and enable the service from the SEO &gt; Performance screen.
+When enabled, uploaded images are sent to the API and replaced with the optimized result.
+
 == Changelog ==
 = 1.4.0 =
 * Basic HTML/CSS/JS minification options and hooks for caching.
