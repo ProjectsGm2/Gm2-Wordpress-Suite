@@ -828,7 +828,7 @@ class Gm2_SEO_Admin {
         }
         foreach ($rule_lines as $idx => $text) {
             $key = sanitize_title($text);
-            echo '<li data-rule="' . esc_attr($key) . '"><span class="dashicons dashicons-no"></span> ' . esc_html($text) . '</li>';
+            echo '<li data-key="' . esc_attr($key) . '"><span class="dashicons dashicons-no"></span> ' . esc_html($text) . '</li>';
         }
         echo '</ul>';
         echo '<div id="gm2-content-analysis-data">';

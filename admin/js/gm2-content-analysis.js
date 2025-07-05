@@ -52,7 +52,7 @@
 
     function applyRuleResults(results){
         $('.gm2-analysis-rules li').each(function(){
-            const key = $(this).data('rule');
+            const key = $(this).data('key');
             if(!key || typeof results[key] === 'undefined') return;
             const pass = results[key];
             $(this).toggleClass('pass', pass).toggleClass('fail', !pass)
