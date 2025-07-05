@@ -27,13 +27,18 @@ class Gm2_SEO_Admin {
             add_action("{$tax}_edit_form_fields", [$this, 'render_taxonomy_meta_box']);
             add_action("create_{$tax}", [$this, 'save_taxonomy_meta']);
             add_action("edited_{$tax}", [$this, 'save_taxonomy_meta']);
-            add_action("created_{$tax}", 'gm2_generate_sitemap');
-            add_action("edited_{$tax}", 'gm2_generate_sitemap');
-            add_action("delete_{$tax}", 'gm2_generate_sitemap');
+            add_action("created_{$tax}", [$this, 'maybe_generate_sitemap'], 10, 0);
+            add_action("edited_{$tax}", [$this, 'maybe_generate_sitemap'], 10, 0);
+            add_action("delete_{$tax}", [$this, 'maybe_generate_sitemap'], 10, 0);
         }
     }
 
-    public function maybe_generate_sitemap($new_status, $old_status, $post) {
+    public function maybe_generate_sitemap($new_status = null, $old_status = null, $post = null) {
+        if (is_null($new_status) && is_null($old_status)) {
+            gm2_generate_sitemap();
+            return;
+        }
+
         if ($new_status === 'publish' || $old_status === 'publish') {
             gm2_generate_sitemap();
         }
