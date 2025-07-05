@@ -256,7 +256,8 @@ class Gm2_SEO_Admin {
         } elseif ($active === 'performance') {
             $auto_fill = get_option('gm2_auto_fill_alt', '0');
             $enable_comp = get_option('gm2_enable_compression', '0');
-            $api_key   = get_option('gm2_compression_api_key', '');
+            $api_key    = get_option('gm2_compression_api_key', '');
+            $api_url   = get_option('gm2_compression_api_url', 'https://api.example.com/compress');
             $min_html  = get_option('gm2_minify_html', '0');
             $min_css   = get_option('gm2_minify_css', '0');
             $min_js    = get_option('gm2_minify_js', '0');
@@ -270,6 +271,7 @@ class Gm2_SEO_Admin {
             echo '<tr><th scope="row">Auto-fill missing alt text</th><td><label><input type="checkbox" name="gm2_auto_fill_alt" value="1" ' . checked($auto_fill, '1', false) . '> Use product title</label></td></tr>';
             echo '<tr><th scope="row">Enable Image Compression</th><td><input type="checkbox" name="gm2_enable_compression" value="1" ' . checked($enable_comp, '1', false) . '></td></tr>';
             echo '<tr><th scope="row">Compression API Key</th><td><input type="text" name="gm2_compression_api_key" value="' . esc_attr($api_key) . '" class="regular-text" /></td></tr>';
+            echo '<tr><th scope="row">Compression API URL</th><td><input type="text" name="gm2_compression_api_url" value="' . esc_attr($api_url) . '" class="regular-text" /></td></tr>';
             echo '<tr><th scope="row">Minify HTML</th><td><label><input type="checkbox" name="gm2_minify_html" value="1" ' . checked($min_html, '1', false) . '></label></td></tr>';
             echo '<tr><th scope="row">Minify CSS</th><td><label><input type="checkbox" name="gm2_minify_css" value="1" ' . checked($min_css, '1', false) . '></label></td></tr>';
             echo '<tr><th scope="row">Minify JS</th><td><label><input type="checkbox" name="gm2_minify_js" value="1" ' . checked($min_js, '1', false) . '></label></td></tr>';
@@ -492,6 +494,9 @@ class Gm2_SEO_Admin {
         $api_key = isset($_POST['gm2_compression_api_key']) ? sanitize_text_field($_POST['gm2_compression_api_key']) : '';
         update_option('gm2_compression_api_key', $api_key);
 
+        $api_url = isset($_POST['gm2_compression_api_url']) ? esc_url_raw($_POST['gm2_compression_api_url']) : 'https://api.example.com/compress';
+        update_option('gm2_compression_api_url', $api_url);
+
         $min_html = isset($_POST['gm2_minify_html']) ? '1' : '0';
         update_option('gm2_minify_html', $min_html);
 
@@ -567,8 +572,13 @@ class Gm2_SEO_Admin {
             return;
         }
 
+        $api_url = apply_filters(
+            'gm2_compression_api_url',
+            get_option('gm2_compression_api_url', 'https://api.example.com/compress')
+        );
+
         $response = wp_remote_post(
-            'https://api.example.com/compress',
+            $api_url,
             [
                 'headers' => [
                     'Authorization' => 'Bearer ' . $api_key,
