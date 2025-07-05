@@ -39,10 +39,10 @@ class ContentRulesAjaxTest extends WP_Ajax_UnitTestCase {
         }
         $resp = json_decode($this->_last_response, true);
         $this->assertTrue($resp['success']);
-        $this->assertTrue($resp['data']['title']);
-        $this->assertTrue($resp['data']['description']);
-        $this->assertFalse($resp['data']['focus']);
-        $this->assertFalse($resp['data']['content']);
+        $this->assertTrue($resp['data']['title-length-between-30-and-60-characters']);
+        $this->assertTrue($resp['data']['description-length-between-50-and-160-characters']);
+        $this->assertFalse($resp['data']['at-least-one-focus-keyword']);
+        $this->assertFalse($resp['data']['content-has-at-least-300-words']);
     }
 }
 ?>

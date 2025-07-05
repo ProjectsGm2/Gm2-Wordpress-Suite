@@ -665,6 +665,8 @@ class Gm2_SEO_Admin {
             wp_send_json_error('permission denied', 403);
         }
 
+        $post_type = isset($_POST['post_type']) ? sanitize_key(wp_unslash($_POST['post_type'])) : 'post';
+
         $title       = isset($_POST['title']) ? sanitize_text_field(wp_unslash($_POST['title'])) : '';
         $description = isset($_POST['description']) ? sanitize_textarea_field(wp_unslash($_POST['description'])) : '';
         $focus       = isset($_POST['focus']) ? sanitize_text_field(wp_unslash($_POST['focus'])) : '';
@@ -673,12 +675,40 @@ class Gm2_SEO_Admin {
         $text       = wp_strip_all_tags($content);
         $word_count = str_word_count($text);
 
-        $results = [
-            'title'       => mb_strlen($title) >= 30 && mb_strlen($title) <= 60,
-            'description' => mb_strlen($description) >= 50 && mb_strlen($description) <= 160,
-            'focus'       => trim($focus) !== '',
-            'content'     => $word_count >= 300,
-        ];
+        $rules_option = get_option('gm2_content_rules', []);
+        $rule_lines = [];
+        if (isset($rules_option['post_' . $post_type])) {
+            $rule_lines = array_filter(array_map('trim', explode("\n", $rules_option['post_' . $post_type])));
+        }
+        if (!$rule_lines) {
+            $rule_lines = [
+                'Title length between 30 and 60 characters',
+                'Description length between 50 and 160 characters',
+                'At least one focus keyword',
+                'Content has at least 300 words',
+            ];
+        }
+
+        $results = [];
+        foreach ($rule_lines as $line) {
+            $key = sanitize_title($line);
+            $pass = false;
+            if (preg_match('/title.*?(\d+).*?(\d+)/i', $line, $m)) {
+                $min = (int) $m[1];
+                $max = (int) $m[2];
+                $pass = mb_strlen($title) >= $min && mb_strlen($title) <= $max;
+            } elseif (preg_match('/description.*?(\d+).*?(\d+)/i', $line, $m)) {
+                $min = (int) $m[1];
+                $max = (int) $m[2];
+                $pass = mb_strlen($description) >= $min && mb_strlen($description) <= $max;
+            } elseif (stripos($line, 'focus keyword') !== false) {
+                $pass = trim($focus) !== '';
+            } elseif (preg_match('/(\d+).*words/i', $line, $m)) {
+                $min = (int) $m[1];
+                $pass = $word_count >= $min;
+            }
+            $results[$key] = $pass;
+        }
 
         wp_send_json_success($results);
     }
@@ -741,6 +771,7 @@ class Gm2_SEO_Admin {
             [
                 'posts' => $list,
                 'rules' => $current_rules,
+                'postType' => $typenow,
             ]
         );
     }
@@ -790,7 +821,8 @@ class Gm2_SEO_Admin {
             ];
         }
         foreach ($rule_lines as $idx => $text) {
-            echo '<li><span class="dashicons dashicons-no"></span> ' . esc_html($text) . '</li>';
+            $key = sanitize_title($text);
+            echo '<li data-rule="' . esc_attr($key) . '"><span class="dashicons dashicons-no"></span> ' . esc_html($text) . '</li>';
         }
         echo '</ul>';
         echo '<div id="gm2-content-analysis-data">';
