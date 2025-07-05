@@ -68,7 +68,8 @@
             title: title,
             description: description,
             focus: focus,
-            post_type: postType
+            post_type: postType,
+            _ajax_nonce: window.gm2ContentAnalysisData ? window.gm2ContentAnalysisData.nonce : ''
         }, function(resp){
             if(resp && resp.success){
                 applyRuleResults(resp.data);
