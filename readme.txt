@@ -15,6 +15,11 @@ A powerful suite of WordPress enhancements including admin tools, frontend optim
 2. Activate the plugin through the 'Plugins' screen in WordPress.
 3. Use the Gm2 Suite menu in the admin sidebar to configure settings.
 
+== Breadcrumbs ==
+Display a breadcrumb trail anywhere using the `[gm2_breadcrumbs]` shortcode. The output
+is an ordered list wrapped in a `<nav>` element with accompanying JSON-LD for search engines.
+You can enable automatic breadcrumbs in the footer from **SEO → Schema**.
+
 == Caching ==
 Enable HTML, CSS, and JavaScript minification from the SEO &gt; Performance
 screen. To enable these options:
