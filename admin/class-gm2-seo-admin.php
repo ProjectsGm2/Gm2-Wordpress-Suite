@@ -666,6 +666,10 @@ class Gm2_SEO_Admin {
             wp_send_json_error('permission denied', 403);
         }
 
+        $strlen = function ($str) {
+            return function_exists('mb_strlen') ? mb_strlen($str) : strlen($str);
+        };
+
         $post_type = isset($_POST['post_type']) ? sanitize_key(wp_unslash($_POST['post_type'])) : 'post';
 
         $title       = isset($_POST['title']) ? sanitize_text_field(wp_unslash($_POST['title'])) : '';
@@ -697,11 +701,11 @@ class Gm2_SEO_Admin {
             if (preg_match('/title.*?(\d+).*?(\d+)/i', $line, $m)) {
                 $min = (int) $m[1];
                 $max = (int) $m[2];
-                $pass = mb_strlen($title) >= $min && mb_strlen($title) <= $max;
+                $pass = $strlen($title) >= $min && $strlen($title) <= $max;
             } elseif (preg_match('/description.*?(\d+).*?(\d+)/i', $line, $m)) {
                 $min = (int) $m[1];
                 $max = (int) $m[2];
-                $pass = mb_strlen($description) >= $min && mb_strlen($description) <= $max;
+                $pass = $strlen($description) >= $min && $strlen($description) <= $max;
             } elseif (stripos($line, 'focus keyword') !== false) {
                 $pass = trim($focus) !== '';
             } elseif (preg_match('/(\d+).*words/i', $line, $m)) {
