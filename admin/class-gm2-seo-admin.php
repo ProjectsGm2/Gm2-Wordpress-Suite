@@ -793,7 +793,7 @@ class Gm2_SEO_Admin {
             echo '<li><span class="dashicons dashicons-no"></span> ' . esc_html($text) . '</li>';
         }
         echo '</ul>';
-        echo '<div id="gm2-content-analysis">';
+        echo '<div id="gm2-content-analysis-data">';
         echo '<p>Word Count: <span id="gm2-content-analysis-word-count">0</span></p>';
         echo '<p>Top Keyword: <span id="gm2-content-analysis-keyword"></span></p>';
         echo '<p>Keyword Density: <span id="gm2-content-analysis-density">0</span>%</p>';
