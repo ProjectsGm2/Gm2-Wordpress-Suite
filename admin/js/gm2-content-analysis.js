@@ -51,23 +51,24 @@
     }
 
     function applyRuleResults(results){
-        const keys = ['title','description','focus','content'];
-        $('.gm2-analysis-rules li').each(function(i){
-            const pass = results[keys[i]];
-            if(typeof pass === 'undefined') return;
+        $('.gm2-analysis-rules li').each(function(){
+            const key = $(this).data('rule');
+            if(!key || typeof results[key] === 'undefined') return;
+            const pass = results[key];
             $(this).toggleClass('pass', pass).toggleClass('fail', !pass)
                 .find('.dashicons').removeClass('dashicons-no dashicons-yes')
                 .addClass(pass ? 'dashicons-yes' : 'dashicons-no');
         });
     }
 
-    function checkRules(content, title, description, focus){
+    function checkRules(content, title, description, focus, postType){
         $.post(ajaxurl, {
             action: 'gm2_check_rules',
             content: content,
             title: title,
             description: description,
-            focus: focus
+            focus: focus,
+            post_type: postType
         }, function(resp){
             if(resp && resp.success){
                 applyRuleResults(resp.data);
@@ -107,7 +108,8 @@
             $('<li>').append($('<a>').attr('href', p.link).text(p.title)).appendTo(list);
         });
 
-        checkRules(content, $('#gm2_seo_title').val() || '', $('#gm2_seo_description').val() || '', kwInput);
+        const ptype = window.gm2ContentAnalysisData ? window.gm2ContentAnalysisData.postType : '';
+        checkRules(content, $('#gm2_seo_title').val() || '', $('#gm2_seo_description').val() || '', kwInput, ptype);
     }
 
     $(document).ready(function(){
