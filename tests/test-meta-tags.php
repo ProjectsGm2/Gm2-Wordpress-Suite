@@ -78,5 +78,25 @@ class MetaTagsTest extends WP_UnitTestCase {
         $this->assertStringContainsString('<meta name="twitter:title" content="Brand Title"', $output);
         $this->assertStringContainsString('content="Brand Description"', $output);
     }
+
+    public function test_noindex_nofollow_outputs_correct_robots_meta() {
+        $post_id = self::factory()->post->create([
+            'post_title'   => 'Sample',
+            'post_content' => 'Content',
+        ]);
+        update_post_meta($post_id, '_gm2_noindex', '1');
+        update_post_meta($post_id, '_gm2_nofollow', '1');
+        update_post_meta($post_id, '_gm2_canonical', 'https://example.com/canonical');
+
+        $seo = new Gm2_SEO_Public();
+        $this->go_to(get_permalink($post_id));
+        setup_postdata(get_post($post_id));
+        ob_start();
+        $seo->output_meta_tags();
+        $output = ob_get_clean();
+
+        $this->assertStringContainsString('<meta name="robots" content="noindex,nofollow"', $output);
+        $this->assertStringContainsString('<link rel="canonical" href="https://example.com/canonical" />', $output);
+    }
 }
 
