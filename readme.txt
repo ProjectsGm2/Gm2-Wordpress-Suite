@@ -17,7 +17,13 @@ A powerful suite of WordPress enhancements including admin tools, frontend optim
 
 == Caching ==
 Enable HTML, CSS, and JavaScript minification from the SEO &gt; Performance
-screen. For full page caching, hook into the `gm2_set_cache_headers` action
+screen. To enable these options:
+
+1. Navigate to **SEO → Performance** in your WordPress admin area.
+2. Check **Minify HTML**, **Minify CSS**, and **Minify JS** as desired.
+3. Click **Save Settings**.
+
+For full page caching, hook into the `gm2_set_cache_headers` action
 to configure headers or integrate your preferred caching plugin.
 
 == Image Optimization ==
