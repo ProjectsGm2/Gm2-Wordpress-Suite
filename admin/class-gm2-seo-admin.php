@@ -661,6 +661,7 @@ class Gm2_SEO_Admin {
     }
 
     public function ajax_check_rules() {
+        check_ajax_referer('gm2_check_rules');
         if (!current_user_can('edit_posts')) {
             wp_send_json_error('permission denied', 403);
         }
@@ -772,6 +773,7 @@ class Gm2_SEO_Admin {
                 'posts' => $list,
                 'rules' => $current_rules,
                 'postType' => $typenow,
+                'nonce' => wp_create_nonce('gm2_check_rules'),
             ]
         );
     }
