@@ -68,7 +68,7 @@ class Gm2_SEO_Public {
     public function log_404_url() {
         if (is_404()) {
             $logs  = get_option('gm2_404_logs', []);
-            $path  = untrailingslashit($_SERVER['REQUEST_URI']);
+            $path  = untrailingslashit(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
             if (!in_array($path, $logs, true)) {
                 $logs[] = $path;
                 if (count($logs) > 100) {
