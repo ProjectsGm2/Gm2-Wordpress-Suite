@@ -8,7 +8,7 @@ class Gm2_SEO_Admin {
         add_action('admin_menu', [$this, 'add_settings_pages']);
         add_action('add_meta_boxes', [$this, 'register_meta_boxes']);
         add_action('save_post', [$this, 'save_post_meta']);
-        add_action('admin_enqueue_scripts', [$this, 'enqueue_editor_scripts']);
+        add_action('enqueue_block_editor_assets', [$this, 'enqueue_editor_scripts']);
         add_action('admin_init', [$this, 'register_settings']);
         add_action('admin_post_gm2_sitemap_settings', [$this, 'handle_sitemap_form']);
         add_action('admin_post_gm2_meta_tags_settings', [$this, 'handle_meta_tags_form']);
@@ -718,11 +718,12 @@ class Gm2_SEO_Admin {
         wp_send_json_success($results);
     }
 
-    public function enqueue_editor_scripts($hook) {
-        global $typenow;
-        if (!in_array($hook, ['post.php', 'post-new.php'], true)) {
+    public function enqueue_editor_scripts() {
+        $screen = get_current_screen();
+        if (!$screen || $screen->base !== 'post') {
             return;
         }
+        $typenow = $screen->post_type;
         if (!in_array($typenow, $this->get_supported_post_types(), true)) {
             return;
         }
