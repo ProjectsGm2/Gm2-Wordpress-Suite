@@ -1,1 +1,18 @@
-/* Admin SEO styles */
+.gm2-nav-tabs { margin-bottom:8px; }
+.gm2-nav-tab {
+    display:inline-block;
+    padding:6px 10px;
+    background:#f1f1f1;
+    border:1px solid #ccc;
+    margin-right:2px;
+    cursor:pointer;
+    text-decoration:none;
+}
+.gm2-nav-tab.active {
+    background:#fff;
+    border-bottom:1px solid #fff;
+}
+.gm2-tab-panel { display:none; border:1px solid #ccc; padding:10px; background:#fff; }
+.gm2-tab-panel.active { display:block; }
+.gm2-analysis-rules li.pass { color:#46b450; }
+.gm2-analysis-rules li.fail { color:#d63638; }
