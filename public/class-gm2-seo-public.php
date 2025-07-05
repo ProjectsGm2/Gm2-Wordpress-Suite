@@ -4,6 +4,8 @@ if (!defined('ABSPATH')) {
 }
 
 class Gm2_SEO_Public {
+    private $buffer_started = false;
+
     public function run() {
         add_action('init', [$this, 'add_sitemap_rewrite']);
         add_filter('query_vars', [$this, 'add_query_vars']);
@@ -463,12 +465,14 @@ class Gm2_SEO_Public {
         $js   = get_option('gm2_minify_js', '0');
         if ($html === '1' || $css === '1' || $js === '1') {
             ob_start([$this, 'minify_output']);
+            $this->buffer_started = true;
         }
     }
 
     public function maybe_flush_buffer() {
-        if (ob_get_level() > 0) {
+        if ($this->buffer_started && ob_get_level() > 0) {
             ob_end_flush();
+            $this->buffer_started = false;
         }
     }
 
