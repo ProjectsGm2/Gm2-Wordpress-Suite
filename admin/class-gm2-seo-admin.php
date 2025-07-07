@@ -8,8 +8,7 @@ class Gm2_SEO_Admin {
         add_action('admin_menu', [$this, 'add_settings_pages']);
         add_action('add_meta_boxes', [$this, 'register_meta_boxes']);
         add_action('save_post', [$this, 'save_post_meta']);
-        add_action('enqueue_block_editor_assets', [$this, 'enqueue_editor_scripts']);
-        add_action('admin_enqueue_scripts', [$this, 'enqueue_classic_editor_scripts']);
+        add_action('admin_enqueue_scripts', [$this, 'enqueue_editor_scripts']);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_taxonomy_scripts']);
         add_action('admin_init', [$this, 'register_settings']);
         add_action('admin_post_gm2_sitemap_settings', [$this, 'handle_sitemap_form']);
@@ -761,13 +760,18 @@ class Gm2_SEO_Admin {
         wp_send_json_success($results);
     }
 
-    public function enqueue_editor_scripts() {
-        $screen = get_current_screen();
-        if (!$screen || $screen->base !== 'post') {
+    public function enqueue_editor_scripts($hook) {
+        if ($hook !== 'post.php' && $hook !== 'post-new.php') {
             return;
         }
-        $typenow = $screen->post_type;
-        if (!in_array($typenow, $this->get_supported_post_types(), true)) {
+        if (isset($_GET['post_type'])) {
+            $typenow = sanitize_key($_GET['post_type']);
+        } elseif (!empty($_GET['post'])) {
+            $typenow = get_post_type(absint($_GET['post']));
+        } else {
+            global $typenow;
+        }
+        if (!$typenow || !in_array($typenow, $this->get_supported_post_types(), true)) {
             return;
         }
 
@@ -826,33 +830,6 @@ class Gm2_SEO_Admin {
         );
     }
 
-    public function enqueue_classic_editor_scripts($hook) {
-        if ($hook !== 'post.php' && $hook !== 'post-new.php') {
-            return;
-        }
-        $screen = get_current_screen();
-        if (!$screen || $screen->base !== 'post') {
-            return;
-        }
-        $typenow = $screen->post_type;
-        if (!in_array($typenow, $this->get_supported_post_types(), true)) {
-            return;
-        }
-
-        wp_enqueue_script(
-            'gm2-seo-tabs',
-            GM2_PLUGIN_URL . 'admin/js/gm2-seo.js',
-            ['jquery'],
-            GM2_VERSION,
-            true
-        );
-        wp_enqueue_style(
-            'gm2-seo-style',
-            GM2_PLUGIN_URL . 'admin/css/gm2-seo.css',
-            [],
-            GM2_VERSION
-        );
-    }
 
     public function enqueue_taxonomy_scripts($hook) {
         if ($hook !== 'edit-tags.php') {
