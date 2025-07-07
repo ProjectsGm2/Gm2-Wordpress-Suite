@@ -9,6 +9,7 @@ class Gm2_SEO_Admin {
         add_action('add_meta_boxes', [$this, 'register_meta_boxes']);
         add_action('save_post', [$this, 'save_post_meta']);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_editor_scripts']);
+        add_action('enqueue_block_editor_assets', [$this, 'enqueue_editor_scripts']);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_taxonomy_scripts']);
         add_action('admin_init', [$this, 'register_settings']);
         add_action('admin_post_gm2_sitemap_settings', [$this, 'handle_sitemap_form']);
@@ -764,7 +765,18 @@ class Gm2_SEO_Admin {
         if ($hook !== null && $hook !== 'post.php' && $hook !== 'post-new.php') {
             return;
         }
-        if (isset($_GET['post_type'])) {
+
+        /*
+         * $pagenow is not always reliable inside the block editor iframe.
+         * Rely only on the passed $hook parameter and post type checks below
+         * so the tab assets load in both classic and block editors.
+         */
+
+        $typenow = '';
+        $screen  = function_exists('get_current_screen') ? get_current_screen() : null;
+        if ($screen && !empty($screen->post_type)) {
+            $typenow = $screen->post_type;
+        } elseif (isset($_GET['post_type'])) {
             $typenow = sanitize_key($_GET['post_type']);
         } elseif (!empty($_GET['post'])) {
             $typenow = get_post_type(absint($_GET['post']));
