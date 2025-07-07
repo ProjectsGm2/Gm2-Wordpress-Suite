@@ -40,6 +40,17 @@ class Gm2_Google_OAuth {
         return (bool) get_option('gm2_google_refresh_token');
     }
 
+    public function get_access_token() {
+        $token = $this->client->getAccessToken();
+        if (!$token || $this->client->isAccessTokenExpired()) {
+            $refresh = get_option('gm2_google_refresh_token');
+            if ($refresh) {
+                $token = $this->client->fetchAccessTokenWithRefreshToken($refresh);
+            }
+        }
+        return $token['access_token'] ?? '';
+    }
+
     public function get_auth_url() {
         return $this->client->createAuthUrl();
     }

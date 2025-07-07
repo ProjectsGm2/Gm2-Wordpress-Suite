@@ -13,7 +13,8 @@ A powerful suite of WordPress enhancements including admin tools, frontend optim
 == Installation ==
 1. Upload the plugin files to the `/wp-content/plugins/gm2-wordpress-suite` directory.
 2. Activate the plugin through the 'Plugins' screen in WordPress.
-3. Use the Gm2 Suite menu in the admin sidebar to configure settings.
+3. Use the Gm2 Suite menu in the admin sidebar to configure settings. Visit
+   **SEO → Connect Google Account** to authorize your Google account.
 
 == Breadcrumbs ==
 Display a breadcrumb trail anywhere using the `[gm2_breadcrumbs]` shortcode. The output
@@ -32,7 +33,7 @@ For full page caching, hook into the `gm2_set_cache_headers` action
 to configure headers or integrate your preferred caching plugin.
 
 == Keyword Research ==
-Enter your Google Ads credentials in **SEO → General** and use the
+Connect your Google account from **SEO → Connect Google Account** and use the
 **Keyword Research** tab to generate ideas via the Google Keyword Planner.
 
 == Image Optimization ==
