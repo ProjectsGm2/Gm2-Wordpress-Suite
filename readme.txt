@@ -15,6 +15,9 @@ A powerful suite of WordPress enhancements including admin tools, frontend optim
 2. Activate the plugin through the 'Plugins' screen in WordPress.
 3. Use the Gm2 Suite menu in the admin sidebar to configure settings. Visit
    **SEO → Connect Google Account** to authorize your Google account.
+4. Run `composer install` to install development dependencies. For a production
+   environment, use `composer install --no-dev`. The libraries will be placed
+   in the `vendor/` directory.
 
 == Breadcrumbs ==
 Display a breadcrumb trail anywhere using the `[gm2_breadcrumbs]` shortcode. The output
