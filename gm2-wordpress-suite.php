@@ -18,6 +18,20 @@ define('GM2_VERSION', '1.5.0');
 define('GM2_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('GM2_PLUGIN_URL', plugin_dir_url(__FILE__));
 
+$autoload = GM2_PLUGIN_DIR . 'vendor/autoload.php';
+if (file_exists($autoload)) {
+    require_once $autoload;
+} else {
+    if (!function_exists('gm2_missing_autoload_notice')) {
+        function gm2_missing_autoload_notice() {
+            echo '<div class="notice notice-warning"><p>' .
+                esc_html__('Gm2 WordPress Suite: missing Composer autoload. Please run "composer install" or include the vendor directory.', 'gm2-wordpress-suite') .
+                '</p></div>';
+        }
+    }
+    add_action('admin_notices', 'gm2_missing_autoload_notice');
+}
+
 // Include required files
 require_once GM2_PLUGIN_DIR . 'includes/class-gm2-loader.php';
 require_once GM2_PLUGIN_DIR . 'public/class-gm2-seo-public.php';
