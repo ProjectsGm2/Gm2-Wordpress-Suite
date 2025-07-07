@@ -22,6 +22,7 @@ define('GM2_PLUGIN_URL', plugin_dir_url(__FILE__));
 require_once GM2_PLUGIN_DIR . 'includes/class-gm2-loader.php';
 
 function gm2_activate_plugin() {
+    $loader = new Gm2_Loader();
     $public = new Gm2_SEO_Public();
     $public->add_sitemap_rewrite();
     flush_rewrite_rules();
