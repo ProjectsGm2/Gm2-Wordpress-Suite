@@ -19,6 +19,7 @@ class Gm2_Loader {
         require_once GM2_PLUGIN_DIR . 'includes/class-gm2-tariff-manager.php';
         require_once GM2_PLUGIN_DIR . 'includes/class-gm2-sitemap.php';
         require_once GM2_PLUGIN_DIR . 'includes/class-gm2-keyword-planner.php';
+        require_once GM2_PLUGIN_DIR . 'includes/class-gm2-google-oauth.php';
     }
 
     public function run() {

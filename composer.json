@@ -8,5 +8,8 @@
   },
   "scripts": {
     "test": "vendor/bin/phpunit"
+  },
+  "require": {
+    "google/apiclient": "^2"
   }
 }
