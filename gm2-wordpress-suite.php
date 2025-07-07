@@ -20,6 +20,8 @@ define('GM2_PLUGIN_URL', plugin_dir_url(__FILE__));
 
 // Include required files
 require_once GM2_PLUGIN_DIR . 'includes/class-gm2-loader.php';
+require_once GM2_PLUGIN_DIR . 'public/class-gm2-seo-public.php';
+require_once GM2_PLUGIN_DIR . 'includes/class-gm2-sitemap.php';
 
 function gm2_activate_plugin() {
     $public = new Gm2_SEO_Public();
