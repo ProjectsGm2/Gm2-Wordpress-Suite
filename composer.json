@@ -11,5 +11,14 @@
   },
   "require": {
     "google/apiclient": "^2"
+  },
+  "autoload": {
+    "psr-4": {
+      "Gm2\\": [
+        "includes/",
+        "admin/",
+        "public/"
+      ]
+    }
   }
 }

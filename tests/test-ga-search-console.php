@@ -1,4 +1,5 @@
 <?php
+use Gm2\Gm2_SEO_Public;
 class GaAndSearchConsoleTest extends WP_UnitTestCase {
     private $seo;
     public function setUp(): void {

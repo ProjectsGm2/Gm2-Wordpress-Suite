@@ -1,4 +1,5 @@
 <?php
+use Gm2\Gm2_Sitemap;
 class SitemapTest extends WP_UnitTestCase {
     public function test_generate_sitemap_creates_file() {
         $post_id = self::factory()->post->create();

@@ -1,4 +1,5 @@
 <?php
+use Gm2\Gm2_SEO_Public;
 class MetaTagsTest extends WP_UnitTestCase {
     public function test_output_meta_tags_for_post_without_title_support() {
         $post_id = self::factory()->post->create([

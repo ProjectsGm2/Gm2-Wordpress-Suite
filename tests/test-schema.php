@@ -1,4 +1,5 @@
 <?php
+use Gm2\Gm2_SEO_Public;
 class SchemaOutputTest extends WP_UnitTestCase {
     public function setUp(): void {
         parent::setUp();

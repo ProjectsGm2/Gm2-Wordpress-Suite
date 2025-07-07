@@ -1,4 +1,7 @@
 <?php
+
+namespace Gm2;
+
 if (!defined('ABSPATH')) {
     exit;
 }
@@ -40,7 +43,7 @@ class Gm2_SEO_Admin {
         }
 
         if (did_action('elementor/loaded')) {
-            require_once GM2_PLUGIN_DIR . 'admin/class-gm2-elementor.php';
+            require_once GM2_PLUGIN_DIR . 'admin/Gm2_Elementor.php';
             new Gm2_Elementor($this);
         }
     }

@@ -1,4 +1,5 @@
 <?php
+use Gm2\Gm2_SEO_Public;
 class RedirectTest extends WP_UnitTestCase {
     public function test_maybe_apply_redirects_when_source_exists() {
         update_option('gm2_redirects', [
