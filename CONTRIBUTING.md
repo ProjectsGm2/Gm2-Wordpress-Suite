@@ -30,14 +30,15 @@ The PHPUnit tests depend on the WordPress testing suite. The installation script
 svn co https://develop.svn.wordpress.org/trunk/tests/phpunit $WP_TESTS_DIR
 ```
 
-Set the `WP_TESTS_DIR` environment variable to the directory where the suite resides. PHPUnit tests cannot run without this directory.
+Set the `WP_TESTS_DIR` environment variable to the directory where the suite resides. PHPUnit tests cannot run without this directory. If the variable is not set, `tests/bootstrap.php` falls back to `/tmp/wordpress-tests-lib`.
 
 ## Running Tests
 
-After the dependencies and test suite are installed, run:
+After the dependencies and test suite are installed, run the tests. Ensure that
+`WP_TESTS_DIR` points to the installed suite, for example:
 
 ```bash
-composer run test
+WP_TESTS_DIR=/path/to/wordpress-tests-lib composer run test
 ```
 
-This will execute the PHPUnit tests located in the `tests/` directory.
+This command executes the PHPUnit tests located in the `tests/` directory.
