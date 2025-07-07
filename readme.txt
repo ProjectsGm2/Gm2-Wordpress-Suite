@@ -21,6 +21,15 @@ A powerful suite of WordPress enhancements including admin tools, frontend optim
    environment, use `composer install --no-dev`. The libraries will be placed
    in the `vendor/` directory.
 
+If you plan to distribute or manually upload the plugin, build a ZIP archive
+that bundles these libraries:
+
+1. From the project root, run `bash bin/build-plugin.sh`. This command runs
+   Composer in production mode and creates `gm2-wordpress-suite.zip` in the
+   same directory.
+2. Upload the generated ZIP through the **Plugins → Add New** screen or copy
+   its contents to your `wp-content/plugins` folder.
+
 == Breadcrumbs ==
 Display a breadcrumb trail anywhere using the `[gm2_breadcrumbs]` shortcode. The output
 is an ordered list wrapped in a `<nav>` element with accompanying JSON-LD for search engines.
