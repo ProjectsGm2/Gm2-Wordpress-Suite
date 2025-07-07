@@ -4,6 +4,10 @@ if (!$_tests_dir) {
     $_tests_dir = '/tmp/wordpress-tests-lib';
 }
 require_once $_tests_dir . '/includes/functions.php';
+$vendor_autoload = dirname(__DIR__) . '/vendor/autoload.php';
+if (file_exists($vendor_autoload)) {
+    require_once $vendor_autoload;
+}
 function _manually_load_plugin() {
     require dirname(__DIR__) . '/gm2-wordpress-suite.php';
 }

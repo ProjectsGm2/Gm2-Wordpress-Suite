@@ -23,12 +23,13 @@ if (file_exists(GM2_PLUGIN_DIR . 'vendor/autoload.php')) {
 } else {
     if (!function_exists('gm2_missing_autoload_notice')) {
         function gm2_missing_autoload_notice() {
-            echo '<div class="notice notice-warning"><p>' .
-                esc_html__('Gm2 WordPress Suite: missing Composer autoload. Please run "composer install" or include the vendor directory.', 'gm2-wordpress-suite') .
+            echo '<div class="notice notice-error"><p>' .
+                esc_html__('Gm2 WordPress Suite requires its Composer dependencies. Please run "composer install".', 'gm2-wordpress-suite') .
                 '</p></div>';
         }
     }
     add_action('admin_notices', 'gm2_missing_autoload_notice');
+    return;
 }
 
 // Include required files
