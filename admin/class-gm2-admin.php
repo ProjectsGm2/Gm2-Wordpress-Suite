@@ -51,6 +51,21 @@ class Gm2_Admin {
                 GM2_VERSION,
                 true
             );
+            wp_enqueue_script(
+                'gm2-keyword-research',
+                GM2_PLUGIN_URL . 'admin/js/gm2-keyword-research.js',
+                ['jquery'],
+                GM2_VERSION,
+                true
+            );
+            wp_localize_script(
+                'gm2-keyword-research',
+                'gm2KeywordResearch',
+                [
+                    'nonce'    => wp_create_nonce('gm2_keyword_ideas'),
+                    'ajax_url' => admin_url('admin-ajax.php'),
+                ]
+            );
         }
     }
 

@@ -20,6 +20,7 @@ class Gm2_SEO_Admin {
         add_action('admin_post_gm2_content_rules', [$this, 'handle_content_rules_form']);
 
         add_action('wp_ajax_gm2_check_rules', [$this, 'ajax_check_rules']);
+        add_action('wp_ajax_gm2_keyword_ideas', [$this, 'ajax_keyword_ideas']);
 
         add_action('add_attachment', [$this, 'auto_fill_alt_on_upload']);
         add_action('add_attachment', [$this, 'compress_image_on_upload'], 20);
@@ -90,6 +91,21 @@ class Gm2_SEO_Admin {
         register_setting('gm2_seo_options', 'gm2_search_console_verification', [
             'sanitize_callback' => 'sanitize_text_field',
         ]);
+        register_setting('gm2_seo_options', 'gm2_gads_developer_token', [
+            'sanitize_callback' => 'sanitize_text_field',
+        ]);
+        register_setting('gm2_seo_options', 'gm2_gads_client_id', [
+            'sanitize_callback' => 'sanitize_text_field',
+        ]);
+        register_setting('gm2_seo_options', 'gm2_gads_client_secret', [
+            'sanitize_callback' => 'sanitize_text_field',
+        ]);
+        register_setting('gm2_seo_options', 'gm2_gads_refresh_token', [
+            'sanitize_callback' => 'sanitize_text_field',
+        ]);
+        register_setting('gm2_seo_options', 'gm2_gads_customer_id', [
+            'sanitize_callback' => 'sanitize_text_field',
+        ]);
 
         add_settings_section(
             'gm2_seo_main',
@@ -119,6 +135,57 @@ class Gm2_SEO_Admin {
             'gm2_seo',
             'gm2_seo_main'
         );
+
+        add_settings_field(
+            'gm2_gads_developer_token',
+            'Google Ads Developer Token',
+            function () {
+                $value = get_option('gm2_gads_developer_token', '');
+                echo '<input type="text" name="gm2_gads_developer_token" value="' . esc_attr($value) . '" class="regular-text" />';
+            },
+            'gm2_seo',
+            'gm2_seo_main'
+        );
+        add_settings_field(
+            'gm2_gads_client_id',
+            'Google Ads Client ID',
+            function () {
+                $value = get_option('gm2_gads_client_id', '');
+                echo '<input type="text" name="gm2_gads_client_id" value="' . esc_attr($value) . '" class="regular-text" />';
+            },
+            'gm2_seo',
+            'gm2_seo_main'
+        );
+        add_settings_field(
+            'gm2_gads_client_secret',
+            'Google Ads Client Secret',
+            function () {
+                $value = get_option('gm2_gads_client_secret', '');
+                echo '<input type="password" name="gm2_gads_client_secret" value="' . esc_attr($value) . '" class="regular-text" />';
+            },
+            'gm2_seo',
+            'gm2_seo_main'
+        );
+        add_settings_field(
+            'gm2_gads_refresh_token',
+            'Google Ads Refresh Token',
+            function () {
+                $value = get_option('gm2_gads_refresh_token', '');
+                echo '<input type="text" name="gm2_gads_refresh_token" value="' . esc_attr($value) . '" class="regular-text" />';
+            },
+            'gm2_seo',
+            'gm2_seo_main'
+        );
+        add_settings_field(
+            'gm2_gads_customer_id',
+            'Google Ads Customer ID',
+            function () {
+                $value = get_option('gm2_gads_customer_id', '');
+                echo '<input type="text" name="gm2_gads_customer_id" value="' . esc_attr($value) . '" class="regular-text" />';
+            },
+            'gm2_seo',
+            'gm2_seo_main'
+        );
     }
 
     public function display_dashboard() {
@@ -129,6 +196,7 @@ class Gm2_SEO_Admin {
             'redirects'   => 'Redirects',
             'schema'      => 'Structured Data',
             'performance' => 'Performance',
+            'keywords'    => 'Keyword Research',
             'rules'       => 'Content Rules',
         ];
 
@@ -284,6 +352,13 @@ class Gm2_SEO_Admin {
             echo '</tbody></table>';
             submit_button('Save Settings');
             echo '</form>';
+        } elseif ($active === 'keywords') {
+            echo '<form id="gm2-keyword-research-form">';
+            echo '<p><label for="gm2_seed_keyword">Seed Keyword</label>';
+            echo '<input type="text" id="gm2_seed_keyword" class="regular-text" /></p>';
+            echo '<p><button class="button" type="submit">Generate Ideas</button></p>';
+            echo '</form>';
+            echo '<ul id="gm2-keyword-results"></ul>';
         } elseif ($active === 'rules') {
             $all_rules = get_option('gm2_content_rules', []);
             if (!empty($_GET['updated'])) {
@@ -759,6 +834,26 @@ class Gm2_SEO_Admin {
         }
 
         wp_send_json_success($results);
+    }
+
+    public function ajax_keyword_ideas() {
+        check_ajax_referer('gm2_keyword_ideas');
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('permission denied', 403);
+        }
+
+        $query = isset($_POST['query']) ? sanitize_text_field(wp_unslash($_POST['query'])) : '';
+        if ($query === '') {
+            wp_send_json_error('empty query');
+        }
+
+        $planner = new Gm2_Keyword_Planner();
+        $ideas   = $planner->generate_keyword_ideas($query);
+        if (is_wp_error($ideas)) {
+            wp_send_json_error($ideas->get_error_message());
+        }
+
+        wp_send_json_success($ideas);
     }
 
     public function enqueue_editor_scripts($hook = null) {
