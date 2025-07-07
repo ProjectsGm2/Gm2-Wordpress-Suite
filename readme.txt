@@ -19,7 +19,9 @@ A powerful suite of WordPress enhancements including admin tools, frontend optim
    dependencies. Composer is required because packages such as
    `google/apiclient` are not bundled with this plugin. For a production
    environment, use `composer install --no-dev`. The libraries will be placed
-   in the `vendor/` directory.
+   in the `vendor/` directory. If the `vendor/` directory is missing when the
+   plugin loads, it will attempt to run Composer automatically using the
+   system binary or a downloaded `composer.phar`.
 
 If you plan to distribute or manually upload the plugin, build a ZIP archive
 that bundles these libraries:

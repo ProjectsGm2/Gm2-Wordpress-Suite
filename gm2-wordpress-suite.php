@@ -22,17 +22,86 @@ use Gm2\Gm2_Loader;
 use Gm2\Gm2_SEO_Public;
 use Gm2\Gm2_Sitemap;
 
-if (file_exists(__DIR__ . '/vendor/autoload.php')) {
-    require_once __DIR__ . '/vendor/autoload.php';
-} else {
+/**
+ * Ensure Composer dependencies are available. If missing, attempt to run
+ * `composer install` using an available Composer binary or a downloaded
+ * composer.phar. Falls back to displaying an admin notice on failure.
+ *
+ * @return bool True when the autoloader was included successfully.
+ */
+function gm2_ensure_autoload() {
+    $autoload = __DIR__ . '/vendor/autoload.php';
+    if (file_exists($autoload)) {
+        require_once $autoload;
+        return true;
+    }
+
+    gm2_try_composer_install();
+
+    if (file_exists($autoload)) {
+        require_once $autoload;
+        return true;
+    }
+
     if (!function_exists('gm2_missing_autoload_notice')) {
         function gm2_missing_autoload_notice() {
             echo '<div class="notice notice-error"><p>' .
-                esc_html__('Gm2 WordPress Suite requires its Composer dependencies. Please run "composer install".', 'gm2-wordpress-suite') .
+                esc_html__('Gm2 WordPress Suite requires its Composer dependencies and was unable to install them automatically. Please run "composer install".', 'gm2-wordpress-suite') .
                 '</p></div>';
         }
     }
     add_action('admin_notices', 'gm2_missing_autoload_notice');
+
+    return false;
+}
+
+/**
+ * Attempt to install Composer dependencies in the plugin directory.
+ * Uses the system Composer binary when available, otherwise downloads
+ * composer.phar from getcomposer.org.
+ */
+function gm2_try_composer_install() {
+    $plugin_dir = __DIR__;
+
+    $composer_bin = trim(shell_exec('command -v composer'));
+    if ($composer_bin !== '') {
+        gm2_run_command(escapeshellcmd($composer_bin) . ' install --no-dev --optimize-autoloader', $plugin_dir);
+        return;
+    }
+
+    if (!function_exists('wp_remote_get')) {
+        return;
+    }
+
+    $phar = $plugin_dir . '/composer.phar';
+    if (!file_exists($phar)) {
+        $response = wp_remote_get('https://getcomposer.org/composer-stable.phar');
+        if (is_wp_error($response)) {
+            return;
+        }
+        file_put_contents($phar, wp_remote_retrieve_body($response));
+        @chmod($phar, 0755);
+    }
+
+    $php = escapeshellcmd(PHP_BINARY ?: 'php');
+    gm2_run_command($php . ' ' . escapeshellarg($phar) . ' install --no-dev --optimize-autoloader', $plugin_dir);
+}
+
+/**
+ * Execute a shell command from within the plugin directory.
+ *
+ * @param string $command
+ * @param string $cwd
+ * @return void
+ */
+function gm2_run_command($command, $cwd) {
+    $original = getcwd();
+    chdir($cwd);
+    @exec($command);
+    chdir($original);
+}
+
+if (!gm2_ensure_autoload()) {
     return;
 }
 
