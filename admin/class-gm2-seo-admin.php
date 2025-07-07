@@ -9,6 +9,7 @@ class Gm2_SEO_Admin {
         add_action('add_meta_boxes', [$this, 'register_meta_boxes']);
         add_action('save_post', [$this, 'save_post_meta']);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_editor_scripts']);
+        add_action('enqueue_block_editor_assets', [$this, 'enqueue_editor_scripts']);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_taxonomy_scripts']);
         add_action('admin_init', [$this, 'register_settings']);
         add_action('admin_post_gm2_sitemap_settings', [$this, 'handle_sitemap_form']);
@@ -760,8 +761,8 @@ class Gm2_SEO_Admin {
         wp_send_json_success($results);
     }
 
-    public function enqueue_editor_scripts($hook) {
-        if ($hook !== 'post.php' && $hook !== 'post-new.php') {
+    public function enqueue_editor_scripts($hook = '') {
+        if ($hook && $hook !== 'post.php' && $hook !== 'post-new.php') {
             return;
         }
         if (isset($_GET['post_type'])) {
@@ -775,26 +776,34 @@ class Gm2_SEO_Admin {
             return;
         }
 
-        wp_enqueue_script(
-            'gm2-content-analysis',
-            GM2_PLUGIN_URL . 'admin/js/gm2-content-analysis.js',
-            ['jquery', 'wp-data'],
-            GM2_VERSION,
-            true
-        );
-        wp_enqueue_script(
-            'gm2-seo-tabs',
-            GM2_PLUGIN_URL . 'admin/js/gm2-seo.js',
-            ['jquery'],
-            GM2_VERSION,
-            true
-        );
-        wp_enqueue_style(
-            'gm2-seo-style',
-            GM2_PLUGIN_URL . 'admin/css/gm2-seo.css',
-            [],
-            GM2_VERSION
-        );
+        if (!wp_script_is('gm2-content-analysis', 'enqueued')) {
+            wp_enqueue_script(
+                'gm2-content-analysis',
+                GM2_PLUGIN_URL . 'admin/js/gm2-content-analysis.js',
+                ['jquery', 'wp-data'],
+                GM2_VERSION,
+                true
+            );
+        }
+
+        if (!wp_script_is('gm2-seo-tabs', 'enqueued')) {
+            wp_enqueue_script(
+                'gm2-seo-tabs',
+                GM2_PLUGIN_URL . 'admin/js/gm2-seo.js',
+                ['jquery'],
+                GM2_VERSION,
+                true
+            );
+        }
+
+        if (!wp_style_is('gm2-seo-style', 'enqueued')) {
+            wp_enqueue_style(
+                'gm2-seo-style',
+                GM2_PLUGIN_URL . 'admin/css/gm2-seo.css',
+                [],
+                GM2_VERSION
+            );
+        }
 
         $current = isset($_GET['post']) ? absint($_GET['post']) : 0;
         $posts    = get_posts([
