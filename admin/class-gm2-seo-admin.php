@@ -762,10 +762,20 @@ class Gm2_SEO_Admin {
     }
 
     public function enqueue_editor_scripts($hook = null) {
+        global $pagenow;
         if ($hook !== null && $hook !== 'post.php' && $hook !== 'post-new.php') {
             return;
         }
-        if (isset($_GET['post_type'])) {
+
+        if (isset($pagenow) && $pagenow !== 'post.php' && $pagenow !== 'post-new.php') {
+            return;
+        }
+
+        $typenow = '';
+        $screen  = function_exists('get_current_screen') ? get_current_screen() : null;
+        if ($screen && !empty($screen->post_type)) {
+            $typenow = $screen->post_type;
+        } elseif (isset($_GET['post_type'])) {
             $typenow = sanitize_key($_GET['post_type']);
         } elseif (!empty($_GET['post'])) {
             $typenow = get_post_type(absint($_GET['post']));
