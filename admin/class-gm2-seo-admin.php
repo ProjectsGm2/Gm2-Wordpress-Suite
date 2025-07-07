@@ -862,14 +862,11 @@ class Gm2_SEO_Admin {
     }
 
     public function enqueue_editor_scripts($hook = null) {
-        if ($hook !== null && $hook !== 'post.php' && $hook !== 'post-new.php') {
-            return;
-        }
 
         /*
          * $pagenow is not always reliable inside the block editor iframe.
-         * Rely only on the passed $hook parameter and post type checks below
-         * so the tab assets load in both classic and block editors.
+         * Determine the post type directly so the tab assets load in both
+         * classic and block editors even when Elementor adjusts the screen.
          */
 
         $typenow = '';
