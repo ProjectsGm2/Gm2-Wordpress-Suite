@@ -30,6 +30,12 @@ that bundles these libraries:
 2. Upload the generated ZIP through the **Plugins → Add New** screen or copy
    its contents to your `wp-content/plugins` folder.
 
+== No Shell Access ==
+Some hosts disable shell functions like `exec` and `shell_exec`. When these are
+unavailable the plugin cannot install Composer packages automatically. Run
+`composer install` on a local machine or execute `bin/build-plugin.sh` to create
+a ZIP. Upload the plugin with the included `vendor/` directory.
+
 == Breadcrumbs ==
 Display a breadcrumb trail anywhere using the `[gm2_breadcrumbs]` shortcode. The output
 is an ordered list wrapped in a `<nav>` element with accompanying JSON-LD for search engines.
