@@ -36,6 +36,14 @@ class Gm2_Loader {
         $seo_public = new Gm2_SEO_Public();
         $seo_public->run();
 
+        if (did_action('elementor/loaded')) {
+            $this->init_elementor_seo();
+        } else {
+            add_action('elementor/loaded', [$this, 'init_elementor_seo']);
+        }
+    }
+
+    public function init_elementor_seo() {
         if (class_exists('Elementor\\Plugin')) {
             new Gm2_Elementor_SEO();
         }
