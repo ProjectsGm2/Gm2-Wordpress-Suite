@@ -761,8 +761,8 @@ class Gm2_SEO_Admin {
         wp_send_json_success($results);
     }
 
-    public function enqueue_editor_scripts($hook = '') {
-        if ($hook && $hook !== 'post.php' && $hook !== 'post-new.php') {
+    public function enqueue_editor_scripts($hook = null) {
+        if ($hook !== null && $hook !== 'post.php' && $hook !== 'post-new.php') {
             return;
         }
         if (isset($_GET['post_type'])) {
