@@ -18,8 +18,8 @@ define('GM2_VERSION', '1.5.0');
 define('GM2_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('GM2_PLUGIN_URL', plugin_dir_url(__FILE__));
 
-if (file_exists(GM2_PLUGIN_DIR . 'vendor/autoload.php')) {
-    require GM2_PLUGIN_DIR . 'vendor/autoload.php';
+if (file_exists(__DIR__ . '/vendor/autoload.php')) {
+    require_once __DIR__ . '/vendor/autoload.php';
 } else {
     if (!function_exists('gm2_missing_autoload_notice')) {
         function gm2_missing_autoload_notice() {
