@@ -1,4 +1,7 @@
 <?php
+
+namespace Gm2;
+
 if (!defined('ABSPATH')) {
     exit;
 }
@@ -15,17 +18,17 @@ class Gm2_Keyword_Planner {
         $creds = $this->get_credentials();
         foreach ($creds as $v) {
             if ($v === '') {
-                return new WP_Error('missing_creds', 'Keyword Planner credentials not set');
+                return new \WP_Error('missing_creds', 'Keyword Planner credentials not set');
             }
         }
 
         $oauth = new Gm2_Google_OAuth();
         if (!$oauth->is_connected()) {
-            return new WP_Error('missing_creds', 'Google account not connected');
+            return new \WP_Error('missing_creds', 'Google account not connected');
         }
         $token = $oauth->get_access_token();
         if (!$token) {
-            return new WP_Error('no_token', 'Unable to obtain access token');
+            return new \WP_Error('no_token', 'Unable to obtain access token');
         }
 
         $url = sprintf('https://googleads.googleapis.com/v15/customers/%s:generateKeywordIdeas', $creds['customer_id']);

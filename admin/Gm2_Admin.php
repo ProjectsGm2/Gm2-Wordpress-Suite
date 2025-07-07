@@ -1,5 +1,7 @@
 <?php
 
+namespace Gm2;
+
 if (!defined('ABSPATH')) {
     exit;
 }

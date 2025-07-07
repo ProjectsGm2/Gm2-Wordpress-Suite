@@ -1,4 +1,5 @@
 <?php
+use Gm2\Gm2_SEO_Public;
 class BreadcrumbsTest extends WP_UnitTestCase {
     public function setUp(): void {
         parent::setUp();

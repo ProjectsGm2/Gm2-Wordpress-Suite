@@ -18,6 +18,10 @@ define('GM2_VERSION', '1.5.0');
 define('GM2_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('GM2_PLUGIN_URL', plugin_dir_url(__FILE__));
 
+use Gm2\Gm2_Loader;
+use Gm2\Gm2_SEO_Public;
+use Gm2\Gm2_Sitemap;
+
 if (file_exists(__DIR__ . '/vendor/autoload.php')) {
     require_once __DIR__ . '/vendor/autoload.php';
 } else {
@@ -33,9 +37,9 @@ if (file_exists(__DIR__ . '/vendor/autoload.php')) {
 }
 
 // Include required files
-require_once GM2_PLUGIN_DIR . 'includes/class-gm2-loader.php';
-require_once GM2_PLUGIN_DIR . 'public/class-gm2-seo-public.php';
-require_once GM2_PLUGIN_DIR . 'includes/class-gm2-sitemap.php';
+require_once GM2_PLUGIN_DIR . 'includes/Gm2_Loader.php';
+require_once GM2_PLUGIN_DIR . 'public/Gm2_SEO_Public.php';
+require_once GM2_PLUGIN_DIR . 'includes/Gm2_Sitemap.php';
 
 function gm2_activate_plugin() {
     $public = new Gm2_SEO_Public();

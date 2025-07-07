@@ -1,4 +1,5 @@
 <?php
+use Gm2\Gm2_SEO_Admin;
 class GoogleConnectPageTest extends WP_UnitTestCase {
     public function tearDown(): void {
         delete_option('gm2_google_refresh_token');

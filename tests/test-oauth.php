@@ -1,4 +1,5 @@
 <?php
+use Gm2\Gm2_Google_OAuth;
 class OAuthTest extends WP_UnitTestCase {
     public function test_get_auth_url_contains_accounts_domain() {
         $client = new class {

@@ -1,4 +1,7 @@
 <?php
+
+namespace Gm2 {
+
 if (!defined('ABSPATH')) {
     exit;
 }
@@ -98,8 +101,11 @@ class Gm2_Sitemap {
         exit;
     }
 }
+}
 
-function gm2_generate_sitemap() {
-    $s = new Gm2_Sitemap();
-    $s->generate();
+namespace {
+    function gm2_generate_sitemap() {
+        $s = new \Gm2\Gm2_Sitemap();
+        $s->generate();
+    }
 }
