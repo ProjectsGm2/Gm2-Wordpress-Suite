@@ -14,7 +14,7 @@ class Gm2_Elementor_SEO {
         }
         add_action('elementor/documents/register_controls', [$this, 'register_controls']);
         add_action('elementor/editor/after_enqueue_scripts', [$this, 'enqueue_editor_assets']);
-        add_action('elementor/document/save', [$this, 'save_document']);
+        add_action('elementor/document/after_save', [$this, 'save_document']);
     }
 
     public function register_controls($document) {
