@@ -7,30 +7,8 @@ class Gm2_Keyword_Planner {
     private function get_credentials() {
         return [
             'developer_token' => trim(get_option('gm2_gads_developer_token', '')),
-            'client_id'       => trim(get_option('gm2_gads_client_id', '')),
-            'client_secret'   => trim(get_option('gm2_gads_client_secret', '')),
-            'refresh_token'   => trim(get_option('gm2_gads_refresh_token', '')),
             'customer_id'     => trim(get_option('gm2_gads_customer_id', '')),
         ];
-    }
-
-    private function refresh_access_token($client_id, $client_secret, $refresh_token) {
-        $resp = wp_remote_post('https://oauth2.googleapis.com/token', [
-            'body' => [
-                'client_id' => $client_id,
-                'client_secret' => $client_secret,
-                'refresh_token' => $refresh_token,
-                'grant_type' => 'refresh_token',
-            ],
-            'timeout' => 20,
-        ]);
-
-        if (is_wp_error($resp)) {
-            return '';
-        }
-
-        $body = json_decode(wp_remote_retrieve_body($resp), true);
-        return $body['access_token'] ?? '';
     }
 
     public function generate_keyword_ideas($keyword) {
@@ -41,7 +19,11 @@ class Gm2_Keyword_Planner {
             }
         }
 
-        $token = $this->refresh_access_token($creds['client_id'], $creds['client_secret'], $creds['refresh_token']);
+        $oauth = new Gm2_Google_OAuth();
+        if (!$oauth->is_connected()) {
+            return new WP_Error('missing_creds', 'Google account not connected');
+        }
+        $token = $oauth->get_access_token();
         if (!$token) {
             return new WP_Error('no_token', 'Unable to obtain access token');
         }

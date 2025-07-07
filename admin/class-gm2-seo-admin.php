@@ -87,6 +87,15 @@ class Gm2_SEO_Admin {
             'gm2-seo',
             [$this, 'display_dashboard']
         );
+
+        add_submenu_page(
+            'gm2',
+            'Connect Google Account',
+            'Connect Google Account',
+            'manage_options',
+            'gm2-google-connect',
+            [$this, 'display_google_connect_page']
+        );
     }
 
     public function register_settings() {
@@ -151,36 +160,8 @@ class Gm2_SEO_Admin {
             'gm2_seo',
             'gm2_seo_main'
         );
-        add_settings_field(
-            'gm2_gads_client_id',
-            'Google Ads Client ID',
-            function () {
-                $value = get_option('gm2_gads_client_id', '');
-                echo '<input type="text" name="gm2_gads_client_id" value="' . esc_attr($value) . '" class="regular-text" />';
-            },
-            'gm2_seo',
-            'gm2_seo_main'
-        );
-        add_settings_field(
-            'gm2_gads_client_secret',
-            'Google Ads Client Secret',
-            function () {
-                $value = get_option('gm2_gads_client_secret', '');
-                echo '<input type="password" name="gm2_gads_client_secret" value="' . esc_attr($value) . '" class="regular-text" />';
-            },
-            'gm2_seo',
-            'gm2_seo_main'
-        );
-        add_settings_field(
-            'gm2_gads_refresh_token',
-            'Google Ads Refresh Token',
-            function () {
-                $value = get_option('gm2_gads_refresh_token', '');
-                echo '<input type="text" name="gm2_gads_refresh_token" value="' . esc_attr($value) . '" class="regular-text" />';
-            },
-            'gm2_seo',
-            'gm2_seo_main'
-        );
+        // Client ID, secret and refresh token fields are now managed via OAuth
+        // and hidden from the settings screen to avoid manual entry.
         add_settings_field(
             'gm2_gads_customer_id',
             'Google Ads Customer ID',
@@ -397,6 +378,28 @@ class Gm2_SEO_Admin {
             echo '</form>';
         }
 
+        echo '</div>';
+    }
+
+    public function display_google_connect_page() {
+        $oauth = apply_filters('gm2_google_oauth_instance', new Gm2_Google_OAuth());
+
+        $notice = '';
+        if (isset($_GET['code'])) {
+            if ($oauth->handle_callback()) {
+                $notice = '<div class="updated notice"><p>Google account connected.</p></div>';
+            }
+        }
+
+        echo '<div class="wrap">';
+        echo '<h1>Connect Google Account</h1>';
+        echo $notice;
+        if (!$oauth->is_connected()) {
+            $url = esc_url($oauth->get_auth_url());
+            echo '<a href="' . $url . '" class="button button-primary">Connect Google</a>';
+        } else {
+            echo '<p>Google account connected.</p>';
+        }
         echo '</div>';
     }
 
