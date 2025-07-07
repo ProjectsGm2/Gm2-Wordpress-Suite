@@ -1,0 +1,22 @@
+name: Build Release
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          coverage: none
+      - name: Build plugin
+        run: bash bin/build-plugin.sh
+      - name: Upload release asset
+        uses: softprops/action-gh-release@v1
+        with:
+          files: gm2-wordpress-suite.zip
