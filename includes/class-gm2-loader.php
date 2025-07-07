@@ -20,6 +20,7 @@ class Gm2_Loader {
         require_once GM2_PLUGIN_DIR . 'includes/class-gm2-sitemap.php';
         require_once GM2_PLUGIN_DIR . 'includes/class-gm2-keyword-planner.php';
         require_once GM2_PLUGIN_DIR . 'includes/class-gm2-google-oauth.php';
+        require_once GM2_PLUGIN_DIR . 'includes/class-gm2-elementor-seo.php';
     }
 
     public function run() {
@@ -34,5 +35,9 @@ class Gm2_Loader {
 
         $seo_public = new Gm2_SEO_Public();
         $seo_public->run();
+
+        if (class_exists('Elementor\\Plugin')) {
+            new Gm2_Elementor_SEO();
+        }
     }
 }
