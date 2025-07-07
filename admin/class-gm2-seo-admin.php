@@ -38,6 +38,11 @@ class Gm2_SEO_Admin {
             add_action("edited_{$tax}", [$this, 'maybe_generate_sitemap'], 10, 0);
             add_action("delete_{$tax}", [$this, 'maybe_generate_sitemap'], 10, 0);
         }
+
+        if (did_action('elementor/loaded')) {
+            require_once GM2_PLUGIN_DIR . 'admin/class-gm2-elementor.php';
+            new Gm2_Elementor($this);
+        }
     }
 
     public function maybe_generate_sitemap($new_status = null, $old_status = null, $post = null) {
