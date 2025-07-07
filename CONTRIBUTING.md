@@ -10,6 +10,10 @@ This project includes a PHPUnit test suite that relies on the WordPress test lib
    composer install
    ```
 
+   This command installs packages under the `vendor/` directory. On production
+   systems you can run `composer install --no-dev` to omit development-only
+   packages.
+
 2. Set up the WordPress testing suite. This script installs WordPress and configures the test environment:
 
    ```bash
