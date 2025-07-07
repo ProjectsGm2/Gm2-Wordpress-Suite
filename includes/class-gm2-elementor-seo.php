@@ -76,7 +76,7 @@ class Gm2_Elementor_SEO {
             [
                 'label' => __('Canonical URL', 'gm2-wordpress-suite'),
                 'type'  => \Elementor\Controls_Manager::URL,
-                'default' => get_post_meta($post_id, '_gm2_canonical', true),
+                'default' => [ 'url' => get_post_meta($post_id, '_gm2_canonical', true) ],
             ]
         );
         $document->end_controls_section();
@@ -101,7 +101,11 @@ class Gm2_Elementor_SEO {
         $description = isset($data['gm2_seo_description']) ? sanitize_textarea_field($data['gm2_seo_description']) : '';
         $noindex     = empty($data['gm2_noindex']) ? '0' : '1';
         $nofollow    = empty($data['gm2_nofollow']) ? '0' : '1';
-        $canonical   = isset($data['gm2_canonical_url']) ? esc_url_raw($data['gm2_canonical_url']) : '';
+        $canonical_val = $data['gm2_canonical_url'] ?? '';
+        if (is_array($canonical_val)) {
+            $canonical_val = $canonical_val['url'] ?? '';
+        }
+        $canonical   = esc_url_raw($canonical_val);
         $focus       = isset($data['gm2_focus_keywords']) ? sanitize_text_field($data['gm2_focus_keywords']) : '';
         update_post_meta($post_id, '_gm2_title', $title);
         update_post_meta($post_id, '_gm2_description', $description);
