@@ -16,7 +16,17 @@ This project includes a PHPUnit test suite that relies on the WordPress test lib
    bash bin/install-wp-tests.sh <db-name> <db-user> <db-pass> [db-host] [wp-version]
    ```
 
-   Replace the placeholders with your local MySQL credentials. Run the script once before executing the tests.
+    Replace the placeholders with your local MySQL credentials. Run the script once before executing the tests.
+
+## WordPress Test Suite
+
+The PHPUnit tests depend on the WordPress testing suite. The installation script above downloads it automatically. You can also check out the suite manually, for example:
+
+```bash
+svn co https://develop.svn.wordpress.org/trunk/tests/phpunit $WP_TESTS_DIR
+```
+
+Set the `WP_TESTS_DIR` environment variable to the directory where the suite resides. PHPUnit tests cannot run without this directory.
 
 ## Running Tests
 
