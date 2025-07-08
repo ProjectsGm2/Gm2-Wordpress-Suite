@@ -20,10 +20,10 @@ A powerful suite of WordPress enhancements including admin tools, frontend optim
    Finally, use **SEO → Connect Google Account** to authorize your Google account. After connecting, you will be able to select your Analytics Measurement ID and Ads Customer ID from dropdown menus.
 4. All required PHP libraries, including the Google API client, are bundled in
    the plugin. No additional installation steps are required.
-5. Obtain your Search Console verification code and Google Ads developer token
-   directly from your Google accounts. The developer token is required for
-   listing Ads accounts. These values cannot be fetched via API and must be
-   entered manually on the SEO settings page.
+5. Follow the steps in the **Google integration** section below to copy your
+   Search Console verification code and Google Ads developer token. These values
+   cannot be fetched via API and must be entered manually on the SEO settings
+   page.
 6. Select your Analytics Measurement ID and Ads Customer ID on the
    **SEO → Connect Google Account** page after connecting. These IDs cannot be
    entered manually on the SEO settings screen.
@@ -32,6 +32,12 @@ If you plan to distribute or manually upload the plugin, you can create a ZIP
 archive with `bash bin/build-plugin.sh`. This command packages the plugin with
 all dependencies into `gm2-wordpress-suite.zip` for installation via the
 **Plugins → Add New** screen.
+
+== Google integration ==
+These credentials must be copied from your Google accounts:
+
+* **Search Console verification code** – Log in to <https://search.google.com/search-console>, open **Settings → Ownership verification**, and choose the *HTML tag* option. Copy the code displayed in the meta tag and paste it into the **Search Console Verification Code** field on the SEO settings page. See <https://support.google.com/webmasters/answer/9008080> for details.
+* **Google Ads developer token** – Sign in at <https://ads.google.com>, then go to **Tools → API Center**. Copy your **Developer token** and enter it into the **Google Ads Developer Token** field. Documentation: <https://developers.google.com/google-ads/api/docs/first-call/dev-token>.
 
 == Breadcrumbs ==
 Display a breadcrumb trail anywhere using the `[gm2_breadcrumbs]` shortcode. The output
