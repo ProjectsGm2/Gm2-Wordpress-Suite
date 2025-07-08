@@ -151,24 +151,57 @@ class Gm2_Google_OAuth {
         if (!$token) {
             return [];
         }
-        $accounts = $this->api_request('GET', 'https://analytics.googleapis.com/analytics/v3/management/accounts', null, [
+        $props = [];
+
+        // GA4 properties via Analytics Admin API.
+        $accounts = $this->api_request('GET', 'https://analyticsadmin.googleapis.com/v1/accountSummaries', null, [
             'Authorization' => 'Bearer ' . $token,
         ]);
-        if (is_wp_error($accounts) || empty($accounts['items'])) {
-            return [];
-        }
-        $props = [];
-        foreach ($accounts['items'] as $acct) {
-            $url = sprintf('https://analytics.googleapis.com/analytics/v3/management/accounts/%s/webproperties', $acct['id']);
-            $webprops = $this->api_request('GET', $url, null, [
-                'Authorization' => 'Bearer ' . $token,
-            ]);
-            if (!is_wp_error($webprops) && !empty($webprops['items'])) {
-                foreach ($webprops['items'] as $p) {
-                    $props[$p['id']] = $p['name'];
+        if (!is_wp_error($accounts) && !empty($accounts['accountSummaries'])) {
+            foreach ($accounts['accountSummaries'] as $acct) {
+                if (empty($acct['propertySummaries'])) {
+                    continue;
+                }
+                foreach ($acct['propertySummaries'] as $p) {
+                    $propName = $p['displayName'] ?? $p['property'];
+                    $propId   = $p['property'];
+                    // Query for web data streams to get measurement ID.
+                    $streams = $this->api_request('GET', sprintf('https://analyticsadmin.googleapis.com/v1/%s/dataStreams', $propId), null, [
+                        'Authorization' => 'Bearer ' . $token,
+                    ]);
+                    if (!is_wp_error($streams) && !empty($streams['dataStreams'])) {
+                        foreach ($streams['dataStreams'] as $stream) {
+                            if (($stream['type'] ?? '') === 'WEB_DATA_STREAM' && !empty($stream['webStreamData']['measurementId'])) {
+                                $mid = $stream['webStreamData']['measurementId'];
+                                $props[$mid] = $propName;
+                                break;
+                            }
+                        }
+                    }
                 }
             }
         }
+
+        // UA properties via the legacy v3 API for backwards compatibility.
+        $ua_accounts = $this->api_request('GET', 'https://analytics.googleapis.com/analytics/v3/management/accounts', null, [
+            'Authorization' => 'Bearer ' . $token,
+        ]);
+        if (!is_wp_error($ua_accounts) && !empty($ua_accounts['items'])) {
+            foreach ($ua_accounts['items'] as $acct) {
+                $url = sprintf('https://analytics.googleapis.com/analytics/v3/management/accounts/%s/webproperties', $acct['id']);
+                $webprops = $this->api_request('GET', $url, null, [
+                    'Authorization' => 'Bearer ' . $token,
+                ]);
+                if (!is_wp_error($webprops) && !empty($webprops['items'])) {
+                    foreach ($webprops['items'] as $p) {
+                        if (!isset($props[$p['id']])) {
+                            $props[$p['id']] = $p['name'];
+                        }
+                    }
+                }
+            }
+        }
+
         return $props;
     }
 

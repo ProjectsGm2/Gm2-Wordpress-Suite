@@ -87,4 +87,57 @@ class OAuthTest extends WP_UnitTestCase {
         $this->assertIsArray($captured);
         $this->assertSame('devtoken', $captured['headers']['developer-token']);
     }
+
+    public function test_ga4_properties_returned() {
+        update_option('gm2_google_refresh_token', 'refresh');
+        update_option('gm2_google_access_token', 'access');
+        update_option('gm2_google_expires_at', time() + 3600);
+
+        $filter = function ($pre, $args, $url) {
+            if (0 === strpos($url, 'https://analyticsadmin.googleapis.com/v1/accountSummaries')) {
+                return [
+                    'response' => ['code' => 200],
+                    'body'     => json_encode([
+                        'accountSummaries' => [
+                            [
+                                'propertySummaries' => [
+                                    [
+                                        'property'    => 'properties/123',
+                                        'displayName' => 'GA4 Prop',
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ]),
+                ];
+            }
+            if (0 === strpos($url, 'https://analyticsadmin.googleapis.com/v1/properties/123/dataStreams')) {
+                return [
+                    'response' => ['code' => 200],
+                    'body'     => json_encode([
+                        'dataStreams' => [
+                            [
+                                'type' => 'WEB_DATA_STREAM',
+                                'webStreamData' => ['measurementId' => 'G-ABC123'],
+                            ],
+                        ],
+                    ]),
+                ];
+            }
+            if (false !== strpos($url, 'analytics/v3/')) {
+                return [ 'response' => ['code' => 200], 'body' => json_encode(['items' => []]) ];
+            }
+            return false;
+        };
+
+        add_filter('pre_http_request', $filter, 10, 3);
+
+        $oauth = new Gm2_Google_OAuth();
+        $props = $oauth->list_analytics_properties();
+
+        remove_filter('pre_http_request', $filter, 10);
+
+        $this->assertArrayHasKey('G-ABC123', $props);
+        $this->assertSame('GA4 Prop', $props['G-ABC123']);
+    }
 }
