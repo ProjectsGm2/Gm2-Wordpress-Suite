@@ -150,6 +150,15 @@ class Gm2_Admin {
             'gm2-add-tariff',
             [$this, 'display_add_tariff_page']
         );
+
+        add_submenu_page(
+            'gm2',
+            esc_html__( 'Google OAuth Setup', 'gm2-wordpress-suite' ),
+            esc_html__( 'Google OAuth Setup', 'gm2-wordpress-suite' ),
+            'manage_options',
+            'gm2-google-oauth-setup',
+            [ $this, 'display_google_oauth_setup_page' ]
+        );
     }
 
     public function display_dashboard() {
@@ -245,6 +254,51 @@ class Gm2_Admin {
             echo '<tr><td colspan="4">No tariffs found.</td></tr>';
         }
         echo '</tbody></table></div>';
+    }
+
+    public function display_google_oauth_setup_page() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( esc_html__( 'Permission denied', 'gm2-wordpress-suite' ) );
+        }
+
+        $notice = '';
+        if ( isset( $_POST['gm2_gads_oauth_setup_nonce'] ) && wp_verify_nonce( $_POST['gm2_gads_oauth_setup_nonce'], 'gm2_gads_oauth_setup_save' ) ) {
+            $client_id     = isset( $_POST['gm2_gads_client_id'] ) ? sanitize_text_field( wp_unslash( $_POST['gm2_gads_client_id'] ) ) : '';
+            $client_secret = isset( $_POST['gm2_gads_client_secret'] ) ? sanitize_text_field( wp_unslash( $_POST['gm2_gads_client_secret'] ) ) : '';
+
+            update_option( 'gm2_gads_client_id', $client_id );
+            update_option( 'gm2_gads_client_secret', $client_secret );
+
+            $notice = '<div class="updated notice"><p>' . esc_html__( 'Settings saved.', 'gm2-wordpress-suite' ) . '</p></div>';
+        }
+
+        $client_id     = get_option( 'gm2_gads_client_id', '' );
+        $client_secret = get_option( 'gm2_gads_client_secret', '' );
+        $redirect      = admin_url( 'admin.php?page=gm2-google-connect' );
+
+        echo '<div class="wrap">';
+        echo '<h1>' . esc_html__( 'Google OAuth Setup', 'gm2-wordpress-suite' ) . '</h1>';
+        echo $notice;
+        echo '<p>' . esc_html__( 'Follow these steps to create OAuth credentials on the Google Cloud console:', 'gm2-wordpress-suite' ) . '</p>';
+        echo '<ol>';
+        echo '<li>' . esc_html__( 'Open the Google Cloud console and create a new project.', 'gm2-wordpress-suite' ) . '</li>';
+        echo '<li>' . esc_html__( 'Enable the Google Ads API and other required APIs.', 'gm2-wordpress-suite' ) . '</li>';
+        echo '<li>' . esc_html__( 'Create OAuth client ID credentials for a Web application.', 'gm2-wordpress-suite' ) . '</li>';
+        echo '<li>' . sprintf( esc_html__( 'Set the authorized redirect URI to %s.', 'gm2-wordpress-suite' ), esc_url( $redirect ) ) . '</li>';
+        echo '<li>' . esc_html__( 'Copy the client ID and client secret into the fields below.', 'gm2-wordpress-suite' ) . '</li>';
+        echo '</ol>';
+
+        echo '<form method="post">';
+        wp_nonce_field( 'gm2_gads_oauth_setup_save', 'gm2_gads_oauth_setup_nonce' );
+        echo '<table class="form-table"><tbody>';
+        echo '<tr><th scope="row"><label for="gm2_gads_client_id">' . esc_html__( 'Client ID', 'gm2-wordpress-suite' ) . '</label></th>';
+        echo '<td><input name="gm2_gads_client_id" type="text" id="gm2_gads_client_id" value="' . esc_attr( $client_id ) . '" class="regular-text" required></td></tr>';
+        echo '<tr><th scope="row"><label for="gm2_gads_client_secret">' . esc_html__( 'Client Secret', 'gm2-wordpress-suite' ) . '</label></th>';
+        echo '<td><input name="gm2_gads_client_secret" type="text" id="gm2_gads_client_secret" value="' . esc_attr( $client_secret ) . '" class="regular-text" required></td></tr>';
+        echo '</tbody></table>';
+        submit_button();
+        echo '</form>';
+        echo '</div>';
     }
 
 }
