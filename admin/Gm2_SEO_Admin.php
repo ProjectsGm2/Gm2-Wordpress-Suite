@@ -43,9 +43,10 @@ class Gm2_SEO_Admin {
             add_action("delete_{$tax}", [$this, 'maybe_generate_sitemap'], 10, 0);
         }
 
-        add_action('elementor/loaded', [$this, 'register_elementor_hooks']);
         if (did_action('elementor/loaded')) {
-            $this->register_elementor_hooks();
+            $this->setup_elementor_integration();
+        } else {
+            add_action('elementor/loaded', [$this, 'setup_elementor_integration']);
         }
     }
 
@@ -82,7 +83,7 @@ class Gm2_SEO_Admin {
         return $taxonomies;
     }
 
-    public function register_elementor_hooks() {
+    public function setup_elementor_integration() {
         if ($this->elementor_initialized) {
             return;
         }
@@ -92,6 +93,11 @@ class Gm2_SEO_Admin {
         new Gm2_Elementor($this);
         add_action('elementor/editor/before_enqueue_scripts', [$this, 'enqueue_elementor_scripts']);
         add_action('elementor/editor/footer', [$this, 'output_elementor_panel']);
+    }
+
+    // Backwards compatibility with older hooks
+    public function register_elementor_hooks() {
+        $this->setup_elementor_integration();
     }
 
     public function add_settings_pages() {
