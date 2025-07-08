@@ -24,6 +24,9 @@ A powerful suite of WordPress enhancements including admin tools, frontend optim
    directly from your Google accounts. The developer token is required for
    listing Ads accounts. These values cannot be fetched via API and must be
    entered manually on the SEO settings page.
+6. Select your Analytics Measurement ID and Ads Customer ID on the
+   **SEO → Connect Google Account** page after connecting. These IDs cannot be
+   entered manually on the SEO settings screen.
 
 If you plan to distribute or manually upload the plugin, you can create a ZIP
 archive with `bash bin/build-plugin.sh`. This command packages the plugin with
