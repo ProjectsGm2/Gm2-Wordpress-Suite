@@ -3,7 +3,7 @@ Contributors: gm2team
 Tags: admin, tools, suite, performance
 Requires at least: 5.6
 Tested up to: 6.5
-Stable tag: 1.6.0
+Stable tag: 1.6.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -38,6 +38,16 @@ These credentials must be copied from your Google accounts:
 
 * **Search Console verification code** – Log in to <https://search.google.com/search-console>, open **Settings → Ownership verification**, and choose the *HTML tag* option. Copy the code displayed in the meta tag and paste it into the **Search Console Verification Code** field on the SEO settings page. See <https://support.google.com/webmasters/answer/9008080> for details.
 * **Google Ads developer token** – Sign in at <https://ads.google.com>, then go to **Tools → API Center**. Copy your **Developer token** and enter it into the **Google Ads Developer Token** field. Documentation: <https://developers.google.com/google-ads/api/docs/first-call/dev-token>.
+
+== Troubleshooting ==
+If you see errors when connecting your Google account:
+
+* **Missing developer token** – Sign in at <https://ads.google.com> and open **Tools → API Center**. Copy your **Developer token** and enter it on the OAuth setup page.
+* **No Analytics properties found** or **No Ads accounts found** –
+  * Enable the Analytics Admin, Search Console and Google Ads APIs for your OAuth client.
+  * Confirm the connected Google account can access the required properties and accounts.
+  * Disconnect and reconnect after adjusting permissions.
+* **Invalid OAuth state** – Reconnect from **SEO → Connect Google Account** to refresh the authorization flow.
 
 == Breadcrumbs ==
 Display a breadcrumb trail anywhere using the `[gm2_breadcrumbs]` shortcode. The output
@@ -76,6 +86,8 @@ Use the **Test Prompt** box on the same page to send a message and verify your
 settings before generating content.
 
 == Changelog ==
+= 1.6.1 =
+* Improved error guidance for OAuth connection issues.
 = 1.6.0 =
 * ChatGPT integration with admin settings page.
 = 1.5.0 =
