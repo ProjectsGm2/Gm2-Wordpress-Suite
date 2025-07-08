@@ -156,6 +156,7 @@ class Gm2_SEO_Admin {
             function () {
                 $value = get_option('gm2_ga_measurement_id', '');
                 echo '<input type="text" name="gm2_ga_measurement_id" value="' . esc_attr($value) . '" class="regular-text" />';
+                echo '<p class="description">Use <strong>SEO → Connect Google Account</strong> to fetch available IDs.</p>';
             },
             'gm2_seo',
             'gm2_seo_main'
@@ -192,6 +193,7 @@ class Gm2_SEO_Admin {
             function () {
                 $value = get_option('gm2_gads_customer_id', '');
                 echo '<input type="text" name="gm2_gads_customer_id" value="' . esc_attr($value) . '" class="regular-text" />';
+                echo '<p class="description">Use <strong>SEO → Connect Google Account</strong> to fetch available IDs.</p>';
             },
             'gm2_seo',
             'gm2_seo_main'
