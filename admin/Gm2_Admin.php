@@ -335,7 +335,11 @@ class Gm2_Admin {
             wp_die('Permission denied');
         }
 
-        $key = get_option('gm2_chatgpt_api_key', '');
+        $key   = get_option('gm2_chatgpt_api_key', '');
+        $model = get_option('gm2_chatgpt_model', 'gpt-3.5-turbo');
+        $temperature = get_option('gm2_chatgpt_temperature', '1.0');
+        $max_tokens  = get_option('gm2_chatgpt_max_tokens', '');
+        $endpoint    = get_option('gm2_chatgpt_endpoint', 'https://api.openai.com/v1/chat/completions');
         $notice = '';
         if (!empty($_GET['updated'])) {
             $notice = '<div class="updated notice"><p>' . esc_html__('Settings saved.', 'gm2-wordpress-suite') . '</p></div>';
@@ -350,6 +354,14 @@ class Gm2_Admin {
         echo '<table class="form-table"><tbody>';
         echo '<tr><th scope="row"><label for="gm2_chatgpt_api_key">API Key</label></th>';
         echo '<td><input type="password" id="gm2_chatgpt_api_key" name="gm2_chatgpt_api_key" value="' . esc_attr($key) . '" class="regular-text" /></td></tr>';
+        echo '<tr><th scope="row"><label for="gm2_chatgpt_model">Model</label></th>';
+        echo '<td><input type="text" id="gm2_chatgpt_model" name="gm2_chatgpt_model" value="' . esc_attr($model) . '" class="regular-text" /></td></tr>';
+        echo '<tr><th scope="row"><label for="gm2_chatgpt_temperature">Temperature</label></th>';
+        echo '<td><input type="number" step="0.1" id="gm2_chatgpt_temperature" name="gm2_chatgpt_temperature" value="' . esc_attr($temperature) . '" class="small-text" /></td></tr>';
+        echo '<tr><th scope="row"><label for="gm2_chatgpt_max_tokens">Max Tokens</label></th>';
+        echo '<td><input type="number" id="gm2_chatgpt_max_tokens" name="gm2_chatgpt_max_tokens" value="' . esc_attr($max_tokens) . '" class="small-text" /></td></tr>';
+        echo '<tr><th scope="row"><label for="gm2_chatgpt_endpoint">API Endpoint</label></th>';
+        echo '<td><input type="text" id="gm2_chatgpt_endpoint" name="gm2_chatgpt_endpoint" value="' . esc_attr($endpoint) . '" class="regular-text" /></td></tr>';
         echo '</tbody></table>';
         submit_button();
         echo '</form>';
@@ -370,7 +382,16 @@ class Gm2_Admin {
 
         check_admin_referer('gm2_chatgpt_settings');
         $key = isset($_POST['gm2_chatgpt_api_key']) ? sanitize_text_field($_POST['gm2_chatgpt_api_key']) : '';
+        $model = isset($_POST['gm2_chatgpt_model']) ? sanitize_text_field($_POST['gm2_chatgpt_model']) : '';
+        $temperature = isset($_POST['gm2_chatgpt_temperature']) ? floatval($_POST['gm2_chatgpt_temperature']) : 1.0;
+        $max_tokens  = isset($_POST['gm2_chatgpt_max_tokens']) ? intval($_POST['gm2_chatgpt_max_tokens']) : 0;
+        $endpoint    = isset($_POST['gm2_chatgpt_endpoint']) ? esc_url_raw($_POST['gm2_chatgpt_endpoint']) : '';
+
         update_option('gm2_chatgpt_api_key', $key);
+        update_option('gm2_chatgpt_model', $model);
+        update_option('gm2_chatgpt_temperature', $temperature);
+        update_option('gm2_chatgpt_max_tokens', $max_tokens);
+        update_option('gm2_chatgpt_endpoint', $endpoint);
 
         wp_redirect(admin_url('admin.php?page=gm2-chatgpt&updated=1'));
         exit;
