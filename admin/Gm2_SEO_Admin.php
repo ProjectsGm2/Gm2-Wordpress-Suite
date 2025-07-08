@@ -42,7 +42,7 @@ class Gm2_SEO_Admin {
             add_action("delete_{$tax}", [$this, 'maybe_generate_sitemap'], 10, 0);
         }
 
-        if (did_action('elementor/loaded')) {
+        if (class_exists('\\Elementor\\Plugin')) {
             require_once GM2_PLUGIN_DIR . 'admin/Gm2_Elementor.php';
             new Gm2_Elementor($this);
             add_action('elementor/editor/before_enqueue_scripts', [$this, 'enqueue_elementor_scripts']);
@@ -1050,11 +1050,14 @@ class Gm2_SEO_Admin {
     }
 
     public function output_elementor_panel() {
-        global $post;
-        if ($post) {
-            echo '<div id="gm2-elementor-seo-panel">';
-            $this->render_seo_tabs_meta_box($post);
-            echo '</div>';
+        $post_id = isset($_GET['post']) ? absint($_GET['post']) : 0;
+        if ($post_id) {
+            $post = get_post($post_id);
+            if ($post) {
+                echo '<div id="gm2-elementor-seo-panel">';
+                $this->render_seo_tabs_meta_box($post);
+                echo '</div>';
+            }
         }
     }
 }
