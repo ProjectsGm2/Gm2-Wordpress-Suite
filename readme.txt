@@ -64,4 +64,4 @@ When enabled, uploaded images are sent to the API and replaced with the optimize
 * Initial release.
 
 == Testing ==
-For contributing and running the automated test suite, see `CONTRIBUTING.md` for detailed setup instructions.
+The automated tests use the WordPress test suite and assume `phpunit` is installed globally. See `CONTRIBUTING.md` for setup details.
