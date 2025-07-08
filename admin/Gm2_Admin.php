@@ -349,7 +349,7 @@ class Gm2_Admin {
         echo '<input type="hidden" name="action" value="gm2_chatgpt_settings" />';
         echo '<table class="form-table"><tbody>';
         echo '<tr><th scope="row"><label for="gm2_chatgpt_api_key">API Key</label></th>';
-        echo '<td><input type="text" id="gm2_chatgpt_api_key" name="gm2_chatgpt_api_key" value="' . esc_attr($key) . '" class="regular-text" /></td></tr>';
+        echo '<td><input type="password" id="gm2_chatgpt_api_key" name="gm2_chatgpt_api_key" value="' . esc_attr($key) . '" class="regular-text" /></td></tr>';
         echo '</tbody></table>';
         submit_button();
         echo '</form>';
