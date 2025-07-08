@@ -25,15 +25,7 @@ $gm2_autoload = GM2_PLUGIN_DIR . 'vendor/autoload.php';
 if (file_exists($gm2_autoload)) {
     require_once $gm2_autoload;
 } else {
-    if (!function_exists('gm2_missing_autoload_notice')) {
-        function gm2_missing_autoload_notice() {
-            echo '<div class="notice notice-error"><p>' .
-                esc_html__('Gm2 WordPress Suite dependencies are missing. Run `composer install` or download a release ZIP that bundles the vendor directory.', 'gm2-wordpress-suite') .
-                '</p></div>';
-        }
-    }
-    add_action('admin_notices', 'gm2_missing_autoload_notice');
-    return;
+    require_once GM2_PLUGIN_DIR . 'includes/autoload.php';
 }
 
 // Include required files
