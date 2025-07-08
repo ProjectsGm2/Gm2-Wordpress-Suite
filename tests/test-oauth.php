@@ -88,6 +88,19 @@ class OAuthTest extends WP_UnitTestCase {
         $this->assertSame('devtoken', $captured['headers']['developer-token']);
     }
 
+    public function test_error_returned_when_no_developer_token() {
+        update_option('gm2_google_refresh_token', 'refresh');
+        update_option('gm2_google_access_token', 'access');
+        update_option('gm2_google_expires_at', time() + 3600);
+        delete_option('gm2_gads_developer_token');
+
+        $oauth  = new Gm2_Google_OAuth();
+        $result = $oauth->list_ads_accounts();
+
+        $this->assertInstanceOf('WP_Error', $result);
+        $this->assertSame('missing_developer_token', $result->get_error_code());
+    }
+
     public function test_ga4_properties_returned() {
         update_option('gm2_google_refresh_token', 'refresh');
         update_option('gm2_google_access_token', 'access');

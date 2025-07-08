@@ -450,7 +450,10 @@ class Gm2_SEO_Admin {
                     update_option('gm2_ga_measurement_id', array_key_first($properties));
                 }
                 $accounts = $oauth->list_ads_accounts();
-                if (!empty($accounts) && '' === get_option('gm2_gads_customer_id', '')) {
+                if (is_wp_error($accounts)) {
+                    $notice .= '<div class="error notice"><p>' . esc_html($accounts->get_error_message()) . '</p></div>';
+                    $accounts = [];
+                } elseif (!empty($accounts) && '' === get_option('gm2_gads_customer_id', '')) {
                     update_option('gm2_gads_customer_id', array_key_first($accounts));
                 }
             }
@@ -462,6 +465,10 @@ class Gm2_SEO_Admin {
             }
             if (!$accounts) {
                 $accounts = $oauth->list_ads_accounts();
+            }
+            if (is_wp_error($accounts)) {
+                $notice .= '<div class="error notice"><p>' . esc_html($accounts->get_error_message()) . '</p></div>';
+                $accounts = [];
             }
 
             if (empty($properties)) {
