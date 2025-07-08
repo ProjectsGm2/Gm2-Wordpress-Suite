@@ -1,10 +1,11 @@
 # Contributing
 
-This project includes a PHPUnit test suite that relies on the WordPress test library.
+This project includes a PHPUnit test suite that relies on the WordPress test library. PHPUnit is expected to be installed globally, so the `phpunit` command is available on your system path.
 
 ## Installation
 
-1. Set up the WordPress testing suite. This script downloads WordPress and configures the test environment:
+1. Install PHPUnit through your package manager so the `phpunit` command is available globally.
+2. Set up the WordPress testing suite. This script downloads WordPress and configures the test environment:
 
    ```bash
    bash bin/install-wp-tests.sh <db-name> <db-user> <db-pass> [db-host] [wp-version]
