@@ -389,7 +389,10 @@ class Gm2_SEO_Admin {
 
         $notice = '';
         if (isset($_GET['code'])) {
-            if ($oauth->handle_callback()) {
+            $result = $oauth->handle_callback();
+            if (is_wp_error($result)) {
+                $notice = '<div class="error notice"><p>' . esc_html($result->get_error_message()) . '</p></div>';
+            } elseif ($result) {
                 $notice = '<div class="updated notice"><p>Google account connected.</p></div>';
             }
         }

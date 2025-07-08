@@ -56,6 +56,9 @@ class Gm2_Google_OAuth {
     }
 
     public function get_auth_url() {
+        $state = wp_create_nonce('gm2_oauth_state');
+        update_user_meta(get_current_user_id(), 'gm2_oauth_state', $state);
+
         $params = [
             'client_id' => $this->client_id,
             'redirect_uri' => $this->redirect_uri,
@@ -63,6 +66,7 @@ class Gm2_Google_OAuth {
             'access_type' => 'offline',
             'prompt' => 'consent',
             'scope' => implode(' ', $this->scopes),
+            'state' => $state,
         ];
         return 'https://accounts.google.com/o/oauth2/v2/auth?' . http_build_query($params, '', '&', PHP_QUERY_RFC3986);
     }
@@ -71,6 +75,13 @@ class Gm2_Google_OAuth {
         if (!isset($_GET['code'])) {
             return false;
         }
+
+        $expected_state = get_user_meta(get_current_user_id(), 'gm2_oauth_state', true);
+        delete_user_meta(get_current_user_id(), 'gm2_oauth_state');
+        if (empty($_GET['state']) || $_GET['state'] !== $expected_state) {
+            return new \WP_Error('invalid_state', 'Invalid OAuth state');
+        }
+
         $resp = $this->api_request('POST', 'https://oauth2.googleapis.com/token', [
             'code' => $_GET['code'],
             'client_id' => $this->client_id,

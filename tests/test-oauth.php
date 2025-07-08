@@ -32,6 +32,9 @@ class OAuthTest extends WP_UnitTestCase {
             public function fetchAccessTokenWithAuthCode($code) { return ['refresh_token'=>'saved']; }
         };
         $oauth = new Gm2_Google_OAuth($client);
+        $url = $oauth->get_auth_url();
+        parse_str(parse_url($url, PHP_URL_QUERY), $params);
+        $_GET['state'] = $params['state'];
         $oauth->handle_callback();
         $this->assertSame('saved', get_option('gm2_google_refresh_token'));
     }
