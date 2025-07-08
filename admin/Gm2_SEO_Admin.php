@@ -389,11 +389,11 @@ class Gm2_SEO_Admin {
 
         $notice = '';
         if (isset($_GET['code'])) {
-            $_GET['code']  = sanitize_text_field(wp_unslash($_GET['code']));
+            $code = sanitize_text_field(wp_unslash($_GET['code']));
             if (isset($_GET['state'])) {
                 $_GET['state'] = sanitize_text_field(wp_unslash($_GET['state']));
             }
-            $result = $oauth->handle_callback();
+            $result = $oauth->handle_callback($code);
             if (is_wp_error($result)) {
                 $notice = '<div class="error notice"><p>' . esc_html($result->get_error_message()) . '</p></div>';
             } elseif ($result) {

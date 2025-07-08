@@ -53,7 +53,7 @@ class OAuthTest extends WP_UnitTestCase {
         parse_str(parse_url($url, PHP_URL_QUERY), $params);
         $_GET['state'] = $params['state'];
 
-        $oauth->handle_callback();
+        $oauth->handle_callback('test');
 
         remove_filter('pre_http_request', $filter, 10);
 
