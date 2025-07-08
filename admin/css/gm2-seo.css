@@ -16,3 +16,6 @@
 .gm2-tab-panel.active { display:block; }
 .gm2-analysis-rules li.pass { color:#46b450; }
 .gm2-analysis-rules li.fail { color:#d63638; }
+
+#gm2-elementor-seo-panel { padding:10px; }
+#elementor-panel-footer #gm2-elementor-seo-panel .gm2-tab-panel { border:none; }

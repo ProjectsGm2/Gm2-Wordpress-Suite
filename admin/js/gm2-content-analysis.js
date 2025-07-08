@@ -139,14 +139,29 @@
         if(typeof wp !== 'undefined' && wp.data){
             wp.data.subscribe(update);
         }
-        if(window.elementor){
+
+        function initElementorPanel(){
+            var $panel = jQuery('#gm2-elementor-seo-panel');
+            if($panel.length){
+                jQuery('#elementor-panel-footer').append($panel);
+            }
             if(elementor.hooks && elementor.hooks.addAction){
                 elementor.hooks.addAction('document:save', update);
             }
             if(elementor.channels && elementor.channels.editor){
                 elementor.channels.editor.on('change', update);
             }
+            update();
         }
+
+        if(window.elementor){
+            if(elementor.on){
+                elementor.on('init', initElementorPanel);
+            } else {
+                initElementorPanel();
+            }
+        }
+
         $(document).on('input', '#gm2_focus_keywords', update);
     });
 })(jQuery);
