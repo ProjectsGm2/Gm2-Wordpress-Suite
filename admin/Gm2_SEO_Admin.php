@@ -45,6 +45,8 @@ class Gm2_SEO_Admin {
         if (did_action('elementor/loaded')) {
             require_once GM2_PLUGIN_DIR . 'admin/Gm2_Elementor.php';
             new Gm2_Elementor($this);
+            add_action('elementor/editor/before_enqueue_scripts', [$this, 'enqueue_elementor_scripts']);
+            add_action('elementor/editor/footer', [$this, 'output_elementor_panel']);
         }
     }
 
@@ -1041,5 +1043,18 @@ class Gm2_SEO_Admin {
         echo '</div>';
         echo '</div>';
         echo '</div>';
+    }
+
+    public function enqueue_elementor_scripts() {
+        $this->enqueue_editor_scripts();
+    }
+
+    public function output_elementor_panel() {
+        global $post;
+        if ($post) {
+            echo '<div id="gm2-elementor-seo-panel">';
+            $this->render_seo_tabs_meta_box($post);
+            echo '</div>';
+        }
     }
 }
