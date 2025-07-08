@@ -32,7 +32,6 @@ class Gm2_Google_OAuth {
 
     private function api_request($method, $url, $body = null, $headers = []) {
         $args = [
-            'method'  => $method,
             'timeout' => 20,
             'headers' => $headers,
         ];
@@ -40,7 +39,11 @@ class Gm2_Google_OAuth {
             $args['body'] = wp_json_encode($body);
             $args['headers']['Content-Type'] = 'application/json';
         }
-        $resp = wp_remote_request($url, $args);
+        if (strtoupper($method) === 'POST') {
+            $resp = wp_remote_post($url, $args);
+        } else {
+            $resp = wp_remote_get($url, $args);
+        }
         if (is_wp_error($resp)) {
             return $resp;
         }
