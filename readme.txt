@@ -17,6 +17,9 @@ A powerful suite of WordPress enhancements including admin tools, frontend optim
    **SEO → Connect Google Account** to authorize your Google account.
 4. All required PHP libraries, including the Google API client, are bundled in
    the plugin. No Composer setup is needed.
+5. If you cloned the repository for development, run `composer install` to pull
+   the Google API libraries. Alternatively, download a packaged release that
+   already includes the `vendor/` directory.
 
 If you plan to distribute or manually upload the plugin, you can create a ZIP
 archive with `bash bin/build-plugin.sh`. This command packages the plugin with
