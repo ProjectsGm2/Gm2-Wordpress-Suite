@@ -479,6 +479,7 @@ class Gm2_SEO_Admin {
                     echo '<option value="' . esc_attr($pid) . '" ' . selected($current, $pid, false) . '>' . esc_html($label) . '</option>';
                 }
                 echo '</select></p>';
+                echo '<p class="description">Measurement IDs are fetched automatically from your connected Google account.</p>';
                 submit_button(__('Save Property', 'gm2-wordpress-suite'));
                 echo '</form>';
             }
@@ -492,6 +493,7 @@ class Gm2_SEO_Admin {
                     echo '<option value="' . esc_attr($aid) . '" ' . selected($current, $aid, false) . '>' . esc_html($alabel) . '</option>';
                 }
                 echo '</select></p>';
+                echo '<p class="description">Ads customer IDs are fetched automatically from your connected Google account.</p>';
                 submit_button(__('Save Ads Account', 'gm2-wordpress-suite'));
                 echo '</form>';
             }

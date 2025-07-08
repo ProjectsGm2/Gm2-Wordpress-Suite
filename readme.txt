@@ -16,8 +16,7 @@ A powerful suite of WordPress enhancements including admin tools, frontend optim
 3. Use the Gm2 Suite menu in the admin sidebar to configure settings. First
    visit **Gm2 → Google OAuth Setup** to enter your client ID and secret, then
    open **Gm2 → ChatGPT** to provide your OpenAI API key and model settings.
-   Finally, use **SEO → Connect Google Account** to authorize your Google
-   account.
+   Finally, use **SEO → Connect Google Account** to authorize your Google account. After connecting, you will be able to select your Analytics Measurement ID and Ads Customer ID from dropdown menus.
 4. All required PHP libraries, including the Google API client, are bundled in
    the plugin. No additional installation steps are required.
 5. Obtain your Search Console verification code and Google Ads developer token
@@ -47,9 +46,7 @@ For full page caching, hook into the `gm2_set_cache_headers` action
 to configure headers or integrate your preferred caching plugin.
 
 == Keyword Research ==
-After configuring credentials in **Gm2 → Google OAuth Setup**, connect your
-Google account from **SEO → Connect Google Account** and use the
-**Keyword Research** tab to generate ideas via the Google Keyword Planner.
+After configuring credentials in **Gm2 → Google OAuth Setup**, connect your Google account from **SEO → Connect Google Account**. The plugin automatically fetches your available Analytics Measurement IDs and Ads Customer IDs so you can select them from dropdown menus. Use the **Keyword Research** tab to generate ideas via the Google Keyword Planner.
 
 == Image Optimization ==
 Enter your compression API key and enable the service from the SEO &gt; Performance screen.
