@@ -148,4 +148,14 @@ class GoogleConnectPageTest extends WP_UnitTestCase {
         $output = ob_get_clean();
         $this->assertStringContainsString('No Ads accounts found', $output);
     }
+
+    public function test_disconnect_form_removes_token() {
+        update_option('gm2_google_refresh_token', 'tok');
+        $_POST['gm2_google_disconnect'] = wp_create_nonce('gm2_google_disconnect');
+        $admin = new Gm2_SEO_Admin();
+        ob_start();
+        $admin->display_google_connect_page();
+        ob_end_clean();
+        $this->assertSame('', get_option('gm2_google_refresh_token'));
+    }
 }
