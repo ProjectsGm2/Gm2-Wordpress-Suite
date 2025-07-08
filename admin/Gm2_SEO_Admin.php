@@ -408,14 +408,23 @@ class Gm2_SEO_Admin {
     public function display_google_connect_page() {
         $oauth = apply_filters('gm2_google_oauth_instance', new Gm2_Google_OAuth());
 
-        $notice = '';
+        $notice     = '';
         $properties = [];
+        $accounts   = [];
 
         if (isset($_POST['gm2_ga_property_nonce']) && wp_verify_nonce($_POST['gm2_ga_property_nonce'], 'gm2_ga_property_save')) {
             $prop = sanitize_text_field(wp_unslash($_POST['gm2_ga_property'] ?? ''));
             if ($prop !== '') {
                 update_option('gm2_ga_measurement_id', $prop);
                 $notice = '<div class="updated notice"><p>' . esc_html__('Analytics property saved.', 'gm2-wordpress-suite') . '</p></div>';
+            }
+        }
+
+        if (isset($_POST['gm2_gads_account_nonce']) && wp_verify_nonce($_POST['gm2_gads_account_nonce'], 'gm2_gads_account_save')) {
+            $acct = sanitize_text_field(wp_unslash($_POST['gm2_gads_account'] ?? ''));
+            if ($acct !== '') {
+                update_option('gm2_gads_customer_id', $acct);
+                $notice = '<div class="updated notice"><p>' . esc_html__('Ads account saved.', 'gm2-wordpress-suite') . '</p></div>';
             }
         }
 
@@ -428,16 +437,25 @@ class Gm2_SEO_Admin {
             if (is_wp_error($result)) {
                 $notice = '<div class="error notice"><p>' . esc_html($result->get_error_message()) . '</p></div>';
             } elseif ($result) {
-                $notice = '<div class="updated notice"><p>' . esc_html__('Google account connected.', 'gm2-wordpress-suite') . '</p></div>';
+                $notice     = '<div class="updated notice"><p>' . esc_html__('Google account connected.', 'gm2-wordpress-suite') . '</p></div>';
                 $properties = $oauth->list_analytics_properties();
                 if (!empty($properties)) {
                     update_option('gm2_ga_measurement_id', array_key_first($properties));
                 }
+                $accounts = $oauth->list_ads_accounts();
+                if (!empty($accounts)) {
+                    update_option('gm2_gads_customer_id', array_key_first($accounts));
+                }
             }
         }
 
-        if ($oauth->is_connected() && !$properties) {
-            $properties = $oauth->list_analytics_properties();
+        if ($oauth->is_connected()) {
+            if (!$properties) {
+                $properties = $oauth->list_analytics_properties();
+            }
+            if (!$accounts) {
+                $accounts = $oauth->list_ads_accounts();
+            }
         }
 
         echo '<div class="wrap">';
@@ -462,6 +480,19 @@ class Gm2_SEO_Admin {
                 }
                 echo '</select></p>';
                 submit_button(__('Save Property', 'gm2-wordpress-suite'));
+                echo '</form>';
+            }
+            if ($accounts) {
+                $current = get_option('gm2_gads_customer_id', array_key_first($accounts));
+                echo '<form method="post">';
+                wp_nonce_field('gm2_gads_account_save', 'gm2_gads_account_nonce');
+                echo '<p><label for="gm2_gads_account">' . esc_html__('Select Ads Account', 'gm2-wordpress-suite') . '</label> ';
+                echo '<select id="gm2_gads_account" name="gm2_gads_account">';
+                foreach ($accounts as $aid => $alabel) {
+                    echo '<option value="' . esc_attr($aid) . '" ' . selected($current, $aid, false) . '>' . esc_html($alabel) . '</option>';
+                }
+                echo '</select></p>';
+                submit_button(__('Save Ads Account', 'gm2-wordpress-suite'));
                 echo '</form>';
             }
         }
