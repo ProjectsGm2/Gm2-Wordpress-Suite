@@ -407,6 +407,16 @@ class Gm2_SEO_Admin {
         $oauth = apply_filters('gm2_google_oauth_instance', new Gm2_Google_OAuth());
 
         $notice = '';
+        $properties = [];
+
+        if (isset($_POST['gm2_ga_property_nonce']) && wp_verify_nonce($_POST['gm2_ga_property_nonce'], 'gm2_ga_property_save')) {
+            $prop = sanitize_text_field(wp_unslash($_POST['gm2_ga_property'] ?? ''));
+            if ($prop !== '') {
+                update_option('gm2_ga_measurement_id', $prop);
+                $notice = '<div class="updated notice"><p>' . esc_html__('Analytics property saved.', 'gm2-wordpress-suite') . '</p></div>';
+            }
+        }
+
         if (isset($_GET['code'])) {
             $code = sanitize_text_field(wp_unslash($_GET['code']));
             if (isset($_GET['state'])) {
@@ -417,7 +427,15 @@ class Gm2_SEO_Admin {
                 $notice = '<div class="error notice"><p>' . esc_html($result->get_error_message()) . '</p></div>';
             } elseif ($result) {
                 $notice = '<div class="updated notice"><p>' . esc_html__('Google account connected.', 'gm2-wordpress-suite') . '</p></div>';
+                $properties = $oauth->list_analytics_properties();
+                if (!empty($properties)) {
+                    update_option('gm2_ga_measurement_id', array_key_first($properties));
+                }
             }
+        }
+
+        if ($oauth->is_connected() && !$properties) {
+            $properties = $oauth->list_analytics_properties();
         }
 
         echo '<div class="wrap">';
@@ -430,6 +448,20 @@ class Gm2_SEO_Admin {
             echo '<a href="' . $url . '" class="button button-primary">Connect Google</a>';
         } else {
             echo '<p>Google account connected.</p>';
+            if ($properties) {
+                $current = get_option('gm2_ga_measurement_id', array_key_first($properties));
+                echo '<form method="post">';
+                wp_nonce_field('gm2_ga_property_save', 'gm2_ga_property_nonce');
+                echo '<p><label for="gm2_ga_property">' . esc_html__('Select Analytics Property', 'gm2-wordpress-suite') . '</label> ';
+                echo '<select id="gm2_ga_property" name="gm2_ga_property">';
+                foreach ($properties as $pid => $pname) {
+                    $label = $pname ? $pname . ' (' . $pid . ')' : $pid;
+                    echo '<option value="' . esc_attr($pid) . '" ' . selected($current, $pid, false) . '>' . esc_html($label) . '</option>';
+                }
+                echo '</select></p>';
+                submit_button(__('Save Property', 'gm2-wordpress-suite'));
+                echo '</form>';
+            }
         }
         echo '</div>';
     }

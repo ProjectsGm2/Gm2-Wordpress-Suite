@@ -3,6 +3,7 @@ use Gm2\Gm2_SEO_Admin;
 class GoogleConnectPageTest extends WP_UnitTestCase {
     public function tearDown(): void {
         delete_option('gm2_google_refresh_token');
+        delete_option('gm2_ga_measurement_id');
         remove_all_filters('gm2_google_oauth_instance');
         parent::tearDown();
     }
@@ -34,6 +35,7 @@ class GoogleConnectPageTest extends WP_UnitTestCase {
                     update_option('gm2_google_refresh_token', 'saved');
                     return true;
                 }
+                public function list_analytics_properties() { return []; }
             };
         });
         $admin = new Gm2_SEO_Admin();
@@ -41,5 +43,27 @@ class GoogleConnectPageTest extends WP_UnitTestCase {
         $admin->display_google_connect_page();
         ob_end_clean();
         $this->assertSame('saved', get_option('gm2_google_refresh_token'));
+    }
+
+    public function test_properties_list_saved_after_callback() {
+        delete_option('gm2_google_refresh_token');
+        delete_option('gm2_ga_measurement_id');
+        $_GET['code'] = 'abc';
+        add_filter('gm2_google_oauth_instance', function() {
+            return new class {
+                public function is_connected() { return true; }
+                public function get_auth_url() { return ''; }
+                public function handle_callback($code) { return true; }
+                public function list_analytics_properties() { return ['G-1' => 'Site 1', 'G-2' => 'Site 2']; }
+            };
+        });
+        $admin = new Gm2_SEO_Admin();
+        ob_start();
+        $admin->display_google_connect_page();
+        $output = ob_get_clean();
+        $this->assertSame('G-1', get_option('gm2_ga_measurement_id'));
+        $this->assertStringContainsString('<select', $output);
+        $this->assertStringContainsString('G-1', $output);
+        $this->assertStringContainsString('G-2', $output);
     }
 }
