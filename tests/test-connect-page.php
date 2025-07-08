@@ -92,6 +92,27 @@ class GoogleConnectPageTest extends WP_UnitTestCase {
         $this->assertStringContainsString('456', $output);
     }
 
+    public function test_existing_options_not_overwritten_on_callback() {
+        update_option('gm2_ga_measurement_id', 'G-EXIST');
+        update_option('gm2_gads_customer_id', '999');
+        $_GET['code'] = 'abc';
+        add_filter('gm2_google_oauth_instance', function() {
+            return new class {
+                public function is_connected() { return true; }
+                public function get_auth_url() { return ''; }
+                public function handle_callback($code) { return true; }
+                public function list_analytics_properties() { return ['G-NEW' => 'New']; }
+                public function list_ads_accounts() { return ['111' => '111']; }
+            };
+        });
+        $admin = new Gm2_SEO_Admin();
+        ob_start();
+        $admin->display_google_connect_page();
+        ob_end_clean();
+        $this->assertSame('G-EXIST', get_option('gm2_ga_measurement_id'));
+        $this->assertSame('999', get_option('gm2_gads_customer_id'));
+    }
+
     public function test_notice_shown_when_no_properties() {
         delete_option('gm2_google_refresh_token');
         add_filter('gm2_google_oauth_instance', function() {
