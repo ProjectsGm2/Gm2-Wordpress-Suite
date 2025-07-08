@@ -31,13 +31,20 @@ class Gm2_ChatGPT {
         if (is_wp_error($response)) {
             return $response;
         }
-        if (wp_remote_retrieve_response_code($response) !== 200) {
-            return new \WP_Error('api_error', 'Non-200 response');
+
+        $status = wp_remote_retrieve_response_code($response);
+        $body   = wp_remote_retrieve_body($response);
+
+        if ($status !== 200) {
+            $data    = json_decode($body, true);
+            $message = $data['error']['message'] ?? 'Non-200 response';
+            return new \WP_Error('api_error', $message);
         }
-        $body = wp_remote_retrieve_body($response);
+
         if ($body === '') {
             return '';
         }
+
         $data = json_decode($body, true);
         return $data['choices'][0]['message']['content'] ?? '';
     }
