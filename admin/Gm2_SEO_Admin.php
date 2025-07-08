@@ -7,6 +7,7 @@ if (!defined('ABSPATH')) {
 }
 
 class Gm2_SEO_Admin {
+    private $elementor_initialized = false;
     public function run() {
         add_action('admin_menu', [$this, 'add_settings_pages']);
         add_action('add_meta_boxes', [$this, 'register_meta_boxes']);
@@ -42,11 +43,9 @@ class Gm2_SEO_Admin {
             add_action("delete_{$tax}", [$this, 'maybe_generate_sitemap'], 10, 0);
         }
 
+        add_action('elementor/loaded', [$this, 'register_elementor_hooks']);
         if (did_action('elementor/loaded')) {
-            require_once GM2_PLUGIN_DIR . 'admin/Gm2_Elementor.php';
-            new Gm2_Elementor($this);
-            add_action('elementor/editor/before_enqueue_scripts', [$this, 'enqueue_elementor_scripts']);
-            add_action('elementor/editor/footer', [$this, 'output_elementor_panel']);
+            $this->register_elementor_hooks();
         }
     }
 
@@ -81,6 +80,18 @@ class Gm2_SEO_Admin {
             $taxonomies[] = 'product_brand';
         }
         return $taxonomies;
+    }
+
+    public function register_elementor_hooks() {
+        if ($this->elementor_initialized) {
+            return;
+        }
+        $this->elementor_initialized = true;
+
+        require_once GM2_PLUGIN_DIR . 'admin/Gm2_Elementor.php';
+        new Gm2_Elementor($this);
+        add_action('elementor/editor/before_enqueue_scripts', [$this, 'enqueue_elementor_scripts']);
+        add_action('elementor/editor/footer', [$this, 'output_elementor_panel']);
     }
 
     public function add_settings_pages() {
