@@ -456,6 +456,13 @@ class Gm2_SEO_Admin {
             if (!$accounts) {
                 $accounts = $oauth->list_ads_accounts();
             }
+
+            if (empty($properties)) {
+                $notice .= '<div class="error notice"><p>' . esc_html__('No Analytics properties found. Check API permissions.', 'gm2-wordpress-suite') . '</p></div>';
+            }
+            if (empty($accounts)) {
+                $notice .= '<div class="error notice"><p>' . esc_html__('No Ads accounts found. Check API permissions.', 'gm2-wordpress-suite') . '</p></div>';
+            }
         }
 
         echo '<div class="wrap">';

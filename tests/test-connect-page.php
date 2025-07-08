@@ -91,4 +91,40 @@ class GoogleConnectPageTest extends WP_UnitTestCase {
         $this->assertStringContainsString('123', $output);
         $this->assertStringContainsString('456', $output);
     }
+
+    public function test_notice_shown_when_no_properties() {
+        delete_option('gm2_google_refresh_token');
+        add_filter('gm2_google_oauth_instance', function() {
+            return new class {
+                public function is_connected() { return true; }
+                public function get_auth_url() { return ''; }
+                public function handle_callback($code) { return true; }
+                public function list_analytics_properties() { return []; }
+                public function list_ads_accounts() { return []; }
+            };
+        });
+        $admin = new Gm2_SEO_Admin();
+        ob_start();
+        $admin->display_google_connect_page();
+        $output = ob_get_clean();
+        $this->assertStringContainsString('No Analytics properties found', $output);
+    }
+
+    public function test_notice_shown_when_no_ads_accounts() {
+        delete_option('gm2_google_refresh_token');
+        add_filter('gm2_google_oauth_instance', function() {
+            return new class {
+                public function is_connected() { return true; }
+                public function get_auth_url() { return ''; }
+                public function handle_callback($code) { return true; }
+                public function list_analytics_properties() { return ['G-1' => 'Site 1']; }
+                public function list_ads_accounts() { return []; }
+            };
+        });
+        $admin = new Gm2_SEO_Admin();
+        ob_start();
+        $admin->display_google_connect_page();
+        $output = ob_get_clean();
+        $this->assertStringContainsString('No Ads accounts found', $output);
+    }
 }
