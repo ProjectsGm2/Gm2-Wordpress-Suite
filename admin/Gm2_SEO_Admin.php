@@ -439,11 +439,11 @@ class Gm2_SEO_Admin {
             } elseif ($result) {
                 $notice     = '<div class="updated notice"><p>' . esc_html__('Google account connected.', 'gm2-wordpress-suite') . '</p></div>';
                 $properties = $oauth->list_analytics_properties();
-                if (!empty($properties)) {
+                if (!empty($properties) && '' === get_option('gm2_ga_measurement_id', '')) {
                     update_option('gm2_ga_measurement_id', array_key_first($properties));
                 }
                 $accounts = $oauth->list_ads_accounts();
-                if (!empty($accounts)) {
+                if (!empty($accounts) && '' === get_option('gm2_gads_customer_id', '')) {
                     update_option('gm2_gads_customer_id', array_key_first($accounts));
                 }
             }
