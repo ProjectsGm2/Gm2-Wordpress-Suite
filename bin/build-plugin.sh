@@ -8,9 +8,6 @@ ZIP_FILE="${PLUGIN_SLUG}.zip"
 
 cd "$ROOT_DIR"
 
-# Install production dependencies
-composer install --no-dev --optimize-autoloader
-
 # Remove any existing archive
 rm -f "$ZIP_FILE"
 
