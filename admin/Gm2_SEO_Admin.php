@@ -413,6 +413,11 @@ class Gm2_SEO_Admin {
         $notice     = '';
         $properties = [];
         $accounts   = [];
+        $help       = '<ul>'
+            . '<li>' . esc_html__( 'Enable the Analytics Admin, Search Console and Google Ads APIs for your OAuth client.', 'gm2-wordpress-suite' ) . '</li>'
+            . '<li>' . esc_html__( 'Verify the connected Google account has access to the target properties/accounts.', 'gm2-wordpress-suite' ) . '</li>'
+            . '<li>' . esc_html__( 'Reconnect after updating permissions.', 'gm2-wordpress-suite' ) . '</li>'
+            . '</ul>';
 
         if (isset($_POST['gm2_google_disconnect']) && wp_verify_nonce($_POST['gm2_google_disconnect'], 'gm2_google_disconnect')) {
             $oauth->disconnect();
@@ -442,7 +447,11 @@ class Gm2_SEO_Admin {
             }
             $result = $oauth->handle_callback($code);
             if (is_wp_error($result)) {
-                $notice = '<div class="error notice"><p>' . esc_html($result->get_error_message()) . '</p></div>';
+                $notice = '<div class="error notice"><p>' . esc_html($result->get_error_message()) . '</p>';
+                if ('invalid_state' === $result->get_error_code()) {
+                    $notice .= $help;
+                }
+                $notice .= '</div>';
             } elseif ($result) {
                 $notice     = '<div class="updated notice"><p>' . esc_html__('Google account connected.', 'gm2-wordpress-suite') . '</p></div>';
                 $properties = $oauth->list_analytics_properties();
@@ -451,7 +460,12 @@ class Gm2_SEO_Admin {
                 }
                 $accounts = $oauth->list_ads_accounts();
                 if (is_wp_error($accounts)) {
-                    $notice .= '<div class="error notice"><p>' . esc_html($accounts->get_error_message()) . '</p></div>';
+                    $msg = '<div class="error notice"><p>' . esc_html($accounts->get_error_message()) . '</p>';
+                    if ('missing_developer_token' === $accounts->get_error_code()) {
+                        $msg .= '<p>' . esc_html__( 'Sign in at Google Ads and open Tools → API Center. Copy your Developer token and enter it on the OAuth setup page.', 'gm2-wordpress-suite' ) . '</p>';
+                    }
+                    $msg .= '</div>';
+                    $notice .= $msg;
                     $accounts = [];
                 } elseif (!empty($accounts) && '' === get_option('gm2_gads_customer_id', '')) {
                     update_option('gm2_gads_customer_id', array_key_first($accounts));
@@ -467,15 +481,20 @@ class Gm2_SEO_Admin {
                 $accounts = $oauth->list_ads_accounts();
             }
             if (is_wp_error($accounts)) {
-                $notice .= '<div class="error notice"><p>' . esc_html($accounts->get_error_message()) . '</p></div>';
+                $msg = '<div class="error notice"><p>' . esc_html($accounts->get_error_message()) . '</p>';
+                if ('missing_developer_token' === $accounts->get_error_code()) {
+                    $msg .= '<p>' . esc_html__( 'Sign in at Google Ads and open Tools → API Center. Copy your Developer token and enter it on the OAuth setup page.', 'gm2-wordpress-suite' ) . '</p>';
+                }
+                $msg .= '</div>';
+                $notice .= $msg;
                 $accounts = [];
             }
 
             if (empty($properties)) {
-                $notice .= '<div class="error notice"><p>' . esc_html__('No Analytics properties found. Check API permissions.', 'gm2-wordpress-suite') . '</p></div>';
+                $notice .= '<div class="error notice"><p>' . esc_html__('No Analytics properties found.', 'gm2-wordpress-suite') . '</p>' . $help . '</div>';
             }
             if (empty($accounts)) {
-                $notice .= '<div class="error notice"><p>' . esc_html__('No Ads accounts found. Check API permissions.', 'gm2-wordpress-suite') . '</p></div>';
+                $notice .= '<div class="error notice"><p>' . esc_html__('No Ads accounts found.', 'gm2-wordpress-suite') . '</p>' . $help . '</div>';
             }
         }
 

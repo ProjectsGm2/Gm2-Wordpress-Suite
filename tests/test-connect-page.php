@@ -129,6 +129,7 @@ class GoogleConnectPageTest extends WP_UnitTestCase {
         $admin->display_google_connect_page();
         $output = ob_get_clean();
         $this->assertStringContainsString('No Analytics properties found', $output);
+        $this->assertStringContainsString('enable the Analytics', $output);
     }
 
     public function test_notice_shown_when_no_ads_accounts() {
@@ -147,6 +148,7 @@ class GoogleConnectPageTest extends WP_UnitTestCase {
         $admin->display_google_connect_page();
         $output = ob_get_clean();
         $this->assertStringContainsString('No Ads accounts found', $output);
+        $this->assertStringContainsString('enable the Analytics', $output);
     }
 
     public function test_error_displayed_when_ads_developer_token_missing() {
@@ -167,6 +169,27 @@ class GoogleConnectPageTest extends WP_UnitTestCase {
         $admin->display_google_connect_page();
         $output = ob_get_clean();
         $this->assertStringContainsString('developer token', $output);
+        $this->assertStringContainsString('Tools → API Center', $output);
+    }
+
+    public function test_invalid_state_displays_help() {
+        delete_option('gm2_google_refresh_token');
+        $_GET['code'] = 'abc';
+        add_filter('gm2_google_oauth_instance', function() {
+            return new class {
+                public function is_connected() { return false; }
+                public function get_auth_url() { return ''; }
+                public function handle_callback($code) {
+                    return new WP_Error('invalid_state', 'Invalid OAuth state');
+                }
+            };
+        });
+        $admin = new Gm2_SEO_Admin();
+        ob_start();
+        $admin->display_google_connect_page();
+        $output = ob_get_clean();
+        $this->assertStringContainsString('Invalid OAuth state', $output);
+        $this->assertStringContainsString('enable the Analytics', $output);
     }
 
     public function test_disconnect_form_removes_token() {
