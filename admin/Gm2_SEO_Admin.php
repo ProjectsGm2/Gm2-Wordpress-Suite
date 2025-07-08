@@ -167,6 +167,7 @@ class Gm2_SEO_Admin {
             function () {
                 $value = get_option('gm2_search_console_verification', '');
                 echo '<input type="text" name="gm2_search_console_verification" value="' . esc_attr($value) . '" class="regular-text" />';
+                echo '<p class="description">Enter this code manually from Search Console. It cannot be retrieved automatically.</p>';
             },
             'gm2_seo',
             'gm2_seo_main'
@@ -178,6 +179,7 @@ class Gm2_SEO_Admin {
             function () {
                 $value = get_option('gm2_gads_developer_token', '');
                 echo '<input type="text" name="gm2_gads_developer_token" value="' . esc_attr($value) . '" class="regular-text" />';
+                echo '<p class="description">This token must be generated in your Google Ads account and entered here manually.</p>';
             },
             'gm2_seo',
             'gm2_seo_main'
