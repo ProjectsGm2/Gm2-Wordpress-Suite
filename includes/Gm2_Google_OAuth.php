@@ -197,12 +197,14 @@ class Gm2_Google_OAuth {
         if (!$this->is_connected()) {
             return [];
         }
-        $token = $this->get_access_token();
-        if (!$token) {
+        $access = $this->get_access_token();
+        if (!$access) {
             return [];
         }
+        $token = get_option('gm2_gads_developer_token', '');
         $resp = $this->api_request('GET', 'https://googleads.googleapis.com/v15/customers:listAccessibleCustomers', null, [
-            'Authorization' => 'Bearer ' . $token,
+            'Authorization'   => 'Bearer ' . $access,
+            'developer-token' => $token,
         ]);
         if (is_wp_error($resp) || empty($resp['resourceNames'])) {
             return [];
