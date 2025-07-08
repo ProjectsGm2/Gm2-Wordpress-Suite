@@ -21,9 +21,9 @@ define('GM2_PLUGIN_URL', plugin_dir_url(__FILE__));
 use Gm2\Gm2_Loader;
 use Gm2\Gm2_SEO_Public;
 use Gm2\Gm2_Sitemap;
-
-if (file_exists(__DIR__ . '/vendor/autoload.php')) {
-    require_once __DIR__ . '/vendor/autoload.php';
+$gm2_autoload = GM2_PLUGIN_DIR . 'vendor/autoload.php';
+if (file_exists($gm2_autoload)) {
+    require_once $gm2_autoload;
 } else {
     if (!function_exists('gm2_missing_autoload_notice')) {
         function gm2_missing_autoload_notice() {
