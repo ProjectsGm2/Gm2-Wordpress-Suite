@@ -22,43 +22,18 @@ use Gm2\Gm2_Loader;
 use Gm2\Gm2_SEO_Public;
 use Gm2\Gm2_Sitemap;
 
-if (!function_exists('gm2_try_composer_install')) {
-    function gm2_try_composer_install() {
-        $disabled = array_map('trim', explode(',', (string) ini_get('disable_functions')));
-        $exec_disabled = in_array('exec', $disabled, true) || !function_exists('exec');
-        $shell_disabled = in_array('shell_exec', $disabled, true) || !function_exists('shell_exec');
-
-        if ($exec_disabled && $shell_disabled) {
-            // Can't run shell commands; bail early.
-            return;
-        }
-
-        $cmd = 'cd ' . escapeshellarg(__DIR__) . ' && composer install --no-dev --optimize-autoloader';
-        if (!$exec_disabled) {
-            exec($cmd);
-        } else {
-            shell_exec($cmd);
-        }
-    }
-}
-
 if (file_exists(__DIR__ . '/vendor/autoload.php')) {
     require_once __DIR__ . '/vendor/autoload.php';
 } else {
-    gm2_try_composer_install();
-    if (file_exists(__DIR__ . '/vendor/autoload.php')) {
-        require_once __DIR__ . '/vendor/autoload.php';
-    } else {
-        if (!function_exists('gm2_missing_autoload_notice')) {
-            function gm2_missing_autoload_notice() {
-                echo '<div class="notice notice-error"><p>' .
-                    esc_html__('Gm2 WordPress Suite requires Composer packages. Automatic installation failed (shell commands disabled). Run `composer install` on a local machine or use `bin/build-plugin.sh` to create a ZIP, then upload it with the `vendor/` directory.', 'gm2-wordpress-suite') .
-                    '</p></div>';
-            }
+    if (!function_exists('gm2_missing_autoload_notice')) {
+        function gm2_missing_autoload_notice() {
+            echo '<div class="notice notice-error"><p>' .
+                esc_html__('Gm2 WordPress Suite dependencies are missing. Run `composer install` or download a release ZIP that bundles the vendor directory.', 'gm2-wordpress-suite') .
+                '</p></div>';
         }
-        add_action('admin_notices', 'gm2_missing_autoload_notice');
-        return;
     }
+    add_action('admin_notices', 'gm2_missing_autoload_notice');
+    return;
 }
 
 // Include required files
