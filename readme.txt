@@ -15,26 +15,13 @@ A powerful suite of WordPress enhancements including admin tools, frontend optim
 2. Activate the plugin through the 'Plugins' screen in WordPress.
 3. Use the Gm2 Suite menu in the admin sidebar to configure settings. Visit
    **SEO → Connect Google Account** to authorize your Google account.
-4. After cloning the repository, run `composer install` to install all
-   dependencies. Composer is required because packages such as
-   `google/apiclient` are not bundled with this plugin. For a production
-   environment, use `composer install --no-dev`. The libraries will be placed
-   in the `vendor/` directory.
+4. All required PHP libraries, including the Google API client, are bundled in
+   the plugin. No Composer setup is needed.
 
-If you plan to distribute or manually upload the plugin, build a ZIP archive
-that bundles these libraries:
-
-1. From the project root, run `bash bin/build-plugin.sh`. This command runs
-   Composer in production mode and creates `gm2-wordpress-suite.zip` in the
-   same directory.
-2. Upload the generated ZIP through the **Plugins → Add New** screen or copy
-   its contents to your `wp-content/plugins` folder.
-
-== No Shell Access ==
-Some hosts disable shell functions like `exec` and `shell_exec`. When these are
-unavailable the plugin cannot install Composer packages automatically. Run
-`composer install` on a local machine or execute `bin/build-plugin.sh` to create
-a ZIP. Upload the plugin with the included `vendor/` directory.
+If you plan to distribute or manually upload the plugin, you can create a ZIP
+archive with `bash bin/build-plugin.sh`. This command packages the plugin with
+all dependencies into `gm2-wordpress-suite.zip` for installation via the
+**Plugins → Add New** screen.
 
 == Breadcrumbs ==
 Display a breadcrumb trail anywhere using the `[gm2_breadcrumbs]` shortcode. The output
