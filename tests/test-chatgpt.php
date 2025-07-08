@@ -63,3 +63,35 @@ class ChatGPTTest extends WP_UnitTestCase {
         $this->assertStringContainsString('gm2_chatgpt_endpoint', $out);
     }
 }
+
+class ChatGPTAjaxTest extends WP_Ajax_UnitTestCase {
+    public function test_multiline_prompt_preserved() {
+        update_option('gm2_chatgpt_api_key', 'key');
+        $captured = null;
+        $filter = function($pre, $args, $url) use (&$captured) {
+            $body = json_decode($args['body'], true);
+            $captured = $body['messages'][0]['content'];
+            return [
+                'response' => ['code' => 200],
+                'body' => json_encode([
+                    'choices' => [ ['message' => ['content' => 'hi']] ]
+                ])
+            ];
+        };
+        add_filter('pre_http_request', $filter, 10, 3);
+
+        $this->_setRole('administrator');
+        $_POST['prompt'] = "line1\nline2";
+        $_POST['_ajax_nonce'] = wp_create_nonce('gm2_chatgpt_nonce');
+        $_REQUEST['_ajax_nonce'] = $_POST['_ajax_nonce'];
+
+        try {
+            $this->_handleAjax('gm2_chatgpt_prompt');
+        } catch (WPAjaxDieContinueException $e) {
+            // Expected due to wp_die in wp_send_json_* functions
+        }
+
+        remove_filter('pre_http_request', $filter, 10);
+        $this->assertSame("line1\nline2", $captured);
+    }
+}
