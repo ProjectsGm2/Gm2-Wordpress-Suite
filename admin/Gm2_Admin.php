@@ -361,7 +361,12 @@ class Gm2_Admin {
         echo '<td><input type="password" id="gm2_chatgpt_api_key" name="gm2_chatgpt_api_key" value="' . esc_attr($key) . '" class="regular-text" />';
         echo ' <button type="button" class="button" id="gm2-chatgpt-toggle">' . esc_html__( 'Show', 'gm2-wordpress-suite' ) . '</button></td></tr>';
         echo '<tr><th scope="row"><label for="gm2_chatgpt_model">' . esc_html__( 'Model', 'gm2-wordpress-suite' ) . '</label></th>';
-        echo '<td><input type="text" id="gm2_chatgpt_model" name="gm2_chatgpt_model" value="' . esc_attr($model) . '" class="regular-text" /></td></tr>';
+        $options = '';
+        foreach (Gm2_ChatGPT::get_available_models() as $m) {
+            $selected = selected($model, $m, false);
+            $options .= '<option value="' . esc_attr($m) . '"' . $selected . '>' . esc_html($m) . '</option>';
+        }
+        echo '<td><select id="gm2_chatgpt_model" name="gm2_chatgpt_model">' . $options . '</select></td></tr>';
         echo '<tr><th scope="row"><label for="gm2_chatgpt_temperature">' . esc_html__( 'Temperature', 'gm2-wordpress-suite' ) . '</label></th>';
         echo '<td><input type="number" step="0.1" id="gm2_chatgpt_temperature" name="gm2_chatgpt_temperature" value="' . esc_attr($temperature) . '" class="small-text" /></td></tr>';
         echo '<tr><th scope="row"><label for="gm2_chatgpt_max_tokens">' . esc_html__( 'Max Tokens', 'gm2-wordpress-suite' ) . '</label></th>';

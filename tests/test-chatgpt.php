@@ -62,6 +62,15 @@ class ChatGPTTest extends WP_UnitTestCase {
         $this->assertStringContainsString('gm2_chatgpt_max_tokens', $out);
         $this->assertStringContainsString('gm2_chatgpt_endpoint', $out);
     }
+
+    public function test_chatgpt_page_model_dropdown() {
+        $admin = new Gm2_Admin();
+        ob_start();
+        $admin->display_chatgpt_page();
+        $out = ob_get_clean();
+        $this->assertStringContainsString('<select id="gm2_chatgpt_model"', $out);
+        $this->assertMatchesRegularExpression('/<select[^>]*id="gm2_chatgpt_model"[^>]*>.*<option/i', $out);
+    }
 }
 
 class ChatGPTAjaxTest extends WP_Ajax_UnitTestCase {
