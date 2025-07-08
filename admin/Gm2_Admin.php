@@ -13,6 +13,8 @@ class Gm2_Admin {
         add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_scripts']);
         add_action('wp_ajax_gm2_add_tariff', [$this, 'ajax_add_tariff']);
         add_action('wp_ajax_nopriv_gm2_add_tariff', [$this, 'ajax_add_tariff']);
+        add_action('admin_post_gm2_chatgpt_settings', [$this, 'handle_chatgpt_form']);
+        add_action('wp_ajax_gm2_chatgpt_prompt', [$this, 'ajax_chatgpt_prompt']);
     }
 
     public function enqueue_admin_scripts($hook) {
@@ -38,6 +40,24 @@ class Gm2_Admin {
         $seo_pages = [
             'gm2_page_gm2-seo',
         ];
+
+        if ($hook === 'gm2_page_gm2-chatgpt') {
+            wp_enqueue_script(
+                'gm2-chatgpt',
+                GM2_PLUGIN_URL . 'admin/js/gm2-chatgpt.js',
+                ['jquery'],
+                GM2_VERSION,
+                true
+            );
+            wp_localize_script(
+                'gm2-chatgpt',
+                'gm2ChatGPT',
+                [
+                    'nonce'    => wp_create_nonce('gm2_chatgpt_nonce'),
+                    'ajax_url' => admin_url('admin-ajax.php'),
+                ]
+            );
+        }
 
         if (in_array($hook, $seo_pages, true)) {
             wp_enqueue_style(
@@ -158,6 +178,15 @@ class Gm2_Admin {
             'manage_options',
             'gm2-google-oauth-setup',
             [ $this, 'display_google_oauth_setup_page' ]
+        );
+
+        add_submenu_page(
+            'gm2',
+            'ChatGPT',
+            'ChatGPT',
+            'manage_options',
+            'gm2-chatgpt',
+            [ $this, 'display_chatgpt_page' ]
         );
     }
 
@@ -301,4 +330,60 @@ class Gm2_Admin {
         echo '</div>';
     }
 
+    public function display_chatgpt_page() {
+        if (!current_user_can('manage_options')) {
+            wp_die('Permission denied');
+        }
+
+        $key = get_option('gm2_chatgpt_api_key', '');
+        $notice = '';
+        if (!empty($_GET['updated'])) {
+            $notice = '<div class="updated notice"><p>' . esc_html__('Settings saved.', 'gm2-wordpress-suite') . '</p></div>';
+        }
+
+        echo '<div class="wrap">';
+        echo '<h1>ChatGPT</h1>';
+        echo $notice;
+        echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
+        wp_nonce_field('gm2_chatgpt_settings');
+        echo '<input type="hidden" name="action" value="gm2_chatgpt_settings" />';
+        echo '<table class="form-table"><tbody>';
+        echo '<tr><th scope="row"><label for="gm2_chatgpt_api_key">API Key</label></th>';
+        echo '<td><input type="text" id="gm2_chatgpt_api_key" name="gm2_chatgpt_api_key" value="' . esc_attr($key) . '" class="regular-text" /></td></tr>';
+        echo '</tbody></table>';
+        submit_button();
+        echo '</form>';
+
+        echo '<h2>Test Prompt</h2>';
+        echo '<form id="gm2-chatgpt-form">';
+        echo '<p><textarea id="gm2_chatgpt_prompt" rows="3" class="large-text"></textarea></p>';
+        echo '<p><button class="button">Send</button></p>';
+        echo '</form>';
+        echo '<pre id="gm2-chatgpt-output"></pre>';
+        echo '</div>';
+    }
+
+    public function handle_chatgpt_form() {
+        if (!current_user_can('manage_options')) {
+            wp_die('Permission denied');
+        }
+
+        check_admin_referer('gm2_chatgpt_settings');
+        $key = isset($_POST['gm2_chatgpt_api_key']) ? sanitize_text_field($_POST['gm2_chatgpt_api_key']) : '';
+        update_option('gm2_chatgpt_api_key', $key);
+
+        wp_redirect(admin_url('admin.php?page=gm2-chatgpt&updated=1'));
+        exit;
+    }
+
+    public function ajax_chatgpt_prompt() {
+        check_ajax_referer('gm2_chatgpt_nonce');
+        $prompt = sanitize_text_field($_POST['prompt'] ?? '');
+        $chat = new Gm2_ChatGPT();
+        $resp = $chat->query($prompt);
+        if (is_wp_error($resp)) {
+            wp_send_json_error($resp->get_error_message());
+        }
+        wp_send_json_success($resp);
+    }
 }

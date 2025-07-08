@@ -3,12 +3,12 @@ Contributors: gm2team
 Tags: admin, tools, suite, performance
 Requires at least: 5.6
 Tested up to: 6.5
-Stable tag: 1.5.0
+Stable tag: 1.6.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 == Description ==
-A powerful suite of WordPress enhancements including admin tools, frontend optimizations, and more.
+A powerful suite of WordPress enhancements including admin tools, frontend optimizations, and ChatGPT-powered content generation.
 
 == Installation ==
 1. Upload the plugin files to the `/wp-content/plugins/gm2-wordpress-suite` directory.
@@ -50,6 +50,8 @@ Enter your compression API key and enable the service from the SEO &gt; Performa
 When enabled, uploaded images are sent to the API and replaced with the optimized result.
 
 == Changelog ==
+= 1.6.0 =
+* ChatGPT integration with admin settings page.
 = 1.5.0 =
 * Google Keyword Planner integration for keyword research.
 = 1.4.0 =
