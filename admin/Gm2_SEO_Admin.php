@@ -168,7 +168,7 @@ class Gm2_SEO_Admin {
             function () {
                 $value = get_option('gm2_search_console_verification', '');
                 echo '<input type="text" name="gm2_search_console_verification" value="' . esc_attr($value) . '" class="regular-text" />';
-                echo '<p class="description">Enter this code manually from Search Console. It cannot be retrieved automatically.</p>';
+                echo '<p class="description">Log in to <a href="https://search.google.com/search-console" target="_blank">Search Console</a>, open <strong>Settings → Ownership verification</strong> and choose the <em>HTML tag</em> option. Copy the code shown there and paste it here.</p>';
             },
             'gm2_seo',
             'gm2_seo_main'
@@ -180,7 +180,7 @@ class Gm2_SEO_Admin {
             function () {
                 $value = get_option('gm2_gads_developer_token', '');
                 echo '<input type="text" name="gm2_gads_developer_token" value="' . esc_attr($value) . '" class="regular-text" />';
-                echo '<p class="description">This token must be generated in your Google Ads account and entered here manually.</p>';
+                echo '<p class="description">Sign in at <a href="https://ads.google.com" target="_blank">Google Ads</a> and open <strong>Tools → API Center</strong>. Copy your <strong>Developer token</strong> and paste it here.</p>';
             },
             'gm2_seo',
             'gm2_seo_main'
