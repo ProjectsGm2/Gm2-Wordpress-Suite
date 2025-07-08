@@ -13,7 +13,7 @@ class GoogleConnectPageTest extends WP_UnitTestCase {
             return new class {
                 public function is_connected() { return false; }
                 public function get_auth_url() { return 'https://accounts.google.com/mock'; }
-                public function handle_callback() { return false; }
+                public function handle_callback($code) { return false; }
             };
         });
         $admin = new Gm2_SEO_Admin();
@@ -30,7 +30,7 @@ class GoogleConnectPageTest extends WP_UnitTestCase {
             return new class {
                 public function is_connected() { return false; }
                 public function get_auth_url() { return ''; }
-                public function handle_callback() {
+                public function handle_callback($code) {
                     update_option('gm2_google_refresh_token', 'saved');
                     return true;
                 }

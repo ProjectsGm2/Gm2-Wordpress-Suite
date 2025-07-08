@@ -74,12 +74,12 @@ class Gm2_Google_OAuth {
         return 'https://accounts.google.com/o/oauth2/v2/auth?' . http_build_query($params, '', '&', PHP_QUERY_RFC3986);
     }
 
-    public function handle_callback() {
-        if (!isset($_GET['code'])) {
+    public function handle_callback($code = '') {
+        if ('' === $code) {
             return false;
         }
 
-        $code  = sanitize_text_field(wp_unslash($_GET['code']));
+        $code  = sanitize_text_field($code);
         $state = isset($_GET['state']) ? sanitize_text_field(wp_unslash($_GET['state'])) : '';
 
         $expected_state = get_user_meta(get_current_user_id(), 'gm2_oauth_state', true);
