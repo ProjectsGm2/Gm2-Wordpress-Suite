@@ -15,7 +15,8 @@ A powerful suite of WordPress enhancements including admin tools, frontend optim
 2. Activate the plugin through the 'Plugins' screen in WordPress.
 3. Use the Gm2 Suite menu in the admin sidebar to configure settings. First
    visit **Gm2 → Google OAuth Setup** to enter your client ID and secret, then
-   open **Gm2 → ChatGPT** to provide your OpenAI API key and model settings.
+   open **Gm2 → ChatGPT** to provide your OpenAI API key and choose a model from
+   the dropdown.
    Finally, use **SEO → Connect Google Account** to authorize your Google account. After connecting, you will be able to select your Analytics Measurement ID and Ads Customer ID from dropdown menus.
 4. All required PHP libraries, including the Google API client, are bundled in
    the plugin. No additional installation steps are required.
@@ -56,7 +57,8 @@ When enabled, uploaded images are sent to the API and replaced with the optimize
 Configure the integration from **Gm2 → ChatGPT** in your WordPress admin area. Enter your
 OpenAI API key and adjust these options:
 
-* **Model** – name of the model to use (defaults to `gpt-3.5-turbo`).
+* **Model** – select the model to use from a dropdown. Options are fetched from
+  OpenAI when possible (defaults to `gpt-3.5-turbo`).
 * **Temperature** – controls randomness of responses.
 * **Max Tokens** – optional limit on the length of completions.
 * **API Endpoint** – URL of the chat completions API.

@@ -62,4 +62,47 @@ class Gm2_ChatGPT {
         $data = json_decode($body, true);
         return $data['choices'][0]['message']['content'] ?? '';
     }
+
+    public static function get_available_models() {
+        $key = get_option('gm2_chatgpt_api_key', '');
+        $defaults = [ 'gpt-4-turbo', 'gpt-4', 'gpt-3.5-turbo' ];
+
+        if ($key === '') {
+            return $defaults;
+        }
+
+        $args = [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $key,
+            ],
+            'timeout' => 20,
+        ];
+
+        $response = wp_remote_get('https://api.openai.com/v1/models', $args);
+
+        if (is_wp_error($response)) {
+            return $defaults;
+        }
+
+        $code = wp_remote_retrieve_response_code($response);
+        $body = wp_remote_retrieve_body($response);
+
+        if ($code !== 200 || $body === '') {
+            return $defaults;
+        }
+
+        $data = json_decode($body, true);
+        if (!isset($data['data']) || !is_array($data['data'])) {
+            return $defaults;
+        }
+
+        $models = [];
+        foreach ($data['data'] as $model) {
+            if (isset($model['id'])) {
+                $models[] = $model['id'];
+            }
+        }
+
+        return $models ?: $defaults;
+    }
 }
