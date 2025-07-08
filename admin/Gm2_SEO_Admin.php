@@ -412,6 +412,11 @@ class Gm2_SEO_Admin {
         $properties = [];
         $accounts   = [];
 
+        if (isset($_POST['gm2_google_disconnect']) && wp_verify_nonce($_POST['gm2_google_disconnect'], 'gm2_google_disconnect')) {
+            $oauth->disconnect();
+            $notice = '<div class="updated notice"><p>' . esc_html__('Google account disconnected.', 'gm2-wordpress-suite') . '</p></div>';
+        }
+
         if (isset($_POST['gm2_ga_property_nonce']) && wp_verify_nonce($_POST['gm2_ga_property_nonce'], 'gm2_ga_property_save')) {
             $prop = sanitize_text_field(wp_unslash($_POST['gm2_ga_property'] ?? ''));
             if ($prop !== '') {
@@ -504,6 +509,11 @@ class Gm2_SEO_Admin {
                 submit_button(__('Save Ads Account', 'gm2-wordpress-suite'));
                 echo '</form>';
             }
+
+            echo '<form method="post">';
+            wp_nonce_field('gm2_google_disconnect', 'gm2_google_disconnect');
+            submit_button(__('Disconnect Google', 'gm2-wordpress-suite'), 'delete');
+            echo '</form>';
         }
         echo '</div>';
     }
