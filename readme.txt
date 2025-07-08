@@ -19,8 +19,9 @@ A powerful suite of WordPress enhancements including admin tools, frontend optim
 4. All required PHP libraries, including the Google API client, are bundled in
    the plugin. No additional installation steps are required.
 5. Obtain your Search Console verification code and Google Ads developer token
-   directly from your Google accounts. These values cannot be fetched via API
-   and must be entered manually on the SEO settings page.
+   directly from your Google accounts. The developer token is required for
+   listing Ads accounts. These values cannot be fetched via API and must be
+   entered manually on the SEO settings page.
 
 If you plan to distribute or manually upload the plugin, you can create a ZIP
 archive with `bash bin/build-plugin.sh`. This command packages the plugin with
