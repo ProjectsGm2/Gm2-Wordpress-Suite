@@ -401,7 +401,7 @@ class Gm2_Admin {
 
     public function ajax_chatgpt_prompt() {
         check_ajax_referer('gm2_chatgpt_nonce');
-        $prompt = sanitize_text_field($_POST['prompt'] ?? '');
+        $prompt = sanitize_textarea_field($_POST['prompt'] ?? '');
         $chat = new Gm2_ChatGPT();
         $resp = $chat->query($prompt);
         if (is_wp_error($resp)) {
