@@ -335,7 +335,13 @@ class Gm2_Admin {
             wp_die('Permission denied');
         }
 
-        $key = get_option('gm2_chatgpt_api_key', '');
+        $key   = get_option('gm2_chatgpt_api_key', '');
+        $model = get_option('gm2_chatgpt_model', 'gpt-3.5-turbo');
+        $chat  = new Gm2_ChatGPT();
+        $models = $chat->get_models();
+        if (empty($models)) {
+            $models = [$model];
+        }
         $notice = '';
         if (!empty($_GET['updated'])) {
             $notice = '<div class="updated notice"><p>' . esc_html__('Settings saved.', 'gm2-wordpress-suite') . '</p></div>';
@@ -350,6 +356,12 @@ class Gm2_Admin {
         echo '<table class="form-table"><tbody>';
         echo '<tr><th scope="row"><label for="gm2_chatgpt_api_key">API Key</label></th>';
         echo '<td><input type="text" id="gm2_chatgpt_api_key" name="gm2_chatgpt_api_key" value="' . esc_attr($key) . '" class="regular-text" /></td></tr>';
+        echo '<tr><th scope="row"><label for="gm2_chatgpt_model">Model</label></th>';
+        echo '<td><select id="gm2_chatgpt_model" name="gm2_chatgpt_model">';
+        foreach ($models as $m) {
+            echo '<option value="' . esc_attr($m) . '"' . selected($model, $m, false) . '>' . esc_html($m) . '</option>';
+        }
+        echo '</select></td></tr>';
         echo '</tbody></table>';
         submit_button();
         echo '</form>';
@@ -370,7 +382,9 @@ class Gm2_Admin {
 
         check_admin_referer('gm2_chatgpt_settings');
         $key = isset($_POST['gm2_chatgpt_api_key']) ? sanitize_text_field($_POST['gm2_chatgpt_api_key']) : '';
+        $model = isset($_POST['gm2_chatgpt_model']) ? sanitize_text_field($_POST['gm2_chatgpt_model']) : 'gpt-3.5-turbo';
         update_option('gm2_chatgpt_api_key', $key);
+        update_option('gm2_chatgpt_model', $model);
 
         wp_redirect(admin_url('admin.php?page=gm2-chatgpt&updated=1'));
         exit;
