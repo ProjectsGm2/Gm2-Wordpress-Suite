@@ -36,9 +36,6 @@ jobs:
       - name: Install system dependencies
         run: sudo apt-get update && sudo apt-get install -y subversion mysql-client
 
-      - name: Install Composer dependencies
-        run: composer install --prefer-dist --no-progress --no-suggest
-
       - name: Install WordPress test suite
         env:
           DB_NAME: wordpress
@@ -49,4 +46,4 @@ jobs:
         run: bash bin/install-wp-tests.sh $DB_NAME $DB_USER $DB_PASS $DB_HOST $WP_VERSION
 
       - name: Run PHPUnit
-        run: vendor/bin/phpunit
+        run: phpunit
