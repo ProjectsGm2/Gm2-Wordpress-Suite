@@ -55,6 +55,8 @@ class Gm2_Admin {
                 [
                     'nonce'    => wp_create_nonce('gm2_chatgpt_nonce'),
                     'ajax_url' => admin_url('admin-ajax.php'),
+                    'loading'  => __( 'Loading...', 'gm2-wordpress-suite' ),
+                    'error'    => __( 'Error', 'gm2-wordpress-suite' ),
                 ]
             );
         }
@@ -93,26 +95,26 @@ class Gm2_Admin {
 
     public function ajax_add_tariff() {
         if (!current_user_can('manage_options')) {
-            wp_send_json_error('Permission denied');
+            wp_send_json_error( __( 'Permission denied', 'gm2-wordpress-suite' ) );
         }
 
         check_ajax_referer('gm2_add_tariff');
 
         $name = sanitize_text_field($_POST['tariff_name'] ?? '');
         if ($name === '') {
-            wp_send_json_error('Tariff name is required');
+            wp_send_json_error( __( 'Tariff name is required', 'gm2-wordpress-suite' ) );
         }
 
         $percentage_raw = $_POST['tariff_percentage'] ?? '';
 
         if (!is_numeric($percentage_raw)) {
-            wp_send_json_error('Tariff percentage must be a number');
+            wp_send_json_error( __( 'Tariff percentage must be a number', 'gm2-wordpress-suite' ) );
         }
 
         $percentage = floatval($percentage_raw);
 
         if ($percentage < 0 || $percentage > 100) {
-            wp_send_json_error('Tariff percentage must be between 0 and 100');
+            wp_send_json_error( __( 'Tariff percentage must be between 0 and 100', 'gm2-wordpress-suite' ) );
         }
         $status = ($_POST['tariff_status'] ?? '') === 'enabled' ? 'enabled' : 'disabled';
 
@@ -141,8 +143,8 @@ class Gm2_Admin {
 
     public function add_admin_menu() {
         add_menu_page(
-            'Gm2',
-            'Gm2',
+            esc_html__( 'Gm2', 'gm2-wordpress-suite' ),
+            esc_html__( 'Gm2', 'gm2-wordpress-suite' ),
             'manage_options',
             'gm2',
             [$this, 'display_dashboard'],
@@ -151,8 +153,8 @@ class Gm2_Admin {
 
         add_submenu_page(
             'gm2',
-            'Tariff',
-            'Tariff',
+            esc_html__( 'Tariff', 'gm2-wordpress-suite' ),
+            esc_html__( 'Tariff', 'gm2-wordpress-suite' ),
             'manage_options',
             'gm2-tariff',
             [$this, 'display_tariff_page']
@@ -164,8 +166,8 @@ class Gm2_Admin {
         // menu by setting the parent slug to null.
         add_submenu_page(
             null,
-            'Edit Tariff',
-            'Edit Tariff',
+            esc_html__( 'Edit Tariff', 'gm2-wordpress-suite' ),
+            esc_html__( 'Edit Tariff', 'gm2-wordpress-suite' ),
             'manage_options',
             'gm2-add-tariff',
             [$this, 'display_add_tariff_page']
@@ -182,8 +184,8 @@ class Gm2_Admin {
 
         add_submenu_page(
             'gm2',
-            'ChatGPT',
-            'ChatGPT',
+            esc_html__( 'ChatGPT', 'gm2-wordpress-suite' ),
+            esc_html__( 'ChatGPT', 'gm2-wordpress-suite' ),
             'manage_options',
             'gm2-chatgpt',
             [ $this, 'display_chatgpt_page' ]
@@ -191,7 +193,7 @@ class Gm2_Admin {
     }
 
     public function display_dashboard() {
-        echo '<div class="wrap"><h1>Gm2 Suite</h1><p>Welcome to the admin interface!</p></div>';
+        echo '<div class="wrap"><h1>' . esc_html__( 'Gm2 Suite', 'gm2-wordpress-suite' ) . '</h1><p>' . esc_html__( 'Welcome to the admin interface!', 'gm2-wordpress-suite' ) . '</p></div>';
     }
 
     private function handle_form_submission() {
@@ -226,16 +228,16 @@ class Gm2_Admin {
         $status     = $tariff ? $tariff['status'] : 'enabled';
         $id_field   = $tariff ? '<input type="hidden" name="tariff_id" value="' . esc_attr($tariff['id']) . '" />' : '';
 
-        echo '<div class="wrap"><h1>Edit Tariff</h1>';
+        echo '<div class="wrap"><h1>' . esc_html__( 'Edit Tariff', 'gm2-wordpress-suite' ) . '</h1>';
         echo '<form method="post">';
         wp_nonce_field('gm2_save_tariff', 'gm2_tariff_nonce');
         echo $id_field;
         echo '<table class="form-table"><tbody>';
-        echo '<tr><th scope="row"><label for="tariff_name">Name</label></th><td><input name="tariff_name" type="text" id="tariff_name" value="' . $name . '" class="regular-text" required></td></tr>';
-        echo '<tr><th scope="row"><label for="tariff_percentage">Percentage</label></th><td><input name="tariff_percentage" type="number" step="0.01" id="tariff_percentage" value="' . $percentage . '" class="regular-text" required></td></tr>';
-        echo '<tr><th scope="row">Status</th><td><label><input type="checkbox" name="tariff_status"' . checked($status, 'enabled', false) . '> Enabled</label></td></tr>';
+        echo '<tr><th scope="row"><label for="tariff_name">' . esc_html__( 'Name', 'gm2-wordpress-suite' ) . '</label></th><td><input name="tariff_name" type="text" id="tariff_name" value="' . $name . '" class="regular-text" required></td></tr>';
+        echo '<tr><th scope="row"><label for="tariff_percentage">' . esc_html__( 'Percentage', 'gm2-wordpress-suite' ) . '</label></th><td><input name="tariff_percentage" type="number" step="0.01" id="tariff_percentage" value="' . $percentage . '" class="regular-text" required></td></tr>';
+        echo '<tr><th scope="row">' . esc_html__( 'Status', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="tariff_status"' . checked($status, 'enabled', false) . '> ' . esc_html__( 'Enabled', 'gm2-wordpress-suite' ) . '</label></td></tr>';
         echo '</tbody></table>';
-        submit_button('Save Tariff');
+        submit_button( esc_html__( 'Save Tariff', 'gm2-wordpress-suite' ) );
         echo '</form></div>';
     }
 
@@ -252,22 +254,22 @@ class Gm2_Admin {
         $tariffs = $manager->get_tariffs();
 
         echo '<div class="wrap">';
-        echo '<h1 class="wp-heading-inline">Tariffs</h1>';
+        echo '<h1 class="wp-heading-inline">' . esc_html__( 'Tariffs', 'gm2-wordpress-suite' ) . '</h1>';
         echo '<hr class="wp-header-end">';
 
-        echo '<h2>Add Tariff</h2>';
+        echo '<h2>' . esc_html__( 'Add Tariff', 'gm2-wordpress-suite' ) . '</h2>';
         echo '<div class="notice notice-success hidden" id="gm2-tariff-msg"></div>';
         echo '<form id="gm2-add-tariff-form">';
         echo '<table class="form-table"><tbody>';
-        echo '<tr><th scope="row"><label for="tariff_name">Name</label></th><td><input name="tariff_name" type="text" id="tariff_name" class="regular-text" required></td></tr>';
-        echo '<tr><th scope="row"><label for="tariff_percentage">Percentage</label></th><td><input name="tariff_percentage" type="number" step="0.01" id="tariff_percentage" class="regular-text" required></td></tr>';
-        echo '<tr><th scope="row">Status</th><td><label><input type="checkbox" name="tariff_status" id="tariff_status" checked> Enabled</label></td></tr>';
+        echo '<tr><th scope="row"><label for="tariff_name">' . esc_html__( 'Name', 'gm2-wordpress-suite' ) . '</label></th><td><input name="tariff_name" type="text" id="tariff_name" class="regular-text" required></td></tr>';
+        echo '<tr><th scope="row"><label for="tariff_percentage">' . esc_html__( 'Percentage', 'gm2-wordpress-suite' ) . '</label></th><td><input name="tariff_percentage" type="number" step="0.01" id="tariff_percentage" class="regular-text" required></td></tr>';
+        echo '<tr><th scope="row">' . esc_html__( 'Status', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="tariff_status" id="tariff_status" checked> ' . esc_html__( 'Enabled', 'gm2-wordpress-suite' ) . '</label></td></tr>';
         echo '</tbody></table>';
-        submit_button('Add Tariff');
+        submit_button( esc_html__( 'Add Tariff', 'gm2-wordpress-suite' ) );
         echo '</form>';
 
-        echo '<h2>Existing Tariffs</h2>';
-        echo '<table class="widefat" id="gm2-tariff-table"><thead><tr><th>Name</th><th>Percentage</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+        echo '<h2>' . esc_html__( 'Existing Tariffs', 'gm2-wordpress-suite' ) . '</h2>';
+        echo '<table class="widefat" id="gm2-tariff-table"><thead><tr><th>' . esc_html__( 'Name', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'Percentage', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'Status', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'Actions', 'gm2-wordpress-suite' ) . '</th></tr></thead><tbody>';
         if ($tariffs) {
             foreach ($tariffs as $tariff) {
                 $delete_url = wp_nonce_url(admin_url('admin.php?page=gm2-tariff&action=delete&id=' . $tariff['id']), 'gm2_delete_tariff_' . $tariff['id']);
@@ -276,11 +278,11 @@ class Gm2_Admin {
                 echo '<td>' . esc_html($tariff['name']) . '</td>';
                 echo '<td>' . esc_html($tariff['percentage']) . '%</td>';
                 echo '<td>' . esc_html(ucfirst($tariff['status'])) . '</td>';
-                echo '<td><a href="' . esc_url( $edit_url ) . '">View</a> | <a href="' . esc_url( $edit_url ) . '">Edit</a> | <a href="' . esc_url( $delete_url ) . '" onclick="return confirm(\'Are you sure?\');">Delete</a></td>';
+                echo '<td><a href="' . esc_url( $edit_url ) . '">' . esc_html__( 'View', 'gm2-wordpress-suite' ) . '</a> | <a href="' . esc_url( $edit_url ) . '">' . esc_html__( 'Edit', 'gm2-wordpress-suite' ) . '</a> | <a href="' . esc_url( $delete_url ) . '" onclick="return confirm(\'' . esc_js( __( 'Are you sure?', 'gm2-wordpress-suite' ) ) . '\');">' . esc_html__( 'Delete', 'gm2-wordpress-suite' ) . '</a></td>';
                 echo '</tr>';
             }
         } else {
-            echo '<tr><td colspan="4">No tariffs found.</td></tr>';
+            echo '<tr><td colspan="4">' . esc_html__( 'No tariffs found.', 'gm2-wordpress-suite' ) . '</td></tr>';
         }
         echo '</tbody></table></div>';
     }
@@ -332,7 +334,7 @@ class Gm2_Admin {
 
     public function display_chatgpt_page() {
         if (!current_user_can('manage_options')) {
-            wp_die('Permission denied');
+            wp_die( esc_html__( 'Permission denied', 'gm2-wordpress-suite' ) );
         }
 
         $key   = get_option('gm2_chatgpt_api_key', '');
@@ -346,30 +348,30 @@ class Gm2_Admin {
         }
 
         echo '<div class="wrap">';
-        echo '<h1>ChatGPT</h1>';
+        echo '<h1>' . esc_html__( 'ChatGPT', 'gm2-wordpress-suite' ) . '</h1>';
         echo $notice;
         echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
         wp_nonce_field('gm2_chatgpt_settings');
         echo '<input type="hidden" name="action" value="gm2_chatgpt_settings" />';
         echo '<table class="form-table"><tbody>';
-        echo '<tr><th scope="row"><label for="gm2_chatgpt_api_key">API Key</label></th>';
+        echo '<tr><th scope="row"><label for="gm2_chatgpt_api_key">' . esc_html__( 'API Key', 'gm2-wordpress-suite' ) . '</label></th>';
         echo '<td><input type="password" id="gm2_chatgpt_api_key" name="gm2_chatgpt_api_key" value="' . esc_attr($key) . '" class="regular-text" /></td></tr>';
-        echo '<tr><th scope="row"><label for="gm2_chatgpt_model">Model</label></th>';
+        echo '<tr><th scope="row"><label for="gm2_chatgpt_model">' . esc_html__( 'Model', 'gm2-wordpress-suite' ) . '</label></th>';
         echo '<td><input type="text" id="gm2_chatgpt_model" name="gm2_chatgpt_model" value="' . esc_attr($model) . '" class="regular-text" /></td></tr>';
-        echo '<tr><th scope="row"><label for="gm2_chatgpt_temperature">Temperature</label></th>';
+        echo '<tr><th scope="row"><label for="gm2_chatgpt_temperature">' . esc_html__( 'Temperature', 'gm2-wordpress-suite' ) . '</label></th>';
         echo '<td><input type="number" step="0.1" id="gm2_chatgpt_temperature" name="gm2_chatgpt_temperature" value="' . esc_attr($temperature) . '" class="small-text" /></td></tr>';
-        echo '<tr><th scope="row"><label for="gm2_chatgpt_max_tokens">Max Tokens</label></th>';
+        echo '<tr><th scope="row"><label for="gm2_chatgpt_max_tokens">' . esc_html__( 'Max Tokens', 'gm2-wordpress-suite' ) . '</label></th>';
         echo '<td><input type="number" id="gm2_chatgpt_max_tokens" name="gm2_chatgpt_max_tokens" value="' . esc_attr($max_tokens) . '" class="small-text" /></td></tr>';
-        echo '<tr><th scope="row"><label for="gm2_chatgpt_endpoint">API Endpoint</label></th>';
+        echo '<tr><th scope="row"><label for="gm2_chatgpt_endpoint">' . esc_html__( 'API Endpoint', 'gm2-wordpress-suite' ) . '</label></th>';
         echo '<td><input type="text" id="gm2_chatgpt_endpoint" name="gm2_chatgpt_endpoint" value="' . esc_attr($endpoint) . '" class="regular-text" /></td></tr>';
         echo '</tbody></table>';
         submit_button();
         echo '</form>';
 
-        echo '<h2>Test Prompt</h2>';
+        echo '<h2>' . esc_html__( 'Test Prompt', 'gm2-wordpress-suite' ) . '</h2>';
         echo '<form id="gm2-chatgpt-form">';
         echo '<p><textarea id="gm2_chatgpt_prompt" rows="3" class="large-text"></textarea></p>';
-        echo '<p><button class="button">Send</button></p>';
+        echo '<p><button class="button">' . esc_html__( 'Send', 'gm2-wordpress-suite' ) . '</button></p>';
         echo '</form>';
         echo '<pre id="gm2-chatgpt-output"></pre>';
         echo '</div>';
@@ -377,7 +379,7 @@ class Gm2_Admin {
 
     public function handle_chatgpt_form() {
         if (!current_user_can('manage_options')) {
-            wp_die('Permission denied');
+            wp_die( esc_html__( 'Permission denied', 'gm2-wordpress-suite' ) );
         }
 
         check_admin_referer('gm2_chatgpt_settings');
