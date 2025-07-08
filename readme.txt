@@ -13,8 +13,9 @@ A powerful suite of WordPress enhancements including admin tools, frontend optim
 == Installation ==
 1. Upload the plugin files to the `/wp-content/plugins/gm2-wordpress-suite` directory.
 2. Activate the plugin through the 'Plugins' screen in WordPress.
-3. Use the Gm2 Suite menu in the admin sidebar to configure settings. Visit
-   **SEO → Connect Google Account** to authorize your Google account.
+3. Use the Gm2 Suite menu in the admin sidebar to configure settings. First
+   visit **Gm2 → Google OAuth Setup** to enter your client ID and secret, then
+   use **SEO → Connect Google Account** to authorize your Google account.
 4. All required PHP libraries, including the Google API client, are bundled in
    the plugin. No additional installation steps are required.
 
@@ -40,7 +41,8 @@ For full page caching, hook into the `gm2_set_cache_headers` action
 to configure headers or integrate your preferred caching plugin.
 
 == Keyword Research ==
-Connect your Google account from **SEO → Connect Google Account** and use the
+After configuring credentials in **Gm2 → Google OAuth Setup**, connect your
+Google account from **SEO → Connect Google Account** and use the
 **Keyword Research** tab to generate ideas via the Google Keyword Planner.
 
 == Image Optimization ==

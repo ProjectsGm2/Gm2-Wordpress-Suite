@@ -405,6 +405,8 @@ class Gm2_SEO_Admin {
 
         echo '<div class="wrap">';
         echo '<h1>Connect Google Account</h1>';
+        $setup_url = admin_url( 'admin.php?page=gm2-google-oauth-setup' );
+        echo '<p><a href="' . esc_url( $setup_url ) . '">' . esc_html__( 'Google OAuth Setup', 'gm2-wordpress-suite' ) . '</a></p>';
         echo $notice;
         if (!$oauth->is_connected()) {
             $url = esc_url($oauth->get_auth_url());
