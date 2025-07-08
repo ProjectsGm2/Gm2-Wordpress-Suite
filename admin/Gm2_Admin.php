@@ -328,6 +328,9 @@ class Gm2_Admin {
         echo '<td><input name="gm2_gads_client_secret" type="text" id="gm2_gads_client_secret" value="' . esc_attr( $client_secret ) . '" class="regular-text" required></td></tr>';
         echo '</tbody></table>';
         submit_button();
+        $show = esc_js( __( 'Show', 'gm2-wordpress-suite' ) );
+        $hide = esc_js( __( 'Hide', 'gm2-wordpress-suite' ) );
+        echo "<script>document.addEventListener('DOMContentLoaded',function(){var i=document.getElementById('gm2_chatgpt_api_key');var b=document.getElementById('gm2-chatgpt-toggle');if(i&&b){var s='{$show}';var h='{$hide}';b.addEventListener('click',function(){if(i.type==='password'){i.type='text';b.textContent=h;}else{i.type='password';b.textContent=s;}});}});</script>";
         echo '</form>';
         echo '</div>';
     }
@@ -355,7 +358,8 @@ class Gm2_Admin {
         echo '<input type="hidden" name="action" value="gm2_chatgpt_settings" />';
         echo '<table class="form-table"><tbody>';
         echo '<tr><th scope="row"><label for="gm2_chatgpt_api_key">' . esc_html__( 'API Key', 'gm2-wordpress-suite' ) . '</label></th>';
-        echo '<td><input type="password" id="gm2_chatgpt_api_key" name="gm2_chatgpt_api_key" value="' . esc_attr($key) . '" class="regular-text" /></td></tr>';
+        echo '<td><input type="password" id="gm2_chatgpt_api_key" name="gm2_chatgpt_api_key" value="' . esc_attr($key) . '" class="regular-text" />';
+        echo ' <button type="button" class="button" id="gm2-chatgpt-toggle">' . esc_html__( 'Show', 'gm2-wordpress-suite' ) . '</button></td></tr>';
         echo '<tr><th scope="row"><label for="gm2_chatgpt_model">' . esc_html__( 'Model', 'gm2-wordpress-suite' ) . '</label></th>';
         echo '<td><input type="text" id="gm2_chatgpt_model" name="gm2_chatgpt_model" value="' . esc_attr($model) . '" class="regular-text" /></td></tr>';
         echo '<tr><th scope="row"><label for="gm2_chatgpt_temperature">' . esc_html__( 'Temperature', 'gm2-wordpress-suite' ) . '</label></th>';
@@ -366,6 +370,9 @@ class Gm2_Admin {
         echo '<td><input type="text" id="gm2_chatgpt_endpoint" name="gm2_chatgpt_endpoint" value="' . esc_attr($endpoint) . '" class="regular-text" /></td></tr>';
         echo '</tbody></table>';
         submit_button();
+        $show = esc_js( __( 'Show', 'gm2-wordpress-suite' ) );
+        $hide = esc_js( __( 'Hide', 'gm2-wordpress-suite' ) );
+        echo "<script>document.addEventListener('DOMContentLoaded',function(){var i=document.getElementById('gm2_chatgpt_api_key');var b=document.getElementById('gm2-chatgpt-toggle');if(i&&b){var s='{$show}';var h='{$hide}';b.addEventListener('click',function(){if(i.type==='password'){i.type='text';b.textContent=h;}else{i.type='password';b.textContent=s;}});}});</script>";
         echo '</form>';
 
         echo '<h2>' . esc_html__( 'Test Prompt', 'gm2-wordpress-suite' ) . '</h2>';
