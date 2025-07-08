@@ -77,9 +77,30 @@
         });
     }
 
+    function getElementorContent(){
+        if(window.elementor){
+            if(elementor.channels && elementor.channels.editor && elementor.channels.editor.request){
+                var model = elementor.channels.editor.request('document:model');
+                if(model && model.get){
+                    return model.get('content') || model.get('post_content') || '';
+                }
+            }
+            if(elementor.settings && elementor.settings.page && elementor.settings.page.model){
+                return elementor.settings.page.model.get('content') || elementor.settings.page.model.get('post_content') || '';
+            }
+        }
+        return '';
+    }
+
     function update(){
-        if(typeof wp === 'undefined' || !wp.data) return;
-        const content = wp.data.select('core/editor').getEditedPostContent();
+        var content = '';
+        if(typeof wp !== 'undefined' && wp.data){
+            content = wp.data.select('core/editor').getEditedPostContent();
+        }
+        if(!content){
+            content = getElementorContent();
+        }
+        if(!content) return;
         const data = analyzeContent(content);
         const kwInput = $('#gm2_focus_keywords').val() || '';
         const keywords = kwInput.split(',');
@@ -117,6 +138,14 @@
         update();
         if(typeof wp !== 'undefined' && wp.data){
             wp.data.subscribe(update);
+        }
+        if(window.elementor){
+            if(elementor.hooks && elementor.hooks.addAction){
+                elementor.hooks.addAction('document:save', update);
+            }
+            if(elementor.channels && elementor.channels.editor){
+                elementor.channels.editor.on('change', update);
+            }
         }
         $(document).on('input', '#gm2_focus_keywords', update);
     });
