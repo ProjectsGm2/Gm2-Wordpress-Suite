@@ -149,6 +149,26 @@ class GoogleConnectPageTest extends WP_UnitTestCase {
         $this->assertStringContainsString('No Ads accounts found', $output);
     }
 
+    public function test_error_displayed_when_ads_developer_token_missing() {
+        delete_option('gm2_google_refresh_token');
+        add_filter('gm2_google_oauth_instance', function() {
+            return new class {
+                public function is_connected() { return true; }
+                public function get_auth_url() { return ''; }
+                public function handle_callback($code) { return true; }
+                public function list_analytics_properties() { return []; }
+                public function list_ads_accounts() {
+                    return new WP_Error('missing_developer_token', 'A Google Ads developer token is required to list accounts.');
+                }
+            };
+        });
+        $admin = new Gm2_SEO_Admin();
+        ob_start();
+        $admin->display_google_connect_page();
+        $output = ob_get_clean();
+        $this->assertStringContainsString('developer token', $output);
+    }
+
     public function test_disconnect_form_removes_token() {
         update_option('gm2_google_refresh_token', 'tok');
         $_POST['gm2_google_disconnect'] = wp_create_nonce('gm2_google_disconnect');

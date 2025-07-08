@@ -234,7 +234,13 @@ class Gm2_Google_OAuth {
         if (!$access) {
             return [];
         }
-        $token = get_option('gm2_gads_developer_token', '');
+        $token = trim(get_option('gm2_gads_developer_token', ''));
+        if ($token === '') {
+            return new \WP_Error(
+                'missing_developer_token',
+                __('A Google Ads developer token is required to list accounts.', 'gm2-wordpress-suite')
+            );
+        }
         $resp = $this->api_request('GET', 'https://googleads.googleapis.com/v15/customers:listAccessibleCustomers', null, [
             'Authorization'   => 'Bearer ' . $access,
             'developer-token' => $token,
