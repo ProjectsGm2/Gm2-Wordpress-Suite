@@ -76,14 +76,17 @@ class Gm2_Google_OAuth {
             return false;
         }
 
+        $code  = sanitize_text_field(wp_unslash($_GET['code']));
+        $state = isset($_GET['state']) ? sanitize_text_field(wp_unslash($_GET['state'])) : '';
+
         $expected_state = get_user_meta(get_current_user_id(), 'gm2_oauth_state', true);
         delete_user_meta(get_current_user_id(), 'gm2_oauth_state');
-        if (empty($_GET['state']) || $_GET['state'] !== $expected_state) {
+        if ('' === $state || $state !== $expected_state) {
             return new \WP_Error('invalid_state', 'Invalid OAuth state');
         }
 
         $resp = $this->api_request('POST', 'https://oauth2.googleapis.com/token', [
-            'code' => $_GET['code'],
+            'code' => $code,
             'client_id' => $this->client_id,
             'client_secret' => $this->client_secret,
             'redirect_uri' => $this->redirect_uri,

@@ -208,7 +208,7 @@ class Gm2_SEO_Admin {
             $variants = get_option('gm2_noindex_variants', '0');
             $oos      = get_option('gm2_noindex_oos', '0');
             if (!empty($_GET['updated'])) {
-                echo '<div class="updated notice"><p>Settings saved.</p></div>';
+                echo '<div class="updated notice"><p>' . esc_html__('Settings saved.', 'gm2-wordpress-suite') . '</p></div>';
             }
             echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
             wp_nonce_field('gm2_meta_tags_save', 'gm2_meta_tags_nonce');
@@ -223,7 +223,7 @@ class Gm2_SEO_Admin {
             $enabled   = get_option('gm2_sitemap_enabled', '1');
             $frequency = get_option('gm2_sitemap_frequency', 'daily');
             if (!empty($_GET['updated'])) {
-                echo '<div class="updated notice"><p>Settings saved.</p></div>';
+                echo '<div class="updated notice"><p>' . esc_html__('Settings saved.', 'gm2-wordpress-suite') . '</p></div>';
             }
             echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
             wp_nonce_field('gm2_sitemap_save', 'gm2_sitemap_nonce');
@@ -247,7 +247,7 @@ class Gm2_SEO_Admin {
             $review      = get_option('gm2_schema_review', '1');
             $footer_bc   = get_option('gm2_show_footer_breadcrumbs', '1');
             if (!empty($_GET['updated'])) {
-                echo '<div class="updated notice"><p>Settings saved.</p></div>';
+                echo '<div class="updated notice"><p>' . esc_html__('Settings saved.', 'gm2-wordpress-suite') . '</p></div>';
             }
             echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
             wp_nonce_field('gm2_schema_save', 'gm2_schema_nonce');
@@ -269,14 +269,14 @@ class Gm2_SEO_Admin {
                 if (isset($redirects[$id])) {
                     unset($redirects[$id]);
                     update_option('gm2_redirects', array_values($redirects));
-                    echo '<div class="updated"><p>Redirect deleted.</p></div>';
+                    echo '<div class="updated"><p>' . esc_html__('Redirect deleted.', 'gm2-wordpress-suite') . '</p></div>';
                     $redirects = array_values($redirects);
                 }
             }
 
             $source_prefill = isset($_GET['source']) ? esc_url_raw($_GET['source']) : '';
             if (!empty($_GET['updated'])) {
-                echo '<div class="updated notice"><p>Redirect saved.</p></div>';
+                echo '<div class="updated notice"><p>' . esc_html__('Redirect saved.', 'gm2-wordpress-suite') . '</p></div>';
             }
             echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
             wp_nonce_field('gm2_redirects_save', 'gm2_redirects_nonce');
@@ -325,7 +325,7 @@ class Gm2_SEO_Admin {
             $min_css   = get_option('gm2_minify_css', '0');
             $min_js    = get_option('gm2_minify_js', '0');
             if (!empty($_GET['updated'])) {
-                echo '<div class="updated notice"><p>Settings saved.</p></div>';
+                echo '<div class="updated notice"><p>' . esc_html__('Settings saved.', 'gm2-wordpress-suite') . '</p></div>';
             }
             echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
             wp_nonce_field('gm2_performance_save', 'gm2_performance_nonce');
@@ -351,7 +351,7 @@ class Gm2_SEO_Admin {
         } elseif ($active === 'rules') {
             $all_rules = get_option('gm2_content_rules', []);
             if (!empty($_GET['updated'])) {
-                echo '<div class="updated notice"><p>Rules saved.</p></div>';
+                echo '<div class="updated notice"><p>' . esc_html__('Rules saved.', 'gm2-wordpress-suite') . '</p></div>';
             }
             echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
             wp_nonce_field('gm2_content_rules_save', 'gm2_content_rules_nonce');
@@ -389,11 +389,15 @@ class Gm2_SEO_Admin {
 
         $notice = '';
         if (isset($_GET['code'])) {
+            $_GET['code']  = sanitize_text_field(wp_unslash($_GET['code']));
+            if (isset($_GET['state'])) {
+                $_GET['state'] = sanitize_text_field(wp_unslash($_GET['state']));
+            }
             $result = $oauth->handle_callback();
             if (is_wp_error($result)) {
                 $notice = '<div class="error notice"><p>' . esc_html($result->get_error_message()) . '</p></div>';
             } elseif ($result) {
-                $notice = '<div class="updated notice"><p>Google account connected.</p></div>';
+                $notice = '<div class="updated notice"><p>' . esc_html__('Google account connected.', 'gm2-wordpress-suite') . '</p></div>';
             }
         }
 

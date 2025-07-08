@@ -170,7 +170,7 @@ class Gm2_Admin {
             } else {
                 $manager->add_tariff($data);
             }
-            echo '<div class="updated"><p>Tariff saved.</p></div>';
+            echo '<div class="updated"><p>' . esc_html__('Tariff saved.', 'gm2-wordpress-suite') . '</p></div>';
         }
     }
 
@@ -208,7 +208,7 @@ class Gm2_Admin {
             $id = sanitize_text_field($_GET['id']);
             check_admin_referer('gm2_delete_tariff_' . $id);
             $manager->delete_tariff($id);
-            echo '<div class="updated"><p>Tariff deleted.</p></div>';
+            echo '<div class="updated"><p>' . esc_html__('Tariff deleted.', 'gm2-wordpress-suite') . '</p></div>';
         }
 
         $tariffs = $manager->get_tariffs();
