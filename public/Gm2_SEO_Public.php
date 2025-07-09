@@ -164,6 +164,7 @@ class Gm2_SEO_Public {
         $noindex     = '';
         $nofollow    = '';
         $canonical   = '';
+        $og_image    = '';
 
         if (is_singular()) {
             $post_id    = get_queried_object_id();
@@ -172,6 +173,7 @@ class Gm2_SEO_Public {
             $noindex     = get_post_meta($post_id, '_gm2_noindex', true);
             $nofollow    = get_post_meta($post_id, '_gm2_nofollow', true);
             $canonical   = get_post_meta($post_id, '_gm2_canonical', true);
+            $og_image    = get_post_meta($post_id, '_gm2_og_image', true);
 
             if (class_exists('WooCommerce') && function_exists('is_product') && is_product()) {
                 $product = wc_get_product($post_id);
@@ -192,6 +194,7 @@ class Gm2_SEO_Public {
                 $noindex     = get_term_meta($term->term_id, '_gm2_noindex', true);
                 $nofollow    = get_term_meta($term->term_id, '_gm2_nofollow', true);
                 $canonical   = get_term_meta($term->term_id, '_gm2_canonical', true);
+                $og_image    = get_term_meta($term->term_id, '_gm2_og_image', true);
             }
         }
 
@@ -219,6 +222,7 @@ class Gm2_SEO_Public {
             'noindex'     => $noindex,
             'nofollow'    => $nofollow,
             'canonical'   => $canonical,
+            'og_image'    => $og_image,
         ];
     }
 
@@ -230,6 +234,11 @@ class Gm2_SEO_Public {
         $robots[]    = ($data['noindex'] === '1') ? 'noindex' : 'index';
         $robots[]    = ($data['nofollow'] === '1') ? 'nofollow' : 'follow';
         $canonical   = $data['canonical'];
+        $og_image_id = $data['og_image'];
+        if (!$og_image_id && is_singular()) {
+            $og_image_id = get_post_thumbnail_id();
+        }
+        $og_image_url = $og_image_id ? wp_get_attachment_url($og_image_id) : '';
 
         // Output the canonical link tag first if it isn't already hooked.
         if (!has_action('wp_head', [$this, 'output_canonical_url'])) {
@@ -249,6 +258,11 @@ class Gm2_SEO_Public {
         echo '<meta property="og:description" content="' . esc_attr($description) . '" />' . "\n";
         echo '<meta property="og:url" content="' . esc_url($url) . '" />' . "\n";
         echo '<meta property="og:type" content="' . esc_attr($type) . '" />' . "\n";
+
+        if ($og_image_url) {
+            echo '<meta property="og:image" content="' . esc_url($og_image_url) . '" />' . "\n";
+            echo '<meta name="twitter:image" content="' . esc_url($og_image_url) . '" />' . "\n";
+        }
 
         echo '<meta name="twitter:card" content="summary" />' . "\n";
         echo '<meta name="twitter:title" content="' . esc_attr($title) . '" />' . "\n";

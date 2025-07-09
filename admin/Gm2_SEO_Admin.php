@@ -699,6 +699,13 @@ class Gm2_SEO_Admin {
         echo '<p><label><input type="checkbox" name="gm2_nofollow" value="1" ' . checked($nofollow, '1', false) . '> nofollow</label></p>';
         echo '<p><label for="gm2_canonical_url">Canonical URL</label>';
         echo '<input type="url" id="gm2_canonical_url" name="gm2_canonical_url" value="' . esc_attr($canonical) . '" class="widefat" /></p>';
+
+        $og_image = is_object($term) ? get_term_meta($term->term_id, '_gm2_og_image', true) : '';
+        $og_image_url = $og_image ? wp_get_attachment_url($og_image) : '';
+        echo '<p><label for="gm2_og_image">OG Image</label>';
+        echo '<input type="hidden" id="gm2_og_image" name="gm2_og_image" value="' . esc_attr($og_image) . '" />';
+        echo '<input type="button" class="button gm2-upload-image" data-target="gm2_og_image" value="Select Image" />';
+        echo '<span class="gm2-image-preview">' . ($og_image_url ? '<img src="' . esc_url($og_image_url) . '" style="max-width:100%;height:auto;" />' : '') . '</span></p>';
         echo '</div>';
 
         echo '<div id="gm2-content-analysis" class="gm2-tab-panel">';
@@ -735,12 +742,14 @@ class Gm2_SEO_Admin {
         $nofollow    = isset($_POST['gm2_nofollow']) ? '1' : '0';
         $canonical      = isset($_POST['gm2_canonical_url']) ? esc_url_raw($_POST['gm2_canonical_url']) : '';
         $focus_keywords = isset($_POST['gm2_focus_keywords']) ? sanitize_text_field($_POST['gm2_focus_keywords']) : '';
+        $og_image    = isset($_POST['gm2_og_image']) ? absint($_POST['gm2_og_image']) : 0;
         update_post_meta($post_id, '_gm2_title', $title);
         update_post_meta($post_id, '_gm2_description', $description);
         update_post_meta($post_id, '_gm2_noindex', $noindex);
         update_post_meta($post_id, '_gm2_nofollow', $nofollow);
         update_post_meta($post_id, '_gm2_canonical', $canonical);
         update_post_meta($post_id, '_gm2_focus_keywords', $focus_keywords);
+        update_post_meta($post_id, '_gm2_og_image', $og_image);
     }
 
     public function save_taxonomy_meta($term_id) {
@@ -753,12 +762,14 @@ class Gm2_SEO_Admin {
         $nofollow    = isset($_POST['gm2_nofollow']) ? '1' : '0';
         $canonical      = isset($_POST['gm2_canonical_url']) ? esc_url_raw($_POST['gm2_canonical_url']) : '';
         $focus_keywords = isset($_POST['gm2_focus_keywords']) ? sanitize_text_field($_POST['gm2_focus_keywords']) : '';
+        $og_image    = isset($_POST['gm2_og_image']) ? absint($_POST['gm2_og_image']) : 0;
         update_term_meta($term_id, '_gm2_title', $title);
         update_term_meta($term_id, '_gm2_description', $description);
         update_term_meta($term_id, '_gm2_noindex', $noindex);
         update_term_meta($term_id, '_gm2_nofollow', $nofollow);
         update_term_meta($term_id, '_gm2_canonical', $canonical);
         update_term_meta($term_id, '_gm2_focus_keywords', $focus_keywords);
+        update_term_meta($term_id, '_gm2_og_image', $og_image);
     }
 
     public function handle_sitemap_form() {
@@ -1315,6 +1326,8 @@ class Gm2_SEO_Admin {
             return;
         }
 
+        wp_enqueue_media();
+
         wp_enqueue_script(
             'gm2-content-analysis',
             GM2_PLUGIN_URL . 'admin/js/gm2-content-analysis.js',
@@ -1402,6 +1415,8 @@ class Gm2_SEO_Admin {
             return;
         }
 
+        wp_enqueue_media();
+
         wp_enqueue_script(
             'gm2-seo-tabs',
             GM2_PLUGIN_URL . 'admin/js/gm2-seo.js',
@@ -1463,6 +1478,13 @@ class Gm2_SEO_Admin {
         echo '<p><label><input type="checkbox" name="gm2_nofollow" value="1" ' . checked($nofollow, '1', false) . '> nofollow</label></p>';
         echo '<p><label for="gm2_canonical_url">Canonical URL</label>';
         echo '<input type="url" id="gm2_canonical_url" name="gm2_canonical_url" value="' . esc_attr($canonical) . '" class="widefat" /></p>';
+
+        $og_image = get_post_meta($post->ID, '_gm2_og_image', true);
+        $og_image_url = $og_image ? wp_get_attachment_url($og_image) : '';
+        echo '<p><label for="gm2_og_image">OG Image</label>';
+        echo '<input type="hidden" id="gm2_og_image" name="gm2_og_image" value="' . esc_attr($og_image) . '" />';
+        echo '<input type="button" class="button gm2-upload-image" data-target="gm2_og_image" value="Select Image" />';
+        echo '<span class="gm2-image-preview">' . ($og_image_url ? '<img src="' . esc_url($og_image_url) . '" style="max-width:100%;height:auto;" />' : '') . '</span></p>';
         echo '</div>';
 
         echo '<div id="gm2-content-analysis" class="gm2-tab-panel">';
