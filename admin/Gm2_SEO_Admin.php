@@ -28,6 +28,7 @@ class Gm2_SEO_Admin {
         add_action('wp_ajax_gm2_check_rules', [$this, 'ajax_check_rules']);
         add_action('wp_ajax_gm2_keyword_ideas', [$this, 'ajax_keyword_ideas']);
         add_action('wp_ajax_gm2_research_guidelines', [$this, 'ajax_research_guidelines']);
+        add_action('wp_ajax_gm2_ai_research', [$this, 'ajax_ai_research']);
 
         add_action('add_attachment', [$this, 'auto_fill_alt_on_upload']);
         add_action('add_attachment', [$this, 'compress_image_on_upload'], 20);
@@ -1164,6 +1165,67 @@ class Gm2_SEO_Admin {
         wp_send_json_success($resp);
     }
 
+    public function ajax_ai_research() {
+        check_ajax_referer('gm2_ai_research');
+        if (!current_user_can('edit_posts')) {
+            wp_send_json_error('permission denied', 403);
+        }
+
+        $post_id  = isset($_POST['post_id']) ? absint($_POST['post_id']) : 0;
+        $term_id  = isset($_POST['term_id']) ? absint($_POST['term_id']) : 0;
+        $taxonomy = isset($_POST['taxonomy']) ? sanitize_key($_POST['taxonomy']) : '';
+
+        $title = $url = '';
+        $seo_title = $seo_description = $focus = $canonical = '';
+
+        if ($post_id) {
+            $post = get_post($post_id);
+            if (!$post) {
+                wp_send_json_error('invalid post');
+            }
+            $title = get_the_title($post);
+            $url   = get_permalink($post);
+            $seo_title       = get_post_meta($post_id, '_gm2_title', true);
+            $seo_description = get_post_meta($post_id, '_gm2_description', true);
+            $focus           = get_post_meta($post_id, '_gm2_focus_keywords', true);
+            $canonical       = get_post_meta($post_id, '_gm2_canonical', true);
+        } elseif ($term_id && $taxonomy) {
+            $term = get_term($term_id, $taxonomy);
+            if (!$term || is_wp_error($term)) {
+                wp_send_json_error('invalid term');
+            }
+            $title = $term->name;
+            $url   = get_term_link($term, $taxonomy);
+            $seo_title       = get_term_meta($term_id, '_gm2_title', true);
+            $seo_description = get_term_meta($term_id, '_gm2_description', true);
+            $focus           = get_term_meta($term_id, '_gm2_focus_keywords', true);
+            $canonical       = get_term_meta($term_id, '_gm2_canonical', true);
+        } else {
+            wp_send_json_error('invalid parameters');
+        }
+
+        $guidelines = trim(get_option('gm2_seo_guidelines', ''));
+        $prompt  = "SEO guidelines:\n" . $guidelines . "\n\n";
+        $prompt .= "Page title: {$title}\nURL: {$url}\n";
+        $prompt .= "Existing SEO Title: {$seo_title}\nSEO Description: {$seo_description}\n";
+        $prompt .= "Focus Keywords: {$focus}\nCanonical: {$canonical}\n";
+        $prompt .= "Provide JSON with keys seo_title, description, focus_keywords, long_tail_keywords, canonical, page_name, content_suggestions, html_issues.";
+
+        $chat = new Gm2_ChatGPT();
+        $resp = $chat->query($prompt);
+
+        if (is_wp_error($resp)) {
+            wp_send_json_error($resp->get_error_message());
+        }
+
+        $data = json_decode($resp, true);
+        if (json_last_error() === JSON_ERROR_NONE) {
+            wp_send_json_success($data);
+        }
+
+        wp_send_json_success($resp);
+    }
+
     public function enqueue_editor_scripts($hook = null) {
 
         /*
@@ -1209,6 +1271,15 @@ class Gm2_SEO_Admin {
             ['jquery'],
             GM2_VERSION,
             true
+        );
+        wp_localize_script(
+            'gm2-ai-seo',
+            'gm2AiSeo',
+            [
+                'nonce'    => wp_create_nonce('gm2_ai_research'),
+                'ajax_url' => admin_url('admin-ajax.php'),
+                'post_id'  => isset($_GET['post']) ? absint($_GET['post']) : 0,
+            ]
         );
 
         wp_enqueue_style(
@@ -1279,6 +1350,16 @@ class Gm2_SEO_Admin {
             ['jquery'],
             GM2_VERSION,
             true
+        );
+        wp_localize_script(
+            'gm2-ai-seo',
+            'gm2AiSeo',
+            [
+                'nonce'    => wp_create_nonce('gm2_ai_research'),
+                'ajax_url' => admin_url('admin-ajax.php'),
+                'term_id'  => isset($_GET['tag_ID']) ? absint($_GET['tag_ID']) : 0,
+                'taxonomy' => $screen->taxonomy,
+            ]
         );
         wp_enqueue_style(
             'gm2-seo-style',
