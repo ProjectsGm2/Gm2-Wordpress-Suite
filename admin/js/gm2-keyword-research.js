@@ -13,7 +13,11 @@ jQuery(function($){
             _ajax_nonce: gm2KeywordResearch.nonce
         }).done(function(resp){
             $list.empty();
-            if(resp && resp.success && Array.isArray(resp.data)){
+            if ((typeof resp === 'string' && resp === '0') || !resp || typeof resp !== 'object') {
+                $list.append($('<li>').text('Invalid request or not logged in'));
+                return;
+            }
+            if(resp.success && Array.isArray(resp.data)){
                 resp.data.forEach(function(k){
                     $('<li>').text(k).appendTo($list);
                 });
