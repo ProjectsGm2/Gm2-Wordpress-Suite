@@ -50,6 +50,7 @@ If you see errors when connecting your Google account:
   * Confirm the connected Google account can access the required properties and accounts. The OAuth client can belong to a different Google account.
   * Disconnect and reconnect after adjusting permissions.
 * **Invalid OAuth state** – Reconnect from **SEO → Connect Google Account** to refresh the authorization flow.
+* **Keyword Research returns no results** – Ensure you have entered your Google Ads developer token, connected a Google account with Ads access, and selected a valid Ads customer ID. Missing or invalid credentials will cause the Keyword Planner request to fail.
 
 == Breadcrumbs ==
 Display a breadcrumb trail anywhere using the `[gm2_breadcrumbs]` shortcode. The output
@@ -68,7 +69,7 @@ For full page caching, hook into the `gm2_set_cache_headers` action
 to configure headers or integrate your preferred caching plugin.
 
 == Keyword Research ==
-After configuring credentials in **Gm2 → Google OAuth Setup**, connect your Google account from **SEO → Connect Google Account**. The plugin automatically fetches your available Analytics Measurement IDs and Ads Customer IDs so you can select them from dropdown menus. Use the **Keyword Research** tab to generate ideas via the Google Keyword Planner.
+After configuring credentials in **Gm2 → Google OAuth Setup**, connect your Google account from **SEO → Connect Google Account**. The plugin automatically fetches your available Analytics Measurement IDs and Ads Customer IDs so you can select them from dropdown menus. Use the **Keyword Research** tab to generate ideas via the Google Keyword Planner. To fetch keywords you must enter a Google Ads developer token, connect a Google account with Ads access, and select a valid Ads customer ID. Missing or invalid credentials will result in empty or failed searches.
 
 == Image Optimization ==
 Enter your compression API key and enable the service from the SEO &gt; Performance screen.
