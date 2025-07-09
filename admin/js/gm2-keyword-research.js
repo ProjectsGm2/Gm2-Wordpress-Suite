@@ -24,6 +24,9 @@ jQuery(function($){
                         msg = resp.data;
                     } else if(resp.data.message){
                         msg = resp.data.message;
+                    } else if(resp.data && resp.data.errors){
+                        var code = Object.keys(resp.data.errors)[0];
+                        msg = resp.data.errors[code][0];
                     }
                 }
                 $list.append($('<li>').text(msg));
