@@ -157,7 +157,10 @@ class Gm2_Google_OAuth {
         $accounts = $this->api_request('GET', 'https://analyticsadmin.googleapis.com/v1/accountSummaries', null, [
             'Authorization' => 'Bearer ' . $token,
         ]);
-        if (!is_wp_error($accounts) && !empty($accounts['accountSummaries'])) {
+        if (is_wp_error($accounts)) {
+            return $accounts;
+        }
+        if (!empty($accounts['accountSummaries'])) {
             foreach ($accounts['accountSummaries'] as $acct) {
                 if (empty($acct['propertySummaries'])) {
                     continue;
@@ -169,7 +172,10 @@ class Gm2_Google_OAuth {
                     $streams = $this->api_request('GET', sprintf('https://analyticsadmin.googleapis.com/v1/%s/dataStreams', $propId), null, [
                         'Authorization' => 'Bearer ' . $token,
                     ]);
-                    if (!is_wp_error($streams) && !empty($streams['dataStreams'])) {
+                    if (is_wp_error($streams)) {
+                        return $streams;
+                    }
+                    if (!empty($streams['dataStreams'])) {
                         foreach ($streams['dataStreams'] as $stream) {
                             if (($stream['type'] ?? '') === 'WEB_DATA_STREAM' && !empty($stream['webStreamData']['measurementId'])) {
                                 $mid = $stream['webStreamData']['measurementId'];
@@ -186,13 +192,19 @@ class Gm2_Google_OAuth {
         $ua_accounts = $this->api_request('GET', 'https://analytics.googleapis.com/analytics/v3/management/accounts', null, [
             'Authorization' => 'Bearer ' . $token,
         ]);
-        if (!is_wp_error($ua_accounts) && !empty($ua_accounts['items'])) {
+        if (is_wp_error($ua_accounts)) {
+            return $ua_accounts;
+        }
+        if (!empty($ua_accounts['items'])) {
             foreach ($ua_accounts['items'] as $acct) {
                 $url = sprintf('https://analytics.googleapis.com/analytics/v3/management/accounts/%s/webproperties', $acct['id']);
                 $webprops = $this->api_request('GET', $url, null, [
                     'Authorization' => 'Bearer ' . $token,
                 ]);
-                if (!is_wp_error($webprops) && !empty($webprops['items'])) {
+                if (is_wp_error($webprops)) {
+                    return $webprops;
+                }
+                if (!empty($webprops['items'])) {
                     foreach ($webprops['items'] as $p) {
                         if (!isset($props[$p['id']])) {
                             $props[$p['id']] = $p['name'];
@@ -245,7 +257,10 @@ class Gm2_Google_OAuth {
             'Authorization'   => 'Bearer ' . $access,
             'developer-token' => $token,
         ]);
-        if (is_wp_error($resp) || empty($resp['resourceNames'])) {
+        if (is_wp_error($resp)) {
+            return $resp;
+        }
+        if (empty($resp['resourceNames'])) {
             return [];
         }
         $list = [];
