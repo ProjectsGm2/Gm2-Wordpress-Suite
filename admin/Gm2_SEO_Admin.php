@@ -365,10 +365,16 @@ class Gm2_SEO_Admin {
             submit_button('Save Settings');
             echo '</form>';
         } elseif ($active === 'keywords') {
+            $enabled = trim(get_option('gm2_gads_developer_token', '')) !== '' &&
+                trim(get_option('gm2_gads_customer_id', '')) !== '' &&
+                get_option('gm2_google_refresh_token', '') !== '';
             echo '<form id="gm2-keyword-research-form">';
             echo '<p><label for="gm2_seed_keyword">Seed Keyword</label>';
             echo '<input type="text" id="gm2_seed_keyword" class="regular-text" /></p>';
-            echo '<p><button class="button" type="submit">Generate Ideas</button></p>';
+            echo '<p><button class="button" type="submit"' . ($enabled ? '' : ' disabled') . '>Generate Ideas</button></p>';
+            if (!$enabled) {
+                echo '<p class="description">' . esc_html__('Google Ads credentials are not configured.', 'gm2-wordpress-suite') . '</p>';
+            }
             echo '</form>';
             echo '<ul id="gm2-keyword-results"></ul>';
         } elseif ($active === 'rules') {
@@ -1016,6 +1022,13 @@ class Gm2_SEO_Admin {
         check_ajax_referer('gm2_keyword_ideas');
         if (!current_user_can('manage_options')) {
             wp_send_json_error('permission denied', 403);
+        }
+
+        $creds_ok = trim(get_option('gm2_gads_developer_token', '')) !== '' &&
+            trim(get_option('gm2_gads_customer_id', '')) !== '' &&
+            get_option('gm2_google_refresh_token', '') !== '';
+        if (!$creds_ok) {
+            wp_send_json_error('Google Ads credentials are not configured.');
         }
 
         $query = isset($_POST['query']) ? sanitize_text_field(wp_unslash($_POST['query'])) : '';

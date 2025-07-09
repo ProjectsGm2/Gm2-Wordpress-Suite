@@ -1,4 +1,7 @@
 jQuery(function($){
+    if(!gm2KeywordResearch.enabled){
+        $('#gm2-keyword-research-form button[type="submit"]').prop('disabled', true);
+    }
     $('#gm2-keyword-research-form').on('submit', function(e){
         e.preventDefault();
         var kw = $('#gm2_seed_keyword').val();
