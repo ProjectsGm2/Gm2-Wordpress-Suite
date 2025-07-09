@@ -71,6 +71,8 @@ to configure headers or integrate your preferred caching plugin.
 == Keyword Research ==
 After configuring credentials in **Gm2 → Google OAuth Setup**, connect your Google account from **SEO → Connect Google Account**. The plugin automatically fetches your available Analytics Measurement IDs and Ads Customer IDs so you can select them from dropdown menus. Use the **Keyword Research** tab to generate ideas via the Google Keyword Planner. To fetch keywords you must enter a Google Ads developer token, connect a Google account with Ads access, and select a valid Ads customer ID. Missing or invalid credentials will result in empty or failed searches.
 
+The Google Ads request also requires a language constant and a geo target constant. These values are configurable on the same screen and default to `languageConstants/1000` (English) and `geoTargetConstants/2840` (United States). If either option is missing or invalid, the keyword search will fail with an error.
+
 == Image Optimization ==
 Enter your compression API key and enable the service from the SEO &gt; Performance screen.
 When enabled, uploaded images are sent to the API and replaced with the optimized result.
