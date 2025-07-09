@@ -89,6 +89,36 @@ class OAuthTest extends WP_UnitTestCase {
         $this->assertSame('devtoken', $captured['headers']['developer-token']);
     }
 
+    public function test_ads_request_includes_login_customer_header() {
+        update_option('gm2_google_refresh_token', 'refresh');
+        update_option('gm2_google_access_token', 'access');
+        update_option('gm2_google_expires_at', time() + 3600);
+        update_option('gm2_gads_developer_token', 'devtoken');
+        update_option('gm2_gads_login_customer_id', '123-456-7890');
+
+        $captured = null;
+        $expected = 'https://googleads.googleapis.com/' . Gm2_Google_OAuth::GOOGLE_ADS_API_VERSION . '/customers:listAccessibleCustomers';
+        $filter   = function ($pre, $args, $url) use (&$captured, $expected) {
+            if (0 === strpos($url, $expected)) {
+                $captured = $args;
+                return [
+                    'response' => ['code' => 200],
+                    'body'     => json_encode(['resourceNames' => []]),
+                ];
+            }
+            return false;
+        };
+        add_filter('pre_http_request', $filter, 10, 3);
+
+        $oauth = new Gm2_Google_OAuth();
+        $oauth->list_ads_accounts();
+
+        remove_filter('pre_http_request', $filter, 10);
+
+        $this->assertIsArray($captured);
+        $this->assertSame('1234567890', $captured['headers']['login-customer-id']);
+    }
+
     public function test_error_returned_when_no_developer_token() {
         update_option('gm2_google_refresh_token', 'refresh');
         update_option('gm2_google_access_token', 'access');
