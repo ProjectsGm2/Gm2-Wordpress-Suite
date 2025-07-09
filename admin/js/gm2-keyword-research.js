@@ -15,9 +15,14 @@ jQuery(function($){
                     $('<li>').text(k).appendTo($list);
                 });
             } else {
-                var msg = (resp && resp.data && typeof resp.data === 'string')
-                    ? resp.data
-                    : 'No results';
+                var msg = 'No results';
+                if(resp && resp.data){
+                    if(typeof resp.data === 'string'){
+                        msg = resp.data;
+                    } else if(resp.data.message){
+                        msg = resp.data.message;
+                    }
+                }
                 $list.append($('<li>').text(msg));
             }
         }).fail(function(){

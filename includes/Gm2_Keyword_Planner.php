@@ -72,6 +72,10 @@ class Gm2_Keyword_Planner {
             }
         }
 
+        if (empty($ideas)) {
+            return new \WP_Error('no_results', 'No keyword ideas found.');
+        }
+
         return $ideas;
     }
 }
