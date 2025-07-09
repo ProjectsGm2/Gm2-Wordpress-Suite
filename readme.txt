@@ -38,6 +38,7 @@ These credentials must be copied from your Google accounts:
 
 * **Search Console verification code** – Log in to <https://search.google.com/search-console>, open **Settings → Ownership verification**, and choose the *HTML tag* option. Copy the code displayed in the meta tag and paste it into the **Search Console Verification Code** field on the SEO settings page. See <https://support.google.com/webmasters/answer/9008080> for details.
 * **Google Ads developer token** – Sign in at <https://ads.google.com>, then go to **Tools → API Center**. Copy your **Developer token** and enter it into the **Google Ads Developer Token** field. Documentation: <https://developers.google.com/google-ads/api/docs/first-call/dev-token>.
+* **Google Ads API version** – The plugin uses the API version defined by the `Gm2_Google_OAuth::GOOGLE_ADS_API_VERSION` constant (default `v17`). Update this constant and any tests referencing it when a new Ads API version becomes available.
 
 == Troubleshooting ==
 If you see errors when connecting your Google account:

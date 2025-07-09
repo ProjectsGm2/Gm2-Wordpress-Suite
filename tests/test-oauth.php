@@ -67,8 +67,9 @@ class OAuthTest extends WP_UnitTestCase {
         update_option('gm2_gads_developer_token', 'devtoken');
 
         $captured = null;
-        $filter   = function ($pre, $args, $url) use (&$captured) {
-            if (0 === strpos($url, 'https://googleads.googleapis.com/v15/customers:listAccessibleCustomers')) {
+        $expected = 'https://googleads.googleapis.com/' . Gm2_Google_OAuth::GOOGLE_ADS_API_VERSION . '/customers:listAccessibleCustomers';
+        $filter   = function ($pre, $args, $url) use (&$captured, $expected) {
+            if (0 === strpos($url, $expected)) {
                 $captured = $args;
                 return [
                     'response' => ['code' => 200],
