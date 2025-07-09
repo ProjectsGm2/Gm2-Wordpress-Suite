@@ -31,7 +31,7 @@ class Gm2_Keyword_Planner {
             return new \WP_Error('no_token', 'Unable to obtain access token');
         }
 
-        $url = sprintf('https://googleads.googleapis.com/v15/customers/%s:generateKeywordIdeas', $creds['customer_id']);
+        $url = sprintf('https://googleads.googleapis.com/%s/customers/%s:generateKeywordIdeas', \Gm2\Gm2_Google_OAuth::GOOGLE_ADS_API_VERSION, $creds['customer_id']);
 
         $body = [
             'customerId' => $creds['customer_id'],

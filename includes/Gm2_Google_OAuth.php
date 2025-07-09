@@ -7,6 +7,9 @@ if (!defined('ABSPATH')) {
 }
 
 class Gm2_Google_OAuth {
+    /** Latest supported Google Ads API version. */
+    public const GOOGLE_ADS_API_VERSION = 'v17';
+
     private $client_id;
     private $client_secret;
     private $redirect_uri;
@@ -253,7 +256,8 @@ class Gm2_Google_OAuth {
                 __('A Google Ads developer token is required to list accounts.', 'gm2-wordpress-suite')
             );
         }
-        $resp = $this->api_request('GET', 'https://googleads.googleapis.com/v15/customers:listAccessibleCustomers', null, [
+        $url  = sprintf('https://googleads.googleapis.com/%s/customers:listAccessibleCustomers', self::GOOGLE_ADS_API_VERSION);
+        $resp = $this->api_request('GET', $url, null, [
             'Authorization'   => 'Bearer ' . $access,
             'developer-token' => $token,
         ]);
