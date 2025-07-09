@@ -82,6 +82,14 @@ class Gm2_Elementor_SEO {
                 'default' => [ 'url' => get_post_meta($post_id, '_gm2_canonical', true) ],
             ]
         );
+        $document->add_control(
+            'gm2_og_image',
+            [
+                'label' => __('OG Image', 'gm2-wordpress-suite'),
+                'type'  => \Elementor\Controls_Manager::MEDIA,
+                'default' => [ 'id' => get_post_meta($post_id, '_gm2_og_image', true) ],
+            ]
+        );
         $document->end_controls_section();
     }
 
@@ -109,6 +117,11 @@ class Gm2_Elementor_SEO {
             $canonical_val = $canonical_val['url'] ?? '';
         }
         $canonical   = esc_url_raw($canonical_val);
+        $og_val = $data['gm2_og_image'] ?? '';
+        if (is_array($og_val)) {
+            $og_val = $og_val['id'] ?? 0;
+        }
+        $og_image = absint($og_val);
         $focus       = isset($data['gm2_focus_keywords']) ? sanitize_text_field($data['gm2_focus_keywords']) : '';
         update_post_meta($post_id, '_gm2_title', $title);
         update_post_meta($post_id, '_gm2_description', $description);
@@ -116,5 +129,6 @@ class Gm2_Elementor_SEO {
         update_post_meta($post_id, '_gm2_nofollow', $nofollow);
         update_post_meta($post_id, '_gm2_canonical', $canonical);
         update_post_meta($post_id, '_gm2_focus_keywords', $focus);
+        update_post_meta($post_id, '_gm2_og_image', $og_image);
     }
 }

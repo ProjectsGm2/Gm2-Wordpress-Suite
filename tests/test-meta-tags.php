@@ -99,5 +99,27 @@ class MetaTagsTest extends WP_UnitTestCase {
         $this->assertStringContainsString('<meta name="robots" content="noindex,nofollow"', $output);
         $this->assertStringContainsString('<link rel="canonical" href="https://example.com/canonical" />', $output);
     }
+
+    public function test_custom_og_image_in_meta_tags() {
+        $post_id = self::factory()->post->create([
+            'post_title'   => 'Image Post',
+            'post_content' => 'Content',
+        ]);
+
+        $filename = DIR_TESTDATA . '/images/canola.jpg';
+        $attachment_id = self::factory()->attachment->create_upload_object($filename, $post_id);
+        update_post_meta($post_id, '_gm2_og_image', $attachment_id);
+
+        $seo = new Gm2_SEO_Public();
+        $this->go_to(get_permalink($post_id));
+        setup_postdata(get_post($post_id));
+        ob_start();
+        $seo->output_meta_tags();
+        $output = ob_get_clean();
+
+        $url = wp_get_attachment_url($attachment_id);
+        $this->assertStringContainsString('property="og:image" content="' . esc_url($url) . '"', $output);
+        $this->assertStringContainsString('name="twitter:image" content="' . esc_url($url) . '"', $output);
+    }
 }
 
