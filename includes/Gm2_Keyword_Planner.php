@@ -54,7 +54,15 @@ class Gm2_Keyword_Planner {
             return $resp;
         }
 
-        $data = json_decode(wp_remote_retrieve_body($resp), true);
+        $code = wp_remote_retrieve_response_code($resp);
+        $body = wp_remote_retrieve_body($resp);
+        $data = $body !== '' ? json_decode($body, true) : null;
+
+        if ($code < 200 || $code >= 300 || (!empty($data['error']['message']))) {
+            $msg = $data['error']['message'] ?? "HTTP $code response";
+            return new \WP_Error('api_error', $msg);
+        }
+
         $ideas = [];
         if (!empty($data['results'])) {
             foreach ($data['results'] as $res) {
@@ -63,6 +71,7 @@ class Gm2_Keyword_Planner {
                 }
             }
         }
+
         return $ideas;
     }
 }
