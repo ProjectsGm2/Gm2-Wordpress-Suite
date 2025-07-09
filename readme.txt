@@ -18,15 +18,15 @@ A powerful suite of WordPress enhancements including admin tools, frontend optim
    open **Gm2 → ChatGPT** to provide your OpenAI API key and choose a model from
    the dropdown.
    Finally, use **SEO → Connect Google Account** to authorize your Google account. After connecting, you will be able to select your Analytics Measurement ID and Ads Customer ID from dropdown menus.
-4. All required PHP libraries, including the Google API client, are bundled in
-   the plugin. No additional installation steps are required.
+4. The plugin relies on WordPress's built-in HTTP API and has no external
+   dependencies.
 5. Follow the steps in the **Google integration** section below to copy your
    Search Console verification code and Google Ads developer token. These values
    cannot be fetched via API and must be entered manually on the SEO settings
    page.
 6. Select your Analytics Measurement ID and Ads Customer ID on the
-   **SEO → Connect Google Account** page after connecting. These IDs cannot be
-   entered manually on the SEO settings screen.
+   **SEO → Connect Google Account** page after connecting, or enter them
+   manually on the SEO settings screen if needed.
 
 If you plan to distribute or manually upload the plugin, you can create a ZIP
 archive with `bash bin/build-plugin.sh`. This command packages the plugin with
@@ -91,6 +91,15 @@ OpenAI API key and adjust these options:
 
 Use the **Test Prompt** box on the same page to send a message and verify your
 settings before generating content.
+
+== Tariff Management ==
+Manage percentage-based fees for WooCommerce orders. Open **Gm2 → Tariff** to
+add or edit tariffs. Enabled tariffs add a fee to the cart total during
+checkout.
+
+== Redirects ==
+Create 301 or 302 redirects from the **SEO → Redirects** tab. The plugin logs
+the last 100 missing URLs to help you create new redirects.
 
 == Changelog ==
 = 1.6.1 =
