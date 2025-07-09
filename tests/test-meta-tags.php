@@ -100,6 +100,27 @@ class MetaTagsTest extends WP_UnitTestCase {
         $this->assertStringContainsString('<link rel="canonical" href="https://example.com/canonical" />', $output);
     }
 
+    public function test_max_preview_directives_appended_to_robots() {
+        $post_id = self::factory()->post->create([
+            'post_title'   => 'Robots',
+            'post_content' => 'Content',
+        ]);
+        update_post_meta($post_id, '_gm2_max_snippet', '50');
+        update_post_meta($post_id, '_gm2_max_image_preview', 'large');
+        update_post_meta($post_id, '_gm2_max_video_preview', '10');
+
+        $seo = new Gm2_SEO_Public();
+        $this->go_to(get_permalink($post_id));
+        setup_postdata(get_post($post_id));
+        ob_start();
+        $seo->output_meta_tags();
+        $output = ob_get_clean();
+
+        $this->assertStringContainsString('max-snippet:50', $output);
+        $this->assertStringContainsString('max-image-preview:large', $output);
+        $this->assertStringContainsString('max-video-preview:10', $output);
+    }
+
     public function test_custom_og_image_in_meta_tags() {
         $post_id = self::factory()->post->create([
             'post_title'   => 'Image Post',
