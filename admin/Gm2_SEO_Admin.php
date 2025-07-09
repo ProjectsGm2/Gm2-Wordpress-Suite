@@ -1057,6 +1057,48 @@ class Gm2_SEO_Admin {
         }
     }
 
+    private function get_rendered_html($post_id, $term_id, $taxonomy) {
+        if ($post_id) {
+            $post = get_post($post_id);
+            if ($post) {
+                return apply_filters('the_content', $post->post_content);
+            }
+        } elseif ($term_id && $taxonomy) {
+            $desc = term_description($term_id, $taxonomy);
+            return apply_filters('the_content', $desc);
+        }
+        return '';
+    }
+
+    private function detect_html_issues($html, $canonical) {
+        $issues = [];
+        if ($canonical === '') {
+            $issues[] = 'Missing canonical link tag';
+        }
+        if (trim($html) === '') {
+            return $issues;
+        }
+
+        $doc = new \DOMDocument();
+        libxml_use_internal_errors(true);
+        $doc->loadHTML('<?xml encoding="utf-8" ?>' . $html);
+        libxml_clear_errors();
+
+        $h1s = $doc->getElementsByTagName('h1');
+        if ($h1s->length > 1) {
+            $issues[] = 'Multiple <h1> tags found';
+        }
+
+        foreach ($doc->getElementsByTagName('img') as $img) {
+            if (!$img->hasAttribute('alt') || trim($img->getAttribute('alt')) === '') {
+                $issues[] = 'Image missing alt attribute';
+                break;
+            }
+        }
+
+        return $issues;
+    }
+
     public function ajax_check_rules() {
         check_ajax_referer('gm2_check_rules');
         if (!current_user_can('edit_posts')) {
@@ -1218,6 +1260,9 @@ class Gm2_SEO_Admin {
             $canonical = esc_url_raw(wp_unslash($_POST['canonical']));
         }
 
+        $html        = $this->get_rendered_html($post_id, $term_id, $taxonomy);
+        $html_issues = $this->detect_html_issues($html, $canonical);
+
         $guidelines = trim(get_option('gm2_seo_guidelines', ''));
         $prompt  = "SEO guidelines:\n" . $guidelines . "\n\n";
         $prompt .= "Page title: {$title}\nURL: {$url}\n";
@@ -1234,10 +1279,17 @@ class Gm2_SEO_Admin {
 
         $data = json_decode($resp, true);
         if (json_last_error() === JSON_ERROR_NONE) {
+            if (!isset($data['html_issues'])) {
+                $data['html_issues'] = [];
+            }
+            $data['html_issues'] = array_merge($data['html_issues'], $html_issues);
             wp_send_json_success($data);
         }
 
-        wp_send_json_success($resp);
+        wp_send_json_success([
+            'response'    => $resp,
+            'html_issues' => $html_issues,
+        ]);
     }
 
     public function enqueue_editor_scripts($hook = null) {
