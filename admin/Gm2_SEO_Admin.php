@@ -457,7 +457,6 @@ class Gm2_SEO_Admin {
                 $properties = $oauth->list_analytics_properties();
                 if (is_wp_error($properties)) {
                     $notice .= '<div class="error notice"><p>' . esc_html($properties->get_error_message()) . '</p>' . $help . '</div>';
-                    $properties = [];
                 } elseif (!empty($properties) && '' === get_option('gm2_ga_measurement_id', '')) {
                     update_option('gm2_ga_measurement_id', array_key_first($properties));
                 }
@@ -471,7 +470,6 @@ class Gm2_SEO_Admin {
                     }
                     $msg .= '</div>';
                     $notice .= $msg;
-                    $accounts = [];
                 } elseif (!empty($accounts) && '' === get_option('gm2_gads_customer_id', '')) {
                     update_option('gm2_gads_customer_id', array_key_first($accounts));
                 }
@@ -484,7 +482,6 @@ class Gm2_SEO_Admin {
             }
             if (is_wp_error($properties)) {
                 $notice .= '<div class="error notice"><p>' . esc_html($properties->get_error_message()) . '</p>' . $help . '</div>';
-                $properties = [];
             }
             if (!$accounts) {
                 $accounts = $oauth->list_ads_accounts();
@@ -498,13 +495,12 @@ class Gm2_SEO_Admin {
                 }
                 $msg .= '</div>';
                 $notice .= $msg;
-                $accounts = [];
             }
 
-            if (empty($properties)) {
+            if (!is_wp_error($properties) && empty($properties)) {
                 $notice .= '<div class="error notice"><p>' . esc_html__('No Analytics properties found.', 'gm2-wordpress-suite') . '</p>' . $help . '</div>';
             }
-            if (empty($accounts)) {
+            if (!is_wp_error($accounts) && empty($accounts)) {
                 $notice .= '<div class="error notice"><p>' . esc_html__('No Ads accounts found.', 'gm2-wordpress-suite') . '</p>' . $help . '</div>';
             }
         }
