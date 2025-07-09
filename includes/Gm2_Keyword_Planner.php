@@ -33,8 +33,8 @@ class Gm2_Keyword_Planner {
 
         $url = sprintf('https://googleads.googleapis.com/%s/customers/%s:generateKeywordIdeas', \Gm2\Gm2_Google_OAuth::GOOGLE_ADS_API_VERSION, $creds['customer_id']);
 
-        $language    = get_option('gm2_kwp_language', 'languageConstants/1000');
-        $geo_targets = get_option('gm2_kwp_geo_targets', 'geoTargetConstants/2840');
+        $language    = get_option('gm2_gads_language', 'languageConstants/1000');
+        $geo_targets = get_option('gm2_gads_geo_target', 'geoTargetConstants/2840');
         $network     = get_option('gm2_kwp_network', 'GOOGLE_SEARCH');
 
         if (!is_array($geo_targets)) {
