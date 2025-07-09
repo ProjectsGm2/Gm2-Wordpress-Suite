@@ -1204,6 +1204,20 @@ class Gm2_SEO_Admin {
             wp_send_json_error('invalid parameters');
         }
 
+        // override with submitted values if provided
+        if (isset($_POST['seo_title'])) {
+            $seo_title = sanitize_text_field(wp_unslash($_POST['seo_title']));
+        }
+        if (isset($_POST['seo_description'])) {
+            $seo_description = sanitize_textarea_field(wp_unslash($_POST['seo_description']));
+        }
+        if (isset($_POST['focus_keywords'])) {
+            $focus = sanitize_text_field(wp_unslash($_POST['focus_keywords']));
+        }
+        if (isset($_POST['canonical'])) {
+            $canonical = esc_url_raw(wp_unslash($_POST['canonical']));
+        }
+
         $guidelines = trim(get_option('gm2_seo_guidelines', ''));
         $prompt  = "SEO guidelines:\n" . $guidelines . "\n\n";
         $prompt .= "Page title: {$title}\nURL: {$url}\n";
