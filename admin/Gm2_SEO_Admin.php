@@ -22,6 +22,8 @@ class Gm2_SEO_Admin {
         add_action('admin_post_gm2_performance_settings', [$this, 'handle_performance_form']);
         add_action('admin_post_gm2_redirects', [$this, 'handle_redirects_form']);
         add_action('admin_post_gm2_content_rules', [$this, 'handle_content_rules_form']);
+        add_action('admin_post_gm2_general_settings', [$this, 'handle_general_settings_form']);
+        add_action('admin_post_gm2_keyword_settings', [$this, 'handle_keyword_settings_form']);
 
         add_action('wp_ajax_gm2_check_rules', [$this, 'ajax_check_rules']);
         add_action('wp_ajax_gm2_keyword_ideas', [$this, 'ajax_keyword_ideas']);
@@ -386,8 +388,9 @@ class Gm2_SEO_Admin {
             $geo   = get_option('gm2_gads_geo_target', 'geoTargetConstants/2840');
             $login = get_option('gm2_gads_login_customer_id', '');
 
-            echo '<form method="post" action="options.php">';
-            settings_fields('gm2_seo_options');
+            echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
+            wp_nonce_field('gm2_keyword_settings_save', 'gm2_keyword_settings_nonce');
+            echo '<input type="hidden" name="action" value="gm2_keyword_settings" />';
             echo '<table class="form-table"><tbody>';
             echo '<tr><th scope="row">Language Constant</th><td><input type="text" name="gm2_gads_language" id="gm2_gads_language" value="' . esc_attr($lang) . '" class="regular-text" /></td></tr>';
             echo '<tr><th scope="row">Geo Target Constant</th><td><input type="text" name="gm2_gads_geo_target" id="gm2_gads_geo_target" value="' . esc_attr($geo) . '" class="regular-text" /></td></tr>';
@@ -432,8 +435,9 @@ class Gm2_SEO_Admin {
             submit_button('Save Rules');
             echo '</form>';
         } else {
-            echo '<form method="post" action="options.php">';
-            settings_fields('gm2_seo_options');
+            echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
+            wp_nonce_field('gm2_general_settings_save', 'gm2_general_settings_nonce');
+            echo '<input type="hidden" name="action" value="gm2_general_settings" />';
             do_settings_sections('gm2_seo');
             submit_button();
             echo '</form>';
@@ -841,6 +845,29 @@ class Gm2_SEO_Admin {
         exit;
     }
 
+    public function handle_general_settings_form() {
+        if (!current_user_can('manage_options')) {
+            wp_die('Permission denied');
+        }
+
+        if (!isset($_POST['gm2_general_settings_nonce']) || !wp_verify_nonce($_POST['gm2_general_settings_nonce'], 'gm2_general_settings_save')) {
+            wp_die('Invalid nonce');
+        }
+
+        $ga_id  = isset($_POST['gm2_ga_measurement_id']) ? sanitize_text_field($_POST['gm2_ga_measurement_id']) : '';
+        $sc_ver = isset($_POST['gm2_search_console_verification']) ? sanitize_text_field($_POST['gm2_search_console_verification']) : '';
+        $token  = isset($_POST['gm2_gads_developer_token']) ? sanitize_text_field($_POST['gm2_gads_developer_token']) : '';
+        $cust   = isset($_POST['gm2_gads_customer_id']) ? $this->sanitize_customer_id($_POST['gm2_gads_customer_id']) : '';
+
+        update_option('gm2_ga_measurement_id', $ga_id);
+        update_option('gm2_search_console_verification', $sc_ver);
+        update_option('gm2_gads_developer_token', $token);
+        update_option('gm2_gads_customer_id', $cust);
+
+        wp_redirect(admin_url('admin.php?page=gm2-seo&tab=general&updated=1'));
+        exit;
+    }
+
     public function handle_redirects_form() {
         if (!current_user_can('manage_options')) {
             wp_die('Permission denied');
@@ -894,6 +921,27 @@ class Gm2_SEO_Admin {
         update_option('gm2_content_rules', $rules);
 
         wp_redirect(admin_url('admin.php?page=gm2-seo&tab=rules&updated=1'));
+        exit;
+    }
+
+    public function handle_keyword_settings_form() {
+        if (!current_user_can('manage_options')) {
+            wp_die('Permission denied');
+        }
+
+        if (!isset($_POST['gm2_keyword_settings_nonce']) || !wp_verify_nonce($_POST['gm2_keyword_settings_nonce'], 'gm2_keyword_settings_save')) {
+            wp_die('Invalid nonce');
+        }
+
+        $lang  = isset($_POST['gm2_gads_language']) ? sanitize_text_field($_POST['gm2_gads_language']) : '';
+        $geo   = isset($_POST['gm2_gads_geo_target']) ? sanitize_text_field($_POST['gm2_gads_geo_target']) : '';
+        $login = isset($_POST['gm2_gads_login_customer_id']) ? $this->sanitize_customer_id($_POST['gm2_gads_login_customer_id']) : '';
+
+        update_option('gm2_gads_language', $lang);
+        update_option('gm2_gads_geo_target', $geo);
+        update_option('gm2_gads_login_customer_id', $login);
+
+        wp_redirect(admin_url('admin.php?page=gm2-seo&tab=keywords&updated=1'));
         exit;
     }
 
