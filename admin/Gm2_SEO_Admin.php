@@ -458,7 +458,7 @@ class Gm2_SEO_Admin {
                 if (is_wp_error($properties)) {
                     $notice .= '<div class="error notice"><p>' . esc_html($properties->get_error_message()) . '</p>' . $help . '</div>';
                 } elseif (!empty($properties) && '' === get_option('gm2_ga_measurement_id', '')) {
-                    update_option('gm2_ga_measurement_id', array_key_first($properties));
+                    update_option('gm2_ga_measurement_id', is_array($properties) ? array_key_first($properties) : '');
                 }
                 $accounts = $oauth->list_ads_accounts();
                 if (is_wp_error($accounts)) {
@@ -471,7 +471,7 @@ class Gm2_SEO_Admin {
                     $msg .= '</div>';
                     $notice .= $msg;
                 } elseif (!empty($accounts) && '' === get_option('gm2_gads_customer_id', '')) {
-                    update_option('gm2_gads_customer_id', array_key_first($accounts));
+                    update_option('gm2_gads_customer_id', is_array($accounts) ? array_key_first($accounts) : '');
                 }
             }
         }
@@ -515,8 +515,8 @@ class Gm2_SEO_Admin {
             echo '<a href="' . $url . '" class="button button-primary">Connect Google</a>';
         } else {
             echo '<p>Google account connected.</p>';
-            if ($properties) {
-                $current = get_option('gm2_ga_measurement_id', array_key_first($properties));
+            if (is_array($properties) && $properties) {
+                $current = get_option('gm2_ga_measurement_id', is_array($properties) ? array_key_first($properties) : '');
                 echo '<form method="post">';
                 wp_nonce_field('gm2_ga_property_save', 'gm2_ga_property_nonce');
                 echo '<p><label for="gm2_ga_property">' . esc_html__('Select Analytics Property', 'gm2-wordpress-suite') . '</label> ';
@@ -530,8 +530,8 @@ class Gm2_SEO_Admin {
                 submit_button(__('Save Property', 'gm2-wordpress-suite'));
                 echo '</form>';
             }
-            if ($accounts) {
-                $current = get_option('gm2_gads_customer_id', array_key_first($accounts));
+            if (is_array($accounts) && $accounts) {
+                $current = get_option('gm2_gads_customer_id', is_array($accounts) ? array_key_first($accounts) : '');
                 echo '<form method="post">';
                 wp_nonce_field('gm2_gads_account_save', 'gm2_gads_account_nonce');
                 echo '<p><label for="gm2_gads_account">' . esc_html__('Select Ads Account', 'gm2-wordpress-suite') . '</label> ';

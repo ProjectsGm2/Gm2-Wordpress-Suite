@@ -276,6 +276,46 @@ class GoogleConnectPageTest extends WP_UnitTestCase {
         $this->assertStringContainsString('enable the Analytics', $output);
     }
 
+    public function test_property_dropdown_not_rendered_on_api_error() {
+        delete_option('gm2_google_refresh_token');
+        add_filter('gm2_google_oauth_instance', function() {
+            return new class {
+                public function is_connected() { return true; }
+                public function get_auth_url() { return ''; }
+                public function handle_callback($code) { return true; }
+                public function list_analytics_properties() {
+                    return new WP_Error('api_error', 'HTTP 500 response');
+                }
+                public function list_ads_accounts() { return []; }
+            };
+        });
+        $admin = new Gm2_SEO_Admin();
+        ob_start();
+        $admin->display_google_connect_page();
+        $output = ob_get_clean();
+        $this->assertStringNotContainsString('<select id="gm2_ga_property"', $output);
+    }
+
+    public function test_ads_dropdown_not_rendered_on_api_error() {
+        delete_option('gm2_google_refresh_token');
+        add_filter('gm2_google_oauth_instance', function() {
+            return new class {
+                public function is_connected() { return true; }
+                public function get_auth_url() { return ''; }
+                public function handle_callback($code) { return true; }
+                public function list_analytics_properties() { return ['G-1' => 'Site']; }
+                public function list_ads_accounts() {
+                    return new WP_Error('api_error', 'HTTP 500 response');
+                }
+            };
+        });
+        $admin = new Gm2_SEO_Admin();
+        ob_start();
+        $admin->display_google_connect_page();
+        $output = ob_get_clean();
+        $this->assertStringNotContainsString('<select id="gm2_gads_account"', $output);
+    }
+
     public function test_disconnect_form_removes_token() {
         update_option('gm2_google_refresh_token', 'tok');
         $_POST['gm2_google_disconnect'] = wp_create_nonce('gm2_google_disconnect');
