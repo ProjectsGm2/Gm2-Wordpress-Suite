@@ -684,6 +684,7 @@ class Gm2_SEO_Admin {
         echo '<nav class="gm2-nav-tabs">';
         echo '<a href="#" class="gm2-nav-tab active" data-tab="gm2-seo-settings">SEO Settings</a>';
         echo '<a href="#" class="gm2-nav-tab" data-tab="gm2-content-analysis">Content Analysis</a>';
+        echo '<a href="#" class="gm2-nav-tab" data-tab="gm2-ai-seo">AI SEO</a>';
         echo '</nav>';
 
         echo '<div id="gm2-seo-settings" class="gm2-tab-panel active">';
@@ -706,6 +707,11 @@ class Gm2_SEO_Admin {
             echo '<li data-key="' . esc_attr($key) . '"><span class="dashicons dashicons-no"></span> ' . esc_html($text) . '</li>';
         }
         echo '</ul>';
+        echo '</div>';
+        echo '<div id="gm2-ai-seo" class="gm2-tab-panel">';
+        echo '<p><button type="button" class="button gm2-ai-research">AI Research</button></p>';
+        echo '<div id="gm2-ai-results"></div>';
+        echo '<p><button type="button" class="button gm2-ai-implement">Implement Selected</button></p>';
         echo '</div>';
 
         echo '</div>';
@@ -1197,6 +1203,14 @@ class Gm2_SEO_Admin {
             true
         );
 
+        wp_enqueue_script(
+            'gm2-ai-seo',
+            GM2_PLUGIN_URL . 'admin/js/gm2-ai-seo.js',
+            ['jquery'],
+            GM2_VERSION,
+            true
+        );
+
         wp_enqueue_style(
             'gm2-seo-style',
             GM2_PLUGIN_URL . 'admin/css/gm2-seo.css',
@@ -1258,6 +1272,14 @@ class Gm2_SEO_Admin {
             GM2_VERSION,
             true
         );
+
+        wp_enqueue_script(
+            'gm2-ai-seo',
+            GM2_PLUGIN_URL . 'admin/js/gm2-ai-seo.js',
+            ['jquery'],
+            GM2_VERSION,
+            true
+        );
         wp_enqueue_style(
             'gm2-seo-style',
             GM2_PLUGIN_URL . 'admin/css/gm2-seo.css',
@@ -1280,6 +1302,7 @@ class Gm2_SEO_Admin {
         echo '<nav class="gm2-nav-tabs">';
         echo '<a href="#" class="gm2-nav-tab active" data-tab="gm2-seo-settings">SEO Settings</a>';
         echo '<a href="#" class="gm2-nav-tab" data-tab="gm2-content-analysis">Content Analysis</a>';
+        echo '<a href="#" class="gm2-nav-tab" data-tab="gm2-ai-seo">AI SEO</a>';
         echo '</nav>';
 
         echo '<div id="gm2-seo-settings" class="gm2-tab-panel active">';
@@ -1323,6 +1346,11 @@ class Gm2_SEO_Admin {
         echo '<p>Readability: <span id="gm2-content-analysis-readability">0</span></p>';
         echo '<p>Suggested Links:</p><ul id="gm2-content-analysis-links"></ul>';
         echo '</div>';
+        echo '</div>';
+        echo '<div id="gm2-ai-seo" class="gm2-tab-panel">';
+        echo '<p><button type="button" class="button gm2-ai-research">AI Research</button></p>';
+        echo '<div id="gm2-ai-results"></div>';
+        echo '<p><button type="button" class="button gm2-ai-implement">Implement Selected</button></p>';
         echo '</div>';
         echo '</div>';
     }
