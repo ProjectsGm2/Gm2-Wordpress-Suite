@@ -100,6 +100,10 @@ class Gm2_SEO_Admin {
         $this->setup_elementor_integration();
     }
 
+    public function sanitize_customer_id($value) {
+        return preg_replace('/\D/', '', $value);
+    }
+
     public function add_settings_pages() {
         add_submenu_page(
             'gm2',
@@ -140,7 +144,7 @@ class Gm2_SEO_Admin {
             'sanitize_callback' => 'sanitize_text_field',
         ]);
         register_setting('gm2_seo_options', 'gm2_gads_customer_id', [
-            'sanitize_callback' => 'sanitize_text_field',
+            'sanitize_callback' => [$this, 'sanitize_customer_id'],
         ]);
         register_setting('gm2_seo_options', 'gm2_gads_language', [
             'sanitize_callback' => 'sanitize_text_field',
