@@ -169,7 +169,7 @@ class GoogleConnectPageTest extends WP_UnitTestCase {
         $admin->display_google_connect_page();
         $output = ob_get_clean();
         $this->assertStringContainsString('developer token', $output);
-        $this->assertStringContainsString('Tools → API Center', $output);
+        $this->assertStringContainsString('Tools & Settings → Setup → API Center', $output);
     }
 
     public function test_error_displayed_when_analytics_api_fails() {

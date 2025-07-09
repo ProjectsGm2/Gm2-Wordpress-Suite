@@ -180,7 +180,7 @@ class Gm2_SEO_Admin {
             function () {
                 $value = get_option('gm2_gads_developer_token', '');
                 echo '<input type="text" name="gm2_gads_developer_token" value="' . esc_attr($value) . '" class="regular-text" />';
-                echo '<p class="description">Sign in at <a href="https://ads.google.com" target="_blank">Google Ads</a> and open <strong>Tools → API Center</strong>. Copy your <strong>Developer token</strong> and paste it here.</p>';
+                echo '<p class="description">Sign in at <a href="https://ads.google.com/aw/apicenter" target="_blank">Google Ads</a> and open <strong>Tools & Settings → Setup → API Center</strong> (manager account required). Copy your <strong>Developer token</strong> and paste it here.</p>';
             },
             'gm2_seo',
             'gm2_seo_main'
@@ -473,7 +473,7 @@ class Gm2_SEO_Admin {
                         $msg .= '<pre>' . esc_html(trim($data['body'])) . '</pre>';
                     }
                     if ('missing_developer_token' === $accounts->get_error_code()) {
-                        $msg .= '<p>' . esc_html__( 'Sign in at Google Ads and open Tools → API Center. Copy your Developer token and enter it on the OAuth setup page.', 'gm2-wordpress-suite' ) . '</p>';
+                        $msg .= '<p>' . esc_html__( 'Sign in at Google Ads and open Tools & Settings → Setup → API Center (manager account required). Copy your Developer token and enter it on the OAuth setup page.', 'gm2-wordpress-suite' ) . '</p>';
                     } else {
                         $msg .= $help;
                     }
@@ -507,7 +507,7 @@ class Gm2_SEO_Admin {
                     $msg .= '<pre>' . esc_html(trim($data['body'])) . '</pre>';
                 }
                 if ('missing_developer_token' === $accounts->get_error_code()) {
-                    $msg .= '<p>' . esc_html__( 'Sign in at Google Ads and open Tools → API Center. Copy your Developer token and enter it on the OAuth setup page.', 'gm2-wordpress-suite' ) . '</p>';
+                    $msg .= '<p>' . esc_html__( 'Sign in at Google Ads and open Tools & Settings → Setup → API Center (manager account required). Copy your Developer token and enter it on the OAuth setup page.', 'gm2-wordpress-suite' ) . '</p>';
                 } else {
                     $msg .= $help;
                 }
