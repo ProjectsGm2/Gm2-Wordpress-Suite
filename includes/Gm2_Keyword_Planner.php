@@ -8,9 +8,10 @@ if (!defined('ABSPATH')) {
 
 class Gm2_Keyword_Planner {
     private function get_credentials() {
+        $id = preg_replace('/\D/', '', get_option('gm2_gads_customer_id', ''));
         return [
             'developer_token' => trim(get_option('gm2_gads_developer_token', '')),
-            'customer_id'     => trim(get_option('gm2_gads_customer_id', '')),
+            'customer_id'     => $id,
         ];
     }
 
