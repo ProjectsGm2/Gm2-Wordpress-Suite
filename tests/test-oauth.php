@@ -108,7 +108,11 @@ class OAuthTest extends WP_UnitTestCase {
         update_option('gm2_google_expires_at', time() + 3600);
 
         $filter = function ($pre, $args, $url) {
-            if (0 === strpos($url, 'https://analyticsadmin.googleapis.com/v1/accountSummaries')) {
+            $acct_url = sprintf(
+                'https://analyticsadmin.googleapis.com/%s/accountSummaries',
+                Gm2_Google_OAuth::ANALYTICS_ADMIN_API_VERSION
+            );
+            if (0 === strpos($url, $acct_url)) {
                 return [
                     'response' => ['code' => 200],
                     'body'     => json_encode([
@@ -125,7 +129,11 @@ class OAuthTest extends WP_UnitTestCase {
                     ]),
                 ];
             }
-            if (0 === strpos($url, 'https://analyticsadmin.googleapis.com/v1/properties/123/dataStreams')) {
+            $stream_url = sprintf(
+                'https://analyticsadmin.googleapis.com/%s/properties/123/dataStreams',
+                Gm2_Google_OAuth::ANALYTICS_ADMIN_API_VERSION
+            );
+            if (0 === strpos($url, $stream_url)) {
                 return [
                     'response' => ['code' => 200],
                     'body'     => json_encode([
@@ -188,7 +196,11 @@ class OAuthTest extends WP_UnitTestCase {
         update_option('gm2_google_expires_at', time() + 3600);
 
         $filter = function ($pre, $args, $url) {
-            if (0 === strpos($url, 'https://analyticsadmin.googleapis.com/v1/accountSummaries')) {
+            $acct_url = sprintf(
+                'https://analyticsadmin.googleapis.com/%s/accountSummaries',
+                Gm2_Google_OAuth::ANALYTICS_ADMIN_API_VERSION
+            );
+            if (0 === strpos($url, $acct_url)) {
                 return [
                     'response' => ['code' => 200],
                     'body'     => json_encode([
@@ -204,11 +216,19 @@ class OAuthTest extends WP_UnitTestCase {
                 ];
             }
 
-            if (0 === strpos($url, 'https://analyticsadmin.googleapis.com/v1/properties/123/dataStreams')) {
+            $stream_a = sprintf(
+                'https://analyticsadmin.googleapis.com/%s/properties/123/dataStreams',
+                Gm2_Google_OAuth::ANALYTICS_ADMIN_API_VERSION
+            );
+            if (0 === strpos($url, $stream_a)) {
                 return new WP_Error('fail', 'oops');
             }
 
-            if (0 === strpos($url, 'https://analyticsadmin.googleapis.com/v1/properties/456/dataStreams')) {
+            $stream_b = sprintf(
+                'https://analyticsadmin.googleapis.com/%s/properties/456/dataStreams',
+                Gm2_Google_OAuth::ANALYTICS_ADMIN_API_VERSION
+            );
+            if (0 === strpos($url, $stream_b)) {
                 return [
                     'response' => ['code' => 200],
                     'body'     => json_encode([
