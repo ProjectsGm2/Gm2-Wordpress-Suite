@@ -82,12 +82,16 @@ class Gm2_Admin {
                 GM2_VERSION,
                 true
             );
+            $gads_ready = trim(get_option('gm2_gads_developer_token', '')) !== '' &&
+                trim(get_option('gm2_gads_customer_id', '')) !== '' &&
+                get_option('gm2_google_refresh_token', '') !== '';
             wp_localize_script(
                 'gm2-keyword-research',
                 'gm2KeywordResearch',
                 [
                     'nonce'    => wp_create_nonce('gm2_keyword_ideas'),
                     'ajax_url' => admin_url('admin-ajax.php'),
+                    'enabled'  => $gads_ready,
                 ]
             );
         }
