@@ -6,6 +6,11 @@ jQuery(function($){
             action: 'gm2_ai_research',
             _ajax_nonce: (window.gm2AiSeo && gm2AiSeo.nonce) ? gm2AiSeo.nonce : ''
         };
+        // collect current field values so unsaved changes are included
+        data.seo_title       = $('#gm2_seo_title').val() || '';
+        data.seo_description = $('#gm2_seo_description').val() || '';
+        data.focus_keywords  = $('#gm2_focus_keywords').val() || '';
+        data.canonical       = $('#gm2_canonical_url').val() || '';
         if(window.gm2AiSeo){
             if(gm2AiSeo.post_id){
                 data.post_id = gm2AiSeo.post_id;
@@ -17,14 +22,13 @@ jQuery(function($){
         }
         $.post((window.gm2AiSeo ? gm2AiSeo.ajax_url : ajaxurl), data)
         .done(function(resp){
-            if(resp && resp.success){
-                if(typeof resp.data === 'object'){
-                    $out.text(JSON.stringify(resp.data, null, 2));
-                } else {
-                    $out.text(resp.data);
-                }
+            $out.empty();
+            if(resp && resp.success && resp.data && typeof resp.data === 'object'){
+                buildResults(resp.data, $out);
+            } else if(resp && resp.data){
+                $out.text(typeof resp.data === 'string' ? resp.data : 'Error');
             } else {
-                $out.text(resp && resp.data ? resp.data : 'Error');
+                $out.text('Error');
             }
         })
         .fail(function(){
@@ -33,7 +37,94 @@ jQuery(function($){
     });
     $('#gm2-ai-seo').on('click', '.gm2-ai-implement', function(e){
         e.preventDefault();
-        // TODO: implement applying selected results
-        alert('Implement selected results');
+        applySelected();
     });
+
+    $('#gm2-ai-seo').on('click', '#gm2-ai-select-all', function(){
+        var checked = $(this).prop('checked');
+        $('#gm2-ai-suggestions input[type="checkbox"]').prop('checked', checked);
+    });
+
+    $('#gm2-ai-seo').on('click', '.gm2-html-fix', function(e){
+        e.preventDefault();
+        var fix = $(this).data('fix');
+        if(!fix) return;
+        if(typeof wp !== 'undefined' && wp.data){
+            var content = wp.data.select('core/editor').getEditedPostContent();
+            wp.data.dispatch('core/editor').editPost({content: content + "\n" + fix});
+        }
+        $(this).closest('li').fadeOut(300);
+    });
+
+    function buildResults(data, $out){
+        var $wrap = $('<div>');
+        var $selectAll = $('<p>').append(
+            $('<label>').append(
+                $('<input>', {type:'checkbox', id:'gm2-ai-select-all'})
+            ).append(' Select all')
+        );
+        var $list = $('<div>', {id:'gm2-ai-suggestions'});
+        var fields = {
+            seo_title: 'SEO Title',
+            description: 'SEO Description',
+            focus_keywords: 'Focus Keywords',
+            canonical: 'Canonical URL'
+        };
+        Object.keys(fields).forEach(function(key){
+            if(typeof data[key] === 'undefined') return;
+            var label = fields[key];
+            var val = Array.isArray(data[key]) ? data[key].join(', ') : data[key];
+            var $lbl = $('<label>');
+            $('<input>', {type:'checkbox','class':'gm2-ai-select', 'data-field':key, 'data-value':val}).appendTo($lbl);
+            $lbl.append(' '+label+': '+val);
+            $list.append($('<p>').append($lbl));
+        });
+        $wrap.append($selectAll).append($list);
+
+        if(data.long_tail_keywords){
+            var $kw = $('<ul>');
+            [].concat(data.long_tail_keywords).forEach(function(k){
+                $('<li>').text(k).appendTo($kw);
+            });
+            $wrap.append('<h4>Long Tail Keywords</h4>').append($kw);
+        }
+        if(data.content_suggestions){
+            var $cs = $('<ul>');
+            [].concat(data.content_suggestions).forEach(function(c){
+                $('<li>').text(c).appendTo($cs);
+            });
+            $wrap.append('<h4>Content Suggestions</h4>').append($cs);
+        }
+        if(data.html_issues){
+            var $issues = $('<ul>', {id:'gm2-html-issues'});
+            [].concat(data.html_issues).forEach(function(issue){
+                var text = issue.issue || issue;
+                var fix = issue.fix || '';
+                var $li = $('<li>').addClass('gm2-html-issue').text(text);
+                if(fix){
+                    $('<button>', {text:'Apply fix', 'class':'button gm2-html-fix', 'data-fix':fix}).appendTo($li);
+                }
+                $issues.append($li);
+            });
+            $wrap.append('<h4>HTML Issues</h4>').append($issues);
+        }
+        $out.append($wrap);
+    }
+
+    function applySelected(){
+        $('#gm2-ai-suggestions .gm2-ai-select:checked').each(function(){
+            var field = $(this).data('field');
+            var val = $(this).data('value');
+            switch(field){
+                case 'seo_title':
+                    $('#gm2_seo_title').val(val); break;
+                case 'description':
+                    $('#gm2_seo_description').val(val); break;
+                case 'focus_keywords':
+                    $('#gm2_focus_keywords').val(val); break;
+                case 'canonical':
+                    $('#gm2_canonical_url').val(val); break;
+            }
+        });
+    }
 });

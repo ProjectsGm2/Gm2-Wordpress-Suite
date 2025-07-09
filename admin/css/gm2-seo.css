@@ -17,5 +17,10 @@
 .gm2-analysis-rules li.pass { color:#46b450; }
 .gm2-analysis-rules li.fail { color:#d63638; }
 
+#gm2-ai-results h4 { margin-top:1em; }
+#gm2-ai-suggestions p { margin:4px 0; }
+.gm2-html-issue { margin-bottom:5px; }
+.gm2-html-issue button { margin-left:10px; }
+
 #gm2-elementor-seo-panel { padding:10px; }
 #elementor-panel-footer #gm2-elementor-seo-panel .gm2-tab-panel { border:none; }
