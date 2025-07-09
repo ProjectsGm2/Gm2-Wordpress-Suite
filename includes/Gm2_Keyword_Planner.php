@@ -70,6 +70,11 @@ class Gm2_Keyword_Planner {
         $body = wp_remote_retrieve_body($resp);
         $data = $body !== '' ? json_decode($body, true) : null;
 
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('KWP status: ' . $code);
+            error_log('KWP body: ' . $body);
+        }
+
         if ($code < 200 || $code >= 300 || (!empty($data['error']['message']))) {
             $msg = $data['error']['message'] ?? "HTTP $code response";
             return new \WP_Error('api_error', $msg);
