@@ -101,6 +101,14 @@ class Gm2_Admin {
                     'enabled'  => $gads_ready,
                 ]
             );
+            wp_localize_script(
+                'gm2-guidelines',
+                'gm2Guidelines',
+                [
+                    'nonce'    => wp_create_nonce('gm2_research_guidelines'),
+                    'ajax_url' => admin_url('admin-ajax.php'),
+                ]
+            );
         }
     }
 

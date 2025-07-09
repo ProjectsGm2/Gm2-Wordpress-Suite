@@ -27,6 +27,7 @@ class Gm2_SEO_Admin {
 
         add_action('wp_ajax_gm2_check_rules', [$this, 'ajax_check_rules']);
         add_action('wp_ajax_gm2_keyword_ideas', [$this, 'ajax_keyword_ideas']);
+        add_action('wp_ajax_gm2_research_guidelines', [$this, 'ajax_research_guidelines']);
 
         add_action('add_attachment', [$this, 'auto_fill_alt_on_upload']);
         add_action('add_attachment', [$this, 'compress_image_on_upload'], 20);
@@ -1132,6 +1133,29 @@ class Gm2_SEO_Admin {
         }
 
         wp_send_json_success($ideas);
+    }
+
+    public function ajax_research_guidelines() {
+        check_ajax_referer('gm2_research_guidelines');
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('permission denied', 403);
+        }
+
+        $cats = isset($_POST['categories']) ? sanitize_text_field(wp_unslash($_POST['categories'])) : '';
+        if ($cats === '') {
+            wp_send_json_error('empty categories');
+        }
+
+        $prompt = 'Provide SEO best practice guidelines for the following categories: ' . $cats;
+        $chat = new Gm2_ChatGPT();
+        $resp = $chat->query($prompt);
+
+        if (is_wp_error($resp)) {
+            wp_send_json_error($resp->get_error_message());
+        }
+
+        update_option('gm2_seo_guidelines', $resp);
+        wp_send_json_success($resp);
     }
 
     public function enqueue_editor_scripts($hook = null) {
