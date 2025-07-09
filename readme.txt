@@ -52,6 +52,7 @@ If you see errors when connecting your Google account:
   * Disconnect and reconnect after adjusting permissions.
 * **Invalid OAuth state** – Reconnect from **SEO → Connect Google Account** to refresh the authorization flow.
 * **Keyword Research returns no results** – Ensure you have entered your Google Ads developer token, connected a Google account with Ads access, and selected a valid Ads customer ID. Missing or invalid credentials will cause the Keyword Planner request to fail.
+* "The caller does not have permission" – This usually means your developer token isn't approved for the selected Ads account or the login customer ID is missing or incorrect. Verify the token status in the Google Ads API Center and ensure the OAuth account can access that customer ID.
 
 == Breadcrumbs ==
 Display a breadcrumb trail anywhere using the `[gm2_breadcrumbs]` shortcode. The output
