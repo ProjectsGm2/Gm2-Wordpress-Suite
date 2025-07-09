@@ -93,6 +93,18 @@ OpenAI API key and adjust these options:
 Use the **Test Prompt** box on the same page to send a message and verify your
 settings before generating content.
 
+== SEO Guidelines ==
+Before researching guidelines, enter your ChatGPT API key on the **Gm2 → ChatGPT**
+page. Navigate to **SEO → SEO Guidelines** and click **Research SEO Guidelines**
+to generate best practices for your chosen categories. Generated guidelines are
+stored under **SEO → SEO Guidelines** so you can review or edit them later.
+
+== AI SEO ==
+While editing a post or taxonomy term, open the **AI SEO** tab in the SEO meta
+box. Use **AI Research** to request suggestions for titles, descriptions,
+keywords and canonical URLs. Select the items you want and click **Implement
+Selected** to populate the fields automatically.
+
 == Tariff Management ==
 Manage percentage-based fees for WooCommerce orders. Open **Gm2 → Tariff** to
 add or edit tariffs. Enabled tariffs add a fee to the cart total during
