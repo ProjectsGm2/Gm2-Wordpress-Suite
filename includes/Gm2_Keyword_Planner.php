@@ -52,12 +52,18 @@ class Gm2_Keyword_Planner {
             ],
         ];
 
+        $headers = [
+            'Authorization'   => 'Bearer ' . $token,
+            'developer-token' => $creds['developer_token'],
+            'Content-Type'    => 'application/json',
+        ];
+
+        if ($login = preg_replace('/\D/', '', get_option('gm2_gads_login_customer_id'))) {
+            $headers['login-customer-id'] = $login;
+        }
+
         $resp = wp_remote_post($url, [
-            'headers' => [
-                'Authorization'   => 'Bearer ' . $token,
-                'developer-token' => $creds['developer_token'],
-                'Content-Type'    => 'application/json',
-            ],
+            'headers' => $headers,
             'body'    => wp_json_encode($body),
             'timeout' => 20,
         ]);
