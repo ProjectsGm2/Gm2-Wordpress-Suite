@@ -154,4 +154,31 @@ class OAuthTest extends WP_UnitTestCase {
         $this->assertArrayHasKey('G-ABC123', $props);
         $this->assertSame('GA4 Prop', $props['G-ABC123']);
     }
+
+    public function test_api_request_error_message_includes_status() {
+        update_option('gm2_google_refresh_token', 'refresh');
+        update_option('gm2_google_access_token', 'access');
+        update_option('gm2_google_expires_at', time() + 3600);
+        update_option('gm2_gads_developer_token', 'devtoken');
+
+        $filter = function ($pre, $args, $url) {
+            if (false !== strpos($url, 'customers:listAccessibleCustomers')) {
+                return [
+                    'response' => ['code' => 403],
+                    'body'     => 'forbidden',
+                ];
+            }
+            return false;
+        };
+        add_filter('pre_http_request', $filter, 10, 3);
+
+        $oauth  = new Gm2_Google_OAuth();
+        $result = $oauth->list_ads_accounts();
+
+        remove_filter('pre_http_request', $filter, 10);
+
+        $this->assertInstanceOf('WP_Error', $result);
+        $this->assertSame('api_error', $result->get_error_code());
+        $this->assertSame('HTTP 403 response', $result->get_error_message());
+    }
 }

@@ -180,7 +180,7 @@ class GoogleConnectPageTest extends WP_UnitTestCase {
                 public function get_auth_url() { return ''; }
                 public function handle_callback($code) { return true; }
                 public function list_analytics_properties() {
-                    return new WP_Error('api_error', 'Analytics API failure');
+                    return new WP_Error('api_error', 'HTTP 500 response');
                 }
                 public function list_ads_accounts() { return []; }
             };
@@ -189,7 +189,7 @@ class GoogleConnectPageTest extends WP_UnitTestCase {
         ob_start();
         $admin->display_google_connect_page();
         $output = ob_get_clean();
-        $this->assertStringContainsString('Analytics API failure', $output);
+        $this->assertStringContainsString('HTTP 500 response', $output);
         $this->assertStringContainsString('enable the Analytics', $output);
     }
 
@@ -201,7 +201,7 @@ class GoogleConnectPageTest extends WP_UnitTestCase {
                 public function get_auth_url() { return ''; }
                 public function handle_callback($code) { return true; }
                 public function list_analytics_properties() {
-                    return new WP_Error('api_error', 'Analytics API failure');
+                    return new WP_Error('api_error', 'HTTP 500 response');
                 }
                 public function list_ads_accounts() { return []; }
             };
@@ -210,7 +210,7 @@ class GoogleConnectPageTest extends WP_UnitTestCase {
         ob_start();
         $admin->display_google_connect_page();
         $output = ob_get_clean();
-        $this->assertSame(1, substr_count($output, 'Analytics API failure'));
+        $this->assertSame(1, substr_count($output, 'HTTP 500 response'));
         $this->assertStringNotContainsString('No Analytics properties found', $output);
     }
 
@@ -223,7 +223,7 @@ class GoogleConnectPageTest extends WP_UnitTestCase {
                 public function handle_callback($code) { return true; }
                 public function list_analytics_properties() { return ['G-1' => 'Site']; }
                 public function list_ads_accounts() {
-                    return new WP_Error('api_error', 'Ads API failure');
+                    return new WP_Error('api_error', 'HTTP 500 response');
                 }
             };
         });
@@ -231,7 +231,7 @@ class GoogleConnectPageTest extends WP_UnitTestCase {
         ob_start();
         $admin->display_google_connect_page();
         $output = ob_get_clean();
-        $this->assertStringContainsString('Ads API failure', $output);
+        $this->assertStringContainsString('HTTP 500 response', $output);
         $this->assertStringContainsString('enable the Analytics', $output);
     }
 
@@ -244,7 +244,7 @@ class GoogleConnectPageTest extends WP_UnitTestCase {
                 public function handle_callback($code) { return true; }
                 public function list_analytics_properties() { return ['G-1' => 'Site']; }
                 public function list_ads_accounts() {
-                    return new WP_Error('api_error', 'Ads API failure');
+                    return new WP_Error('api_error', 'HTTP 500 response');
                 }
             };
         });
@@ -252,7 +252,7 @@ class GoogleConnectPageTest extends WP_UnitTestCase {
         ob_start();
         $admin->display_google_connect_page();
         $output = ob_get_clean();
-        $this->assertSame(1, substr_count($output, 'Ads API failure'));
+        $this->assertSame(1, substr_count($output, 'HTTP 500 response'));
         $this->assertStringNotContainsString('No Ads accounts found', $output);
     }
 
