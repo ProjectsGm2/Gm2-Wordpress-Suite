@@ -157,6 +157,9 @@ class Gm2_SEO_Admin {
         register_setting('gm2_seo_options', 'gm2_gads_geo_target', [
             'sanitize_callback' => 'sanitize_text_field',
         ]);
+        register_setting('gm2_seo_options', 'gm2_seo_guidelines', [
+            'sanitize_callback' => 'sanitize_textarea_field',
+        ]);
 
         add_settings_section(
             'gm2_seo_main',
@@ -225,6 +228,7 @@ class Gm2_SEO_Admin {
             'performance' => 'Performance',
             'keywords'    => 'Keyword Research',
             'rules'       => 'Content Rules',
+            'guidelines'  => 'SEO Guidelines',
         ];
 
         $active = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : 'general';
@@ -434,6 +438,14 @@ class Gm2_SEO_Admin {
             echo '</tbody></table>';
             submit_button('Save Rules');
             echo '</form>';
+        } elseif ($active === 'guidelines') {
+            $guidelines = get_option('gm2_seo_guidelines', '');
+            echo '<form method="post" action="options.php">';
+            settings_fields('gm2_seo_options');
+            echo '<textarea name="gm2_seo_guidelines" rows="6" class="large-text">' . esc_textarea($guidelines) . '</textarea>';
+            submit_button('Save Guidelines');
+            echo '</form>';
+            echo '<p><button id="gm2-research-guidelines" class="button">Research SEO Guidelines</button></p>';
         } else {
             echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
             wp_nonce_field('gm2_general_settings_save', 'gm2_general_settings_nonce');
