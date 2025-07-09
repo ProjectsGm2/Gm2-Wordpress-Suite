@@ -45,7 +45,7 @@ If you see errors when connecting your Google account:
 * **Missing developer token** – Sign in at <https://ads.google.com> and open **Tools → API Center**. Copy your **Developer token** and enter it on the OAuth setup page.
 * **No Analytics properties found** or **No Ads accounts found** –
   * Enable the Analytics Admin, Google Analytics (v3) for UA properties, Search Console, and Google Ads APIs for your OAuth client.
-  * Confirm the connected Google account can access the required properties and accounts.
+  * Confirm the connected Google account can access the required properties and accounts. The OAuth client can belong to a different Google account.
   * Disconnect and reconnect after adjusting permissions.
 * **Invalid OAuth state** – Reconnect from **SEO → Connect Google Account** to refresh the authorization flow.
 

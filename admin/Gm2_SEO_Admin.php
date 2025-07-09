@@ -414,8 +414,8 @@ class Gm2_SEO_Admin {
         $properties = [];
         $accounts   = [];
         $help       = '<ul>'
-            . '<li>' . esc_html__( 'Enable the Analytics Admin, Search Console and Google Ads APIs for your OAuth client.', 'gm2-wordpress-suite' ) . '</li>'
-            . '<li>' . esc_html__( 'Verify the connected Google account has access to the target properties/accounts.', 'gm2-wordpress-suite' ) . '</li>'
+            . '<li>' . esc_html__( 'Enable the Analytics Admin, Google Analytics (v3) for UA properties, Search Console, and Google Ads APIs for your OAuth client.', 'gm2-wordpress-suite' ) . '</li>'
+            . '<li>' . esc_html__( 'Verify the connected Google account has access to the target properties and Ads accounts. The OAuth client may be created under a different Google account.', 'gm2-wordpress-suite' ) . '</li>'
             . '<li>' . esc_html__( 'Reconnect after updating permissions.', 'gm2-wordpress-suite' ) . '</li>'
             . '</ul>';
 
