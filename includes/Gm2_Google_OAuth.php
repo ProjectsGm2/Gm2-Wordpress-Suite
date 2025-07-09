@@ -8,7 +8,10 @@ if (!defined('ABSPATH')) {
 
 class Gm2_Google_OAuth {
     /** Latest supported Google Ads API version. */
-    public const GOOGLE_ADS_API_VERSION = 'v17';
+    public const GOOGLE_ADS_API_VERSION = 'v18';
+
+    /** Latest supported Analytics Admin API version for GA4 requests. */
+    public const ANALYTICS_ADMIN_API_VERSION = 'v1beta';
 
     private $client_id;
     private $client_secret;
@@ -159,9 +162,14 @@ class Gm2_Google_OAuth {
         $last_error  = null;
 
         // GA4 properties via Analytics Admin API.
-        $accounts = $this->api_request('GET', 'https://analyticsadmin.googleapis.com/v1/accountSummaries', null, [
+        $accounts = $this->api_request(
+            'GET',
+            sprintf('https://analyticsadmin.googleapis.com/%s/accountSummaries', self::ANALYTICS_ADMIN_API_VERSION),
+            null,
+            [
             'Authorization' => 'Bearer ' . $token,
-        ]);
+            ]
+        );
         if (is_wp_error($accounts)) {
             return $accounts;
         }
@@ -174,9 +182,18 @@ class Gm2_Google_OAuth {
                     $propName = $p['displayName'] ?? $p['property'];
                     $propId   = $p['property'];
                     // Query for web data streams to get measurement ID.
-                    $streams = $this->api_request('GET', sprintf('https://analyticsadmin.googleapis.com/v1/%s/dataStreams', $propId), null, [
-                        'Authorization' => 'Bearer ' . $token,
-                    ]);
+                    $streams = $this->api_request(
+                        'GET',
+                        sprintf(
+                            'https://analyticsadmin.googleapis.com/%s/%s/dataStreams',
+                            self::ANALYTICS_ADMIN_API_VERSION,
+                            $propId
+                        ),
+                        null,
+                        [
+                            'Authorization' => 'Bearer ' . $token,
+                        ]
+                    );
                     if (is_wp_error($streams)) {
                         $had_error  = true;
                         $last_error = $streams;
