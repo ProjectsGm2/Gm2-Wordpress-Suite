@@ -8,15 +8,20 @@ jQuery(function($){
             action: 'gm2_keyword_ideas',
             query: kw,
             _ajax_nonce: gm2KeywordResearch.nonce
-        }, function(resp){
+        }).done(function(resp){
             $list.empty();
-            if(resp && resp.success && resp.data.length){
+            if(resp && resp.success && Array.isArray(resp.data)){
                 resp.data.forEach(function(k){
                     $('<li>').text(k).appendTo($list);
                 });
             } else {
-                $list.append($('<li>').text('No results'));
+                var msg = (resp && resp.data && typeof resp.data === 'string')
+                    ? resp.data
+                    : 'No results';
+                $list.append($('<li>').text(msg));
             }
+        }).fail(function(){
+            $list.empty().append($('<li>').text('Request failed'));
         });
     });
 });
