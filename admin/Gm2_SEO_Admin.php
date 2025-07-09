@@ -1026,7 +1026,7 @@ class Gm2_SEO_Admin {
         $planner = new Gm2_Keyword_Planner();
         $ideas   = $planner->generate_keyword_ideas($query);
         if (is_wp_error($ideas)) {
-            wp_send_json_error($ideas->get_error_message());
+            wp_send_json_error($ideas);
         }
 
         wp_send_json_success($ideas);
