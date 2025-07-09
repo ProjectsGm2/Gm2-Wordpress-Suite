@@ -180,7 +180,9 @@ class GoogleConnectPageTest extends WP_UnitTestCase {
                 public function get_auth_url() { return ''; }
                 public function handle_callback($code) { return true; }
                 public function list_analytics_properties() {
-                    return new WP_Error('api_error', 'HTTP 500 response');
+                    return new WP_Error('api_error', 'HTTP 500 response', [
+                        'body' => 'Server error',
+                    ]);
                 }
                 public function list_ads_accounts() { return []; }
             };
@@ -190,6 +192,7 @@ class GoogleConnectPageTest extends WP_UnitTestCase {
         $admin->display_google_connect_page();
         $output = ob_get_clean();
         $this->assertStringContainsString('HTTP 500 response', $output);
+        $this->assertStringContainsString('Server error', $output);
         $this->assertStringContainsString('enable the Analytics', $output);
     }
 
@@ -223,7 +226,9 @@ class GoogleConnectPageTest extends WP_UnitTestCase {
                 public function handle_callback($code) { return true; }
                 public function list_analytics_properties() { return ['G-1' => 'Site']; }
                 public function list_ads_accounts() {
-                    return new WP_Error('api_error', 'HTTP 500 response');
+                    return new WP_Error('api_error', 'HTTP 500 response', [
+                        'body' => 'Server error',
+                    ]);
                 }
             };
         });
@@ -232,6 +237,7 @@ class GoogleConnectPageTest extends WP_UnitTestCase {
         $admin->display_google_connect_page();
         $output = ob_get_clean();
         $this->assertStringContainsString('HTTP 500 response', $output);
+        $this->assertStringContainsString('Server error', $output);
         $this->assertStringContainsString('enable the Analytics', $output);
     }
 

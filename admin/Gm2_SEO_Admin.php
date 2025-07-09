@@ -456,13 +456,22 @@ class Gm2_SEO_Admin {
                 $notice     = '<div class="updated notice"><p>' . esc_html__('Google account connected.', 'gm2-wordpress-suite') . '</p></div>';
                 $properties = $oauth->list_analytics_properties();
                 if (is_wp_error($properties)) {
-                    $notice .= '<div class="error notice"><p>' . esc_html($properties->get_error_message()) . '</p>' . $help . '</div>';
+                    $notice .= '<div class="error notice"><p>' . esc_html($properties->get_error_message()) . '</p>';
+                    $data = $properties->get_error_data();
+                    if (!empty($data['body'])) {
+                        $notice .= '<pre>' . esc_html(trim($data['body'])) . '</pre>';
+                    }
+                    $notice .= $help . '</div>';
                 } elseif (!empty($properties) && '' === get_option('gm2_ga_measurement_id', '')) {
                     update_option('gm2_ga_measurement_id', is_array($properties) ? array_key_first($properties) : '');
                 }
                 $accounts = $oauth->list_ads_accounts();
                 if (is_wp_error($accounts)) {
                     $msg = '<div class="error notice"><p>' . esc_html($accounts->get_error_message()) . '</p>';
+                    $data = $accounts->get_error_data();
+                    if (!empty($data['body'])) {
+                        $msg .= '<pre>' . esc_html(trim($data['body'])) . '</pre>';
+                    }
                     if ('missing_developer_token' === $accounts->get_error_code()) {
                         $msg .= '<p>' . esc_html__( 'Sign in at Google Ads and open Tools → API Center. Copy your Developer token and enter it on the OAuth setup page.', 'gm2-wordpress-suite' ) . '</p>';
                     } else {
@@ -481,13 +490,22 @@ class Gm2_SEO_Admin {
                 $properties = $oauth->list_analytics_properties();
             }
             if (is_wp_error($properties)) {
-                $notice .= '<div class="error notice"><p>' . esc_html($properties->get_error_message()) . '</p>' . $help . '</div>';
+                $notice .= '<div class="error notice"><p>' . esc_html($properties->get_error_message()) . '</p>';
+                $data = $properties->get_error_data();
+                if (!empty($data['body'])) {
+                    $notice .= '<pre>' . esc_html(trim($data['body'])) . '</pre>';
+                }
+                $notice .= $help . '</div>';
             }
             if (!$accounts) {
                 $accounts = $oauth->list_ads_accounts();
             }
             if (is_wp_error($accounts)) {
                 $msg = '<div class="error notice"><p>' . esc_html($accounts->get_error_message()) . '</p>';
+                $data = $accounts->get_error_data();
+                if (!empty($data['body'])) {
+                    $msg .= '<pre>' . esc_html(trim($data['body'])) . '</pre>';
+                }
                 if ('missing_developer_token' === $accounts->get_error_code()) {
                     $msg .= '<p>' . esc_html__( 'Sign in at Google Ads and open Tools → API Center. Copy your Developer token and enter it on the OAuth setup page.', 'gm2-wordpress-suite' ) . '</p>';
                 } else {
