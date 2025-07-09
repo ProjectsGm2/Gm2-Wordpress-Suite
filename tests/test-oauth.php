@@ -181,4 +181,62 @@ class OAuthTest extends WP_UnitTestCase {
         $this->assertSame('api_error', $result->get_error_code());
         $this->assertSame('HTTP 403 response', $result->get_error_message());
     }
+
+    public function test_ga4_error_does_not_block_other_properties() {
+        update_option('gm2_google_refresh_token', 'refresh');
+        update_option('gm2_google_access_token', 'access');
+        update_option('gm2_google_expires_at', time() + 3600);
+
+        $filter = function ($pre, $args, $url) {
+            if (0 === strpos($url, 'https://analyticsadmin.googleapis.com/v1/accountSummaries')) {
+                return [
+                    'response' => ['code' => 200],
+                    'body'     => json_encode([
+                        'accountSummaries' => [
+                            [
+                                'propertySummaries' => [
+                                    [ 'property' => 'properties/123', 'displayName' => 'GA4 A' ],
+                                    [ 'property' => 'properties/456', 'displayName' => 'GA4 B' ],
+                                ],
+                            ],
+                        ],
+                    ]),
+                ];
+            }
+
+            if (0 === strpos($url, 'https://analyticsadmin.googleapis.com/v1/properties/123/dataStreams')) {
+                return new WP_Error('fail', 'oops');
+            }
+
+            if (0 === strpos($url, 'https://analyticsadmin.googleapis.com/v1/properties/456/dataStreams')) {
+                return [
+                    'response' => ['code' => 200],
+                    'body'     => json_encode([
+                        'dataStreams' => [
+                            [
+                                'type' => 'WEB_DATA_STREAM',
+                                'webStreamData' => ['measurementId' => 'G-DEF456'],
+                            ],
+                        ],
+                    ]),
+                ];
+            }
+
+            if (false !== strpos($url, 'analytics/v3/')) {
+                return [ 'response' => ['code' => 200], 'body' => json_encode(['items' => []]) ];
+            }
+
+            return false;
+        };
+
+        add_filter('pre_http_request', $filter, 10, 3);
+
+        $oauth = new Gm2_Google_OAuth();
+        $props = $oauth->list_analytics_properties();
+
+        remove_filter('pre_http_request', $filter, 10);
+
+        $this->assertArrayHasKey('G-DEF456', $props);
+        $this->assertSame('GA4 B', $props['G-DEF456']);
+    }
 }

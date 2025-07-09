@@ -155,6 +155,8 @@ class Gm2_Google_OAuth {
             return [];
         }
         $props = [];
+        $had_error   = false;
+        $last_error  = null;
 
         // GA4 properties via Analytics Admin API.
         $accounts = $this->api_request('GET', 'https://analyticsadmin.googleapis.com/v1/accountSummaries', null, [
@@ -176,7 +178,9 @@ class Gm2_Google_OAuth {
                         'Authorization' => 'Bearer ' . $token,
                     ]);
                     if (is_wp_error($streams)) {
-                        return $streams;
+                        $had_error  = true;
+                        $last_error = $streams;
+                        continue;
                     }
                     if (!empty($streams['dataStreams'])) {
                         foreach ($streams['dataStreams'] as $stream) {
@@ -205,7 +209,9 @@ class Gm2_Google_OAuth {
                     'Authorization' => 'Bearer ' . $token,
                 ]);
                 if (is_wp_error($webprops)) {
-                    return $webprops;
+                    $had_error  = true;
+                    $last_error = $webprops;
+                    continue;
                 }
                 if (!empty($webprops['items'])) {
                     foreach ($webprops['items'] as $p) {
@@ -215,6 +221,14 @@ class Gm2_Google_OAuth {
                     }
                 }
             }
+        }
+
+        if ($had_error && empty($props) && $last_error instanceof \WP_Error) {
+            return new \WP_Error(
+                $last_error->get_error_code(),
+                $last_error->get_error_message(),
+                $last_error->get_error_data()
+            );
         }
 
         return $props;
