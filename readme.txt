@@ -45,7 +45,7 @@ These credentials must be copied from your Google accounts:
 == Troubleshooting ==
 If you see errors when connecting your Google account:
 
-* **Missing developer token** – Sign in at <https://ads.google.com/aw/apicenter> and open **Tools & Settings → Setup → API Center** (manager account required). Copy your **Developer token** and enter it on the OAuth setup page.
+* **Missing developer token** – Sign in at <https://ads.google.com/aw/apicenter> and open **Tools & Settings → Setup → API Center** (manager account required). Copy your **Developer token** and enter it in the **Google Ads Developer Token** field on the SEO settings page.
 * **No Analytics properties found** or **No Ads accounts found** –
   * Enable the Analytics Admin, Google Analytics (v3) for UA properties, Search Console, and Google Ads APIs for your OAuth client.
   * Confirm the connected Google account can access the required properties and accounts. The OAuth client can belong to a different Google account.

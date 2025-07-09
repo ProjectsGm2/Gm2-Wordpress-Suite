@@ -512,7 +512,7 @@ class Gm2_SEO_Admin {
                         $msg .= '<pre>' . esc_html(trim($data['body'])) . '</pre>';
                     }
                     if ('missing_developer_token' === $accounts->get_error_code()) {
-                        $msg .= '<p>' . esc_html__( 'Sign in at Google Ads and open Tools & Settings → Setup → API Center (manager account required). Copy your Developer token and enter it on the OAuth setup page.', 'gm2-wordpress-suite' ) . '</p>';
+                        $msg .= '<p>' . esc_html__( 'Sign in at Google Ads and open Tools & Settings → Setup → API Center (manager account required). Copy your Developer token and enter it in the Google Ads Developer Token field on the SEO settings page.', 'gm2-wordpress-suite' ) . '</p>';
                     } else {
                         $msg .= $help;
                     }
@@ -546,7 +546,7 @@ class Gm2_SEO_Admin {
                     $msg .= '<pre>' . esc_html(trim($data['body'])) . '</pre>';
                 }
                 if ('missing_developer_token' === $accounts->get_error_code()) {
-                    $msg .= '<p>' . esc_html__( 'Sign in at Google Ads and open Tools & Settings → Setup → API Center (manager account required). Copy your Developer token and enter it on the OAuth setup page.', 'gm2-wordpress-suite' ) . '</p>';
+                    $msg .= '<p>' . esc_html__( 'Sign in at Google Ads and open Tools & Settings → Setup → API Center (manager account required). Copy your Developer token and enter it in the Google Ads Developer Token field on the SEO settings page.', 'gm2-wordpress-suite' ) . '</p>';
                 } else {
                     $msg .= $help;
                 }
