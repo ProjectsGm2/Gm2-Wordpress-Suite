@@ -146,6 +146,9 @@ class Gm2_SEO_Admin {
         register_setting('gm2_seo_options', 'gm2_gads_customer_id', [
             'sanitize_callback' => [$this, 'sanitize_customer_id'],
         ]);
+        register_setting('gm2_seo_options', 'gm2_gads_login_customer_id', [
+            'sanitize_callback' => [$this, 'sanitize_customer_id'],
+        ]);
         register_setting('gm2_seo_options', 'gm2_gads_language', [
             'sanitize_callback' => 'sanitize_text_field',
         ]);
@@ -379,14 +382,16 @@ class Gm2_SEO_Admin {
                 trim(get_option('gm2_gads_customer_id', '')) !== '' &&
                 get_option('gm2_google_refresh_token', '') !== '';
 
-            $lang = get_option('gm2_gads_language', 'languageConstants/1000');
-            $geo  = get_option('gm2_gads_geo_target', 'geoTargetConstants/2840');
+            $lang  = get_option('gm2_gads_language', 'languageConstants/1000');
+            $geo   = get_option('gm2_gads_geo_target', 'geoTargetConstants/2840');
+            $login = get_option('gm2_gads_login_customer_id', '');
 
             echo '<form method="post" action="options.php">';
             settings_fields('gm2_seo_options');
             echo '<table class="form-table"><tbody>';
             echo '<tr><th scope="row">Language Constant</th><td><input type="text" name="gm2_gads_language" id="gm2_gads_language" value="' . esc_attr($lang) . '" class="regular-text" /></td></tr>';
             echo '<tr><th scope="row">Geo Target Constant</th><td><input type="text" name="gm2_gads_geo_target" id="gm2_gads_geo_target" value="' . esc_attr($geo) . '" class="regular-text" /></td></tr>';
+            echo '<tr><th scope="row">Login Customer ID</th><td><input type="text" name="gm2_gads_login_customer_id" id="gm2_gads_login_customer_id" value="' . esc_attr($login) . '" class="regular-text" /></td></tr>';
             echo '</tbody></table>';
             echo '<p class="description">Defaults: English / United States.</p>';
             submit_button('Save Settings');
