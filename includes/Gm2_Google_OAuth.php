@@ -52,7 +52,7 @@ class Gm2_Google_OAuth {
         }
         $code = wp_remote_retrieve_response_code($resp);
         if ($code < 200 || $code >= 300) {
-            return new \WP_Error('api_error', 'Non-2xx response', [
+            return new \WP_Error('api_error', "HTTP $code response", [
                 'code' => $code,
                 'body' => wp_remote_retrieve_body($resp),
             ]);
