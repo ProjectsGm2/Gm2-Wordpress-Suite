@@ -172,6 +172,48 @@ class GoogleConnectPageTest extends WP_UnitTestCase {
         $this->assertStringContainsString('Tools → API Center', $output);
     }
 
+    public function test_error_displayed_when_analytics_api_fails() {
+        delete_option('gm2_google_refresh_token');
+        add_filter('gm2_google_oauth_instance', function() {
+            return new class {
+                public function is_connected() { return true; }
+                public function get_auth_url() { return ''; }
+                public function handle_callback($code) { return true; }
+                public function list_analytics_properties() {
+                    return new WP_Error('api_error', 'Analytics API failure');
+                }
+                public function list_ads_accounts() { return []; }
+            };
+        });
+        $admin = new Gm2_SEO_Admin();
+        ob_start();
+        $admin->display_google_connect_page();
+        $output = ob_get_clean();
+        $this->assertStringContainsString('Analytics API failure', $output);
+        $this->assertStringContainsString('enable the Analytics', $output);
+    }
+
+    public function test_error_displayed_when_ads_api_fails() {
+        delete_option('gm2_google_refresh_token');
+        add_filter('gm2_google_oauth_instance', function() {
+            return new class {
+                public function is_connected() { return true; }
+                public function get_auth_url() { return ''; }
+                public function handle_callback($code) { return true; }
+                public function list_analytics_properties() { return ['G-1' => 'Site']; }
+                public function list_ads_accounts() {
+                    return new WP_Error('api_error', 'Ads API failure');
+                }
+            };
+        });
+        $admin = new Gm2_SEO_Admin();
+        ob_start();
+        $admin->display_google_connect_page();
+        $output = ob_get_clean();
+        $this->assertStringContainsString('Ads API failure', $output);
+        $this->assertStringContainsString('enable the Analytics', $output);
+    }
+
     public function test_invalid_state_displays_help() {
         delete_option('gm2_google_refresh_token');
         $_GET['code'] = 'abc';
