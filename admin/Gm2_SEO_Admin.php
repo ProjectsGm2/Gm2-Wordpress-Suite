@@ -1345,13 +1345,20 @@ class Gm2_SEO_Admin {
 
     public function ajax_ai_research() {
         check_ajax_referer('gm2_ai_research');
-        if (!current_user_can('edit_posts')) {
-            wp_send_json_error('permission denied', 403);
-        }
 
         $post_id  = isset($_POST['post_id']) ? absint($_POST['post_id']) : 0;
         $term_id  = isset($_POST['term_id']) ? absint($_POST['term_id']) : 0;
         $taxonomy = isset($_POST['taxonomy']) ? sanitize_key($_POST['taxonomy']) : '';
+
+        if ($term_id) {
+            if (!current_user_can('edit_term', $term_id)) {
+                wp_send_json_error('permission denied', 403);
+            }
+        } else {
+            if (!current_user_can('edit_posts')) {
+                wp_send_json_error('permission denied', 403);
+            }
+        }
 
         $title = $url = '';
         $seo_title = $seo_description = $focus = $canonical = '';
