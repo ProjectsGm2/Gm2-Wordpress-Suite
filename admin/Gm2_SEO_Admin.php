@@ -8,6 +8,7 @@ if (!defined('ABSPATH')) {
 
 class Gm2_SEO_Admin {
     private $elementor_initialized = false;
+    private static $notices = [];
     public function run() {
         add_action('admin_menu', [$this, 'add_settings_pages']);
         add_action('add_meta_boxes', [$this, 'register_meta_boxes']);
@@ -31,6 +32,7 @@ class Gm2_SEO_Admin {
         add_action('wp_ajax_gm2_ai_research', [$this, 'ajax_ai_research']);
 
         add_action('add_attachment', [$this, 'auto_fill_alt_on_upload']);
+        add_action('admin_notices', [$this, 'admin_notices']);
         add_action('add_attachment', [$this, 'compress_image_on_upload'], 20);
         add_action('save_post', [$this, 'auto_fill_product_alt'], 20, 3);
 
@@ -778,6 +780,21 @@ class Gm2_SEO_Admin {
         }
         $title       = isset($_POST['gm2_seo_title']) ? sanitize_text_field($_POST['gm2_seo_title']) : '';
         $description = isset($_POST['gm2_seo_description']) ? sanitize_textarea_field($_POST['gm2_seo_description']) : '';
+        if ($description === '' && trim(get_option('gm2_chatgpt_api_key', '')) !== '') {
+            $post = get_post($post_id);
+            if ($post) {
+                $content = wp_strip_all_tags($post->post_content);
+                $prompt  = "Write a short SEO description for the following content:\n\n" . substr($content, 0, 400);
+                $chat    = new Gm2_ChatGPT();
+                $resp    = $chat->query($prompt);
+                if (!is_wp_error($resp) && $resp !== '') {
+                    $description = sanitize_textarea_field($resp);
+                } else {
+                    $msg = is_wp_error($resp) ? $resp->get_error_message() : 'Empty response from ChatGPT';
+                    self::add_notice('ChatGPT description error: ' . $msg);
+                }
+            }
+        }
         $noindex     = isset($_POST['gm2_noindex']) ? '1' : '0';
         $nofollow    = isset($_POST['gm2_nofollow']) ? '1' : '0';
         $canonical      = isset($_POST['gm2_canonical_url']) ? esc_url_raw($_POST['gm2_canonical_url']) : '';
@@ -1027,16 +1044,26 @@ class Gm2_SEO_Admin {
         wp_redirect(admin_url('admin.php?page=gm2-seo&tab=keywords&updated=1'));
         exit;
     }
-
     public function auto_fill_alt_on_upload($attachment_id) {
         if (get_option('gm2_auto_fill_alt', '0') !== '1') {
             return;
-        }
 
         $alt = get_post_meta($attachment_id, '_wp_attachment_image_alt', true);
         if ($alt === '') {
             $title = get_post($attachment_id)->post_title;
-            update_post_meta($attachment_id, '_wp_attachment_image_alt', sanitize_text_field($title));
+            $alt   = sanitize_text_field($title);
+            if (trim(get_option('gm2_chatgpt_api_key', '')) !== '') {
+                $prompt = "Provide a short descriptive alt text for an image titled: {$title}";
+                $chat   = new Gm2_ChatGPT();
+                $resp   = $chat->query($prompt);
+                if (!is_wp_error($resp) && $resp !== '') {
+                    $alt = sanitize_text_field($resp);
+                } else {
+                    $msg = is_wp_error($resp) ? $resp->get_error_message() : 'Empty response from ChatGPT';
+                    self::add_notice('ChatGPT alt text error: ' . $msg);
+                }
+            }
+            update_post_meta($attachment_id, '_wp_attachment_image_alt', $alt);
         }
     }
 
@@ -1586,6 +1613,16 @@ class Gm2_SEO_Admin {
         echo '</div>';
     }
 
+    public static function add_notice($msg, $type = 'error') {
+        self::$notices[] = [ 'message' => $msg, 'type' => $type ];
+    }
+
+    public function admin_notices() {
+        foreach (self::$notices as $n) {
+            echo '<div class="notice notice-' . esc_attr($n['type']) . '"><p>' . esc_html($n['message']) . '</p></div>';
+        }
+        self::$notices = [];
+    }
     public function enqueue_elementor_scripts() {
         $this->enqueue_editor_scripts();
     }
