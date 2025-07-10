@@ -95,9 +95,10 @@ settings before generating content.
 
 == SEO Guidelines ==
 Before researching guidelines, enter your ChatGPT API key on the **Gm2 → ChatGPT**
-page. Navigate to **SEO → SEO Guidelines** and click **Research SEO Guidelines**
-to generate best practices for your chosen categories. Generated guidelines are
-stored under **SEO → SEO Guidelines** so you can review or edit them later.
+page. Navigate to **SEO → SEO Guidelines** where each post type and taxonomy
+has its own textarea. Click **Research SEO Guidelines** next to a content type
+to generate best-practice rules. The generated text is saved automatically so
+you can revisit this screen later and adjust the guidelines as needed.
 
 == SEO Settings ==
 The SEO meta box appears when editing posts, pages and taxonomy terms. In the
@@ -116,9 +117,14 @@ edit your robots file from **SEO → Robots.txt**.
 
 == AI SEO ==
 While editing a post or taxonomy term, open the **AI SEO** tab in the SEO meta
-box. Use **AI Research** to request suggestions for titles, descriptions,
-keywords and canonical URLs. Select the items you want and click **Implement
-Selected** to populate the fields automatically.
+box. Click **AI Research** and you'll first be asked whether to use any existing
+SEO field values. If you decline and all fields are empty, the plugin prompts
+for a short description so ChatGPT has extra context.
+
+The results suggest a title, description, focus keywords, canonical URL, page
+name and slug. Any detected HTML issues—such as multiple `<h1>` tags—are listed
+with optional fixes. Use the **Select all** checkbox to pick every suggestion
+before clicking **Implement Selected** to populate the fields automatically.
 
 If the description field in the SEO Settings tab is left empty, the plugin sends
 an excerpt of the post to ChatGPT and uses the response as the meta description.
@@ -170,4 +176,4 @@ the last 100 missing URLs to help you create new redirects.
 * Initial release.
 
 == Testing ==
-The automated tests use the WordPress test suite and assume `phpunit` is installed globally. See `CONTRIBUTING.md` for setup details.
+The automated tests use the WordPress test suite and assume `phpunit` is installed globally. They cover the AJAX endpoints used for content analysis and AI research (`gm2_check_rules`, `gm2_keyword_ideas`, `gm2_research_guidelines` and `gm2_ai_research`). See `CONTRIBUTING.md` for setup details.
