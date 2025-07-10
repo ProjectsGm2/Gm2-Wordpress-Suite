@@ -44,6 +44,7 @@ class AiResearchAjaxTest extends WP_Ajax_UnitTestCase {
             'long_tail_keywords' => ['a','b'],
             'canonical' => 'https://example.com',
             'page_name' => 'Name',
+            'slug' => 'new-post',
             'content_suggestions' => ['x','y'],
             'html_issues' => [ ['issue' => 'Missing alt', 'fix' => 'Add alt'] ]
         ];
@@ -80,6 +81,7 @@ class AiResearchAjaxTest extends WP_Ajax_UnitTestCase {
         $this->assertSame('New Title', $resp['data']['seo_title']);
         $this->assertSame('Desc', $resp['data']['description']);
         $this->assertSame('Missing alt', $resp['data']['html_issues'][0]['issue']);
+        $this->assertSame('new-post', $resp['data']['slug']);
     }
 }
 
