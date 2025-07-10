@@ -83,8 +83,12 @@ jQuery(function($){
             seo_title: 'SEO Title',
             description: 'SEO Description',
             focus_keywords: 'Focus Keywords',
-            canonical: 'Canonical URL'
+            canonical: 'Canonical URL',
+            page_name: 'Page Name'
         };
+        if(typeof data.slug !== 'undefined'){
+            fields.slug = 'Slug';
+        }
         Object.keys(fields).forEach(function(key){
             if(typeof data[key] === 'undefined') return;
             var label = fields[key];
@@ -139,6 +143,20 @@ jQuery(function($){
                     $('#gm2_focus_keywords').val(val); break;
                 case 'canonical':
                     $('#gm2_canonical_url').val(val); break;
+                case 'page_name':
+                    if(window.gm2AiSeo && gm2AiSeo.post_id){
+                        $('#title').val(val);
+                    } else if(window.gm2AiSeo && gm2AiSeo.term_id){
+                        $('#tag-name').val(val);
+                    }
+                    break;
+                case 'slug':
+                    if(window.gm2AiSeo && gm2AiSeo.post_id){
+                        $('#post_name').val(val);
+                    } else if(window.gm2AiSeo && gm2AiSeo.term_id){
+                        $('#tag-slug').val(val);
+                    }
+                    break;
             }
         });
     }
