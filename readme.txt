@@ -99,13 +99,40 @@ page. Navigate to **SEO → SEO Guidelines** and click **Research SEO Guidelines
 to generate best practices for your chosen categories. Generated guidelines are
 stored under **SEO → SEO Guidelines** so you can review or edit them later.
 
+== SEO Settings ==
+The SEO meta box appears when editing posts, pages and taxonomy terms. In the
+**SEO Settings** tab you can enter a custom title and description, toggle
+`noindex` or `nofollow`, and upload an Open Graph image. Click **Select Image**
+to open the WordPress media library and choose a picture for the `og:image` and
+`twitter:image` tags.
+
+Use the **Max Snippet**, **Max Image Preview**, and **Max Video Preview** fields
+to control how search engines display your content. Values entered here are
+added to the robots meta tag.
+
+The **Sitemap** tab lets you regenerate your XML sitemap. Each time a sitemap is
+created, the plugin pings Google and Bing so they can re-crawl it. You can also
+edit your robots file from **SEO → Robots.txt**.
+
 == AI SEO ==
 While editing a post or taxonomy term, open the **AI SEO** tab in the SEO meta
 box. Use **AI Research** to request suggestions for titles, descriptions,
 keywords and canonical URLs. Select the items you want and click **Implement
 Selected** to populate the fields automatically.
+
+If the description field in the SEO Settings tab is left empty, the plugin sends
+an excerpt of the post to ChatGPT and uses the response as the meta description.
+Enabling **Auto-fill missing alt text** under **SEO → Performance** also uses
+ChatGPT to generate alt text for new images when none is provided.
+
+
 The SEO Settings tab also lets you set `max-snippet`, `max-image-preview`, and
 `max-video-preview` values that will be added to the robots meta tag.
+
+== Structured Data ==
+Enable **Article Schema** from **SEO → Schema** to output Schema.org Article
+markup on posts. The markup includes the headline, author and publication date
+and helps search engines understand your content.
 
 == Tariff Management ==
 Manage percentage-based fees for WooCommerce orders. Open **Gm2 → Tariff** to
@@ -117,6 +144,10 @@ Create 301 or 302 redirects from the **SEO → Redirects** tab. The plugin logs
 the last 100 missing URLs to help you create new redirects.
 
 == Changelog ==
+= 1.6.3 =
+* Expanded documentation for Open Graph images, robots meta settings, sitemap
+  pinging, robots.txt editing, AI-generated descriptions and alt text, and
+  Article schema.
 = 1.6.2 =
 * Added max-snippet, max-image-preview and max-video-preview options in SEO meta boxes.
 = 1.6.1 =
