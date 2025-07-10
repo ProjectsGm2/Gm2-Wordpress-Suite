@@ -321,8 +321,9 @@ class Gm2_SEO_Admin {
         echo '</h2>';
 
         if ($active === 'meta') {
-            $variants = get_option('gm2_noindex_variants', '0');
-            $oos      = get_option('gm2_noindex_oos', '0');
+            $variants       = get_option('gm2_noindex_variants', '0');
+            $oos            = get_option('gm2_noindex_oos', '0');
+            $canon_parent   = get_option('gm2_variation_canonical_parent', '0');
             if (!empty($_GET['updated'])) {
                 echo '<div class="updated notice"><p>' . esc_html__('Settings saved.', 'gm2-wordpress-suite') . '</p></div>';
             }
@@ -332,6 +333,7 @@ class Gm2_SEO_Admin {
             echo '<table class="form-table"><tbody>';
             echo '<tr><th scope="row">Noindex product variants</th><td><input type="checkbox" name="gm2_noindex_variants" value="1" ' . checked($variants, '1', false) . '></td></tr>';
             echo '<tr><th scope="row">Noindex out-of-stock products</th><td><input type="checkbox" name="gm2_noindex_oos" value="1" ' . checked($oos, '1', false) . '></td></tr>';
+            echo '<tr><th scope="row">Variation canonical points to parent</th><td><input type="checkbox" name="gm2_variation_canonical_parent" value="1" ' . checked($canon_parent, '1', false) . '></td></tr>';
             echo '</tbody></table>';
             submit_button('Save Settings');
             echo '</form>';
@@ -989,6 +991,9 @@ class Gm2_SEO_Admin {
 
         $oos = isset($_POST['gm2_noindex_oos']) ? '1' : '0';
         update_option('gm2_noindex_oos', $oos);
+
+        $canon_parent = isset($_POST['gm2_variation_canonical_parent']) ? '1' : '0';
+        update_option('gm2_variation_canonical_parent', $canon_parent);
 
         wp_redirect(admin_url('admin.php?page=gm2-seo&tab=meta&updated=1'));
         exit;
