@@ -19,6 +19,7 @@ class GuidelinesAjaxTest extends WP_Ajax_UnitTestCase {
 
         $this->_setRole('administrator');
         $_POST['categories'] = 'on page';
+        $_POST['target'] = 'gm2_seo_guidelines_post_post';
         $_POST['_ajax_nonce'] = wp_create_nonce('gm2_research_guidelines');
         $_REQUEST['_ajax_nonce'] = $_POST['_ajax_nonce'];
         try {
@@ -29,7 +30,7 @@ class GuidelinesAjaxTest extends WP_Ajax_UnitTestCase {
         $resp = json_decode($this->_last_response, true);
         $this->assertTrue($resp['success']);
         $this->assertSame('guidelines', $resp['data']);
-        $this->assertSame('guidelines', get_option('gm2_seo_guidelines'));
+        $this->assertSame('guidelines', get_option('gm2_seo_guidelines_post_post'));
     }
 }
 

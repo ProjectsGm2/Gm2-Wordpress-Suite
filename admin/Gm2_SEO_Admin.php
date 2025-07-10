@@ -170,9 +170,16 @@ class Gm2_SEO_Admin {
         register_setting('gm2_seo_options', 'gm2_gads_geo_target', [
             'sanitize_callback' => 'sanitize_text_field',
         ]);
-        register_setting('gm2_seo_options', 'gm2_seo_guidelines', [
-            'sanitize_callback' => 'sanitize_textarea_field',
-        ]);
+        foreach ($this->get_supported_post_types() as $pt) {
+            register_setting('gm2_seo_options', 'gm2_seo_guidelines_post_' . $pt, [
+                'sanitize_callback' => 'sanitize_textarea_field',
+            ]);
+        }
+        foreach ($this->get_supported_taxonomies() as $tax) {
+            register_setting('gm2_seo_options', 'gm2_seo_guidelines_tax_' . $tax, [
+                'sanitize_callback' => 'sanitize_textarea_field',
+            ]);
+        }
 
         register_setting('gm2_robots_options', 'gm2_robots_txt', [
             'sanitize_callback' => 'sanitize_textarea_field',
@@ -458,13 +465,30 @@ class Gm2_SEO_Admin {
             submit_button('Save Rules');
             echo '</form>';
         } elseif ($active === 'guidelines') {
-            $guidelines = get_option('gm2_seo_guidelines', '');
             echo '<form method="post" action="options.php">';
             settings_fields('gm2_seo_options');
-            echo '<textarea name="gm2_seo_guidelines" rows="6" class="large-text">' . esc_textarea($guidelines) . '</textarea>';
+
+            foreach ($this->get_supported_post_types() as $pt) {
+                $opt   = 'gm2_seo_guidelines_post_' . $pt;
+                $label = get_post_type_object($pt)->labels->singular_name ?? ucfirst($pt);
+                $val   = get_option($opt, '');
+                echo '<h3>' . esc_html($label) . '</h3>';
+                echo '<textarea name="' . esc_attr($opt) . '" rows="6" class="large-text">' . esc_textarea($val) . '</textarea>';
+                echo '<p><button class="button gm2-research-guidelines" data-target="' . esc_attr($opt) . '">Research SEO Guidelines</button></p>';
+            }
+
+            foreach ($this->get_supported_taxonomies() as $tax) {
+                $opt   = 'gm2_seo_guidelines_tax_' . $tax;
+                $tax_obj = get_taxonomy($tax);
+                $label = $tax_obj ? $tax_obj->labels->singular_name : ucfirst($tax);
+                $val   = get_option($opt, '');
+                echo '<h3>' . esc_html($label) . '</h3>';
+                echo '<textarea name="' . esc_attr($opt) . '" rows="6" class="large-text">' . esc_textarea($val) . '</textarea>';
+                echo '<p><button class="button gm2-research-guidelines" data-target="' . esc_attr($opt) . '">Research SEO Guidelines</button></p>';
+            }
+
             submit_button('Save Guidelines');
             echo '</form>';
-            echo '<p><button id="gm2-research-guidelines" class="button">Research SEO Guidelines</button></p>';
         } else {
             echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
             wp_nonce_field('gm2_general_settings_save', 'gm2_general_settings_nonce');
@@ -1285,20 +1309,33 @@ class Gm2_SEO_Admin {
             wp_send_json_error('permission denied', 403);
         }
 
-        $cats = isset($_POST['categories']) ? sanitize_text_field(wp_unslash($_POST['categories'])) : '';
-        if ($cats === '') {
-            wp_send_json_error('empty categories');
+        $cats   = isset($_POST['categories']) ? sanitize_text_field(wp_unslash($_POST['categories'])) : '';
+        $target = isset($_POST['target']) ? sanitize_key($_POST['target']) : '';
+
+        if ($cats === '' || $target === '') {
+            wp_send_json_error('missing parameters');
+        }
+
+        $allowed = [];
+        foreach ($this->get_supported_post_types() as $pt) {
+            $allowed[] = 'gm2_seo_guidelines_post_' . $pt;
+        }
+        foreach ($this->get_supported_taxonomies() as $tax) {
+            $allowed[] = 'gm2_seo_guidelines_tax_' . $tax;
+        }
+        if (!in_array($target, $allowed, true)) {
+            wp_send_json_error('invalid target');
         }
 
         $prompt = 'Provide SEO best practice guidelines for the following categories: ' . $cats;
-        $chat = new Gm2_ChatGPT();
-        $resp = $chat->query($prompt);
+        $chat   = new Gm2_ChatGPT();
+        $resp   = $chat->query($prompt);
 
         if (is_wp_error($resp)) {
             wp_send_json_error($resp->get_error_message());
         }
 
-        update_option('gm2_seo_guidelines', $resp);
+        update_option($target, $resp);
         wp_send_json_success($resp);
     }
 
@@ -1363,8 +1400,17 @@ class Gm2_SEO_Admin {
         $html        = $this->get_rendered_html($post_id, $term_id, $taxonomy);
         $html_issues = $this->detect_html_issues($html, $canonical);
 
-        $guidelines = trim(get_option('gm2_seo_guidelines', ''));
-        $prompt  = "SEO guidelines:\n" . $guidelines . "\n\n";
+        $guidelines = '';
+        if ($post_id && !empty($post)) {
+            $guidelines = get_option('gm2_seo_guidelines_post_' . $post->post_type, '');
+        } elseif ($term_id && $taxonomy) {
+            $guidelines = get_option('gm2_seo_guidelines_tax_' . $taxonomy, '');
+        }
+        $guidelines = trim($guidelines);
+        $prompt  = '';
+        if ($guidelines !== '') {
+            $prompt .= "SEO guidelines:\n" . $guidelines . "\n\n";
+        }
         $prompt .= "Page title: {$title}\nURL: {$url}\n";
         $prompt .= "Existing SEO Title: {$seo_title}\nSEO Description: {$seo_description}\n";
         $prompt .= "Focus Keywords: {$focus}\nCanonical: {$canonical}\n";
