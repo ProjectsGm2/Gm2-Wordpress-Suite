@@ -176,4 +176,4 @@ the last 100 missing URLs to help you create new redirects.
 * Initial release.
 
 == Testing ==
-The automated tests use the WordPress test suite and assume `phpunit` is installed globally. They cover the AJAX endpoints used for content analysis and AI research (`gm2_check_rules`, `gm2_keyword_ideas`, `gm2_research_guidelines` and `gm2_ai_research`). See `CONTRIBUTING.md` for setup details.
+The automated tests rely on the WordPress test suite, fetched from GitHub by `bin/install-wp-tests.sh`. PHPUnit must be installed globally. The tests cover the AJAX endpoints used for content analysis and AI research (`gm2_check_rules`, `gm2_keyword_ideas`, `gm2_research_guidelines` and `gm2_ai_research`). See `CONTRIBUTING.md` for setup details.

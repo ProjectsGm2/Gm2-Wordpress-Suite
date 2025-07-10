@@ -15,10 +15,11 @@ This project includes a PHPUnit test suite that relies on the WordPress test lib
 
 ## WordPress Test Suite
 
-The PHPUnit tests depend on the WordPress testing suite. The installation script above downloads it automatically. You can also check out the suite manually, for example:
+The PHPUnit tests depend on the WordPress testing suite. The installation script above downloads it automatically from GitHub. You can also fetch the suite manually if you prefer:
 
 ```bash
-svn co https://develop.svn.wordpress.org/trunk/tests/phpunit $WP_TESTS_DIR
+curl -L https://codeload.github.com/WordPress/wordpress-develop/tar.gz/refs/heads/trunk | \
+  tar -xz --strip-components=1 wordpress-develop-*/tests/phpunit -C "$WP_TESTS_DIR"
 ```
 
 Set the `WP_TESTS_DIR` environment variable to the directory where the suite resides. PHPUnit tests cannot run without this directory. If the variable is not set, `tests/bootstrap.php` falls back to `/tmp/wordpress-tests-lib`.
