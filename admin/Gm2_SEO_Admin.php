@@ -1076,6 +1076,7 @@ class Gm2_SEO_Admin {
     public function auto_fill_alt_on_upload($attachment_id) {
         if (get_option('gm2_auto_fill_alt', '0') !== '1') {
             return;
+        }
 
         $alt = get_post_meta($attachment_id, '_wp_attachment_image_alt', true);
         if ($alt === '') {
