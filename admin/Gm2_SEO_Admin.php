@@ -1432,7 +1432,12 @@ class Gm2_SEO_Admin {
         }
 
         $data = json_decode($resp, true);
-        if (json_last_error() === JSON_ERROR_NONE) {
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            if (preg_match('/\{.*\}/s', $resp, $m)) {
+                $data = json_decode($m[0], true);
+            }
+        }
+        if (json_last_error() === JSON_ERROR_NONE && is_array($data)) {
             if (!isset($data['html_issues'])) {
                 $data['html_issues'] = [];
             }
