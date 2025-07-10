@@ -1298,22 +1298,52 @@ class Gm2_SEO_Admin {
             ];
         }
 
+        $home_host = parse_url(home_url(), PHP_URL_HOST);
+        $focus_main = trim(explode(',', $focus)[0]);
+        $first_para = '';
+        if (preg_match('/<p[^>]*>(.*?)<\/p>/is', $content, $pm)) {
+            $first_para = wp_strip_all_tags($pm[1]);
+        }
+        $h1_count = preg_match_all('/<h1\b[^>]*>/i', $content, $h1m);
+        $internal = false;
+        $external = false;
+        if (preg_match_all('/<a\s[^>]*href=["\']([^"\']+)["\']/i', $content, $am)) {
+            foreach ($am[1] as $href) {
+                $host = parse_url($href, PHP_URL_HOST);
+                if (!$host || $host === $home_host) {
+                    $internal = true;
+                } else {
+                    $external = true;
+                }
+            }
+        }
+
         $results = [];
         foreach ($rule_lines as $line) {
-            $key = sanitize_title($line);
+            $key  = sanitize_title($line);
             $pass = false;
             if (preg_match('/title.*?(\d+).*?(\d+)/i', $line, $m)) {
-                $min = (int) $m[1];
-                $max = (int) $m[2];
+                $min  = (int) $m[1];
+                $max  = (int) $m[2];
                 $pass = $strlen($title) >= $min && $strlen($title) <= $max;
             } elseif (preg_match('/description.*?(\d+).*?(\d+)/i', $line, $m)) {
-                $min = (int) $m[1];
-                $max = (int) $m[2];
+                $min  = (int) $m[1];
+                $max  = (int) $m[2];
                 $pass = $strlen($description) >= $min && $strlen($description) <= $max;
+            } elseif (stripos($line, 'first paragraph') !== false) {
+                $pass = $focus_main !== '' && stripos($first_para, $focus_main) !== false;
+            } elseif (stripos($line, 'one h1') !== false) {
+                $pass = $h1_count === 1;
+            } elseif (stripos($line, 'internal link') !== false) {
+                $pass = $internal;
+            } elseif (stripos($line, 'external link') !== false) {
+                $pass = $external;
+            } elseif (stripos($line, 'meta description') !== false && stripos($line, 'focus keyword') !== false) {
+                $pass = $focus_main !== '' && stripos($description, $focus_main) !== false;
             } elseif (stripos($line, 'focus keyword') !== false) {
                 $pass = trim($focus) !== '';
             } elseif (preg_match('/(\d+).*words/i', $line, $m)) {
-                $min = (int) $m[1];
+                $min  = (int) $m[1];
                 $pass = $word_count >= $min;
             }
             $results[$key] = $pass;
