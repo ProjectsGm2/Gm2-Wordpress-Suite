@@ -1417,7 +1417,7 @@ class Gm2_SEO_Admin {
         if ($extra_context !== '') {
             $prompt .= "Extra context: {$extra_context}\n";
         }
-        $prompt .= "Provide JSON with keys seo_title, description, focus_keywords, long_tail_keywords, canonical, page_name, content_suggestions, html_issues.";
+        $prompt .= "Provide JSON with keys seo_title, description, focus_keywords, long_tail_keywords, canonical, page_name, slug, content_suggestions, html_issues.";
 
         $chat = new Gm2_ChatGPT();
         $resp = $chat->query($prompt);
@@ -1432,6 +1432,10 @@ class Gm2_SEO_Admin {
                 $data['html_issues'] = [];
             }
             $data['html_issues'] = array_merge($data['html_issues'], $html_issues);
+            $slug = isset($data['slug']) ? sanitize_title($data['slug']) : '';
+            if ($slug !== '') {
+                $data['slug'] = $slug;
+            }
             wp_send_json_success($data);
         }
 
