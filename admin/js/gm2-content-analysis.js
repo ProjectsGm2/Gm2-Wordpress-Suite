@@ -51,11 +51,16 @@
     }
 
     function applyRuleResults(results){
-        $('.gm2-analysis-rules li').each(function(){
-            const key = $(this).data('key');
-            if(!key || typeof results[key] === 'undefined') return;
+        const list = $('.gm2-analysis-rules');
+        Object.keys(results).forEach(function(key){
+            let $li = list.find('li[data-key="' + key + '"]');
+            if(!$li.length){
+                $li = $('<li>').attr('data-key', key)
+                    .append('<span class="dashicons"></span> ' + key.replace(/-/g,' '))
+                    .appendTo(list);
+            }
             const pass = results[key];
-            $(this).toggleClass('pass', pass).toggleClass('fail', !pass)
+            $li.toggleClass('pass', pass).toggleClass('fail', !pass)
                 .find('.dashicons').removeClass('dashicons-no dashicons-yes')
                 .addClass(pass ? 'dashicons-yes' : 'dashicons-no');
         });

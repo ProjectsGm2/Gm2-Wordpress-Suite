@@ -29,3 +29,42 @@ JS;
         $this->assertGreaterThan(0, $data['readability']);
     }
 }
+
+class ContentRulesNewTest extends WP_Ajax_UnitTestCase {
+    private function run_check($content, $description = 'desc keyword', $focus = 'keyword') {
+        $this->_setRole('administrator');
+        $_POST['title'] = str_repeat('T', 35);
+        $_POST['description'] = $description;
+        $_POST['focus'] = $focus;
+        $_POST['content'] = $content;
+        $_POST['_ajax_nonce'] = wp_create_nonce('gm2_check_rules');
+        $_REQUEST['_ajax_nonce'] = $_POST['_ajax_nonce'];
+        try { $this->_handleAjax('gm2_check_rules'); } catch (WPAjaxDieContinueException $e) {}
+        return json_decode($this->_last_response, true);
+    }
+
+    public function test_new_rules_pass() {
+        $content = '<p>keyword first</p><h1>Heading</h1>' .
+            '<a href="' . home_url('/') . '">int</a>' .
+            '<a href="https://example.com">ext</a> ' . str_repeat('word ', 300);
+        $resp = $this->run_check($content, 'meta with keyword', 'keyword');
+        $data = $resp['data'];
+        $this->assertTrue($data['focus-keyword-appears-in-first-paragraph']);
+        $this->assertTrue($data['only-one-h1-tag-present']);
+        $this->assertTrue($data['at-least-one-internal-link']);
+        $this->assertTrue($data['at-least-one-external-link']);
+        $this->assertTrue($data['focus-keyword-included-in-meta-description']);
+    }
+
+    public function test_new_rules_fail() {
+        $content = '<p>no key</p><h1>h1</h1><h1>h2</h1>' . str_repeat('word ', 10);
+        $resp = $this->run_check($content, 'no match', 'keyword');
+        $data = $resp['data'];
+        $this->assertFalse($data['focus-keyword-appears-in-first-paragraph']);
+        $this->assertFalse($data['only-one-h1-tag-present']);
+        $this->assertFalse($data['at-least-one-internal-link']);
+        $this->assertFalse($data['at-least-one-external-link']);
+        $this->assertFalse($data['focus-keyword-included-in-meta-description']);
+    }
+}
+

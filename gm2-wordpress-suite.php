@@ -76,6 +76,11 @@ function gm2_initialize_content_rules() {
         'Description length between 50 and 160 characters',
         'At least one focus keyword',
         'Content has at least 300 words',
+        'Focus keyword appears in first paragraph',
+        'Only one H1 tag present',
+        'At least one internal link',
+        'At least one external link',
+        'Focus keyword included in meta description',
     ];
     foreach ($posts as $pt) {
         $rules['post_' . $pt] = implode("\n", $post_defaults);
