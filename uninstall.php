@@ -53,6 +53,7 @@ $option_names = array(
     'gm2_schema_review',
     'gm2_show_footer_breadcrumbs',
     'gm2_auto_fill_alt',
+    'gm2_clean_image_filenames',
     'gm2_enable_compression',
     'gm2_compression_api_key',
     'gm2_compression_api_url',
