@@ -155,7 +155,10 @@ class Gm2_SEO_Public {
      *     description:string,
      *     noindex:string,
      *     nofollow:string,
-     *     canonical:string
+     *     canonical:string,
+     *     max_snippet:string,
+     *     max_image_preview:string,
+     *     max_video_preview:string
      * }
      */
     private function get_seo_meta() {
@@ -163,8 +166,11 @@ class Gm2_SEO_Public {
         $description = '';
         $noindex     = '';
         $nofollow    = '';
-        $canonical   = '';
-        $og_image    = '';
+        $canonical         = '';
+        $og_image          = '';
+        $max_snippet       = '';
+        $max_image_preview = '';
+        $max_video_preview = '';
 
         if (is_singular()) {
             $post_id    = get_queried_object_id();
@@ -172,8 +178,11 @@ class Gm2_SEO_Public {
             $description = get_post_meta($post_id, '_gm2_description', true);
             $noindex     = get_post_meta($post_id, '_gm2_noindex', true);
             $nofollow    = get_post_meta($post_id, '_gm2_nofollow', true);
-            $canonical   = get_post_meta($post_id, '_gm2_canonical', true);
-            $og_image    = get_post_meta($post_id, '_gm2_og_image', true);
+            $canonical         = get_post_meta($post_id, '_gm2_canonical', true);
+            $og_image          = get_post_meta($post_id, '_gm2_og_image', true);
+            $max_snippet       = get_post_meta($post_id, '_gm2_max_snippet', true);
+            $max_image_preview = get_post_meta($post_id, '_gm2_max_image_preview', true);
+            $max_video_preview = get_post_meta($post_id, '_gm2_max_video_preview', true);
 
             if (class_exists('WooCommerce') && function_exists('is_product') && is_product()) {
                 $product = wc_get_product($post_id);
@@ -193,8 +202,11 @@ class Gm2_SEO_Public {
                 $description = get_term_meta($term->term_id, '_gm2_description', true);
                 $noindex     = get_term_meta($term->term_id, '_gm2_noindex', true);
                 $nofollow    = get_term_meta($term->term_id, '_gm2_nofollow', true);
-                $canonical   = get_term_meta($term->term_id, '_gm2_canonical', true);
-                $og_image    = get_term_meta($term->term_id, '_gm2_og_image', true);
+                $canonical         = get_term_meta($term->term_id, '_gm2_canonical', true);
+                $og_image          = get_term_meta($term->term_id, '_gm2_og_image', true);
+                $max_snippet       = get_term_meta($term->term_id, '_gm2_max_snippet', true);
+                $max_image_preview = get_term_meta($term->term_id, '_gm2_max_image_preview', true);
+                $max_video_preview = get_term_meta($term->term_id, '_gm2_max_video_preview', true);
             }
         }
 
@@ -223,6 +235,9 @@ class Gm2_SEO_Public {
             'nofollow'    => $nofollow,
             'canonical'   => $canonical,
             'og_image'    => $og_image,
+            'max_snippet' => $max_snippet,
+            'max_image_preview' => $max_image_preview,
+            'max_video_preview' => $max_video_preview,
         ];
     }
 
@@ -233,6 +248,15 @@ class Gm2_SEO_Public {
         $robots      = [];
         $robots[]    = ($data['noindex'] === '1') ? 'noindex' : 'index';
         $robots[]    = ($data['nofollow'] === '1') ? 'nofollow' : 'follow';
+        if ($data['max_snippet'] !== '') {
+            $robots[] = 'max-snippet:' . $data['max_snippet'];
+        }
+        if ($data['max_image_preview'] !== '') {
+            $robots[] = 'max-image-preview:' . $data['max_image_preview'];
+        }
+        if ($data['max_video_preview'] !== '') {
+            $robots[] = 'max-video-preview:' . $data['max_video_preview'];
+        }
         $canonical   = $data['canonical'];
         $og_image_id = $data['og_image'];
         if (!$og_image_id && is_singular()) {

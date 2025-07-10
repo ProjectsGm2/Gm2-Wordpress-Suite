@@ -104,6 +104,8 @@ While editing a post or taxonomy term, open the **AI SEO** tab in the SEO meta
 box. Use **AI Research** to request suggestions for titles, descriptions,
 keywords and canonical URLs. Select the items you want and click **Implement
 Selected** to populate the fields automatically.
+The SEO Settings tab also lets you set `max-snippet`, `max-image-preview`, and
+`max-video-preview` values that will be added to the robots meta tag.
 
 == Tariff Management ==
 Manage percentage-based fees for WooCommerce orders. Open **Gm2 → Tariff** to
@@ -115,6 +117,8 @@ Create 301 or 302 redirects from the **SEO → Redirects** tab. The plugin logs
 the last 100 missing URLs to help you create new redirects.
 
 == Changelog ==
+= 1.6.2 =
+* Added max-snippet, max-image-preview and max-video-preview options in SEO meta boxes.
 = 1.6.1 =
 * Improved error guidance for OAuth connection issues.
 = 1.6.0 =

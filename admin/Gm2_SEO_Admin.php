@@ -640,12 +640,15 @@ class Gm2_SEO_Admin {
 
 
     public function render_taxonomy_meta_box($term) {
-        $title          = '';
-        $description    = '';
-        $noindex        = '';
-        $nofollow       = '';
-        $canonical      = '';
-        $focus_keywords = '';
+        $title               = '';
+        $description         = '';
+        $noindex             = '';
+        $nofollow            = '';
+        $canonical           = '';
+        $focus_keywords      = '';
+        $max_snippet         = '';
+        $max_image_preview   = '';
+        $max_video_preview   = '';
         $taxonomy       = is_object($term) ? $term->taxonomy : (string) $term;
 
         if (is_object($term)) {
@@ -653,8 +656,11 @@ class Gm2_SEO_Admin {
             $description    = get_term_meta($term->term_id, '_gm2_description', true);
             $noindex        = get_term_meta($term->term_id, '_gm2_noindex', true);
             $nofollow       = get_term_meta($term->term_id, '_gm2_nofollow', true);
-            $canonical      = get_term_meta($term->term_id, '_gm2_canonical', true);
-            $focus_keywords = get_term_meta($term->term_id, '_gm2_focus_keywords', true);
+            $canonical        = get_term_meta($term->term_id, '_gm2_canonical', true);
+            $focus_keywords   = get_term_meta($term->term_id, '_gm2_focus_keywords', true);
+            $max_snippet      = get_term_meta($term->term_id, '_gm2_max_snippet', true);
+            $max_image_preview = get_term_meta($term->term_id, '_gm2_max_image_preview', true);
+            $max_video_preview = get_term_meta($term->term_id, '_gm2_max_video_preview', true);
         }
 
         wp_nonce_field('gm2_save_seo_meta', 'gm2_seo_nonce');
@@ -700,6 +706,15 @@ class Gm2_SEO_Admin {
         echo '<p><label for="gm2_canonical_url">Canonical URL</label>';
         echo '<input type="url" id="gm2_canonical_url" name="gm2_canonical_url" value="' . esc_attr($canonical) . '" class="widefat" /></p>';
 
+        echo '<p><label for="gm2_max_snippet">Max Snippet</label>';
+        echo '<input type="text" id="gm2_max_snippet" name="gm2_max_snippet" value="' . esc_attr($max_snippet) . '" class="small-text" /></p>';
+        echo '<p><label for="gm2_max_image_preview">Max Image Preview</label>';
+        echo '<input type="text" id="gm2_max_image_preview" name="gm2_max_image_preview" value="' . esc_attr($max_image_preview) . '" class="small-text" /></p>';
+        echo '<p><label for="gm2_max_video_preview">Max Video Preview</label>';
+        echo '<input type="text" id="gm2_max_video_preview" name="gm2_max_video_preview" value="' . esc_attr($max_video_preview) . '" class="small-text" /></p>';
+
+
+
         $og_image = is_object($term) ? get_term_meta($term->term_id, '_gm2_og_image', true) : '';
         $og_image_url = $og_image ? wp_get_attachment_url($og_image) : '';
         echo '<p><label for="gm2_og_image">OG Image</label>';
@@ -741,14 +756,20 @@ class Gm2_SEO_Admin {
         $noindex     = isset($_POST['gm2_noindex']) ? '1' : '0';
         $nofollow    = isset($_POST['gm2_nofollow']) ? '1' : '0';
         $canonical      = isset($_POST['gm2_canonical_url']) ? esc_url_raw($_POST['gm2_canonical_url']) : '';
-        $focus_keywords = isset($_POST['gm2_focus_keywords']) ? sanitize_text_field($_POST['gm2_focus_keywords']) : '';
-        $og_image    = isset($_POST['gm2_og_image']) ? absint($_POST['gm2_og_image']) : 0;
+        $focus_keywords   = isset($_POST['gm2_focus_keywords']) ? sanitize_text_field($_POST['gm2_focus_keywords']) : '';
+        $max_snippet      = isset($_POST['gm2_max_snippet']) ? sanitize_text_field($_POST['gm2_max_snippet']) : '';
+        $max_image_preview = isset($_POST['gm2_max_image_preview']) ? sanitize_text_field($_POST['gm2_max_image_preview']) : '';
+        $max_video_preview = isset($_POST['gm2_max_video_preview']) ? sanitize_text_field($_POST['gm2_max_video_preview']) : '';
+        $og_image         = isset($_POST['gm2_og_image']) ? absint($_POST['gm2_og_image']) : 0;
         update_post_meta($post_id, '_gm2_title', $title);
         update_post_meta($post_id, '_gm2_description', $description);
         update_post_meta($post_id, '_gm2_noindex', $noindex);
         update_post_meta($post_id, '_gm2_nofollow', $nofollow);
         update_post_meta($post_id, '_gm2_canonical', $canonical);
         update_post_meta($post_id, '_gm2_focus_keywords', $focus_keywords);
+        update_post_meta($post_id, '_gm2_max_snippet', $max_snippet);
+        update_post_meta($post_id, '_gm2_max_image_preview', $max_image_preview);
+        update_post_meta($post_id, '_gm2_max_video_preview', $max_video_preview);
         update_post_meta($post_id, '_gm2_og_image', $og_image);
     }
 
@@ -761,14 +782,20 @@ class Gm2_SEO_Admin {
         $noindex     = isset($_POST['gm2_noindex']) ? '1' : '0';
         $nofollow    = isset($_POST['gm2_nofollow']) ? '1' : '0';
         $canonical      = isset($_POST['gm2_canonical_url']) ? esc_url_raw($_POST['gm2_canonical_url']) : '';
-        $focus_keywords = isset($_POST['gm2_focus_keywords']) ? sanitize_text_field($_POST['gm2_focus_keywords']) : '';
-        $og_image    = isset($_POST['gm2_og_image']) ? absint($_POST['gm2_og_image']) : 0;
+        $focus_keywords   = isset($_POST['gm2_focus_keywords']) ? sanitize_text_field($_POST['gm2_focus_keywords']) : '';
+        $max_snippet      = isset($_POST['gm2_max_snippet']) ? sanitize_text_field($_POST['gm2_max_snippet']) : '';
+        $max_image_preview = isset($_POST['gm2_max_image_preview']) ? sanitize_text_field($_POST['gm2_max_image_preview']) : '';
+        $max_video_preview = isset($_POST['gm2_max_video_preview']) ? sanitize_text_field($_POST['gm2_max_video_preview']) : '';
+        $og_image         = isset($_POST['gm2_og_image']) ? absint($_POST['gm2_og_image']) : 0;
         update_term_meta($term_id, '_gm2_title', $title);
         update_term_meta($term_id, '_gm2_description', $description);
         update_term_meta($term_id, '_gm2_noindex', $noindex);
         update_term_meta($term_id, '_gm2_nofollow', $nofollow);
         update_term_meta($term_id, '_gm2_canonical', $canonical);
         update_term_meta($term_id, '_gm2_focus_keywords', $focus_keywords);
+        update_term_meta($term_id, '_gm2_max_snippet', $max_snippet);
+        update_term_meta($term_id, '_gm2_max_image_preview', $max_image_preview);
+        update_term_meta($term_id, '_gm2_max_video_preview', $max_video_preview);
         update_term_meta($term_id, '_gm2_og_image', $og_image);
     }
 
@@ -1456,7 +1483,10 @@ class Gm2_SEO_Admin {
         $noindex        = get_post_meta($post->ID, '_gm2_noindex', true);
         $nofollow       = get_post_meta($post->ID, '_gm2_nofollow', true);
         $canonical      = get_post_meta($post->ID, '_gm2_canonical', true);
-        $focus_keywords = get_post_meta($post->ID, '_gm2_focus_keywords', true);
+        $focus_keywords      = get_post_meta($post->ID, '_gm2_focus_keywords', true);
+        $max_snippet         = get_post_meta($post->ID, '_gm2_max_snippet', true);
+        $max_image_preview   = get_post_meta($post->ID, '_gm2_max_image_preview', true);
+        $max_video_preview   = get_post_meta($post->ID, '_gm2_max_video_preview', true);
 
         wp_nonce_field('gm2_save_seo_meta', 'gm2_seo_nonce');
 
@@ -1478,6 +1508,13 @@ class Gm2_SEO_Admin {
         echo '<p><label><input type="checkbox" name="gm2_nofollow" value="1" ' . checked($nofollow, '1', false) . '> nofollow</label></p>';
         echo '<p><label for="gm2_canonical_url">Canonical URL</label>';
         echo '<input type="url" id="gm2_canonical_url" name="gm2_canonical_url" value="' . esc_attr($canonical) . '" class="widefat" /></p>';
+
+        echo '<p><label for="gm2_max_snippet">Max Snippet</label>';
+        echo '<input type="text" id="gm2_max_snippet" name="gm2_max_snippet" value="' . esc_attr($max_snippet) . '" class="small-text" /></p>';
+        echo '<p><label for="gm2_max_image_preview">Max Image Preview</label>';
+        echo '<input type="text" id="gm2_max_image_preview" name="gm2_max_image_preview" value="' . esc_attr($max_image_preview) . '" class="small-text" /></p>';
+        echo '<p><label for="gm2_max_video_preview">Max Video Preview</label>';
+        echo '<input type="text" id="gm2_max_video_preview" name="gm2_max_video_preview" value="' . esc_attr($max_video_preview) . '" class="small-text" /></p>';
 
         $og_image = get_post_meta($post->ID, '_gm2_og_image', true);
         $og_image_url = $og_image ? wp_get_attachment_url($og_image) : '';
