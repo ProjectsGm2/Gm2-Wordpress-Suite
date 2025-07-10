@@ -1556,7 +1556,7 @@ class Gm2_SEO_Admin {
 
 
     public function enqueue_taxonomy_scripts($hook) {
-        if ($hook !== 'edit-tags.php') {
+        if ($hook !== 'edit-tags.php' && $hook !== 'term.php') {
             return;
         }
         $screen = get_current_screen();
