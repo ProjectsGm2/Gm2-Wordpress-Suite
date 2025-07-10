@@ -28,6 +28,13 @@ jQuery(function($){
                 data.taxonomy = gm2AiSeo.taxonomy;
             }
         }
+
+        if(!data.seo_title && !data.seo_description && !data.focus_keywords && !data.canonical){
+            var extra = prompt('Describe the page or its target audience:');
+            if(extra){
+                data.extra_context = extra;
+            }
+        }
         $.post((window.gm2AiSeo ? gm2AiSeo.ajax_url : ajaxurl), data)
         .done(function(resp){
             $out.empty();
