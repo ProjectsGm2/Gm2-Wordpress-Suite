@@ -170,6 +170,12 @@ class Gm2_SEO_Admin {
         register_setting('gm2_seo_options', 'gm2_gads_geo_target', [
             'sanitize_callback' => 'sanitize_text_field',
         ]);
+        register_setting('gm2_seo_options', 'gm2_sc_query_limit', [
+            'sanitize_callback' => 'absint',
+        ]);
+        register_setting('gm2_seo_options', 'gm2_analytics_days', [
+            'sanitize_callback' => 'absint',
+        ]);
         foreach ($this->get_supported_post_types() as $pt) {
             register_setting('gm2_seo_options', 'gm2_seo_guidelines_post_' . $pt, [
                 'sanitize_callback' => 'sanitize_textarea_field',
@@ -414,9 +420,11 @@ class Gm2_SEO_Admin {
                 trim(get_option('gm2_gads_customer_id', '')) !== '' &&
                 get_option('gm2_google_refresh_token', '') !== '';
 
-            $lang  = get_option('gm2_gads_language', 'languageConstants/1000');
-            $geo   = get_option('gm2_gads_geo_target', 'geoTargetConstants/2840');
-            $login = get_option('gm2_gads_login_customer_id', '');
+            $lang   = get_option('gm2_gads_language', 'languageConstants/1000');
+            $geo    = get_option('gm2_gads_geo_target', 'geoTargetConstants/2840');
+            $login  = get_option('gm2_gads_login_customer_id', '');
+            $limit  = get_option('gm2_sc_query_limit', 10);
+            $days   = get_option('gm2_analytics_days', 30);
 
             echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
             wp_nonce_field('gm2_keyword_settings_save', 'gm2_keyword_settings_nonce');
@@ -425,6 +433,8 @@ class Gm2_SEO_Admin {
             echo '<tr><th scope="row">Language Constant</th><td><input type="text" name="gm2_gads_language" id="gm2_gads_language" value="' . esc_attr($lang) . '" class="regular-text" /></td></tr>';
             echo '<tr><th scope="row">Geo Target Constant</th><td><input type="text" name="gm2_gads_geo_target" id="gm2_gads_geo_target" value="' . esc_attr($geo) . '" class="regular-text" /></td></tr>';
             echo '<tr><th scope="row">Login Customer ID</th><td><input type="text" name="gm2_gads_login_customer_id" id="gm2_gads_login_customer_id" value="' . esc_attr($login) . '" class="regular-text" /></td></tr>';
+            echo '<tr><th scope="row">Search Console Query Limit</th><td><input type="number" name="gm2_sc_query_limit" id="gm2_sc_query_limit" value="' . esc_attr($limit) . '" class="small-text" /></td></tr>';
+            echo '<tr><th scope="row">Analytics Days</th><td><input type="number" name="gm2_analytics_days" id="gm2_analytics_days" value="' . esc_attr($days) . '" class="small-text" /></td></tr>';
             echo '</tbody></table>';
             echo '<p class="description">Defaults: English / United States.</p>';
             submit_button('Save Settings');
@@ -439,6 +449,34 @@ class Gm2_SEO_Admin {
             }
             echo '</form>';
             echo '<ul id="gm2-keyword-results"></ul>';
+
+            $oauth = apply_filters('gm2_google_oauth_instance', new Gm2_Google_OAuth());
+            if ($oauth->is_connected()) {
+                $site   = home_url('/');
+                $queries = $oauth->get_search_console_queries($site, $limit);
+                $metrics = $oauth->get_analytics_metrics(get_option('gm2_ga_measurement_id', ''), $days);
+
+                echo '<h3>Top Queries</h3>';
+                if ($queries) {
+                    echo '<ul class="gm2-top-queries">';
+                    foreach ($queries as $q) {
+                        echo '<li>' . esc_html($q) . '</li>';
+                    }
+                    echo '</ul>';
+                } else {
+                    echo '<p>' . esc_html__('No queries found.', 'gm2-wordpress-suite') . '</p>';
+                }
+
+                echo '<h3>Analytics</h3>';
+                if (!empty($metrics)) {
+                    echo '<p>Sessions: ' . esc_html($metrics['sessions']) . '</p>';
+                    echo '<p>Bounce Rate: ' . esc_html($metrics['bounce_rate']) . '</p>';
+                } else {
+                    echo '<p>' . esc_html__('No analytics data found.', 'gm2-wordpress-suite') . '</p>';
+                }
+            } else {
+                echo '<p>' . esc_html__('Connect your Google account to fetch query and analytics data.', 'gm2-wordpress-suite') . '</p>';
+            }
         } elseif ($active === 'rules') {
             $all_rules = get_option('gm2_content_rules', []);
             if (!empty($_GET['updated'])) {
@@ -1068,10 +1106,14 @@ class Gm2_SEO_Admin {
         $lang  = isset($_POST['gm2_gads_language']) ? sanitize_text_field($_POST['gm2_gads_language']) : '';
         $geo   = isset($_POST['gm2_gads_geo_target']) ? sanitize_text_field($_POST['gm2_gads_geo_target']) : '';
         $login = isset($_POST['gm2_gads_login_customer_id']) ? $this->sanitize_customer_id($_POST['gm2_gads_login_customer_id']) : '';
+        $sc_limit = isset($_POST['gm2_sc_query_limit']) ? absint($_POST['gm2_sc_query_limit']) : 0;
+        $days     = isset($_POST['gm2_analytics_days']) ? absint($_POST['gm2_analytics_days']) : 0;
 
         update_option('gm2_gads_language', $lang);
         update_option('gm2_gads_geo_target', $geo);
         update_option('gm2_gads_login_customer_id', $login);
+        update_option('gm2_sc_query_limit', $sc_limit);
+        update_option('gm2_analytics_days', $days);
 
         wp_redirect(admin_url('admin.php?page=gm2-seo&tab=keywords&updated=1'));
         exit;
