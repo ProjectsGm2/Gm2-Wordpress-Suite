@@ -38,10 +38,24 @@ jQuery(function($){
         $.post((window.gm2AiSeo ? gm2AiSeo.ajax_url : ajaxurl), data)
         .done(function(resp){
             $out.empty();
-            if(resp && resp.success && resp.data && typeof resp.data === 'object'){
-                buildResults(resp.data, $out);
-            } else if(resp && resp.data){
-                $out.text(typeof resp.data === 'string' ? resp.data : 'Error');
+            if(resp && resp.success && resp.data){
+                if(typeof resp.data === 'object' && !resp.data.response){
+                    buildResults(resp.data, $out);
+                } else if(resp.data.response){
+                    try {
+                        var parsed = JSON.parse(resp.data.response);
+                        if(parsed && typeof parsed === 'object'){
+                            if(resp.data.html_issues){
+                                parsed.html_issues = resp.data.html_issues;
+                            }
+                            buildResults(parsed, $out);
+                            return;
+                        }
+                    } catch(e) {}
+                    $out.text(resp.data.response);
+                } else {
+                    $out.text(typeof resp.data === 'string' ? resp.data : 'Error');
+                }
             } else {
                 $out.text('Error');
             }
