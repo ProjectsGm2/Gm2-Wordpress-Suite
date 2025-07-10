@@ -23,6 +23,7 @@ class Gm2_SEO_Public {
         add_action('wp_head', [$this, 'output_brand_schema'], 20);
         add_action('wp_head', [$this, 'output_breadcrumb_schema'], 20);
         add_action('wp_head', [$this, 'output_review_schema'], 20);
+        add_action('wp_head', [$this, 'output_article_schema'], 20);
         if (get_option('gm2_show_footer_breadcrumbs', '1') === '1') {
             add_action('wp_footer', [$this, 'output_breadcrumbs']);
         }
@@ -322,6 +323,35 @@ class Gm2_SEO_Public {
                 'url'           => get_permalink(),
             ],
         ];
+
+        echo '<script type="application/ld+json">' . wp_json_encode($data) . "</script>\n";
+    }
+
+    public function output_article_schema() {
+        if (get_option('gm2_schema_article', '1') !== '1') {
+            return;
+        }
+
+        if (!is_singular('post') && !is_page()) {
+            return;
+        }
+
+        $image = get_the_post_thumbnail_url(get_the_ID(), 'full');
+
+        $data = [
+            '@context' => 'https://schema.org/',
+            '@type'    => 'Article',
+            'headline' => get_the_title(),
+            'author'   => [
+                '@type' => 'Person',
+                'name'  => get_the_author(),
+            ],
+            'datePublished' => get_the_date('c'),
+        ];
+
+        if ($image) {
+            $data['image'] = $image;
+        }
 
         echo '<script type="application/ld+json">' . wp_json_encode($data) . "</script>\n";
     }
