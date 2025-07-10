@@ -272,6 +272,45 @@ class Gm2_Google_OAuth {
         return $list;
     }
 
+    public function get_search_console_queries($site_url, $limit = 10) {
+        if (!$this->is_connected()) {
+            return [];
+        }
+        $token = $this->get_access_token();
+        if (!$token) {
+            return [];
+        }
+
+        $body = [
+            'startDate' => date('Y-m-d', strtotime('-30 days')),
+            'endDate'   => date('Y-m-d'),
+            'dimensions' => ['query'],
+            'rowLimit'   => absint($limit),
+            'orderBy'    => [ [ 'field' => 'clicks', 'descending' => true ] ],
+        ];
+
+        $url = sprintf(
+            'https://searchconsole.googleapis.com/webmasters/v3/sites/%s/searchAnalytics/query',
+            rawurlencode($site_url)
+        );
+
+        $resp = $this->api_request('POST', $url, $body, [
+            'Authorization' => 'Bearer ' . $token,
+        ]);
+
+        if (is_wp_error($resp) || empty($resp['rows'])) {
+            return [];
+        }
+
+        $queries = [];
+        foreach ($resp['rows'] as $row) {
+            if (!empty($row['keys'][0])) {
+                $queries[] = $row['keys'][0];
+            }
+        }
+        return $queries;
+    }
+
     public function list_ads_accounts() {
         if (!$this->is_connected()) {
             return [];
@@ -310,6 +349,71 @@ class Gm2_Google_OAuth {
             $list[$id] = $id;
         }
         return $list;
+    }
+
+    public function get_analytics_metrics($property_id, $days = 30) {
+        if (!$this->is_connected()) {
+            return [];
+        }
+        $token = $this->get_access_token();
+        if (!$token) {
+            return [];
+        }
+
+        $end   = date('Y-m-d');
+        $start = date('Y-m-d', strtotime('-' . absint($days) . ' days'));
+
+        if (strpos($property_id, 'UA-') === 0) {
+            $url  = 'https://analyticsreporting.googleapis.com/v4/reports:batchGet';
+            $body = [
+                'reportRequests' => [
+                    [
+                        'viewId'    => $property_id,
+                        'dateRanges'=> [ [ 'startDate' => $start, 'endDate' => $end ] ],
+                        'metrics'   => [
+                            [ 'expression' => 'ga:sessions' ],
+                            [ 'expression' => 'ga:bounceRate' ],
+                        ],
+                    ],
+                ],
+            ];
+        } else {
+            $prop = preg_replace('/^properties\//', '', $property_id);
+            $url  = sprintf('https://analyticsdata.googleapis.com/v1beta/properties/%s:runReport', $prop);
+            $body = [
+                'dateRanges' => [ [ 'startDate' => $start, 'endDate' => $end ] ],
+                'metrics'    => [
+                    [ 'name' => 'sessions' ],
+                    [ 'name' => 'bounceRate' ],
+                ],
+            ];
+        }
+
+        $resp = $this->api_request('POST', $url, $body, [
+            'Authorization' => 'Bearer ' . $token,
+        ]);
+
+        if (is_wp_error($resp)) {
+            return [];
+        }
+
+        if (isset($resp['reports'][0]['data']['totals'][0]['values'])) {
+            $vals = $resp['reports'][0]['data']['totals'][0]['values'];
+            return [
+                'sessions'    => (int) ($vals[0] ?? 0),
+                'bounce_rate' => (float) ($vals[1] ?? 0),
+            ];
+        }
+
+        if (!empty($resp['rows'][0]['metricValues'])) {
+            $vals = $resp['rows'][0]['metricValues'];
+            return [
+                'sessions'    => (int) ($vals[0]['value'] ?? 0),
+                'bounce_rate' => (float) ($vals[1]['value'] ?? 0),
+            ];
+        }
+
+        return [];
     }
 
     public function disconnect() {
