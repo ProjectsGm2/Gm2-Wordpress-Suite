@@ -64,6 +64,8 @@ $option_names = array(
     'gm2_chatgpt_temperature',
     'gm2_chatgpt_max_tokens',
     'gm2_chatgpt_endpoint',
+    'gm2_min_internal_links',
+    'gm2_min_external_links',
 );
 
 foreach ( $option_names as $option ) {

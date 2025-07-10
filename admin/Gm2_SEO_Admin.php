@@ -545,6 +545,10 @@ class Gm2_SEO_Admin {
                 echo '<tr><th scope="row"><label for="gm2_rule_tax_' . esc_attr($tax) . '">' . esc_html($label) . '</label></th>';
                 echo '<td><textarea id="gm2_rule_tax_' . esc_attr($tax) . '" name="gm2_content_rules[tax_' . esc_attr($tax) . ']" rows="3" class="large-text">' . esc_textarea($val) . '</textarea></td></tr>';
             }
+            $min_int = (int) get_option('gm2_min_internal_links', 1);
+            $min_ext = (int) get_option('gm2_min_external_links', 1);
+            echo '<tr><th scope="row">Minimum Internal Links</th><td><input type="number" name="gm2_min_internal_links" value="' . esc_attr($min_int) . '" class="small-text" /></td></tr>';
+            echo '<tr><th scope="row">Minimum External Links</th><td><input type="number" name="gm2_min_external_links" value="' . esc_attr($min_ext) . '" class="small-text" /></td></tr>';
             echo '</tbody></table>';
             submit_button('Save Rules');
             echo '</form>';
@@ -862,9 +866,13 @@ class Gm2_SEO_Admin {
 
         echo '<div id="gm2-content-analysis" class="gm2-tab-panel">';
         echo '<ul class="gm2-analysis-rules">';
+        $min_int = (int) get_option('gm2_min_internal_links', 1);
+        $min_ext = (int) get_option('gm2_min_external_links', 1);
         foreach ($rule_lines as $text) {
             $key = sanitize_title($text);
-            echo '<li data-key="' . esc_attr($key) . '"><span class="dashicons dashicons-no"></span> ' . esc_html($text) . '</li>';
+            $disp = preg_replace('/Minimum X internal links/i', 'Minimum ' . $min_int . ' internal links', $text);
+            $disp = preg_replace('/Minimum X external links/i', 'Minimum ' . $min_ext . ' external links', $disp);
+            echo '<li data-key="' . esc_attr($key) . '"><span class="dashicons dashicons-no"></span> ' . esc_html($disp) . '</li>';
         }
         echo '</ul>';
         echo '</div>';
@@ -1142,6 +1150,10 @@ class Gm2_SEO_Admin {
             }
         }
         update_option('gm2_content_rules', $rules);
+        $min_int = isset($_POST['gm2_min_internal_links']) ? absint($_POST['gm2_min_internal_links']) : 1;
+        $min_ext = isset($_POST['gm2_min_external_links']) ? absint($_POST['gm2_min_external_links']) : 1;
+        update_option('gm2_min_internal_links', $min_int);
+        update_option('gm2_min_external_links', $min_ext);
 
         wp_redirect(admin_url('admin.php?page=gm2-seo&tab=rules&updated=1'));
         exit;
@@ -1372,13 +1384,17 @@ class Gm2_SEO_Admin {
         $h1_count = preg_match_all('/<h1\b[^>]*>/i', $content, $h1m);
         $internal = false;
         $external = false;
+        $internal_count = 0;
+        $external_count = 0;
         if (preg_match_all('/<a\s[^>]*href=["\']([^"\']+)["\']/i', $content, $am)) {
             foreach ($am[1] as $href) {
                 $host = parse_url($href, PHP_URL_HOST);
                 if (!$host || $host === $home_host) {
                     $internal = true;
+                    $internal_count++;
                 } else {
                     $external = true;
+                    $external_count++;
                 }
             }
         }
@@ -1439,6 +1455,8 @@ class Gm2_SEO_Admin {
         }
 
         $results = [];
+        $min_internal = (int) get_option('gm2_min_internal_links', 1);
+        $min_external = (int) get_option('gm2_min_external_links', 1);
         foreach ($rule_lines as $line) {
             $key  = sanitize_title($line);
             $pass = false;
@@ -1454,6 +1472,14 @@ class Gm2_SEO_Admin {
                 $pass = $focus_main !== '' && stripos($first_para, $focus_main) !== false;
             } elseif (stripos($line, 'one h1') !== false) {
                 $pass = $h1_count === 1;
+            } elseif (preg_match('/minimum\s*(\d+)\s*internal/i', $line, $m)) {
+                $pass = $internal_count >= (int) $m[1];
+            } elseif (preg_match('/minimum\s*(\d+)\s*external/i', $line, $m)) {
+                $pass = $external_count >= (int) $m[1];
+            } elseif (stripos($line, 'minimum x internal') !== false) {
+                $pass = $internal_count >= $min_internal;
+            } elseif (stripos($line, 'minimum x external') !== false) {
+                $pass = $external_count >= $min_external;
             } elseif (stripos($line, 'internal link') !== false) {
                 $pass = $internal;
             } elseif (stripos($line, 'external link') !== false) {
@@ -1874,9 +1900,13 @@ class Gm2_SEO_Admin {
                 'Image alt text contains focus keyword',
             ];
         }
+        $min_int = (int) get_option('gm2_min_internal_links', 1);
+        $min_ext = (int) get_option('gm2_min_external_links', 1);
         foreach ($rule_lines as $idx => $text) {
             $key = sanitize_title($text);
-            echo '<li data-key="' . esc_attr($key) . '"><span class="dashicons dashicons-no"></span> ' . esc_html($text) . '</li>';
+            $disp = preg_replace('/Minimum X internal links/i', 'Minimum ' . $min_int . ' internal links', $text);
+            $disp = preg_replace('/Minimum X external links/i', 'Minimum ' . $min_ext . ' external links', $disp);
+            echo '<li data-key="' . esc_attr($key) . '"><span class="dashicons dashicons-no"></span> ' . esc_html($disp) . '</li>';
         }
         echo '</ul>';
         echo '<div id="gm2-content-analysis-data">';
@@ -1885,6 +1915,8 @@ class Gm2_SEO_Admin {
         echo '<p>Keyword Density: <span id="gm2-content-analysis-density">0</span>%</p>';
         echo '<p>Focus Keyword Density:</p><ul id="gm2-focus-keyword-density"></ul>';
         echo '<p>Readability: <span id="gm2-content-analysis-readability">0</span></p>';
+        echo '<p>Internal Links: <span id="gm2-content-analysis-internal-links">0</span></p>';
+        echo '<p>External Links: <span id="gm2-content-analysis-external-links">0</span></p>';
         echo '<p>Suggested Links:</p><ul id="gm2-content-analysis-links"></ul>';
         echo '</div>';
         echo '</div>';

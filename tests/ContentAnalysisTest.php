@@ -13,11 +13,11 @@ const end = code.indexOf('function analyzeFocusKeywords');
 let snippet = code.substring(start, end);
 function jQuery(){return {_html:'',html:function(c){this._html=c;return this;},text:function(){return this._html.replace(/<[^>]*>/g,'');}};}
 const vm = require('vm');
-const context = {jQuery:jQuery, $: jQuery};
+const context = {jQuery:jQuery, $: jQuery, location:{hostname:'example.com'}};
 vm.createContext(context);
 vm.runInContext(snippet + '; exports={analyzeContent};', context);
 const result = context.exports.analyzeContent(process.argv[2]);
-console.log(JSON.stringify({topWord: result.topWord, readability: result.readability}));
+console.log(JSON.stringify({topWord: result.topWord, readability: result.readability, internal: result.internalLinks, external: result.externalLinks}));
 JS;
         $tmp = tempnam(sys_get_temp_dir(), 'js');
         file_put_contents($tmp, $js);
@@ -27,6 +27,8 @@ JS;
         $data = json_decode(trim($output), true);
         $this->assertSame('hello', $data['topWord']);
         $this->assertGreaterThan(0, $data['readability']);
+        $this->assertSame(0, $data['internal']);
+        $this->assertSame(0, $data['external']);
     }
 }
 
@@ -83,6 +85,30 @@ class ContentRulesNewTest extends WP_Ajax_UnitTestCase {
         $resp = $this->run_check($content, 'desc keyword', 'keyword');
         $data = $resp['data'];
         $this->assertFalse($data['image-alt-text-contains-focus-keyword']);
+    }
+
+    public function test_min_link_rules_pass() {
+        update_option('gm2_content_rules', ['post_post' => "Minimum X internal links\nMinimum X external links"]);
+        update_option('gm2_min_internal_links', 2);
+        update_option('gm2_min_external_links', 1);
+        $content = '<a href="' . home_url('/a') . '">1</a>' .
+            '<a href="' . home_url('/b') . '">2</a>' .
+            '<a href="https://ext.com">e</a>';
+        $resp = $this->run_check($content);
+        $data = $resp['data'];
+        $this->assertTrue($data['minimum-x-internal-links']);
+        $this->assertTrue($data['minimum-x-external-links']);
+    }
+
+    public function test_min_link_rules_fail() {
+        update_option('gm2_content_rules', ['post_post' => "Minimum X internal links\nMinimum X external links"]);
+        update_option('gm2_min_internal_links', 2);
+        update_option('gm2_min_external_links', 1);
+        $content = '<a href="' . home_url('/a') . '">1</a>';
+        $resp = $this->run_check($content);
+        $data = $resp['data'];
+        $this->assertFalse($data['minimum-x-internal-links']);
+        $this->assertFalse($data['minimum-x-external-links']);
     }
 }
 

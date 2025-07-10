@@ -9,7 +9,20 @@
     }
 
     function analyzeContent(content) {
-        const text = $('<div>').html(content).text();
+        const $div = $('<div>').html(content);
+        const text = $div.text();
+        let internalLinks = 0;
+        let externalLinks = 0;
+        $div.find('a[href]').each(function(){
+            const href = $(this).attr('href');
+            const a = document.createElement('a');
+            a.href = href;
+            if(!a.hostname || a.hostname === window.location.hostname){
+                internalLinks++;
+            } else {
+                externalLinks++;
+            }
+        });
         const words = text.match(/\b\w+\b/g) || [];
         const wordCount = words.length;
         const freq = {};
@@ -31,7 +44,7 @@
         const readability = (sentences.length && wordCount) ?
             206.835 - 1.015*(wordCount/sentences.length) - 84.6*(syllables/wordCount)
             : 0;
-        return {wordCount, topWord, density, readability, words: words.map(function(w){return w.toLowerCase();}), text};
+        return {wordCount, topWord, density, readability, words: words.map(function(w){return w.toLowerCase();}), text, internalLinks, externalLinks};
     }
 
     function analyzeFocusKeywords(text, wordCount, keywords){
@@ -114,6 +127,8 @@
         $('#gm2-content-analysis-keyword').text(data.topWord);
         $('#gm2-content-analysis-density').text(data.density);
         $('#gm2-content-analysis-readability').text(data.readability.toFixed(2));
+        $('#gm2-content-analysis-internal-links').text(data.internalLinks);
+        $('#gm2-content-analysis-external-links').text(data.externalLinks);
         const kwList = $('#gm2-focus-keyword-density').empty();
         Object.keys(densities).forEach(function(k){
             $('<li>').text(k + ': ' + densities[k] + '%').appendTo(kwList);
