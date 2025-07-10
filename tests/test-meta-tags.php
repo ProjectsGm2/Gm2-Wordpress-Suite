@@ -1,6 +1,42 @@
 <?php
 use Gm2\Gm2_SEO_Public;
 class MetaTagsTest extends WP_UnitTestCase {
+    public function setUp(): void {
+        parent::setUp();
+        if (!class_exists('WooCommerce')) {
+            eval('class WooCommerce {}');
+        }
+        if (!function_exists('is_product')) {
+            function is_product() {
+                return true;
+            }
+        }
+        if (!class_exists('WC_Product_Stub')) {
+            eval('class WC_Product_Stub {
+                private $type;
+                private $parent_id;
+                public function __construct($type = "simple", $parent_id = 0) { $this->type = $type; $this->parent_id = $parent_id; }
+                public function get_image_id() { return 0; }
+                public function get_description() { return "Sample description"; }
+                public function get_sku() { return "SKU"; }
+                public function get_price() { return "10"; }
+                public function is_in_stock() { return true; }
+                public function get_average_rating() { return 4; }
+                public function is_type($t) { return $this->type === $t; }
+                public function get_parent_id() { return $this->parent_id; }
+            }');
+        }
+        if (!function_exists('wc_get_product')) {
+            function wc_get_product($id) {
+                $type = get_post_meta($id, 'wc_type', true) ?: 'simple';
+                $parent = intval(get_post_meta($id, 'parent_id', true));
+                return new WC_Product_Stub($type, $parent);
+            }
+        }
+        if (!function_exists('get_woocommerce_currency')) {
+            function get_woocommerce_currency() { return 'USD'; }
+        }
+    }
     public function test_output_meta_tags_for_post_without_title_support() {
         $post_id = self::factory()->post->create([
             'post_title'   => 'Sample',
@@ -141,6 +177,61 @@ class MetaTagsTest extends WP_UnitTestCase {
         $url = wp_get_attachment_url($attachment_id);
         $this->assertStringContainsString('property="og:image" content="' . esc_url($url) . '"', $output);
         $this->assertStringContainsString('name="twitter:image" content="' . esc_url($url) . '"', $output);
+    }
+
+    public function test_variation_canonical_points_to_parent() {
+        register_post_type('product');
+
+        $parent_id = self::factory()->post->create([
+            'post_type'  => 'product',
+            'post_title' => 'Parent',
+        ]);
+
+        $variation_id = self::factory()->post->create([
+            'post_type'  => 'product',
+            'post_title' => 'Variation',
+        ]);
+        update_post_meta($variation_id, 'wc_type', 'variation');
+        update_post_meta($variation_id, 'parent_id', $parent_id);
+
+        update_option('gm2_variation_canonical_parent', '1');
+
+        $seo = new Gm2_SEO_Public();
+        $this->go_to(get_permalink($variation_id));
+        setup_postdata(get_post($variation_id));
+        ob_start();
+        $seo->output_meta_tags();
+        $output = ob_get_clean();
+
+        $this->assertStringContainsString('<link rel="canonical" href="' . esc_url(get_permalink($parent_id)) . '" />', $output);
+    }
+
+    public function test_manual_variation_canonical_not_overridden() {
+        register_post_type('product');
+
+        $parent_id = self::factory()->post->create([
+            'post_type'  => 'product',
+            'post_title' => 'Parent',
+        ]);
+
+        $variation_id = self::factory()->post->create([
+            'post_type'  => 'product',
+            'post_title' => 'Variation',
+        ]);
+        update_post_meta($variation_id, 'wc_type', 'variation');
+        update_post_meta($variation_id, 'parent_id', $parent_id);
+        update_post_meta($variation_id, '_gm2_canonical', 'https://example.com/custom');
+
+        update_option('gm2_variation_canonical_parent', '1');
+
+        $seo = new Gm2_SEO_Public();
+        $this->go_to(get_permalink($variation_id));
+        setup_postdata(get_post($variation_id));
+        ob_start();
+        $seo->output_meta_tags();
+        $output = ob_get_clean();
+
+        $this->assertStringContainsString('<link rel="canonical" href="https://example.com/custom" />', $output);
     }
 }
 

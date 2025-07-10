@@ -195,6 +195,12 @@ class Gm2_SEO_Public {
                     if ('1' === get_option('gm2_noindex_oos', '0') && !$product->is_in_stock()) {
                         $noindex = '1';
                     }
+                    if (empty($canonical) && '1' === get_option('gm2_variation_canonical_parent', '0') && $product->is_type('variation')) {
+                        $parent_id = $product->get_parent_id();
+                        if ($parent_id) {
+                            $canonical = get_permalink($parent_id);
+                        }
+                    }
                 }
             }
         } elseif (is_category() || is_tag() || is_tax()) {
