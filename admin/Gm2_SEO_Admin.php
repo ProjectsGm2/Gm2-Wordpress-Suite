@@ -30,6 +30,7 @@ class Gm2_SEO_Admin {
         add_action('wp_ajax_gm2_keyword_ideas', [$this, 'ajax_keyword_ideas']);
         add_action('wp_ajax_gm2_research_guidelines', [$this, 'ajax_research_guidelines']);
         add_action('wp_ajax_gm2_ai_research', [$this, 'ajax_ai_research']);
+        add_action('wp_ajax_gm2_ai_generate_tax_description', [$this, 'ajax_generate_tax_description']);
 
         add_action('add_attachment', [$this, 'auto_fill_alt_on_upload']);
         add_action('admin_notices', [$this, 'admin_notices']);
@@ -197,6 +198,9 @@ class Gm2_SEO_Admin {
         register_setting('gm2_seo_options', 'gm2_slug_stopwords', [
             'sanitize_callback' => 'sanitize_textarea_field',
         ]);
+        register_setting('gm2_seo_options', 'gm2_tax_desc_prompt', [
+            'sanitize_callback' => 'sanitize_textarea_field',
+        ]);
         foreach ($this->get_supported_post_types() as $pt) {
             register_setting('gm2_seo_options', 'gm2_seo_guidelines_post_' . $pt, [
                 'sanitize_callback' => 'sanitize_textarea_field',
@@ -286,6 +290,18 @@ class Gm2_SEO_Admin {
                 $value = get_option('gm2_slug_stopwords', '');
                 echo '<textarea name="gm2_slug_stopwords" rows="3" class="large-text">' . esc_textarea($value) . '</textarea>';
                 echo '<p class="description">Space or comma separated list.</p>';
+            },
+            'gm2_seo',
+            'gm2_seo_main'
+        );
+
+        add_settings_field(
+            'gm2_tax_desc_prompt',
+            'Taxonomy Description Prompt',
+            function () {
+                $value = get_option('gm2_tax_desc_prompt', 'Write a short SEO description for the term "{name}". {guidelines}');
+                echo '<textarea name="gm2_tax_desc_prompt" rows="3" class="large-text">' . esc_textarea($value) . '</textarea>';
+                echo '<p class="description">Available tags: {name}, {taxonomy}, {guidelines}</p>';
             },
             'gm2_seo',
             'gm2_seo_main'
@@ -1127,6 +1143,7 @@ class Gm2_SEO_Admin {
         $cust   = isset($_POST['gm2_gads_customer_id']) ? $this->sanitize_customer_id($_POST['gm2_gads_customer_id']) : '';
         $clean  = isset($_POST['gm2_clean_slugs']) ? '1' : '0';
         $words  = isset($_POST['gm2_slug_stopwords']) ? sanitize_textarea_field($_POST['gm2_slug_stopwords']) : '';
+        $prompt = isset($_POST['gm2_tax_desc_prompt']) ? sanitize_textarea_field($_POST['gm2_tax_desc_prompt']) : '';
 
         update_option('gm2_ga_measurement_id', $ga_id);
         update_option('gm2_search_console_verification', $sc_ver);
@@ -1134,6 +1151,7 @@ class Gm2_SEO_Admin {
         update_option('gm2_gads_customer_id', $cust);
         update_option('gm2_clean_slugs', $clean);
         update_option('gm2_slug_stopwords', $words);
+        update_option('gm2_tax_desc_prompt', $prompt);
 
         wp_redirect(admin_url('admin.php?page=gm2-seo&tab=general&updated=1'));
         exit;
@@ -1761,6 +1779,50 @@ class Gm2_SEO_Admin {
         ]);
     }
 
+    public function ajax_generate_tax_description() {
+        check_ajax_referer('gm2_ai_generate_tax_description');
+
+        $taxonomy = isset($_POST['taxonomy']) ? sanitize_key($_POST['taxonomy']) : '';
+        $term_id  = isset($_POST['term_id']) ? absint($_POST['term_id']) : 0;
+        $name     = isset($_POST['name']) ? sanitize_text_field(wp_unslash($_POST['name'])) : '';
+
+        if (!$taxonomy || !taxonomy_exists($taxonomy)) {
+            wp_send_json_error('invalid taxonomy');
+        }
+
+        if ($term_id) {
+            if (!current_user_can('edit_term', $term_id)) {
+                wp_send_json_error('permission denied', 403);
+            }
+        } else {
+            if (!current_user_can('edit_terms')) {
+                wp_send_json_error('permission denied', 403);
+            }
+        }
+
+        $guidelines = trim(get_option('gm2_seo_guidelines_tax_' . $taxonomy, ''));
+        $template   = get_option('gm2_tax_desc_prompt', 'Write a short SEO description for the term "{name}". {guidelines}');
+
+        $prompt = strtr($template, [
+            '{name}'       => $name,
+            '{taxonomy}'   => $taxonomy,
+            '{guidelines}' => $guidelines,
+        ]);
+
+        $chat = new Gm2_ChatGPT();
+        $resp = $chat->query($prompt);
+
+        if (is_wp_error($resp)) {
+            wp_send_json_error($resp->get_error_message());
+        }
+
+        if ($term_id) {
+            wp_update_term($term_id, $taxonomy, ['description' => $resp]);
+        }
+
+        wp_send_json_success($resp);
+    }
+
     public function enqueue_editor_scripts($hook = null) {
 
         /*
@@ -1895,6 +1957,24 @@ class Gm2_SEO_Admin {
             'gm2AiSeo',
             [
                 'nonce'    => wp_create_nonce('gm2_ai_research'),
+                'ajax_url' => admin_url('admin-ajax.php'),
+                'term_id'  => isset($_GET['tag_ID']) ? absint($_GET['tag_ID']) : 0,
+                'taxonomy' => $screen->taxonomy,
+            ]
+        );
+
+        wp_enqueue_script(
+            'gm2-tax-desc',
+            GM2_PLUGIN_URL . 'admin/js/gm2-tax-desc.js',
+            ['jquery'],
+            GM2_VERSION,
+            true
+        );
+        wp_localize_script(
+            'gm2-tax-desc',
+            'gm2TaxDesc',
+            [
+                'nonce'    => wp_create_nonce('gm2_ai_generate_tax_description'),
                 'ajax_url' => admin_url('admin-ajax.php'),
                 'term_id'  => isset($_GET['tag_ID']) ? absint($_GET['tag_ID']) : 0,
                 'taxonomy' => $screen->taxonomy,
