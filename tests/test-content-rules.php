@@ -10,7 +10,7 @@ class ContentRulesAjaxTest extends WP_Ajax_UnitTestCase {
         $_POST['title'] = str_repeat('T', 35);
         $_POST['description'] = str_repeat('D', 80);
         $_POST['focus'] = 'keyword';
-        $_POST['content'] = str_repeat('word ', 300);
+        $_POST['content'] = '<img src="img.jpg" alt="keyword" /> ' . str_repeat('word ', 300);
         $_POST['_ajax_nonce'] = wp_create_nonce('gm2_check_rules');
         $_REQUEST['_ajax_nonce'] = $_POST['_ajax_nonce'];
         try {

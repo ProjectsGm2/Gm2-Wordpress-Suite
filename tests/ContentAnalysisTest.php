@@ -45,6 +45,7 @@ class ContentRulesNewTest extends WP_Ajax_UnitTestCase {
 
     public function test_new_rules_pass() {
         $content = '<p>keyword first</p><h1>Heading</h1>' .
+            '<img src="img.jpg" alt="keyword image" />' .
             '<a href="' . home_url('/') . '">int</a>' .
             '<a href="https://example.com">ext</a> ' . str_repeat('word ', 300);
         $resp = $this->run_check($content, 'meta with keyword', 'keyword');
@@ -54,10 +55,12 @@ class ContentRulesNewTest extends WP_Ajax_UnitTestCase {
         $this->assertTrue($data['at-least-one-internal-link']);
         $this->assertTrue($data['at-least-one-external-link']);
         $this->assertTrue($data['focus-keyword-included-in-meta-description']);
+        $this->assertTrue($data['image-alt-text-contains-focus-keyword']);
     }
 
     public function test_new_rules_fail() {
-        $content = '<p>no key</p><h1>h1</h1><h1>h2</h1>' . str_repeat('word ', 10);
+        $content = '<p>no key</p><img src="img.jpg" alt="no match" />' .
+            '<h1>h1</h1><h1>h2</h1>' . str_repeat('word ', 10);
         $resp = $this->run_check($content, 'no match', 'keyword');
         $data = $resp['data'];
         $this->assertFalse($data['focus-keyword-appears-in-first-paragraph']);
@@ -65,6 +68,21 @@ class ContentRulesNewTest extends WP_Ajax_UnitTestCase {
         $this->assertFalse($data['at-least-one-internal-link']);
         $this->assertFalse($data['at-least-one-external-link']);
         $this->assertFalse($data['focus-keyword-included-in-meta-description']);
+        $this->assertFalse($data['image-alt-text-contains-focus-keyword']);
+    }
+
+    public function test_alt_text_rule_passes() {
+        $content = '<p>text</p><img src="img.jpg" alt="keyword here" />';
+        $resp = $this->run_check($content, 'desc keyword', 'keyword');
+        $data = $resp['data'];
+        $this->assertTrue($data['image-alt-text-contains-focus-keyword']);
+    }
+
+    public function test_alt_text_rule_fails() {
+        $content = '<p>text</p><img src="img.jpg" alt="something else" />';
+        $resp = $this->run_check($content, 'desc keyword', 'keyword');
+        $data = $resp['data'];
+        $this->assertFalse($data['image-alt-text-contains-focus-keyword']);
     }
 }
 
