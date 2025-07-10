@@ -11,6 +11,14 @@ jQuery(function($){
         data.seo_description = $('#gm2_seo_description').val() || '';
         data.focus_keywords  = $('#gm2_focus_keywords').val() || '';
         data.canonical       = $('#gm2_canonical_url').val() || '';
+        if (data.seo_title || data.seo_description || data.focus_keywords || data.canonical) {
+            if (!confirm('Use existing SEO values for AI research?')) {
+                data.seo_title = '';
+                data.seo_description = '';
+                data.focus_keywords = '';
+                data.canonical = '';
+            }
+        }
         if(window.gm2AiSeo){
             if(gm2AiSeo.post_id){
                 data.post_id = gm2AiSeo.post_id;
