@@ -845,6 +845,9 @@ class Gm2_SEO_Admin {
         if (!isset($_POST['gm2_seo_nonce']) || !wp_verify_nonce($_POST['gm2_seo_nonce'], 'gm2_save_seo_meta')) {
             return;
         }
+        if (!current_user_can('edit_term', $term_id)) {
+            return;
+        }
         $title       = isset($_POST['gm2_seo_title']) ? sanitize_text_field($_POST['gm2_seo_title']) : '';
         $description = isset($_POST['gm2_seo_description']) ? sanitize_textarea_field($_POST['gm2_seo_description']) : '';
         $noindex     = isset($_POST['gm2_noindex']) ? '1' : '0';
