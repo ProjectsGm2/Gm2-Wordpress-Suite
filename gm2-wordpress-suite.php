@@ -24,9 +24,8 @@ use Gm2\Gm2_Sitemap;
 $gm2_autoload = GM2_PLUGIN_DIR . 'vendor/autoload.php';
 if (file_exists($gm2_autoload)) {
     require_once $gm2_autoload;
-} else {
-    require_once GM2_PLUGIN_DIR . 'includes/autoload.php';
 }
+require_once GM2_PLUGIN_DIR . 'includes/autoload.php';
 
 // Include required files
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Loader.php';
@@ -81,6 +80,8 @@ function gm2_initialize_content_rules() {
         'At least one internal link',
         'At least one external link',
         'Focus keyword included in meta description',
+        'SEO title is unique',
+        'Meta description is unique',
     ];
     foreach ($posts as $pt) {
         $rules['post_' . $pt] = implode("\n", $post_defaults);
@@ -99,6 +100,8 @@ function gm2_initialize_content_rules() {
     $tax_defaults = [
         'Title length between 30 and 60 characters',
         'Description length between 50 and 160 characters',
+        'SEO title is unique',
+        'Meta description is unique',
     ];
     foreach ($taxonomies as $tax) {
         $rules['tax_' . $tax] = implode("\n", $tax_defaults);
