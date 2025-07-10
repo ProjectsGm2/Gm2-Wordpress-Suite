@@ -444,6 +444,8 @@ class Gm2_SEO_Admin {
             $min_html  = get_option('gm2_minify_html', '0');
             $min_css   = get_option('gm2_minify_css', '0');
             $min_js    = get_option('gm2_minify_js', '0');
+            $ps_key    = get_option('gm2_pagespeed_api_key', '');
+            $ps_scores = get_option('gm2_pagespeed_scores', []);
             if (!empty($_GET['updated'])) {
                 echo '<div class="updated notice"><p>' . esc_html__('Settings saved.', 'gm2-wordpress-suite') . '</p></div>';
             }
@@ -458,8 +460,15 @@ class Gm2_SEO_Admin {
             echo '<tr><th scope="row">Minify HTML</th><td><label><input type="checkbox" name="gm2_minify_html" value="1" ' . checked($min_html, '1', false) . '></label></td></tr>';
             echo '<tr><th scope="row">Minify CSS</th><td><label><input type="checkbox" name="gm2_minify_css" value="1" ' . checked($min_css, '1', false) . '></label></td></tr>';
             echo '<tr><th scope="row">Minify JS</th><td><label><input type="checkbox" name="gm2_minify_js" value="1" ' . checked($min_js, '1', false) . '></label></td></tr>';
+            echo '<tr><th scope="row">PageSpeed API Key</th><td><input type="text" name="gm2_pagespeed_api_key" value="' . esc_attr($ps_key) . '" class="regular-text" />';
+            if (!empty($ps_scores['mobile']) || !empty($ps_scores['desktop'])) {
+                $time = !empty($ps_scores['time']) ? date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $ps_scores['time']) : '';
+                echo '<p>Mobile: ' . esc_html($ps_scores['mobile'] ?? '') . ' Desktop: ' . esc_html($ps_scores['desktop'] ?? '') . ' ' . esc_html($time) . '</p>';
+            }
+            echo '</td></tr>';
             echo '</tbody></table>';
             submit_button('Save Settings');
+            echo ' <input type="submit" name="gm2_test_pagespeed" class="button" value="Test Page Speed" />';
             echo '</form>';
         } elseif ($active === 'keywords') {
             $enabled = trim(get_option('gm2_gads_developer_token', '')) !== '' &&
@@ -1067,6 +1076,20 @@ class Gm2_SEO_Admin {
 
         $min_js = isset($_POST['gm2_minify_js']) ? '1' : '0';
         update_option('gm2_minify_js', $min_js);
+
+        $ps_key = isset($_POST['gm2_pagespeed_api_key']) ? sanitize_text_field($_POST['gm2_pagespeed_api_key']) : '';
+        update_option('gm2_pagespeed_api_key', $ps_key);
+
+        if (isset($_POST['gm2_test_pagespeed'])) {
+            $helper = new Gm2_PageSpeed($ps_key);
+            $scores = $helper->get_scores(home_url('/'));
+            if (!is_wp_error($scores)) {
+                $scores['time'] = time();
+                update_option('gm2_pagespeed_scores', $scores);
+            } else {
+                self::add_notice($scores->get_error_message());
+            }
+        }
 
         wp_redirect(admin_url('admin.php?page=gm2-seo&tab=performance&updated=1'));
         exit;
