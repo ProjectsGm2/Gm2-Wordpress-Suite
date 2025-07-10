@@ -824,7 +824,16 @@ class Gm2_SEO_Admin {
             $rule_lines = [
                 'Title length between 30 and 60 characters',
                 'Description length between 50 and 160 characters',
+                'Description has at least 150 words',
             ];
+        }
+
+        $desc_warning = '';
+        if (is_object($term)) {
+            $count = str_word_count(wp_strip_all_tags($term->description));
+            if ($count < 150) {
+                $desc_warning = 'Description has ' . $count . ' words; recommended minimum is 150.';
+            }
         }
 
         $wrapper_start = $wrapper_end = '';
@@ -874,6 +883,9 @@ class Gm2_SEO_Admin {
         echo '</div>';
 
         echo '<div id="gm2-content-analysis" class="gm2-tab-panel">';
+        if ($desc_warning) {
+            echo '<p class="gm2-warning" style="color:#d63638;">' . esc_html($desc_warning) . '</p>';
+        }
         echo '<ul class="gm2-analysis-rules">';
         $min_int = (int) get_option('gm2_min_internal_links', 1);
         $min_ext = (int) get_option('gm2_min_external_links', 1);
@@ -1367,6 +1379,7 @@ class Gm2_SEO_Admin {
         };
 
         $post_type = isset($_POST['post_type']) ? sanitize_key(wp_unslash($_POST['post_type'])) : 'post';
+        $taxonomy  = isset($_POST['taxonomy']) ? sanitize_key(wp_unslash($_POST['taxonomy'])) : '';
 
         $title       = isset($_POST['title']) ? sanitize_text_field(wp_unslash($_POST['title'])) : '';
         $description = isset($_POST['description']) ? sanitize_textarea_field(wp_unslash($_POST['description'])) : '';
@@ -1378,24 +1391,36 @@ class Gm2_SEO_Admin {
 
         $rules_option = get_option('gm2_content_rules', []);
         $rule_lines = [];
-        if (isset($rules_option['post_' . $post_type])) {
+        if ($taxonomy && isset($rules_option['tax_' . $taxonomy])) {
+            $rule_lines = array_filter(array_map('trim', explode("\n", $rules_option['tax_' . $taxonomy])));
+        } elseif (isset($rules_option['post_' . $post_type])) {
             $rule_lines = array_filter(array_map('trim', explode("\n", $rules_option['post_' . $post_type])));
         }
         if (!$rule_lines) {
-            $rule_lines = [
-                'Title length between 30 and 60 characters',
-                'Description length between 50 and 160 characters',
-                'At least one focus keyword',
-                'Content has at least 300 words',
-                'Focus keyword appears in first paragraph',
-                'Only one H1 tag present',
-                'Image alt text contains focus keyword',
-                'At least one internal link',
-                'At least one external link',
-                'Focus keyword included in meta description',
-                'SEO title is unique',
-                'Meta description is unique',
-            ];
+            if ($taxonomy) {
+                $rule_lines = [
+                    'Title length between 30 and 60 characters',
+                    'Description length between 50 and 160 characters',
+                    'Description has at least 150 words',
+                    'SEO title is unique',
+                    'Meta description is unique',
+                ];
+            } else {
+                $rule_lines = [
+                    'Title length between 30 and 60 characters',
+                    'Description length between 50 and 160 characters',
+                    'At least one focus keyword',
+                    'Content has at least 300 words',
+                    'Focus keyword appears in first paragraph',
+                    'Only one H1 tag present',
+                    'Image alt text contains focus keyword',
+                    'At least one internal link',
+                    'At least one external link',
+                    'Focus keyword included in meta description',
+                    'SEO title is unique',
+                    'Meta description is unique',
+                ];
+            }
         }
 
         $home_host = parse_url(home_url(), PHP_URL_HOST);

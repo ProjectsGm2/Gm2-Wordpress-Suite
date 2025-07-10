@@ -120,6 +120,7 @@ function gm2_initialize_content_rules() {
     $tax_defaults = [
         'Title length between 30 and 60 characters',
         'Description length between 50 and 160 characters',
+        'Description has at least 150 words',
         'SEO title is unique',
         'Meta description is unique',
     ];
