@@ -32,6 +32,7 @@ class Gm2_SEO_Public {
         add_action('template_redirect', [$this, 'maybe_buffer_output'], 1);
         add_action('shutdown', [$this, 'maybe_flush_buffer'], 0);
         add_action('send_headers', [$this, 'send_cache_headers']);
+        add_filter('robots_txt', [$this, 'filter_robots_txt'], 10, 2);
     }
 
     public function add_sitemap_rewrite() {
@@ -537,6 +538,14 @@ class Gm2_SEO_Public {
             }, $html);
         }
         return $html;
+    }
+
+    public function filter_robots_txt($output, $public) {
+        $custom = get_option('gm2_robots_txt', '');
+        if ($custom !== '') {
+            $output .= "\n" . $custom;
+        }
+        return $output;
     }
 
     public function send_cache_headers() {

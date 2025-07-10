@@ -126,6 +126,15 @@ class Gm2_SEO_Admin {
             'gm2-google-connect',
             [$this, 'display_google_connect_page']
         );
+
+        add_submenu_page(
+            'gm2',
+            'Robots.txt',
+            'Robots.txt',
+            'manage_options',
+            'gm2-robots',
+            [$this, 'display_robots_page']
+        );
     }
 
     public function register_settings() {
@@ -160,6 +169,10 @@ class Gm2_SEO_Admin {
             'sanitize_callback' => 'sanitize_text_field',
         ]);
         register_setting('gm2_seo_options', 'gm2_seo_guidelines', [
+            'sanitize_callback' => 'sanitize_textarea_field',
+        ]);
+
+        register_setting('gm2_robots_options', 'gm2_robots_txt', [
             'sanitize_callback' => 'sanitize_textarea_field',
         ]);
 
@@ -457,6 +470,18 @@ class Gm2_SEO_Admin {
             echo '</form>';
         }
 
+        echo '</div>';
+    }
+
+    public function display_robots_page() {
+        $content = get_option('gm2_robots_txt', '');
+        echo '<div class="wrap">';
+        echo '<h1>Robots.txt</h1>';
+        echo '<form method="post" action="options.php">';
+        settings_fields('gm2_robots_options');
+        echo '<textarea name="gm2_robots_txt" rows="10" class="large-text code">' . esc_textarea($content) . '</textarea>';
+        submit_button('Save');
+        echo '</form>';
         echo '</div>';
     }
 
