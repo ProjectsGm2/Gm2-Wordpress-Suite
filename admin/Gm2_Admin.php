@@ -100,12 +100,13 @@ class Gm2_Admin {
 
         check_ajax_referer('gm2_add_tariff');
 
-        $name = sanitize_text_field($_POST['tariff_name'] ?? '');
+        $name_val = isset($_POST['tariff_name']) ? $_POST['tariff_name'] : '';
+        $name = sanitize_text_field($name_val);
         if ($name === '') {
             wp_send_json_error( __( 'Tariff name is required', 'gm2-wordpress-suite' ) );
         }
 
-        $percentage_raw = $_POST['tariff_percentage'] ?? '';
+        $percentage_raw = isset($_POST['tariff_percentage']) ? $_POST['tariff_percentage'] : '';
 
         if (!is_numeric($percentage_raw)) {
             wp_send_json_error( __( 'Tariff percentage must be a number', 'gm2-wordpress-suite' ) );
@@ -116,7 +117,8 @@ class Gm2_Admin {
         if ($percentage < 0 || $percentage > 100) {
             wp_send_json_error( __( 'Tariff percentage must be between 0 and 100', 'gm2-wordpress-suite' ) );
         }
-        $status = ($_POST['tariff_status'] ?? '') === 'enabled' ? 'enabled' : 'disabled';
+        $status_raw = isset($_POST['tariff_status']) ? $_POST['tariff_status'] : '';
+        $status = $status_raw === 'enabled' ? 'enabled' : 'disabled';
 
         $manager = new Gm2_Tariff_Manager();
         $id      = $manager->add_tariff([
@@ -413,7 +415,8 @@ class Gm2_Admin {
 
     public function ajax_chatgpt_prompt() {
         check_ajax_referer('gm2_chatgpt_nonce');
-        $prompt = sanitize_textarea_field($_POST['prompt'] ?? '');
+        $prompt_val = isset($_POST['prompt']) ? $_POST['prompt'] : '';
+        $prompt = sanitize_textarea_field($prompt_val);
         $chat = new Gm2_ChatGPT();
         $resp = $chat->query($prompt);
         if (is_wp_error($resp)) {

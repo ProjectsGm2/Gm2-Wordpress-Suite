@@ -381,15 +381,16 @@ class Gm2_SEO_Admin {
             echo '<input type="hidden" name="action" value="gm2_content_rules" />';
             echo '<table class="form-table"><tbody>';
             foreach ($this->get_supported_post_types() as $pt) {
-                $label = get_post_type_object($pt)->labels->singular_name ?? ucfirst($pt);
-                $val   = $all_rules['post_' . $pt] ?? '';
+                $pt_obj = get_post_type_object($pt);
+                $label  = $pt_obj ? $pt_obj->labels->singular_name : ucfirst($pt);
+                $val    = isset($all_rules['post_' . $pt]) ? $all_rules['post_' . $pt] : '';
                 echo '<tr><th scope="row"><label for="gm2_rule_post_' . esc_attr($pt) . '">' . esc_html($label) . '</label></th>';
                 echo '<td><textarea id="gm2_rule_post_' . esc_attr($pt) . '" name="gm2_content_rules[post_' . esc_attr($pt) . ']" rows="3" class="large-text">' . esc_textarea($val) . '</textarea></td></tr>';
             }
             foreach ($this->get_supported_taxonomies() as $tax) {
                 $tax_obj = get_taxonomy($tax);
                 $label   = $tax_obj ? $tax_obj->labels->singular_name : $tax;
-                $val     = $all_rules['tax_' . $tax] ?? '';
+                $val     = isset($all_rules['tax_' . $tax]) ? $all_rules['tax_' . $tax] : '';
                 echo '<tr><th scope="row"><label for="gm2_rule_tax_' . esc_attr($tax) . '">' . esc_html($label) . '</label></th>';
                 echo '<td><textarea id="gm2_rule_tax_' . esc_attr($tax) . '" name="gm2_content_rules[tax_' . esc_attr($tax) . ']" rows="3" class="large-text">' . esc_textarea($val) . '</textarea></td></tr>';
             }
@@ -420,7 +421,8 @@ class Gm2_SEO_Admin {
         }
 
         if (isset($_POST['gm2_ga_property_nonce']) && wp_verify_nonce($_POST['gm2_ga_property_nonce'], 'gm2_ga_property_save')) {
-            $prop = sanitize_text_field(wp_unslash($_POST['gm2_ga_property'] ?? ''));
+            $prop_val = isset($_POST['gm2_ga_property']) ? $_POST['gm2_ga_property'] : '';
+            $prop = sanitize_text_field(wp_unslash($prop_val));
             if ($prop !== '') {
                 update_option('gm2_ga_measurement_id', $prop);
                 $notice = '<div class="updated notice"><p>' . esc_html__('Analytics property saved.', 'gm2-wordpress-suite') . '</p></div>';
@@ -428,7 +430,8 @@ class Gm2_SEO_Admin {
         }
 
         if (isset($_POST['gm2_gads_account_nonce']) && wp_verify_nonce($_POST['gm2_gads_account_nonce'], 'gm2_gads_account_save')) {
-            $acct = sanitize_text_field(wp_unslash($_POST['gm2_gads_account'] ?? ''));
+            $acct_val = isset($_POST['gm2_gads_account']) ? $_POST['gm2_gads_account'] : '';
+            $acct = sanitize_text_field(wp_unslash($acct_val));
             if ($acct !== '') {
                 update_option('gm2_gads_customer_id', $acct);
                 $notice = '<div class="updated notice"><p>' . esc_html__('Ads account saved.', 'gm2-wordpress-suite') . '</p></div>';
@@ -773,7 +776,8 @@ class Gm2_SEO_Admin {
 
         $source = isset($_POST['gm2_redirect_source']) ? sanitize_text_field($_POST['gm2_redirect_source']) : '';
         $target = isset($_POST['gm2_redirect_target']) ? esc_url_raw($_POST['gm2_redirect_target']) : '';
-        $type   = ($_POST['gm2_redirect_type'] ?? '301') === '302' ? '302' : '301';
+        $rtype  = isset($_POST['gm2_redirect_type']) ? $_POST['gm2_redirect_type'] : '301';
+        $type   = $rtype === '302' ? '302' : '301';
 
         if ($source && $target) {
             $redirects   = get_option('gm2_redirects', []);
