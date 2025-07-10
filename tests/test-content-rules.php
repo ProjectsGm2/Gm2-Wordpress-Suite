@@ -48,5 +48,29 @@ class ContentRulesAjaxTest extends WP_Ajax_UnitTestCase {
         $this->assertFalse($resp['data']['at-least-one-focus-keyword']);
         $this->assertFalse($resp['data']['content-has-at-least-300-words']);
     }
+
+    public function test_duplicate_titles_and_descriptions_fail() {
+        $existing = self::factory()->post->create([
+            'post_title'   => 'Dup',
+            'post_content' => 'Content',
+        ]);
+        update_post_meta($existing, '_gm2_title', 'Dup Title');
+        update_post_meta($existing, '_gm2_description', 'Dup Description');
+
+        $this->_setRole('administrator');
+        $_POST['title'] = 'Dup Title';
+        $_POST['description'] = 'Dup Description';
+        $_POST['focus'] = 'keyword';
+        $_POST['content'] = str_repeat('word ', 300);
+        $_POST['_ajax_nonce'] = wp_create_nonce('gm2_check_rules');
+        $_REQUEST['_ajax_nonce'] = $_POST['_ajax_nonce'];
+        try {
+            $this->_handleAjax('gm2_check_rules');
+        } catch (WPAjaxDieContinueException $e) {}
+        $resp = json_decode($this->_last_response, true);
+        $this->assertTrue($resp['success']);
+        $this->assertFalse($resp['data']['seo-title-is-unique']);
+        $this->assertFalse($resp['data']['meta-description-is-unique']);
+    }
 }
 ?>

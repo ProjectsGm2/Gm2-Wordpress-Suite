@@ -1295,6 +1295,13 @@ class Gm2_SEO_Admin {
                 'Description length between 50 and 160 characters',
                 'At least one focus keyword',
                 'Content has at least 300 words',
+                'Focus keyword appears in first paragraph',
+                'Only one H1 tag present',
+                'At least one internal link',
+                'At least one external link',
+                'Focus keyword included in meta description',
+                'SEO title is unique',
+                'Meta description is unique',
             ];
         }
 
@@ -1315,6 +1322,49 @@ class Gm2_SEO_Admin {
                 } else {
                     $external = true;
                 }
+            }
+        }
+
+        $dup_title = false;
+        $dup_desc  = false;
+        if ($title !== '') {
+            $dup_title = !empty(get_posts([
+                'post_type'      => $this->get_supported_post_types(),
+                'post_status'    => 'any',
+                'meta_key'       => '_gm2_title',
+                'meta_value'     => $title,
+                'fields'         => 'ids',
+                'posts_per_page' => 1,
+            ]));
+            $t = get_terms([
+                'taxonomy'   => $this->get_supported_taxonomies(),
+                'hide_empty' => false,
+                'meta_query' => [ [ 'key' => '_gm2_title', 'value' => $title ] ],
+                'fields'     => 'ids',
+                'number'     => 1,
+            ]);
+            if (!is_wp_error($t) && !empty($t)) {
+                $dup_title = true;
+            }
+        }
+        if ($description !== '') {
+            $dup_desc = !empty(get_posts([
+                'post_type'      => $this->get_supported_post_types(),
+                'post_status'    => 'any',
+                'meta_key'       => '_gm2_description',
+                'meta_value'     => $description,
+                'fields'         => 'ids',
+                'posts_per_page' => 1,
+            ]));
+            $t = get_terms([
+                'taxonomy'   => $this->get_supported_taxonomies(),
+                'hide_empty' => false,
+                'meta_query' => [ [ 'key' => '_gm2_description', 'value' => $description ] ],
+                'fields'     => 'ids',
+                'number'     => 1,
+            ]);
+            if (!is_wp_error($t) && !empty($t)) {
+                $dup_desc = true;
             }
         }
 
@@ -1340,6 +1390,10 @@ class Gm2_SEO_Admin {
                 $pass = $external;
             } elseif (stripos($line, 'meta description') !== false && stripos($line, 'focus keyword') !== false) {
                 $pass = $focus_main !== '' && stripos($description, $focus_main) !== false;
+            } elseif (stripos($line, 'title') !== false && stripos($line, 'unique') !== false) {
+                $pass = !$dup_title;
+            } elseif (stripos($line, 'description') !== false && stripos($line, 'unique') !== false) {
+                $pass = !$dup_desc;
             } elseif (stripos($line, 'focus keyword') !== false) {
                 $pass = trim($focus) !== '';
             } elseif (preg_match('/(\d+).*words/i', $line, $m)) {
