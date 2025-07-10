@@ -1399,6 +1399,7 @@ class Gm2_SEO_Admin {
 
         $html        = $this->get_rendered_html($post_id, $term_id, $taxonomy);
         $html_issues = $this->detect_html_issues($html, $canonical);
+        $snippet     = substr(wp_strip_all_tags($html), 0, 400);
 
         $guidelines = '';
         if ($post_id && !empty($post)) {
@@ -1416,6 +1417,9 @@ class Gm2_SEO_Admin {
         $prompt .= "Focus Keywords: {$focus}\nCanonical: {$canonical}\n";
         if ($extra_context !== '') {
             $prompt .= "Extra context: {$extra_context}\n";
+        }
+        if ($snippet !== '') {
+            $prompt .= "Content snippet: {$snippet}\n";
         }
         $prompt .= "Provide JSON with keys seo_title, description, focus_keywords, long_tail_keywords, canonical, page_name, slug, content_suggestions, html_issues.";
 

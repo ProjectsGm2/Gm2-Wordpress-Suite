@@ -83,6 +83,41 @@ class AiResearchAjaxTest extends WP_Ajax_UnitTestCase {
         $this->assertSame('Missing alt', $resp['data']['html_issues'][0]['issue']);
         $this->assertSame('new-post', $resp['data']['slug']);
     }
+
+    public function test_ai_research_prompt_contains_snippet() {
+        update_option('gm2_chatgpt_api_key', 'key');
+        $captured = null;
+        $filter = function($pre, $args, $url) use (&$captured) {
+            if ($url === 'https://api.openai.com/v1/chat/completions') {
+                $body = json_decode($args['body'], true);
+                $captured = $body['messages'][0]['content'];
+                return [
+                    'response' => ['code' => 200],
+                    'body' => json_encode([ 'choices' => [ ['message' => ['content' => '{}']] ] ])
+                ];
+            }
+            return false;
+        };
+        add_filter('pre_http_request', $filter, 10, 3);
+
+        $post_id = self::factory()->post->create([
+            'post_title' => 'Post',
+            'post_content' => '<h1>Hello</h1>'
+        ]);
+        update_post_meta($post_id, '_gm2_canonical', 'https://example.com');
+
+        $this->_setRole('administrator');
+        $_POST['post_id'] = $post_id;
+        $_POST['_ajax_nonce'] = wp_create_nonce('gm2_ai_research');
+        $_REQUEST['_ajax_nonce'] = $_POST['_ajax_nonce'];
+        try {
+            $this->_handleAjax('gm2_ai_research');
+        } catch (WPAjaxDieContinueException $e) {
+        }
+        remove_filter('pre_http_request', $filter, 10);
+
+        $this->assertStringContainsString('Content snippet: Hello', $captured);
+    }
 }
 
 class AdminTabsTest extends WP_UnitTestCase {
