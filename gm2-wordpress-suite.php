@@ -31,6 +31,18 @@ require_once GM2_PLUGIN_DIR . 'includes/autoload.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Loader.php';
 require_once GM2_PLUGIN_DIR . 'public/Gm2_SEO_Public.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Sitemap.php';
+require_once GM2_PLUGIN_DIR . 'includes/Gm2_PageSpeed.php';
+
+function gm2_add_weekly_schedule($schedules) {
+    if (!isset($schedules['weekly'])) {
+        $schedules['weekly'] = [
+            'interval' => WEEK_IN_SECONDS,
+            'display'  => __('Once Weekly')
+        ];
+    }
+    return $schedules;
+}
+add_filter('cron_schedules', 'gm2_add_weekly_schedule');
 
 function gm2_activate_plugin() {
     $public = new Gm2_SEO_Public();
@@ -45,6 +57,10 @@ function gm2_activate_plugin() {
         wp_schedule_event(time(), 'daily', 'gm2_sitemap_ping');
     }
 
+    if (!wp_next_scheduled('gm2_pagespeed_check')) {
+        wp_schedule_event(time(), 'weekly', 'gm2_pagespeed_check');
+    }
+
     gm2_initialize_content_rules();
 }
 register_activation_hook(__FILE__, 'gm2_activate_plugin');
@@ -54,6 +70,10 @@ function gm2_deactivate_plugin() {
     $timestamp = wp_next_scheduled('gm2_sitemap_ping');
     if ($timestamp) {
         wp_unschedule_event($timestamp, 'gm2_sitemap_ping');
+    }
+    $ts = wp_next_scheduled('gm2_pagespeed_check');
+    if ($ts) {
+        wp_unschedule_event($ts, 'gm2_pagespeed_check');
     }
 }
 register_deactivation_hook(__FILE__, 'gm2_deactivate_plugin');
@@ -120,4 +140,18 @@ function gm2_init_plugin() {
 add_action('plugins_loaded', 'gm2_init_plugin');
 
 add_action('gm2_sitemap_ping', 'gm2_generate_sitemap');
+
+function gm2_run_pagespeed_check() {
+    $key = get_option('gm2_pagespeed_api_key', '');
+    if (!$key) {
+        return;
+    }
+    $helper = new \Gm2\Gm2_PageSpeed($key);
+    $scores = $helper->get_scores(home_url('/'));
+    if (!is_wp_error($scores)) {
+        $scores['time'] = time();
+        update_option('gm2_pagespeed_scores', $scores);
+    }
+}
+add_action('gm2_pagespeed_check', 'gm2_run_pagespeed_check');
 
