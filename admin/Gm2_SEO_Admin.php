@@ -1355,6 +1355,11 @@ class Gm2_SEO_Admin {
             $canonical = esc_url_raw(wp_unslash($_POST['canonical']));
         }
 
+        $extra_context = '';
+        if (isset($_POST['extra_context'])) {
+            $extra_context = sanitize_textarea_field(wp_unslash($_POST['extra_context']));
+        }
+
         $html        = $this->get_rendered_html($post_id, $term_id, $taxonomy);
         $html_issues = $this->detect_html_issues($html, $canonical);
 
@@ -1363,6 +1368,9 @@ class Gm2_SEO_Admin {
         $prompt .= "Page title: {$title}\nURL: {$url}\n";
         $prompt .= "Existing SEO Title: {$seo_title}\nSEO Description: {$seo_description}\n";
         $prompt .= "Focus Keywords: {$focus}\nCanonical: {$canonical}\n";
+        if ($extra_context !== '') {
+            $prompt .= "Extra context: {$extra_context}\n";
+        }
         $prompt .= "Provide JSON with keys seo_title, description, focus_keywords, long_tail_keywords, canonical, page_name, content_suggestions, html_issues.";
 
         $chat = new Gm2_ChatGPT();
