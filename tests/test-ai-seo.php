@@ -151,6 +151,37 @@ class AiResearchAjaxTest extends WP_Ajax_UnitTestCase {
         $this->assertTrue($resp['success']);
         $this->assertSame('Parsed', $resp['data']['seo_title']);
     }
+
+    public function test_ai_research_requires_edit_posts_cap() {
+        $post_id = self::factory()->post->create();
+
+        $this->_setRole('subscriber');
+        $_POST['post_id'] = $post_id;
+        $_POST['_ajax_nonce'] = wp_create_nonce('gm2_ai_research');
+        $_REQUEST['_ajax_nonce'] = $_POST['_ajax_nonce'];
+        try {
+            $this->_handleAjax('gm2_ai_research');
+        } catch (WPAjaxDieContinueException $e) {
+        }
+        $resp = json_decode($this->_last_response, true);
+        $this->assertFalse($resp['success']);
+    }
+
+    public function test_ai_research_requires_edit_term_cap() {
+        $term_id = self::factory()->term->create(['taxonomy' => 'category']);
+
+        $this->_setRole('subscriber');
+        $_POST['term_id'] = $term_id;
+        $_POST['taxonomy'] = 'category';
+        $_POST['_ajax_nonce'] = wp_create_nonce('gm2_ai_research');
+        $_REQUEST['_ajax_nonce'] = $_POST['_ajax_nonce'];
+        try {
+            $this->_handleAjax('gm2_ai_research');
+        } catch (WPAjaxDieContinueException $e) {
+        }
+        $resp = json_decode($this->_last_response, true);
+        $this->assertFalse($resp['success']);
+    }
 }
 
 class AdminTabsTest extends WP_UnitTestCase {
