@@ -39,12 +39,23 @@ function gm2_activate_plugin() {
     flush_rewrite_rules();
     gm2_generate_sitemap();
 
+    $s = new Gm2_Sitemap();
+    $s->ping_search_engines();
+
+    if (!wp_next_scheduled('gm2_sitemap_ping')) {
+        wp_schedule_event(time(), 'daily', 'gm2_sitemap_ping');
+    }
+
     gm2_initialize_content_rules();
 }
 register_activation_hook(__FILE__, 'gm2_activate_plugin');
 
 function gm2_deactivate_plugin() {
     flush_rewrite_rules();
+    $timestamp = wp_next_scheduled('gm2_sitemap_ping');
+    if ($timestamp) {
+        wp_unschedule_event($timestamp, 'gm2_sitemap_ping');
+    }
 }
 register_deactivation_hook(__FILE__, 'gm2_deactivate_plugin');
 
@@ -97,4 +108,6 @@ function gm2_init_plugin() {
     $plugin->run();
 }
 add_action('plugins_loaded', 'gm2_init_plugin');
+
+add_action('gm2_sitemap_ping', 'gm2_generate_sitemap');
 
