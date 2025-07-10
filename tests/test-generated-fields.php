@@ -54,5 +54,21 @@ class GeneratedFieldsTest extends WP_UnitTestCase {
 
         $this->assertSame('alt text', get_post_meta($attachment_id, '_wp_attachment_image_alt', true));
     }
+
+    public function test_filename_is_cleaned_on_upload() {
+        update_option('gm2_clean_image_filenames', '1');
+        $filename = DIR_TESTDATA . '/images/canola.jpg';
+        $attachment_id = self::factory()->attachment->create_upload_object($filename);
+        wp_update_post([
+            'ID' => $attachment_id,
+            'post_title' => 'My Image Name',
+        ]);
+
+        $admin = new Gm2_SEO_Admin();
+        $admin->auto_fill_alt_on_upload($attachment_id);
+
+        $path = get_attached_file($attachment_id);
+        $this->assertSame('my-image-name.jpg', wp_basename($path));
+    }
 }
 

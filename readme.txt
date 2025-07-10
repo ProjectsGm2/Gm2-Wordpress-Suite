@@ -132,7 +132,9 @@ before clicking **Implement Selected** to populate the fields automatically.
 If the description field in the SEO Settings tab is left empty, the plugin sends
 an excerpt of the post to ChatGPT and uses the response as the meta description.
 Enabling **Auto-fill missing alt text** under **SEO → Performance** also uses
-ChatGPT to generate alt text for new images when none is provided.
+ChatGPT to generate alt text for new images when none is provided. Enable
+**Clean Image Filenames** in the same section to automatically rename uploads
+using a sanitized version of the attachment title.
 
 
 The SEO Settings tab also lets you set `max-snippet`, `max-image-preview`, and
@@ -155,6 +157,7 @@ the last 100 missing URLs to help you create new redirects.
 == Changelog ==
 = 1.6.4 =
 * Optional slug cleaner with customizable stopwords.
+* Option to clean image filenames on upload.
 = 1.6.3 =
 * Expanded documentation for Open Graph images, robots meta settings, sitemap
   pinging, robots.txt editing, AI-generated descriptions and alt text, and

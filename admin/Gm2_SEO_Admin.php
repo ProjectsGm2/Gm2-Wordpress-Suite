@@ -438,6 +438,7 @@ class Gm2_SEO_Admin {
             }
         } elseif ($active === 'performance') {
             $auto_fill = get_option('gm2_auto_fill_alt', '0');
+            $clean_files = get_option('gm2_clean_image_filenames', '0');
             $enable_comp = get_option('gm2_enable_compression', '0');
             $api_key    = get_option('gm2_compression_api_key', '');
             $api_url   = get_option('gm2_compression_api_url', 'https://api.example.com/compress');
@@ -454,6 +455,7 @@ class Gm2_SEO_Admin {
             echo '<input type="hidden" name="action" value="gm2_performance_settings" />';
             echo '<table class="form-table"><tbody>';
             echo '<tr><th scope="row">Auto-fill missing alt text</th><td><label><input type="checkbox" name="gm2_auto_fill_alt" value="1" ' . checked($auto_fill, '1', false) . '> Use product title</label></td></tr>';
+            echo '<tr><th scope="row">Clean Image Filenames</th><td><label><input type="checkbox" name="gm2_clean_image_filenames" value="1" ' . checked($clean_files, '1', false) . '> Sanitize on upload</label></td></tr>';
             echo '<tr><th scope="row">Enable Image Compression</th><td><input type="checkbox" name="gm2_enable_compression" value="1" ' . checked($enable_comp, '1', false) . '></td></tr>';
             echo '<tr><th scope="row">Compression API Key</th><td><input type="text" name="gm2_compression_api_key" value="' . esc_attr($api_key) . '" class="regular-text" /></td></tr>';
             echo '<tr><th scope="row">Compression API URL</th><td><input type="text" name="gm2_compression_api_url" value="' . esc_attr($api_url) . '" class="regular-text" /></td></tr>';
@@ -1071,6 +1073,9 @@ class Gm2_SEO_Admin {
         $auto_fill = isset($_POST['gm2_auto_fill_alt']) ? '1' : '0';
         update_option('gm2_auto_fill_alt', $auto_fill);
 
+        $clean_files = isset($_POST['gm2_clean_image_filenames']) ? '1' : '0';
+        update_option('gm2_clean_image_filenames', $clean_files);
+
         $enable_comp = isset($_POST['gm2_enable_compression']) ? '1' : '0';
         update_option('gm2_enable_compression', $enable_comp);
 
@@ -1218,7 +1223,25 @@ class Gm2_SEO_Admin {
         wp_redirect(admin_url('admin.php?page=gm2-seo&tab=keywords&updated=1'));
         exit;
     }
-    public function auto_fill_alt_on_upload($attachment_id) {
+    public function auto_fill_alt_on_upload($attachment_id, $keyword = '') {
+        if (get_option('gm2_clean_image_filenames', '0') === '1') {
+            $file = get_attached_file($attachment_id);
+            if ($file && file_exists($file)) {
+                $info = pathinfo($file);
+                $dir  = $info['dirname'];
+                $ext  = isset($info['extension']) && $info['extension'] !== '' ? '.' . $info['extension'] : '';
+                $source = $keyword !== '' ? $keyword : get_post($attachment_id)->post_title;
+                $name   = sanitize_file_name(sanitize_title($source)) . $ext;
+                $name   = wp_unique_filename($dir, $name);
+                $new    = $dir . '/' . $name;
+                if ($new !== $file && @rename($file, $new)) {
+                    update_attached_file($attachment_id, $new);
+                    $meta = wp_generate_attachment_metadata($attachment_id, $new);
+                    wp_update_attachment_metadata($attachment_id, $meta);
+                }
+            }
+        }
+
         if (get_option('gm2_auto_fill_alt', '0') !== '1') {
             return;
         }
