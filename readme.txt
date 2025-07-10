@@ -115,6 +115,9 @@ The **Sitemap** tab lets you regenerate your XML sitemap. Each time a sitemap is
 created, the plugin pings Google and Bing so they can re-crawl it. You can also
 edit your robots file from **SEO → Robots.txt**.
 
+Enable **Clean Slugs** from **SEO → General** to strip stopwords from new
+permalinks. Enter the words to remove in the accompanying field.
+
 == AI SEO ==
 While editing a post or taxonomy term, open the **AI SEO** tab in the SEO meta
 box. Click **AI Research** and you'll first be asked whether to use any existing
@@ -150,6 +153,8 @@ Create 301 or 302 redirects from the **SEO → Redirects** tab. The plugin logs
 the last 100 missing URLs to help you create new redirects.
 
 == Changelog ==
+= 1.6.4 =
+* Optional slug cleaner with customizable stopwords.
 = 1.6.3 =
 * Expanded documentation for Open Graph images, robots meta settings, sitemap
   pinging, robots.txt editing, AI-generated descriptions and alt text, and

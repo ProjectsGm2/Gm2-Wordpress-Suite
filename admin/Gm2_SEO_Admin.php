@@ -54,6 +54,10 @@ class Gm2_SEO_Admin {
         } else {
             add_action('elementor/loaded', [$this, 'setup_elementor_integration']);
         }
+
+        if (get_option('gm2_clean_slugs', '0') === '1') {
+            add_filter('sanitize_title', [$this, 'clean_slug'], 20, 3);
+        }
     }
 
     public function maybe_generate_sitemap($new_status = null, $old_status = null, $post = null) {
@@ -108,6 +112,17 @@ class Gm2_SEO_Admin {
 
     public function sanitize_customer_id($value) {
         return preg_replace('/\D/', '', $value);
+    }
+
+    public function clean_slug($slug, $raw_title = '', $context = '') {
+        $stop = get_option('gm2_slug_stopwords', '');
+        $words = array_filter(array_map('trim', preg_split('/[\s,]+/', strtolower($stop))));
+        if ($words) {
+            $pattern = '/(?:^|-)(?:' . implode('|', array_map('preg_quote', $words)) . ')(?:-|$)/i';
+            $slug = preg_replace($pattern, '-', $slug);
+        }
+        $slug = trim(preg_replace('/-+/', '-', $slug), '-');
+        return $slug;
     }
 
     public function add_settings_pages() {
@@ -176,6 +191,12 @@ class Gm2_SEO_Admin {
         register_setting('gm2_seo_options', 'gm2_analytics_days', [
             'sanitize_callback' => 'absint',
         ]);
+        register_setting('gm2_seo_options', 'gm2_clean_slugs', [
+            'sanitize_callback' => 'sanitize_text_field',
+        ]);
+        register_setting('gm2_seo_options', 'gm2_slug_stopwords', [
+            'sanitize_callback' => 'sanitize_textarea_field',
+        ]);
         foreach ($this->get_supported_post_types() as $pt) {
             register_setting('gm2_seo_options', 'gm2_seo_guidelines_post_' . $pt, [
                 'sanitize_callback' => 'sanitize_textarea_field',
@@ -242,6 +263,29 @@ class Gm2_SEO_Admin {
                 $value = get_option('gm2_gads_customer_id', '');
                 echo '<input type="text" name="gm2_gads_customer_id" value="' . esc_attr($value) . '" class="regular-text" />';
                 echo '<p class="description">Use <strong>SEO → Connect Google Account</strong> to fetch available IDs.</p>';
+            },
+            'gm2_seo',
+            'gm2_seo_main'
+        );
+
+        add_settings_field(
+            'gm2_clean_slugs',
+            'Clean Slugs',
+            function () {
+                $value = get_option('gm2_clean_slugs', '0');
+                echo '<label><input type="checkbox" name="gm2_clean_slugs" value="1" ' . checked($value, '1', false) . '> Remove stopwords</label>';
+            },
+            'gm2_seo',
+            'gm2_seo_main'
+        );
+
+        add_settings_field(
+            'gm2_slug_stopwords',
+            'Slug Stopwords',
+            function () {
+                $value = get_option('gm2_slug_stopwords', '');
+                echo '<textarea name="gm2_slug_stopwords" rows="3" class="large-text">' . esc_textarea($value) . '</textarea>';
+                echo '<p class="description">Space or comma separated list.</p>';
             },
             'gm2_seo',
             'gm2_seo_main'
@@ -1028,11 +1072,15 @@ class Gm2_SEO_Admin {
         $sc_ver = isset($_POST['gm2_search_console_verification']) ? sanitize_text_field($_POST['gm2_search_console_verification']) : '';
         $token  = isset($_POST['gm2_gads_developer_token']) ? sanitize_text_field($_POST['gm2_gads_developer_token']) : '';
         $cust   = isset($_POST['gm2_gads_customer_id']) ? $this->sanitize_customer_id($_POST['gm2_gads_customer_id']) : '';
+        $clean  = isset($_POST['gm2_clean_slugs']) ? '1' : '0';
+        $words  = isset($_POST['gm2_slug_stopwords']) ? sanitize_textarea_field($_POST['gm2_slug_stopwords']) : '';
 
         update_option('gm2_ga_measurement_id', $ga_id);
         update_option('gm2_search_console_verification', $sc_ver);
         update_option('gm2_gads_developer_token', $token);
         update_option('gm2_gads_customer_id', $cust);
+        update_option('gm2_clean_slugs', $clean);
+        update_option('gm2_slug_stopwords', $words);
 
         wp_redirect(admin_url('admin.php?page=gm2-seo&tab=general&updated=1'));
         exit;
