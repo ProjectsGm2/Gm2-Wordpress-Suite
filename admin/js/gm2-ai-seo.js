@@ -57,11 +57,13 @@ jQuery(function($){
                     $out.text(typeof resp.data === 'string' ? resp.data : 'Error');
                 }
             } else {
-                $out.text('Error');
+                var msg = resp && resp.data ? resp.data : 'Error';
+                $('<div>', {'class':'notice notice-error gm2-ai-error'}).text(msg).appendTo($out);
             }
         })
         .fail(function(){
-            $out.text('Request failed');
+            $('<div>', {'class':'notice notice-error gm2-ai-error'})
+                .text('Request failed').appendTo($out.empty());
         });
     });
     $('#gm2-ai-seo').on('click', '.gm2-ai-implement', function(e){
