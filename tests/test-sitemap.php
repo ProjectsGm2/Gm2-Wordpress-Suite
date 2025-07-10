@@ -36,5 +36,26 @@ class SitemapTest extends WP_UnitTestCase {
         $this->assertStringContainsString(get_permalink($post_id), $content);
         $this->assertStringContainsString(get_term_link($term_id, 'product_cat'), $content);
     }
+
+    public function test_generate_sitemap_pings_search_engines() {
+        $urls = [];
+        $filter = function($pre, $args, $url) use (&$urls) {
+            $urls[] = $url;
+            return [ 'response' => ['code' => 200], 'body' => 'ok' ];
+        };
+        add_filter('pre_http_request', $filter, 10, 3);
+
+        $sitemap = new Gm2_Sitemap();
+        $sitemap->generate();
+
+        remove_filter('pre_http_request', $filter, 10);
+
+        $sitemap_url = home_url('/sitemap.xml');
+        $google = 'https://www.google.com/ping?sitemap=' . rawurlencode($sitemap_url);
+        $bing   = 'https://www.bing.com/ping?sitemap=' . rawurlencode($sitemap_url);
+
+        $this->assertContains($google, $urls);
+        $this->assertContains($bing, $urls);
+    }
 }
 

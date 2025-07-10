@@ -86,6 +86,19 @@ class Gm2_Sitemap {
         $xml .= "</urlset>\n";
 
         file_put_contents($this->file_path, $xml);
+
+        $this->ping_search_engines();
+    }
+
+    public function ping_search_engines() {
+        $sitemap_url = home_url('/sitemap.xml');
+        $endpoints    = [
+            'https://www.google.com/ping?sitemap=' . rawurlencode($sitemap_url),
+            'https://www.bing.com/ping?sitemap=' . rawurlencode($sitemap_url),
+        ];
+        foreach ($endpoints as $endpoint) {
+            wp_remote_get($endpoint);
+        }
     }
 
     public function output() {
