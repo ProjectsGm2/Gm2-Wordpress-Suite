@@ -1288,7 +1288,7 @@ class Gm2_SEO_Admin {
         return '';
     }
 
-    private function detect_html_issues($html, $canonical) {
+    private function detect_html_issues($html, $canonical, $focus_main = '') {
         $issues = [];
         if ($canonical === '') {
             $issues[] = 'Missing canonical link tag';
@@ -1310,6 +1310,10 @@ class Gm2_SEO_Admin {
         foreach ($doc->getElementsByTagName('img') as $img) {
             if (!$img->hasAttribute('alt') || trim($img->getAttribute('alt')) === '') {
                 $issues[] = 'Image missing alt attribute';
+                break;
+            }
+            if ($focus_main !== '' && stripos($img->getAttribute('alt'), $focus_main) === false) {
+                $issues[] = 'Image alt text missing focus keyword';
                 break;
             }
         }
@@ -1350,6 +1354,7 @@ class Gm2_SEO_Admin {
                 'Content has at least 300 words',
                 'Focus keyword appears in first paragraph',
                 'Only one H1 tag present',
+                'Image alt text contains focus keyword',
                 'At least one internal link',
                 'At least one external link',
                 'Focus keyword included in meta description',
@@ -1374,6 +1379,18 @@ class Gm2_SEO_Admin {
                     $internal = true;
                 } else {
                     $external = true;
+                }
+            }
+        }
+
+        $img_focus = false;
+        if ($focus_main !== '') {
+            if (preg_match_all('/<img[^>]+alt=["\']([^"\']*)["\']/i', $content, $im)) {
+                foreach ($im[1] as $alt) {
+                    if (stripos($alt, $focus_main) !== false) {
+                        $img_focus = true;
+                        break;
+                    }
                 }
             }
         }
@@ -1441,6 +1458,8 @@ class Gm2_SEO_Admin {
                 $pass = $internal;
             } elseif (stripos($line, 'external link') !== false) {
                 $pass = $external;
+            } elseif (stripos($line, 'alt text') !== false) {
+                $pass = $img_focus;
             } elseif (stripos($line, 'meta description') !== false && stripos($line, 'focus keyword') !== false) {
                 $pass = $focus_main !== '' && stripos($description, $focus_main) !== false;
             } elseif (stripos($line, 'title') !== false && stripos($line, 'unique') !== false) {
@@ -1588,7 +1607,8 @@ class Gm2_SEO_Admin {
         }
 
         $html        = $this->get_rendered_html($post_id, $term_id, $taxonomy);
-        $html_issues = $this->detect_html_issues($html, $canonical);
+        $focus_main  = trim(explode(',', $focus)[0]);
+        $html_issues = $this->detect_html_issues($html, $canonical, $focus_main);
         $snippet     = substr(wp_strip_all_tags($html), 0, 400);
 
         $guidelines = '';
@@ -1851,6 +1871,7 @@ class Gm2_SEO_Admin {
                 'Description length between 50 and 160 characters',
                 'At least one focus keyword',
                 'Content has at least 300 words',
+                'Image alt text contains focus keyword',
             ];
         }
         foreach ($rule_lines as $idx => $text) {
