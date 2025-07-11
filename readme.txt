@@ -220,4 +220,18 @@ the last 100 missing URLs to help you create new redirects.
 * Initial release.
 
 == Testing ==
-The automated tests rely on the WordPress test suite, fetched from GitHub by `bin/install-wp-tests.sh`. PHPUnit must be installed globally. The tests cover the AJAX endpoints used for content analysis and AI research (`gm2_check_rules`, `gm2_keyword_ideas`, `gm2_research_guidelines` and `gm2_ai_research`). See `CONTRIBUTING.md` for setup details.
+The PHPUnit tests rely on the WordPress test suite and the `phpunit` executable.
+
+1. **Install PHP and PHPUnit.** Install via your package manager or with Composer:
+   ```bash
+   composer global require phpunit/phpunit
+   ```
+   Ensure `phpunit` is on your `PATH`.
+2. **Install the WordPress test suite.** Run the helper script once using your database credentials:
+   ```bash
+   bash bin/install-wp-tests.sh <db-name> <db-user> <db-pass> [db-host] [wp-version]
+   ```
+   This downloads WordPress and sets up the test database.
+3. **Run the tests.** Execute `phpunit` (or `make test` with the provided Makefile) from the project root. Set `WP_TESTS_DIR` if you installed the suite elsewhere.
+
+The tests cover the AJAX endpoints used for content analysis and AI research (`gm2_check_rules`, `gm2_keyword_ideas`, `gm2_research_guidelines` and `gm2_ai_research`).
