@@ -300,6 +300,45 @@ class AiResearchAjaxTest extends WP_Ajax_UnitTestCase {
         $resp = json_decode($this->_last_response, true);
         $this->assertFalse($resp['success']);
     }
+
+    public function test_ai_research_handles_invalid_term_link() {
+        update_option('gm2_chatgpt_api_key', 'key');
+
+        $term_link_filter = function() {
+            return new WP_Error('no_link', 'invalid');
+        };
+        add_filter('term_link', $term_link_filter, 10, 3);
+
+        $captured = null;
+        $http_filter = function($pre, $args, $url) use (&$captured) {
+            if ($url === 'https://api.openai.com/v1/chat/completions') {
+                $body = json_decode($args['body'], true);
+                $captured = $body['messages'][0]['content'];
+                return [
+                    'response' => ['code' => 200],
+                    'body' => json_encode([ 'choices' => [ ['message' => ['content' => '{}']] ] ])
+                ];
+            }
+            return false;
+        };
+        add_filter('pre_http_request', $http_filter, 10, 3);
+
+        $term_id = self::factory()->term->create(['taxonomy' => 'category']);
+
+        $this->_setRole('administrator');
+        $_POST['term_id']  = $term_id;
+        $_POST['taxonomy'] = 'category';
+        $_POST['_ajax_nonce'] = wp_create_nonce('gm2_ai_research');
+        $_REQUEST['_ajax_nonce'] = $_POST['_ajax_nonce'];
+        try { $this->_handleAjax('gm2_ai_research'); } catch (WPAjaxDieContinueException $e) {}
+
+        remove_filter('term_link', $term_link_filter, 10);
+        remove_filter('pre_http_request', $http_filter, 10);
+
+        $resp = json_decode($this->_last_response, true);
+        $this->assertTrue($resp['success']);
+        $this->assertStringContainsString('URL: \n', $captured);
+    }
 }
 
 class AdminTabsTest extends WP_UnitTestCase {

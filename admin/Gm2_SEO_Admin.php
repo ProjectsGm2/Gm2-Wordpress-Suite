@@ -1814,6 +1814,9 @@ class Gm2_SEO_Admin {
             }
             $title = $term->name;
             $url   = get_term_link($term, $taxonomy);
+            if (is_wp_error($url)) {
+                $url = '';
+            }
             $seo_title       = get_term_meta($term_id, '_gm2_title', true);
             $seo_description = get_term_meta($term_id, '_gm2_description', true);
             $focus           = get_term_meta($term_id, '_gm2_focus_keywords', true);
