@@ -74,10 +74,19 @@ class Gm2_SEO_Admin {
     }
 
     private function get_supported_post_types() {
-        $types = ['post', 'page'];
-        if (post_type_exists('product')) {
-            $types[] = 'product';
-        }
+        $args  = [
+            'public'             => true,
+            'show_ui'            => true,
+            'exclude_from_search' => false,
+        ];
+        $types = get_post_types($args, 'names');
+        unset($types['attachment']);
+        /**
+         * Filter the list of post types that should receive GM2 SEO features.
+         *
+         * @param string[] $types Array of post type slugs.
+         */
+        $types = apply_filters('gm2_supported_post_types', array_values($types));
         return $types;
     }
 
@@ -661,7 +670,7 @@ class Gm2_SEO_Admin {
         }
 
         $query = new \WP_Query([
-            'post_type'      => ['post', 'page'],
+            'post_type'      => $this->get_supported_post_types(),
             'post_status'    => $status,
             'posts_per_page' => $page_size,
         ]);

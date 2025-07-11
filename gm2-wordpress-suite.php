@@ -86,10 +86,14 @@ function gm2_initialize_content_rules() {
 
     $rules = [];
 
-    $posts = ['post', 'page'];
-    if (post_type_exists('product')) {
-        $posts[] = 'product';
-    }
+    $args  = [
+        'public'             => true,
+        'show_ui'            => true,
+        'exclude_from_search' => false,
+    ];
+    $posts = get_post_types($args, 'names');
+    unset($posts['attachment']);
+    $posts = apply_filters('gm2_supported_post_types', array_values($posts));
     $post_defaults = [
         'Title length between 30 and 60 characters',
         'Description length between 50 and 160 characters',

@@ -179,6 +179,24 @@ class MetaTagsTest extends WP_UnitTestCase {
         $this->assertStringContainsString('name="twitter:image" content="' . esc_url($url) . '"', $output);
     }
 
+    public function test_meta_tags_for_custom_post_type() {
+        register_post_type('book');
+        $post_id = self::factory()->post->create([
+            'post_type'    => 'book',
+            'post_title'   => 'Book',
+            'post_content' => 'Content',
+        ]);
+        update_post_meta($post_id, '_gm2_title', 'Book Title');
+        $seo = new Gm2_SEO_Public();
+        $this->go_to(get_permalink($post_id));
+        setup_postdata(get_post($post_id));
+        ob_start();
+        $seo->output_meta_tags();
+        $output = ob_get_clean();
+
+        $this->assertStringContainsString('content="Book Title"', $output);
+    }
+
     public function test_variation_canonical_points_to_parent() {
         register_post_type('product');
 
