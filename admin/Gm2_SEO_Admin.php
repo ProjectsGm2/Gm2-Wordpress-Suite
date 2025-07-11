@@ -35,6 +35,7 @@ class Gm2_SEO_Admin {
 
         add_action('add_attachment', [$this, 'auto_fill_alt_on_upload']);
         add_action('admin_notices', [$this, 'admin_notices']);
+        add_action('admin_notices', [$this, 'dom_extension_warning']);
         add_action('add_attachment', [$this, 'compress_image_on_upload'], 20);
         add_action('save_post', [$this, 'auto_fill_product_alt'], 20, 3);
 
@@ -2218,6 +2219,12 @@ class Gm2_SEO_Admin {
             echo '<div class="notice notice-' . esc_attr($n['type']) . '"><p>' . esc_html($n['message']) . '</p></div>';
         }
         self::$notices = [];
+    }
+
+    public function dom_extension_warning() {
+        if (!class_exists('\\DOMDocument')) {
+            echo '<div class="notice notice-warning"><p>' . esc_html__( 'PHP DOM extension not installed—HTML analysis and AI features are unavailable.', 'gm2-wordpress-suite' ) . '</p></div>';
+        }
     }
     public function enqueue_elementor_scripts() {
         $this->enqueue_editor_scripts();
