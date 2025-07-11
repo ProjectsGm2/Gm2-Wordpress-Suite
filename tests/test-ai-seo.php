@@ -190,6 +190,47 @@ class AiResearchAjaxTest extends WP_Ajax_UnitTestCase {
         $this->assertContains('Image missing alt attribute', $resp['data']['html_issues']);
     }
 
+    public function test_ai_research_handles_taxonomy_term() {
+        update_option('gm2_chatgpt_api_key', 'key');
+        $data = [ 'seo_title' => 'Term Title' ];
+        $filter = function($pre, $args, $url) use ($data) {
+            if ($url === 'https://api.openai.com/v1/chat/completions') {
+                return [
+                    'response' => ['code' => 200],
+                    'body' => json_encode(['choices' => [ ['message' => ['content' => json_encode($data)]] ]])
+                ];
+            }
+            return false;
+        };
+        add_filter('pre_http_request', $filter, 10, 3);
+
+        $captured = null;
+        $capture_filter = function($content) use (&$captured) {
+            global $post;
+            $captured = $post instanceof WP_Post ? $post->ID : null;
+            return $content;
+        };
+        add_filter('the_content', $capture_filter);
+
+        $term_id = self::factory()->term->create(['taxonomy' => 'category', 'description' => 'Desc']);
+        update_term_meta($term_id, '_gm2_canonical', 'https://example.com');
+
+        $this->_setRole('administrator');
+        $_POST['term_id'] = $term_id;
+        $_POST['taxonomy'] = 'category';
+        $_POST['_ajax_nonce'] = wp_create_nonce('gm2_ai_research');
+        $_REQUEST['_ajax_nonce'] = $_POST['_ajax_nonce'];
+        try { $this->_handleAjax('gm2_ai_research'); } catch (WPAjaxDieContinueException $e) {}
+
+        remove_filter('pre_http_request', $filter, 10);
+        remove_filter('the_content', $capture_filter);
+
+        $resp = json_decode($this->_last_response, true);
+        $this->assertTrue($resp['success']);
+        $this->assertSame('Term Title', $resp['data']['seo_title']);
+        $this->assertSame(0, $captured);
+    }
+
     public function test_ai_research_requires_edit_posts_cap() {
         $post_id = self::factory()->post->create();
 

@@ -1473,7 +1473,17 @@ class Gm2_SEO_Admin {
             }
         } elseif ($term_id && $taxonomy) {
             $desc = term_description($term_id, $taxonomy);
-            return apply_filters('the_content', $desc);
+            $stub = new \stdClass();
+            $stub->ID = 0;
+            $post_obj = new \WP_Post($stub);
+            global $post;
+            $prev_post = $post;
+            $post      = $post_obj;
+            setup_postdata($post);
+            $html = apply_filters('the_content', $desc);
+            $post = $prev_post;
+            wp_reset_postdata();
+            return $html;
         }
         return '';
     }
