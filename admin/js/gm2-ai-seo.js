@@ -61,9 +61,12 @@ jQuery(function($){
                 $('<div>', {'class':'notice notice-error gm2-ai-error'}).text(msg).appendTo($out);
             }
         })
-        .fail(function(){
+        .fail(function(jqXHR, textStatus){
+            var msg = (jqXHR && jqXHR.responseJSON && jqXHR.responseJSON.data)
+                ? jqXHR.responseJSON.data
+                : (jqXHR && jqXHR.responseText ? jqXHR.responseText : textStatus);
             $('<div>', {'class':'notice notice-error gm2-ai-error'})
-                .text('Request failed').appendTo($out.empty());
+                .text(msg || 'Request failed').appendTo($out.empty());
         });
     });
     $('#gm2-ai-seo').on('click', '.gm2-ai-implement', function(e){

@@ -22,7 +22,12 @@ jQuery(function($){
                     row.find('.gm2-result').html(html);
                 }else{row.find('.gm2-result').text('Error');}
             })
-            .fail(function(){row.find('.gm2-result').text('Error');});
+            .fail(function(jqXHR, textStatus){
+                var msg = (jqXHR && jqXHR.responseJSON && jqXHR.responseJSON.data)
+                    ? jqXHR.responseJSON.data
+                    : (jqXHR && jqXHR.responseText ? jqXHR.responseText : textStatus);
+                row.find('.gm2-result').text(msg || 'Error');
+            });
         });
     });
     $('#gm2-bulk-list').on('click','.gm2-apply-btn',function(e){
