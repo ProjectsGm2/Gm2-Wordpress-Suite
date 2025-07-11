@@ -17,8 +17,8 @@ jQuery(function($){
         var button = $(this);
         var field  = $('#' + button.data('target'));
         var frame = wp.media({
-            title: 'Select Image',
-            button: { text: 'Use image' },
+            title: gm2Seo.i18n.selectImage,
+            button: { text: gm2Seo.i18n.useImage },
             multiple: false
         });
         frame.on('select', function(){

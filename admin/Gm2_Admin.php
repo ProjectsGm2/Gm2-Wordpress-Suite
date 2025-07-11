@@ -76,6 +76,16 @@ class Gm2_Admin {
                 GM2_VERSION,
                 true
             );
+            wp_localize_script(
+                'gm2-seo',
+                'gm2Seo',
+                [
+                    'i18n' => [
+                        'selectImage' => __( 'Select Image', 'gm2-wordpress-suite' ),
+                        'useImage'    => __( 'Use image', 'gm2-wordpress-suite' ),
+                    ],
+                ]
+            );
             wp_enqueue_script(
                 'gm2-keyword-research',
                 GM2_PLUGIN_URL . 'admin/js/gm2-keyword-research.js',
