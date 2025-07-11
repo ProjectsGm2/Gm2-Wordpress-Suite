@@ -20,7 +20,8 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 // gm2_schema_review, gm2_show_footer_breadcrumbs, gm2_auto_fill_alt, gm2_enable_compression,
 // gm2_compression_api_key, gm2_compression_api_url, gm2_minify_html, gm2_minify_css,
 // gm2_minify_js, gm2_chatgpt_api_key, gm2_chatgpt_model, gm2_chatgpt_temperature,
-// gm2_chatgpt_max_tokens, gm2_chatgpt_endpoint, gm2_seo_guidelines_post_*, gm2_seo_guidelines_tax_*.
+// gm2_chatgpt_max_tokens, gm2_chatgpt_endpoint, gm2_pagespeed_api_key, gm2_pagespeed_scores,
+// gm2_bulk_ai_page_size, gm2_bulk_ai_status, gm2_seo_guidelines_post_*, gm2_seo_guidelines_tax_*.
 $option_names = array(
     'gm2_suite_settings',
     'gm2_suite_version',
@@ -67,6 +68,10 @@ $option_names = array(
     'gm2_chatgpt_endpoint',
     'gm2_min_internal_links',
     'gm2_min_external_links',
+    'gm2_pagespeed_api_key',
+    'gm2_pagespeed_scores',
+    'gm2_bulk_ai_page_size',
+    'gm2_bulk_ai_status',
 );
 
 foreach ( $option_names as $option ) {
