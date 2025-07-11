@@ -72,6 +72,11 @@ $option_names = array(
     'gm2_pagespeed_scores',
     'gm2_bulk_ai_page_size',
     'gm2_bulk_ai_status',
+    'gm2_clean_slugs',
+    'gm2_slug_stopwords',
+    'gm2_tax_desc_prompt',
+    'gm2_sc_query_limit',
+    'gm2_analytics_days',
 );
 
 foreach ( $option_names as $option ) {
