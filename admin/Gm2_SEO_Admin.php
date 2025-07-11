@@ -592,7 +592,13 @@ class Gm2_SEO_Admin {
             }
             foreach ($this->get_supported_taxonomies() as $tax) {
                 $tax_obj = get_taxonomy($tax);
-                $label   = $tax_obj ? $tax_obj->labels->singular_name : $tax;
+                if ($tax === 'category') {
+                    $label = __('Post Category', 'gm2-wordpress-suite');
+                } elseif ($tax === 'product_cat') {
+                    $label = __('Product Category', 'gm2-wordpress-suite');
+                } else {
+                    $label = $tax_obj ? $tax_obj->labels->singular_name : $tax;
+                }
                 $val     = $all_rules['tax_' . $tax] ?? '';
                 echo '<tr><th scope="row"><label for="gm2_rule_tax_' . esc_attr($tax) . '">' . esc_html($label) . '</label></th>';
                 echo '<td><textarea id="gm2_rule_tax_' . esc_attr($tax) . '" name="gm2_content_rules[tax_' . esc_attr($tax) . ']" rows="3" class="large-text">' . esc_textarea($val) . '</textarea></td></tr>';
@@ -620,7 +626,13 @@ class Gm2_SEO_Admin {
             foreach ($this->get_supported_taxonomies() as $tax) {
                 $opt   = 'gm2_seo_guidelines_tax_' . $tax;
                 $tax_obj = get_taxonomy($tax);
-                $label = $tax_obj ? $tax_obj->labels->singular_name : ucfirst($tax);
+                if ($tax === 'category') {
+                    $label = __('Post Category', 'gm2-wordpress-suite');
+                } elseif ($tax === 'product_cat') {
+                    $label = __('Product Category', 'gm2-wordpress-suite');
+                } else {
+                    $label = $tax_obj ? $tax_obj->labels->singular_name : ucfirst($tax);
+                }
                 $val   = get_option($opt, '');
                 echo '<h3>' . esc_html($label) . '</h3>';
                 echo '<textarea name="' . esc_attr($opt) . '" rows="6" class="large-text">' . esc_textarea($val) . '</textarea>';
