@@ -1,7 +1,8 @@
 jQuery(function($){
     $('#gm2-ai-seo').on('click', '.gm2-ai-research', function(e){
         e.preventDefault();
-        var $out = $('#gm2-ai-results').text('Researching...');
+        var researchingText = window.gm2AiSeo && gm2AiSeo.i18n ? gm2AiSeo.i18n.researching : 'Researching...';
+        var $out = $('#gm2-ai-results').text(researchingText);
         var data = {
             action: 'gm2_ai_research',
             _ajax_nonce: (window.gm2AiSeo && gm2AiSeo.nonce) ? gm2AiSeo.nonce : ''
@@ -12,7 +13,8 @@ jQuery(function($){
         data.focus_keywords  = $('#gm2_focus_keywords').val() || '';
         data.canonical       = $('#gm2_canonical_url').val() || '';
         if (data.seo_title || data.seo_description || data.focus_keywords || data.canonical) {
-            if (!confirm('Use existing SEO values for AI research?')) {
+            var confirmText = window.gm2AiSeo && gm2AiSeo.i18n ? gm2AiSeo.i18n.useExisting : 'Use existing SEO values for AI research?';
+            if (!confirm(confirmText)) {
                 data.seo_title = '';
                 data.seo_description = '';
                 data.focus_keywords = '';
@@ -30,7 +32,8 @@ jQuery(function($){
         }
 
         if(!data.seo_title && !data.seo_description && !data.focus_keywords && !data.canonical){
-            var extra = prompt('Describe the page or its target audience:');
+            var promptText = window.gm2AiSeo && gm2AiSeo.i18n ? gm2AiSeo.i18n.promptExtra : 'Describe the page or its target audience:';
+            var extra = prompt(promptText);
             if(extra){
                 data.extra_context = extra;
             }
@@ -115,15 +118,17 @@ jQuery(function($){
             $list.append($('<p>').append($lbl));
         });
         if(added){
+            var selectAllText = window.gm2AiSeo && gm2AiSeo.i18n ? gm2AiSeo.i18n.selectAll : 'Select all';
             var $selectAll = $('<p>').append(
                 $('<label>').append(
                     $('<input>', {type:'checkbox', id:'gm2-ai-select-all'})
-                ).append(' Select all')
+                ).append(' ' + selectAllText)
             );
             $wrap.append($selectAll).append($list);
         } else {
+            var parseErrorText = window.gm2AiSeo && gm2AiSeo.i18n ? gm2AiSeo.i18n.parseError : 'Unable to parse AI response—please try again';
             $('<div>', {'class':'notice notice-warning gm2-ai-warning'})
-                .text('Unable to parse AI response—please try again').appendTo($wrap);
+                .text(parseErrorText).appendTo($wrap);
         }
 
         if(data.long_tail_keywords){
