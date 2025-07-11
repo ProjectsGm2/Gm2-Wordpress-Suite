@@ -593,6 +593,10 @@ class Gm2_SEO_Public {
         if (!is_array($map) || empty($map)) {
             return $content;
         }
+        if (!class_exists('\\DOMDocument')) {
+            return $content;
+        }
+
         $doc = new \DOMDocument();
         libxml_use_internal_errors(true);
         $doc->loadHTML('<?xml encoding="utf-8" ?>' . $content, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
