@@ -1479,6 +1479,10 @@ class Gm2_SEO_Admin {
             return $issues;
         }
 
+        if (!class_exists('\\DOMDocument')) {
+            return $issues;
+        }
+
         $doc = new \DOMDocument();
         libxml_use_internal_errors(true);
         $doc->loadHTML('<?xml encoding="utf-8" ?>' . $html);
