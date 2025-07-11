@@ -136,14 +136,16 @@ jQuery(function($){
             [].concat(data.long_tail_keywords).forEach(function(k){
                 $('<li>').text(k).appendTo($kw);
             });
-            $wrap.append('<h4>Long Tail Keywords</h4>').append($kw);
+            var ltText = window.gm2AiSeo && gm2AiSeo.i18n ? gm2AiSeo.i18n.longTailKeywords : 'Long Tail Keywords';
+            $wrap.append('<h4>' + ltText + '</h4>').append($kw);
         }
         if(data.content_suggestions){
             var $cs = $('<ul>');
             [].concat(data.content_suggestions).forEach(function(c){
                 $('<li>').text(c).appendTo($cs);
             });
-            $wrap.append('<h4>Content Suggestions</h4>').append($cs);
+            var csText = window.gm2AiSeo && gm2AiSeo.i18n ? gm2AiSeo.i18n.contentSuggestions : 'Content Suggestions';
+            $wrap.append('<h4>' + csText + '</h4>').append($cs);
         }
         if(data.html_issues){
             var $issues = $('<ul>', {id:'gm2-html-issues'});
@@ -152,11 +154,13 @@ jQuery(function($){
                 var fix = issue.fix || '';
                 var $li = $('<li>').addClass('gm2-html-issue').text(text);
                 if(fix){
-                    $('<button>', {text:'Apply fix', 'class':'button gm2-html-fix', 'data-fix':fix}).appendTo($li);
+                    var applyFixText = window.gm2AiSeo && gm2AiSeo.i18n ? gm2AiSeo.i18n.applyFix : 'Apply fix';
+                    $('<button>', {text:applyFixText, 'class':'button gm2-html-fix', 'data-fix':fix}).appendTo($li);
                 }
                 $issues.append($li);
             });
-            $wrap.append('<h4>HTML Issues</h4>').append($issues);
+            var htmlIssuesText = window.gm2AiSeo && gm2AiSeo.i18n ? gm2AiSeo.i18n.htmlIssues : 'HTML Issues';
+            $wrap.append('<h4>' + htmlIssuesText + '</h4>').append($issues);
         }
         $out.append($wrap);
     }

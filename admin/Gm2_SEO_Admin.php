@@ -2035,6 +2035,10 @@ class Gm2_SEO_Admin {
                     'promptExtra' => __( 'Describe the page or its target audience:', 'gm2-wordpress-suite' ),
                     'selectAll'   => __( 'Select all', 'gm2-wordpress-suite' ),
                     'parseError'  => __( 'Unable to parse AI response—please try again', 'gm2-wordpress-suite' ),
+                    'longTailKeywords'  => __( 'Long Tail Keywords', 'gm2-wordpress-suite' ),
+                    'contentSuggestions' => __( 'Content Suggestions', 'gm2-wordpress-suite' ),
+                    'htmlIssues'  => __( 'HTML Issues', 'gm2-wordpress-suite' ),
+                    'applyFix'    => __( 'Apply fix', 'gm2-wordpress-suite' ),
                 ],
             ]
         );
@@ -2124,6 +2128,10 @@ class Gm2_SEO_Admin {
                     'promptExtra' => __( 'Describe the page or its target audience:', 'gm2-wordpress-suite' ),
                     'selectAll'   => __( 'Select all', 'gm2-wordpress-suite' ),
                     'parseError'  => __( 'Unable to parse AI response—please try again', 'gm2-wordpress-suite' ),
+                    'longTailKeywords'  => __( 'Long Tail Keywords', 'gm2-wordpress-suite' ),
+                    'contentSuggestions' => __( 'Content Suggestions', 'gm2-wordpress-suite' ),
+                    'htmlIssues'  => __( 'HTML Issues', 'gm2-wordpress-suite' ),
+                    'applyFix'    => __( 'Apply fix', 'gm2-wordpress-suite' ),
                 ],
             ]
         );
