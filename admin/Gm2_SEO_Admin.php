@@ -1028,6 +1028,10 @@ class Gm2_SEO_Admin {
         $max_image_preview = isset($_POST['gm2_max_image_preview']) ? sanitize_text_field($_POST['gm2_max_image_preview']) : '';
         $max_video_preview = isset($_POST['gm2_max_video_preview']) ? sanitize_text_field($_POST['gm2_max_video_preview']) : '';
         $og_image         = isset($_POST['gm2_og_image']) ? absint($_POST['gm2_og_image']) : 0;
+        $link_rel_data    = isset($_POST['gm2_link_rel']) ? wp_unslash($_POST['gm2_link_rel']) : '';
+        if (!is_array(json_decode($link_rel_data, true)) && $link_rel_data !== '') {
+            $link_rel_data = '';
+        }
         update_post_meta($post_id, '_gm2_title', $title);
         update_post_meta($post_id, '_gm2_description', $description);
         update_post_meta($post_id, '_gm2_noindex', $noindex);
@@ -1038,6 +1042,7 @@ class Gm2_SEO_Admin {
         update_post_meta($post_id, '_gm2_max_image_preview', $max_image_preview);
         update_post_meta($post_id, '_gm2_max_video_preview', $max_video_preview);
         update_post_meta($post_id, '_gm2_og_image', $og_image);
+        update_post_meta($post_id, '_gm2_link_rel', $link_rel_data);
     }
 
     public function save_taxonomy_meta($term_id) {
@@ -2129,6 +2134,10 @@ class Gm2_SEO_Admin {
         echo '<input type="hidden" id="gm2_og_image" name="gm2_og_image" value="' . esc_attr($og_image) . '" />';
         echo '<input type="button" class="button gm2-upload-image" data-target="gm2_og_image" value="Select Image" />';
         echo '<span class="gm2-image-preview">' . ($og_image_url ? '<img src="' . esc_url($og_image_url) . '" style="max-width:100%;height:auto;" />' : '') . '</span></p>';
+
+        $link_rel = get_post_meta($post->ID, '_gm2_link_rel', true);
+        echo '<input type="hidden" id="gm2_link_rel_data" name="gm2_link_rel" value="' . esc_attr($link_rel) . '" />';
+        echo '<p class="description">Use the link dialog to mark external links as <code>nofollow</code> or <code>sponsored</code>.</p>';
         echo '</div>';
 
         echo '<div id="gm2-content-analysis" class="gm2-tab-panel">';
