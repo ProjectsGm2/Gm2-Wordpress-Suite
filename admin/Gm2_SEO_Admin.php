@@ -1475,6 +1475,10 @@ class Gm2_SEO_Admin {
             $desc = term_description($term_id, $taxonomy);
             $stub = new \stdClass();
             $stub->ID = 0;
+            // Provide a more complete context object for shortcodes and filters.
+            $stub->post_title  = '';
+            $stub->post_type   = 'post';
+            $stub->post_status = 'publish';
             $post_obj = new \WP_Post($stub);
             global $post;
             $prev_post = $post;
