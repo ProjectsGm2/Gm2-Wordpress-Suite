@@ -31,6 +31,7 @@ class Gm2_SEO_Admin {
         add_action('wp_ajax_gm2_research_guidelines', [$this, 'ajax_research_guidelines']);
         add_action('wp_ajax_gm2_ai_research', [$this, 'ajax_ai_research']);
         add_action('wp_ajax_gm2_ai_generate_tax_description', [$this, 'ajax_generate_tax_description']);
+        add_action('wp_ajax_gm2_bulk_ai_apply', [$this, 'ajax_bulk_ai_apply']);
 
         add_action('add_attachment', [$this, 'auto_fill_alt_on_upload']);
         add_action('admin_notices', [$this, 'admin_notices']);
@@ -153,6 +154,15 @@ class Gm2_SEO_Admin {
             'gm2-robots',
             [$this, 'display_robots_page']
         );
+
+        add_submenu_page(
+            'gm2',
+            'Bulk AI Review',
+            'Bulk AI Review',
+            'edit_posts',
+            'gm2-bulk-ai-review',
+            [$this, 'display_bulk_ai_page']
+        );
     }
 
     public function register_settings() {
@@ -200,6 +210,12 @@ class Gm2_SEO_Admin {
         ]);
         register_setting('gm2_seo_options', 'gm2_tax_desc_prompt', [
             'sanitize_callback' => 'sanitize_textarea_field',
+        ]);
+        register_setting('gm2_seo_options', 'gm2_bulk_ai_page_size', [
+            'sanitize_callback' => 'absint',
+        ]);
+        register_setting('gm2_seo_options', 'gm2_bulk_ai_status', [
+            'sanitize_callback' => 'sanitize_key',
         ]);
         foreach ($this->get_supported_post_types() as $pt) {
             register_setting('gm2_seo_options', 'gm2_seo_guidelines_post_' . $pt, [
@@ -625,6 +641,58 @@ class Gm2_SEO_Admin {
         echo '<textarea name="gm2_robots_txt" rows="10" class="large-text code">' . esc_textarea($content) . '</textarea>';
         submit_button('Save');
         echo '</form>';
+        echo '</div>';
+    }
+
+    public function display_bulk_ai_page() {
+        if (!current_user_can('edit_posts')) {
+            echo 'Permission denied';
+            return;
+        }
+
+        $page_size = max(1, absint(get_option('gm2_bulk_ai_page_size', 10)));
+        $status    = get_option('gm2_bulk_ai_status', 'publish');
+
+        if (isset($_POST['gm2_bulk_ai_save']) && check_admin_referer('gm2_bulk_ai_settings')) {
+            $page_size = max(1, absint($_POST['page_size'] ?? 10));
+            $status    = sanitize_key($_POST['status'] ?? 'publish');
+            update_option('gm2_bulk_ai_page_size', $page_size);
+            update_option('gm2_bulk_ai_status', $status);
+        }
+
+        $query = new \WP_Query([
+            'post_type'      => ['post', 'page'],
+            'post_status'    => $status,
+            'posts_per_page' => $page_size,
+        ]);
+
+        echo '<div class="wrap" id="gm2-bulk-ai">';
+        echo '<h1>Bulk AI Review</h1>';
+        echo '<form method="post">';
+        wp_nonce_field('gm2_bulk_ai_settings');
+        echo '<p><label>Posts per page <input type="number" name="page_size" value="' . esc_attr($page_size) . '" min="1"></label> ';
+        echo '<label>Status <select name="status">';
+        echo '<option value="publish"' . selected($status, 'publish', false) . '>Published</option>';
+        echo '<option value="draft"' . selected($status, 'draft', false) . '>Draft</option>';
+        echo '</select></label> ';
+        submit_button('Save', 'secondary', 'gm2_bulk_ai_save', false);
+        echo '</p></form>';
+
+        echo '<table class="widefat" id="gm2-bulk-list"><thead><tr><th class="check-column"><input type="checkbox" id="gm2-bulk-select-all"></th><th>Title</th><th>SEO Title</th><th>Description</th><th>Slug</th><th>AI Suggestions</th></tr></thead><tbody>';
+        foreach ($query->posts as $post) {
+            $seo_title   = get_post_meta($post->ID, '_gm2_title', true);
+            $description = get_post_meta($post->ID, '_gm2_description', true);
+            echo '<tr id="gm2-row-' . intval($post->ID) . '">';
+            echo '<th scope="row" class="check-column"><input type="checkbox" class="gm2-select" value="' . intval($post->ID) . '"></th>';
+            echo '<td>' . esc_html($post->post_title) . '</td>';
+            echo '<td>' . esc_html($seo_title) . '</td>';
+            echo '<td>' . esc_html($description) . '</td>';
+            echo '<td>' . esc_html($post->post_name) . '</td>';
+            echo '<td class="gm2-result"></td>';
+            echo '</tr>';
+        }
+        echo '</tbody></table>';
+        echo '<p><button type="button" class="button" id="gm2-bulk-analyze">Analyze Selected</button></p>';
         echo '</div>';
     }
 
@@ -1821,6 +1889,34 @@ class Gm2_SEO_Admin {
         }
 
         wp_send_json_success($resp);
+    }
+
+    public function ajax_bulk_ai_apply() {
+        check_ajax_referer('gm2_bulk_ai_apply');
+
+        $post_id = isset($_POST['post_id']) ? absint($_POST['post_id']) : 0;
+        if (!$post_id || !current_user_can('edit_post', $post_id)) {
+            wp_send_json_error('permission denied', 403);
+        }
+
+        $data = ['ID' => $post_id];
+        if (isset($_POST['title'])) {
+            $data['post_title'] = sanitize_text_field(wp_unslash($_POST['title']));
+        }
+        if (isset($_POST['slug'])) {
+            $data['post_name'] = sanitize_title(wp_unslash($_POST['slug']));
+        }
+        if (count($data) > 1) {
+            wp_update_post($data);
+        }
+        if (isset($_POST['seo_title'])) {
+            update_post_meta($post_id, '_gm2_title', sanitize_text_field(wp_unslash($_POST['seo_title'])));
+        }
+        if (isset($_POST['seo_description'])) {
+            update_post_meta($post_id, '_gm2_description', sanitize_textarea_field(wp_unslash($_POST['seo_description'])));
+        }
+
+        wp_send_json_success();
     }
 
     public function enqueue_editor_scripts($hook = null) {
