@@ -20,8 +20,8 @@ A powerful suite of WordPress enhancements including admin tools, frontend optim
    Finally, use **SEO → Connect Google Account** to authorize your Google account. After connecting, you will be able to select your Analytics Measurement ID and Ads Customer ID from dropdown menus.
 4. The plugin relies on WordPress's built-in HTTP API and has no external
    dependencies.
-5. Ensure the PHP DOM extension is installed. Without it, HTML analysis and AI
-   research features will be unavailable.
+5. Ensure the PHP DOM/LibXML extension is installed. Without it, HTML analysis
+   and AI research features will be unavailable.
 6. Follow the steps in the **Google integration** section below to copy your
    Search Console verification code and Google Ads developer token. These values
    cannot be fetched via API and must be entered manually on the SEO settings

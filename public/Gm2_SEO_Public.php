@@ -593,7 +593,7 @@ class Gm2_SEO_Public {
         if (!is_array($map) || empty($map)) {
             return $content;
         }
-        if (!class_exists('\DOMDocument')) {
+        if (!class_exists('\DOMDocument') || !function_exists('libxml_use_internal_errors')) {
             return $content;
         }
 

@@ -1480,7 +1480,7 @@ class Gm2_SEO_Admin {
             return $issues;
         }
 
-        if (!class_exists('\DOMDocument')) {
+        if (!class_exists('\DOMDocument') || !function_exists('libxml_use_internal_errors')) {
             return $issues;
         }
 
