@@ -14,11 +14,14 @@ class Gm2_Sitemap {
     }
 
     private function get_post_types() {
-        $types = ['post', 'page'];
-        if (post_type_exists('product')) {
-            $types[] = 'product';
-        }
-        return $types;
+        $args  = [
+            'public'             => true,
+            'show_ui'            => true,
+            'exclude_from_search' => false,
+        ];
+        $types = get_post_types($args, 'names');
+        unset($types['attachment']);
+        return apply_filters('gm2_supported_post_types', array_values($types));
     }
 
     private function get_taxonomies() {

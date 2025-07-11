@@ -101,7 +101,7 @@ to generate best-practice rules. The generated text is saved automatically so
 you can revisit this screen later and adjust the guidelines as needed.
 
 == SEO Settings ==
-The SEO meta box appears when editing posts, pages and taxonomy terms. In the
+The SEO meta box appears when editing posts, pages, any public custom post types and taxonomy terms. In the
 **SEO Settings** tab you can enter a custom title and description, toggle
 `noindex` or `nofollow`, and upload an Open Graph image. Click **Select Image**
 to open the WordPress media library and choose a picture for the `og:image` and

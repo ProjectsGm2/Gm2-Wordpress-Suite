@@ -88,10 +88,14 @@ foreach ( $option_names as $option ) {
 }
 
 // Remove dynamic SEO guideline options for supported post types and taxonomies.
-$post_types = array( 'post', 'page' );
-if ( post_type_exists( 'product' ) ) {
-    $post_types[] = 'product';
-}
+$args  = array(
+    'public'             => true,
+    'show_ui'            => true,
+    'exclude_from_search' => false,
+);
+$post_types = get_post_types( $args, 'names' );
+unset( $post_types['attachment'] );
+$post_types = apply_filters( 'gm2_supported_post_types', array_values( $post_types ) );
 foreach ( $post_types as $pt ) {
     $opt = 'gm2_seo_guidelines_post_' . $pt;
     delete_option( $opt );

@@ -37,6 +37,21 @@ class SitemapTest extends WP_UnitTestCase {
         $this->assertStringContainsString(get_term_link($term_id, 'product_cat'), $content);
     }
 
+    public function test_custom_post_type_in_sitemap() {
+        register_post_type('book');
+        $post_id = self::factory()->post->create([
+            'post_type'   => 'book',
+            'post_title'  => 'Book Title',
+            'post_status' => 'publish',
+        ]);
+
+        $sitemap = new Gm2_Sitemap();
+        $sitemap->generate();
+
+        $content = file_get_contents(ABSPATH . 'sitemap.xml');
+        $this->assertStringContainsString(get_permalink($post_id), $content);
+    }
+
     public function test_generate_sitemap_pings_search_engines() {
         $urls = [];
         $filter = function($pre, $args, $url) use (&$urls) {
