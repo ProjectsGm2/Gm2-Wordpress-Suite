@@ -26,10 +26,13 @@ Set the `WP_TESTS_DIR` environment variable to the directory where the suite res
 
 ## Running Tests
 
-After the test suite is installed, run the tests. Ensure that
-`WP_TESTS_DIR` points to the installed suite, for example:
+After the test suite is installed, run the tests. Ensure that `WP_TESTS_DIR`
+points to the installed suite if you used a custom location. You can invoke the
+Makefile or run PHPUnit directly, for example:
 
 ```bash
+make test
+# or
 WP_TESTS_DIR=/path/to/wordpress-tests-lib phpunit
 ```
 
