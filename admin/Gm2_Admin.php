@@ -39,6 +39,7 @@ class Gm2_Admin {
 
         $seo_pages = [
             'gm2_page_gm2-seo',
+            'gm2_page_gm2-bulk-ai-review',
         ];
 
         if ($hook === 'gm2_page_gm2-chatgpt') {
@@ -109,6 +110,24 @@ class Gm2_Admin {
                     'ajax_url' => admin_url('admin-ajax.php'),
                 ]
             );
+            if ($hook === 'gm2_page_gm2-bulk-ai-review') {
+                wp_enqueue_script(
+                    'gm2-bulk-ai',
+                    GM2_PLUGIN_URL . 'admin/js/gm2-bulk-ai.js',
+                    ['jquery'],
+                    GM2_VERSION,
+                    true
+                );
+                wp_localize_script(
+                    'gm2-bulk-ai',
+                    'gm2BulkAi',
+                    [
+                        'nonce'       => wp_create_nonce('gm2_ai_research'),
+                        'apply_nonce' => wp_create_nonce('gm2_bulk_ai_apply'),
+                        'ajax_url'    => admin_url('admin-ajax.php'),
+                    ]
+                );
+            }
         }
     }
 
