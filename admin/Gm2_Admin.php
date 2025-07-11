@@ -366,9 +366,6 @@ class Gm2_Admin {
         echo '<td><input name="gm2_gads_client_secret" type="text" id="gm2_gads_client_secret" value="' . esc_attr( $client_secret ) . '" class="regular-text" required></td></tr>';
         echo '</tbody></table>';
         submit_button();
-        $show = esc_js( __( 'Show', 'gm2-wordpress-suite' ) );
-        $hide = esc_js( __( 'Hide', 'gm2-wordpress-suite' ) );
-        echo "<script>document.addEventListener('DOMContentLoaded',function(){var i=document.getElementById('gm2_chatgpt_api_key');var b=document.getElementById('gm2-chatgpt-toggle');if(i&&b){var s='{$show}';var h='{$hide}';b.addEventListener('click',function(){if(i.type==='password'){i.type='text';b.textContent=h;}else{i.type='password';b.textContent=s;}});}});</script>";
         echo '</form>';
         echo '</div>';
     }
