@@ -96,15 +96,16 @@ jQuery(function($){
     function buildResults(data, $out){
         var $wrap = $('<div>');
         var $list = $('<div>', {id:'gm2-ai-suggestions'});
+        var labels = window.gm2AiSeo && gm2AiSeo.i18n && gm2AiSeo.i18n.labels ? gm2AiSeo.i18n.labels : {};
         var fields = {
-            seo_title: 'SEO Title',
-            description: 'SEO Description',
-            focus_keywords: 'Focus Keywords',
-            canonical: 'Canonical URL',
-            page_name: 'Page Name'
+            seo_title: labels.seoTitle || 'SEO Title',
+            description: labels.description || 'SEO Description',
+            focus_keywords: labels.focusKeywords || 'Focus Keywords',
+            canonical: labels.canonical || 'Canonical URL',
+            page_name: labels.pageName || 'Page Name'
         };
         if(typeof data.slug !== 'undefined'){
-            fields.slug = 'Slug';
+            fields.slug = labels.slug || 'Slug';
         }
         var added = 0;
         Object.keys(fields).forEach(function(key){

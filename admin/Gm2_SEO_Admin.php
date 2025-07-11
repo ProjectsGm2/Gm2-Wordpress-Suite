@@ -2039,6 +2039,14 @@ class Gm2_SEO_Admin {
                     'contentSuggestions' => __( 'Content Suggestions', 'gm2-wordpress-suite' ),
                     'htmlIssues'  => __( 'HTML Issues', 'gm2-wordpress-suite' ),
                     'applyFix'    => __( 'Apply fix', 'gm2-wordpress-suite' ),
+                    'labels' => [
+                        'seoTitle'       => __( 'SEO Title', 'gm2-wordpress-suite' ),
+                        'description'    => __( 'SEO Description', 'gm2-wordpress-suite' ),
+                        'focusKeywords'  => __( 'Focus Keywords', 'gm2-wordpress-suite' ),
+                        'canonical'      => __( 'Canonical URL', 'gm2-wordpress-suite' ),
+                        'pageName'       => __( 'Page Name', 'gm2-wordpress-suite' ),
+                        'slug'           => __( 'Slug', 'gm2-wordpress-suite' ),
+                    ],
                 ],
             ]
         );
@@ -2132,6 +2140,14 @@ class Gm2_SEO_Admin {
                     'contentSuggestions' => __( 'Content Suggestions', 'gm2-wordpress-suite' ),
                     'htmlIssues'  => __( 'HTML Issues', 'gm2-wordpress-suite' ),
                     'applyFix'    => __( 'Apply fix', 'gm2-wordpress-suite' ),
+                    'labels' => [
+                        'seoTitle'       => __( 'SEO Title', 'gm2-wordpress-suite' ),
+                        'description'    => __( 'SEO Description', 'gm2-wordpress-suite' ),
+                        'focusKeywords'  => __( 'Focus Keywords', 'gm2-wordpress-suite' ),
+                        'canonical'      => __( 'Canonical URL', 'gm2-wordpress-suite' ),
+                        'pageName'       => __( 'Page Name', 'gm2-wordpress-suite' ),
+                        'slug'           => __( 'Slug', 'gm2-wordpress-suite' ),
+                    ],
                 ],
             ]
         );
