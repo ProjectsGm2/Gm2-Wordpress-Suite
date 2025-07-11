@@ -646,7 +646,7 @@ class Gm2_SEO_Admin {
 
     public function display_bulk_ai_page() {
         if (!current_user_can('edit_posts')) {
-            echo 'Permission denied';
+            esc_html_e( 'Permission denied', 'gm2-wordpress-suite' );
             return;
         }
 
@@ -1076,11 +1076,11 @@ class Gm2_SEO_Admin {
 
     public function handle_sitemap_form() {
         if (!current_user_can('manage_options')) {
-            wp_die('Permission denied');
+            wp_die( esc_html__( 'Permission denied', 'gm2-wordpress-suite' ) );
         }
 
         if (!isset($_POST['gm2_sitemap_nonce']) || !wp_verify_nonce($_POST['gm2_sitemap_nonce'], 'gm2_sitemap_save')) {
-            wp_die('Invalid nonce');
+            wp_die( esc_html__( 'Invalid nonce', 'gm2-wordpress-suite' ) );
         }
 
         $enabled = isset($_POST['gm2_sitemap_enabled']) ? '1' : '0';
@@ -1099,11 +1099,11 @@ class Gm2_SEO_Admin {
 
     public function handle_meta_tags_form() {
         if (!current_user_can('manage_options')) {
-            wp_die('Permission denied');
+            wp_die( esc_html__( 'Permission denied', 'gm2-wordpress-suite' ) );
         }
 
         if (!isset($_POST['gm2_meta_tags_nonce']) || !wp_verify_nonce($_POST['gm2_meta_tags_nonce'], 'gm2_meta_tags_save')) {
-            wp_die('Invalid nonce');
+            wp_die( esc_html__( 'Invalid nonce', 'gm2-wordpress-suite' ) );
         }
 
         $variants = isset($_POST['gm2_noindex_variants']) ? '1' : '0';
@@ -1121,11 +1121,11 @@ class Gm2_SEO_Admin {
 
     public function handle_schema_form() {
         if (!current_user_can('manage_options')) {
-            wp_die('Permission denied');
+            wp_die( esc_html__( 'Permission denied', 'gm2-wordpress-suite' ) );
         }
 
         if (!isset($_POST['gm2_schema_nonce']) || !wp_verify_nonce($_POST['gm2_schema_nonce'], 'gm2_schema_save')) {
-            wp_die('Invalid nonce');
+            wp_die( esc_html__( 'Invalid nonce', 'gm2-wordpress-suite' ) );
         }
 
         $product    = isset($_POST['gm2_schema_product']) ? '1' : '0';
@@ -1152,11 +1152,11 @@ class Gm2_SEO_Admin {
 
     public function handle_performance_form() {
         if (!current_user_can('manage_options')) {
-            wp_die('Permission denied');
+            wp_die( esc_html__( 'Permission denied', 'gm2-wordpress-suite' ) );
         }
 
         if (!isset($_POST['gm2_performance_nonce']) || !wp_verify_nonce($_POST['gm2_performance_nonce'], 'gm2_performance_save')) {
-            wp_die('Invalid nonce');
+            wp_die( esc_html__( 'Invalid nonce', 'gm2-wordpress-suite' ) );
         }
 
         $auto_fill = isset($_POST['gm2_auto_fill_alt']) ? '1' : '0';
@@ -1203,11 +1203,11 @@ class Gm2_SEO_Admin {
 
     public function handle_general_settings_form() {
         if (!current_user_can('manage_options')) {
-            wp_die('Permission denied');
+            wp_die( esc_html__( 'Permission denied', 'gm2-wordpress-suite' ) );
         }
 
         if (!isset($_POST['gm2_general_settings_nonce']) || !wp_verify_nonce($_POST['gm2_general_settings_nonce'], 'gm2_general_settings_save')) {
-            wp_die('Invalid nonce');
+            wp_die( esc_html__( 'Invalid nonce', 'gm2-wordpress-suite' ) );
         }
 
         $ga_id  = isset($_POST['gm2_ga_measurement_id']) ? sanitize_text_field($_POST['gm2_ga_measurement_id']) : '';
@@ -1232,11 +1232,11 @@ class Gm2_SEO_Admin {
 
     public function handle_redirects_form() {
         if (!current_user_can('manage_options')) {
-            wp_die('Permission denied');
+            wp_die( esc_html__( 'Permission denied', 'gm2-wordpress-suite' ) );
         }
 
         if (!isset($_POST['gm2_redirects_nonce']) || !wp_verify_nonce($_POST['gm2_redirects_nonce'], 'gm2_redirects_save')) {
-            wp_die('Invalid nonce');
+            wp_die( esc_html__( 'Invalid nonce', 'gm2-wordpress-suite' ) );
         }
 
         $source = isset($_POST['gm2_redirect_source']) ? sanitize_text_field($_POST['gm2_redirect_source']) : '';
@@ -1267,11 +1267,11 @@ class Gm2_SEO_Admin {
 
     public function handle_content_rules_form() {
         if (!current_user_can('manage_options')) {
-            wp_die('Permission denied');
+            wp_die( esc_html__( 'Permission denied', 'gm2-wordpress-suite' ) );
         }
 
         if (!isset($_POST['gm2_content_rules_nonce']) || !wp_verify_nonce($_POST['gm2_content_rules_nonce'], 'gm2_content_rules_save')) {
-            wp_die('Invalid nonce');
+            wp_die( esc_html__( 'Invalid nonce', 'gm2-wordpress-suite' ) );
         }
 
         $rules = [];
@@ -1292,11 +1292,11 @@ class Gm2_SEO_Admin {
 
     public function handle_keyword_settings_form() {
         if (!current_user_can('manage_options')) {
-            wp_die('Permission denied');
+            wp_die( esc_html__( 'Permission denied', 'gm2-wordpress-suite' ) );
         }
 
         if (!isset($_POST['gm2_keyword_settings_nonce']) || !wp_verify_nonce($_POST['gm2_keyword_settings_nonce'], 'gm2_keyword_settings_save')) {
-            wp_die('Invalid nonce');
+            wp_die( esc_html__( 'Invalid nonce', 'gm2-wordpress-suite' ) );
         }
 
         $lang  = isset($_POST['gm2_gads_language']) ? sanitize_text_field($_POST['gm2_gads_language']) : '';
