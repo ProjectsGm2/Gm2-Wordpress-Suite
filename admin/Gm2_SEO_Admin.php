@@ -130,8 +130,8 @@ class Gm2_SEO_Admin {
     public function add_settings_pages() {
         add_submenu_page(
             'gm2',
-            'SEO',
-            'SEO',
+            esc_html__( 'SEO', 'gm2-wordpress-suite' ),
+            esc_html__( 'SEO', 'gm2-wordpress-suite' ),
             'manage_options',
             'gm2-seo',
             [$this, 'display_dashboard']
@@ -139,8 +139,8 @@ class Gm2_SEO_Admin {
 
         add_submenu_page(
             'gm2',
-            'Connect Google Account',
-            'Connect Google Account',
+            esc_html__( 'Connect Google Account', 'gm2-wordpress-suite' ),
+            esc_html__( 'Connect Google Account', 'gm2-wordpress-suite' ),
             'manage_options',
             'gm2-google-connect',
             [$this, 'display_google_connect_page']
@@ -148,8 +148,8 @@ class Gm2_SEO_Admin {
 
         add_submenu_page(
             'gm2',
-            'Robots.txt',
-            'Robots.txt',
+            esc_html__( 'Robots.txt', 'gm2-wordpress-suite' ),
+            esc_html__( 'Robots.txt', 'gm2-wordpress-suite' ),
             'manage_options',
             'gm2-robots',
             [$this, 'display_robots_page']
@@ -157,8 +157,8 @@ class Gm2_SEO_Admin {
 
         add_submenu_page(
             'gm2',
-            'Bulk AI Review',
-            'Bulk AI Review',
+            esc_html__( 'Bulk AI Review', 'gm2-wordpress-suite' ),
+            esc_html__( 'Bulk AI Review', 'gm2-wordpress-suite' ),
             'edit_posts',
             'gm2-bulk-ai-review',
             [$this, 'display_bulk_ai_page']
@@ -290,10 +290,10 @@ class Gm2_SEO_Admin {
 
         add_settings_field(
             'gm2_clean_slugs',
-            'Clean Slugs',
+            esc_html__( 'Clean Slugs', 'gm2-wordpress-suite' ),
             function () {
                 $value = get_option('gm2_clean_slugs', '0');
-                echo '<label><input type="checkbox" name="gm2_clean_slugs" value="1" ' . checked($value, '1', false) . '> Remove stopwords</label>';
+                echo '<label><input type="checkbox" name="gm2_clean_slugs" value="1" ' . checked($value, '1', false) . '> ' . esc_html__( 'Remove stopwords', 'gm2-wordpress-suite' ) . '</label>';
             },
             'gm2_seo',
             'gm2_seo_main'
@@ -301,11 +301,11 @@ class Gm2_SEO_Admin {
 
         add_settings_field(
             'gm2_slug_stopwords',
-            'Slug Stopwords',
+            esc_html__( 'Slug Stopwords', 'gm2-wordpress-suite' ),
             function () {
                 $value = get_option('gm2_slug_stopwords', '');
                 echo '<textarea name="gm2_slug_stopwords" rows="3" class="large-text">' . esc_textarea($value) . '</textarea>';
-                echo '<p class="description">Space or comma separated list.</p>';
+                echo '<p class="description">' . esc_html__( 'Space or comma separated list.', 'gm2-wordpress-suite' ) . '</p>';
             },
             'gm2_seo',
             'gm2_seo_main'
@@ -315,9 +315,9 @@ class Gm2_SEO_Admin {
             'gm2_tax_desc_prompt',
             'Taxonomy Description Prompt',
             function () {
-                $value = get_option('gm2_tax_desc_prompt', 'Write a short SEO description for the term "{name}". {guidelines}');
+                $value = get_option('gm2_tax_desc_prompt', __( 'Write a short SEO description for the term "{name}". {guidelines}', 'gm2-wordpress-suite' ) );
                 echo '<textarea name="gm2_tax_desc_prompt" rows="3" class="large-text">' . esc_textarea($value) . '</textarea>';
-                echo '<p class="description">Available tags: {name}, {taxonomy}, {guidelines}</p>';
+                echo '<p class="description">' . esc_html__( 'Available tags: {name}, {taxonomy}, {guidelines}', 'gm2-wordpress-suite' ) . '</p>';
             },
             'gm2_seo',
             'gm2_seo_main'
@@ -326,15 +326,15 @@ class Gm2_SEO_Admin {
 
     public function display_dashboard() {
         $tabs = [
-            'general'     => 'General',
-            'meta'        => 'Meta Tags',
-            'sitemap'     => 'Sitemap',
-            'redirects'   => 'Redirects',
-            'schema'      => 'Structured Data',
-            'performance' => 'Performance',
-            'keywords'    => 'Keyword Research',
-            'rules'       => 'Content Rules',
-            'guidelines'  => 'SEO Guidelines',
+            'general'     => esc_html__( 'General', 'gm2-wordpress-suite' ),
+            'meta'        => esc_html__( 'Meta Tags', 'gm2-wordpress-suite' ),
+            'sitemap'     => esc_html__( 'Sitemap', 'gm2-wordpress-suite' ),
+            'redirects'   => esc_html__( 'Redirects', 'gm2-wordpress-suite' ),
+            'schema'      => esc_html__( 'Structured Data', 'gm2-wordpress-suite' ),
+            'performance' => esc_html__( 'Performance', 'gm2-wordpress-suite' ),
+            'keywords'    => esc_html__( 'Keyword Research', 'gm2-wordpress-suite' ),
+            'rules'       => esc_html__( 'Content Rules', 'gm2-wordpress-suite' ),
+            'guidelines'  => esc_html__( 'SEO Guidelines', 'gm2-wordpress-suite' ),
         ];
 
         $active = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : 'general';
@@ -343,7 +343,7 @@ class Gm2_SEO_Admin {
         }
 
         echo '<div class="wrap">';
-        echo '<h1>SEO Settings</h1>';
+        echo '<h1>' . esc_html__( 'SEO Settings', 'gm2-wordpress-suite' ) . '</h1>';
         echo '<h2 class="nav-tab-wrapper">';
         foreach ($tabs as $slug => $label) {
             $class = $active === $slug ? ' nav-tab-active' : '';
@@ -363,11 +363,11 @@ class Gm2_SEO_Admin {
             wp_nonce_field('gm2_meta_tags_save', 'gm2_meta_tags_nonce');
             echo '<input type="hidden" name="action" value="gm2_meta_tags_settings" />';
             echo '<table class="form-table"><tbody>';
-            echo '<tr><th scope="row">Noindex product variants</th><td><input type="checkbox" name="gm2_noindex_variants" value="1" ' . checked($variants, '1', false) . '></td></tr>';
-            echo '<tr><th scope="row">Noindex out-of-stock products</th><td><input type="checkbox" name="gm2_noindex_oos" value="1" ' . checked($oos, '1', false) . '></td></tr>';
-            echo '<tr><th scope="row">Variation canonical points to parent</th><td><input type="checkbox" name="gm2_variation_canonical_parent" value="1" ' . checked($canon_parent, '1', false) . '></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Noindex product variants', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="gm2_noindex_variants" value="1" ' . checked($variants, '1', false) . '></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Noindex out-of-stock products', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="gm2_noindex_oos" value="1" ' . checked($oos, '1', false) . '></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Variation canonical points to parent', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="gm2_variation_canonical_parent" value="1" ' . checked($canon_parent, '1', false) . '></td></tr>';
             echo '</tbody></table>';
-            submit_button('Save Settings');
+            submit_button( esc_html__( 'Save Settings', 'gm2-wordpress-suite' ) );
             echo '</form>';
         } elseif ($active === 'sitemap') {
             $enabled   = get_option('gm2_sitemap_enabled', '1');
@@ -379,16 +379,16 @@ class Gm2_SEO_Admin {
             wp_nonce_field('gm2_sitemap_save', 'gm2_sitemap_nonce');
             echo '<input type="hidden" name="action" value="gm2_sitemap_settings" />';
             echo '<table class="form-table"><tbody>';
-            echo '<tr><th scope="row">Enable Sitemap</th><td><input type="checkbox" name="gm2_sitemap_enabled" value="1" ' . checked($enabled, '1', false) . '></td></tr>';
-            echo '<tr><th scope="row">Update Frequency</th><td><select name="gm2_sitemap_frequency">';
-            $options = ["daily", "weekly", "monthly"];
-            foreach ($options as $opt) {
-                echo '<option value="' . esc_attr($opt) . '" ' . selected($frequency, $opt, false) . '>' . esc_html(ucfirst($opt)) . '</option>';
+            echo '<tr><th scope="row">' . esc_html__( 'Enable Sitemap', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="gm2_sitemap_enabled" value="1" ' . checked($enabled, '1', false) . '></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Update Frequency', 'gm2-wordpress-suite' ) . '</th><td><select name="gm2_sitemap_frequency">';
+            $options = [ 'daily' => esc_html__( 'Daily', 'gm2-wordpress-suite' ), 'weekly' => esc_html__( 'Weekly', 'gm2-wordpress-suite' ), 'monthly' => esc_html__( 'Monthly', 'gm2-wordpress-suite' ) ];
+            foreach ($options as $opt => $label) {
+                echo '<option value="' . esc_attr($opt) . '" ' . selected($frequency, $opt, false) . '>' . esc_html($label) . '</option>';
             }
             echo '</select></td></tr>';
             echo '</tbody></table>';
-            submit_button('Save Settings');
-            echo '<input type="submit" name="gm2_regenerate" class="button" value="Regenerate Sitemap" />';
+            submit_button( esc_html__( 'Save Settings', 'gm2-wordpress-suite' ) );
+            echo '<input type="submit" name="gm2_regenerate" class="button" value="' . esc_attr__( 'Regenerate Sitemap', 'gm2-wordpress-suite' ) . '" />';
             echo '</form>';
         } elseif ($active === 'schema') {
             $product     = get_option('gm2_schema_product', '1');
@@ -404,14 +404,14 @@ class Gm2_SEO_Admin {
             wp_nonce_field('gm2_schema_save', 'gm2_schema_nonce');
             echo '<input type="hidden" name="action" value="gm2_schema_settings" />';
             echo '<table class="form-table"><tbody>';
-            echo '<tr><th scope="row">Product Schema</th><td><input type="checkbox" name="gm2_schema_product" value="1" ' . checked($product, '1', false) . '></td></tr>';
-            echo '<tr><th scope="row">Brand Schema</th><td><input type="checkbox" name="gm2_schema_brand" value="1" ' . checked($brand, '1', false) . '></td></tr>';
-            echo '<tr><th scope="row">Breadcrumb Schema</th><td><input type="checkbox" name="gm2_schema_breadcrumbs" value="1" ' . checked($breadcrumbs, '1', false) . '></td></tr>';
-            echo '<tr><th scope="row">Article Schema</th><td><input type="checkbox" name="gm2_schema_article" value="1" ' . checked($article, '1', false) . '></td></tr>';
-            echo '<tr><th scope="row">Show Breadcrumbs in Footer</th><td><input type="checkbox" name="gm2_show_footer_breadcrumbs" value="1" ' . checked($footer_bc, '1', false) . '></td></tr>';
-            echo '<tr><th scope="row">Review Schema</th><td><input type="checkbox" name="gm2_schema_review" value="1" ' . checked($review, '1', false) . '></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Product Schema', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="gm2_schema_product" value="1" ' . checked($product, '1', false) . '></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Brand Schema', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="gm2_schema_brand" value="1" ' . checked($brand, '1', false) . '></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Breadcrumb Schema', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="gm2_schema_breadcrumbs" value="1" ' . checked($breadcrumbs, '1', false) . '></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Article Schema', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="gm2_schema_article" value="1" ' . checked($article, '1', false) . '></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Show Breadcrumbs in Footer', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="gm2_show_footer_breadcrumbs" value="1" ' . checked($footer_bc, '1', false) . '></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Review Schema', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="gm2_schema_review" value="1" ' . checked($review, '1', false) . '></td></tr>';
             echo '</tbody></table>';
-            submit_button('Save Settings');
+            submit_button( esc_html__( 'Save Settings', 'gm2-wordpress-suite' ) );
             echo '</form>';
         } elseif ($active === 'redirects') {
             $redirects = get_option('gm2_redirects', []);
@@ -434,15 +434,15 @@ class Gm2_SEO_Admin {
             wp_nonce_field('gm2_redirects_save', 'gm2_redirects_nonce');
             echo '<input type="hidden" name="action" value="gm2_redirects" />';
             echo '<table class="form-table"><tbody>';
-            echo '<tr><th scope="row"><label for="gm2_redirect_source">Source URL</label></th><td><input name="gm2_redirect_source" type="text" id="gm2_redirect_source" value="' . esc_attr($source_prefill) . '" class="regular-text" required></td></tr>';
-            echo '<tr><th scope="row"><label for="gm2_redirect_target">Target URL</label></th><td><input name="gm2_redirect_target" type="url" id="gm2_redirect_target" class="regular-text" required></td></tr>';
-            echo '<tr><th scope="row"><label for="gm2_redirect_type">Type</label></th><td><select name="gm2_redirect_type" id="gm2_redirect_type"><option value="301">301</option><option value="302">302</option></select></td></tr>';
+            echo '<tr><th scope="row"><label for="gm2_redirect_source">' . esc_html__( 'Source URL', 'gm2-wordpress-suite' ) . '</label></th><td><input name="gm2_redirect_source" type="text" id="gm2_redirect_source" value="' . esc_attr($source_prefill) . '" class="regular-text" required></td></tr>';
+            echo '<tr><th scope="row"><label for="gm2_redirect_target">' . esc_html__( 'Target URL', 'gm2-wordpress-suite' ) . '</label></th><td><input name="gm2_redirect_target" type="url" id="gm2_redirect_target" class="regular-text" required></td></tr>';
+            echo '<tr><th scope="row"><label for="gm2_redirect_type">' . esc_html__( 'Type', 'gm2-wordpress-suite' ) . '</label></th><td><select name="gm2_redirect_type" id="gm2_redirect_type"><option value="301">301</option><option value="302">302</option></select></td></tr>';
             echo '</tbody></table>';
-            submit_button('Add Redirect');
+            submit_button( esc_html__( 'Add Redirect', 'gm2-wordpress-suite' ) );
             echo '</form>';
 
-            echo '<h2>Existing Redirects</h2>';
-            echo '<table class="widefat"><thead><tr><th>Source</th><th>Target</th><th>Type</th><th>Actions</th></tr></thead><tbody>';
+            echo '<h2>' . esc_html__( 'Existing Redirects', 'gm2-wordpress-suite' ) . '</h2>';
+            echo '<table class="widefat"><thead><tr><th>' . esc_html__( 'Source', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'Target', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'Type', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'Actions', 'gm2-wordpress-suite' ) . '</th></tr></thead><tbody>';
             if ($redirects) {
                 foreach ($redirects as $index => $r) {
                     $delete_url = wp_nonce_url(admin_url('admin.php?page=gm2-seo&tab=redirects&action=delete&id=' . $index), 'gm2_delete_redirect_' . $index);
@@ -450,18 +450,18 @@ class Gm2_SEO_Admin {
                     echo '<td>' . esc_html($r['source']) . '</td>';
                     echo '<td>' . esc_html($r['target']) . '</td>';
                     echo '<td>' . esc_html($r['type']) . '</td>';
-                    echo '<td><a href="' . esc_url($delete_url) . '" onclick="return confirm(\'Are you sure?\');">Delete</a></td>';
+                    echo '<td><a href="' . esc_url($delete_url) . '" onclick="return confirm(\'' . esc_js( __( 'Are you sure?', 'gm2-wordpress-suite' ) ) . '\');">' . esc_html__( 'Delete', 'gm2-wordpress-suite' ) . '</a></td>';
                     echo '</tr>';
                 }
             } else {
-                echo '<tr><td colspan="4">No redirects found.</td></tr>';
+                echo '<tr><td colspan="4">' . esc_html__( 'No redirects found.', 'gm2-wordpress-suite' ) . '</td></tr>';
             }
             echo '</tbody></table>';
 
             $logs = get_option('gm2_404_logs', []);
             if ($logs) {
-                echo '<h2>404 Logs</h2>';
-                echo '<table class="widefat"><thead><tr><th>URL</th></tr></thead><tbody>';
+                echo '<h2>' . esc_html__( '404 Logs', 'gm2-wordpress-suite' ) . '</h2>';
+                echo '<table class="widefat"><thead><tr><th>' . esc_html__( 'URL', 'gm2-wordpress-suite' ) . '</th></tr></thead><tbody>';
                 foreach ($logs as $log) {
                     $link = admin_url('admin.php?page=gm2-seo&tab=redirects&source=' . urlencode($log));
                     echo '<tr><td><a href="' . esc_url($link) . '">' . esc_html($log) . '</a></td></tr>';
@@ -486,23 +486,23 @@ class Gm2_SEO_Admin {
             wp_nonce_field('gm2_performance_save', 'gm2_performance_nonce');
             echo '<input type="hidden" name="action" value="gm2_performance_settings" />';
             echo '<table class="form-table"><tbody>';
-            echo '<tr><th scope="row">Auto-fill missing alt text</th><td><label><input type="checkbox" name="gm2_auto_fill_alt" value="1" ' . checked($auto_fill, '1', false) . '> Use product title</label></td></tr>';
-            echo '<tr><th scope="row">Clean Image Filenames</th><td><label><input type="checkbox" name="gm2_clean_image_filenames" value="1" ' . checked($clean_files, '1', false) . '> Sanitize on upload</label></td></tr>';
-            echo '<tr><th scope="row">Enable Image Compression</th><td><input type="checkbox" name="gm2_enable_compression" value="1" ' . checked($enable_comp, '1', false) . '></td></tr>';
-            echo '<tr><th scope="row">Compression API Key</th><td><input type="text" name="gm2_compression_api_key" value="' . esc_attr($api_key) . '" class="regular-text" /></td></tr>';
-            echo '<tr><th scope="row">Compression API URL</th><td><input type="text" name="gm2_compression_api_url" value="' . esc_attr($api_url) . '" class="regular-text" /></td></tr>';
-            echo '<tr><th scope="row">Minify HTML</th><td><label><input type="checkbox" name="gm2_minify_html" value="1" ' . checked($min_html, '1', false) . '></label></td></tr>';
-            echo '<tr><th scope="row">Minify CSS</th><td><label><input type="checkbox" name="gm2_minify_css" value="1" ' . checked($min_css, '1', false) . '></label></td></tr>';
-            echo '<tr><th scope="row">Minify JS</th><td><label><input type="checkbox" name="gm2_minify_js" value="1" ' . checked($min_js, '1', false) . '></label></td></tr>';
-            echo '<tr><th scope="row">PageSpeed API Key</th><td><input type="text" name="gm2_pagespeed_api_key" value="' . esc_attr($ps_key) . '" class="regular-text" />';
+            echo '<tr><th scope="row">' . esc_html__( 'Auto-fill missing alt text', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_auto_fill_alt" value="1" ' . checked($auto_fill, '1', false) . '> ' . esc_html__( 'Use product title', 'gm2-wordpress-suite' ) . '</label></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Clean Image Filenames', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_clean_image_filenames" value="1" ' . checked($clean_files, '1', false) . '> ' . esc_html__( 'Sanitize on upload', 'gm2-wordpress-suite' ) . '</label></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Enable Image Compression', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="gm2_enable_compression" value="1" ' . checked($enable_comp, '1', false) . '></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Compression API Key', 'gm2-wordpress-suite' ) . '</th><td><input type="text" name="gm2_compression_api_key" value="' . esc_attr($api_key) . '" class="regular-text" /></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Compression API URL', 'gm2-wordpress-suite' ) . '</th><td><input type="text" name="gm2_compression_api_url" value="' . esc_attr($api_url) . '" class="regular-text" /></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Minify HTML', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_minify_html" value="1" ' . checked($min_html, '1', false) . '></label></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Minify CSS', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_minify_css" value="1" ' . checked($min_css, '1', false) . '></label></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Minify JS', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_minify_js" value="1" ' . checked($min_js, '1', false) . '></label></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'PageSpeed API Key', 'gm2-wordpress-suite' ) . '</th><td><input type="text" name="gm2_pagespeed_api_key" value="' . esc_attr($ps_key) . '" class="regular-text" />';
             if (!empty($ps_scores['mobile']) || !empty($ps_scores['desktop'])) {
                 $time = !empty($ps_scores['time']) ? date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $ps_scores['time']) : '';
                 echo '<p>Mobile: ' . esc_html($ps_scores['mobile'] ?? '') . ' Desktop: ' . esc_html($ps_scores['desktop'] ?? '') . ' ' . esc_html($time) . '</p>';
             }
             echo '</td></tr>';
             echo '</tbody></table>';
-            submit_button('Save Settings');
-            echo ' <input type="submit" name="gm2_test_pagespeed" class="button" value="Test Page Speed" />';
+            submit_button( esc_html__( 'Save Settings', 'gm2-wordpress-suite' ) );
+            echo ' <input type="submit" name="gm2_test_pagespeed" class="button" value="' . esc_attr__( 'Test Page Speed', 'gm2-wordpress-suite' ) . '" />';
             echo '</form>';
         } elseif ($active === 'keywords') {
             $enabled = trim(get_option('gm2_gads_developer_token', '')) !== '' &&
@@ -519,20 +519,20 @@ class Gm2_SEO_Admin {
             wp_nonce_field('gm2_keyword_settings_save', 'gm2_keyword_settings_nonce');
             echo '<input type="hidden" name="action" value="gm2_keyword_settings" />';
             echo '<table class="form-table"><tbody>';
-            echo '<tr><th scope="row">Language Constant</th><td><input type="text" name="gm2_gads_language" id="gm2_gads_language" value="' . esc_attr($lang) . '" class="regular-text" /></td></tr>';
-            echo '<tr><th scope="row">Geo Target Constant</th><td><input type="text" name="gm2_gads_geo_target" id="gm2_gads_geo_target" value="' . esc_attr($geo) . '" class="regular-text" /></td></tr>';
-            echo '<tr><th scope="row">Login Customer ID</th><td><input type="text" name="gm2_gads_login_customer_id" id="gm2_gads_login_customer_id" value="' . esc_attr($login) . '" class="regular-text" /></td></tr>';
-            echo '<tr><th scope="row">Search Console Query Limit</th><td><input type="number" name="gm2_sc_query_limit" id="gm2_sc_query_limit" value="' . esc_attr($limit) . '" class="small-text" /></td></tr>';
-            echo '<tr><th scope="row">Analytics Days</th><td><input type="number" name="gm2_analytics_days" id="gm2_analytics_days" value="' . esc_attr($days) . '" class="small-text" /></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Language Constant', 'gm2-wordpress-suite' ) . '</th><td><input type="text" name="gm2_gads_language" id="gm2_gads_language" value="' . esc_attr($lang) . '" class="regular-text" /></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Geo Target Constant', 'gm2-wordpress-suite' ) . '</th><td><input type="text" name="gm2_gads_geo_target" id="gm2_gads_geo_target" value="' . esc_attr($geo) . '" class="regular-text" /></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Login Customer ID', 'gm2-wordpress-suite' ) . '</th><td><input type="text" name="gm2_gads_login_customer_id" id="gm2_gads_login_customer_id" value="' . esc_attr($login) . '" class="regular-text" /></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Search Console Query Limit', 'gm2-wordpress-suite' ) . '</th><td><input type="number" name="gm2_sc_query_limit" id="gm2_sc_query_limit" value="' . esc_attr($limit) . '" class="small-text" /></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Analytics Days', 'gm2-wordpress-suite' ) . '</th><td><input type="number" name="gm2_analytics_days" id="gm2_analytics_days" value="' . esc_attr($days) . '" class="small-text" /></td></tr>';
             echo '</tbody></table>';
-            echo '<p class="description">Defaults: English / United States.</p>';
-            submit_button('Save Settings');
+            echo '<p class="description">' . esc_html__( 'Defaults: English / United States.', 'gm2-wordpress-suite' ) . '</p>';
+            submit_button( esc_html__( 'Save Settings', 'gm2-wordpress-suite' ) );
             echo '</form>';
 
             echo '<form id="gm2-keyword-research-form">';
-            echo '<p><label for="gm2_seed_keyword">Seed Keyword</label>';
+            echo '<p><label for="gm2_seed_keyword">' . esc_html__( 'Seed Keyword', 'gm2-wordpress-suite' ) . '</label>';
             echo '<input type="text" id="gm2_seed_keyword" class="regular-text" /></p>';
-            echo '<p><button class="button" type="submit"' . ($enabled ? '' : ' disabled') . '>Generate Ideas</button></p>';
+            echo '<p><button class="button" type="submit"' . ($enabled ? '' : ' disabled') . '>' . esc_html__( 'Generate Ideas', 'gm2-wordpress-suite' ) . '</button></p>';
             if (!$enabled) {
                 echo '<p class="description">' . esc_html__('Google Ads credentials are not configured.', 'gm2-wordpress-suite') . '</p>';
             }
@@ -590,10 +590,10 @@ class Gm2_SEO_Admin {
             }
             $min_int = (int) get_option('gm2_min_internal_links', 1);
             $min_ext = (int) get_option('gm2_min_external_links', 1);
-            echo '<tr><th scope="row">Minimum Internal Links</th><td><input type="number" name="gm2_min_internal_links" value="' . esc_attr($min_int) . '" class="small-text" /></td></tr>';
-            echo '<tr><th scope="row">Minimum External Links</th><td><input type="number" name="gm2_min_external_links" value="' . esc_attr($min_ext) . '" class="small-text" /></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Minimum Internal Links', 'gm2-wordpress-suite' ) . '</th><td><input type="number" name="gm2_min_internal_links" value="' . esc_attr($min_int) . '" class="small-text" /></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Minimum External Links', 'gm2-wordpress-suite' ) . '</th><td><input type="number" name="gm2_min_external_links" value="' . esc_attr($min_ext) . '" class="small-text" /></td></tr>';
             echo '</tbody></table>';
-            submit_button('Save Rules');
+            submit_button( esc_html__( 'Save Rules', 'gm2-wordpress-suite' ) );
             echo '</form>';
         } elseif ($active === 'guidelines') {
             echo '<form method="post" action="options.php">';
@@ -605,7 +605,7 @@ class Gm2_SEO_Admin {
                 $val   = get_option($opt, '');
                 echo '<h3>' . esc_html($label) . '</h3>';
                 echo '<textarea name="' . esc_attr($opt) . '" rows="6" class="large-text">' . esc_textarea($val) . '</textarea>';
-                echo '<p><button class="button gm2-research-guidelines" data-target="' . esc_attr($opt) . '">Research SEO Guidelines</button></p>';
+                echo '<p><button class="button gm2-research-guidelines" data-target="' . esc_attr($opt) . '">' . esc_html__( 'Research SEO Guidelines', 'gm2-wordpress-suite' ) . '</button></p>';
             }
 
             foreach ($this->get_supported_taxonomies() as $tax) {
@@ -615,10 +615,10 @@ class Gm2_SEO_Admin {
                 $val   = get_option($opt, '');
                 echo '<h3>' . esc_html($label) . '</h3>';
                 echo '<textarea name="' . esc_attr($opt) . '" rows="6" class="large-text">' . esc_textarea($val) . '</textarea>';
-                echo '<p><button class="button gm2-research-guidelines" data-target="' . esc_attr($opt) . '">Research SEO Guidelines</button></p>';
+                echo '<p><button class="button gm2-research-guidelines" data-target="' . esc_attr($opt) . '">' . esc_html__( 'Research SEO Guidelines', 'gm2-wordpress-suite' ) . '</button></p>';
             }
 
-            submit_button('Save Guidelines');
+            submit_button( esc_html__( 'Save Guidelines', 'gm2-wordpress-suite' ) );
             echo '</form>';
         } else {
             echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
@@ -635,11 +635,11 @@ class Gm2_SEO_Admin {
     public function display_robots_page() {
         $content = get_option('gm2_robots_txt', '');
         echo '<div class="wrap">';
-        echo '<h1>Robots.txt</h1>';
+        echo '<h1>' . esc_html__( 'Robots.txt', 'gm2-wordpress-suite' ) . '</h1>';
         echo '<form method="post" action="options.php">';
         settings_fields('gm2_robots_options');
         echo '<textarea name="gm2_robots_txt" rows="10" class="large-text code">' . esc_textarea($content) . '</textarea>';
-        submit_button('Save');
+        submit_button( esc_html__( 'Save', 'gm2-wordpress-suite' ) );
         echo '</form>';
         echo '</div>';
     }
@@ -667,18 +667,18 @@ class Gm2_SEO_Admin {
         ]);
 
         echo '<div class="wrap" id="gm2-bulk-ai">';
-        echo '<h1>Bulk AI Review</h1>';
+        echo '<h1>' . esc_html__( 'Bulk AI Review', 'gm2-wordpress-suite' ) . '</h1>';
         echo '<form method="post">';
         wp_nonce_field('gm2_bulk_ai_settings');
-        echo '<p><label>Posts per page <input type="number" name="page_size" value="' . esc_attr($page_size) . '" min="1"></label> ';
-        echo '<label>Status <select name="status">';
-        echo '<option value="publish"' . selected($status, 'publish', false) . '>Published</option>';
-        echo '<option value="draft"' . selected($status, 'draft', false) . '>Draft</option>';
+        echo '<p><label>' . esc_html__( 'Posts per page', 'gm2-wordpress-suite' ) . ' <input type="number" name="page_size" value="' . esc_attr($page_size) . '" min="1"></label> ';
+        echo '<label>' . esc_html__( 'Status', 'gm2-wordpress-suite' ) . ' <select name="status">';
+        echo '<option value="publish"' . selected($status, 'publish', false) . '>' . esc_html__( 'Published', 'gm2-wordpress-suite' ) . '</option>';
+        echo '<option value="draft"' . selected($status, 'draft', false) . '>' . esc_html__( 'Draft', 'gm2-wordpress-suite' ) . '</option>';
         echo '</select></label> ';
-        submit_button('Save', 'secondary', 'gm2_bulk_ai_save', false);
+        submit_button( esc_html__( 'Save', 'gm2-wordpress-suite' ), 'secondary', 'gm2_bulk_ai_save', false );
         echo '</p></form>';
 
-        echo '<table class="widefat" id="gm2-bulk-list"><thead><tr><th class="check-column"><input type="checkbox" id="gm2-bulk-select-all"></th><th>Title</th><th>SEO Title</th><th>Description</th><th>Slug</th><th>AI Suggestions</th></tr></thead><tbody>';
+        echo '<table class="widefat" id="gm2-bulk-list"><thead><tr><th class="check-column"><input type="checkbox" id="gm2-bulk-select-all"></th><th>' . esc_html__( 'Title', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'SEO Title', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'Description', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'Slug', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'AI Suggestions', 'gm2-wordpress-suite' ) . '</th></tr></thead><tbody>';
         foreach ($query->posts as $post) {
             $seo_title   = get_post_meta($post->ID, '_gm2_title', true);
             $description = get_post_meta($post->ID, '_gm2_description', true);
@@ -692,7 +692,7 @@ class Gm2_SEO_Admin {
             echo '</tr>';
         }
         echo '</tbody></table>';
-        echo '<p><button type="button" class="button" id="gm2-bulk-analyze">Analyze Selected</button></p>';
+        echo '<p><button type="button" class="button" id="gm2-bulk-analyze">' . esc_html__( 'Analyze Selected', 'gm2-wordpress-suite' ) . '</button></p>';
         echo '</div>';
     }
 
@@ -813,15 +813,15 @@ class Gm2_SEO_Admin {
         }
 
         echo '<div class="wrap">';
-        echo '<h1>Connect Google Account</h1>';
+        echo '<h1>' . esc_html__( 'Connect Google Account', 'gm2-wordpress-suite' ) . '</h1>';
         $setup_url = admin_url( 'admin.php?page=gm2-google-oauth-setup' );
         echo '<p><a href="' . esc_url( $setup_url ) . '">' . esc_html__( 'Google OAuth Setup', 'gm2-wordpress-suite' ) . '</a></p>';
         echo $notice;
         if (!$oauth->is_connected()) {
             $url = esc_url($oauth->get_auth_url());
-            echo '<a href="' . $url . '" class="button button-primary">Connect Google</a>';
+            echo '<a href="' . $url . '" class="button button-primary">' . esc_html__( 'Connect Google', 'gm2-wordpress-suite' ) . '</a>';
         } else {
-            echo '<p>Google account connected.</p>';
+            echo '<p>' . esc_html__( 'Google account connected.', 'gm2-wordpress-suite' ) . '</p>';
             if (is_array($properties) && $properties) {
                 $current = get_option('gm2_ga_measurement_id', is_array($properties) ? array_key_first($properties) : '');
                 echo '<form method="post">';
@@ -847,7 +847,7 @@ class Gm2_SEO_Admin {
                     echo '<option value="' . esc_attr($aid) . '" ' . selected($current, $aid, false) . '>' . esc_html($alabel) . '</option>';
                 }
                 echo '</select></p>';
-                echo '<p class="description">Ads customer IDs are fetched automatically from your connected Google account.</p>';
+                  echo '<p class="description">' . esc_html__( 'Ads customer IDs are fetched automatically from your connected Google account.', 'gm2-wordpress-suite' ) . '</p>';
                 submit_button(__('Save Ads Account', 'gm2-wordpress-suite'));
                 echo '</form>';
             }
@@ -908,9 +908,9 @@ class Gm2_SEO_Admin {
         }
         if (!$rule_lines) {
             $rule_lines = [
-                'Title length between 30 and 60 characters',
-                'Description length between 50 and 160 characters',
-                'Description has at least 150 words',
+                __( 'Title length between 30 and 60 characters', 'gm2-wordpress-suite' ),
+                __( 'Description length between 50 and 160 characters', 'gm2-wordpress-suite' ),
+                __( 'Description has at least 150 words', 'gm2-wordpress-suite' ),
             ];
         }
 
@@ -918,7 +918,7 @@ class Gm2_SEO_Admin {
         if (is_object($term)) {
             $count = str_word_count(wp_strip_all_tags($term->description));
             if ($count < 150) {
-                $desc_warning = 'Description has ' . $count . ' words; recommended minimum is 150.';
+                $desc_warning = sprintf( __( 'Description has %d words; recommended minimum is 150.', 'gm2-wordpress-suite' ), $count );
             }
         }
 
@@ -934,37 +934,37 @@ class Gm2_SEO_Admin {
         echo $wrapper_start;
         echo '<div class="gm2-seo-tabs">';
         echo '<nav class="gm2-nav-tabs">';
-        echo '<a href="#" class="gm2-nav-tab active" data-tab="gm2-seo-settings">SEO Settings</a>';
-        echo '<a href="#" class="gm2-nav-tab" data-tab="gm2-content-analysis">Content Analysis</a>';
-        echo '<a href="#" class="gm2-nav-tab" data-tab="gm2-ai-seo">AI SEO</a>';
+        echo '<a href="#" class="gm2-nav-tab active" data-tab="gm2-seo-settings">' . esc_html__( 'SEO Settings', 'gm2-wordpress-suite' ) . '</a>';
+        echo '<a href="#" class="gm2-nav-tab" data-tab="gm2-content-analysis">' . esc_html__( 'Content Analysis', 'gm2-wordpress-suite' ) . '</a>';
+        echo '<a href="#" class="gm2-nav-tab" data-tab="gm2-ai-seo">' . esc_html__( 'AI SEO', 'gm2-wordpress-suite' ) . '</a>';
         echo '</nav>';
 
         echo '<div id="gm2-seo-settings" class="gm2-tab-panel active">';
-        echo '<p><label for="gm2_seo_title">SEO Title</label>';
+        echo '<p><label for="gm2_seo_title">' . esc_html__( 'SEO Title', 'gm2-wordpress-suite' ) . '</label>';
         echo '<input type="text" id="gm2_seo_title" name="gm2_seo_title" value="' . esc_attr($title) . '" class="widefat" /></p>';
-        echo '<p><label for="gm2_seo_description">SEO Description</label>';
+        echo '<p><label for="gm2_seo_description">' . esc_html__( 'SEO Description', 'gm2-wordpress-suite' ) . '</label>';
         echo '<textarea id="gm2_seo_description" name="gm2_seo_description" class="widefat" rows="3">' . esc_textarea($description) . '</textarea></p>';
-        echo '<p><label for="gm2_focus_keywords">Focus Keywords (comma separated)</label>';
+        echo '<p><label for="gm2_focus_keywords">' . esc_html__( 'Focus Keywords (comma separated)', 'gm2-wordpress-suite' ) . '</label>';
         echo '<input type="text" id="gm2_focus_keywords" name="gm2_focus_keywords" value="' . esc_attr($focus_keywords) . '" class="widefat" /></p>';
-        echo '<p><label><input type="checkbox" name="gm2_noindex" value="1" ' . checked($noindex, '1', false) . '> noindex</label></p>';
-        echo '<p><label><input type="checkbox" name="gm2_nofollow" value="1" ' . checked($nofollow, '1', false) . '> nofollow</label></p>';
-        echo '<p><label for="gm2_canonical_url">Canonical URL</label>';
+        echo '<p><label><input type="checkbox" name="gm2_noindex" value="1" ' . checked($noindex, '1', false) . '> ' . esc_html__( 'noindex', 'gm2-wordpress-suite' ) . '</label></p>';
+        echo '<p><label><input type="checkbox" name="gm2_nofollow" value="1" ' . checked($nofollow, '1', false) . '> ' . esc_html__( 'nofollow', 'gm2-wordpress-suite' ) . '</label></p>';
+        echo '<p><label for="gm2_canonical_url">' . esc_html__( 'Canonical URL', 'gm2-wordpress-suite' ) . '</label>';
         echo '<input type="url" id="gm2_canonical_url" name="gm2_canonical_url" value="' . esc_attr($canonical) . '" class="widefat" /></p>';
 
-        echo '<p><label for="gm2_max_snippet">Max Snippet</label>';
+        echo '<p><label for="gm2_max_snippet">' . esc_html__( 'Max Snippet', 'gm2-wordpress-suite' ) . '</label>';
         echo '<input type="text" id="gm2_max_snippet" name="gm2_max_snippet" value="' . esc_attr($max_snippet) . '" class="small-text" /></p>';
-        echo '<p><label for="gm2_max_image_preview">Max Image Preview</label>';
+        echo '<p><label for="gm2_max_image_preview">' . esc_html__( 'Max Image Preview', 'gm2-wordpress-suite' ) . '</label>';
         echo '<input type="text" id="gm2_max_image_preview" name="gm2_max_image_preview" value="' . esc_attr($max_image_preview) . '" class="small-text" /></p>';
-        echo '<p><label for="gm2_max_video_preview">Max Video Preview</label>';
+        echo '<p><label for="gm2_max_video_preview">' . esc_html__( 'Max Video Preview', 'gm2-wordpress-suite' ) . '</label>';
         echo '<input type="text" id="gm2_max_video_preview" name="gm2_max_video_preview" value="' . esc_attr($max_video_preview) . '" class="small-text" /></p>';
 
 
 
         $og_image = is_object($term) ? get_term_meta($term->term_id, '_gm2_og_image', true) : '';
         $og_image_url = $og_image ? wp_get_attachment_url($og_image) : '';
-        echo '<p><label for="gm2_og_image">OG Image</label>';
+        echo '<p><label for="gm2_og_image">' . esc_html__( 'OG Image', 'gm2-wordpress-suite' ) . '</label>';
         echo '<input type="hidden" id="gm2_og_image" name="gm2_og_image" value="' . esc_attr($og_image) . '" />';
-        echo '<input type="button" class="button gm2-upload-image" data-target="gm2_og_image" value="Select Image" />';
+        echo '<input type="button" class="button gm2-upload-image" data-target="gm2_og_image" value="' . esc_attr__( 'Select Image', 'gm2-wordpress-suite' ) . '" />';
         echo '<span class="gm2-image-preview">' . ($og_image_url ? '<img src="' . esc_url($og_image_url) . '" style="max-width:100%;height:auto;" />' : '') . '</span></p>';
         echo '</div>';
 
@@ -984,9 +984,9 @@ class Gm2_SEO_Admin {
         echo '</ul>';
         echo '</div>';
         echo '<div id="gm2-ai-seo" class="gm2-tab-panel">';
-        echo '<p><button type="button" class="button gm2-ai-research">AI Research</button></p>';
+        echo '<p><button type="button" class="button gm2-ai-research">' . esc_html__( 'AI Research', 'gm2-wordpress-suite' ) . '</button></p>';
         echo '<div id="gm2-ai-results"></div>';
-        echo '<p><button type="button" class="button gm2-ai-implement">Implement Selected</button></p>';
+        echo '<p><button type="button" class="button gm2-ai-implement">' . esc_html__( 'Implement Selected', 'gm2-wordpress-suite' ) . '</button></p>';
         echo '</div>';
 
         echo '</div>';
@@ -1015,8 +1015,8 @@ class Gm2_SEO_Admin {
                 if (!is_wp_error($resp) && $resp !== '') {
                     $description = sanitize_textarea_field($resp);
                 } else {
-                    $msg = is_wp_error($resp) ? $resp->get_error_message() : 'Empty response from ChatGPT';
-                    self::add_notice('ChatGPT description error: ' . $msg);
+                    $msg = is_wp_error($resp) ? $resp->get_error_message() : __( 'Empty response from ChatGPT', 'gm2-wordpress-suite' );
+                    self::add_notice(sprintf( __( 'ChatGPT description error: %s', 'gm2-wordpress-suite' ), $msg ));
                 }
             }
         }
@@ -1348,8 +1348,8 @@ class Gm2_SEO_Admin {
                 if (!is_wp_error($resp) && $resp !== '') {
                     $alt = sanitize_text_field($resp);
                 } else {
-                    $msg = is_wp_error($resp) ? $resp->get_error_message() : 'Empty response from ChatGPT';
-                    self::add_notice('ChatGPT alt text error: ' . $msg);
+                    $msg = is_wp_error($resp) ? $resp->get_error_message() : __( 'Empty response from ChatGPT', 'gm2-wordpress-suite' );
+                    self::add_notice( sprintf( __( 'ChatGPT alt text error: %s', 'gm2-wordpress-suite' ), $msg ) );
                 }
             }
             update_post_meta($attachment_id, '_wp_attachment_image_alt', $alt);
@@ -1465,16 +1465,16 @@ class Gm2_SEO_Admin {
 
         $h1s = $doc->getElementsByTagName('h1');
         if ($h1s->length > 1) {
-            $issues[] = 'Multiple <h1> tags found';
+            $issues[] = __( 'Multiple <h1> tags found', 'gm2-wordpress-suite' );
         }
 
         foreach ($doc->getElementsByTagName('img') as $img) {
             if (!$img->hasAttribute('alt') || trim($img->getAttribute('alt')) === '') {
-                $issues[] = 'Image missing alt attribute';
+                $issues[] = __( 'Image missing alt attribute', 'gm2-wordpress-suite' );
                 break;
             }
             if ($focus_main !== '' && stripos($img->getAttribute('alt'), $focus_main) === false) {
-                $issues[] = 'Image alt text missing focus keyword';
+                $issues[] = __( 'Image alt text missing focus keyword', 'gm2-wordpress-suite' );
                 break;
             }
         }
@@ -1513,26 +1513,26 @@ class Gm2_SEO_Admin {
         if (!$rule_lines) {
             if ($taxonomy) {
                 $rule_lines = [
-                    'Title length between 30 and 60 characters',
-                    'Description length between 50 and 160 characters',
-                    'Description has at least 150 words',
-                    'SEO title is unique',
-                    'Meta description is unique',
+                    __( 'Title length between 30 and 60 characters', 'gm2-wordpress-suite' ),
+                    __( 'Description length between 50 and 160 characters', 'gm2-wordpress-suite' ),
+                    __( 'Description has at least 150 words', 'gm2-wordpress-suite' ),
+                    __( 'SEO title is unique', 'gm2-wordpress-suite' ),
+                    __( 'Meta description is unique', 'gm2-wordpress-suite' ),
                 ];
             } else {
                 $rule_lines = [
-                    'Title length between 30 and 60 characters',
-                    'Description length between 50 and 160 characters',
-                    'At least one focus keyword',
-                    'Content has at least 300 words',
-                    'Focus keyword appears in first paragraph',
-                    'Only one H1 tag present',
-                    'Image alt text contains focus keyword',
-                    'At least one internal link',
-                    'At least one external link',
-                    'Focus keyword included in meta description',
-                    'SEO title is unique',
-                    'Meta description is unique',
+                    __( 'Title length between 30 and 60 characters', 'gm2-wordpress-suite' ),
+                    __( 'Description length between 50 and 160 characters', 'gm2-wordpress-suite' ),
+                    __( 'At least one focus keyword', 'gm2-wordpress-suite' ),
+                    __( 'Content has at least 300 words', 'gm2-wordpress-suite' ),
+                    __( 'Focus keyword appears in first paragraph', 'gm2-wordpress-suite' ),
+                    __( 'Only one H1 tag present', 'gm2-wordpress-suite' ),
+                    __( 'Image alt text contains focus keyword', 'gm2-wordpress-suite' ),
+                    __( 'At least one internal link', 'gm2-wordpress-suite' ),
+                    __( 'At least one external link', 'gm2-wordpress-suite' ),
+                    __( 'Focus keyword included in meta description', 'gm2-wordpress-suite' ),
+                    __( 'SEO title is unique', 'gm2-wordpress-suite' ),
+                    __( 'Meta description is unique', 'gm2-wordpress-suite' ),
                 ];
             }
         }
@@ -2114,30 +2114,30 @@ class Gm2_SEO_Admin {
         echo '<input type="text" id="gm2_seo_title" name="gm2_seo_title" value="' . esc_attr($title) . '" class="widefat" /></p>';
         echo '<p><label for="gm2_seo_description">SEO Description</label>';
         echo '<textarea id="gm2_seo_description" name="gm2_seo_description" class="widefat" rows="3">' . esc_textarea($description) . '</textarea></p>';
-        echo '<p><label for="gm2_focus_keywords">Focus Keywords (comma separated)</label>';
+        echo '<p><label for="gm2_focus_keywords">' . esc_html__( 'Focus Keywords (comma separated)', 'gm2-wordpress-suite' ) . '</label>';
         echo '<input type="text" id="gm2_focus_keywords" name="gm2_focus_keywords" value="' . esc_attr($focus_keywords) . '" class="widefat" /></p>';
-        echo '<p><label><input type="checkbox" name="gm2_noindex" value="1" ' . checked($noindex, '1', false) . '> noindex</label></p>';
-        echo '<p><label><input type="checkbox" name="gm2_nofollow" value="1" ' . checked($nofollow, '1', false) . '> nofollow</label></p>';
-        echo '<p><label for="gm2_canonical_url">Canonical URL</label>';
+        echo '<p><label><input type="checkbox" name="gm2_noindex" value="1" ' . checked($noindex, '1', false) . '> ' . esc_html__( 'noindex', 'gm2-wordpress-suite' ) . '</label></p>';
+        echo '<p><label><input type="checkbox" name="gm2_nofollow" value="1" ' . checked($nofollow, '1', false) . '> ' . esc_html__( 'nofollow', 'gm2-wordpress-suite' ) . '</label></p>';
+        echo '<p><label for="gm2_canonical_url">' . esc_html__( 'Canonical URL', 'gm2-wordpress-suite' ) . '</label>';
         echo '<input type="url" id="gm2_canonical_url" name="gm2_canonical_url" value="' . esc_attr($canonical) . '" class="widefat" /></p>';
 
-        echo '<p><label for="gm2_max_snippet">Max Snippet</label>';
+        echo '<p><label for="gm2_max_snippet">' . esc_html__( 'Max Snippet', 'gm2-wordpress-suite' ) . '</label>';
         echo '<input type="text" id="gm2_max_snippet" name="gm2_max_snippet" value="' . esc_attr($max_snippet) . '" class="small-text" /></p>';
-        echo '<p><label for="gm2_max_image_preview">Max Image Preview</label>';
+        echo '<p><label for="gm2_max_image_preview">' . esc_html__( 'Max Image Preview', 'gm2-wordpress-suite' ) . '</label>';
         echo '<input type="text" id="gm2_max_image_preview" name="gm2_max_image_preview" value="' . esc_attr($max_image_preview) . '" class="small-text" /></p>';
-        echo '<p><label for="gm2_max_video_preview">Max Video Preview</label>';
+        echo '<p><label for="gm2_max_video_preview">' . esc_html__( 'Max Video Preview', 'gm2-wordpress-suite' ) . '</label>';
         echo '<input type="text" id="gm2_max_video_preview" name="gm2_max_video_preview" value="' . esc_attr($max_video_preview) . '" class="small-text" /></p>';
 
         $og_image = get_post_meta($post->ID, '_gm2_og_image', true);
         $og_image_url = $og_image ? wp_get_attachment_url($og_image) : '';
-        echo '<p><label for="gm2_og_image">OG Image</label>';
+        echo '<p><label for="gm2_og_image">' . esc_html__( 'OG Image', 'gm2-wordpress-suite' ) . '</label>';
         echo '<input type="hidden" id="gm2_og_image" name="gm2_og_image" value="' . esc_attr($og_image) . '" />';
-        echo '<input type="button" class="button gm2-upload-image" data-target="gm2_og_image" value="Select Image" />';
+        echo '<input type="button" class="button gm2-upload-image" data-target="gm2_og_image" value="' . esc_attr__( 'Select Image', 'gm2-wordpress-suite' ) . '" />';
         echo '<span class="gm2-image-preview">' . ($og_image_url ? '<img src="' . esc_url($og_image_url) . '" style="max-width:100%;height:auto;" />' : '') . '</span></p>';
 
         $link_rel = get_post_meta($post->ID, '_gm2_link_rel', true);
         echo '<input type="hidden" id="gm2_link_rel_data" name="gm2_link_rel" value="' . esc_attr($link_rel) . '" />';
-        echo '<p class="description">Use the link dialog to mark external links as <code>nofollow</code> or <code>sponsored</code>.</p>';
+        echo '<p class="description">' . esc_html__( 'Use the link dialog to mark external links as', 'gm2-wordpress-suite' ) . ' <code>nofollow</code> ' . esc_html__( 'or', 'gm2-wordpress-suite' ) . ' <code>sponsored</code>.</p>';
         echo '</div>';
 
         echo '<div id="gm2-content-analysis" class="gm2-tab-panel">';
@@ -2149,11 +2149,11 @@ class Gm2_SEO_Admin {
         }
         if (!$rule_lines) {
             $rule_lines = [
-                'Title length between 30 and 60 characters',
-                'Description length between 50 and 160 characters',
-                'At least one focus keyword',
-                'Content has at least 300 words',
-                'Image alt text contains focus keyword',
+                __( 'Title length between 30 and 60 characters', 'gm2-wordpress-suite' ),
+                __( 'Description length between 50 and 160 characters', 'gm2-wordpress-suite' ),
+                __( 'At least one focus keyword', 'gm2-wordpress-suite' ),
+                __( 'Content has at least 300 words', 'gm2-wordpress-suite' ),
+                __( 'Image alt text contains focus keyword', 'gm2-wordpress-suite' ),
             ];
         }
         $min_int = (int) get_option('gm2_min_internal_links', 1);
@@ -2166,20 +2166,20 @@ class Gm2_SEO_Admin {
         }
         echo '</ul>';
         echo '<div id="gm2-content-analysis-data">';
-        echo '<p>Word Count: <span id="gm2-content-analysis-word-count">0</span></p>';
-        echo '<p>Top Keyword: <span id="gm2-content-analysis-keyword"></span></p>';
-        echo '<p>Keyword Density: <span id="gm2-content-analysis-density">0</span>%</p>';
-        echo '<p>Focus Keyword Density:</p><ul id="gm2-focus-keyword-density"></ul>';
-        echo '<p>Readability: <span id="gm2-content-analysis-readability">0</span></p>';
-        echo '<p>Internal Links: <span id="gm2-content-analysis-internal-links">0</span></p>';
-        echo '<p>External Links: <span id="gm2-content-analysis-external-links">0</span></p>';
-        echo '<p>Suggested Links:</p><ul id="gm2-content-analysis-links"></ul>';
+        echo '<p>' . esc_html__( 'Word Count', 'gm2-wordpress-suite' ) . ': <span id="gm2-content-analysis-word-count">0</span></p>';
+        echo '<p>' . esc_html__( 'Top Keyword', 'gm2-wordpress-suite' ) . ': <span id="gm2-content-analysis-keyword"></span></p>';
+        echo '<p>' . esc_html__( 'Keyword Density', 'gm2-wordpress-suite' ) . ': <span id="gm2-content-analysis-density">0</span>%</p>';
+        echo '<p>' . esc_html__( 'Focus Keyword Density', 'gm2-wordpress-suite' ) . ':</p><ul id="gm2-focus-keyword-density"></ul>';
+        echo '<p>' . esc_html__( 'Readability', 'gm2-wordpress-suite' ) . ': <span id="gm2-content-analysis-readability">0</span></p>';
+        echo '<p>' . esc_html__( 'Internal Links', 'gm2-wordpress-suite' ) . ': <span id="gm2-content-analysis-internal-links">0</span></p>';
+        echo '<p>' . esc_html__( 'External Links', 'gm2-wordpress-suite' ) . ': <span id="gm2-content-analysis-external-links">0</span></p>';
+        echo '<p>' . esc_html__( 'Suggested Links', 'gm2-wordpress-suite' ) . ':</p><ul id="gm2-content-analysis-links"></ul>';
         echo '</div>';
         echo '</div>';
         echo '<div id="gm2-ai-seo" class="gm2-tab-panel">';
-        echo '<p><button type="button" class="button gm2-ai-research">AI Research</button></p>';
+        echo '<p><button type="button" class="button gm2-ai-research">' . esc_html__( 'AI Research', 'gm2-wordpress-suite' ) . '</button></p>';
         echo '<div id="gm2-ai-results"></div>';
-        echo '<p><button type="button" class="button gm2-ai-implement">Implement Selected</button></p>';
+        echo '<p><button type="button" class="button gm2-ai-implement">' . esc_html__( 'Implement Selected', 'gm2-wordpress-suite' ) . '</button></p>';
         echo '</div>';
         echo '</div>';
     }
