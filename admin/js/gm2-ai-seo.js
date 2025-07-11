@@ -92,11 +92,6 @@ jQuery(function($){
 
     function buildResults(data, $out){
         var $wrap = $('<div>');
-        var $selectAll = $('<p>').append(
-            $('<label>').append(
-                $('<input>', {type:'checkbox', id:'gm2-ai-select-all'})
-            ).append(' Select all')
-        );
         var $list = $('<div>', {id:'gm2-ai-suggestions'});
         var fields = {
             seo_title: 'SEO Title',
@@ -108,8 +103,10 @@ jQuery(function($){
         if(typeof data.slug !== 'undefined'){
             fields.slug = 'Slug';
         }
+        var added = 0;
         Object.keys(fields).forEach(function(key){
             if(typeof data[key] === 'undefined') return;
+            added++;
             var label = fields[key];
             var val = Array.isArray(data[key]) ? data[key].join(', ') : data[key];
             var $lbl = $('<label>');
@@ -117,7 +114,17 @@ jQuery(function($){
             $lbl.append(' '+label+': '+val);
             $list.append($('<p>').append($lbl));
         });
-        $wrap.append($selectAll).append($list);
+        if(added){
+            var $selectAll = $('<p>').append(
+                $('<label>').append(
+                    $('<input>', {type:'checkbox', id:'gm2-ai-select-all'})
+                ).append(' Select all')
+            );
+            $wrap.append($selectAll).append($list);
+        } else {
+            $('<div>', {'class':'notice notice-warning gm2-ai-warning'})
+                .text('Unable to parse AI response—please try again').appendTo($wrap);
+        }
 
         if(data.long_tail_keywords){
             var $kw = $('<ul>');
