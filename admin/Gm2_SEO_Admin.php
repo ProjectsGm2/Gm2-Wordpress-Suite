@@ -1030,8 +1030,9 @@ class Gm2_SEO_Admin {
         if ($description === '' && trim(get_option('gm2_chatgpt_api_key', '')) !== '') {
             $post = get_post($post_id);
             if ($post) {
-                $content = wp_strip_all_tags($post->post_content);
-                $prompt  = "Write a short SEO description for the following content:\n\n" . substr($content, 0, 400);
+                $sanitized_content = wp_strip_all_tags($post->post_content);
+                $snippet_content   = function_exists('mb_substr') ? mb_substr($sanitized_content, 0, 400) : substr($sanitized_content, 0, 400);
+                $prompt  = "Write a short SEO description for the following content:\n\n" . $snippet_content;
                 $chat    = new Gm2_ChatGPT();
                 $resp    = $chat->query($prompt);
                 if (!is_wp_error($resp) && $resp !== '') {
@@ -1847,7 +1848,8 @@ class Gm2_SEO_Admin {
         $html        = $this->get_rendered_html($post_id, $term_id, $taxonomy);
         $focus_main  = trim(explode(',', $focus)[0]);
         $html_issues = $this->detect_html_issues($html, $canonical, $focus_main);
-        $snippet     = substr(wp_strip_all_tags($html), 0, 400);
+        $clean_html  = wp_strip_all_tags($html);
+        $snippet     = function_exists('mb_substr') ? mb_substr($clean_html, 0, 400) : substr($clean_html, 0, 400);
 
         $guidelines = '';
         if ($post_id && !empty($post)) {
