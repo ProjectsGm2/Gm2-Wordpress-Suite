@@ -114,7 +114,7 @@ jQuery(function($){
             var val = Array.isArray(data[key]) ? data[key].join(', ') : data[key];
             var $lbl = $('<label>');
             $('<input>', {type:'checkbox','class':'gm2-ai-select', 'data-field':key, 'data-value':val}).appendTo($lbl);
-            $lbl.append(' '+label+': '+val);
+            $lbl.append(document.createTextNode(' ' + label + ': ' + val));
             $list.append($('<p>').append($lbl));
         });
         if(added){
