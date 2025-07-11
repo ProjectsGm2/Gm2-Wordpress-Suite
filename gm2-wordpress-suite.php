@@ -37,7 +37,7 @@ function gm2_add_weekly_schedule($schedules) {
     if (!isset($schedules['weekly'])) {
         $schedules['weekly'] = [
             'interval' => WEEK_IN_SECONDS,
-            'display'  => __('Once Weekly')
+            'display'  => __('Once Weekly', 'gm2-wordpress-suite')
         ];
     }
     return $schedules;
