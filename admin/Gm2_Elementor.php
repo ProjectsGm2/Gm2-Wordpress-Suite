@@ -24,6 +24,16 @@ class Gm2_Elementor {
             GM2_VERSION,
             true
         );
+        wp_localize_script(
+            'gm2-seo-tabs',
+            'gm2Seo',
+            [
+                'i18n' => [
+                    'selectImage' => __( 'Select Image', 'gm2-wordpress-suite' ),
+                    'useImage'    => __( 'Use image', 'gm2-wordpress-suite' ),
+                ],
+            ]
+        );
         wp_enqueue_style(
             'gm2-seo-style',
             GM2_PLUGIN_URL . 'admin/css/gm2-seo.css',

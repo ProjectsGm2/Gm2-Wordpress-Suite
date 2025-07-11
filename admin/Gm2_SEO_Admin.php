@@ -2014,6 +2014,16 @@ class Gm2_SEO_Admin {
             GM2_VERSION,
             true
         );
+        wp_localize_script(
+            'gm2-seo-tabs',
+            'gm2Seo',
+            [
+                'i18n' => [
+                    'selectImage' => __( 'Select Image', 'gm2-wordpress-suite' ),
+                    'useImage'    => __( 'Use image', 'gm2-wordpress-suite' ),
+                ],
+            ]
+        );
 
         wp_enqueue_script(
             'gm2-ai-seo',
@@ -2113,6 +2123,16 @@ class Gm2_SEO_Admin {
             ['jquery'],
             GM2_VERSION,
             true
+        );
+        wp_localize_script(
+            'gm2-seo-tabs',
+            'gm2Seo',
+            [
+                'i18n' => [
+                    'selectImage' => __( 'Select Image', 'gm2-wordpress-suite' ),
+                    'useImage'    => __( 'Use image', 'gm2-wordpress-suite' ),
+                ],
+            ]
         );
 
         wp_enqueue_script(
