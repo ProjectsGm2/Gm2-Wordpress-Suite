@@ -1467,8 +1467,8 @@ class Gm2_SEO_Admin {
                 $post      = $post_obj;
                 setup_postdata($post);
                 $html = apply_filters('the_content', $post_obj->post_content);
-                $post = $prev_post;
                 wp_reset_postdata();
+                $post = $prev_post;
                 return $html;
             }
         } elseif ($term_id && $taxonomy) {
@@ -1485,8 +1485,8 @@ class Gm2_SEO_Admin {
             $post      = $post_obj;
             setup_postdata($post);
             $html = apply_filters('the_content', $desc);
-            $post = $prev_post;
             wp_reset_postdata();
+            $post = $prev_post;
             return $html;
         }
         return '';
