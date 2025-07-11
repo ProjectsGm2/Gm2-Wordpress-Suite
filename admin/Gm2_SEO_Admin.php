@@ -2026,6 +2026,13 @@ class Gm2_SEO_Admin {
                 'nonce'    => wp_create_nonce('gm2_ai_research'),
                 'ajax_url' => admin_url('admin-ajax.php'),
                 'post_id'  => isset($_GET['post']) ? absint($_GET['post']) : 0,
+                'i18n'     => [
+                    'researching' => __( 'Researching...', 'gm2-wordpress-suite' ),
+                    'useExisting' => __( 'Use existing SEO values for AI research?', 'gm2-wordpress-suite' ),
+                    'promptExtra' => __( 'Describe the page or its target audience:', 'gm2-wordpress-suite' ),
+                    'selectAll'   => __( 'Select all', 'gm2-wordpress-suite' ),
+                    'parseError'  => __( 'Unable to parse AI response—please try again', 'gm2-wordpress-suite' ),
+                ],
             ]
         );
 
@@ -2108,6 +2115,13 @@ class Gm2_SEO_Admin {
                 'ajax_url' => admin_url('admin-ajax.php'),
                 'term_id'  => isset($_GET['tag_ID']) ? absint($_GET['tag_ID']) : 0,
                 'taxonomy' => $screen->taxonomy,
+                'i18n'     => [
+                    'researching' => __( 'Researching...', 'gm2-wordpress-suite' ),
+                    'useExisting' => __( 'Use existing SEO values for AI research?', 'gm2-wordpress-suite' ),
+                    'promptExtra' => __( 'Describe the page or its target audience:', 'gm2-wordpress-suite' ),
+                    'selectAll'   => __( 'Select all', 'gm2-wordpress-suite' ),
+                    'parseError'  => __( 'Unable to parse AI response—please try again', 'gm2-wordpress-suite' ),
+                ],
             ]
         );
 
