@@ -105,7 +105,8 @@ The SEO meta box appears when editing posts, pages and taxonomy terms. In the
 **SEO Settings** tab you can enter a custom title and description, toggle
 `noindex` or `nofollow`, and upload an Open Graph image. Click **Select Image**
 to open the WordPress media library and choose a picture for the `og:image` and
-`twitter:image` tags.
+`twitter:image` tags. When inserting a link, you can pick `nofollow` or `sponsored`
+from the link dialog and the plugin will automatically apply the attribute.
 
 Use the **Max Snippet**, **Max Image Preview**, and **Max Video Preview** fields
 to control how search engines display your content. Values entered here are

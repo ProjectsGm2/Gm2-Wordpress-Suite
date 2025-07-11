@@ -24,6 +24,7 @@ class Gm2_SEO_Public {
         add_action('wp_head', [$this, 'output_breadcrumb_schema'], 20);
         add_action('wp_head', [$this, 'output_review_schema'], 20);
         add_action('wp_head', [$this, 'output_article_schema'], 20);
+        add_filter('the_content', [$this, 'apply_link_rel']);
         if (get_option('gm2_show_footer_breadcrumbs', '1') === '1') {
             add_action('wp_footer', [$this, 'output_breadcrumbs']);
         }
@@ -574,6 +575,40 @@ class Gm2_SEO_Public {
             }, $html);
         }
         return $html;
+    }
+
+    public function apply_link_rel($content) {
+        if (is_admin()) {
+            return $content;
+        }
+        $post_id = get_the_ID();
+        if (!$post_id) {
+            return $content;
+        }
+        $json = get_post_meta($post_id, '_gm2_link_rel', true);
+        if (!$json) {
+            return $content;
+        }
+        $map = json_decode($json, true);
+        if (!is_array($map) || empty($map)) {
+            return $content;
+        }
+        $doc = new \DOMDocument();
+        libxml_use_internal_errors(true);
+        $doc->loadHTML('<?xml encoding="utf-8" ?>' . $content, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        libxml_clear_errors();
+        foreach ($doc->getElementsByTagName('a') as $a) {
+            $href = $a->getAttribute('href');
+            if (isset($map[$href])) {
+                $rel = trim($map[$href]);
+                if ($rel === '') {
+                    $a->removeAttribute('rel');
+                } else {
+                    $a->setAttribute('rel', $rel);
+                }
+            }
+        }
+        return $doc->saveHTML();
     }
 
     public function filter_robots_txt($output, $public) {
