@@ -1460,9 +1460,16 @@ class Gm2_SEO_Admin {
 
     private function get_rendered_html($post_id, $term_id, $taxonomy) {
         if ($post_id) {
-            $post = get_post($post_id);
-            if ($post) {
-                return apply_filters('the_content', $post->post_content);
+            $post_obj = get_post($post_id);
+            if ($post_obj) {
+                global $post;
+                $prev_post = $post;
+                $post      = $post_obj;
+                setup_postdata($post);
+                $html = apply_filters('the_content', $post_obj->post_content);
+                $post = $prev_post;
+                wp_reset_postdata();
+                return $html;
             }
         } elseif ($term_id && $taxonomy) {
             $desc = term_description($term_id, $taxonomy);
