@@ -160,6 +160,34 @@ checkout.
 Create 301 or 302 redirects from the **SEO → Redirects** tab. The plugin logs
 the last 100 missing URLs to help you create new redirects.
 
+== Planned Features ==
+* **Search Console metrics** – new **SEO → Analytics** tab will show clicks and
+  impressions from connected sites.
+* **Expanded rules** – additional guidelines per content type editable under
+  **SEO → SEO Guidelines**.
+* **Duplicate checks** – upcoming report in **SEO → Tools** that flags posts
+  with duplicate titles or descriptions.
+* **Slug cleanup** – bulk action in **SEO → General** to remove stopwords from
+  existing slugs.
+* **Canonical for variations** – meta box option to set a canonical URL on
+  individual product variations.
+* **Image alt keyword checks** – SEO meta box warning when alt text is missing
+  or lacks the focus keyword.
+* **Link count tracking** – post list columns showing internal and external
+  link counts with a totals widget.
+* **PageSpeed** – run Google PageSpeed tests from a new **Performance →
+  PageSpeed** screen.
+* **Taxonomy intro length enforcement** – minimum description length setting
+  under **SEO → Taxonomies**.
+* **AI-generated taxonomy descriptions** – generate term descriptions via an
+  **AI SEO** button on taxonomy edit screens.
+* **Image filename normalization** – automatically sanitize filenames when
+  **Clean Image Filenames** is enabled.
+* **Bulk AI suggestions** – bulk action on the posts list to generate AI SEO
+  suggestions for multiple items.
+* **Outbound link rel controls** – dropdown in the link dialog to apply
+  `nofollow` or `sponsored` to outbound links.
+
 == Changelog ==
 = 1.6.4 =
 * Optional slug cleaner with customizable stopwords.
