@@ -1479,7 +1479,7 @@ class Gm2_SEO_Admin {
             return $issues;
         }
 
-        if (!class_exists('\\DOMDocument')) {
+        if (!class_exists('\DOMDocument')) {
             return $issues;
         }
 
