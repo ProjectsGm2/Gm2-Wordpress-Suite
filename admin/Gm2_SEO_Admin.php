@@ -1485,7 +1485,7 @@ class Gm2_SEO_Admin {
     public function ajax_check_rules() {
         check_ajax_referer('gm2_check_rules');
         if (!current_user_can('edit_posts')) {
-            wp_send_json_error('permission denied', 403);
+            wp_send_json_error( __( 'permission denied', 'gm2-wordpress-suite' ), 403 );
         }
 
         $strlen = function ($str) {
@@ -1669,19 +1669,19 @@ class Gm2_SEO_Admin {
     public function ajax_keyword_ideas() {
         check_ajax_referer('gm2_keyword_ideas');
         if (!current_user_can('manage_options')) {
-            wp_send_json_error('permission denied', 403);
+            wp_send_json_error( __( 'permission denied', 'gm2-wordpress-suite' ), 403 );
         }
 
         $creds_ok = trim(get_option('gm2_gads_developer_token', '')) !== '' &&
             trim(get_option('gm2_gads_customer_id', '')) !== '' &&
             get_option('gm2_google_refresh_token', '') !== '';
         if (!$creds_ok) {
-            wp_send_json_error('Google Ads credentials are not configured.');
+            wp_send_json_error( __( 'Google Ads credentials are not configured.', 'gm2-wordpress-suite' ) );
         }
 
         $query = isset($_POST['query']) ? sanitize_text_field(wp_unslash($_POST['query'])) : '';
         if ($query === '') {
-            wp_send_json_error('empty query');
+            wp_send_json_error( __( 'empty query', 'gm2-wordpress-suite' ) );
         }
 
         $planner = new Gm2_Keyword_Planner();
@@ -1696,14 +1696,14 @@ class Gm2_SEO_Admin {
     public function ajax_research_guidelines() {
         check_ajax_referer('gm2_research_guidelines');
         if (!current_user_can('manage_options')) {
-            wp_send_json_error('permission denied', 403);
+            wp_send_json_error( __( 'permission denied', 'gm2-wordpress-suite' ), 403 );
         }
 
         $cats   = isset($_POST['categories']) ? sanitize_text_field(wp_unslash($_POST['categories'])) : '';
         $target = isset($_POST['target']) ? sanitize_key($_POST['target']) : '';
 
         if ($cats === '' || $target === '') {
-            wp_send_json_error('missing parameters');
+            wp_send_json_error( __( 'missing parameters', 'gm2-wordpress-suite' ) );
         }
 
         $allowed = [];
@@ -1714,7 +1714,7 @@ class Gm2_SEO_Admin {
             $allowed[] = 'gm2_seo_guidelines_tax_' . $tax;
         }
         if (!in_array($target, $allowed, true)) {
-            wp_send_json_error('invalid target');
+            wp_send_json_error( __( 'invalid target', 'gm2-wordpress-suite' ) );
         }
 
         $prompt = 'Provide SEO best practice guidelines for the following categories: ' . $cats;
@@ -1738,11 +1738,11 @@ class Gm2_SEO_Admin {
 
         if ($term_id) {
             if (!current_user_can('edit_term', $term_id)) {
-                wp_send_json_error('permission denied', 403);
+                wp_send_json_error( __( 'permission denied', 'gm2-wordpress-suite' ), 403 );
             }
         } else {
             if (!current_user_can('edit_posts')) {
-                wp_send_json_error('permission denied', 403);
+                wp_send_json_error( __( 'permission denied', 'gm2-wordpress-suite' ), 403 );
             }
         }
 
@@ -1752,7 +1752,7 @@ class Gm2_SEO_Admin {
         if ($post_id) {
             $post = get_post($post_id);
             if (!$post) {
-                wp_send_json_error('invalid post');
+                wp_send_json_error( __( 'invalid post', 'gm2-wordpress-suite' ) );
             }
             $title = get_the_title($post);
             $url   = get_permalink($post);
@@ -1763,7 +1763,7 @@ class Gm2_SEO_Admin {
         } elseif ($term_id && $taxonomy) {
             $term = get_term($term_id, $taxonomy);
             if (!$term || is_wp_error($term)) {
-                wp_send_json_error('invalid term');
+                wp_send_json_error( __( 'invalid term', 'gm2-wordpress-suite' ) );
             }
             $title = $term->name;
             $url   = get_term_link($term, $taxonomy);
@@ -1772,7 +1772,7 @@ class Gm2_SEO_Admin {
             $focus           = get_term_meta($term_id, '_gm2_focus_keywords', true);
             $canonical       = get_term_meta($term_id, '_gm2_canonical', true);
         } else {
-            wp_send_json_error('invalid parameters');
+            wp_send_json_error( __( 'invalid parameters', 'gm2-wordpress-suite' ) );
         }
 
         // override with submitted values if provided
@@ -1860,16 +1860,16 @@ class Gm2_SEO_Admin {
         $name     = isset($_POST['name']) ? sanitize_text_field(wp_unslash($_POST['name'])) : '';
 
         if (!$taxonomy || !taxonomy_exists($taxonomy)) {
-            wp_send_json_error('invalid taxonomy');
+            wp_send_json_error( __( 'invalid taxonomy', 'gm2-wordpress-suite' ) );
         }
 
         if ($term_id) {
             if (!current_user_can('edit_term', $term_id)) {
-                wp_send_json_error('permission denied', 403);
+                wp_send_json_error( __( 'permission denied', 'gm2-wordpress-suite' ), 403 );
             }
         } else {
             if (!current_user_can('edit_terms')) {
-                wp_send_json_error('permission denied', 403);
+                wp_send_json_error( __( 'permission denied', 'gm2-wordpress-suite' ), 403 );
             }
         }
 
@@ -1901,7 +1901,7 @@ class Gm2_SEO_Admin {
 
         $post_id = isset($_POST['post_id']) ? absint($_POST['post_id']) : 0;
         if (!$post_id || !current_user_can('edit_post', $post_id)) {
-            wp_send_json_error('permission denied', 403);
+            wp_send_json_error( __( 'permission denied', 'gm2-wordpress-suite' ), 403 );
         }
 
         $data = ['ID' => $post_id];
