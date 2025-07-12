@@ -56,6 +56,7 @@ If you see errors when connecting your Google account:
 * **Keyword Research returns no results** – Ensure you have entered your Google Ads developer token, connected a Google account with Ads access, and selected a valid Ads customer ID. Missing or invalid credentials will cause the Keyword Planner request to fail.
 * "The caller does not have permission" – This usually means your developer token isn't approved for the selected Ads account or the login customer ID is missing or incorrect. Verify the token status in the Google Ads API Center and ensure the OAuth account can access that customer ID.
 * **Testing with an unapproved token** – Unapproved developer tokens can be used with [Google Ads test accounts](https://developers.google.com/google-ads/api/docs/best-practices/test-accounts). The login customer ID must be the manager ID for that token, and test accounts don't serve ads and have limited features.
+* **Viewing debug logs** – Enable debugging by adding `define('WP_DEBUG', true);` to your `wp-config.php` file. Errors and request details will then appear in your PHP error log.
 
 == Breadcrumbs ==
 Display a breadcrumb trail anywhere using the `[gm2_breadcrumbs]` shortcode. The output
