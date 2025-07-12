@@ -1031,7 +1031,7 @@ class Gm2_SEO_Admin {
             $post = get_post($post_id);
             if ($post) {
                 $sanitized_content = wp_strip_all_tags($post->post_content);
-                $snippet_content   = function_exists('mb_substr') ? mb_substr($sanitized_content, 0, 400) : substr($sanitized_content, 0, 400);
+                $snippet_content   = $this->safe_truncate($sanitized_content, 400);
                 $prompt  = "Write a short SEO description for the following content:\n\n" . $snippet_content;
                 $chat    = new Gm2_ChatGPT();
                 $resp    = $chat->query($prompt);
@@ -1530,6 +1530,16 @@ class Gm2_SEO_Admin {
         return $issues;
     }
 
+    private function safe_truncate($text, $length) {
+        if (function_exists('mb_substr')) {
+            return mb_substr($text, 0, $length, 'UTF-8');
+        }
+        if (preg_match('/^.{0,' . (int) $length . '}/us', $text, $m)) {
+            return $m[0];
+        }
+        return substr($text, 0, $length);
+    }
+
     public function ajax_check_rules() {
         check_ajax_referer('gm2_check_rules');
         if (!current_user_can('edit_posts')) {
@@ -1849,7 +1859,7 @@ class Gm2_SEO_Admin {
         $focus_main  = trim(explode(',', $focus)[0]);
         $html_issues = $this->detect_html_issues($html, $canonical, $focus_main);
         $clean_html  = wp_strip_all_tags($html);
-        $snippet     = function_exists('mb_substr') ? mb_substr($clean_html, 0, 400) : substr($clean_html, 0, 400);
+        $snippet     = $this->safe_truncate($clean_html, 400);
 
         $guidelines = '';
         if ($post_id && !empty($post)) {
