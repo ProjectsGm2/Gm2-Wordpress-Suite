@@ -41,8 +41,14 @@ class Gm2_ChatGPT {
             'body'    => wp_json_encode($payload),
             'timeout' => 20,
         ];
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('Gm2_ChatGPT request: ' . wp_json_encode($payload));
+        }
         $response = wp_remote_post($this->endpoint, $args);
         if (is_wp_error($response)) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('Gm2_ChatGPT error: ' . $response->get_error_message());
+            }
             return $response;
         }
 

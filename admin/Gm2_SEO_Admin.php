@@ -9,6 +9,12 @@ if (!defined('ABSPATH')) {
 class Gm2_SEO_Admin {
     private $elementor_initialized = false;
     private static $notices = [];
+
+    private function debug_log($message) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log($message);
+        }
+    }
     public function run() {
         add_action('admin_menu', [$this, 'add_settings_pages']);
         add_action('add_meta_boxes', [$this, 'register_meta_boxes']);
@@ -1785,10 +1791,12 @@ class Gm2_SEO_Admin {
 
         if ($term_id) {
             if (!current_user_can('edit_term', $term_id)) {
+                $this->debug_log('AI Research: permission denied for term ' . $term_id);
                 wp_send_json_error( __( 'permission denied', 'gm2-wordpress-suite' ), 403 );
             }
         } else {
             if (!current_user_can('edit_posts')) {
+                $this->debug_log('AI Research: permission denied for post');
                 wp_send_json_error( __( 'permission denied', 'gm2-wordpress-suite' ), 403 );
             }
         }
@@ -1799,6 +1807,7 @@ class Gm2_SEO_Admin {
         if ($post_id) {
             $post = get_post($post_id);
             if (!$post) {
+                $this->debug_log('AI Research: invalid post ID ' . $post_id);
                 wp_send_json_error( __( 'invalid post', 'gm2-wordpress-suite' ) );
             }
             $title = get_the_title($post);
@@ -1810,6 +1819,7 @@ class Gm2_SEO_Admin {
         } elseif ($term_id && $taxonomy) {
             $term = get_term($term_id, $taxonomy);
             if (!$term || is_wp_error($term)) {
+                $this->debug_log('AI Research: invalid term ' . $term_id . ' for taxonomy ' . $taxonomy);
                 wp_send_json_error( __( 'invalid term', 'gm2-wordpress-suite' ) );
             }
             $title = $term->name;
@@ -1822,6 +1832,7 @@ class Gm2_SEO_Admin {
             $focus           = get_term_meta($term_id, '_gm2_focus_keywords', true);
             $canonical       = get_term_meta($term_id, '_gm2_canonical', true);
         } else {
+            $this->debug_log('AI Research: invalid parameters');
             wp_send_json_error( __( 'invalid parameters', 'gm2-wordpress-suite' ) );
         }
 
@@ -1875,6 +1886,7 @@ class Gm2_SEO_Admin {
         $resp = $chat->query($prompt);
 
         if (is_wp_error($resp)) {
+            $this->debug_log('AI Research: ' . $resp->get_error_message());
             wp_send_json_error($resp->get_error_message());
         }
 
