@@ -1908,7 +1908,13 @@ class Gm2_SEO_Admin {
                 $data = json_decode($m[0], true);
             }
         }
-        if (json_last_error() === JSON_ERROR_NONE && is_array($data)) {
+
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($data)) {
+            $this->debug_log('AI Research: invalid JSON response - ' . $resp);
+            wp_send_json_error( __( 'Invalid AI response', 'gm2-wordpress-suite' ) );
+        }
+
+        if (is_array($data)) {
             if (!isset($data['html_issues'])) {
                 $data['html_issues'] = [];
             }

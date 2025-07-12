@@ -152,6 +152,37 @@ class AiResearchAjaxTest extends WP_Ajax_UnitTestCase {
         $this->assertSame('Parsed', $resp['data']['seo_title']);
     }
 
+    public function test_ai_research_invalid_json_returns_error() {
+        update_option('gm2_chatgpt_api_key', 'key');
+        $filter = function($pre, $args, $url) {
+            if ($url === 'https://api.openai.com/v1/chat/completions') {
+                return [
+                    'response' => ['code' => 200],
+                    'body' => json_encode([
+                        'choices' => [ ['message' => ['content' => 'nonsense']] ]
+                    ])
+                ];
+            }
+            return false;
+        };
+        add_filter('pre_http_request', $filter, 10, 3);
+
+        $post_id = self::factory()->post->create(['post_title' => 'Post', 'post_content' => 'Content']);
+
+        $this->_setRole('administrator');
+        $_POST['post_id'] = $post_id;
+        $_POST['_ajax_nonce'] = wp_create_nonce('gm2_ai_research');
+        $_REQUEST['_ajax_nonce'] = $_POST['_ajax_nonce'];
+        try {
+            $this->_handleAjax('gm2_ai_research');
+        } catch (WPAjaxDieContinueException $e) {
+        }
+        remove_filter('pre_http_request', $filter, 10);
+
+        $resp = json_decode($this->_last_response, true);
+        $this->assertFalse($resp['success']);
+    }
+
     public function test_ai_research_detects_html_issues() {
         update_option('gm2_chatgpt_api_key', 'key');
         $filter = function($pre, $args, $url) {
