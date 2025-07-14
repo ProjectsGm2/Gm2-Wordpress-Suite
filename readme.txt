@@ -115,13 +115,30 @@ taxonomy term.
 Within the Rules table, every category textarea now includes an **AI Research
 Content Rules** button. The button sits directly below the textarea label and
 fetches best-practice suggestions from ChatGPT for the selected post type or
-taxonomy. The results are saved automatically so you can refine them at any
-time. ChatGPT is instructed to respond **only with JSON** and each key must
-exactly match one of the slugs you provided.
+taxonomy. ChatGPT is told which content type is being analyzed and instructed to
+return an array of short, measurable rules for each requested category. The
+results are saved automatically so you can refine them at any time. ChatGPT is
+instructed to respond **only with JSON** where each key matches one of the slugs
+you provided and each value is an array of rules.
 
 Category names returned by ChatGPT may contain spaces or hyphens. These are
 normalized to use underscores when saving so keys like "SEO Title" or
 "seo-title" populate the `seo_title` textarea.
+
+Example JSON response:
+
+```
+{
+  "seo_title": [
+    "Use the main keyword first",
+    "Keep under 60 characters"
+  ],
+  "seo_description": [
+    "Summarize the page in under 160 characters",
+    "Include a call to action"
+  ]
+}
+```
 
 == SEO Settings ==
 The SEO meta box appears when editing posts, pages, any public custom post types and taxonomy terms. In the
