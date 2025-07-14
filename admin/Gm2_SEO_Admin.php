@@ -1944,6 +1944,10 @@ class Gm2_SEO_Admin {
         $chat   = new Gm2_ChatGPT();
         $resp   = $chat->query($prompt);
 
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('Content rules response: ' . $resp);
+        }
+
         if (is_wp_error($resp)) {
             wp_send_json_error($resp->get_error_message());
         }
@@ -1977,6 +1981,10 @@ class Gm2_SEO_Admin {
             }
             $rules[$target][$key] = $text;
             $formatted[$key]     = $text;
+        }
+
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('Content rules formatted: ' . print_r($formatted, true));
         }
 
         update_option('gm2_content_rules', $rules);
