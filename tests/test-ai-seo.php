@@ -80,6 +80,7 @@ class AiResearchAjaxTest extends WP_Ajax_UnitTestCase {
         $this->assertTrue($resp['success']);
         $this->assertSame('New Title', $resp['data']['seo_title']);
         $this->assertSame('Desc', $resp['data']['description']);
+        $this->assertSame(['a','b'], $resp['data']['long_tail_keywords']);
         $this->assertSame('Missing alt', $resp['data']['html_issues'][0]['issue']);
         $this->assertSame('new-post', $resp['data']['slug']);
     }
@@ -389,5 +390,16 @@ class AdminTabsTest extends WP_UnitTestCase {
         $admin->render_seo_tabs_meta_box($post);
         $out = ob_get_clean();
         $this->assertStringContainsString('AI SEO', $out);
+    }
+}
+
+class LongTailKeywordsTest extends WP_UnitTestCase {
+    public function test_long_tail_keywords_saved() {
+        $post_id = self::factory()->post->create();
+        $admin = new Gm2\Gm2_SEO_Admin();
+        $_POST['gm2_seo_nonce'] = wp_create_nonce('gm2_save_seo_meta');
+        $_POST['gm2_long_tail_keywords'] = 'alpha, beta ';
+        $admin->save_post_meta($post_id);
+        $this->assertSame('alpha, beta', get_post_meta($post_id, '_gm2_long_tail_keywords', true));
     }
 }
