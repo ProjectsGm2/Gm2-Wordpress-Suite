@@ -1946,13 +1946,25 @@ class Gm2_SEO_Admin {
         if (!isset($rules[$target]) || !is_array($rules[$target])) {
             $rules[$target] = [];
         }
+
+        $formatted = [];
         foreach ($data as $cat => $text) {
-            $rules[$target][sanitize_key($cat)] = sanitize_textarea_field($text);
+            $key = sanitize_key($cat);
+            if (is_array($text)) {
+                $lines = array_map(static function($t){
+                    return sanitize_textarea_field((string) $t);
+                }, array_values($text));
+                $text = implode("\n", $lines);
+            } else {
+                $text = sanitize_textarea_field($text);
+            }
+            $rules[$target][$key] = $text;
+            $formatted[$key]     = $text;
         }
 
         update_option('gm2_content_rules', $rules);
 
-        wp_send_json_success($data);
+        wp_send_json_success($formatted);
     }
 
     public function ajax_ai_research() {
