@@ -100,6 +100,13 @@ class Gm2_Admin {
                 GM2_VERSION,
                 true
             );
+            wp_enqueue_script(
+                'gm2-content-rules',
+                GM2_PLUGIN_URL . 'admin/js/gm2-content-rules.js',
+                ['jquery'],
+                GM2_VERSION,
+                true
+            );
             $gads_ready = trim(get_option('gm2_gads_developer_token', '')) !== '' &&
                 trim(get_option('gm2_gads_customer_id', '')) !== '' &&
                 get_option('gm2_google_refresh_token', '') !== '';
@@ -118,6 +125,15 @@ class Gm2_Admin {
                 [
                     'nonce'    => wp_create_nonce('gm2_research_guidelines'),
                     'ajax_url' => admin_url('admin-ajax.php'),
+                ]
+            );
+            wp_localize_script(
+                'gm2-content-rules',
+                'gm2ContentRules',
+                [
+                    'nonce'    => wp_create_nonce('gm2_research_content_rules'),
+                    'ajax_url' => admin_url('admin-ajax.php'),
+                    'prompt'   => __( 'Enter rule categories (comma separated):', 'gm2-wordpress-suite' ),
                 ]
             );
             if ($hook === 'gm2_page_gm2-bulk-ai-review') {

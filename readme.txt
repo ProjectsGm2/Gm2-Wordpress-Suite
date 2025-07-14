@@ -103,6 +103,13 @@ has its own textarea. Click **Research SEO Guidelines** next to a content type
 to generate best-practice rules. The generated text is saved automatically so
 you can revisit this screen later and adjust the guidelines as needed.
 
+== Content Rules ==
+Open the **Rules** tab under **SEO** to define checks for each post type and
+taxonomy. Next to every rule field you'll find an **AI Research Content Rules**
+button. Click it to fetch best-practice suggestions from ChatGPT for the
+selected categories. The response is stored automatically so you can refine the
+rules at any time.
+
 == SEO Settings ==
 The SEO meta box appears when editing posts, pages, any public custom post types and taxonomy terms. In the
 **SEO Settings** tab you can enter a custom title and description, toggle
