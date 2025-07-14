@@ -1897,8 +1897,15 @@ class Gm2_SEO_Admin {
             wp_send_json_error($resp->get_error_message());
         }
 
-        update_option($target, $resp);
-        wp_send_json_success($resp);
+        $decoded = json_decode($resp, true);
+        if (json_last_error() === JSON_ERROR_NONE) {
+            $resp = $decoded;
+        }
+
+        $flat = $this->flatten_rule_value($resp);
+
+        update_option($target, $flat);
+        wp_send_json_success($flat);
     }
 
     public function ajax_research_content_rules() {
