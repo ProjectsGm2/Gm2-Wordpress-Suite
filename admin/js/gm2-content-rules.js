@@ -19,15 +19,19 @@ jQuery(function($){
             _ajax_nonce: gm2ContentRules.nonce
         }).done(function(resp){
             if(resp && resp.success && typeof resp.data === 'object'){
-                $.each(resp.data, function(key,val){
-                    var selector = 'textarea[name="gm2_content_rules['+base+']['+key+']"]';
-                    if($.isArray(val)){
-                        val = val.join("\n");
-                    }else if(typeof val === 'object' && val !== null){
-                        val = Object.values(val).join("\n");
-                    }
-                    $(selector).val(val);
-                });
+                if($.isEmptyObject(resp.data)){
+                    alert('No rules returned. Please verify the categories or check the server logs.');
+                }else{
+                    $.each(resp.data, function(key,val){
+                        var selector = 'textarea[name="gm2_content_rules['+base+']['+key+']"]';
+                        if($.isArray(val)){
+                            val = val.join("\n");
+                        }else if(typeof val === 'object' && val !== null){
+                            val = Object.values(val).join("\n");
+                        }
+                        $(selector).val(val);
+                    });
+                }
             }else if(resp && resp.data){
                 alert(resp.data);
             }else{
