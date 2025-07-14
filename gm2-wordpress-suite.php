@@ -96,20 +96,39 @@ function gm2_initialize_content_rules() {
     unset($posts['attachment']);
     $posts = apply_filters('gm2_supported_post_types', array_values($posts));
     $post_defaults = [
-        'Title length between 30 and 60 characters',
-        'Description length between 50 and 160 characters',
-        'At least one focus keyword',
-        'Content has at least 300 words',
-        'Focus keyword appears in first paragraph',
-        'Only one H1 tag present',
-        'At least one internal link',
-        'At least one external link',
-        'Focus keyword included in meta description',
-        'SEO title is unique',
-        'Meta description is unique',
+        'seo_title' => [
+            'Title length between 30 and 60 characters',
+            'SEO title is unique',
+        ],
+        'seo_description' => [
+            'Description length between 50 and 160 characters',
+            'Meta description is unique',
+            'Focus keyword included in meta description',
+        ],
+        'focus_keywords' => [
+            'At least one focus keyword',
+        ],
+        'long_tail_keywords' => [
+            'Consider including long-tail keywords',
+        ],
+        'canonical_url' => [
+            'Use a canonical URL',
+        ],
+        'content' => [
+            'Content has at least 300 words',
+            'Focus keyword appears in first paragraph',
+            'Only one H1 tag present',
+            'At least one internal link',
+            'At least one external link',
+            'Image alt text contains focus keyword',
+        ],
+        'general' => [],
     ];
     foreach ($posts as $pt) {
-        $rules['post_' . $pt] = implode("\n", $post_defaults);
+        $rules['post_' . $pt] = [];
+        foreach ($post_defaults as $key => $vals) {
+            $rules['post_' . $pt][$key] = implode("\n", $vals);
+        }
     }
 
     $taxonomies = ['category'];
@@ -123,14 +142,27 @@ function gm2_initialize_content_rules() {
         $taxonomies[] = 'product_brand';
     }
     $tax_defaults = [
-        'Title length between 30 and 60 characters',
-        'Description length between 50 and 160 characters',
-        'Description has at least 150 words',
-        'SEO title is unique',
-        'Meta description is unique',
+        'seo_title' => [
+            'Title length between 30 and 60 characters',
+            'SEO title is unique',
+        ],
+        'seo_description' => [
+            'Description length between 50 and 160 characters',
+            'Meta description is unique',
+        ],
+        'focus_keywords' => [],
+        'long_tail_keywords' => [],
+        'canonical_url' => [],
+        'content' => [
+            'Description has at least 150 words',
+        ],
+        'general' => [],
     ];
     foreach ($taxonomies as $tax) {
-        $rules['tax_' . $tax] = implode("\n", $tax_defaults);
+        $rules['tax_' . $tax] = [];
+        foreach ($tax_defaults as $key => $vals) {
+            $rules['tax_' . $tax][$key] = implode("\n", $vals);
+        }
     }
 
     add_option('gm2_content_rules', $rules);
