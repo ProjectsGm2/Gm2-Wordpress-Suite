@@ -716,7 +716,7 @@ class Gm2_SEO_Admin {
         if (isset($_POST['gm2_bulk_ai_save']) && check_admin_referer('gm2_bulk_ai_settings')) {
             $page_size = max(1, absint($_POST['page_size'] ?? 10));
             $status    = sanitize_key($_POST['status'] ?? 'publish');
-            $post_type = sanitize_key($_POST['post_type'] ?? 'all');
+            $post_type = sanitize_key($_POST['gm2_post_type'] ?? 'all');
             $term      = sanitize_text_field($_POST['term'] ?? '');
             update_option('gm2_bulk_ai_page_size', $page_size);
             update_option('gm2_bulk_ai_status', $status);
@@ -748,14 +748,14 @@ class Gm2_SEO_Admin {
 
         echo '<div class="wrap" id="gm2-bulk-ai">';
         echo '<h1>' . esc_html__( 'Bulk AI Review', 'gm2-wordpress-suite' ) . '</h1>';
-        echo '<form method="post">';
+        echo '<form method="post" action="' . esc_url( admin_url( 'admin.php?page=gm2-bulk-ai-review' ) ) . '">';
         wp_nonce_field('gm2_bulk_ai_settings');
         echo '<p><label>' . esc_html__( 'Posts per page', 'gm2-wordpress-suite' ) . ' <input type="number" name="page_size" value="' . esc_attr($page_size) . '" min="1"></label> ';
         echo '<label>' . esc_html__( 'Status', 'gm2-wordpress-suite' ) . ' <select name="status">';
         echo '<option value="publish"' . selected($status, 'publish', false) . '>' . esc_html__( 'Published', 'gm2-wordpress-suite' ) . '</option>';
         echo '<option value="draft"' . selected($status, 'draft', false) . '>' . esc_html__( 'Draft', 'gm2-wordpress-suite' ) . '</option>';
         echo '</select></label> ';
-        echo '<label>' . esc_html__( 'Post Type', 'gm2-wordpress-suite' ) . ' <select name="post_type">';
+        echo '<label>' . esc_html__( 'Post Type', 'gm2-wordpress-suite' ) . ' <select name="gm2_post_type">';
         echo '<option value="all"' . selected($post_type, 'all', false) . '>' . esc_html__( 'All', 'gm2-wordpress-suite' ) . '</option>';
         foreach ($this->get_supported_post_types() as $pt) {
             $obj = get_post_type_object($pt);
