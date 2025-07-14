@@ -18,6 +18,7 @@ defined('ABSPATH') or die('No script kiddies please!');
 define('GM2_VERSION', '1.6.3');
 define('GM2_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('GM2_PLUGIN_URL', plugin_dir_url(__FILE__));
+define('GM2_CONTENT_RULES_VERSION', 2);
 
 use Gm2\Gm2_Loader;
 use Gm2\Gm2_SEO_Public;
@@ -63,6 +64,7 @@ function gm2_activate_plugin() {
     }
 
     gm2_initialize_content_rules();
+    gm2_maybe_migrate_content_rules();
 }
 register_activation_hook(__FILE__, 'gm2_activate_plugin');
 
@@ -192,4 +194,62 @@ function gm2_run_pagespeed_check() {
     }
 }
 add_action('gm2_pagespeed_check', 'gm2_run_pagespeed_check');
+
+function gm2_maybe_migrate_content_rules() {
+    $current = (int) get_option('gm2_content_rules_version', 1);
+    if ($current >= GM2_CONTENT_RULES_VERSION) {
+        return;
+    }
+
+    $rules   = get_option('gm2_content_rules', []);
+    $changed = false;
+
+    if (is_array($rules)) {
+        foreach ($rules as $base => $cats) {
+            // Old format stored strings
+            if (is_string($cats)) {
+                $lines = array_filter(array_map('trim', explode("\n", $cats)));
+                $new   = [];
+                foreach ($lines as $line) {
+                    $new[sanitize_title($line)] = $line;
+                }
+                $rules[$base] = ['general' => $new];
+                $changed      = true;
+            } elseif (is_array($cats)) {
+                $first = reset($cats);
+                if ($first !== false && !is_array($first)) {
+                    $new_cats = [];
+                    foreach ($cats as $cat => $text) {
+                        $lines = array_filter(array_map('trim', explode("\n", $text)));
+                        foreach ($lines as $line) {
+                            $new_cats[$cat][sanitize_title($line)] = $line;
+                        }
+                    }
+                    $rules[$base] = $new_cats;
+                    $changed      = true;
+                }
+            }
+        }
+    }
+
+    if ($changed) {
+        update_option('gm2_content_rules', $rules);
+        update_option('gm2_content_rules_migrated', 1);
+    }
+    update_option('gm2_content_rules_version', GM2_CONTENT_RULES_VERSION);
+}
+add_action('plugins_loaded', 'gm2_maybe_migrate_content_rules');
+
+function gm2_content_rules_migration_notice() {
+    if (!current_user_can('manage_options')) {
+        return;
+    }
+    if (get_option('gm2_content_rules_migrated')) {
+        echo '<div class="notice notice-warning is-dismissible"><p>' .
+             esc_html__( 'Content rules have been migrated. Please review them on the SEO settings page.', 'gm2-wordpress-suite' ) .
+             '</p></div>';
+        delete_option('gm2_content_rules_migrated');
+    }
+}
+add_action('admin_notices', 'gm2_content_rules_migration_notice');
 
