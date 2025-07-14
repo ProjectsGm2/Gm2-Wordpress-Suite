@@ -591,11 +591,25 @@ class Gm2_SEO_Admin {
             wp_nonce_field('gm2_content_rules_save', 'gm2_content_rules_nonce');
             echo '<input type="hidden" name="action" value="gm2_content_rules" />';
             echo '<table class="form-table"><tbody>';
+            $cats = [
+                'seo_title'        => __( 'SEO Title', 'gm2-wordpress-suite' ),
+                'seo_description'  => __( 'SEO Description', 'gm2-wordpress-suite' ),
+                'focus_keywords'   => __( 'Focus Keywords', 'gm2-wordpress-suite' ),
+                'long_tail_keywords' => __( 'Long Tail Keywords', 'gm2-wordpress-suite' ),
+                'canonical_url'    => __( 'Canonical URL', 'gm2-wordpress-suite' ),
+                'content'          => __( 'Content', 'gm2-wordpress-suite' ),
+                'general'          => __( 'General', 'gm2-wordpress-suite' ),
+            ];
             foreach ($this->get_supported_post_types() as $pt) {
                 $label = get_post_type_object($pt)->labels->singular_name ?? ucfirst($pt);
-                $val   = $all_rules['post_' . $pt] ?? '';
-                echo '<tr><th scope="row"><label for="gm2_rule_post_' . esc_attr($pt) . '">' . esc_html($label) . '</label></th>';
-                echo '<td><textarea id="gm2_rule_post_' . esc_attr($pt) . '" name="gm2_content_rules[post_' . esc_attr($pt) . ']" rows="3" class="large-text">' . esc_textarea($val) . '</textarea></td></tr>';
+                $vals  = $all_rules['post_' . $pt] ?? [];
+                echo '<tr><th scope="row"><label>' . esc_html($label) . '</label></th><td>';
+                foreach ($cats as $c => $clabel) {
+                    $val = $vals[$c] ?? '';
+                    echo '<p><label for="gm2_rule_post_' . esc_attr($pt . '_' . $c) . '">' . esc_html($clabel) . '</label><br />';
+                    echo '<textarea id="gm2_rule_post_' . esc_attr($pt . '_' . $c) . '" name="gm2_content_rules[post_' . esc_attr($pt) . '][' . esc_attr($c) . ']" rows="3" class="large-text">' . esc_textarea($val) . '</textarea></p>';
+                }
+                echo '</td></tr>';
             }
             foreach ($this->get_supported_taxonomies() as $tax) {
                 $tax_obj = get_taxonomy($tax);
@@ -606,9 +620,14 @@ class Gm2_SEO_Admin {
                 } else {
                     $label = $tax_obj ? $tax_obj->labels->singular_name : $tax;
                 }
-                $val     = $all_rules['tax_' . $tax] ?? '';
-                echo '<tr><th scope="row"><label for="gm2_rule_tax_' . esc_attr($tax) . '">' . esc_html($label) . '</label></th>';
-                echo '<td><textarea id="gm2_rule_tax_' . esc_attr($tax) . '" name="gm2_content_rules[tax_' . esc_attr($tax) . ']" rows="3" class="large-text">' . esc_textarea($val) . '</textarea></td></tr>';
+                $vals = $all_rules['tax_' . $tax] ?? [];
+                echo '<tr><th scope="row"><label>' . esc_html($label) . '</label></th><td>';
+                foreach ($cats as $c => $clabel) {
+                    $val = $vals[$c] ?? '';
+                    echo '<p><label for="gm2_rule_tax_' . esc_attr($tax . '_' . $c) . '">' . esc_html($clabel) . '</label><br />';
+                    echo '<textarea id="gm2_rule_tax_' . esc_attr($tax . '_' . $c) . '" name="gm2_content_rules[tax_' . esc_attr($tax) . '][' . esc_attr($c) . ']" rows="3" class="large-text">' . esc_textarea($val) . '</textarea></p>';
+                }
+                echo '</td></tr>';
             }
             $min_int = (int) get_option('gm2_min_internal_links', 1);
             $min_ext = (int) get_option('gm2_min_external_links', 1);
@@ -931,8 +950,10 @@ class Gm2_SEO_Admin {
 
         $rules_option = get_option('gm2_content_rules', []);
         $rule_lines   = [];
-        if (isset($rules_option['tax_' . $taxonomy])) {
-            $rule_lines = array_filter(array_map('trim', explode("\n", $rules_option['tax_' . $taxonomy])));
+        if (isset($rules_option['tax_' . $taxonomy]) && is_array($rules_option['tax_' . $taxonomy])) {
+            foreach ($rules_option['tax_' . $taxonomy] as $txt) {
+                $rule_lines = array_merge($rule_lines, array_filter(array_map('trim', explode("\n", $txt))));
+            }
         }
         if (!$rule_lines) {
             $rule_lines = [
@@ -1306,7 +1327,12 @@ class Gm2_SEO_Admin {
         $rules = [];
         if (isset($_POST['gm2_content_rules']) && is_array($_POST['gm2_content_rules'])) {
             foreach ($_POST['gm2_content_rules'] as $k => $v) {
-                $rules[$k] = sanitize_textarea_field($v);
+                $rules[$k] = [];
+                if (is_array($v)) {
+                    foreach ($v as $cat => $val) {
+                        $rules[$k][$cat] = sanitize_textarea_field($val);
+                    }
+                }
             }
         }
         update_option('gm2_content_rules', $rules);
@@ -1569,10 +1595,14 @@ class Gm2_SEO_Admin {
 
         $rules_option = get_option('gm2_content_rules', []);
         $rule_lines = [];
-        if ($taxonomy && isset($rules_option['tax_' . $taxonomy])) {
-            $rule_lines = array_filter(array_map('trim', explode("\n", $rules_option['tax_' . $taxonomy])));
-        } elseif (isset($rules_option['post_' . $post_type])) {
-            $rule_lines = array_filter(array_map('trim', explode("\n", $rules_option['post_' . $post_type])));
+        if ($taxonomy && isset($rules_option['tax_' . $taxonomy]) && is_array($rules_option['tax_' . $taxonomy])) {
+            foreach ($rules_option['tax_' . $taxonomy] as $txt) {
+                $rule_lines = array_merge($rule_lines, array_filter(array_map('trim', explode("\n", $txt))));
+            }
+        } elseif (isset($rules_option['post_' . $post_type]) && is_array($rules_option['post_' . $post_type])) {
+            foreach ($rules_option['post_' . $post_type] as $txt) {
+                $rule_lines = array_merge($rule_lines, array_filter(array_map('trim', explode("\n", $txt))));
+            }
         }
         if (!$rule_lines) {
             if ($taxonomy) {
@@ -2117,8 +2147,10 @@ class Gm2_SEO_Admin {
         }
         $all_rules    = get_option('gm2_content_rules', []);
         $current_rules = [];
-        if (isset($all_rules['post_' . $typenow])) {
-            $current_rules = array_filter(array_map('trim', explode("\n", $all_rules['post_' . $typenow])));
+        if (isset($all_rules['post_' . $typenow]) && is_array($all_rules['post_' . $typenow])) {
+            foreach ($all_rules['post_' . $typenow] as $txt) {
+                $current_rules = array_merge($current_rules, array_filter(array_map('trim', explode("\n", $txt))));
+            }
         }
         wp_localize_script(
             'gm2-content-analysis',
@@ -2282,8 +2314,10 @@ class Gm2_SEO_Admin {
         echo '<ul class="gm2-analysis-rules">';
         $rules_option = get_option('gm2_content_rules', []);
         $rule_lines = [];
-        if (isset($rules_option['post_' . $post->post_type])) {
-            $rule_lines = array_filter(array_map('trim', explode("\n", $rules_option['post_' . $post->post_type])));
+        if (isset($rules_option['post_' . $post->post_type]) && is_array($rules_option['post_' . $post->post_type])) {
+            foreach ($rules_option['post_' . $post->post_type] as $txt) {
+                $rule_lines = array_merge($rule_lines, array_filter(array_map('trim', explode("\n", $txt))));
+            }
         }
         if (!$rule_lines) {
             $rule_lines = [

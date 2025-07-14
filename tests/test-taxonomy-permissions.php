@@ -35,7 +35,7 @@ class TaxonomyContentRulesTest extends WP_Ajax_UnitTestCase {
     }
 
     public function test_description_word_count_rule() {
-        update_option('gm2_content_rules', ['tax_category' => 'Description has at least 150 words']);
+        update_option('gm2_content_rules', ['tax_category' => ['content' => 'Description has at least 150 words']]);
         $resp = $this->run_check(str_repeat('word ', 160));
         $this->assertTrue($resp['success']);
         $this->assertTrue($resp['data']['description-has-at-least-150-words']);

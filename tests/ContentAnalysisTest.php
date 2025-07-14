@@ -88,7 +88,7 @@ class ContentRulesNewTest extends WP_Ajax_UnitTestCase {
     }
 
     public function test_min_link_rules_pass() {
-        update_option('gm2_content_rules', ['post_post' => "Minimum X internal links\nMinimum X external links"]);
+        update_option('gm2_content_rules', ['post_post' => ['content' => "Minimum X internal links\nMinimum X external links"]]);
         update_option('gm2_min_internal_links', 2);
         update_option('gm2_min_external_links', 1);
         $content = '<a href="' . home_url('/a') . '">1</a>' .
@@ -101,7 +101,7 @@ class ContentRulesNewTest extends WP_Ajax_UnitTestCase {
     }
 
     public function test_min_link_rules_fail() {
-        update_option('gm2_content_rules', ['post_post' => "Minimum X internal links\nMinimum X external links"]);
+        update_option('gm2_content_rules', ['post_post' => ['content' => "Minimum X internal links\nMinimum X external links"]]);
         update_option('gm2_min_internal_links', 2);
         update_option('gm2_min_external_links', 1);
         $content = '<a href="' . home_url('/a') . '">1</a>';
