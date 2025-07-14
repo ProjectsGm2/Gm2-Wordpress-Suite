@@ -403,3 +403,47 @@ class LongTailKeywordsTest extends WP_UnitTestCase {
         $this->assertSame('alpha, beta', get_post_meta($post_id, '_gm2_long_tail_keywords', true));
     }
 }
+
+class AiResearchPersistenceTest extends WP_Ajax_UnitTestCase {
+    public function test_ai_research_saved_and_localized() {
+        update_option('gm2_chatgpt_api_key', 'key');
+        $resp_data = ['seo_title' => 'Saved Title'];
+        $filter = function($pre, $args, $url) use ($resp_data) {
+            if ($url === 'https://api.openai.com/v1/chat/completions') {
+                return [
+                    'response' => ['code' => 200],
+                    'body' => json_encode(['choices' => [ ['message' => ['content' => json_encode($resp_data)]] ]])
+                ];
+            }
+            return false;
+        };
+        add_filter('pre_http_request', $filter, 10, 3);
+
+        $post_id = self::factory()->post->create(['post_title' => 'Post', 'post_content' => 'Content']);
+
+        $this->_setRole('administrator');
+        $_POST['post_id'] = $post_id;
+        $_POST['_ajax_nonce'] = wp_create_nonce('gm2_ai_research');
+        $_REQUEST['_ajax_nonce'] = $_POST['_ajax_nonce'];
+        try { $this->_handleAjax('gm2_ai_research'); } catch (WPAjaxDieContinueException $e) {}
+        remove_filter('pre_http_request', $filter, 10);
+
+        $stored = get_post_meta($post_id, '_gm2_ai_research', true);
+        $this->assertNotEmpty($stored);
+        $saved = json_decode($stored, true);
+        $this->assertSame('Saved Title', $saved['seo_title']);
+
+        $_GET['post'] = $post_id;
+        $admin = new Gm2\Gm2_SEO_Admin();
+        $admin->enqueue_editor_scripts();
+        global $wp_scripts;
+        $inline = $wp_scripts->get_data('gm2-ai-seo', 'data');
+        $this->assertNotEmpty($inline);
+        if (preg_match('/var gm2AiSeo = (.*);/', $inline, $m)) {
+            $localized = json_decode($m[1], true);
+        } else {
+            $localized = [];
+        }
+        $this->assertSame('Saved Title', $localized['results']['seo_title']);
+    }
+}

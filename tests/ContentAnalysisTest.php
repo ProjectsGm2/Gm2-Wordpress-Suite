@@ -11,7 +11,15 @@ let code = fs.readFileSync(filePath, 'utf8');
 const start = code.indexOf('function countSyllables');
 const end = code.indexOf('function analyzeFocusKeywords');
 let snippet = code.substring(start, end);
-function jQuery(){return {_html:'',html:function(c){this._html=c;return this;},text:function(){return this._html.replace(/<[^>]*>/g,'');}};}
+function jQuery(){
+    return {
+        _html:'',
+        html:function(c){this._html=c;return this;},
+        text:function(){return this._html.replace(/<[^>]*>/g,'');},
+        find:function(){return {each:function(){}};},
+        attr:function(){return '';}
+    };
+}
 const vm = require('vm');
 const context = {jQuery:jQuery, $: jQuery, location:{hostname:'example.com'}};
 vm.createContext(context);
