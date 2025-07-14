@@ -130,4 +130,40 @@ class ContentRulesFormTest extends WP_UnitTestCase {
         $this->assertSame('One\nTwo', $rules['post_post']['general']);
     }
 }
+
+class ContentRulesNormalizationTest extends WP_Ajax_UnitTestCase {
+    public function test_categories_with_spaces_or_hyphens_are_normalized() {
+        update_option('gm2_chatgpt_api_key', 'key');
+        $resp_data = [ 'SEO Title' => 'Title rule', 'seo-description' => 'Desc rule' ];
+        $filter = function($pre, $args, $url) use ($resp_data) {
+            if ($url === 'https://api.openai.com/v1/chat/completions') {
+                return [
+                    'response' => ['code' => 200],
+                    'body'     => json_encode([
+                        'choices' => [ ['message' => ['content' => json_encode($resp_data)]] ]
+                    ])
+                ];
+            }
+            return false;
+        };
+        add_filter('pre_http_request', $filter, 10, 3);
+
+        $this->_setRole('administrator');
+        $_POST['categories'] = 'SEO Title, seo-description';
+        $_POST['target'] = 'post_post';
+        $_POST['_ajax_nonce'] = wp_create_nonce('gm2_research_content_rules');
+        $_REQUEST['_ajax_nonce'] = $_POST['_ajax_nonce'];
+        try { $this->_handleAjax('gm2_research_content_rules'); } catch (WPAjaxDieContinueException $e) {}
+
+        remove_filter('pre_http_request', $filter, 10);
+
+        $resp = json_decode($this->_last_response, true);
+        $this->assertTrue($resp['success']);
+        $this->assertSame('Title rule', $resp['data']['seo_title']);
+        $this->assertSame('Desc rule', $resp['data']['seo_description']);
+        $rules = get_option('gm2_content_rules');
+        $this->assertSame('Title rule', $rules['post_post']['seo_title']);
+        $this->assertSame('Desc rule', $rules['post_post']['seo_description']);
+    }
+}
 ?>

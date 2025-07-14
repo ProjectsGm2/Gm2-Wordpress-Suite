@@ -1965,7 +1965,8 @@ class Gm2_SEO_Admin {
 
         $formatted = [];
         foreach ($data as $cat => $text) {
-            $key = sanitize_key($cat);
+            $key = strtolower(str_replace([' ', '-'], '_', $cat));
+            $key = preg_replace('/[^a-z0-9_]/', '', $key);
             if (is_array($text)) {
                 $lines = array_map(static function($t){
                     return sanitize_textarea_field((string) $t);

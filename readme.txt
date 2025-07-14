@@ -118,6 +118,10 @@ fetches best-practice suggestions from ChatGPT for the selected post type or
 taxonomy. The results are saved automatically so you can refine them at any
 time.
 
+Category names returned by ChatGPT may contain spaces or hyphens. These are
+normalized to use underscores when saving so keys like "SEO Title" or
+"seo-title" populate the `seo_title` textarea.
+
 == SEO Settings ==
 The SEO meta box appears when editing posts, pages, any public custom post types and taxonomy terms. In the
 **SEO Settings** tab you can enter a custom title and description, focus keywords and long tail keywords, toggle
