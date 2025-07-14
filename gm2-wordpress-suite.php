@@ -206,28 +206,21 @@ function gm2_maybe_migrate_content_rules() {
 
     if (is_array($rules)) {
         foreach ($rules as $base => $cats) {
-            // Old format stored strings
             if (is_string($cats)) {
-                $lines = array_filter(array_map('trim', explode("\n", $cats)));
-                $new   = [];
-                foreach ($lines as $line) {
-                    $new[sanitize_title($line)] = $line;
-                }
-                $rules[$base] = ['general' => $new];
+                // Previously stored as a single string without categories
+                $rules[$base] = [ 'general' => $cats ];
                 $changed      = true;
             } elseif (is_array($cats)) {
-                $first = reset($cats);
-                if ($first !== false && !is_array($first)) {
-                    $new_cats = [];
-                    foreach ($cats as $cat => $text) {
-                        $lines = array_filter(array_map('trim', explode("\n", $text)));
-                        foreach ($lines as $line) {
-                            $new_cats[$cat][sanitize_title($line)] = $line;
-                        }
+                $new_cats = [];
+                foreach ($cats as $cat => $lines) {
+                    if (is_array($lines)) {
+                        $new_cats[$cat] = implode("\n", array_values($lines));
+                    } else {
+                        $new_cats[$cat] = (string) $lines;
                     }
-                    $rules[$base] = $new_cats;
-                    $changed      = true;
                 }
+                $rules[$base] = $new_cats;
+                $changed      = true;
             }
         }
     }

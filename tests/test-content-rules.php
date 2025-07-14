@@ -72,5 +72,25 @@ class ContentRulesAjaxTest extends WP_Ajax_UnitTestCase {
         $this->assertFalse($resp['data']['seo-title-is-unique']);
         $this->assertFalse($resp['data']['meta-description-is-unique']);
     }
+
+    public function test_dashboard_handles_legacy_rule_array() {
+        $_GET['tab'] = 'rules';
+        $legacy = [
+            'post_post' => [
+                'general' => [
+                    'rule-one' => 'Old rule one',
+                    'rule-two' => 'Old rule two',
+                ],
+            ],
+        ];
+        update_option('gm2_content_rules', $legacy);
+
+        $admin = new \Gm2\Gm2_SEO_Admin();
+        ob_start();
+        $admin->display_dashboard();
+        $out = ob_get_clean();
+
+        $this->assertStringContainsString('Content Rules', $out);
+    }
 }
 ?>
