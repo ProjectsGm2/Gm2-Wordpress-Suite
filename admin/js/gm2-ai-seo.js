@@ -43,6 +43,9 @@ jQuery(function($){
         .done(function(resp){
             $out.empty();
             if(resp && resp.success && resp.data){
+                if(window.gm2AiSeo){
+                    gm2AiSeo.results = resp.data;
+                }
                 if(typeof resp.data === 'object' && !resp.data.response){
                     buildResults(resp.data, $out);
                     if(window.gm2AiSeo && parseInt(gm2AiSeo.post_id, 10) === 0){
