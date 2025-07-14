@@ -35,6 +35,7 @@ class Gm2_SEO_Admin {
         add_action('wp_ajax_gm2_check_rules', [$this, 'ajax_check_rules']);
         add_action('wp_ajax_gm2_keyword_ideas', [$this, 'ajax_keyword_ideas']);
         add_action('wp_ajax_gm2_research_guidelines', [$this, 'ajax_research_guidelines']);
+        add_action('wp_ajax_gm2_research_content_rules', [$this, 'ajax_research_content_rules']);
         add_action('wp_ajax_gm2_ai_research', [$this, 'ajax_ai_research']);
         add_action('wp_ajax_gm2_ai_generate_tax_description', [$this, 'ajax_generate_tax_description']);
         add_action('wp_ajax_gm2_bulk_ai_apply', [$this, 'ajax_bulk_ai_apply']);
@@ -607,7 +608,8 @@ class Gm2_SEO_Admin {
                 foreach ($cats as $c => $clabel) {
                     $val = $vals[$c] ?? '';
                     echo '<p><label for="gm2_rule_post_' . esc_attr($pt . '_' . $c) . '">' . esc_html($clabel) . '</label><br />';
-                    echo '<textarea id="gm2_rule_post_' . esc_attr($pt . '_' . $c) . '" name="gm2_content_rules[post_' . esc_attr($pt) . '][' . esc_attr($c) . ']" rows="3" class="large-text">' . esc_textarea($val) . '</textarea></p>';
+                    echo '<textarea id="gm2_rule_post_' . esc_attr($pt . '_' . $c) . '" name="gm2_content_rules[post_' . esc_attr($pt) . '][' . esc_attr($c) . ']" rows="3" class="large-text">' . esc_textarea($val) . '</textarea>';
+                    echo ' <button type="button" class="button gm2-research-rules" data-base="post_' . esc_attr($pt) . '" data-category="' . esc_attr($c) . '">' . esc_html__( 'AI Research Content Rules', 'gm2-wordpress-suite' ) . '</button></p>';
                 }
                 echo '</td></tr>';
             }
@@ -625,7 +627,8 @@ class Gm2_SEO_Admin {
                 foreach ($cats as $c => $clabel) {
                     $val = $vals[$c] ?? '';
                     echo '<p><label for="gm2_rule_tax_' . esc_attr($tax . '_' . $c) . '">' . esc_html($clabel) . '</label><br />';
-                    echo '<textarea id="gm2_rule_tax_' . esc_attr($tax . '_' . $c) . '" name="gm2_content_rules[tax_' . esc_attr($tax) . '][' . esc_attr($c) . ']" rows="3" class="large-text">' . esc_textarea($val) . '</textarea></p>';
+                    echo '<textarea id="gm2_rule_tax_' . esc_attr($tax . '_' . $c) . '" name="gm2_content_rules[tax_' . esc_attr($tax) . '][' . esc_attr($c) . ']" rows="3" class="large-text">' . esc_textarea($val) . '</textarea>';
+                    echo ' <button type="button" class="button gm2-research-rules" data-base="tax_' . esc_attr($tax) . '" data-category="' . esc_attr($c) . '">' . esc_html__( 'AI Research Content Rules', 'gm2-wordpress-suite' ) . '</button></p>';
                 }
                 echo '</td></tr>';
             }
@@ -1821,6 +1824,61 @@ class Gm2_SEO_Admin {
 
         update_option($target, $resp);
         wp_send_json_success($resp);
+    }
+
+    public function ajax_research_content_rules() {
+        check_ajax_referer('gm2_research_content_rules');
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error( __( 'permission denied', 'gm2-wordpress-suite' ), 403 );
+        }
+
+        $cats   = isset($_POST['categories']) ? sanitize_text_field(wp_unslash($_POST['categories'])) : '';
+        $target = isset($_POST['target']) ? sanitize_key($_POST['target']) : '';
+
+        if ($cats === '' || $target === '') {
+            wp_send_json_error( __( 'missing parameters', 'gm2-wordpress-suite' ) );
+        }
+
+        $allowed = [];
+        foreach ($this->get_supported_post_types() as $pt) {
+            $allowed[] = 'post_' . $pt;
+        }
+        foreach ($this->get_supported_taxonomies() as $tax) {
+            $allowed[] = 'tax_' . $tax;
+        }
+        if (!in_array($target, $allowed, true)) {
+            wp_send_json_error( __( 'invalid target', 'gm2-wordpress-suite' ) );
+        }
+
+        $prompt = 'Provide best practice content rules as JSON for these categories: ' . $cats;
+        $chat   = new Gm2_ChatGPT();
+        $resp   = $chat->query($prompt);
+
+        if (is_wp_error($resp)) {
+            wp_send_json_error($resp->get_error_message());
+        }
+
+        $data = json_decode($resp, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            if (preg_match('/\{.*\}/s', $resp, $m)) {
+                $data = json_decode($m[0], true);
+            }
+        }
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($data)) {
+            wp_send_json_error( __( 'Invalid AI response', 'gm2-wordpress-suite' ) );
+        }
+
+        $rules = get_option('gm2_content_rules', []);
+        if (!isset($rules[$target]) || !is_array($rules[$target])) {
+            $rules[$target] = [];
+        }
+        foreach ($data as $cat => $text) {
+            $rules[$target][sanitize_key($cat)] = sanitize_textarea_field($text);
+        }
+
+        update_option('gm2_content_rules', $rules);
+
+        wp_send_json_success($data);
     }
 
     public function ajax_ai_research() {
