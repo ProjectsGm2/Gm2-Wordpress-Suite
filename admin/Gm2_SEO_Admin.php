@@ -959,6 +959,7 @@ class Gm2_SEO_Admin {
         $rule_lines   = [];
         if (isset($rules_option['tax_' . $taxonomy]) && is_array($rules_option['tax_' . $taxonomy])) {
             foreach ($rules_option['tax_' . $taxonomy] as $txt) {
+                $txt        = $this->flatten_rule_value($txt);
                 $rule_lines = array_merge($rule_lines, array_filter(array_map('trim', explode("\n", $txt))));
             }
         }
@@ -2231,6 +2232,7 @@ class Gm2_SEO_Admin {
         $current_rules = [];
         if (isset($all_rules['post_' . $typenow]) && is_array($all_rules['post_' . $typenow])) {
             foreach ($all_rules['post_' . $typenow] as $txt) {
+                $txt          = $this->flatten_rule_value($txt);
                 $current_rules = array_merge($current_rules, array_filter(array_map('trim', explode("\n", $txt))));
             }
         }
@@ -2399,6 +2401,7 @@ class Gm2_SEO_Admin {
         $rule_lines = [];
         if (isset($rules_option['post_' . $post->post_type]) && is_array($rules_option['post_' . $post->post_type])) {
             foreach ($rules_option['post_' . $post->post_type] as $txt) {
+                $txt        = $this->flatten_rule_value($txt);
                 $rule_lines = array_merge($rule_lines, array_filter(array_map('trim', explode("\n", $txt))));
             }
         }
