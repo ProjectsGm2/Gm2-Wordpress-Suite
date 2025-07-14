@@ -231,6 +231,7 @@ the last 100 missing URLs to help you create new redirects.
 == Changelog ==
 = 1.6.5 =
 * Added loading state for AI Research Content Rules button.
+* Fixed nested-array handling for AI Research Content Rules.
 = 1.6.4 =
 * Optional slug cleaner with customizable stopwords.
 * Option to clean image filenames on upload.

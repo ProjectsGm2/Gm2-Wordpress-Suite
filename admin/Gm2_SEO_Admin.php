@@ -1649,8 +1649,24 @@ class Gm2_SEO_Admin {
      */
     private function flatten_rule_value($value) {
         if (is_array($value)) {
-            return implode("\n", array_values($value));
+            $parts = [];
+            foreach ($value as $v) {
+                $flat = $this->flatten_rule_value($v);
+                if ($flat !== '') {
+                    $parts[] = $flat;
+                }
+            }
+            return implode("\n", $parts);
         }
+
+        if (is_object($value)) {
+            if (method_exists($value, '__toString')) {
+                return (string) $value;
+            }
+            $value = (array) $value;
+            return $this->flatten_rule_value($value);
+        }
+
         return (string) $value;
     }
 
