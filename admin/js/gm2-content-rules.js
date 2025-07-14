@@ -1,4 +1,12 @@
 jQuery(function($){
+    function flatten(val){
+        if($.isArray(val)){
+            return $.map(val, flatten).join("\n");
+        }else if(val && typeof val === "object"){
+            return $.map(Object.values(val), flatten).join("\n");
+        }
+        return String(val);
+    }
     $('.gm2-research-rules').on('click', function(e){
         e.preventDefault();
         if(!window.gm2ContentRules) return;
@@ -24,12 +32,7 @@ jQuery(function($){
                 }else{
                     $.each(resp.data, function(key,val){
                         var selector = 'textarea[name="gm2_content_rules['+base+']['+key+']"]';
-                        if($.isArray(val)){
-                            val = val.join("\n");
-                        }else if(typeof val === 'object' && val !== null){
-                            val = Object.values(val).join("\n");
-                        }
-                        $(selector).val(val);
+                        $(selector).val(flatten(val));
                     });
                 }
             }else if(resp && resp.data){
