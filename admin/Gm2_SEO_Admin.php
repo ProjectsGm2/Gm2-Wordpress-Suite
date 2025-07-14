@@ -1392,9 +1392,15 @@ class Gm2_SEO_Admin {
                 $rules[$k] = [];
                 if (is_array($v)) {
                     foreach ($v as $cat => $val) {
-                        $val = $this->flatten_rule_value($val);
-                        $rules[$k][$cat] = sanitize_textarea_field($val);
+                        $rules[$k][$cat] = sanitize_textarea_field(
+                            $this->flatten_rule_value($val)
+                        );
                     }
+                } else {
+                    // Support legacy or single-category submissions.
+                    $rules[$k]['general'] = sanitize_textarea_field(
+                        $this->flatten_rule_value($v)
+                    );
                 }
             }
         }
