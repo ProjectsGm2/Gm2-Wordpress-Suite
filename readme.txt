@@ -240,16 +240,17 @@ the last 100 missing URLs to help you create new redirects.
 == Testing ==
 The PHPUnit tests rely on the WordPress test suite and the `phpunit` executable.
 
-1. **Install PHP and PHPUnit.** Install via your package manager or with Composer:
+
+1. **Install PHP and Composer.** PHPUnit is required for the tests and can be installed globally:
    ```bash
    composer global require phpunit/phpunit
    ```
-   Ensure `phpunit` is on your `PATH`.
-2. **Install the WordPress test suite.** Run the helper script once using your database credentials:
+   Ensure the Composer global bin directory is on your `PATH`.
+2. **Install the WordPress test suite.** Run the helper script before executing the tests:
    ```bash
    bash bin/install-wp-tests.sh <db-name> <db-user> <db-pass> [db-host] [wp-version]
    ```
-   This downloads WordPress and sets up the test database.
-3. **Run the tests.** Execute `phpunit` (or `make test` with the provided Makefile) from the project root. Set `WP_TESTS_DIR` if you installed the suite elsewhere.
+   This downloads WordPress and prepares the test database.
+3. **Run the tests.** Execute `phpunit` or `make test` from the project root. The Makefile will install the test suite automatically if it is missing. Set `WP_TESTS_DIR` if you installed the suite elsewhere.
 
 The tests cover the AJAX endpoints used for content analysis and AI research (`gm2_check_rules`, `gm2_keyword_ideas`, `gm2_research_guidelines` and `gm2_ai_research`).
