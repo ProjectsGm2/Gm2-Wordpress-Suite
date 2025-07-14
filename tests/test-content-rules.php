@@ -165,5 +165,68 @@ class ContentRulesNormalizationTest extends WP_Ajax_UnitTestCase {
         $this->assertSame('Title rule', $rules['post_post']['seo_title']);
         $this->assertSame('Desc rule', $rules['post_post']['seo_description']);
     }
+
+    public function test_unknown_categories_are_ignored() {
+        update_option('gm2_chatgpt_api_key', 'key');
+        $resp_data = [ 'unknown' => 'Rule', 'seo_title' => 'Title rule' ];
+        $filter = function($pre, $args, $url) use ($resp_data) {
+            if ($url === 'https://api.openai.com/v1/chat/completions') {
+                return [
+                    'response' => ['code' => 200],
+                    'body'     => json_encode([
+                        'choices' => [ ['message' => ['content' => json_encode($resp_data)]] ]
+                    ])
+                ];
+            }
+            return false;
+        };
+        add_filter('pre_http_request', $filter, 10, 3);
+
+        $this->_setRole('administrator');
+        $_POST['categories'] = 'unknown, seo_title';
+        $_POST['target'] = 'post_post';
+        $_POST['_ajax_nonce'] = wp_create_nonce('gm2_research_content_rules');
+        $_REQUEST['_ajax_nonce'] = $_POST['_ajax_nonce'];
+        try { $this->_handleAjax('gm2_research_content_rules'); } catch (WPAjaxDieContinueException $e) {}
+
+        remove_filter('pre_http_request', $filter, 10);
+
+        $resp = json_decode($this->_last_response, true);
+        $this->assertTrue($resp['success']);
+        $this->assertArrayHasKey('seo_title', $resp['data']);
+        $this->assertArrayNotHasKey('unknown', $resp['data']);
+        $rules = get_option('gm2_content_rules');
+        $this->assertArrayHasKey('seo_title', $rules['post_post']);
+        $this->assertArrayNotHasKey('unknown', $rules['post_post']);
+    }
+
+    public function test_only_unknown_categories_returns_error() {
+        update_option('gm2_chatgpt_api_key', 'key');
+        $resp_data = [ 'weird' => 'Rule' ];
+        $filter = function($pre, $args, $url) use ($resp_data) {
+            if ($url === 'https://api.openai.com/v1/chat/completions') {
+                return [
+                    'response' => ['code' => 200],
+                    'body'     => json_encode([
+                        'choices' => [ ['message' => ['content' => json_encode($resp_data)]] ]
+                    ])
+                ];
+            }
+            return false;
+        };
+        add_filter('pre_http_request', $filter, 10, 3);
+
+        $this->_setRole('administrator');
+        $_POST['categories'] = 'weird';
+        $_POST['target'] = 'post_post';
+        $_POST['_ajax_nonce'] = wp_create_nonce('gm2_research_content_rules');
+        $_REQUEST['_ajax_nonce'] = $_POST['_ajax_nonce'];
+        try { $this->_handleAjax('gm2_research_content_rules'); } catch (WPAjaxDieContinueException $e) {}
+
+        remove_filter('pre_http_request', $filter, 10);
+
+        $resp = json_decode($this->_last_response, true);
+        $this->assertFalse($resp['success']);
+    }
 }
 ?>
