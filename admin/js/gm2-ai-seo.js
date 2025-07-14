@@ -201,6 +201,19 @@ jQuery(function($){
     }
 
     if(window.gm2AiSeo && gm2AiSeo.results){
-        buildResults(gm2AiSeo.results, $('#gm2-ai-results'));
+        var results = gm2AiSeo.results;
+        if(typeof results === 'string'){
+            try {
+                results = JSON.parse(results);
+            } catch(err){
+                if(window.console && console.error){
+                    console.error('Invalid gm2AiSeo.results JSON', err);
+                }
+                results = null;
+            }
+        }
+        if(results && typeof results === 'object'){
+            buildResults(results, $('#gm2-ai-results'));
+        }
     }
 });
