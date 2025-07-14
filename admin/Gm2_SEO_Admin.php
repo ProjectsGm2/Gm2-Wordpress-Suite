@@ -748,7 +748,7 @@ class Gm2_SEO_Admin {
 
         echo '<div class="wrap" id="gm2-bulk-ai">';
         echo '<h1>' . esc_html__( 'Bulk AI Review', 'gm2-wordpress-suite' ) . '</h1>';
-        echo '<form method="post">';
+        echo '<form method="post" action="' . esc_url( admin_url( 'admin.php?page=gm2-bulk-ai-review' ) ) . '">';
         wp_nonce_field('gm2_bulk_ai_settings');
         echo '<p><label>' . esc_html__( 'Posts per page', 'gm2-wordpress-suite' ) . ' <input type="number" name="page_size" value="' . esc_attr($page_size) . '" min="1"></label> ';
         echo '<label>' . esc_html__( 'Status', 'gm2-wordpress-suite' ) . ' <select name="status">';
