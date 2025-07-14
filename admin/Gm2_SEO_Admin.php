@@ -934,6 +934,7 @@ class Gm2_SEO_Admin {
         $nofollow            = '';
         $canonical           = '';
         $focus_keywords      = '';
+        $long_tail_keywords  = '';
         $max_snippet         = '';
         $max_image_preview   = '';
         $max_video_preview   = '';
@@ -946,6 +947,7 @@ class Gm2_SEO_Admin {
             $nofollow       = get_term_meta($term->term_id, '_gm2_nofollow', true);
             $canonical        = get_term_meta($term->term_id, '_gm2_canonical', true);
             $focus_keywords   = get_term_meta($term->term_id, '_gm2_focus_keywords', true);
+            $long_tail_keywords = get_term_meta($term->term_id, '_gm2_long_tail_keywords', true);
             $max_snippet      = get_term_meta($term->term_id, '_gm2_max_snippet', true);
             $max_image_preview = get_term_meta($term->term_id, '_gm2_max_image_preview', true);
             $max_video_preview = get_term_meta($term->term_id, '_gm2_max_video_preview', true);
@@ -1000,6 +1002,8 @@ class Gm2_SEO_Admin {
         echo '<textarea id="gm2_seo_description" name="gm2_seo_description" class="widefat" rows="3">' . esc_textarea($description) . '</textarea></p>';
         echo '<p><label for="gm2_focus_keywords">' . esc_html__( 'Focus Keywords (comma separated)', 'gm2-wordpress-suite' ) . '</label>';
         echo '<input type="text" id="gm2_focus_keywords" name="gm2_focus_keywords" value="' . esc_attr($focus_keywords) . '" class="widefat" /></p>';
+        echo '<p><label for="gm2_long_tail_keywords">' . esc_html__( 'Long Tail Keywords (comma separated)', 'gm2-wordpress-suite' ) . '</label>';
+        echo '<input type="text" id="gm2_long_tail_keywords" name="gm2_long_tail_keywords" value="' . esc_attr($long_tail_keywords) . '" class="widefat" /></p>';
         echo '<p><label><input type="checkbox" name="gm2_noindex" value="1" ' . checked($noindex, '1', false) . '> ' . esc_html__( 'noindex', 'gm2-wordpress-suite' ) . '</label></p>';
         echo '<p><label><input type="checkbox" name="gm2_nofollow" value="1" ' . checked($nofollow, '1', false) . '> ' . esc_html__( 'nofollow', 'gm2-wordpress-suite' ) . '</label></p>';
         echo '<p><label for="gm2_canonical_url">' . esc_html__( 'Canonical URL', 'gm2-wordpress-suite' ) . '</label>';
@@ -1079,6 +1083,7 @@ class Gm2_SEO_Admin {
         $nofollow    = isset($_POST['gm2_nofollow']) ? '1' : '0';
         $canonical      = isset($_POST['gm2_canonical_url']) ? esc_url_raw($_POST['gm2_canonical_url']) : '';
         $focus_keywords   = isset($_POST['gm2_focus_keywords']) ? sanitize_text_field($_POST['gm2_focus_keywords']) : '';
+        $long_tail_keywords = isset($_POST['gm2_long_tail_keywords']) ? sanitize_text_field($_POST['gm2_long_tail_keywords']) : '';
         $max_snippet      = isset($_POST['gm2_max_snippet']) ? sanitize_text_field($_POST['gm2_max_snippet']) : '';
         $max_image_preview = isset($_POST['gm2_max_image_preview']) ? sanitize_text_field($_POST['gm2_max_image_preview']) : '';
         $max_video_preview = isset($_POST['gm2_max_video_preview']) ? sanitize_text_field($_POST['gm2_max_video_preview']) : '';
@@ -1093,6 +1098,7 @@ class Gm2_SEO_Admin {
         update_post_meta($post_id, '_gm2_nofollow', $nofollow);
         update_post_meta($post_id, '_gm2_canonical', $canonical);
         update_post_meta($post_id, '_gm2_focus_keywords', $focus_keywords);
+        update_post_meta($post_id, '_gm2_long_tail_keywords', $long_tail_keywords);
         update_post_meta($post_id, '_gm2_max_snippet', $max_snippet);
         update_post_meta($post_id, '_gm2_max_image_preview', $max_image_preview);
         update_post_meta($post_id, '_gm2_max_video_preview', $max_video_preview);
@@ -1123,6 +1129,7 @@ class Gm2_SEO_Admin {
         update_term_meta($term_id, '_gm2_nofollow', $nofollow);
         update_term_meta($term_id, '_gm2_canonical', $canonical);
         update_term_meta($term_id, '_gm2_focus_keywords', $focus_keywords);
+        update_term_meta($term_id, '_gm2_long_tail_keywords', $long_tail_keywords);
         update_term_meta($term_id, '_gm2_max_snippet', $max_snippet);
         update_term_meta($term_id, '_gm2_max_image_preview', $max_image_preview);
         update_term_meta($term_id, '_gm2_max_video_preview', $max_video_preview);
@@ -2341,6 +2348,7 @@ class Gm2_SEO_Admin {
         $nofollow       = get_post_meta($post->ID, '_gm2_nofollow', true);
         $canonical      = get_post_meta($post->ID, '_gm2_canonical', true);
         $focus_keywords      = get_post_meta($post->ID, '_gm2_focus_keywords', true);
+        $long_tail_keywords  = get_post_meta($post->ID, '_gm2_long_tail_keywords', true);
         $max_snippet         = get_post_meta($post->ID, '_gm2_max_snippet', true);
         $max_image_preview   = get_post_meta($post->ID, '_gm2_max_image_preview', true);
         $max_video_preview   = get_post_meta($post->ID, '_gm2_max_video_preview', true);
@@ -2361,6 +2369,8 @@ class Gm2_SEO_Admin {
         echo '<textarea id="gm2_seo_description" name="gm2_seo_description" class="widefat" rows="3">' . esc_textarea($description) . '</textarea></p>';
         echo '<p><label for="gm2_focus_keywords">' . esc_html__( 'Focus Keywords (comma separated)', 'gm2-wordpress-suite' ) . '</label>';
         echo '<input type="text" id="gm2_focus_keywords" name="gm2_focus_keywords" value="' . esc_attr($focus_keywords) . '" class="widefat" /></p>';
+        echo '<p><label for="gm2_long_tail_keywords">' . esc_html__( 'Long Tail Keywords (comma separated)', 'gm2-wordpress-suite' ) . '</label>';
+        echo '<input type="text" id="gm2_long_tail_keywords" name="gm2_long_tail_keywords" value="' . esc_attr($long_tail_keywords) . '" class="widefat" /></p>';
         echo '<p><label><input type="checkbox" name="gm2_noindex" value="1" ' . checked($noindex, '1', false) . '> ' . esc_html__( 'noindex', 'gm2-wordpress-suite' ) . '</label></p>';
         echo '<p><label><input type="checkbox" name="gm2_nofollow" value="1" ' . checked($nofollow, '1', false) . '> ' . esc_html__( 'nofollow', 'gm2-wordpress-suite' ) . '</label></p>';
         echo '<p><label for="gm2_canonical_url">' . esc_html__( 'Canonical URL', 'gm2-wordpress-suite' ) . '</label>';

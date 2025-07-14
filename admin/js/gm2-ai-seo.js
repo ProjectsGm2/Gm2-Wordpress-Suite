@@ -101,6 +101,7 @@ jQuery(function($){
             seo_title: labels.seoTitle || 'SEO Title',
             description: labels.description || 'SEO Description',
             focus_keywords: labels.focusKeywords || 'Focus Keywords',
+            long_tail_keywords: labels.longTailKeywords || 'Long Tail Keywords',
             canonical: labels.canonical || 'Canonical URL',
             page_name: labels.pageName || 'Page Name'
         };
@@ -133,12 +134,12 @@ jQuery(function($){
         }
 
         if(data.long_tail_keywords){
-            var $kw = $('<ul>');
-            [].concat(data.long_tail_keywords).forEach(function(k){
-                $('<li>').text(k).appendTo($kw);
-            });
+            var valLt = [].concat(data.long_tail_keywords).join(', ');
             var ltText = window.gm2AiSeo && gm2AiSeo.i18n ? gm2AiSeo.i18n.longTailKeywords : 'Long Tail Keywords';
-            $wrap.append('<h4>' + ltText + '</h4>').append($kw);
+            var $lblLt = $('<label>');
+            $('<input>', {type:'checkbox','class':'gm2-ai-select','data-field':'long_tail_keywords','data-value':valLt}).appendTo($lblLt);
+            $lblLt.append(document.createTextNode(' ' + ltText + ': ' + valLt));
+            $list.append($('<p>').append($lblLt));
         }
         if(data.content_suggestions){
             var $cs = $('<ul>');
@@ -177,6 +178,8 @@ jQuery(function($){
                     $('#gm2_seo_description').val(val); break;
                 case 'focus_keywords':
                     $('#gm2_focus_keywords').val(val); break;
+                case 'long_tail_keywords':
+                    $('#gm2_long_tail_keywords').val(val); break;
                 case 'canonical':
                     $('#gm2_canonical_url').val(val); break;
                 case 'page_name':
