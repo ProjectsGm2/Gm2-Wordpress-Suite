@@ -199,4 +199,8 @@ jQuery(function($){
             }
         });
     }
+
+    if(window.gm2AiSeo && gm2AiSeo.results){
+        buildResults(gm2AiSeo.results, $('#gm2-ai-results'));
+    }
 });
