@@ -44,3 +44,36 @@ class BulkAiApplyAjaxTest extends WP_Ajax_UnitTestCase {
         $this->assertFalse($resp['success']);
     }
 }
+
+class BulkAiFilterTest extends WP_UnitTestCase {
+    public function test_post_type_filter_limits_results() {
+        $post1 = self::factory()->post->create(['post_title' => 'Post One']);
+        $page1 = self::factory()->post->create(['post_type' => 'page', 'post_title' => 'Page One']);
+        update_option('gm2_bulk_ai_post_type', 'page');
+        $admin = new Gm2_SEO_Admin();
+        $user = self::factory()->user->create(['role' => 'administrator']);
+        wp_set_current_user($user);
+        ob_start();
+        $admin->display_bulk_ai_page();
+        $out = ob_get_clean();
+        $this->assertStringContainsString('Page One', $out);
+        $this->assertStringNotContainsString('Post One', $out);
+    }
+
+    public function test_category_filter_limits_results() {
+        $cat1 = self::factory()->term->create(['taxonomy' => 'category', 'name' => 'Alpha']);
+        $cat2 = self::factory()->term->create(['taxonomy' => 'category', 'name' => 'Beta']);
+        $in = self::factory()->post->create(['post_title' => 'In', 'post_category' => [$cat1]]);
+        $out_post = self::factory()->post->create(['post_title' => 'Out', 'post_category' => [$cat2]]);
+        update_option('gm2_bulk_ai_post_type', 'post');
+        update_option('gm2_bulk_ai_term', 'category:' . $cat1);
+        $admin = new Gm2_SEO_Admin();
+        $user = self::factory()->user->create(['role' => 'administrator']);
+        wp_set_current_user($user);
+        ob_start();
+        $admin->display_bulk_ai_page();
+        $html = ob_get_clean();
+        $this->assertStringContainsString('In', $html);
+        $this->assertStringNotContainsString('Out', $html);
+    }
+}

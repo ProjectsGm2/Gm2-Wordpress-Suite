@@ -234,6 +234,12 @@ class Gm2_SEO_Admin {
         register_setting('gm2_seo_options', 'gm2_bulk_ai_status', [
             'sanitize_callback' => 'sanitize_key',
         ]);
+        register_setting('gm2_seo_options', 'gm2_bulk_ai_post_type', [
+            'sanitize_callback' => 'sanitize_key',
+        ]);
+        register_setting('gm2_seo_options', 'gm2_bulk_ai_term', [
+            'sanitize_callback' => 'sanitize_text_field',
+        ]);
         foreach ($this->get_supported_post_types() as $pt) {
             register_setting('gm2_seo_options', 'gm2_seo_guidelines_post_' . $pt, [
                 'sanitize_callback' => 'sanitize_textarea_field',
@@ -704,19 +710,41 @@ class Gm2_SEO_Admin {
 
         $page_size = max(1, absint(get_option('gm2_bulk_ai_page_size', 10)));
         $status    = get_option('gm2_bulk_ai_status', 'publish');
+        $post_type = get_option('gm2_bulk_ai_post_type', 'all');
+        $term      = get_option('gm2_bulk_ai_term', '');
 
         if (isset($_POST['gm2_bulk_ai_save']) && check_admin_referer('gm2_bulk_ai_settings')) {
             $page_size = max(1, absint($_POST['page_size'] ?? 10));
             $status    = sanitize_key($_POST['status'] ?? 'publish');
+            $post_type = sanitize_key($_POST['post_type'] ?? 'all');
+            $term      = sanitize_text_field($_POST['term'] ?? '');
             update_option('gm2_bulk_ai_page_size', $page_size);
             update_option('gm2_bulk_ai_status', $status);
+            update_option('gm2_bulk_ai_post_type', $post_type);
+            update_option('gm2_bulk_ai_term', $term);
         }
 
-        $query = new \WP_Query([
-            'post_type'      => $this->get_supported_post_types(),
+        $types = $this->get_supported_post_types();
+        if ($post_type !== 'all' && in_array($post_type, $types, true)) {
+            $types = [$post_type];
+        }
+        $args = [
+            'post_type'      => $types,
             'post_status'    => $status,
             'posts_per_page' => $page_size,
-        ]);
+        ];
+        if ($term && strpos($term, ':') !== false) {
+            list($tax, $id) = explode(':', $term);
+            $taxonomies = $this->get_supported_taxonomies();
+            if (in_array($tax, $taxonomies, true)) {
+                $args['tax_query'] = [[
+                    'taxonomy' => $tax,
+                    'field'    => 'term_id',
+                    'terms'    => absint($id),
+                ]];
+            }
+        }
+        $query = new \WP_Query($args);
 
         echo '<div class="wrap" id="gm2-bulk-ai">';
         echo '<h1>' . esc_html__( 'Bulk AI Review', 'gm2-wordpress-suite' ) . '</h1>';
@@ -726,6 +754,27 @@ class Gm2_SEO_Admin {
         echo '<label>' . esc_html__( 'Status', 'gm2-wordpress-suite' ) . ' <select name="status">';
         echo '<option value="publish"' . selected($status, 'publish', false) . '>' . esc_html__( 'Published', 'gm2-wordpress-suite' ) . '</option>';
         echo '<option value="draft"' . selected($status, 'draft', false) . '>' . esc_html__( 'Draft', 'gm2-wordpress-suite' ) . '</option>';
+        echo '</select></label> ';
+        echo '<label>' . esc_html__( 'Post Type', 'gm2-wordpress-suite' ) . ' <select name="post_type">';
+        echo '<option value="all"' . selected($post_type, 'all', false) . '>' . esc_html__( 'All', 'gm2-wordpress-suite' ) . '</option>';
+        foreach ($this->get_supported_post_types() as $pt) {
+            $obj = get_post_type_object($pt);
+            $name = $obj ? $obj->labels->singular_name : $pt;
+            echo '<option value="' . esc_attr($pt) . '"' . selected($post_type, $pt, false) . '>' . esc_html($name) . '</option>';
+        }
+        echo '</select></label> ';
+        echo '<label>' . esc_html__( 'Category', 'gm2-wordpress-suite' ) . ' <select name="term">';
+        echo '<option value=""' . selected($term, '', false) . '>' . esc_html__( 'All', 'gm2-wordpress-suite' ) . '</option>';
+        $dropdown_terms = get_terms([
+            'taxonomy'   => $this->get_supported_taxonomies(),
+            'hide_empty' => false,
+        ]);
+        foreach ($dropdown_terms as $t) {
+            $tax_obj = get_taxonomy($t->taxonomy);
+            $label = ($tax_obj ? $tax_obj->labels->singular_name : $t->taxonomy) . ': ' . $t->name;
+            $value = $t->taxonomy . ':' . $t->term_id;
+            echo '<option value="' . esc_attr($value) . '"' . selected($term, $value, false) . '>' . esc_html($label) . '</option>';
+        }
         echo '</select></label> ';
         submit_button( esc_html__( 'Save', 'gm2-wordpress-suite' ), 'secondary', 'gm2_bulk_ai_save', false );
         echo '</p></form>';

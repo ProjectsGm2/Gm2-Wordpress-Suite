@@ -21,7 +21,8 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 // gm2_compression_api_key, gm2_compression_api_url, gm2_minify_html, gm2_minify_css,
 // gm2_minify_js, gm2_chatgpt_api_key, gm2_chatgpt_model, gm2_chatgpt_temperature,
 // gm2_chatgpt_max_tokens, gm2_chatgpt_endpoint, gm2_pagespeed_api_key, gm2_pagespeed_scores,
-// gm2_bulk_ai_page_size, gm2_bulk_ai_status, gm2_seo_guidelines_post_*, gm2_seo_guidelines_tax_*.
+// gm2_bulk_ai_page_size, gm2_bulk_ai_status, gm2_bulk_ai_post_type, gm2_bulk_ai_term,
+// gm2_seo_guidelines_post_*, gm2_seo_guidelines_tax_*.
 $option_names = array(
     'gm2_suite_settings',
     'gm2_suite_version',
@@ -72,6 +73,8 @@ $option_names = array(
     'gm2_pagespeed_scores',
     'gm2_bulk_ai_page_size',
     'gm2_bulk_ai_status',
+    'gm2_bulk_ai_post_type',
+    'gm2_bulk_ai_term',
     'gm2_clean_slugs',
     'gm2_slug_stopwords',
     'gm2_tax_desc_prompt',
