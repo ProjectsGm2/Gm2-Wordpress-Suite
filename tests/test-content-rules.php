@@ -113,5 +113,21 @@ class ContentRulesFormTest extends WP_UnitTestCase {
         $this->assertIsString($rules['post_post']['content']);
         $this->assertSame("First\nSecond", $rules['post_post']['content']);
     }
+
+    public function test_form_flattens_scalar_value() {
+        $admin = new \Gm2\Gm2_SEO_Admin();
+        $user  = self::factory()->user->create(['role' => 'administrator']);
+        wp_set_current_user($user);
+
+        $_POST['gm2_content_rules_nonce'] = wp_create_nonce('gm2_content_rules_save');
+        $_POST['gm2_content_rules'] = [
+            'post_post' => 'One\nTwo'
+        ];
+
+        $admin->handle_content_rules_form();
+
+        $rules = get_option('gm2_content_rules');
+        $this->assertSame('One\nTwo', $rules['post_post']['general']);
+    }
 }
 ?>
