@@ -2009,14 +2009,9 @@ class Gm2_SEO_Admin {
                 continue;
             }
 
-            if (is_array($text)) {
-                $lines = array_map(static function($t){
-                    return sanitize_textarea_field((string) $t);
-                }, array_values($text));
-                $text = implode("\n", $lines);
-            } else {
-                $text = sanitize_textarea_field($text);
-            }
+            $text = sanitize_textarea_field(
+                $this->flatten_rule_value($text)
+            );
             $rules[$target][$key] = $text;
             $formatted[$key]     = $text;
         }
