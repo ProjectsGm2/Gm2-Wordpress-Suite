@@ -1,4 +1,5 @@
 jQuery(function($){
+    var LS_KEY = 'gm2_ai_seo_results';
     $('#gm2-ai-seo').on('click', '.gm2-ai-research', function(e){
         e.preventDefault();
         var researchingText = window.gm2AiSeo && gm2AiSeo.i18n ? gm2AiSeo.i18n.researching : 'Researching...';
@@ -44,6 +45,9 @@ jQuery(function($){
             if(resp && resp.success && resp.data){
                 if(typeof resp.data === 'object' && !resp.data.response){
                     buildResults(resp.data, $out);
+                    if(window.gm2AiSeo && parseInt(gm2AiSeo.post_id, 10) === 0){
+                        try{ localStorage.setItem(LS_KEY, JSON.stringify(resp.data)); }catch(e){}
+                    }
                 } else if(resp.data.response){
                     try {
                         var parsed = JSON.parse(resp.data.response);
@@ -52,6 +56,9 @@ jQuery(function($){
                                 parsed.html_issues = resp.data.html_issues;
                             }
                             buildResults(parsed, $out);
+                            if(window.gm2AiSeo && parseInt(gm2AiSeo.post_id, 10) === 0){
+                                try{ localStorage.setItem(LS_KEY, JSON.stringify(parsed)); }catch(e){}
+                            }
                             return;
                         }
                     } catch(e) {}
@@ -200,20 +207,37 @@ jQuery(function($){
         });
     }
 
-    if(window.gm2AiSeo && gm2AiSeo.results){
-        var results = gm2AiSeo.results;
-        if(typeof results === 'string'){
-            try {
-                results = JSON.parse(results);
-            } catch(err){
-                if(window.console && console.error){
-                    console.error('Invalid gm2AiSeo.results JSON', err);
+    if(window.gm2AiSeo){
+        if(gm2AiSeo.results){
+            var results = gm2AiSeo.results;
+            if(typeof results === 'string'){
+                try {
+                    results = JSON.parse(results);
+                } catch(err){
+                    if(window.console && console.error){
+                        console.error('Invalid gm2AiSeo.results JSON', err);
+                    }
+                    results = null;
                 }
-                results = null;
             }
-        }
-        if(results && typeof results === 'object'){
-            buildResults(results, $('#gm2-ai-results'));
+            if(results && typeof results === 'object'){
+                buildResults(results, $('#gm2-ai-results'));
+                if(parseInt(gm2AiSeo.post_id, 10) === 0){
+                    try{ localStorage.setItem(LS_KEY, JSON.stringify(results)); }catch(e){}
+                } else {
+                    localStorage.removeItem(LS_KEY);
+                }
+            }
+        } else if(parseInt(gm2AiSeo.post_id, 10) === 0){
+            var stored = localStorage.getItem(LS_KEY);
+            if(stored){
+                try{ stored = JSON.parse(stored); }catch(e){ stored = null; }
+                if(stored && typeof stored === 'object'){
+                    buildResults(stored, $('#gm2-ai-results'));
+                }
+            }
+        } else {
+            localStorage.removeItem(LS_KEY);
         }
     }
 });
