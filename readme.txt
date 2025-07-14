@@ -202,7 +202,7 @@ the last 100 missing URLs to help you create new redirects.
 * **Image filename normalization** – automatically sanitize filenames when
   **Clean Image Filenames** is enabled.
 * **Bulk AI suggestions** – bulk action on the posts list to generate AI SEO
-  suggestions for multiple items.
+  suggestions for multiple items with post type and category filters.
 * **Outbound link rel controls** – dropdown in the link dialog to apply
   `nofollow` or `sponsored` to outbound links.
 
@@ -211,6 +211,7 @@ the last 100 missing URLs to help you create new redirects.
 * Optional slug cleaner with customizable stopwords.
 * Option to clean image filenames on upload.
 * Updated AI SEO JavaScript for more accurate suggestions.
+* Bulk AI page now filters posts by type and category.
 = 1.6.3 =
 * Expanded documentation for Open Graph images, robots meta settings, sitemap
   pinging, robots.txt editing, AI-generated descriptions and alt text, and
