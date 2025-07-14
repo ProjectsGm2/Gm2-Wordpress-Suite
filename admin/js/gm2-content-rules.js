@@ -20,7 +20,7 @@ jQuery(function($){
         }).done(function(resp){
             if(resp && resp.success && typeof resp.data === 'object'){
                 if($.isEmptyObject(resp.data)){
-                    alert('No rules returned. Please verify the categories or check the server logs.');
+                    alert('No recognized rules returned. Check the categories or server logs.');
                 }else{
                     $.each(resp.data, function(key,val){
                         var selector = 'textarea[name="gm2_content_rules['+base+']['+key+']"]';
