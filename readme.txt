@@ -3,7 +3,7 @@ Contributors: gm2team
 Tags: admin, tools, suite, performance
 Requires at least: 7.0
 Tested up to: 6.5
-Stable tag: 1.6.3
+Stable tag: 1.6.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -210,6 +210,7 @@ the last 100 missing URLs to help you create new redirects.
 = 1.6.4 =
 * Optional slug cleaner with customizable stopwords.
 * Option to clean image filenames on upload.
+* Updated AI SEO JavaScript for more accurate suggestions.
 = 1.6.3 =
 * Expanded documentation for Open Graph images, robots meta settings, sitemap
   pinging, robots.txt editing, AI-generated descriptions and alt text, and
