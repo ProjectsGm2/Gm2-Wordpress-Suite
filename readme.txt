@@ -105,10 +105,18 @@ you can revisit this screen later and adjust the guidelines as needed.
 
 == Content Rules ==
 Open the **Rules** tab under **SEO** to define checks for each post type and
-taxonomy. Next to every rule field you'll find an **AI Research Content Rules**
-button. Click it to fetch best-practice suggestions from ChatGPT for the
-selected categories. The response is stored automatically so you can refine the
-rules at any time.
+taxonomy. Rules are grouped into categories like *SEO Title*, *SEO Description*,
+*Focus Keywords*, *Long Tail Keywords*, *Canonical URL*, *Content* and
+*General*. Each category provides its own textarea where you can enter multiple
+line-based rules. These category rules work alongside the text in **SEO
+Guidelines** and are considered when running **AI Research** on a post or
+taxonomy term.
+
+Within the Rules table, every category textarea now includes an **AI Research
+Content Rules** button. The button sits directly below the textarea label and
+fetches best-practice suggestions from ChatGPT for the selected post type or
+taxonomy. The results are saved automatically so you can refine them at any
+time.
 
 == SEO Settings ==
 The SEO meta box appears when editing posts, pages, any public custom post types and taxonomy terms. In the
