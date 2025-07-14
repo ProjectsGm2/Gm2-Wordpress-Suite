@@ -1938,7 +1938,9 @@ class Gm2_SEO_Admin {
             wp_send_json_error( __( 'invalid target', 'gm2-wordpress-suite' ) );
         }
 
-        $prompt = 'Provide best practice content rules as JSON for these categories: ' . $cats;
+        $prompt = 'For each of these categories (' . $cats .
+            '), provide one short best-practice rule as text. ' .
+            'Respond only with JSON where keys match the category slugs and values are sentences.';
         $chat   = new Gm2_ChatGPT();
         $resp   = $chat->query($prompt);
 
