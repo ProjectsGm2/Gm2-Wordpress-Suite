@@ -1392,6 +1392,7 @@ class Gm2_SEO_Admin {
                 $rules[$k] = [];
                 if (is_array($v)) {
                     foreach ($v as $cat => $val) {
+                        $val = $this->flatten_rule_value($val);
                         $rules[$k][$cat] = sanitize_textarea_field($val);
                     }
                 }
