@@ -116,7 +116,8 @@ Within the Rules table, every category textarea now includes an **AI Research
 Content Rules** button. The button sits directly below the textarea label and
 fetches best-practice suggestions from ChatGPT for the selected post type or
 taxonomy. The results are saved automatically so you can refine them at any
-time.
+time. ChatGPT is instructed to respond **only with JSON** and each key must
+exactly match one of the slugs you provided.
 
 Category names returned by ChatGPT may contain spaces or hyphens. These are
 normalized to use underscores when saving so keys like "SEO Title" or
