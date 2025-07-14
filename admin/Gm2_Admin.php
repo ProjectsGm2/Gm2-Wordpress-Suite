@@ -134,6 +134,7 @@ class Gm2_Admin {
                     'nonce'    => wp_create_nonce('gm2_research_content_rules'),
                     'ajax_url' => admin_url('admin-ajax.php'),
                     'prompt'   => __( 'Enter rule categories (comma separated):', 'gm2-wordpress-suite' ),
+                    'loading'  => __( 'Researching...', 'gm2-wordpress-suite' ),
                 ]
             );
             if ($hook === 'gm2_page_gm2-bulk-ai-review') {
