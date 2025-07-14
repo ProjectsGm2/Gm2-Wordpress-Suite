@@ -15,14 +15,18 @@ jQuery(function($){
             _ajax_nonce: gm2ContentRules.nonce
         }).done(function(resp){
             if(resp && resp.success && typeof resp.data === 'object'){
+                function flatten(v){
+                    if($.isArray(v)){
+                        return $.map(v, flatten).join("\n");
+                    }
+                    if(v && typeof v === 'object'){
+                        return $.map(v, flatten).join("\n");
+                    }
+                    return v == null ? '' : String(v);
+                }
                 $.each(resp.data, function(key,val){
                     var selector = 'textarea[name="gm2_content_rules['+base+']['+key+']"]';
-                    if($.isArray(val)){
-                        val = val.join("\n");
-                    }else if(typeof val === 'object' && val !== null){
-                        val = Object.values(val).join("\n");
-                    }
-                    $(selector).val(val);
+                    $(selector).val(flatten(val));
                 });
             }else if(resp && resp.data){
                 alert(resp.data);

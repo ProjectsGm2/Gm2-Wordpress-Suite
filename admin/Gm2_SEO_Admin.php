@@ -1641,10 +1641,17 @@ class Gm2_SEO_Admin {
      * @return string Flattened rule string.
      */
     private function flatten_rule_value($value) {
-        if (is_array($value)) {
-            return implode("\n", array_values($value));
+        if (is_array($value) || is_object($value)) {
+            $parts = [];
+            foreach ((array) $value as $v) {
+                $str = $this->flatten_rule_value($v);
+                if ($str !== '') {
+                    $parts[] = $str;
+                }
+            }
+            return implode("\n", $parts);
         }
-        return (string) $value;
+        return sanitize_textarea_field((string) $value);
     }
 
     public function ajax_check_rules() {
@@ -1949,15 +1956,8 @@ class Gm2_SEO_Admin {
 
         $formatted = [];
         foreach ($data as $cat => $text) {
-            $key = sanitize_key($cat);
-            if (is_array($text)) {
-                $lines = array_map(static function($t){
-                    return sanitize_textarea_field((string) $t);
-                }, array_values($text));
-                $text = implode("\n", $lines);
-            } else {
-                $text = sanitize_textarea_field($text);
-            }
+            $key  = sanitize_key($cat);
+            $text = $this->flatten_rule_value($text);
             $rules[$target][$key] = $text;
             $formatted[$key]     = $text;
         }
