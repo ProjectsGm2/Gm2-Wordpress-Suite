@@ -1967,10 +1967,23 @@ class Gm2_SEO_Admin {
             $rules[$target] = [];
         }
 
+        $valid_slugs = [
+            'seo_title', 'seo_description', 'focus_keywords',
+            'long_tail_keywords', 'canonical_url', 'content', 'general'
+        ];
+
         $formatted = [];
         foreach ($data as $cat => $text) {
             $key = strtolower(str_replace([' ', '-'], '_', $cat));
             $key = preg_replace('/[^a-z0-9_]/', '', $key);
+
+            if (!in_array($key, $valid_slugs, true)) {
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                    error_log('Discarded content rule category: ' . $key);
+                }
+                continue;
+            }
+
             if (is_array($text)) {
                 $lines = array_map(static function($t){
                     return sanitize_textarea_field((string) $t);
@@ -1981,6 +1994,10 @@ class Gm2_SEO_Admin {
             }
             $rules[$target][$key] = $text;
             $formatted[$key]     = $text;
+        }
+
+        if (empty($formatted)) {
+            wp_send_json_error( __( 'Unrecognized categories', 'gm2-wordpress-suite' ) );
         }
 
         if (defined('WP_DEBUG') && WP_DEBUG) {
