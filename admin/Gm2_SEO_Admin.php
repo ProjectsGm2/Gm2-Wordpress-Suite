@@ -1938,9 +1938,16 @@ class Gm2_SEO_Admin {
             wp_send_json_error( __( 'invalid target', 'gm2-wordpress-suite' ) );
         }
 
+        if (strpos($target, 'post_') === 0) {
+            $prompt_target = sprintf('for the %s post type', substr($target, 5));
+        } else {
+            $prompt_target = sprintf('for the %s taxonomy', substr($target, 4));
+        }
+
         $prompt = sprintf(
-            'For each of these categories (%s) provide one short best-practice rule. ' .
-            'Return ONLY JSON where each key is exactly one of the provided slugs.',
+            'Provide an array of short, measurable rules %s. Use these categories: %s. ' .
+            'Respond ONLY with JSON where each key matches the provided slugs and each value is an array of rules.',
+            $prompt_target,
             $cats
         );
         $chat   = new Gm2_ChatGPT();
