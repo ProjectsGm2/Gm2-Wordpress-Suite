@@ -2036,6 +2036,11 @@ class Gm2_SEO_Admin {
             if ($slug !== '') {
                 $data['slug'] = $slug;
             }
+            if ($post_id) {
+                update_post_meta($post_id, '_gm2_ai_research', wp_json_encode($data));
+            } elseif ($term_id) {
+                update_term_meta($term_id, '_gm2_ai_research', wp_json_encode($data));
+            }
             wp_send_json_success($data);
         }
 
@@ -2182,6 +2187,17 @@ class Gm2_SEO_Admin {
                 'nonce'    => wp_create_nonce('gm2_ai_research'),
                 'ajax_url' => admin_url('admin-ajax.php'),
                 'post_id'  => isset($_GET['post']) ? absint($_GET['post']) : 0,
+                'results'  => (function(){
+                    $id = isset($_GET['post']) ? absint($_GET['post']) : 0;
+                    if($id){
+                        $stored = get_post_meta($id, '_gm2_ai_research', true);
+                        $data = $stored ? json_decode($stored, true) : null;
+                        if(json_last_error() === JSON_ERROR_NONE){
+                            return $data;
+                        }
+                    }
+                    return null;
+                })(),
                 'i18n'     => [
                     'researching' => __( 'Researching...', 'gm2-wordpress-suite' ),
                     'useExisting' => __( 'Use existing SEO values for AI research?', 'gm2-wordpress-suite' ),
@@ -2296,6 +2312,17 @@ class Gm2_SEO_Admin {
                 'ajax_url' => admin_url('admin-ajax.php'),
                 'term_id'  => isset($_GET['tag_ID']) ? absint($_GET['tag_ID']) : 0,
                 'taxonomy' => $screen->taxonomy,
+                'results'  => (function() use ($screen){
+                    $id = isset($_GET['tag_ID']) ? absint($_GET['tag_ID']) : 0;
+                    if($id){
+                        $stored = get_term_meta($id, '_gm2_ai_research', true);
+                        $data = $stored ? json_decode($stored, true) : null;
+                        if(json_last_error() === JSON_ERROR_NONE){
+                            return $data;
+                        }
+                    }
+                    return null;
+                })(),
                 'i18n'     => [
                     'researching' => __( 'Researching...', 'gm2-wordpress-suite' ),
                     'useExisting' => __( 'Use existing SEO values for AI research?', 'gm2-wordpress-suite' ),
