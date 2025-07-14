@@ -1,6 +1,14 @@
-.PHONY: test install-tests
+.PHONY: test install-tests check-tests
 
-test:
+WP_TESTS_DIR ?= $(TMPDIR)/wordpress-tests-lib
+
+check-tests:
+	@if [ ! -f "$(WP_TESTS_DIR)/includes/functions.php" ]; then \
+		echo "WordPress test suite not found. Installing..."; \
+		$(MAKE) install-tests; \
+	fi
+
+test: check-tests
 	phpunit
 
 install-tests:
