@@ -56,10 +56,11 @@ If you see errors when connecting your Google account:
 * **Keyword Research returns no results** – Ensure you have entered your Google Ads developer token, connected a Google account with Ads access, and selected a valid Ads customer ID. AI Research uses the same credentials when refining ChatGPT keywords, so missing or invalid details will cause the Keyword Planner request to fail.
 * "The caller does not have permission" – This usually means your developer token isn't approved for the selected Ads account or the login customer ID is missing or incorrect. Verify the token status in the Google Ads API Center and ensure the OAuth account can access that customer ID.
 * **Testing with an unapproved token** – Unapproved developer tokens can be used with [Google Ads test accounts](https://developers.google.com/google-ads/api/docs/best-practices/test-accounts). The login customer ID must be the manager ID for that token, and test accounts don't serve ads and have limited features.
-* **Viewing debug logs** – Enable debugging by adding `define('WP_DEBUG', true);` to your `wp-config.php` file. Errors and request details will then appear in your PHP error log.
+* **Viewing debug logs** – Add `define('WP_DEBUG', true);` and `define('WP_DEBUG_LOG', true);` to your `wp-config.php` file, then check `wp-content/debug.log` for errors.
+* **Check DOM extension** – Run `php -m | grep -i dom` to verify the DOM/LibXML extension is loaded. The plugin requires this for HTML analysis.
 
 == Diagnostics ==
-Use **Gm2 → Diagnostics** to check for plugin conflicts, missing files or theme customizations that may disable SEO output. Any detected issues are listed as an admin notice with steps to resolve them.
+As a first step, open **Gm2 → Diagnostics** to detect plugin conflicts, missing files or theme customizations that may disable SEO output. Any detected issues are listed as an admin notice with steps to resolve them.
 
 == Breadcrumbs ==
 Display a breadcrumb trail anywhere using the `[gm2_breadcrumbs]` shortcode. The output
