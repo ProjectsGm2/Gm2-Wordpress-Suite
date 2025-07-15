@@ -23,7 +23,11 @@ jQuery(function($){
                     if(typeof item === 'string'){
                         li.text(item);
                     }else{
-                        li.text(item.text || '');
+                        var txt = item.text;
+                        if (typeof txt === 'object') {
+                            txt = txt.value || JSON.stringify(txt);
+                        }
+                        li.text(txt || '');
                         if(item.metrics){
                             var parts = [];
                             Object.keys(item.metrics).forEach(function(key){
