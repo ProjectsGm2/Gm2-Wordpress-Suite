@@ -56,6 +56,10 @@ class Gm2_ChatGPT {
         $body   = wp_remote_retrieve_body($response);
 
         if ($status !== 200) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                $snippet = substr($body, 0, 200);
+                error_log(sprintf('Gm2_ChatGPT HTTP %s: %s', $status, $snippet));
+            }
             $data    = json_decode($body, true);
             $message = $data['error']['message'] ?? 'Non-200 response';
             return new \WP_Error('api_error', $message);
