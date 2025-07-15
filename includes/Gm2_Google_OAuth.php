@@ -90,6 +90,10 @@ class Gm2_Google_OAuth {
         $hdr  = rtrim(strtr($hdr, '+/', '-_'), '=');
         $clm  = rtrim(strtr($clm, '+/', '-_'), '=');
         $sig_data = $hdr . '.' . $clm;
+        if (!function_exists('openssl_sign')) {
+            error_log('OpenSSL extension missing: cannot sign JWT.');
+            return '';
+        }
         openssl_sign($sig_data, $signature, $data['private_key'], 'sha256');
         $sig = rtrim(strtr(base64_encode($signature), '+/', '-_'), '=');
         $jwt = $sig_data . '.' . $sig;
