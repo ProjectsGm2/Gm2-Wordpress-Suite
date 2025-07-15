@@ -7,8 +7,11 @@ if (!defined('ABSPATH')) {
 }
 
 class Gm2_Admin {
+    private $diagnostics;
 
     public function run() {
+        $this->diagnostics = new Gm2_Diagnostics();
+        $this->diagnostics->run();
         add_action('admin_menu', [$this, 'add_admin_menu']);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_scripts']);
         add_action('wp_ajax_gm2_add_tariff', [$this, 'ajax_add_tariff']);

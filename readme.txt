@@ -58,6 +58,9 @@ If you see errors when connecting your Google account:
 * **Testing with an unapproved token** – Unapproved developer tokens can be used with [Google Ads test accounts](https://developers.google.com/google-ads/api/docs/best-practices/test-accounts). The login customer ID must be the manager ID for that token, and test accounts don't serve ads and have limited features.
 * **Viewing debug logs** – Enable debugging by adding `define('WP_DEBUG', true);` to your `wp-config.php` file. Errors and request details will then appear in your PHP error log.
 
+== Diagnostics ==
+Use **Gm2 → Diagnostics** to check for plugin conflicts, missing files or theme customizations that may disable SEO output. Any detected issues are listed as an admin notice with steps to resolve them.
+
 == Breadcrumbs ==
 Display a breadcrumb trail anywhere using the `[gm2_breadcrumbs]` shortcode. The output
 is an ordered list wrapped in a `<nav>` element with accompanying JSON-LD for search engines.
