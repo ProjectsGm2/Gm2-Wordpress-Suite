@@ -124,6 +124,8 @@ you provided and each value is an array of rules.
 Category names returned by ChatGPT may contain spaces or hyphens. These are
 normalized to use underscores when saving so keys like "SEO Title" or
 "seo-title" populate the `seo_title` textarea.
+Synonyms such as "content in post" or "content in product" will also populate
+the `content` category automatically.
 
 Example JSON response:
 

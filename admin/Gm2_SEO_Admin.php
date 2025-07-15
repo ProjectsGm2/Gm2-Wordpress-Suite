@@ -1997,10 +1997,20 @@ class Gm2_SEO_Admin {
             'long_tail_keywords', 'canonical_url', 'content', 'general'
         ];
 
+        $alias_map = [
+            'content_in_post'        => 'content',
+            'content_in_page'        => 'content',
+            'content_in_custom_post' => 'content',
+            'content_in_product'     => 'content',
+        ];
+
         $formatted = [];
         foreach ($data as $cat => $text) {
             $key = strtolower(str_replace([' ', '-'], '_', $cat));
             $key = preg_replace('/[^a-z0-9_]/', '', $key);
+            if (isset($alias_map[$key])) {
+                $key = $alias_map[$key];
+            }
 
             if (!in_array($key, $valid_slugs, true)) {
                 if (defined('WP_DEBUG') && WP_DEBUG) {
