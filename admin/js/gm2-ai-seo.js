@@ -70,7 +70,14 @@ jQuery(function($){
                     $out.text(typeof resp.data === 'string' ? resp.data : 'Error');
                 }
             } else {
-                var msg = resp && resp.data ? resp.data : 'Error';
+                var msg = 'Error';
+                if(resp && resp.data){
+                    if(typeof resp.data === 'string'){
+                        msg = resp.data;
+                    }else if(resp.data.message){
+                        msg = resp.data.message;
+                    }
+                }
                 $('<div>', {'class':'notice notice-error gm2-ai-error'}).text(msg).appendTo($out);
             }
         })
