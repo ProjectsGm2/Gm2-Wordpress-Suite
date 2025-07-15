@@ -27,12 +27,19 @@ jQuery(function($){
                         if (typeof txt === 'object') {
                             txt = txt.value || JSON.stringify(txt);
                         }
-                        li.text(txt || '');
+                        if(!txt){
+                            // Fallback to stringify the entire item if text is missing
+                            txt = JSON.stringify(item);
+                        }
+                        li.text(txt);
                         if(item.metrics){
                             var parts = [];
                             Object.keys(item.metrics).forEach(function(key){
                                 var val = item.metrics[key];
                                 if(val !== null && val !== ''){
+                                    if(typeof val === 'object'){
+                                        val = val.value || JSON.stringify(val);
+                                    }
                                     parts.push(key.replace(/_/g,' ') + ': ' + val);
                                 }
                             });
