@@ -195,7 +195,7 @@ jQuery(function($){
                     if(window.gm2AiSeo && gm2AiSeo.post_id){
                         $('#post_name').val(val);
                     } else if(window.gm2AiSeo && gm2AiSeo.term_id){
-                        $('#tag-slug').val(val);
+                        $('#slug').val(val);
                     }
                     break;
             }
