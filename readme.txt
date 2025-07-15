@@ -53,7 +53,7 @@ If you see errors when connecting your Google account:
   * Confirm the connected Google account can access the required properties and accounts. The OAuth client can belong to a different Google account.
   * Disconnect and reconnect after adjusting permissions.
 * **Invalid OAuth state** – Reconnect from **SEO → Connect Google Account** to refresh the authorization flow.
-* **Keyword Research returns no results** – Ensure you have entered your Google Ads developer token, connected a Google account with Ads access, and selected a valid Ads customer ID. Missing or invalid credentials will cause the Keyword Planner request to fail.
+* **Keyword Research returns no results** – Ensure you have entered your Google Ads developer token, connected a Google account with Ads access, and selected a valid Ads customer ID. AI Research uses the same credentials when refining ChatGPT keywords, so missing or invalid details will cause the Keyword Planner request to fail.
 * "The caller does not have permission" – This usually means your developer token isn't approved for the selected Ads account or the login customer ID is missing or incorrect. Verify the token status in the Google Ads API Center and ensure the OAuth account can access that customer ID.
 * **Testing with an unapproved token** – Unapproved developer tokens can be used with [Google Ads test accounts](https://developers.google.com/google-ads/api/docs/best-practices/test-accounts). The login customer ID must be the manager ID for that token, and test accounts don't serve ads and have limited features.
 * **Viewing debug logs** – Enable debugging by adding `define('WP_DEBUG', true);` to your `wp-config.php` file. Errors and request details will then appear in your PHP error log.
@@ -75,7 +75,9 @@ For full page caching, hook into the `gm2_set_cache_headers` action
 to configure headers or integrate your preferred caching plugin.
 
 == Keyword Research ==
-After configuring credentials in **Gm2 → Google OAuth Setup**, connect your Google account from **SEO → Connect Google Account**. The plugin automatically fetches your available Analytics Measurement IDs and Ads Customer IDs so you can select them from dropdown menus. Use the **Keyword Research** tab to generate ideas via the Google Keyword Planner. To fetch keywords you must enter a Google Ads developer token, connect a Google account with Ads access, and select a valid Ads customer ID (without dashes, e.g., `1234567890`). Missing or invalid credentials will result in empty or failed searches. If your developer token belongs to a manager account, provide the optional Login Customer ID so the value is sent with each request.
+After configuring credentials in **Gm2 → Google OAuth Setup**, connect your Google account from **SEO → Connect Google Account**. The plugin automatically fetches your available Analytics Measurement IDs and Ads Customer IDs so you can select them from dropdown menus. Use the **Keyword Research** tab or the AI SEO workflow to generate ideas via the Google Keyword Planner. To fetch keywords you must enter a Google Ads developer token, connect a Google account with Ads access, and select a valid Ads customer ID (without dashes, e.g., `1234567890`). Missing or invalid credentials will result in empty or failed searches. If your developer token belongs to a manager account, provide the optional Login Customer ID so the value is sent with each request.
+
+Keyword metrics include **Avg. Monthly Searches**, **competition**, **3‑month change** and **year-over-year change**. These values refine the seed keywords returned by ChatGPT and are sorted by popularity when displayed in the AI SEO modal.
 
 The Google Ads request also requires a language constant and a geo target constant. These values are configurable on the same screen and default to `languageConstants/1000` (English) and `geoTargetConstants/2840` (United States). If either option is missing or invalid, the keyword search will fail with an error.
 
@@ -163,14 +165,20 @@ permalinks. Enter the words to remove in the accompanying field.
 
 == AI SEO ==
 While editing a post or taxonomy term, open the **AI SEO** tab in the SEO meta
-box. Click **AI Research** and you'll first be asked whether to use any existing
-SEO field values. If you decline and all fields are empty, the plugin prompts
-for a short description so ChatGPT has extra context.
+box. Click **AI Research** to run a two-step workflow. You'll first be asked
+whether to use any existing SEO field values. If all fields are empty, provide a
+short description so ChatGPT has extra context.
+
+Step one sends the post content to ChatGPT which returns a title, description
+and a list of seed keywords. Step two refines those keywords with the Google
+Keyword Planner, ranking them by **Avg. Monthly Searches**, **competition** and
+the **3‑month** and **year-over-year change** metrics. A valid Google Ads
+developer token, connected account and customer ID are required for this step.
 
 The results suggest a title, description, focus keywords, canonical URL, page
 name and slug. Any detected HTML issues—such as multiple `<h1>` tags—are listed
-with optional fixes. Use the **Select all** checkbox to pick every suggestion
-before clicking **Implement Selected** to populate the fields automatically.
+with optional fixes. Use the **Select all** checkbox to implement the results
+and automatically populate the SEO fields.
 
 If the description field in the SEO Settings tab is left empty, the plugin sends
 an excerpt of the post to ChatGPT and uses the response as the meta description.
@@ -231,6 +239,8 @@ the last 100 missing URLs to help you create new redirects.
   `nofollow` or `sponsored` to outbound links.
 
 == Changelog ==
+= 1.6.6 =
+* AI Research now refines ChatGPT keywords using Google Keyword Planner metrics (Avg. Monthly Searches, competition, 3‑month and YoY change). Results can auto-populate SEO fields and require valid Ads credentials.
 = 1.6.5 =
 * Added loading state for AI Research Content Rules button.
 * Fixed nested-array handling for AI Research Content Rules.
