@@ -17,6 +17,12 @@ TMPDIR=$(echo $TMPDIR | sed -e "s/\/$//")
 WP_TESTS_DIR=${WP_TESTS_DIR-$TMPDIR/wordpress-tests-lib}
 WP_CORE_DIR=${WP_CORE_DIR-$TMPDIR/wordpress/}
 
+# Ensure mysqladmin is available before proceeding
+if ! command -v mysqladmin >/dev/null 2>&1; then
+    echo "Error: mysqladmin command not found. Install MySQL client utilities and ensure they are on your PATH."
+    exit 1
+fi
+
 download() {
     if [ "$(command -v curl)" ]; then
         curl -sL "$1" -o "$2"
