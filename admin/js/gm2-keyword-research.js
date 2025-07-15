@@ -25,9 +25,11 @@ jQuery(function($){
                 $list.append($('<li>').text('Invalid request or not logged in'));
                 return;
             }
-            if(resp.success && Array.isArray(resp.data)){
+            var data = resp.data || {};
+            var ideas = Array.isArray(data) ? data : data.ideas;
+            if(resp.success && Array.isArray(ideas)){
                 var metricsFound = false;
-                resp.data.forEach(function(item){
+                ideas.forEach(function(item){
                     var li = $('<li>');
                     if(typeof item === 'string'){
                         li.text(item);
@@ -66,7 +68,9 @@ jQuery(function($){
                     }
                     li.appendTo($list);
                 });
-                if(!metricsFound){
+                if(data.ai_only){
+                    $msg.text('Keyword metrics unavailable; showing AI-generated ideas only.').addClass('notice-warning').removeClass('hidden');
+                } else if(!metricsFound){
                     $msg.text('Google Ads API did not return keyword metrics. Ads accounts without historical metrics access or unapproved developer tokens can cause this.').addClass('notice-error').removeClass('hidden');
                 }
             } else {
