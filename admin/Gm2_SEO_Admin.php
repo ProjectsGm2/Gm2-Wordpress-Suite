@@ -2768,7 +2768,7 @@ class Gm2_SEO_Admin {
 
     public function dom_extension_warning() {
         if (!class_exists('\\DOMDocument')) {
-            echo '<div class="notice notice-warning"><p>' . esc_html__( 'PHP DOM extension not installed—HTML analysis and AI features are unavailable.', 'gm2-wordpress-suite' ) . '</p></div>';
+            echo '<div class="notice notice-warning"><p>' . esc_html__( 'PHP DOM/LibXML extension not installed—HTML analysis and AI features are unavailable.', 'gm2-wordpress-suite' ) . '</p></div>';
         }
     }
     public function enqueue_elementor_scripts() {
