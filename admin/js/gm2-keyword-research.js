@@ -69,7 +69,11 @@ jQuery(function($){
                     li.appendTo($list);
                 });
                 if(data.ai_only){
-                    $msg.text('Keyword metrics unavailable; showing AI-generated ideas only.').addClass('notice-warning').removeClass('hidden');
+                    var msgText = 'Keyword metrics unavailable; showing AI-generated ideas only.';
+                    if(window.gm2KeywordResearch && gm2KeywordResearch.i18n && gm2KeywordResearch.i18n.metricsUnavailable){
+                        msgText = gm2KeywordResearch.i18n.metricsUnavailable;
+                    }
+                    $msg.text(msgText).addClass('notice-warning').removeClass('hidden');
                 } else if(!metricsFound){
                     $msg.text('Google Ads API did not return keyword metrics. Ads accounts without historical metrics access or unapproved developer tokens can cause this.').addClass('notice-error').removeClass('hidden');
                 }

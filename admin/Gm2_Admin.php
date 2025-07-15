@@ -120,6 +120,9 @@ class Gm2_Admin {
                     'nonce'    => wp_create_nonce('gm2_keyword_ideas'),
                     'ajax_url' => admin_url('admin-ajax.php'),
                     'enabled'  => $gads_ready,
+                    'i18n'     => [
+                        'metricsUnavailable' => __( 'Keyword metrics unavailable; showing AI-generated ideas only.', 'gm2-wordpress-suite' ),
+                    ],
                 ]
             );
             wp_localize_script(
