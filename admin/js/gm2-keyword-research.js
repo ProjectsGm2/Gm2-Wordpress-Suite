@@ -67,7 +67,7 @@ jQuery(function($){
                     li.appendTo($list);
                 });
                 if(!metricsFound){
-                    $msg.text('Google Ads API did not return keyword metrics.').addClass('notice-error').removeClass('hidden');
+                    $msg.text('Google Ads API did not return keyword metrics. Ads accounts without historical metrics access or unapproved developer tokens can cause this.').addClass('notice-error').removeClass('hidden');
                 }
             } else {
                 var msg = 'No results';
