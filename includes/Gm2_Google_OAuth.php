@@ -17,6 +17,8 @@ class Gm2_Google_OAuth {
     private $client_secret;
     private $redirect_uri;
     private $scopes;
+    private $gcloud_project;
+    private $service_account;
 
     public function __construct() {
         $this->client_id     = get_option('gm2_gads_client_id', '');
@@ -30,6 +32,10 @@ class Gm2_Google_OAuth {
             'profile',
             'email',
         ];
+        $this->gcloud_project   = defined('GM2_GCLOUD_PROJECT_ID') ? GM2_GCLOUD_PROJECT_ID : '';
+        $this->gcloud_project   = apply_filters('gm2_gcloud_project_id', $this->gcloud_project);
+        $this->service_account  = defined('GM2_SERVICE_ACCOUNT_JSON') ? GM2_SERVICE_ACCOUNT_JSON : '';
+        $this->service_account  = apply_filters('gm2_service_account_json', $this->service_account);
     }
 
     public function is_connected() {
@@ -64,7 +70,69 @@ class Gm2_Google_OAuth {
         return $body !== '' ? json_decode($body, true) : [];
     }
 
+    private function get_service_token() {
+        if (!$this->gcloud_project || !$this->service_account || !file_exists($this->service_account)) {
+            return '';
+        }
+        $data = json_decode(file_get_contents($this->service_account), true);
+        if (!$data || empty($data['client_email']) || empty($data['private_key'])) {
+            return '';
+        }
+        $now  = time();
+        $hdr  = base64_encode(json_encode(['alg' => 'RS256', 'typ' => 'JWT']));
+        $clm  = base64_encode(json_encode([
+            'iss'   => $data['client_email'],
+            'scope' => 'https://www.googleapis.com/auth/cloud-platform',
+            'aud'   => 'https://oauth2.googleapis.com/token',
+            'exp'   => $now + 3600,
+            'iat'   => $now,
+        ]));
+        $hdr  = rtrim(strtr($hdr, '+/', '-_'), '=');
+        $clm  = rtrim(strtr($clm, '+/', '-_'), '=');
+        $sig_data = $hdr . '.' . $clm;
+        openssl_sign($sig_data, $signature, $data['private_key'], 'sha256');
+        $sig = rtrim(strtr(base64_encode($signature), '+/', '-_'), '=');
+        $jwt = $sig_data . '.' . $sig;
+        $resp = wp_remote_post('https://oauth2.googleapis.com/token', [
+            'body' => [
+                'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+                'assertion'  => $jwt,
+            ],
+            'timeout' => 20,
+        ]);
+        if (is_wp_error($resp)) {
+            return '';
+        }
+        $body = json_decode(wp_remote_retrieve_body($resp), true);
+        return $body['access_token'] ?? '';
+    }
+
+    private function maybe_add_redirect_uri() {
+        if (!$this->gcloud_project || !$this->client_id) {
+            return;
+        }
+        $token = $this->get_service_token();
+        if (!$token) {
+            return;
+        }
+        $base = sprintf('https://oauth2.googleapis.com/v2/projects/%s/clients/%s',
+            rawurlencode($this->gcloud_project), rawurlencode($this->client_id));
+        $info = $this->api_request('GET', $base, null, ['Authorization' => 'Bearer ' . $token]);
+        if (is_wp_error($info)) {
+            return;
+        }
+        $uris = $info['redirectUris'] ?? [];
+        if (in_array($this->redirect_uri, $uris, true)) {
+            return;
+        }
+        $uris[] = $this->redirect_uri;
+        $this->api_request('PATCH', $base . '?updateMask=redirectUris', [ 'redirectUris' => $uris ], [
+            'Authorization' => 'Bearer ' . $token,
+        ]);
+    }
+
     public function get_auth_url() {
+        $this->maybe_add_redirect_uri();
         $state = wp_create_nonce('gm2_oauth_state');
         update_user_meta(get_current_user_id(), 'gm2_oauth_state', $state);
 

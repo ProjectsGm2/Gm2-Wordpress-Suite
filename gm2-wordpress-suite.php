@@ -19,6 +19,12 @@ define('GM2_VERSION', '1.6.10');
 define('GM2_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('GM2_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('GM2_CONTENT_RULES_VERSION', 2);
+if (!defined('GM2_GCLOUD_PROJECT_ID')) {
+    define('GM2_GCLOUD_PROJECT_ID', getenv('GM2_GCLOUD_PROJECT_ID') ?: '');
+}
+if (!defined('GM2_SERVICE_ACCOUNT_JSON')) {
+    define('GM2_SERVICE_ACCOUNT_JSON', getenv('GM2_SERVICE_ACCOUNT_JSON') ?: '');
+}
 
 use Gm2\Gm2_Loader;
 use Gm2\Gm2_SEO_Public;

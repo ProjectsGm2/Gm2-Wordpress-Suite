@@ -43,6 +43,7 @@ These credentials must be copied from your Google accounts:
 * **Google Ads login customer ID** – Optional manager account ID associated with your developer token. Enter this value if the token belongs to a manager account so requests include the `login-customer-id` header.
 * **Google Ads API version** – The plugin uses the API version defined by the `Gm2_Google_OAuth::GOOGLE_ADS_API_VERSION` constant (default `v18`). Update this constant and any tests referencing it when a new Ads API version becomes available.
 * **Analytics Admin API version** – The GA4 endpoints use the version specified by `Gm2_Google_OAuth::ANALYTICS_ADMIN_API_VERSION` (default `v1beta`). Update this constant along with related tests when Google releases a new version.
+* **Automatic redirect URI registration** – Define `GM2_GCLOUD_PROJECT_ID` and `GM2_SERVICE_ACCOUNT_JSON` in your `wp-config.php` so the plugin can add the current site's redirect URI to the OAuth client via the Google Cloud API.
 
 == Troubleshooting ==
 If you see errors when connecting your Google account:
