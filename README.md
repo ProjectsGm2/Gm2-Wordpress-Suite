@@ -10,6 +10,7 @@ The PHPUnit tests rely on the official WordPress test suite. Before running the 
 
 - **PHP** 7.4 or higher
 - **Composer** for installing PHPUnit
+- **Node.js** and **npm** for running JavaScript tests
 
 Install PHPUnit globally with Composer if it is not already available:
 
@@ -18,6 +19,7 @@ composer global require phpunit/phpunit
 ```
 
 Make sure `~/.composer/vendor/bin` (or your global Composer bin directory) is on your `PATH`.
+Run `npm install` once to install the JavaScript test dependencies.
 
 ### Installing the WordPress test suite
 
@@ -37,7 +39,13 @@ After the test suite is installed, execute:
 phpunit
 ```
 
-The Makefile includes a `test` target which automatically checks for the test suite and runs PHPUnit:
+JavaScript tests live in `tests/js` and are executed with:
+
+```bash
+npm test
+```
+
+The Makefile includes a `test` target which automatically checks for the test suite and runs PHPUnit and the Jest tests:
 
 ```bash
 make test
