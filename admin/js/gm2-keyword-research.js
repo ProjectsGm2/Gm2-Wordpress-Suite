@@ -27,7 +27,11 @@ jQuery(function($){
                         if (typeof txt === 'object') {
                             txt = txt.value || JSON.stringify(txt);
                         }
-                        li.text(txt || '');
+                        if(!txt){
+                            // Fallback to stringify the entire item if text is missing
+                            txt = JSON.stringify(item);
+                        }
+                        li.text(txt);
                         if(item.metrics){
                             var parts = [];
                             Object.keys(item.metrics).forEach(function(key){
