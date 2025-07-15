@@ -1780,6 +1780,41 @@ class Gm2_SEO_Admin {
         return [ 'focus' => $focus, 'long_tail' => array_slice($keywords, 0, 5) ];
     }
 
+    /**
+     * Generate keyword ideas using ChatGPT when Keyword Planner is unavailable.
+     *
+     * @param string $query Seed keyword or phrase.
+     * @return array|\WP_Error
+     */
+    private function chatgpt_keyword_ideas($query) {
+        $prompt = sprintf(
+            'Provide a comma-separated list of short keyword ideas related to: %s',
+            $query
+        );
+        $chat = new Gm2_ChatGPT();
+        try {
+            $resp = $chat->query($prompt);
+        } catch (\Throwable $e) {
+            error_log('ChatGPT keyword ideas failed: ' . $e->getMessage());
+            return new \WP_Error('chatgpt_error', __('AI request failed', 'gm2-wordpress-suite'));
+        }
+        if (is_wp_error($resp)) {
+            error_log('ChatGPT keyword ideas error: ' . $resp->get_error_message());
+            return $resp;
+        }
+        $ideas = [];
+        foreach (preg_split('/,\s*/', $resp) as $kw) {
+            $kw = trim($kw);
+            if ($kw !== '') {
+                $ideas[] = ['text' => $kw];
+            }
+        }
+        if (!$ideas) {
+            return new \WP_Error('no_results', __('No keyword ideas found.', 'gm2-wordpress-suite'));
+        }
+        return $ideas;
+    }
+
     public function ajax_check_rules() {
         check_ajax_referer('gm2_check_rules');
         if (!current_user_can('edit_posts')) {
@@ -1979,23 +2014,34 @@ class Gm2_SEO_Admin {
         $creds_ok = trim(get_option('gm2_gads_developer_token', '')) !== '' &&
             trim(get_option('gm2_gads_customer_id', '')) !== '' &&
             get_option('gm2_google_refresh_token', '') !== '';
-        if (!$creds_ok) {
-            wp_send_json_error( __( 'Google Ads credentials are not configured.', 'gm2-wordpress-suite' ) );
-        }
 
         $query = isset($_POST['query']) ? sanitize_text_field(wp_unslash($_POST['query'])) : '';
         if ($query === '') {
             wp_send_json_error( __( 'empty query', 'gm2-wordpress-suite' ) );
         }
 
-        $planner = new Gm2_Keyword_Planner();
-        $ideas   = $planner->generate_keyword_ideas($query);
+        $fallback = false;
+        if ($creds_ok) {
+            $planner = new Gm2_Keyword_Planner();
+            $ideas   = $planner->generate_keyword_ideas($query);
+            if (is_wp_error($ideas)) {
+                error_log('Keyword Planner error: ' . $ideas->get_error_message());
+                $ideas = $this->chatgpt_keyword_ideas($query);
+                $fallback = true;
+            }
+        } else {
+            $ideas = $this->chatgpt_keyword_ideas($query);
+            $fallback = true;
+        }
+
         if (is_wp_error($ideas)) {
             wp_send_json_error( $ideas->get_error_message() );
         }
 
-        // Results now include metric information when available.
-        wp_send_json_success($ideas);
+        wp_send_json_success([
+            'ideas'  => $ideas,
+            'ai_only'=> $fallback,
+        ]);
     }
 
     public function ajax_research_guidelines() {

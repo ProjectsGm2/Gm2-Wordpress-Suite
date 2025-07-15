@@ -3,7 +3,7 @@ Contributors: gm2team
 Tags: admin, tools, suite, performance
 Requires at least: 7.0
 Tested up to: 6.5
-Stable tag: 1.6.9
+Stable tag: 1.6.10
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -54,7 +54,7 @@ If you see errors when connecting your Google account:
   * Confirm the connected Google account can access the required properties and accounts. The OAuth client can belong to a different Google account.
   * Disconnect and reconnect after adjusting permissions.
 * **Invalid OAuth state** – Reconnect from **SEO → Connect Google Account** to refresh the authorization flow.
-* **Keyword Research returns no results** – Ensure you have entered your Google Ads developer token, connected a Google account with Ads access, and selected a valid Ads customer ID. AI Research uses the same credentials when refining ChatGPT keywords, so missing or invalid details will cause the Keyword Planner request to fail.
+* **Keyword Research returns no results** – Ensure you have entered your Google Ads developer token, connected a Google account with Ads access, and selected a valid Ads customer ID. When these details are missing or the Keyword Planner request fails, the plugin now falls back to ChatGPT and displays a notice that metrics are unavailable.
 * **Google Ads API did not return keyword metrics** – The Keyword Planner may return keyword ideas without search volume data. AI Research still analyzes the top results and displays a notice when metrics are missing. Verify the selected Ads account and date range have sufficient data.
 * "The caller does not have permission" – This usually means your developer token isn't approved for the selected Ads account or the login customer ID is missing or incorrect. Verify the token status in the Google Ads API Center and ensure the OAuth account can access that customer ID.
 * **Testing with an unapproved token** – Unapproved developer tokens can be used with [Google Ads test accounts](https://developers.google.com/google-ads/api/docs/best-practices/test-accounts). The login customer ID must be the manager ID for that token, and test accounts don't serve ads and have limited features.
@@ -255,6 +255,8 @@ the last 100 missing URLs to help you create new redirects.
   `nofollow` or `sponsored` to outbound links.
 
 == Changelog ==
+= 1.6.10 =
+* Keyword research now falls back to ChatGPT when Ads credentials are missing or the Keyword Planner request fails. A notice explains that metrics are unavailable.
 = 1.6.9 =
 * Added warning when Google Ads metrics are missing. AI Research continues using the top keywords and displays a notice.
 = 1.6.8 =
