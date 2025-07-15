@@ -586,3 +586,65 @@ class AiResearchKeywordSelectionTest extends WP_Ajax_UnitTestCase {
         $this->assertStringContainsString('best alpha', $captured);
     }
 }
+
+class AiResearchErrorHandlingTest extends WP_Ajax_UnitTestCase {
+    public function test_chatgpt_exception_handled() {
+        update_option('gm2_chatgpt_api_key', 'key');
+        $filter = function($pre, $args, $url) {
+            if ($url === 'https://api.openai.com/v1/chat/completions') {
+                throw new Exception('fail');
+            }
+            return false;
+        };
+        add_filter('pre_http_request', $filter, 10, 3);
+
+        $post_id = self::factory()->post->create(['post_title' => 'Post', 'post_content' => 'Content']);
+
+        $this->_setRole('administrator');
+        $_POST['post_id'] = $post_id;
+        $_POST['_ajax_nonce'] = wp_create_nonce('gm2_ai_research');
+        $_REQUEST['_ajax_nonce'] = $_POST['_ajax_nonce'];
+        try { $this->_handleAjax('gm2_ai_research'); } catch (WPAjaxDieContinueException $e) {}
+        remove_filter('pre_http_request', $filter, 10);
+
+        $resp = json_decode($this->_last_response, true);
+        $this->assertFalse($resp['success']);
+    }
+
+    public function test_keyword_planner_exception_handled() {
+        update_option('gm2_chatgpt_api_key', 'key');
+        update_option('gm2_gads_developer_token', 'dev');
+        update_option('gm2_gads_customer_id', '123-456-7890');
+        update_option('gm2_google_refresh_token', 'refresh');
+        update_option('gm2_google_access_token', 'access');
+        update_option('gm2_google_expires_at', time() + 3600);
+
+        $step = 0;
+        $filter = function($pre, $args, $url) use (&$step) {
+            if ($url === 'https://api.openai.com/v1/chat/completions') {
+                if ($step === 0) {
+                    $step++;
+                    return [ 'response' => ['code' => 200], 'body' => json_encode(['choices' => [ ['message' => ['content' => json_encode(['seed_keywords' => 'alpha'])]] ]]) ];
+                }
+                return [ 'response' => ['code' => 200], 'body' => json_encode(['choices' => [ ['message' => ['content' => '{}']] ]]) ];
+            }
+            if (false !== strpos($url, 'generateKeywordIdeas')) {
+                throw new Exception('kwp fail');
+            }
+            return false;
+        };
+        add_filter('pre_http_request', $filter, 10, 3);
+
+        $post_id = self::factory()->post->create(['post_title' => 'Post', 'post_content' => 'Content']);
+
+        $this->_setRole('administrator');
+        $_POST['post_id'] = $post_id;
+        $_POST['_ajax_nonce'] = wp_create_nonce('gm2_ai_research');
+        $_REQUEST['_ajax_nonce'] = $_POST['_ajax_nonce'];
+        try { $this->_handleAjax('gm2_ai_research'); } catch (WPAjaxDieContinueException $e) {}
+        remove_filter('pre_http_request', $filter, 10);
+
+        $resp = json_decode($this->_last_response, true);
+        $this->assertFalse($resp['success']);
+    }
+}
