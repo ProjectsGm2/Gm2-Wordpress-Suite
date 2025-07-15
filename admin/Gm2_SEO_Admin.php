@@ -1197,6 +1197,7 @@ class Gm2_SEO_Admin {
         $nofollow    = isset($_POST['gm2_nofollow']) ? '1' : '0';
         $canonical      = isset($_POST['gm2_canonical_url']) ? esc_url_raw($_POST['gm2_canonical_url']) : '';
         $focus_keywords   = isset($_POST['gm2_focus_keywords']) ? sanitize_text_field($_POST['gm2_focus_keywords']) : '';
+        $long_tail_keywords = isset($_POST['gm2_long_tail_keywords']) ? sanitize_text_field($_POST['gm2_long_tail_keywords']) : '';
         $max_snippet      = isset($_POST['gm2_max_snippet']) ? sanitize_text_field($_POST['gm2_max_snippet']) : '';
         $max_image_preview = isset($_POST['gm2_max_image_preview']) ? sanitize_text_field($_POST['gm2_max_image_preview']) : '';
         $max_video_preview = isset($_POST['gm2_max_video_preview']) ? sanitize_text_field($_POST['gm2_max_video_preview']) : '';
