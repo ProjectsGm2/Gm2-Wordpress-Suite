@@ -3,7 +3,7 @@ Contributors: gm2team
 Tags: admin, tools, suite, performance
 Requires at least: 7.0
 Tested up to: 6.5
-Stable tag: 1.6.8
+Stable tag: 1.6.9
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -243,6 +243,8 @@ the last 100 missing URLs to help you create new redirects.
   `nofollow` or `sponsored` to outbound links.
 
 == Changelog ==
+= 1.6.9 =
+* Added warning when Google Ads metrics are missing.
 = 1.6.8 =
 * Added three-month and year-over-year change metrics to keyword research results.
 = 1.6.7 =
