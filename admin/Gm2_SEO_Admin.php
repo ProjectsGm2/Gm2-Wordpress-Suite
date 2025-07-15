@@ -48,16 +48,7 @@ class Gm2_SEO_Admin {
 
         add_action('transition_post_status', [$this, 'maybe_generate_sitemap'], 10, 3);
 
-        $taxonomies = $this->get_supported_taxonomies();
-        foreach ($taxonomies as $tax) {
-            add_action("{$tax}_add_form_fields", [$this, 'render_taxonomy_meta_box']);
-            add_action("{$tax}_edit_form_fields", [$this, 'render_taxonomy_meta_box']);
-            add_action("create_{$tax}", [$this, 'save_taxonomy_meta']);
-            add_action("edited_{$tax}", [$this, 'save_taxonomy_meta']);
-            add_action("created_{$tax}", [$this, 'maybe_generate_sitemap'], 10, 0);
-            add_action("edited_{$tax}", [$this, 'maybe_generate_sitemap'], 10, 0);
-            add_action("delete_{$tax}", [$this, 'maybe_generate_sitemap'], 10, 0);
-        }
+        add_action('init', [$this, 'register_taxonomy_hooks'], 20);
 
         if (did_action('elementor/loaded')) {
             $this->setup_elementor_integration();
@@ -110,6 +101,19 @@ class Gm2_SEO_Admin {
             $taxonomies[] = 'product_brand';
         }
         return $taxonomies;
+    }
+
+    public function register_taxonomy_hooks() {
+        $taxonomies = $this->get_supported_taxonomies();
+        foreach ($taxonomies as $tax) {
+            add_action("{$tax}_add_form_fields", [$this, 'render_taxonomy_meta_box']);
+            add_action("{$tax}_edit_form_fields", [$this, 'render_taxonomy_meta_box']);
+            add_action("create_{$tax}", [$this, 'save_taxonomy_meta']);
+            add_action("edited_{$tax}", [$this, 'save_taxonomy_meta']);
+            add_action("created_{$tax}", [$this, 'maybe_generate_sitemap'], 10, 0);
+            add_action("edited_{$tax}", [$this, 'maybe_generate_sitemap'], 10, 0);
+            add_action("delete_{$tax}", [$this, 'maybe_generate_sitemap'], 10, 0);
+        }
     }
 
     public function setup_elementor_integration() {
