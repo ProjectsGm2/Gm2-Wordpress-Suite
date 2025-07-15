@@ -560,6 +560,7 @@ class Gm2_SEO_Admin {
                 echo '<p class="description">' . esc_html__('Google Ads credentials are not configured.', 'gm2-wordpress-suite') . '</p>';
             }
             echo '</form>';
+            echo '<div class="notice notice-error hidden" id="gm2-keyword-msg"></div>';
             echo '<ul id="gm2-keyword-results"></ul>';
 
             $oauth = apply_filters('gm2_google_oauth_instance', new Gm2_Google_OAuth());
