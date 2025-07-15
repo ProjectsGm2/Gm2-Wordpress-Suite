@@ -3,7 +3,7 @@ Contributors: gm2team
 Tags: admin, tools, suite, performance
 Requires at least: 7.0
 Tested up to: 6.5
-Stable tag: 1.6.7
+Stable tag: 1.6.8
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -239,6 +239,8 @@ the last 100 missing URLs to help you create new redirects.
   `nofollow` or `sponsored` to outbound links.
 
 == Changelog ==
+= 1.6.8 =
+* Added three-month and year-over-year change metrics to keyword research results.
 = 1.6.7 =
 * Fixed display of keyword research results when API returns complex objects.
 = 1.6.6 =

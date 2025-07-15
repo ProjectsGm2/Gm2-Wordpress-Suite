@@ -12,21 +12,34 @@ class KeywordPlannerTest extends WP_UnitTestCase {
     }
 
     public function test_metrics_parsed_from_response() {
+        $months = [];
+        for ($i = 1; $i <= 14; $i++) {
+            $months[] = [
+                'year' => 2024 + intdiv($i - 1, 12),
+                'month' => (($i - 1) % 12) + 1,
+                'monthly_searches' => $i * 10,
+            ];
+        }
         $response = [
             'results' => [
                 [
                     'text' => 'alpha',
                     'keyword_idea_metrics' => [
-                        'avg_monthly_searches'      => 100,
-                        'competition'               => 'LOW',
-                        'three_month_avg_searches'  => 110
+                        'avg_monthly_searches' => 100,
+                        'competition'          => 'LOW',
+                        'monthly_search_volumes' => $months,
                     ]
                 ],
                 [
                     'text' => 'beta',
                     'keyword_idea_metrics' => [
                         'avg_monthly_searches' => 50,
-                        'competition'          => null
+                        'competition'          => null,
+                        'monthly_search_volumes' => [
+                            ['year' => 2025, 'month' => 1, 'monthly_searches' => 200],
+                            ['year' => 2025, 'month' => 2, 'monthly_searches' => 210],
+                            ['year' => 2025, 'month' => 3, 'monthly_searches' => 220],
+                        ]
                     ]
                 ]
             ]
@@ -53,8 +66,12 @@ class KeywordPlannerTest extends WP_UnitTestCase {
         $this->assertSame('alpha', $ideas[0]['text']);
         $this->assertSame(100, $ideas[0]['metrics']['avg_monthly_searches']);
         $this->assertSame('LOW', $ideas[0]['metrics']['competition']);
+        $this->assertSame(30, $ideas[0]['metrics']['three_month_change']);
+        $this->assertSame(130, $ideas[0]['metrics']['yoy_change']);
         $this->assertSame('beta', $ideas[1]['text']);
         $this->assertSame(50, $ideas[1]['metrics']['avg_monthly_searches']);
         $this->assertArrayNotHasKey('competition', $ideas[1]['metrics']);
+        $this->assertSame(20, $ideas[1]['metrics']['three_month_change']);
+        $this->assertArrayNotHasKey('yoy_change', $ideas[1]['metrics']);
     }
 }

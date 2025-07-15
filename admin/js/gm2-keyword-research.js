@@ -1,4 +1,10 @@
 jQuery(function($){
+    const labels = {
+        avg_monthly_searches: 'Avg. Monthly Searches',
+        competition: 'Competition',
+        three_month_change: '3‑month change',
+        yoy_change: 'YoY change'
+    };
     if(!gm2KeywordResearch.enabled){
         $('#gm2-keyword-research-form button[type="submit"]').prop('disabled', true);
     }
@@ -35,12 +41,16 @@ jQuery(function($){
                         if(item.metrics){
                             var parts = [];
                             Object.keys(item.metrics).forEach(function(key){
+                                if(key === 'monthly_search_volumes'){
+                                    return;
+                                }
                                 var val = item.metrics[key];
                                 if(val !== null && val !== ''){
                                     if(typeof val === 'object'){
                                         val = val.value || JSON.stringify(val);
                                     }
-                                    parts.push(key.replace(/_/g,' ') + ': ' + val);
+                                    var label = labels[key] || key.replace(/_/g,' ');
+                                    parts.push(label + ': ' + val);
                                 }
                             });
                             if(parts.length){

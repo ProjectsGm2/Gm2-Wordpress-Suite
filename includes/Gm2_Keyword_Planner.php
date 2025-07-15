@@ -102,6 +102,23 @@ class Gm2_Keyword_Planner {
                             $metrics[$m_key] = $m_val;
                         }
                     }
+
+                    if (!empty($metrics['monthly_search_volumes']) && is_array($metrics['monthly_search_volumes'])) {
+                        $vols = $metrics['monthly_search_volumes'];
+                        usort($vols, function ($a, $b) {
+                            $ta = ($a['year'] ?? 0) * 12 + ($a['month'] ?? 0);
+                            $tb = ($b['year'] ?? 0) * 12 + ($b['month'] ?? 0);
+                            return $ta <=> $tb;
+                        });
+                        $n = count($vols);
+                        if ($n >= 3) {
+                            $metrics['three_month_change'] = $vols[$n - 1]['monthly_searches'] - $vols[$n - 3]['monthly_searches'];
+                        }
+                        if ($n >= 13) {
+                            $metrics['yoy_change'] = $vols[$n - 1]['monthly_searches'] - $vols[$n - 13]['monthly_searches'];
+                        }
+                    }
+
                     if ($metrics) {
                         $idea['metrics'] = $metrics;
                     }
