@@ -1884,6 +1884,7 @@ class Gm2_SEO_Admin {
             wp_send_json_error( $ideas->get_error_message() );
         }
 
+        // Results now include metric information when available.
         wp_send_json_success($ideas);
     }
 

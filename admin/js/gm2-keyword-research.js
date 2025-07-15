@@ -18,8 +18,26 @@ jQuery(function($){
                 return;
             }
             if(resp.success && Array.isArray(resp.data)){
-                resp.data.forEach(function(k){
-                    $('<li>').text(k).appendTo($list);
+                resp.data.forEach(function(item){
+                    var li = $('<li>');
+                    if(typeof item === 'string'){
+                        li.text(item);
+                    }else{
+                        li.text(item.text || '');
+                        if(item.metrics){
+                            var parts = [];
+                            Object.keys(item.metrics).forEach(function(key){
+                                var val = item.metrics[key];
+                                if(val !== null && val !== ''){
+                                    parts.push(key.replace(/_/g,' ') + ': ' + val);
+                                }
+                            });
+                            if(parts.length){
+                                li.append(' (' + parts.join(', ') + ')');
+                            }
+                        }
+                    }
+                    li.appendTo($list);
                 });
             } else {
                 var msg = 'No results';
