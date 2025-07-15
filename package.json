@@ -1,0 +1,21 @@
+{
+  "name": "gm2-wordpress-suite",
+  "version": "1.0.0",
+  "description": "This repository contains the development version of the Gm2 WordPress Suite plugin. For plugin installation steps and feature documentation see [readme.txt](readme.txt).",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "jest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "jest": "^30.0.4",
+    "jquery": "^3.7.1",
+    "jsdom": "^26.1.0"
+  }
+}

@@ -10,6 +10,7 @@ check-tests:
 
 test: check-tests
 	phpunit
+	npm test
 
 install-tests:
 	bash bin/install-wp-tests.sh $(DB_NAME) $(DB_USER) $(DB_PASS) $(DB_HOST) $(WP_VERSION)
