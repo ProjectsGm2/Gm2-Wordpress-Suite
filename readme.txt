@@ -59,6 +59,16 @@ If you see errors when connecting your Google account:
 * **Viewing debug logs** – Add `define('WP_DEBUG', true);` and `define('WP_DEBUG_LOG', true);` to your `wp-config.php` file, then check `wp-content/debug.log` for errors.
 * **Check DOM extension** – Run `php -m | grep -i dom` to verify the DOM/LibXML extension is loaded. The plugin requires this for HTML analysis.
 
+=== WP Debugging ===
+If AI Research fails or returns unexpected results, enable WordPress debugging and check for PHP errors:
+
+1. Edit your `wp-config.php` file and add:
+   `define('WP_DEBUG', true);`
+   `define('WP_DEBUG_LOG', true);`
+2. Retry the request and examine `wp-content/debug.log` for error messages.
+
+The AI features depend on the DOM/LibXML extension. Verify it is installed by running `php -m | grep -i dom` before using AI Research.
+
 == Diagnostics ==
 As a first step, open **Gm2 → Diagnostics** to detect plugin conflicts, missing files or theme customizations that may disable SEO output. Any detected issues are listed as an admin notice with steps to resolve them.
 
