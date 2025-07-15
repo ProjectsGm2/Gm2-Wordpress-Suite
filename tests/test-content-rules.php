@@ -250,6 +250,38 @@ class ContentRulesNormalizationTest extends WP_Ajax_UnitTestCase {
         $this->assertSame("Rule A\nRule B", $rules['post_post']['canonical_url']);
     }
 
+    public function test_synonym_categories_map_to_content() {
+        update_option('gm2_chatgpt_api_key', 'key');
+        $resp_data = [ 'content-in-post' => 'Mapped rule' ];
+        $filter = function($pre, $args, $url) use ($resp_data) {
+            if ($url === 'https://api.openai.com/v1/chat/completions') {
+                return [
+                    'response' => ['code' => 200],
+                    'body'     => json_encode([
+                        'choices' => [ ['message' => ['content' => json_encode($resp_data)]] ]
+                    ])
+                ];
+            }
+            return false;
+        };
+        add_filter('pre_http_request', $filter, 10, 3);
+
+        $this->_setRole('administrator');
+        $_POST['categories'] = 'content-in-post';
+        $_POST['target'] = 'post_post';
+        $_POST['_ajax_nonce'] = wp_create_nonce('gm2_research_content_rules');
+        $_REQUEST['_ajax_nonce'] = $_POST['_ajax_nonce'];
+        try { $this->_handleAjax('gm2_research_content_rules'); } catch (WPAjaxDieContinueException $e) {}
+
+        remove_filter('pre_http_request', $filter, 10);
+
+        $resp = json_decode($this->_last_response, true);
+        $this->assertTrue($resp['success']);
+        $this->assertSame('Mapped rule', $resp['data']['content']);
+        $rules = get_option('gm2_content_rules');
+        $this->assertSame('Mapped rule', $rules['post_post']['content']);
+    }
+
     public function test_only_unknown_categories_returns_error() {
         update_option('gm2_chatgpt_api_key', 'key');
         $resp_data = [ 'weird' => 'Rule' ];

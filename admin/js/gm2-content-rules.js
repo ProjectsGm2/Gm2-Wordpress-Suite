@@ -1,4 +1,13 @@
 jQuery(function($){
+    function mapAlias(key){
+        var map = {
+            'content_in_post': 'content',
+            'content_in_page': 'content',
+            'content_in_custom_post': 'content',
+            'content_in_product': 'content'
+        };
+        return map[key] || key;
+    }
     function flatten(val){
         if($.isArray(val)){
             return $.map(val, flatten).join("\n");
@@ -31,7 +40,7 @@ jQuery(function($){
                     alert('No recognized rules returned. Check the categories or server logs.');
                 }else{
                     $.each(resp.data, function(key,val){
-                        var selector = 'textarea[name="gm2_content_rules['+base+']['+key+']"]';
+                        var selector = 'textarea[name="gm2_content_rules['+base+']['+mapAlias(key)+']"]';
                         $(selector).val(flatten(val));
                     });
                 }
