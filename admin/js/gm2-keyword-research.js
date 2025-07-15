@@ -5,6 +5,7 @@ jQuery(function($){
         three_month_change: '3‑month change',
         yoy_change: 'YoY change'
     };
+    var $msg = $('#gm2-keyword-msg');
     if(!gm2KeywordResearch.enabled){
         $('#gm2-keyword-research-form button[type="submit"]').prop('disabled', true);
     }
@@ -12,6 +13,7 @@ jQuery(function($){
         e.preventDefault();
         var kw = $('#gm2_seed_keyword').val();
         var $list = $('#gm2-keyword-results').empty();
+        $msg.addClass('hidden').removeClass('notice-error').text('');
         $list.text('Loading...');
         $.post(gm2KeywordResearch.ajax_url, {
             action: 'gm2_keyword_ideas',
@@ -24,6 +26,7 @@ jQuery(function($){
                 return;
             }
             if(resp.success && Array.isArray(resp.data)){
+                var metricsFound = false;
                 resp.data.forEach(function(item){
                     var li = $('<li>');
                     if(typeof item === 'string'){
@@ -51,6 +54,9 @@ jQuery(function($){
                                     }
                                     var label = labels[key] || key.replace(/_/g,' ');
                                     parts.push(label + ': ' + val);
+                                    if(key === 'avg_monthly_searches' || key === 'competition' || key === 'three_month_change' || key === 'yoy_change'){
+                                        metricsFound = true;
+                                    }
                                 }
                             });
                             if(parts.length){
@@ -60,6 +66,9 @@ jQuery(function($){
                     }
                     li.appendTo($list);
                 });
+                if(!metricsFound){
+                    $msg.text('Google Ads API did not return keyword metrics.').addClass('notice-error').removeClass('hidden');
+                }
             } else {
                 var msg = 'No results';
                 if(resp && resp.data){
