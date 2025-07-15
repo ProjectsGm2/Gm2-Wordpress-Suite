@@ -1670,6 +1670,67 @@ class Gm2_SEO_Admin {
         return (string) $value;
     }
 
+    /**
+     * Choose the best focus and long-tail keywords from Keyword Planner ideas.
+     *
+     * @param array $ideas Raw ideas array from Keyword Planner.
+     * @return array{focus:string,long_tail:array}
+     */
+    private function select_best_keywords(array $ideas) {
+        $filtered = [];
+        foreach ($ideas as $idea) {
+            if (empty($idea['metrics']) || !is_array($idea['metrics'])) {
+                continue;
+            }
+            $comp = $idea['metrics']['competition'] ?? '';
+            if ($comp !== 'LOW' && $comp !== 'MEDIUM') {
+                continue;
+            }
+            $avg = (int) ($idea['metrics']['avg_monthly_searches'] ?? 0);
+            $trend3 = 0;
+            $trend12 = 0;
+            if (!empty($idea['metrics']['monthly_search_volumes']) && is_array($idea['metrics']['monthly_search_volumes'])) {
+                $vols = $idea['metrics']['monthly_search_volumes'];
+                usort($vols, function ($a, $b) {
+                    $ta = ($a['year'] ?? 0) * 12 + ($a['month'] ?? 0);
+                    $tb = ($b['year'] ?? 0) * 12 + ($b['month'] ?? 0);
+                    return $ta <=> $tb;
+                });
+                $n = count($vols);
+                if ($n >= 3) {
+                    $trend3 = $vols[$n - 1]['monthly_searches'] - $vols[$n - 3]['monthly_searches'];
+                }
+                if ($n >= 13) {
+                    $trend12 = $vols[$n - 1]['monthly_searches'] - $vols[$n - 13]['monthly_searches'];
+                }
+            }
+            $filtered[] = [
+                'text'    => $idea['text'],
+                'avg'     => $avg,
+                'trend3'  => $trend3,
+                'trend12' => $trend12,
+            ];
+        }
+
+        usort($filtered, function ($a, $b) {
+            if ($b['avg'] !== $a['avg']) {
+                return $b['avg'] <=> $a['avg'];
+            }
+            $scoreA = $a['trend3'] + $a['trend12'];
+            $scoreB = $b['trend3'] + $b['trend12'];
+            return $scoreB <=> $scoreA;
+        });
+
+        if (empty($filtered)) {
+            return [ 'focus' => '', 'long_tail' => [] ];
+        }
+
+        $focus = array_shift($filtered);
+        $long  = array_column($filtered, 'text');
+
+        return [ 'focus' => $focus['text'], 'long_tail' => array_slice($long, 0, 5) ];
+    }
+
     public function ajax_check_rules() {
         check_ajax_referer('gm2_check_rules');
         if (!current_user_can('edit_posts')) {
@@ -2139,7 +2200,7 @@ class Gm2_SEO_Admin {
         if ($snippet !== '') {
             $prompt .= "Content snippet: {$snippet}\n";
         }
-        $prompt .= "Provide JSON with keys seo_title, description, focus_keywords, long_tail_keywords, canonical, page_name, slug, content_suggestions, html_issues.";
+        $prompt .= "Provide JSON with keys seo_title, description, focus_keywords, long_tail_keywords, seed_keywords, canonical, page_name, slug, content_suggestions, html_issues.";
 
         $chat = new Gm2_ChatGPT();
         $resp = $chat->query($prompt);
@@ -2161,27 +2222,84 @@ class Gm2_SEO_Admin {
             wp_send_json_error( __( 'Invalid AI response', 'gm2-wordpress-suite' ) );
         }
 
-        if (is_array($data)) {
-            if (!isset($data['html_issues'])) {
-                $data['html_issues'] = [];
-            }
-            $data['html_issues'] = array_merge($data['html_issues'], $html_issues);
-            $slug = isset($data['slug']) ? sanitize_title($data['slug']) : '';
-            if ($slug !== '') {
-                $data['slug'] = $slug;
-            }
-            if ($post_id) {
-                update_post_meta($post_id, '_gm2_ai_research', wp_json_encode($data));
-            } elseif ($term_id) {
-                update_term_meta($term_id, '_gm2_ai_research', wp_json_encode($data));
-            }
-            wp_send_json_success($data);
+
+        $seed_string = '';
+        if (!empty($data['seed_keywords'])) {
+            $seed_string = $data['seed_keywords'];
+        } elseif (!empty($data['focus_keywords'])) {
+            $seed_string = $data['focus_keywords'];
         }
 
-        wp_send_json_success([
-            'response'    => $resp,
-            'html_issues' => $html_issues,
-        ]);
+        $seeds = array_filter(array_map('trim', explode(',', $seed_string)));
+
+        $final_focus = '';
+        $final_long  = [];
+        if ($seeds) {
+            $planner = new Gm2_Keyword_Planner();
+            $ideas = [];
+            foreach ($seeds as $kw) {
+                $res = $planner->generate_keyword_ideas($kw);
+                if (!is_wp_error($res)) {
+                    $ideas = array_merge($ideas, $res);
+                }
+            }
+            $chosen = $this->select_best_keywords($ideas);
+            $final_focus = $chosen['focus'] ?: $seeds[0];
+            $final_long  = $chosen['long_tail'];
+        }
+
+        $prompt2 = '';
+        if ($guidelines !== '') {
+            $prompt2 .= "SEO guidelines:\n" . $guidelines . "\n\n";
+        }
+        $prompt2 .= "Page title: {$title}\nURL: {$url}\n";
+        $prompt2 .= "Focus Keyword: {$final_focus}\n";
+        if ($final_long) {
+            $prompt2 .= "Long-tail Keywords: " . implode(', ', $final_long) . "\n";
+        }
+        if ($extra_context !== '') {
+            $prompt2 .= "Extra context: {$extra_context}\n";
+        }
+        if ($snippet !== '') {
+            $prompt2 .= "Content snippet: {$snippet}\n";
+        }
+        $prompt2 .= "Provide JSON with keys seo_title, description, focus_keywords, long_tail_keywords, canonical, page_name, slug, content_suggestions, html_issues.";
+
+        $resp2 = $chat->query($prompt2);
+
+        if (is_wp_error($resp2)) {
+            wp_send_json_error($resp2->get_error_message());
+        }
+
+        $data2 = json_decode($resp2, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            if (preg_match('/\{.*\}/s', $resp2, $m)) {
+                $data2 = json_decode($m[0], true);
+            }
+        }
+        if (!is_array($data2)) {
+            wp_send_json_error( __( 'Invalid AI response', 'gm2-wordpress-suite' ) );
+        }
+
+        if (!isset($data2['html_issues'])) {
+            $data2['html_issues'] = [];
+        }
+        $data2['html_issues'] = array_merge($data2['html_issues'], $html_issues);
+        $data2['focus_keywords'] = $final_focus;
+        $data2['long_tail_keywords'] = $final_long;
+        $data2['seed_keywords'] = implode(', ', $seeds);
+        $slug = isset($data2['slug']) ? sanitize_title($data2['slug']) : '';
+        if ($slug !== '') {
+            $data2['slug'] = $slug;
+        }
+
+        if ($post_id) {
+            update_post_meta($post_id, '_gm2_ai_research', wp_json_encode($data2));
+        } elseif ($term_id) {
+            update_term_meta($term_id, '_gm2_ai_research', wp_json_encode($data2));
+        }
+
+        wp_send_json_success($data2);
     }
 
     public function ajax_generate_tax_description() {

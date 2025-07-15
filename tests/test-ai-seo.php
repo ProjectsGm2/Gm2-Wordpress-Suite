@@ -509,3 +509,80 @@ class AiResearchPersistenceTest extends WP_Ajax_UnitTestCase {
         $this->assertSame('Saved Title', $localized['results']['seo_title']);
     }
 }
+
+class AiResearchKeywordSelectionTest extends WP_Ajax_UnitTestCase {
+    public function test_seed_keywords_and_selection() {
+        update_option('gm2_chatgpt_api_key', 'key');
+        update_option('gm2_gads_developer_token', 'dev');
+        update_option('gm2_gads_customer_id', '123-456-7890');
+        update_option('gm2_google_refresh_token', 'refresh');
+        update_option('gm2_google_access_token', 'access');
+        update_option('gm2_google_expires_at', time() + 3600);
+
+        $first = ['seed_keywords' => 'alpha,beta'];
+        $second = ['seo_title' => 'Final'];
+        $kwp = [
+            'results' => [
+                [
+                    'text' => 'best alpha',
+                    'keyword_idea_metrics' => [
+                        'avg_monthly_searches' => 200,
+                        'competition' => 'LOW',
+                        'monthly_search_volumes' => [
+                            ['year' => 2023, 'month' => 1, 'monthly_searches' => 200],
+                            ['year' => 2023, 'month' => 2, 'monthly_searches' => 210],
+                            ['year' => 2023, 'month' => 3, 'monthly_searches' => 220]
+                        ]
+                    ]
+                ],
+                [
+                    'text' => 'cheap beta',
+                    'keyword_idea_metrics' => [
+                        'avg_monthly_searches' => 150,
+                        'competition' => 'MEDIUM',
+                        'monthly_search_volumes' => [
+                            ['year' => 2023, 'month' => 1, 'monthly_searches' => 150],
+                            ['year' => 2023, 'month' => 2, 'monthly_searches' => 145],
+                            ['year' => 2023, 'month' => 3, 'monthly_searches' => 140]
+                        ]
+                    ]
+                ]
+            ]
+        ];
+        $step = 0;
+        $captured = null;
+        $filter = function($pre, $args, $url) use (&$step, $first, $second, $kwp, &$captured) {
+            if ($url === 'https://api.openai.com/v1/chat/completions') {
+                $body = json_decode($args['body'], true);
+                if ($step === 0) {
+                    $step++;
+                    return [ 'response' => ['code' => 200], 'body' => json_encode(['choices' => [ ['message' => ['content' => json_encode($first)]] ]]) ];
+                } else {
+                    $captured = $body['messages'][0]['content'];
+                    return [ 'response' => ['code' => 200], 'body' => json_encode(['choices' => [ ['message' => ['content' => json_encode($second)]] ]]) ];
+                }
+            }
+            if (false !== strpos($url, 'generateKeywordIdeas')) {
+                return [ 'response' => ['code' => 200], 'body' => json_encode($kwp) ];
+            }
+            return false;
+        };
+        add_filter('pre_http_request', $filter, 10, 3);
+
+        $post_id = self::factory()->post->create(['post_title' => 'Post', 'post_content' => 'Content']);
+
+        $this->_setRole('administrator');
+        $_POST['post_id'] = $post_id;
+        $_POST['_ajax_nonce'] = wp_create_nonce('gm2_ai_research');
+        $_REQUEST['_ajax_nonce'] = $_POST['_ajax_nonce'];
+        try { $this->_handleAjax('gm2_ai_research'); } catch (WPAjaxDieContinueException $e) {}
+        remove_filter('pre_http_request', $filter, 10);
+
+        $resp = json_decode($this->_last_response, true);
+        $this->assertTrue($resp['success']);
+        $this->assertSame('Final', $resp['data']['seo_title']);
+        $this->assertSame('best alpha', $resp['data']['focus_keywords']);
+        $this->assertContains('cheap beta', $resp['data']['long_tail_keywords']);
+        $this->assertStringContainsString('best alpha', $captured);
+    }
+}
