@@ -1,7 +1,7 @@
 === Gm2 WordPress Suite ===
 Contributors: gm2team
 Tags: admin, tools, suite, performance
-Requires at least: 7.0
+Requires at least: 7.3
 Tested up to: 6.5
 Stable tag: 1.6.10
 License: GPLv2 or later
