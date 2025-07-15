@@ -143,14 +143,6 @@ jQuery(function($){
                 .text(parseErrorText).appendTo($wrap);
         }
 
-        if(data.long_tail_keywords){
-            var valLt = [].concat(data.long_tail_keywords).join(', ');
-            var ltText = window.gm2AiSeo && gm2AiSeo.i18n ? gm2AiSeo.i18n.longTailKeywords : 'Long Tail Keywords';
-            var $lblLt = $('<label>');
-            $('<input>', {type:'checkbox','class':'gm2-ai-select','data-field':'long_tail_keywords','data-value':valLt}).appendTo($lblLt);
-            $lblLt.append(document.createTextNode(' ' + ltText + ': ' + valLt));
-            $list.append($('<p>').append($lblLt));
-        }
         if(data.content_suggestions){
             var $cs = $('<ul>');
             [].concat(data.content_suggestions).forEach(function(c){
