@@ -7,6 +7,22 @@ if (!defined('ABSPATH')) {
 }
 
 class Gm2_Keyword_Planner {
+    /**
+     * Stores the raw response body from the most recent API request.
+     *
+     * @var string
+     */
+    private $last_response_body = '';
+
+    /**
+     * Return the raw response body from the last request.
+     *
+     * @return string
+     */
+    public function get_last_response_body() {
+        return $this->last_response_body;
+    }
+
     private function get_credentials() {
         $id = preg_replace('/\D/', '', get_option('gm2_gads_customer_id', ''));
         return [
@@ -74,6 +90,7 @@ class Gm2_Keyword_Planner {
 
         $code = wp_remote_retrieve_response_code($resp);
         $body = wp_remote_retrieve_body($resp);
+        $this->last_response_body = $body;
         $data = $body !== '' ? json_decode($body, true) : null;
 
         if (defined('WP_DEBUG') && WP_DEBUG) {

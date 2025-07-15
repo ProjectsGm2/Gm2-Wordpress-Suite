@@ -81,7 +81,8 @@ jQuery(function($){
                         msg = resp.data.errors[code][0];
                     }
                 }
-                $list.append($('<li>').text(msg));
+                $msg.text(msg).addClass('notice-error').removeClass('hidden');
+                $list.empty();
             }
         }).fail(function(){
             $list.empty().append($('<li>').text('Request failed'));

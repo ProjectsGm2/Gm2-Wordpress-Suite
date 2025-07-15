@@ -2266,6 +2266,12 @@ class Gm2_SEO_Admin {
             $chosen = $this->select_best_keywords($ideas);
             $final_focus = $chosen['focus'] ?: $seeds[0];
             $final_long  = $chosen['long_tail'];
+
+            if ($chosen['focus'] === '' && empty($chosen['long_tail'])) {
+                $raw = $planner->get_last_response_body();
+                error_log('Keyword Planner returned no metrics: ' . $raw);
+                wp_send_json_error(__('Keyword Planner returned no metrics.', 'gm2-wordpress-suite'));
+            }
         }
 
         $prompt2 = '';
