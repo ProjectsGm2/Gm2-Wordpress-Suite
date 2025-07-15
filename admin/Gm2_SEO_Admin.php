@@ -729,6 +729,7 @@ class Gm2_SEO_Admin {
         $status    = get_option('gm2_bulk_ai_status', 'publish');
         $post_type = get_option('gm2_bulk_ai_post_type', 'all');
         $term      = get_option('gm2_bulk_ai_term', '');
+        $current_page = isset($_GET['paged']) ? max(1, absint($_GET['paged'])) : 1;
 
         if (isset($_POST['gm2_bulk_ai_save']) && check_admin_referer('gm2_bulk_ai_settings')) {
             $page_size = max(1, absint($_POST['page_size'] ?? 10));
@@ -749,6 +750,7 @@ class Gm2_SEO_Admin {
             'post_type'      => $types,
             'post_status'    => $status,
             'posts_per_page' => $page_size,
+            'paged'          => $current_page,
         ];
         if ($term && strpos($term, ':') !== false) {
             list($tax, $id) = explode(':', $term);
@@ -810,6 +812,15 @@ class Gm2_SEO_Admin {
             echo '</tr>';
         }
         echo '</tbody></table>';
+        $links = paginate_links([
+            'base'    => add_query_arg('paged', '%#%', admin_url('admin.php?page=gm2-bulk-ai-review')),
+            'format'  => '',
+            'current' => $current_page,
+            'total'   => max(1, $query->max_num_pages),
+        ]);
+        if ($links) {
+            echo '<div class="tablenav"><div class="tablenav-pages">' . $links . '</div></div>';
+        }
         echo '<p><button type="button" class="button" id="gm2-bulk-analyze">' . esc_html__( 'Analyze Selected', 'gm2-wordpress-suite' ) . '</button></p>';
         echo '</div>';
     }

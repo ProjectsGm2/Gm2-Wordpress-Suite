@@ -77,3 +77,21 @@ class BulkAiFilterTest extends WP_UnitTestCase {
         $this->assertStringNotContainsString('Out', $html);
     }
 }
+
+class BulkAiPaginationTest extends WP_UnitTestCase {
+    public function test_second_page_shows_expected_posts() {
+        update_option('gm2_bulk_ai_page_size', 2);
+        $posts = self::factory()->post->create_many(3);
+        $admin = new Gm2_SEO_Admin();
+        $user = self::factory()->user->create(['role' => 'administrator']);
+        wp_set_current_user($user);
+        $_GET['paged'] = 2;
+        ob_start();
+        $admin->display_bulk_ai_page();
+        $html = ob_get_clean();
+        $this->assertStringContainsString(get_post($posts[2])->post_title, $html);
+        $this->assertStringNotContainsString(get_post($posts[0])->post_title, $html);
+        $this->assertStringContainsString('paged=1', $html);
+        unset($_GET['paged']);
+    }
+}
