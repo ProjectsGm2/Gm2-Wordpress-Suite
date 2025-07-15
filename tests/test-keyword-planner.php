@@ -74,4 +74,47 @@ class KeywordPlannerTest extends WP_UnitTestCase {
         $this->assertSame(20, $ideas[1]['metrics']['three_month_change']);
         $this->assertArrayNotHasKey('yoy_change', $ideas[1]['metrics']);
     }
+
+    public function test_complex_values_are_strings() {
+        $response = [
+            'results' => [
+                [
+                    'text' => ['value' => 'gamma'],
+                    'keyword_idea_metrics' => [
+                        'competition' => ['value' => 'HIGH'],
+                        'monthly_search_volumes' => [
+                            ['year' => 2025, 'month' => 1, 'monthly_searches' => 100],
+                            ['year' => 2025, 'month' => 2, 'monthly_searches' => 120],
+                            ['year' => 2025, 'month' => 3, 'monthly_searches' => 140],
+                        ],
+                        'other' => ['foo' => 'bar'],
+                    ],
+                ],
+            ],
+        ];
+
+        $filter = function($pre, $args, $url) use ($response) {
+            if (false !== strpos($url, 'generateKeywordIdeas')) {
+                return [
+                    'response' => ['code' => 200],
+                    'body'     => json_encode($response),
+                ];
+            }
+            return false;
+        };
+        add_filter('pre_http_request', $filter, 10, 3);
+
+        $planner = new Gm2_Keyword_Planner();
+        $ideas   = $planner->generate_keyword_ideas('seed');
+
+        remove_filter('pre_http_request', $filter, 10);
+
+        $this->assertIsArray($ideas);
+        $this->assertCount(1, $ideas);
+        $this->assertSame('gamma', $ideas[0]['text']);
+        $this->assertSame('HIGH', $ideas[0]['metrics']['competition']);
+        $this->assertSame(40, $ideas[0]['metrics']['three_month_change']);
+        $this->assertIsString($ideas[0]['metrics']['monthly_search_volumes']);
+        $this->assertSame('{"foo":"bar"}', $ideas[0]['metrics']['other']);
+    }
 }
