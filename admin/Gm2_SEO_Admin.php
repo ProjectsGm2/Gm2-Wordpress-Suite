@@ -1732,6 +1732,27 @@ class Gm2_SEO_Admin {
         return [ 'focus' => $focus['text'], 'long_tail' => array_slice($long, 0, 5) ];
     }
 
+    /**
+     * Fallback keyword selection using the original order when metrics are missing.
+     *
+     * @param array $ideas Raw ideas array from Keyword Planner.
+     * @return array{focus:string,long_tail:array}
+     */
+    private function select_top_keywords(array $ideas) {
+        $keywords = [];
+        foreach ($ideas as $idea) {
+            if (empty($idea['text'])) {
+                continue;
+            }
+            $keywords[] = $idea['text'];
+        }
+        if (empty($keywords)) {
+            return [ 'focus' => '', 'long_tail' => [] ];
+        }
+        $focus = array_shift($keywords);
+        return [ 'focus' => $focus, 'long_tail' => array_slice($keywords, 0, 5) ];
+    }
+
     public function ajax_check_rules() {
         check_ajax_referer('gm2_check_rules');
         if (!current_user_can('edit_posts')) {
@@ -2241,6 +2262,7 @@ class Gm2_SEO_Admin {
 
         $final_focus = '';
         $final_long  = [];
+        $kwp_notice  = '';
         if ($seeds) {
             $planner = new Gm2_Keyword_Planner();
             $ideas = [];
@@ -2264,14 +2286,14 @@ class Gm2_SEO_Admin {
             }
 
             $chosen = $this->select_best_keywords($ideas);
-            $final_focus = $chosen['focus'] ?: $seeds[0];
-            $final_long  = $chosen['long_tail'];
-
             if ($chosen['focus'] === '' && empty($chosen['long_tail'])) {
+                $kwp_notice = __('Google Ads API did not return keyword metrics.', 'gm2-wordpress-suite');
                 $raw = $planner->get_last_response_body();
                 error_log('Keyword Planner returned no metrics: ' . $raw);
-                wp_send_json_error(__('Keyword Planner returned no metrics.', 'gm2-wordpress-suite'));
+                $chosen = $this->select_top_keywords($ideas);
             }
+            $final_focus = $chosen['focus'] ?: $seeds[0];
+            $final_long  = $chosen['long_tail'];
         }
 
         $prompt2 = '';
@@ -2320,6 +2342,9 @@ class Gm2_SEO_Admin {
         $data2['focus_keywords'] = $final_focus;
         $data2['long_tail_keywords'] = $final_long;
         $data2['seed_keywords'] = implode(', ', $seeds);
+        if ($kwp_notice !== '') {
+            $data2['kwp_notice'] = $kwp_notice;
+        }
         $slug = isset($data2['slug']) ? sanitize_title($data2['slug']) : '';
         if ($slug !== '') {
             $data2['slug'] = $slug;
