@@ -682,7 +682,9 @@ class AiResearchErrorHandlingTest extends WP_Ajax_UnitTestCase {
         remove_filter('pre_http_request', $filter, 10);
 
         $resp = json_decode($this->_last_response, true);
-        $this->assertFalse($resp['success']);
-        $this->assertSame('Keyword Planner returned no metrics.', $resp['data']);
+        $this->assertTrue($resp['success']);
+        $this->assertSame('alpha', $resp['data']['focus_keywords']);
+        $this->assertSame([], $resp['data']['long_tail_keywords']);
+        $this->assertSame('Google Ads API did not return keyword metrics.', $resp['data']['kwp_notice']);
     }
 }

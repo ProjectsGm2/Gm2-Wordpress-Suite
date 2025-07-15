@@ -48,6 +48,10 @@ jQuery(function($){
                 }
                 if(typeof resp.data === 'object' && !resp.data.response){
                     buildResults(resp.data, $out);
+                    if(resp.data.kwp_notice){
+                        $('<div>', {'class':'notice notice-warning gm2-ai-warning'})
+                            .text(resp.data.kwp_notice).appendTo($out);
+                    }
                     if(window.gm2AiSeo && parseInt(gm2AiSeo.post_id, 10) === 0){
                         try{ localStorage.setItem(LS_KEY, JSON.stringify(resp.data)); }catch(e){}
                     }
@@ -59,6 +63,10 @@ jQuery(function($){
                                 parsed.html_issues = resp.data.html_issues;
                             }
                             buildResults(parsed, $out);
+                            if(resp.data.kwp_notice){
+                                $('<div>', {'class':'notice notice-warning gm2-ai-warning'})
+                                    .text(resp.data.kwp_notice).appendTo($out);
+                            }
                             if(window.gm2AiSeo && parseInt(gm2AiSeo.post_id, 10) === 0){
                                 try{ localStorage.setItem(LS_KEY, JSON.stringify(parsed)); }catch(e){}
                             }
