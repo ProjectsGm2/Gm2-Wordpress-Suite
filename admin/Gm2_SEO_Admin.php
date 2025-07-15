@@ -2350,37 +2350,50 @@ class Gm2_SEO_Admin {
         $final_long  = [];
         $kwp_notice  = '';
         if ($seeds) {
-            $planner = new Gm2_Keyword_Planner();
-            $ideas = [];
-            $ideas_error = null;
-            try {
-                foreach ($seeds as $kw) {
-                    $res = $planner->generate_keyword_ideas($kw);
-                    if (is_wp_error($res)) {
-                        $ideas_error = $res;
-                        break;
+            $seed_ideas = array_map(function($kw) { return ['text' => $kw]; }, $seeds);
+
+            $creds_ok = trim(get_option('gm2_gads_developer_token', '')) !== '' &&
+                trim(get_option('gm2_gads_customer_id', '')) !== '' &&
+                get_option('gm2_google_refresh_token', '') !== '';
+
+            if ($creds_ok) {
+                $planner = new Gm2_Keyword_Planner();
+                $ideas = [];
+                $ideas_error = null;
+                try {
+                    foreach ($seeds as $kw) {
+                        $res = $planner->generate_keyword_ideas($kw);
+                        if (is_wp_error($res)) {
+                            $ideas_error = $res;
+                            break;
+                        }
+                        $ideas = array_merge($ideas, $res);
                     }
-                    $ideas = array_merge($ideas, $res);
+                } catch (\Throwable $e) {
+                    error_log('Keyword Planner request failed: ' . $e->getMessage());
+                    $ideas_error = new \WP_Error('kwp_error', $e->getMessage());
                 }
-            } catch (\Throwable $e) {
-                error_log('Keyword Planner request failed: ' . $e->getMessage());
-                wp_send_json_error(__('Keyword Planner request failed', 'gm2-wordpress-suite'));
-            }
-            if ($ideas_error || empty($ideas)) {
-                if ($ideas_error) {
-                    error_log('Keyword Planner error: ' . $ideas_error->get_error_message());
+
+                if ($ideas_error || empty($ideas)) {
+                    if ($ideas_error) {
+                        error_log('Keyword Planner error: ' . $ideas_error->get_error_message());
+                    }
+                    $kwp_notice = __('Google Ads keyword research unavailable—using AI suggestions only.', 'gm2-wordpress-suite');
+                    $chosen = $this->select_top_keywords($seed_ideas);
+                } else {
+                    $chosen = $this->select_best_keywords($ideas);
+                    if ($chosen['focus'] === '' && empty($chosen['long_tail'])) {
+                        $kwp_notice = __('Google Ads API did not return keyword metrics.', 'gm2-wordpress-suite');
+                        $raw = $planner->get_last_response_body();
+                        error_log('Keyword Planner returned no metrics: ' . $raw);
+                        $chosen = $this->select_top_keywords($ideas);
+                    }
                 }
-                $msg = $ideas_error ? __('Keyword Planner request failed', 'gm2-wordpress-suite') : __( 'Keyword Planner request failed: no keyword ideas found', 'gm2-wordpress-suite' );
-                wp_send_json_error($msg);
+            } else {
+                $kwp_notice = __('Google Ads keyword research unavailable—using AI suggestions only.', 'gm2-wordpress-suite');
+                $chosen = $this->select_top_keywords($seed_ideas);
             }
 
-            $chosen = $this->select_best_keywords($ideas);
-            if ($chosen['focus'] === '' && empty($chosen['long_tail'])) {
-                $kwp_notice = __('Google Ads API did not return keyword metrics.', 'gm2-wordpress-suite');
-                $raw = $planner->get_last_response_body();
-                error_log('Keyword Planner returned no metrics: ' . $raw);
-                $chosen = $this->select_top_keywords($ideas);
-            }
             $final_focus = $chosen['focus'] ?: $seeds[0];
             $final_long  = $chosen['long_tail'];
         }

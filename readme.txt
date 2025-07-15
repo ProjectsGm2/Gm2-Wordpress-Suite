@@ -190,6 +190,8 @@ and a list of seed keywords. Step two refines those keywords with the Google
 Keyword Planner, ranking them by **Avg. Monthly Searches**, **competition** and
 the **3‑month** and **year-over-year change** metrics. A valid Google Ads
 developer token, connected account and customer ID are required for this step.
+If these credentials are missing or the Keyword Planner fails, AI SEO falls back
+to the ChatGPT suggestions and adds a notice that metrics are unavailable.
 
 The results suggest a title, description, focus keywords, canonical URL, page
 name and slug. Any detected HTML issues—such as multiple `<h1>` tags—are listed
