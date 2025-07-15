@@ -20,10 +20,18 @@ define('GM2_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('GM2_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('GM2_CONTENT_RULES_VERSION', 2);
 if (!defined('GM2_GCLOUD_PROJECT_ID')) {
-    define('GM2_GCLOUD_PROJECT_ID', getenv('GM2_GCLOUD_PROJECT_ID') ?: '');
+    $project = getenv('GM2_GCLOUD_PROJECT_ID');
+    if ($project === false || $project === '') {
+        $project = get_option('gm2_gcloud_project_id', '');
+    }
+    define('GM2_GCLOUD_PROJECT_ID', $project);
 }
 if (!defined('GM2_SERVICE_ACCOUNT_JSON')) {
-    define('GM2_SERVICE_ACCOUNT_JSON', getenv('GM2_SERVICE_ACCOUNT_JSON') ?: '');
+    $json = getenv('GM2_SERVICE_ACCOUNT_JSON');
+    if ($json === false || $json === '') {
+        $json = get_option('gm2_service_account_json', '');
+    }
+    define('GM2_SERVICE_ACCOUNT_JSON', $json);
 }
 
 use Gm2\Gm2_Loader;
