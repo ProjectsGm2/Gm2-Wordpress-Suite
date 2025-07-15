@@ -364,15 +364,21 @@ class Gm2_Admin {
         if ( isset( $_POST['gm2_gads_oauth_setup_nonce'] ) && wp_verify_nonce( $_POST['gm2_gads_oauth_setup_nonce'], 'gm2_gads_oauth_setup_save' ) ) {
             $client_id     = isset( $_POST['gm2_gads_client_id'] ) ? sanitize_text_field( wp_unslash( $_POST['gm2_gads_client_id'] ) ) : '';
             $client_secret = isset( $_POST['gm2_gads_client_secret'] ) ? sanitize_text_field( wp_unslash( $_POST['gm2_gads_client_secret'] ) ) : '';
+            $project_id    = isset( $_POST['gm2_gcloud_project_id'] ) ? sanitize_text_field( wp_unslash( $_POST['gm2_gcloud_project_id'] ) ) : '';
+            $service_json  = isset( $_POST['gm2_service_account_json'] ) ? sanitize_text_field( wp_unslash( $_POST['gm2_service_account_json'] ) ) : '';
 
             update_option( 'gm2_gads_client_id', $client_id );
             update_option( 'gm2_gads_client_secret', $client_secret );
+            update_option( 'gm2_gcloud_project_id', $project_id );
+            update_option( 'gm2_service_account_json', $service_json );
 
             $notice = '<div class="updated notice"><p>' . esc_html__( 'Settings saved.', 'gm2-wordpress-suite' ) . '</p></div>';
         }
 
         $client_id     = get_option( 'gm2_gads_client_id', '' );
         $client_secret = get_option( 'gm2_gads_client_secret', '' );
+        $project_id    = get_option( 'gm2_gcloud_project_id', '' );
+        $service_json  = get_option( 'gm2_service_account_json', '' );
         $redirect      = admin_url( 'admin.php?page=gm2-google-connect' );
 
         echo '<div class="wrap">';
@@ -385,6 +391,8 @@ class Gm2_Admin {
         echo '<li>' . esc_html__( 'Create OAuth client ID credentials for a Web application.', 'gm2-wordpress-suite' ) . '</li>';
         echo '<li>' . sprintf( esc_html__( 'Set the authorized redirect URI to %s.', 'gm2-wordpress-suite' ), esc_url( $redirect ) ) . '</li>';
         echo '<li>' . esc_html__( 'Copy the client ID and client secret into the fields below.', 'gm2-wordpress-suite' ) . '</li>';
+        echo '<li>' . esc_html__( 'Find your Project ID on the Google Cloud dashboard. In IAM & Admin → Service Accounts create a new service account, add a key, and download the JSON file.', 'gm2-wordpress-suite' ) . '</li>';
+        echo '<li>' . esc_html__( 'Enter the Project ID and the path to the downloaded JSON key in the fields below.', 'gm2-wordpress-suite' ) . '</li>';
         echo '</ol>';
 
         echo '<form method="post">';
@@ -394,6 +402,10 @@ class Gm2_Admin {
         echo '<td><input name="gm2_gads_client_id" type="text" id="gm2_gads_client_id" value="' . esc_attr( $client_id ) . '" class="regular-text" required></td></tr>';
         echo '<tr><th scope="row"><label for="gm2_gads_client_secret">' . esc_html__( 'Client Secret', 'gm2-wordpress-suite' ) . '</label></th>';
         echo '<td><input name="gm2_gads_client_secret" type="text" id="gm2_gads_client_secret" value="' . esc_attr( $client_secret ) . '" class="regular-text" required></td></tr>';
+        echo '<tr><th scope="row"><label for="gm2_gcloud_project_id">' . esc_html__( 'Project ID', 'gm2-wordpress-suite' ) . '</label></th>';
+        echo '<td><input name="gm2_gcloud_project_id" type="text" id="gm2_gcloud_project_id" value="' . esc_attr( $project_id ) . '" class="regular-text"></td></tr>';
+        echo '<tr><th scope="row"><label for="gm2_service_account_json">' . esc_html__( 'Service Account JSON Path', 'gm2-wordpress-suite' ) . '</label></th>';
+        echo '<td><input name="gm2_service_account_json" type="text" id="gm2_service_account_json" value="' . esc_attr( $service_json ) . '" class="regular-text"></td></tr>';
         echo '</tbody></table>';
         submit_button();
         echo '</form>';
