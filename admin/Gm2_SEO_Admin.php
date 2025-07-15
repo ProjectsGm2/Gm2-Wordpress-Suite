@@ -145,7 +145,7 @@ class Gm2_SEO_Admin {
     }
 
     public function add_settings_pages() {
-        add_submenu_page(
+        $hook = add_submenu_page(
             'gm2',
             esc_html__( 'SEO', 'gm2-wordpress-suite' ),
             esc_html__( 'SEO', 'gm2-wordpress-suite' ),
@@ -153,6 +153,9 @@ class Gm2_SEO_Admin {
             'gm2-seo',
             [$this, 'display_dashboard']
         );
+        if ( $hook ) {
+            add_action( 'load-' . $hook, [ $this, 'add_settings_help' ] );
+        }
 
         add_submenu_page(
             'gm2',
@@ -367,6 +370,19 @@ class Gm2_SEO_Admin {
 
         echo '<div class="wrap">';
         echo '<h1>' . esc_html__( 'SEO Settings', 'gm2-wordpress-suite' ) . '</h1>';
+        if ( current_user_can( 'manage_options' ) ) {
+            $readme = plugins_url( 'readme.txt', GM2_PLUGIN_DIR . 'gm2-wordpress-suite.php' );
+            $url    = esc_url( $readme . '#wp-debugging' );
+            echo '<p class="description">' .
+                sprintf(
+                    /* translators: 1: opening link tag, 2: closing link tag */
+                    esc_html__( 'If AI Research fails, please enable WordPress debugging as explained in the %1$sWP Debugging%2$s section of the readme. Check %3$s for errors.', 'gm2-wordpress-suite' ),
+                    '<a href="' . $url . '" target="_blank">',
+                    '</a>',
+                    '<code>wp-content/debug.log</code>'
+                ) .
+                '</p>';
+        }
         echo '<h2 class="nav-tab-wrapper">';
         foreach ($tabs as $slug => $label) {
             $class = $active === $slug ? ' nav-tab-active' : '';
@@ -2827,5 +2843,26 @@ class Gm2_SEO_Admin {
             $this->render_seo_tabs_meta_box($post);
             echo '</div>';
         }
+    }
+
+    public function add_settings_help() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+        $screen = get_current_screen();
+        if ( ! $screen ) {
+            return;
+        }
+        $readme = plugins_url( 'readme.txt', GM2_PLUGIN_DIR . 'gm2-wordpress-suite.php' );
+        $screen->add_help_tab(
+            [
+                'id'      => 'gm2-wp-debugging',
+                'title'   => __( 'WP Debugging', 'gm2-wordpress-suite' ),
+                'content' => '<p>' . sprintf(
+                    __( 'See the <a href="%s#wp-debugging" target="_blank">WP Debugging</a> section of the readme for instructions. Errors will appear in <code>wp-content/debug.log</code>.', 'gm2-wordpress-suite' ),
+                    esc_url( $readme )
+                ) . '</p>',
+            ]
+        );
     }
 }
