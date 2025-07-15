@@ -37,3 +37,19 @@ WP_TESTS_DIR=/path/to/wordpress-tests-lib phpunit
 ```
 
 This command executes the PHPUnit tests located in the `tests/` directory.
+
+### Database credentials
+
+Before running the test suite via `make test`, export your database connection
+details as environment variables:
+
+```
+export DB_NAME=<database>
+export DB_USER=<user>
+export DB_PASS=<password>
+export DB_HOST=<host>
+```
+
+These variables are required so that `bin/install-wp-tests.sh` can create the
+database used by WordPress. If they are omitted, the Makefile will invoke the
+script with missing parameters and you'll encounter an error.
