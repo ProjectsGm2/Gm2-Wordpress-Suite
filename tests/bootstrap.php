@@ -8,6 +8,12 @@ $vendor_autoload = dirname(__DIR__) . '/vendor/autoload.php';
 if (file_exists($vendor_autoload)) {
     require_once $vendor_autoload;
 }
+if (!defined('GM2_GCLOUD_PROJECT_ID') && getenv('GM2_GCLOUD_PROJECT_ID')) {
+    define('GM2_GCLOUD_PROJECT_ID', getenv('GM2_GCLOUD_PROJECT_ID'));
+}
+if (!defined('GM2_SERVICE_ACCOUNT_JSON') && getenv('GM2_SERVICE_ACCOUNT_JSON')) {
+    define('GM2_SERVICE_ACCOUNT_JSON', getenv('GM2_SERVICE_ACCOUNT_JSON'));
+}
 function _manually_load_plugin() {
     require dirname(__DIR__) . '/gm2-wordpress-suite.php';
 }
