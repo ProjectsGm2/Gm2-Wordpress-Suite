@@ -33,6 +33,9 @@ jQuery(function($){
                             Object.keys(item.metrics).forEach(function(key){
                                 var val = item.metrics[key];
                                 if(val !== null && val !== ''){
+                                    if(typeof val === 'object'){
+                                        val = val.value || JSON.stringify(val);
+                                    }
                                     parts.push(key.replace(/_/g,' ') + ': ' + val);
                                 }
                             });
