@@ -93,7 +93,11 @@ class Gm2_Keyword_Planner {
                     continue;
                 }
 
-                $idea = ['text' => $res['text']];
+                $txt = $res['text'];
+                if (is_array($txt) || is_object($txt)) {
+                    $txt = $txt['value'] ?? wp_json_encode($txt);
+                }
+                $idea = ['text' => $txt];
 
                 if (!empty($res['keyword_idea_metrics']) && is_array($res['keyword_idea_metrics'])) {
                     $metrics = [];
@@ -120,6 +124,12 @@ class Gm2_Keyword_Planner {
                     }
 
                     if ($metrics) {
+                        foreach ($metrics as $m_key => $m_val) {
+                            if (is_array($m_val) || is_object($m_val)) {
+                                $m_val = $m_val['value'] ?? wp_json_encode($m_val);
+                            }
+                            $metrics[$m_key] = $m_val;
+                        }
                         $idea['metrics'] = $metrics;
                     }
                 }
