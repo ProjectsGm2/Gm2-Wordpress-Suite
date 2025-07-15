@@ -1393,13 +1393,13 @@ class Gm2_SEO_Admin {
                 if (is_array($v)) {
                     foreach ($v as $cat => $val) {
                         $rules[$k][$cat] = sanitize_textarea_field(
-                            $this->flatten_rule_value($val)
+                            wp_unslash($this->flatten_rule_value($val))
                         );
                     }
                 } else {
                     // Support legacy or single-category submissions.
                     $rules[$k]['general'] = sanitize_textarea_field(
-                        $this->flatten_rule_value($v)
+                        wp_unslash($this->flatten_rule_value($v))
                     );
                 }
             }
