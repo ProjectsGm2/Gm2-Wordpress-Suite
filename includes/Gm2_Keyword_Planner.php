@@ -89,9 +89,25 @@ class Gm2_Keyword_Planner {
         $ideas = [];
         if (!empty($data['results'])) {
             foreach ($data['results'] as $res) {
-                if (!empty($res['text'])) {
-                    $ideas[] = $res['text'];
+                if (empty($res['text'])) {
+                    continue;
                 }
+
+                $idea = ['text' => $res['text']];
+
+                if (!empty($res['keyword_idea_metrics']) && is_array($res['keyword_idea_metrics'])) {
+                    $metrics = [];
+                    foreach ($res['keyword_idea_metrics'] as $m_key => $m_val) {
+                        if ($m_val !== '' && $m_val !== null) {
+                            $metrics[$m_key] = $m_val;
+                        }
+                    }
+                    if ($metrics) {
+                        $idea['metrics'] = $metrics;
+                    }
+                }
+
+                $ideas[] = $idea;
             }
         }
 
