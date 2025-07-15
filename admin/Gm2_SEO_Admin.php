@@ -2237,12 +2237,20 @@ class Gm2_SEO_Admin {
         if ($seeds) {
             $planner = new Gm2_Keyword_Planner();
             $ideas = [];
+            $ideas_error = null;
             foreach ($seeds as $kw) {
                 $res = $planner->generate_keyword_ideas($kw);
-                if (!is_wp_error($res)) {
-                    $ideas = array_merge($ideas, $res);
+                if (is_wp_error($res)) {
+                    $ideas_error = $res;
+                    break;
                 }
+                $ideas = array_merge($ideas, $res);
             }
+            if ($ideas_error || empty($ideas)) {
+                $msg = $ideas_error ? 'Keyword Planner request failed: ' . $ideas_error->get_error_message() : __( 'Keyword Planner request failed: no keyword ideas found', 'gm2-wordpress-suite' );
+                wp_send_json_error($msg);
+            }
+
             $chosen = $this->select_best_keywords($ideas);
             $final_focus = $chosen['focus'] ?: $seeds[0];
             $final_long  = $chosen['long_tail'];
