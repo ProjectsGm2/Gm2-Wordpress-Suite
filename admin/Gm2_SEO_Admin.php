@@ -2233,20 +2233,27 @@ class Gm2_SEO_Admin {
         }
 
         if (is_wp_error($resp)) {
-            $this->debug_log('AI Research: ' . $resp->get_error_message());
-            wp_send_json_error($resp->get_error_message());
+            error_log('AI Research ChatGPT error: ' . $resp->get_error_message());
+            wp_send_json_error(__('AI request failed', 'gm2-wordpress-suite'));
         }
 
-        $data = json_decode($resp, true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
+        try {
+            $data = json_decode($resp, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\Throwable $e) {
+            error_log('AI Research JSON decode failed: ' . $resp);
             if (preg_match('/\{.*\}/s', $resp, $m)) {
-                $data = json_decode($m[0], true);
+                try {
+                    $data = json_decode($m[0], true, 512, JSON_THROW_ON_ERROR);
+                } catch (\Throwable $e2) {
+                    error_log('AI Research JSON decode failed after extraction: ' . $m[0]);
+                    wp_send_json_error(__('Invalid AI response', 'gm2-wordpress-suite'));
+                }
+            } else {
+                wp_send_json_error(__('Invalid AI response', 'gm2-wordpress-suite'));
             }
         }
 
-        if (json_last_error() !== JSON_ERROR_NONE || !is_array($data)) {
-            $this->debug_log('AI Research: invalid JSON response - ' . $resp);
-            error_log('AI Research invalid JSON: ' . $resp);
+        if (!is_array($data)) {
             wp_send_json_error( __( 'Invalid AI response', 'gm2-wordpress-suite' ) );
         }
 
@@ -2281,7 +2288,10 @@ class Gm2_SEO_Admin {
                 wp_send_json_error(__('Keyword Planner request failed', 'gm2-wordpress-suite'));
             }
             if ($ideas_error || empty($ideas)) {
-                $msg = $ideas_error ? 'Keyword Planner request failed: ' . $ideas_error->get_error_message() : __( 'Keyword Planner request failed: no keyword ideas found', 'gm2-wordpress-suite' );
+                if ($ideas_error) {
+                    error_log('Keyword Planner error: ' . $ideas_error->get_error_message());
+                }
+                $msg = $ideas_error ? __('Keyword Planner request failed', 'gm2-wordpress-suite') : __( 'Keyword Planner request failed: no keyword ideas found', 'gm2-wordpress-suite' );
                 wp_send_json_error($msg);
             }
 
@@ -2321,17 +2331,27 @@ class Gm2_SEO_Admin {
         }
 
         if (is_wp_error($resp2)) {
-            wp_send_json_error($resp2->get_error_message());
+            error_log('AI Research ChatGPT error: ' . $resp2->get_error_message());
+            wp_send_json_error(__('AI request failed', 'gm2-wordpress-suite'));
         }
 
-        $data2 = json_decode($resp2, true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
+        try {
+            $data2 = json_decode($resp2, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\Throwable $e) {
+            error_log('AI Research JSON decode failed: ' . $resp2);
             if (preg_match('/\{.*\}/s', $resp2, $m)) {
-                $data2 = json_decode($m[0], true);
+                try {
+                    $data2 = json_decode($m[0], true, 512, JSON_THROW_ON_ERROR);
+                } catch (\Throwable $e2) {
+                    error_log('AI Research JSON decode failed after extraction: ' . $m[0]);
+                    wp_send_json_error(__('Invalid AI response', 'gm2-wordpress-suite'));
+                }
+            } else {
+                wp_send_json_error(__('Invalid AI response', 'gm2-wordpress-suite'));
             }
         }
+
         if (!is_array($data2)) {
-            error_log('AI Research invalid JSON: ' . $resp2);
             wp_send_json_error( __( 'Invalid AI response', 'gm2-wordpress-suite' ) );
         }
 
