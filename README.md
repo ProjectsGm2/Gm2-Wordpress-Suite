@@ -29,7 +29,23 @@ Run the following command once using your database credentials:
 bash bin/install-wp-tests.sh <db-name> <db-user> <db-pass> [db-host] [wp-version]
 ```
 
-This downloads WordPress and configures the test database. The script uses `$WP_TESTS_DIR` or defaults to `/tmp/wordpress-tests-lib`.
+This downloads WordPress and configures the test database. By default the script
+places the suite in `/tmp/wordpress-tests-lib`. If you want to install it in a
+different location, set the `WP_TESTS_DIR` environment variable before running
+the script and when executing the tests so that
+`tests/bootstrap.php` can locate the files:
+
+```bash
+export WP_TESTS_DIR=/path/to/wordpress-tests-lib
+bash bin/install-wp-tests.sh <db-name> <db-user> <db-pass> [db-host] [wp-version]
+```
+
+If the directory does not exist when `phpunit` runs, the bootstrap script will
+fail with an error similar to:
+
+```
+Fatal error: Uncaught Error: Failed opening required '/tmp/wordpress-tests-lib/includes/functions.php'
+```
 
 ### Running the tests
 
