@@ -2349,6 +2349,19 @@ class Gm2_SEO_Admin {
         $final_focus = '';
         $final_long  = [];
         $kwp_notice  = '';
+
+        if (!$seeds) {
+            $query = $seo_title !== '' ? $seo_title : ($seo_description !== '' ? $seo_description : $title);
+            $ideas = $this->chatgpt_keyword_ideas($query);
+            if (!is_wp_error($ideas)) {
+                $seeds = array_map(function($i) { return $i['text']; }, $ideas);
+                $chosen = $this->select_top_keywords($ideas);
+                $final_focus = $chosen['focus'];
+                $final_long  = $chosen['long_tail'];
+                $kwp_notice  = __('AI response contained no seed keywords—using generated suggestions.', 'gm2-wordpress-suite');
+            }
+        }
+
         if ($seeds) {
             $seed_ideas = array_map(function($kw) { return ['text' => $kw]; }, $seeds);
 

@@ -186,7 +186,8 @@ whether to use any existing SEO field values. If all fields are empty, provide a
 short description so ChatGPT has extra context.
 
 Step one sends the post content to ChatGPT which returns a title, description
-and a list of seed keywords. Step two refines those keywords with the Google
+and a list of seed keywords. If no seed keywords are returned, the plugin
+generates them automatically before querying Google Ads. Step two refines those keywords with the Google
 Keyword Planner, ranking them by **Avg. Monthly Searches**, **competition** and
 the **3‑month** and **year-over-year change** metrics. A valid Google Ads
 developer token, connected account and customer ID are required for this step.
