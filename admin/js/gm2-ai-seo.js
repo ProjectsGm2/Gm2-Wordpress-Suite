@@ -33,10 +33,13 @@ jQuery(function($){
         }
 
         if(!data.seo_title && !data.seo_description && !data.focus_keywords && !data.canonical){
-            var promptText = window.gm2AiSeo && gm2AiSeo.i18n ? gm2AiSeo.i18n.promptExtra : 'Describe the page or its target audience:';
-            var extra = prompt(promptText);
-            if(extra){
-                data.extra_context = extra;
+            var hasContext = window.gm2AiSeo && gm2AiSeo.context_exists;
+            if(!hasContext){
+                var promptText = window.gm2AiSeo && gm2AiSeo.i18n ? gm2AiSeo.i18n.promptExtra : 'Describe the page or its target audience:';
+                var extra = prompt(promptText);
+                if(extra){
+                    data.extra_context = extra;
+                }
             }
         }
         $.post((window.gm2AiSeo ? gm2AiSeo.ajax_url : ajaxurl), data)
