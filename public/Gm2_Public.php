@@ -27,6 +27,22 @@ class Gm2_Public {
             GM2_VERSION,
             true
         );
+
+        if (function_exists('is_product') && is_product()) {
+            wp_enqueue_style(
+                'gm2-qd-widget',
+                GM2_PLUGIN_URL . 'public/css/gm2-qd-widget.css',
+                [],
+                GM2_VERSION
+            );
+            wp_enqueue_script(
+                'gm2-qd-widget',
+                GM2_PLUGIN_URL . 'public/js/gm2-qd-widget.js',
+                [ 'jquery' ],
+                GM2_VERSION,
+                true
+            );
+        }
     }
 
     public function add_tariff_fees($cart) {

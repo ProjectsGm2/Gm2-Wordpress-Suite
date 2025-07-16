@@ -35,6 +35,7 @@ class Gm2_Loader {
 
         if (class_exists('Elementor\\Plugin')) {
             new Gm2_Elementor_SEO();
+            new Gm2_Elementor_Quantity_Discounts();
         }
     }
 }
