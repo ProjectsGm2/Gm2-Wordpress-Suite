@@ -24,7 +24,7 @@ jQuery(function($){
         header.append('<input type="text" class="gm2-qd-name" placeholder="Group name" value="'+(g.name||'')+'"> <button type="button" class="button gm2-qd-remove-group">&times;</button><span class="gm2-qd-toggle">&#9650;</span>');
         accordion.append(header);
         var container = $('<div class="gm2-qd-group"></div>');
-        var prodSection = $('<div class="gm2-qd-products"><select class="gm2-qd-cat"><option value="">All Categories</option></select> <input type="text" class="gm2-qd-search" placeholder="Search products"> <button type="button" class="button gm2-qd-search-btn">Search</button> <div class="gm2-qd-cat-products"></div><ul class="gm2-qd-results"></ul><ul class="gm2-qd-selected"></ul><p class="gm2-qd-remove-actions"><button type="button" class="button gm2-qd-remove-selected">Remove selected products</button> <button type="button" class="button gm2-qd-remove-all">Remove all</button></p></div>');
+        var prodSection = $('<div class="gm2-qd-products"><select class="gm2-qd-cat" multiple><option value="">All Categories</option></select> <input type="text" class="gm2-qd-search" placeholder="Search products"> <button type="button" class="button gm2-qd-search-btn">Search</button> <div class="gm2-qd-cat-products"></div><ul class="gm2-qd-results"></ul><ul class="gm2-qd-selected"></ul><p class="gm2-qd-remove-actions"><button type="button" class="button gm2-qd-remove-selected">Remove selected products</button> <button type="button" class="button gm2-qd-remove-all">Remove all</button></p></div>');
         categories.forEach(function(c){prodSection.find('select').append('<option value="'+c.id+'">'+c.name+'</option>');});
         container.append(prodSection);
         var table = $('<table class="widefat gm2-qd-rules"><thead><tr><th>Min Qty</th><th>Label</th><th>% Off</th><th>Fixed Off</th><th></th></tr></thead><tbody></tbody></table>');
@@ -53,10 +53,10 @@ jQuery(function($){
         ul.append('<li data-id="'+item.id+'"><label><input type="checkbox" class="gm2-qd-selected-chk"> '+labelFor(item)+' <span class="remove">x</span></label></li>');
     }
 
-    function loadCategoryProducts(group, cat){
+    function loadCategoryProducts(group, cats){
         var box = group.find('.gm2-qd-cat-products').html('');
-        if(!cat){ return; }
-        $.get(gm2Qd.ajax_url,{action:'gm2_qd_get_category_products',nonce:gm2Qd.nonce,category:cat}).done(function(res){
+        if(!cats || !cats.length){ return; }
+        $.get(gm2Qd.ajax_url,{action:'gm2_qd_get_category_products',nonce:gm2Qd.nonce,'categories[]':cats}).done(function(res){
             if(!res.success) return;
             var html = '<label><input type="checkbox" class="gm2-qd-select-all"> Select all</label><ul class="gm2-qd-checkboxes"></ul><p><button type="button" class="button gm2-qd-add-selected">Add selected products</button></p>';
             box.append(html);
@@ -114,13 +114,13 @@ jQuery(function($){
     });
     function searchProducts(group){
         var term=group.find('.gm2-qd-search').val();
-        var cat=group.find('.gm2-qd-cat').val();
+        var cats=group.find('.gm2-qd-cat').val();
         var box=group.find('.gm2-qd-results').empty();
         if(term.length<2){return;}
         if(activeSearch){
             activeSearch.abort();
         }
-        activeSearch=$.get(gm2Qd.ajax_url,{action:'gm2_qd_search_products',nonce:gm2Qd.nonce,term:term,category:cat}).done(function(res){
+        activeSearch=$.get(gm2Qd.ajax_url,{action:'gm2_qd_search_products',nonce:gm2Qd.nonce,term:term,'categories[]':cats}).done(function(res){
             if(!res.success) return;
             var html='<label><input type="checkbox" class="gm2-qd-select-all"> Select all</label>'+
                       '<ul class="gm2-qd-checkboxes"></ul>'+

@@ -111,18 +111,18 @@ class Gm2_Quantity_Discounts_Admin {
         }
         check_ajax_referer( 'gm2_qd_nonce', 'nonce' );
         $term  = sanitize_text_field( $_GET['term'] ?? '' );
-        $cat   = absint( $_GET['category'] ?? 0 );
+        $cats  = array_map( 'absint', (array) $_GET['categories'] );
         $args  = [
             'post_type'      => 'product',
             'posts_per_page' => 20,
             's'              => $term,
             'post_status'    => 'publish',
         ];
-        if ( $cat ) {
+        if ( ! empty( $cats ) ) {
             $args['tax_query'] = [
                 [
                     'taxonomy' => 'product_cat',
-                    'terms'    => [ $cat ],
+                    'terms'    => $cats,
                 ],
             ];
         }
@@ -144,8 +144,8 @@ class Gm2_Quantity_Discounts_Admin {
             wp_send_json_error( __( 'Permission denied', 'gm2-wordpress-suite' ) );
         }
         check_ajax_referer( 'gm2_qd_nonce', 'nonce' );
-        $cat = absint( $_GET['category'] ?? 0 );
-        if ( ! $cat ) {
+        $cats = array_map( 'absint', (array) $_GET['categories'] );
+        if ( empty( $cats ) ) {
             wp_send_json_success( [] );
         }
         $args = [
@@ -155,7 +155,7 @@ class Gm2_Quantity_Discounts_Admin {
             'tax_query'      => [
                 [
                     'taxonomy' => 'product_cat',
-                    'terms'    => [ $cat ],
+                    'terms'    => $cats,
                 ],
             ],
             'orderby' => 'title',
