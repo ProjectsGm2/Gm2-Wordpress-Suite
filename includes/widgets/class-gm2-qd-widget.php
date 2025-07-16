@@ -425,7 +425,12 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
     }
 
     protected function render() {
-        if ( ! function_exists( 'is_product' ) || ! is_product() ) {
+        $in_edit_mode = false;
+        if ( class_exists( '\\Elementor\\Plugin' ) && \Elementor\Plugin::$instance->editor ) {
+            $in_edit_mode = \Elementor\Plugin::$instance->editor->is_edit_mode();
+        }
+
+        if ( ! $in_edit_mode && ( ! function_exists( 'is_product' ) || ! is_product() ) ) {
             return;
         }
         global $product;

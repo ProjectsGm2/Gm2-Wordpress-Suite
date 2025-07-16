@@ -33,6 +33,15 @@ if (!function_exists('is_admin')) {
 if (!class_exists('Elementor\\Widget_Base')) {
     eval('namespace Elementor; class Widget_Base {}');
 }
+if (!class_exists('Elementor\\Icons_Manager')) {
+    eval('namespace Elementor; class Icons_Manager { public static function render_icon($icon, $args = []) { echo "<i></i>"; } }');
+}
+if (!function_exists('wc_price')) {
+    function wc_price($price, $args = []) { return (string)$price; }
+}
+if (!function_exists('get_woocommerce_currency_symbol')) {
+    function get_woocommerce_currency_symbol() { return '$'; }
+}
 
 class QuantityDiscountsTest extends WP_UnitTestCase {
     public function setUp(): void {
@@ -107,4 +116,34 @@ class QuantityDiscountsTest extends WP_UnitTestCase {
 
         $this->assertSame($expected, $calc);
     }
+
+    public function test_widget_renders_in_edit_mode() {
+        require_once GM2_PLUGIN_DIR . 'includes/widgets/class-gm2-qd-widget.php';
+
+        if ( ! class_exists( '\\Elementor\\Plugin' ) ) {
+            eval('namespace Elementor; class Plugin { public static $instance; public $editor; public function __construct(){ self::$instance = $this; $this->editor = new class { public function is_edit_mode(){ return true; } }; } }');
+        } else {
+            \Elementor\Plugin::$instance = new class { public $editor; public function __construct(){ $this->editor = new class { public function is_edit_mode(){ return true; } }; } };
+        }
+
+        if ( ! class_exists( 'WC_Product_With_ID' ) ) {
+            class WC_Product_With_ID extends WC_Product { public function get_id() { return 1; } }
+        }
+        global $product;
+        $product = new WC_Product_With_ID(100);
+
+        $m = new Gm2_Quantity_Discount_Manager();
+        $m->add_group([
+            'name'     => 'Test',
+            'products' => [1],
+            'rules'    => [ [ 'min' => 1, 'type' => 'percent', 'amount' => 10, 'label' => 'L' ] ],
+        ]);
+
+        ob_start();
+        $widget = new \Gm2\GM2_QD_Widget();
+        $widget->render();
+        $out = ob_get_clean();
+        $this->assertStringContainsString('gm2-qd-options', $out);
+    }
 }
+
