@@ -1,6 +1,8 @@
 <?php
 namespace Gm2;
 
+use Elementor\Icons_Manager;
+
 if (!defined('ABSPATH')) { exit; }
 
 if ( class_exists( '\\Elementor\\Widget_Base' ) ) {
@@ -28,36 +30,321 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
                 'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
             ]
         );
-        $this->add_control(
-            'text_color',
+        $this->add_group_control(
+            \Elementor\Group_Control_Background::get_type(),
             [
-                'label' => __( 'Text Color', 'gm2-wordpress-suite' ),
+                'name'     => 'option_bg',
+                'selector' => '{{WRAPPER}} .gm2-qd-option',
+            ]
+        );
+        $this->add_group_control(
+            \Elementor\Group_Control_Border::get_type(),
+            [
+                'name'     => 'option_border',
+                'selector' => '{{WRAPPER}} .gm2-qd-option',
+            ]
+        );
+        $this->add_responsive_control(
+            'option_radius',
+            [
+                'label' => __( 'Border Radius', 'gm2-wordpress-suite' ),
+                'type'  => \Elementor\Controls_Manager::DIMENSIONS,
+                'selectors' => [
+                    '{{WRAPPER}} .gm2-qd-option' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                ],
+            ]
+        );
+        $this->add_responsive_control(
+            'option_padding',
+            [
+                'label' => __( 'Padding', 'gm2-wordpress-suite' ),
+                'type'  => \Elementor\Controls_Manager::DIMENSIONS,
+                'selectors' => [
+                    '{{WRAPPER}} .gm2-qd-option' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                ],
+            ]
+        );
+        $this->end_controls_section();
+
+        $this->start_controls_section(
+            'gm2_qd_label_style',
+            [
+                'label' => __( 'Quantity Label', 'gm2-wordpress-suite' ),
+                'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
+            ]
+        );
+        $this->add_group_control(
+            \Elementor\Group_Control_Typography::get_type(),
+            [
+                'name'     => 'label_typography',
+                'selector' => '{{WRAPPER}} .gm2-qd-label',
+            ]
+        );
+        $this->start_controls_tabs( 'label_style_tabs' );
+        $this->start_controls_tab(
+            'label_style_normal',
+            [ 'label' => __( 'Normal', 'gm2-wordpress-suite' ) ]
+        );
+        $this->add_control(
+            'label_color',
+            [
+                'label' => __( 'Color', 'gm2-wordpress-suite' ),
                 'type'  => \Elementor\Controls_Manager::COLOR,
                 'selectors' => [
-                    '{{WRAPPER}} .gm2-qd-option' => 'color: {{VALUE}};',
+                    '{{WRAPPER}} .gm2-qd-label' => 'color: {{VALUE}};',
                 ],
             ]
         );
-        $this->add_control(
-            'bg_color',
+        $this->add_group_control(
+            \Elementor\Group_Control_Text_Shadow::get_type(),
             [
-                'label' => __( 'Background', 'gm2-wordpress-suite' ),
+                'name'     => 'label_text_shadow',
+                'selector' => '{{WRAPPER}} .gm2-qd-label',
+            ]
+        );
+        $this->add_responsive_control(
+            'label_padding',
+            [
+                'label' => __( 'Padding', 'gm2-wordpress-suite' ),
+                'type'  => \Elementor\Controls_Manager::DIMENSIONS,
+                'selectors' => [
+                    '{{WRAPPER}} .gm2-qd-label' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                ],
+            ]
+        );
+        $this->add_group_control(
+            \Elementor\Group_Control_Background::get_type(),
+            [
+                'name'     => 'label_background',
+                'selector' => '{{WRAPPER}} .gm2-qd-label',
+            ]
+        );
+        $this->end_controls_tab();
+        $this->start_controls_tab(
+            'label_style_hover',
+            [ 'label' => __( 'Hover', 'gm2-wordpress-suite' ) ]
+        );
+        $this->add_control(
+            'label_hover_color',
+            [
+                'label' => __( 'Color', 'gm2-wordpress-suite' ),
                 'type'  => \Elementor\Controls_Manager::COLOR,
                 'selectors' => [
-                    '{{WRAPPER}} .gm2-qd-option' => 'background-color: {{VALUE}};',
+                    '{{WRAPPER}} .gm2-qd-option:hover .gm2-qd-label' => 'color: {{VALUE}};',
                 ],
+            ]
+        );
+        $this->add_group_control(
+            \Elementor\Group_Control_Text_Shadow::get_type(),
+            [
+                'name'     => 'label_hover_shadow',
+                'selector' => '{{WRAPPER}} .gm2-qd-option:hover .gm2-qd-label',
+            ]
+        );
+        $this->add_responsive_control(
+            'label_hover_padding',
+            [
+                'label' => __( 'Padding', 'gm2-wordpress-suite' ),
+                'type'  => \Elementor\Controls_Manager::DIMENSIONS,
+                'selectors' => [
+                    '{{WRAPPER}} .gm2-qd-option:hover .gm2-qd-label' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                ],
+            ]
+        );
+        $this->add_group_control(
+            \Elementor\Group_Control_Background::get_type(),
+            [
+                'name'     => 'label_hover_bg',
+                'selector' => '{{WRAPPER}} .gm2-qd-option:hover .gm2-qd-label',
+            ]
+        );
+        $this->end_controls_tab();
+        $this->start_controls_tab(
+            'label_style_active',
+            [ 'label' => __( 'Active', 'gm2-wordpress-suite' ) ]
+        );
+        $this->add_control(
+            'label_active_color',
+            [
+                'label' => __( 'Color', 'gm2-wordpress-suite' ),
+                'type'  => \Elementor\Controls_Manager::COLOR,
+                'selectors' => [
+                    '{{WRAPPER}} .gm2-qd-option:active .gm2-qd-label' => 'color: {{VALUE}};',
+                ],
+            ]
+        );
+        $this->add_group_control(
+            \Elementor\Group_Control_Text_Shadow::get_type(),
+            [
+                'name'     => 'label_active_shadow',
+                'selector' => '{{WRAPPER}} .gm2-qd-option:active .gm2-qd-label',
+            ]
+        );
+        $this->add_responsive_control(
+            'label_active_padding',
+            [
+                'label' => __( 'Padding', 'gm2-wordpress-suite' ),
+                'type'  => \Elementor\Controls_Manager::DIMENSIONS,
+                'selectors' => [
+                    '{{WRAPPER}} .gm2-qd-option:active .gm2-qd-label' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                ],
+            ]
+        );
+        $this->add_group_control(
+            \Elementor\Group_Control_Background::get_type(),
+            [
+                'name'     => 'label_active_bg',
+                'selector' => '{{WRAPPER}} .gm2-qd-option:active .gm2-qd-label',
+            ]
+        );
+        $this->end_controls_tab();
+        $this->end_controls_tabs();
+        $this->end_controls_section();
+
+        $this->start_controls_section(
+            'gm2_qd_price_style',
+            [
+                'label' => __( 'Price', 'gm2-wordpress-suite' ),
+                'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
             ]
         );
         $this->add_control(
-            'font_size',
+            'currency_icon',
             [
-                'label' => __( 'Font Size', 'gm2-wordpress-suite' ),
-                'type'  => \Elementor\Controls_Manager::NUMBER,
-                'selectors' => [
-                    '{{WRAPPER}} .gm2-qd-option' => 'font-size: {{VALUE}}px;',
+                'label'   => __( 'Currency Icon', 'gm2-wordpress-suite' ),
+                'type'    => \Elementor\Controls_Manager::ICONS,
+                'default' => [
+                    'value'   => 'fas fa-dollar-sign',
+                    'library' => 'fa-solid',
                 ],
             ]
         );
+        $this->add_group_control(
+            \Elementor\Group_Control_Typography::get_type(),
+            [
+                'name'     => 'price_typography',
+                'selector' => '{{WRAPPER}} .gm2-qd-price',
+            ]
+        );
+        $this->start_controls_tabs( 'price_style_tabs' );
+        $this->start_controls_tab(
+            'price_style_normal',
+            [ 'label' => __( 'Normal', 'gm2-wordpress-suite' ) ]
+        );
+        $this->add_control(
+            'price_color',
+            [
+                'label' => __( 'Color', 'gm2-wordpress-suite' ),
+                'type'  => \Elementor\Controls_Manager::COLOR,
+                'selectors' => [
+                    '{{WRAPPER}} .gm2-qd-price' => 'color: {{VALUE}};',
+                ],
+            ]
+        );
+        $this->add_group_control(
+            \Elementor\Group_Control_Text_Shadow::get_type(),
+            [
+                'name'     => 'price_text_shadow',
+                'selector' => '{{WRAPPER}} .gm2-qd-price',
+            ]
+        );
+        $this->add_responsive_control(
+            'price_padding',
+            [
+                'label' => __( 'Padding', 'gm2-wordpress-suite' ),
+                'type'  => \Elementor\Controls_Manager::DIMENSIONS,
+                'selectors' => [
+                    '{{WRAPPER}} .gm2-qd-price' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                ],
+            ]
+        );
+        $this->add_group_control(
+            \Elementor\Group_Control_Background::get_type(),
+            [
+                'name'     => 'price_background',
+                'selector' => '{{WRAPPER}} .gm2-qd-price',
+            ]
+        );
+        $this->end_controls_tab();
+        $this->start_controls_tab(
+            'price_style_hover',
+            [ 'label' => __( 'Hover', 'gm2-wordpress-suite' ) ]
+        );
+        $this->add_control(
+            'price_hover_color',
+            [
+                'label' => __( 'Color', 'gm2-wordpress-suite' ),
+                'type'  => \Elementor\Controls_Manager::COLOR,
+                'selectors' => [
+                    '{{WRAPPER}} .gm2-qd-option:hover .gm2-qd-price' => 'color: {{VALUE}};',
+                ],
+            ]
+        );
+        $this->add_group_control(
+            \Elementor\Group_Control_Text_Shadow::get_type(),
+            [
+                'name'     => 'price_hover_shadow',
+                'selector' => '{{WRAPPER}} .gm2-qd-option:hover .gm2-qd-price',
+            ]
+        );
+        $this->add_responsive_control(
+            'price_hover_padding',
+            [
+                'label' => __( 'Padding', 'gm2-wordpress-suite' ),
+                'type'  => \Elementor\Controls_Manager::DIMENSIONS,
+                'selectors' => [
+                    '{{WRAPPER}} .gm2-qd-option:hover .gm2-qd-price' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                ],
+            ]
+        );
+        $this->add_group_control(
+            \Elementor\Group_Control_Background::get_type(),
+            [
+                'name'     => 'price_hover_bg',
+                'selector' => '{{WRAPPER}} .gm2-qd-option:hover .gm2-qd-price',
+            ]
+        );
+        $this->end_controls_tab();
+        $this->start_controls_tab(
+            'price_style_active',
+            [ 'label' => __( 'Active', 'gm2-wordpress-suite' ) ]
+        );
+        $this->add_control(
+            'price_active_color',
+            [
+                'label' => __( 'Color', 'gm2-wordpress-suite' ),
+                'type'  => \Elementor\Controls_Manager::COLOR,
+                'selectors' => [
+                    '{{WRAPPER}} .gm2-qd-option:active .gm2-qd-price' => 'color: {{VALUE}};',
+                ],
+            ]
+        );
+        $this->add_group_control(
+            \Elementor\Group_Control_Text_Shadow::get_type(),
+            [
+                'name'     => 'price_active_shadow',
+                'selector' => '{{WRAPPER}} .gm2-qd-option:active .gm2-qd-price',
+            ]
+        );
+        $this->add_responsive_control(
+            'price_active_padding',
+            [
+                'label' => __( 'Padding', 'gm2-wordpress-suite' ),
+                'type'  => \Elementor\Controls_Manager::DIMENSIONS,
+                'selectors' => [
+                    '{{WRAPPER}} .gm2-qd-option:active .gm2-qd-price' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                ],
+            ]
+        );
+        $this->add_group_control(
+            \Elementor\Group_Control_Background::get_type(),
+            [
+                'name'     => 'price_active_bg',
+                'selector' => '{{WRAPPER}} .gm2-qd-option:active .gm2-qd-price',
+            ]
+        );
+        $this->end_controls_tab();
+        $this->end_controls_tabs();
         $this->end_controls_section();
     }
 
@@ -101,17 +388,26 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
         if ( empty( $rules ) ) {
             return;
         }
+        $settings = $this->get_settings_for_display();
         echo '<div class="gm2-qd-options">';
         foreach ( $rules as $rule ) {
             $qty   = intval( $rule['min'] );
             $label = ! empty( $rule['label'] )
                 ? $rule['label']
                 : sprintf( __( 'Qty: %d', 'gm2-wordpress-suite' ), $qty );
-            $price = wc_price( $this->calculate_discounted_price( $product, $rule ) );
+            $price_raw = $this->calculate_discounted_price( $product, $rule );
+            $price     = wc_price( $price_raw, [ 'currency' => '', 'price_format' => '%2$s' ] );
 
             echo '<button class="gm2-qd-option" data-qty="' . esc_attr( $qty ) . '">';
             echo '<span class="gm2-qd-label">' . esc_html( $label ) . '</span>';
-            echo '<span class="gm2-qd-price">' . wp_kses_post( $price ) . '</span>';
+            echo '<span class="gm2-qd-price">';
+            if ( ! empty( $settings['currency_icon']['value'] ) ) {
+                Icons_Manager::render_icon( $settings['currency_icon'], [ 'aria-hidden' => 'true', 'class' => 'gm2-qd-currency-icon' ] );
+            } else {
+                echo '<span class="gm2-qd-currency-icon">' . esc_html( get_woocommerce_currency_symbol() ) . '</span>';
+            }
+            echo '<span class="gm2-qd-amount">' . wp_kses_post( $price ) . '</span>';
+            echo '</span>';
             echo '</button>';
         }
         echo '</div>';
