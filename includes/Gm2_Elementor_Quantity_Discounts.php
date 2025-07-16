@@ -21,6 +21,77 @@ class Gm2_Elementor_Quantity_Discounts {
         add_action('elementor/widgets/widgets_registered', [ $this, 'register_widget' ]);
     }
 
+    public function register_widget( $widgets_manager ) {
+        $widgets_manager->register( new GM2_QD_Widget() );
+    }
+}
+
+if ( class_exists( '\\Elementor\\Widget_Base' ) ) {
+class GM2_QD_Widget extends \Elementor\Widget_Base {
+    public function get_name() {
+        return 'gm2_quantity_discounts';
+    }
+    public function get_title() {
+        return __( 'Gm2 Qnty Discounts', 'gm2-wordpress-suite' );
+    }
+    public function get_icon() {
+        return 'eicon-cart-medium';
+    }
+    public function get_categories() {
+        // Prefer the WooCommerce section if available. This requires
+        // Elementor Pro, otherwise widgets default to the General
+        // category so they remain visible in all installations.
+        $manager = \Elementor\Plugin::instance()->elements_manager;
+        if ( method_exists( $manager, 'get_categories' ) ) {
+            $categories = $manager->get_categories();
+            if ( isset( $categories['woocommerce'] ) ) {
+                return [ 'woocommerce' ];
+            }
+        }
+        return [ 'general' ];
+    }
+
+    protected function register_controls() {
+        $this->start_controls_section(
+            'gm2_qd_style',
+            [
+                'label' => __( 'Options Style', 'gm2-wordpress-suite' ),
+                'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
+            ]
+        );
+        $this->add_control(
+            'text_color',
+            [
+                'label' => __( 'Text Color', 'gm2-wordpress-suite' ),
+                'type'  => \Elementor\Controls_Manager::COLOR,
+                'selectors' => [
+                    '{{WRAPPER}} .gm2-qd-option' => 'color: {{VALUE}};',
+                ],
+            ]
+        );
+        $this->add_control(
+            'bg_color',
+            [
+                'label' => __( 'Background', 'gm2-wordpress-suite' ),
+                'type'  => \Elementor\Controls_Manager::COLOR,
+                'selectors' => [
+                    '{{WRAPPER}} .gm2-qd-option' => 'background-color: {{VALUE}};',
+                ],
+            ]
+        );
+        $this->add_control(
+            'font_size',
+            [
+                'label' => __( 'Font Size', 'gm2-wordpress-suite' ),
+                'type'  => \Elementor\Controls_Manager::NUMBER,
+                'selectors' => [
+                    '{{WRAPPER}} .gm2-qd-option' => 'font-size: {{VALUE}}px;',
+                ],
+            ]
+        );
+        $this->end_controls_section();
+    }
+
     public function register_widget( $widgets_manager = null ) {
         if ( $widgets_manager === null && class_exists( '\\Elementor\\Plugin' ) ) {
             $widgets_manager = \Elementor\Plugin::$instance->widgets_manager;
