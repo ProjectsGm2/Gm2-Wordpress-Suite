@@ -1,6 +1,11 @@
 jQuery(function($){
     var groups = gm2Qd.groups || [];
     var categories = gm2Qd.categories || [];
+    function labelFor(item){
+        var l = item.title || item.text || item.id;
+        if(item.sku){ l += ' ('+item.sku+')'; }
+        return l;
+    }
     function createRuleRow(rule){
         rule = rule || {min:'',type:'percent',amount:''};
         var row = $('<tr class="gm2-qd-rule">\
@@ -24,8 +29,9 @@ jQuery(function($){
         g.rules.forEach(function(r){table.find('tbody').append(createRuleRow(r));});
         container.append(table);
         container.append('<p><button type="button" class="button gm2-qd-add-rule">Add Rule</button></p>');
-        g.products.forEach(function(id){
-            addSelectedProduct(container, {id:id,text:id});
+        g.products.forEach(function(p){
+            if(typeof p!=='object'){p={id:p};}
+            addSelectedProduct(container, p);
         });
         accordion.append(container);
         return accordion;
@@ -33,7 +39,7 @@ jQuery(function($){
     function addSelectedProduct(group, item){
         var ul = group.find('.gm2-qd-selected');
         if( ul.find('li[data-id="'+item.id+'"]').length ) return;
-        ul.append('<li data-id="'+item.id+'"><label><input type="checkbox" class="gm2-qd-selected-chk"> '+item.text+' <span class="remove">x</span></label></li>');
+        ul.append('<li data-id="'+item.id+'"><label><input type="checkbox" class="gm2-qd-selected-chk"> '+labelFor(item)+' <span class="remove">x</span></label></li>');
     }
 
     function loadCategoryProducts(group, cat){
@@ -45,7 +51,7 @@ jQuery(function($){
             box.append(html);
             var list = box.find('.gm2-qd-checkboxes');
             res.data.forEach(function(p){
-                var li = $('<li><label><input type="checkbox" class="gm2-qd-product-chk" value="'+p.id+'"> '+p.text+'</label></li>');
+                var li = $('<li><label><input type="checkbox" class="gm2-qd-product-chk" value="'+p.id+'" data-title="'+p.title+'" data-sku="'+p.sku+'"> '+labelFor(p)+'</label></li>');
                 if(group.find('.gm2-qd-selected li[data-id="'+p.id+'"]').length){
                     li.find('input').prop('checked',true);
                 }
@@ -92,8 +98,7 @@ jQuery(function($){
         var group=$(this).closest('.gm2-qd-group');
         group.find('.gm2-qd-product-chk:checked').each(function(){
             var id=$(this).val();
-            var name=$(this).closest('label').text().trim();
-            addSelectedProduct(group,{id:id,text:name});
+            addSelectedProduct(group,{id:id,title:$(this).data('title'),sku:$(this).data('sku')});
         });
     });
     function searchProducts(group){
@@ -102,7 +107,7 @@ jQuery(function($){
         if(term.length<2){group.find('.gm2-qd-results').empty();return;}
         $.get(gm2Qd.ajax_url,{action:'gm2_qd_search_products',nonce:gm2Qd.nonce,term:term,category:cat}).done(function(res){
             var ul=group.find('.gm2-qd-results').empty();
-            if(res.success){res.data.forEach(function(i){ul.append('<li data-id="'+i.id+'">'+i.text+'</li>');});}
+            if(res.success){res.data.forEach(function(i){ul.append('<li data-id="'+i.id+'" data-title="'+i.title+'" data-sku="'+i.sku+'">'+labelFor(i)+'</li>');});}
         });
     }
     $(document).on('click','.gm2-qd-search-btn',function(){
@@ -111,7 +116,7 @@ jQuery(function($){
     });
     $(document).on('click','.gm2-qd-results li',function(){
         var group=$(this).closest('.gm2-qd-group');
-        addSelectedProduct(group,{id:$(this).data('id'),text:$(this).text()});
+        addSelectedProduct(group,{id:$(this).data('id'),title:$(this).data('title'),sku:$(this).data('sku')});
     });
     $(document).on('click','.gm2-qd-remove-selected',function(){
         var group=$(this).closest('.gm2-qd-products');
