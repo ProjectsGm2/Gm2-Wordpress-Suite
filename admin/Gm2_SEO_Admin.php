@@ -260,6 +260,18 @@ class Gm2_SEO_Admin {
         register_setting('gm2_seo_options', 'gm2_context_unique_selling_points', [
             'sanitize_callback' => 'sanitize_textarea_field',
         ]);
+        register_setting('gm2_seo_options', 'gm2_context_revenue_streams', [
+            'sanitize_callback' => 'sanitize_textarea_field',
+        ]);
+        register_setting('gm2_seo_options', 'gm2_context_primary_goal', [
+            'sanitize_callback' => 'sanitize_textarea_field',
+        ]);
+        register_setting('gm2_seo_options', 'gm2_context_brand_voice', [
+            'sanitize_callback' => 'sanitize_textarea_field',
+        ]);
+        register_setting('gm2_seo_options', 'gm2_context_competitors', [
+            'sanitize_callback' => 'sanitize_textarea_field',
+        ]);
         foreach ($this->get_supported_post_types() as $pt) {
             register_setting('gm2_seo_options', 'gm2_seo_guidelines_post_' . $pt, [
                 'sanitize_callback' => 'sanitize_textarea_field',
@@ -692,6 +704,10 @@ class Gm2_SEO_Admin {
                 'gm2_context_industry_category'     => [ 'label' => __( 'Industry Category', 'gm2-wordpress-suite' ), 'type' => 'text' ],
                 'gm2_context_target_audience'       => [ 'label' => __( 'Target Audience', 'gm2-wordpress-suite' ), 'type' => 'textarea' ],
                 'gm2_context_unique_selling_points' => [ 'label' => __( 'Unique Selling Points', 'gm2-wordpress-suite' ), 'type' => 'textarea' ],
+                'gm2_context_revenue_streams'       => [ 'label' => __( 'Revenue Streams', 'gm2-wordpress-suite' ), 'type' => 'textarea' ],
+                'gm2_context_primary_goal'          => [ 'label' => __( 'Primary Goal', 'gm2-wordpress-suite' ), 'type' => 'textarea' ],
+                'gm2_context_brand_voice'           => [ 'label' => __( 'Brand Voice', 'gm2-wordpress-suite' ), 'type' => 'textarea' ],
+                'gm2_context_competitors'           => [ 'label' => __( 'Competitors', 'gm2-wordpress-suite' ), 'type' => 'textarea' ],
             ];
             foreach ( $fields as $opt => $data ) {
                 $val = get_option( $opt, '' );
@@ -3043,7 +3059,7 @@ class Gm2_SEO_Admin {
             [
                 'id'      => 'gm2-seo-context',
                 'title'   => __( 'SEO Context', 'gm2-wordpress-suite' ),
-                'content' => '<p>' . __( 'Use the Context tab to describe your business model, industry, audience and unique selling points. Saved answers are automatically included in ChatGPT prompts for AI SEO.', 'gm2-wordpress-suite' ) . '</p>',
+                'content' => '<p>' . __( 'Use the Context tab to describe your business model, industry, audience, unique selling points and more. Saved answers are automatically included in ChatGPT prompts for AI SEO.', 'gm2-wordpress-suite' ) . '</p>',
             ]
         );
     }

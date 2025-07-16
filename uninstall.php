@@ -82,6 +82,10 @@ $option_names = array(
     'gm2_context_industry_category',
     'gm2_context_target_audience',
     'gm2_context_unique_selling_points',
+    'gm2_context_revenue_streams',
+    'gm2_context_primary_goal',
+    'gm2_context_brand_voice',
+    'gm2_context_competitors',
     'gm2_sc_query_limit',
     'gm2_analytics_days',
 );
