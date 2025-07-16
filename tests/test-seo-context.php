@@ -14,14 +14,20 @@ class SeoContextHelperTest extends WP_UnitTestCase {
     }
 
     public function test_helper_returns_sanitized_and_filtered_values() {
-        update_option('gm2_context_business_model', '<b>Model</b>');
-        update_option('gm2_context_industry_category', ' <i>Tech</i> ');
-        update_option('gm2_context_target_audience', "Audience <script>bad()</script>");
-        update_option('gm2_context_unique_selling_points', 'USP <span>great</span>');
-        update_option('gm2_context_revenue_streams', 'Ads <b>Subscriptions</b>');
-        update_option('gm2_context_primary_goal', '<i>Increase sales</i>');
-        update_option('gm2_context_brand_voice', 'Friendly <script>alert(1)</script>');
-        update_option('gm2_context_competitors', 'Comp <span>A</span>, CompB');
+        $raw_options = [
+            'gm2_context_business_model'        => '<b>Model</b>',
+            'gm2_context_industry_category'     => ' <i>Tech</i> ',
+            'gm2_context_target_audience'       => "Audience <script>bad()</script>",
+            'gm2_context_unique_selling_points' => 'USP <span>great</span>',
+            'gm2_context_revenue_streams'       => 'Ads <b>Subscriptions</b>',
+            'gm2_context_primary_goal'          => '<i>Increase sales</i>',
+            'gm2_context_brand_voice'           => 'Friendly <script>alert(1)</script>',
+            'gm2_context_competitors'           => 'Comp <span>A</span>, CompB',
+        ];
+
+        foreach ($raw_options as $opt => $val) {
+            update_option($opt, $val);
+        }
 
         $filtered = null;
         add_filter('gm2_seo_context', function($context) use (&$filtered) {
@@ -32,23 +38,28 @@ class SeoContextHelperTest extends WP_UnitTestCase {
 
         $context = gm2_get_seo_context();
 
+        $expected = [
+            'business_model'        => sanitize_textarea_field($raw_options['gm2_context_business_model']),
+            'industry_category'     => sanitize_text_field($raw_options['gm2_context_industry_category']),
+            'target_audience'       => sanitize_textarea_field($raw_options['gm2_context_target_audience']),
+            'unique_selling_points' => sanitize_textarea_field($raw_options['gm2_context_unique_selling_points']),
+            'revenue_streams'       => sanitize_textarea_field($raw_options['gm2_context_revenue_streams']),
+            'primary_goal'          => sanitize_textarea_field($raw_options['gm2_context_primary_goal']),
+            'brand_voice'           => sanitize_textarea_field($raw_options['gm2_context_brand_voice']),
+            'competitors'           => sanitize_textarea_field($raw_options['gm2_context_competitors']),
+        ];
+
         $this->assertIsArray($filtered);
-        $this->assertSame(sanitize_textarea_field('<b>Model</b>'), $filtered['business_model']);
-        $this->assertSame(sanitize_text_field(' <i>Tech</i> '), $filtered['industry_category']);
-        $this->assertSame(sanitize_textarea_field("Audience <script>bad()</script>"), $filtered['target_audience']);
-        $this->assertSame(sanitize_textarea_field('USP <span>great</span>'), $filtered['unique_selling_points']);
-        $this->assertSame(sanitize_textarea_field('Ads <b>Subscriptions</b>'), $filtered['revenue_streams']);
-        $this->assertSame(sanitize_textarea_field('<i>Increase sales</i>'), $filtered['primary_goal']);
-        $this->assertSame(sanitize_textarea_field('Friendly <script>alert(1)</script>'), $filtered['brand_voice']);
-        $this->assertSame(sanitize_textarea_field('Comp <span>A</span>, CompB'), $filtered['competitors']);
+        foreach ($expected as $key => $val) {
+            $this->assertSame($val, $filtered[$key]);
+        }
 
         $this->assertSame('filtered', $context['industry_category']);
-        $this->assertSame($filtered['business_model'], $context['business_model']);
-        $this->assertSame($filtered['target_audience'], $context['target_audience']);
-        $this->assertSame($filtered['unique_selling_points'], $context['unique_selling_points']);
-        $this->assertSame($filtered['revenue_streams'], $context['revenue_streams']);
-        $this->assertSame($filtered['primary_goal'], $context['primary_goal']);
-        $this->assertSame($filtered['brand_voice'], $context['brand_voice']);
-        $this->assertSame($filtered['competitors'], $context['competitors']);
+        foreach ($expected as $key => $val) {
+            if ($key === 'industry_category') {
+                continue;
+            }
+            $this->assertSame($val, $context[$key]);
+        }
     }
 }
