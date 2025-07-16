@@ -13,12 +13,12 @@ class Gm2_Elementor_Quantity_Discounts {
     public function init() {
         if (
             ! class_exists('Elementor\\Plugin') ||
-            ! class_exists('WooCommerce') ||
             ! class_exists('Elementor\\Widget_Base')
         ) {
             return;
         }
         add_action('elementor/widgets/register', [ $this, 'register_widget' ]);
+        add_action('elementor/widgets/widgets_registered', [ $this, 'register_widget' ]);
     }
 
     public function register_widget( $widgets_manager ) {
@@ -92,36 +92,31 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
         $this->end_controls_section();
     }
 
-    protected function render() {
-        if ( ! function_exists( 'is_product' ) || ! is_product() ) {
-            return;
+    public function register_widget( $widgets_manager = null ) {
+        if ( $widgets_manager === null && class_exists( '\\Elementor\\Plugin' ) ) {
+            $widgets_manager = \Elementor\Plugin::$instance->widgets_manager;
         }
-        global $product;
-        if ( ! $product ) {
-            return;
-        }
-        $rules = $this->get_rules( $product->get_id() );
-        if ( empty( $rules ) ) {
-            return;
-        }
-        echo '<div class="gm2-qd-options">';
-        foreach ( $rules as $rule ) {
-            $qty   = intval( $rule['min'] );
-            $label = sprintf( __( 'Qty: %d', 'gm2-wordpress-suite' ), $qty );
-            echo '<button type="button" class="gm2-qd-option" data-qty="' . esc_attr( $qty ) . '">' . esc_html( $label ) . '</button>';
-        }
-        echo '</div>';
-    }
 
-    private function get_rules( $product_id ) {
-        $m = new Gm2_Quantity_Discount_Manager();
-        $groups = $m->get_groups();
-        foreach ( $groups as $g ) {
-            if ( ! empty( $g['products'] ) && in_array( $product_id, $g['products'], true ) ) {
-                return $g['rules'] ?? [];
-            }
+        // Only load the widget class if Elementor's Widget_Base exists.
+        if ( ! class_exists( '\\Elementor\\Widget_Base' ) ) {
+            return;
         }
-        return [];
+
+        if ( ! class_exists( GM2_QD_Widget::class ) ) {
+            require_once GM2_PLUGIN_DIR . 'includes/widgets/class-gm2-qd-widget.php';
+        }
+
+        if ( ! class_exists( GM2_QD_Widget::class ) ) {
+            return;
+        }
+
+        if ( method_exists( $widgets_manager, 'register' ) ) {
+            // Elementor 3.5+ exposes a `register()` method on the
+            // widgets manager.
+            $widgets_manager->register( new GM2_QD_Widget() );
+        } elseif ( method_exists( $widgets_manager, 'register_widget_type' ) ) {
+            // Older versions use `register_widget_type()` instead.
+            $widgets_manager->register_widget_type( new GM2_QD_Widget() );
+        }
     }
-}
 }

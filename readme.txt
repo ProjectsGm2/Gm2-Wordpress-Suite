@@ -40,6 +40,8 @@ Key features include:
 9. Install and activate Elementor to use the Gm2 Qnty Discounts widget on product pages. With Elementor Pro the widget appears in the **WooCommerce** section when editing Single Product templates. Otherwise look under **General**.
 10. Open **Gm2 → Quantity Discounts** and create discount groups to define pricing rules.
 
+**Note:** WooCommerce and Elementor Pro must be active. Elementor 3.5+ is recommended and older versions are supported with a fallback.
+
 If you plan to distribute or manually upload the plugin, you can create a ZIP
 archive with `bash bin/build-plugin.sh`. This command packages the plugin with
 all dependencies into `gm2-wordpress-suite.zip` for installation via the
@@ -178,9 +180,17 @@ Open the **Context** tab under **SEO** to store detailed business information us
 * **Target Audience** – Who are your core customer segments and where are they located?
 * **Unique Selling Points** – What differentiates your brand from competitors in terms of price, quality, experience, or mission?
 * **Revenue Streams** – List the major sources of revenue such as products, services, subscriptions or ads.
-* **Primary Goal** – What is the website's main objective and which KPIs indicate success?
+* **Primary Goal** – What is the website's main objective?
 * **Brand Voice** – Describe the desired style or tone (professional, casual, luxury, authoritative, playful, eco-friendly, etc.).
 * **Competitors** – List main online competitors and what makes your offer stronger or unique.
+* **Core Offerings** – What are the key products or services you provide?
+* **Geographic Focus** – Which regions or locations do you primarily target?
+* **Keyword Data** – Do you have existing keyword research or rankings to share?
+* **Competitor Landscape** – How would you describe the competitive landscape in your niche?
+* **Success Metrics** – Which KPIs will track SEO success (sales, leads, traffic, rankings)?
+* **Buyer Personas** – Describe your ideal buyers and their pain points.
+* **Project Description** – Short summary of your project or website. Used when other fields are empty.
+* **Custom Prompts** – Default instructions appended to AI requests.
 
 == SEO Settings ==
 The SEO meta box appears when editing posts, pages, any public custom post types and taxonomy terms. In the

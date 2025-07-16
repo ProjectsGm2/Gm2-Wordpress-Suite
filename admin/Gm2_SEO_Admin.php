@@ -755,7 +755,7 @@ class Gm2_SEO_Admin {
                 'gm2_context_primary_goal'          => [
                     'label' => __( 'Primary Goal', 'gm2-wordpress-suite' ),
                     'type'  => 'textarea',
-                    'desc'  => __( 'What is the website\'s main objective and which KPIs indicate success?', 'gm2-wordpress-suite' ),
+                    'desc'  => __( 'What is the website\'s main objective?', 'gm2-wordpress-suite' ),
                 ],
                 'gm2_context_brand_voice'           => [
                     'label' => __( 'Brand Voice', 'gm2-wordpress-suite' ),
@@ -790,7 +790,7 @@ class Gm2_SEO_Admin {
                 'gm2_context_success_metrics'       => [
                     'label' => __( 'Success Metrics', 'gm2-wordpress-suite' ),
                     'type'  => 'textarea',
-                    'desc'  => __( 'How will you measure SEO success (sales, leads, traffic, rankings)?', 'gm2-wordpress-suite' ),
+                    'desc'  => __( 'Which KPIs will track SEO success (sales, leads, traffic, rankings)?', 'gm2-wordpress-suite' ),
                 ],
                 'gm2_context_buyer_personas'        => [
                     'label' => __( 'Buyer Personas', 'gm2-wordpress-suite' ),
