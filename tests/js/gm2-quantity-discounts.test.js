@@ -10,7 +10,7 @@ test('renders groups from gm2Qd', async () => {
   `, { url: 'http://localhost' });
   const $ = jquery(dom.window);
   Object.assign(global, { window: dom.window, document: dom.window.document, jQuery: $, $ });
-  global.gm2Qd = { nonce: 'n', ajax_url: '/fake', groups: [{ name: 'Group A', products: [{ id: 1, title: 'Prod', sku: 'P1' }], rules: [] }], categories: [] };
+  global.gm2Qd = { nonce: 'n', ajax_url: '/fake', groups: [{ name: 'Group A', products: [{ id: 1, title: 'Prod', sku: 'P1' }], rules: [] }], categories: [], productTitles: { 1: 'Prod' } };
 
   jest.resetModules();
   require('../../admin/js/gm2-quantity-discounts.js');
@@ -34,7 +34,7 @@ test('submits group data via ajax', async () => {
   `, { url: 'http://localhost' });
   const $ = jquery(dom.window);
   Object.assign(global, { window: dom.window, document: dom.window.document, jQuery: $, $ });
-  global.gm2Qd = { nonce: 'n', ajax_url: '/fake', groups: [], categories: [] };
+  global.gm2Qd = { nonce: 'n', ajax_url: '/fake', groups: [], categories: [], productTitles: {} };
   $.post = jest.fn(() => $.Deferred().resolve({ success: true }));
 
   jest.resetModules();
@@ -68,7 +68,7 @@ test('accordion toggles visibility', async () => {
   `, { url: 'http://localhost' });
   const $ = jquery(dom.window);
   Object.assign(global, { window: dom.window, document: dom.window.document, jQuery: $, $ });
-  global.gm2Qd = { nonce: 'n', ajax_url: '/fake', groups: [{ name: 'A', products: [], rules: [] }], categories: [] };
+  global.gm2Qd = { nonce: 'n', ajax_url: '/fake', groups: [{ name: 'A', products: [], rules: [] }], categories: [], productTitles: {} };
 
   jest.resetModules();
   require('../../admin/js/gm2-quantity-discounts.js');
