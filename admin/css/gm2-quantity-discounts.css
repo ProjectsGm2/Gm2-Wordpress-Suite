@@ -3,13 +3,37 @@
     border:1px solid #ccc;
     padding:6px 10px;
     cursor:pointer;
+    position:relative;
+}
+.gm2-qd-header .gm2-qd-toggle {
+    position:absolute;
+    top:6px;
+    right:6px;
+    font-weight:bold;
 }
 .gm2-qd-accordion .gm2-qd-group {
     border:1px solid #ccc;
     border-top:0;
     padding:10px;
+    background:#fff;
     display:none;
 }
 .gm2-qd-accordion.open .gm2-qd-group {
     display:block;
+}
+.gm2-qd-title {
+    margin-bottom:20px;
+}
+.gm2-qd-results,
+.gm2-qd-selected {
+    border:1px solid #ccc;
+    padding:5px;
+    margin:5px 0;
+}
+.gm2-qd-selected .remove {
+    color:red;
+    cursor:pointer;
+    font-size:14px;
+    font-weight:bold;
+    margin-left:4px;
 }
