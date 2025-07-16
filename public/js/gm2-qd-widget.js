@@ -13,9 +13,12 @@ jQuery(function($){
             if($btn.length){
                 $btn.addClass('loading');
                 $option.addClass('loading');
+                var $spinner = $('<span class="loading-spinner"></span>');
+                $option.append($spinner);
                 $form.one('ajaxComplete', function(){
                     $btn.removeClass('loading');
                     $option.removeClass('loading');
+                    $spinner.remove();
                 });
                 $btn.trigger('click');
             }
