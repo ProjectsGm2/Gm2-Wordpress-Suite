@@ -144,20 +144,20 @@ class Gm2_Quantity_Discounts_Public {
                 true
             );
         }
-        $item->add_meta_data(__('Purchased Quantity', 'gm2-wordpress-suite'), $item->get_quantity(), true);
+        $item->add_meta_data('_gm2_purchased_qty', $item->get_quantity(), true);
         if (isset($values['gm2_qd_discounted_price'])) {
-            $item->add_meta_data(__('Discounted Price', 'gm2-wordpress-suite'), wc_price($values['gm2_qd_discounted_price']), true);
+            $item->add_meta_data('_gm2_discounted_price', $values['gm2_qd_discounted_price'], true);
         }
     }
 
     public function display_item_meta($html, $item, $args) {
-        $qty   = $item->get_meta(__('Purchased Quantity', 'gm2-wordpress-suite'), true);
-        $price = $item->get_meta(__('Discounted Price', 'gm2-wordpress-suite'), true);
-        if ($qty) {
+        $qty   = $item->get_meta('_gm2_purchased_qty', true);
+        $price = $item->get_meta('_gm2_discounted_price', true);
+        if ($qty !== '') {
             $html .= '<br><small>' . sprintf(__('Purchased Quantity: %s', 'gm2-wordpress-suite'), esc_html($qty)) . '</small>';
         }
-        if ($price) {
-            $html .= '<br><small>' . sprintf(__('Discounted Price: %s', 'gm2-wordpress-suite'), wp_kses_post($price)) . '</small>';
+        if ($price !== '') {
+            $html .= '<br><small>' . sprintf(__('Discounted Price: %s', 'gm2-wordpress-suite'), wp_kses_post(wc_price($price))) . '</small>';
         }
         return $html;
     }
