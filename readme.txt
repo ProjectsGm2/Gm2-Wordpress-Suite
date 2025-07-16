@@ -13,7 +13,7 @@ A powerful suite of WordPress enhancements including admin tools, frontend optim
 Key features include:
 * SEO tools with breadcrumbs, caching and structured data
 * ChatGPT-powered content generation and keyword research
-* WooCommerce quantity discounts with a dedicated Elementor widget
+* WooCommerce quantity discounts with a dedicated Elementor widget (requires WooCommerce)
 * Tariff management and redirects
 * Expanded SEO Context feeds AI prompts with business details
 
@@ -36,7 +36,7 @@ Key features include:
 7. Select your Analytics Measurement ID and Ads Customer ID on the
    **SEO → Connect Google Account** page after connecting, or enter them
    manually on the SEO settings screen if needed.
-8. Activate WooCommerce to enable Quantity Discounts.
+8. Install and activate WooCommerce (required for Quantity Discounts).
 9. Install and activate Elementor to use the Gm2 Qnty Discounts widget on product pages. With Elementor Pro the widget appears in the **WooCommerce** section when editing Single Product templates. Otherwise look under **General**.
 10. Open **Gm2 → Quantity Discounts** and create discount groups to define pricing rules.
 
@@ -72,6 +72,7 @@ If you see errors when connecting your Google account:
 * **Testing with an unapproved token** – Unapproved developer tokens can be used with [Google Ads test accounts](https://developers.google.com/google-ads/api/docs/best-practices/test-accounts). The login customer ID must be the manager ID for that token, and test accounts don't serve ads and have limited features.
 * **Viewing debug logs** – Add `define('WP_DEBUG', true);` and `define('WP_DEBUG_LOG', true);` to your `wp-config.php` file, then check `wp-content/debug.log` for errors.
 * **Check DOM extension** – Run `php -m | grep -i dom` to verify the DOM/LibXML extension is loaded. The plugin requires this for HTML analysis.
+* **Gm2 Qnty Discounts widget missing** – Ensure Elementor is active and loads before this plugin, or deactivate and reactivate plugins so Elementor triggers the `elementor/loaded` action.
 
 === WP Debugging ===
 If AI Research fails or returns unexpected results, enable WordPress debugging and check for PHP errors:
@@ -255,6 +256,7 @@ add or edit tariffs. Enabled tariffs add a fee to the cart total during
 checkout.
 
 == Quantity Discounts ==
+This feature requires WooCommerce to be active.
 After activating WooCommerce, open **Gm2 → Quantity Discounts** and click **Add Discount Group** to define bulk pricing rules. Choose the products or categories to apply, enter the minimum quantity and specify either a percentage or fixed discount. When customers meet the threshold the discount is applied automatically in the cart. Install Elementor to add the **Gm2 Qnty Discounts** widget on product pages, giving shoppers buttons for preset quantities that match your rules. If Elementor Pro is active the widget lives in the **WooCommerce** section; otherwise it appears in **General**. The selected rule and discounted price are saved in order item meta and appear in emails and on the admin order screen.
 
 == Redirects ==
