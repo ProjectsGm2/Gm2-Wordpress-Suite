@@ -239,6 +239,8 @@ WooCommerce products. Define rules with minimum quantities and either percentage
 or fixed discounts. Discounts are applied automatically in the cart.
 When Elementor is active, use the **GM2 Quantity Options** widget on product
 pages to display buttons that preselect quantities before adding to the cart.
+Each selected rule, the purchased quantity and the discounted price are stored
+in the order item meta and shown in emails and the admin order screen.
 
 == Redirects ==
 Create 301 or 302 redirects from the **SEO → Redirects** tab. The plugin logs
