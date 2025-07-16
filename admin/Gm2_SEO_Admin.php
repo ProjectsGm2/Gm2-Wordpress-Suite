@@ -248,6 +248,18 @@ class Gm2_SEO_Admin {
         register_setting('gm2_seo_options', 'gm2_bulk_ai_term', [
             'sanitize_callback' => 'sanitize_text_field',
         ]);
+        register_setting('gm2_seo_options', 'gm2_context_business_model', [
+            'sanitize_callback' => 'sanitize_textarea_field',
+        ]);
+        register_setting('gm2_seo_options', 'gm2_context_industry_category', [
+            'sanitize_callback' => 'sanitize_text_field',
+        ]);
+        register_setting('gm2_seo_options', 'gm2_context_target_audience', [
+            'sanitize_callback' => 'sanitize_textarea_field',
+        ]);
+        register_setting('gm2_seo_options', 'gm2_context_unique_selling_points', [
+            'sanitize_callback' => 'sanitize_textarea_field',
+        ]);
         foreach ($this->get_supported_post_types() as $pt) {
             register_setting('gm2_seo_options', 'gm2_seo_guidelines_post_' . $pt, [
                 'sanitize_callback' => 'sanitize_textarea_field',
@@ -366,6 +378,7 @@ class Gm2_SEO_Admin {
             'keywords'    => esc_html__( 'Keyword Research', 'gm2-wordpress-suite' ),
             'rules'       => esc_html__( 'Content Rules', 'gm2-wordpress-suite' ),
             'guidelines'  => esc_html__( 'SEO Guidelines', 'gm2-wordpress-suite' ),
+            'context'     => esc_html__( 'Context', 'gm2-wordpress-suite' ),
         ];
 
         $active = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : 'general';
@@ -668,6 +681,30 @@ class Gm2_SEO_Admin {
             echo '<tr><th scope="row">' . esc_html__( 'Minimum External Links', 'gm2-wordpress-suite' ) . '</th><td><input type="number" name="gm2_min_external_links" value="' . esc_attr($min_ext) . '" class="small-text" /></td></tr>';
             echo '</tbody></table>';
             submit_button( esc_html__( 'Save Rules', 'gm2-wordpress-suite' ) );
+            echo '</form>';
+        } elseif ($active === 'context') {
+            echo '<form method="post" action="options.php">';
+            settings_fields('gm2_seo_options');
+
+            echo '<table class="form-table"><tbody>';
+            $fields = [
+                'gm2_context_business_model'        => [ 'label' => __( 'Business Model', 'gm2-wordpress-suite' ), 'type' => 'textarea' ],
+                'gm2_context_industry_category'     => [ 'label' => __( 'Industry Category', 'gm2-wordpress-suite' ), 'type' => 'text' ],
+                'gm2_context_target_audience'       => [ 'label' => __( 'Target Audience', 'gm2-wordpress-suite' ), 'type' => 'textarea' ],
+                'gm2_context_unique_selling_points' => [ 'label' => __( 'Unique Selling Points', 'gm2-wordpress-suite' ), 'type' => 'textarea' ],
+            ];
+            foreach ( $fields as $opt => $data ) {
+                $val = get_option( $opt, '' );
+                echo '<tr><th scope="row"><label for="' . esc_attr( $opt ) . '">' . esc_html( $data['label'] ) . '</label></th><td>';
+                if ( $data['type'] === 'text' ) {
+                    echo '<input type="text" id="' . esc_attr( $opt ) . '" name="' . esc_attr( $opt ) . '" value="' . esc_attr( $val ) . '" class="regular-text" />';
+                } else {
+                    echo '<textarea id="' . esc_attr( $opt ) . '" name="' . esc_attr( $opt ) . '" rows="3" class="large-text">' . esc_textarea( $val ) . '</textarea>';
+                }
+                echo '</td></tr>';
+            }
+            echo '</tbody></table>';
+            submit_button( esc_html__( 'Save Context', 'gm2-wordpress-suite' ) );
             echo '</form>';
         } elseif ($active === 'guidelines') {
             echo '<form method="post" action="options.php">';

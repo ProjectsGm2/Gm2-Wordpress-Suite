@@ -78,6 +78,10 @@ $option_names = array(
     'gm2_clean_slugs',
     'gm2_slug_stopwords',
     'gm2_tax_desc_prompt',
+    'gm2_context_business_model',
+    'gm2_context_industry_category',
+    'gm2_context_target_audience',
+    'gm2_context_unique_selling_points',
     'gm2_sc_query_limit',
     'gm2_analytics_days',
 );
