@@ -1,6 +1,7 @@
 jQuery(function($){
     var groups = gm2Qd.groups || [];
     var categories = gm2Qd.categories || [];
+    let activeSearch = null;
     function labelFor(item){
         var l = item.title || item.text || item.id;
         if(item.sku){ l += ' ('+item.sku+')'; }
@@ -116,12 +117,15 @@ jQuery(function($){
         var cat=group.find('.gm2-qd-cat').val();
         var box=group.find('.gm2-qd-results').empty();
         if(term.length<2){return;}
-        $.get(gm2Qd.ajax_url,{action:'gm2_qd_search_products',nonce:gm2Qd.nonce,term:term,category:cat}).done(function(res){
+        if(activeSearch){
+            activeSearch.abort();
+        }
+        activeSearch=$.get(gm2Qd.ajax_url,{action:'gm2_qd_search_products',nonce:gm2Qd.nonce,term:term,category:cat}).done(function(res){
             if(!res.success) return;
             var html='<label><input type="checkbox" class="gm2-qd-select-all"> Select all</label>'+
                       '<ul class="gm2-qd-checkboxes"></ul>'+
                       '<p><button type="button" class="button gm2-qd-add-selected">Add selected products</button></p>';
-            box.append(html);
+            box.html(html);
             var list=box.find('.gm2-qd-checkboxes');
             res.data.forEach(function(i){
                 var li=$('<li><label><input type="checkbox" class="gm2-qd-product-chk" value="'+i.id+'" data-title="'+i.title+'" data-sku="'+i.sku+'"> '+labelFor(i)+'</label></li>');
@@ -130,6 +134,8 @@ jQuery(function($){
                 }
                 list.append(li);
             });
+        }).always(function(){
+            activeSearch=null;
         });
     }
     $(document).on('click','.gm2-qd-search-btn',function(){
