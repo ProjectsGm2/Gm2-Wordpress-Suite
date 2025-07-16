@@ -37,7 +37,7 @@ Key features include:
    **SEO → Connect Google Account** page after connecting, or enter them
    manually on the SEO settings screen if needed.
 8. Activate WooCommerce to enable Quantity Discounts.
-9. Install and activate Elementor to use the Gm2 Qnty Discounts widget on product pages. The widget appears under the **WooCommerce** section when editing Single Product templates in Elementor.
+9. Install and activate Elementor **3.5** or later to use the Gm2 Qnty Discounts widget on product pages. The widget appears under the **WooCommerce** section when editing Single Product templates in Elementor.
 10. Open **Gm2 → Quantity Discounts** and create discount groups to define pricing rules.
 
 If you plan to distribute or manually upload the plugin, you can create a ZIP

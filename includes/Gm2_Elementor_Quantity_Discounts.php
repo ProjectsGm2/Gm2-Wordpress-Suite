@@ -26,8 +26,11 @@ class Gm2_Elementor_Quantity_Discounts {
         require_once GM2_PLUGIN_DIR . 'includes/widgets/class-gm2-qd-widget.php';
 
         if ( method_exists( $widgets_manager, 'register' ) ) {
+            // Elementor 3.5+ exposes a `register()` method on the
+            // widgets manager.
             $widgets_manager->register( new GM2_QD_Widget() );
-        } else {
+        } elseif ( method_exists( $widgets_manager, 'register_widget_type' ) ) {
+            // Older versions use `register_widget_type()` instead.
             $widgets_manager->register_widget_type( new GM2_QD_Widget() );
         }
     }
