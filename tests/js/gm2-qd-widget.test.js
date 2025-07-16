@@ -27,3 +27,21 @@ test.skip('clicking option activates it', async () => {
   expect(second.hasClass('active')).toBe(true);
   expect(first.hasClass('active')).toBe(false);
 });
+
+test('currency icon font size changes with active class', () => {
+  const dom = new JSDOM(`
+    <style>
+      .gm2-qd-currency-icon{font-size:10px}
+      .gm2-qd-option.active .gm2-qd-currency-icon{font-size:20px}
+    </style>
+    <div class="gm2-qd-option">
+      <span class="gm2-qd-currency-icon"></span>
+    </div>
+  `, { url: 'http://localhost' });
+
+  const $ = jquery(dom.window);
+
+  expect($('.gm2-qd-currency-icon').css('font-size')).toBe('10px');
+  $('.gm2-qd-option').addClass('active');
+  expect($('.gm2-qd-option.active .gm2-qd-currency-icon').css('font-size')).toBe('20px');
+});
