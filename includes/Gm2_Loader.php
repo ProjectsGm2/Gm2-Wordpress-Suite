@@ -27,6 +27,9 @@ class Gm2_Loader {
         $public = new Gm2_Public();
         $public->run();
 
+        $qd_public = new Gm2_Quantity_Discounts_Public();
+        $qd_public->run();
+
         $seo_public = new Gm2_SEO_Public();
         $seo_public->run();
 
