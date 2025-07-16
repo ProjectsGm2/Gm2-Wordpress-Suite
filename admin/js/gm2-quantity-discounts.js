@@ -17,7 +17,7 @@ jQuery(function($){
         header.append('<input type="text" class="gm2-qd-name" placeholder="Group name" value="'+(g.name||'')+'"> <button type="button" class="button gm2-qd-remove-group">&times;</button><span class="gm2-qd-toggle">&#9650;</span>');
         accordion.append(header);
         var container = $('<div class="gm2-qd-group"></div>');
-        var prodSection = $('<div class="gm2-qd-products"><select class="gm2-qd-cat"><option value="">All Categories</option></select> <input type="text" class="gm2-qd-search" placeholder="Search products"> <button type="button" class="button gm2-qd-search-btn">Search</button> <div class="gm2-qd-cat-products"></div><ul class="gm2-qd-results"></ul><ul class="gm2-qd-selected"></ul></div>');
+        var prodSection = $('<div class="gm2-qd-products"><select class="gm2-qd-cat"><option value="">All Categories</option></select> <input type="text" class="gm2-qd-search" placeholder="Search products"> <button type="button" class="button gm2-qd-search-btn">Search</button> <div class="gm2-qd-cat-products"></div><ul class="gm2-qd-results"></ul><ul class="gm2-qd-selected"></ul><p class="gm2-qd-remove-actions"><button type="button" class="button gm2-qd-remove-selected">Remove selected products</button> <button type="button" class="button gm2-qd-remove-all">Remove all</button></p></div>');
         categories.forEach(function(c){prodSection.find('select').append('<option value="'+c.id+'">'+c.name+'</option>');});
         container.append(prodSection);
         var table = $('<table class="widefat gm2-qd-rules"><thead><tr><th>Min Qty</th><th>% Off</th><th>Fixed Off</th><th></th></tr></thead><tbody></tbody></table>');
@@ -33,7 +33,7 @@ jQuery(function($){
     function addSelectedProduct(group, item){
         var ul = group.find('.gm2-qd-selected');
         if( ul.find('li[data-id="'+item.id+'"]').length ) return;
-        ul.append('<li data-id="'+item.id+'">'+item.text+' <span class="remove">x</span></li>');
+        ul.append('<li data-id="'+item.id+'"><label><input type="checkbox" class="gm2-qd-selected-chk"> '+item.text+' <span class="remove">x</span></label></li>');
     }
 
     function loadCategoryProducts(group, cat){
@@ -112,6 +112,16 @@ jQuery(function($){
     $(document).on('click','.gm2-qd-results li',function(){
         var group=$(this).closest('.gm2-qd-group');
         addSelectedProduct(group,{id:$(this).data('id'),text:$(this).text()});
+    });
+    $(document).on('click','.gm2-qd-remove-selected',function(){
+        var group=$(this).closest('.gm2-qd-products');
+        group.find('.gm2-qd-selected-chk:checked').each(function(){
+            $(this).closest('li').remove();
+        });
+    });
+    $(document).on('click','.gm2-qd-remove-all',function(){
+        var group=$(this).closest('.gm2-qd-products');
+        group.find('.gm2-qd-selected').empty();
     });
     $(document).on('click','.gm2-qd-selected .remove',function(){
         $(this).parent().remove();
