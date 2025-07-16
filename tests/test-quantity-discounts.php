@@ -24,13 +24,15 @@ if (!class_exists('WC_Cart')) {
 if (!class_exists('WC_Product')) {
     class WC_Product {
         private $price;
-        public function __construct($price) { $this->price = $price; }
+        private $id;
+        public function __construct($price, $id = 0) { $this->price = $price; $this->id = $id; }
         public function get_price($ctx = '') { return $this->price; }
         public function set_price($p) { $this->price = $p; }
+        public function get_id() { return $this->id; }
     }
 }
 if (!function_exists('wc_get_product')) {
-    function wc_get_product($id) { return new WC_Product(100); }
+    function wc_get_product($id) { return new WC_Product(100, $id); }
 }
 if (!function_exists('wc_get_price_to_display')) {
     function wc_get_price_to_display($product, $args = []) {
@@ -158,6 +160,35 @@ class QuantityDiscountsTest extends WP_UnitTestCase {
         $m->add_group([
             'name'     => 'Test',
             'products' => [1],
+            'rules'    => [ [ 'min' => 1, 'type' => 'percent', 'amount' => 10, 'label' => 'L' ] ],
+        ]);
+
+        ob_start();
+        $widget = new \Gm2\GM2_QD_Widget();
+        $widget->render();
+        $out = ob_get_clean();
+        $this->assertStringContainsString('gm2-qd-options', $out);
+    }
+
+    public function test_widget_renders_with_preview_id() {
+        require_once GM2_PLUGIN_DIR . 'includes/widgets/class-gm2-qd-widget.php';
+
+        if ( ! class_exists( '\\Elementor\\Plugin' ) ) {
+            eval('namespace Elementor; class Plugin { public static $instance; public $editor; public function __construct(){ self::$instance = $this; $this->editor = new class { public function is_edit_mode(){ return true; } }; } }');
+        } else {
+            \Elementor\Plugin::$instance = new class { public $editor; public function __construct(){ $this->editor = new class { public function is_edit_mode(){ return true; } }; } };
+        }
+
+        global $product, $post;
+        $product = null;
+
+        $post_id = self::factory()->post->create();
+        $post    = get_post( $post_id );
+
+        $m = new Gm2_Quantity_Discount_Manager();
+        $m->add_group([
+            'name'     => 'Test',
+            'products' => [ $post_id ],
             'rules'    => [ [ 'min' => 1, 'type' => 'percent', 'amount' => 10, 'label' => 'L' ] ],
         ]);
 
