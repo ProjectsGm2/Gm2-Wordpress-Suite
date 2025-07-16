@@ -33,6 +33,16 @@ namespace {
         /**
          * Filter the assembled SEO context options.
          *
+         * The array contains sanitized values from all context settings such as
+         * `gm2_context_business_model`, `gm2_context_industry_category`,
+         * `gm2_context_target_audience`, `gm2_context_unique_selling_points`,
+         * `gm2_context_revenue_streams`, `gm2_context_primary_goal`,
+         * `gm2_context_brand_voice`, `gm2_context_competitors`,
+         * `gm2_context_core_offerings`, `gm2_context_geographic_focus`,
+         * `gm2_context_keyword_data`, `gm2_context_competitor_landscape`,
+         * `gm2_context_success_metrics`, `gm2_context_buyer_personas`,
+         * `gm2_context_project_description` and `gm2_context_custom_prompts`.
+         *
          * @param array $context Associative array of context strings.
          */
         $context = apply_filters('gm2_seo_context', $context);
