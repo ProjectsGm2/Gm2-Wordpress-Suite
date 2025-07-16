@@ -22,8 +22,16 @@ if (!class_exists('WC_Product')) {
 if (!function_exists('wc_get_product')) {
     function wc_get_product($id) { return new WC_Product(100); }
 }
+if (!function_exists('wc_get_price_to_display')) {
+    function wc_get_price_to_display($product, $args = []) {
+        return $args['price'] ?? $product->get_price();
+    }
+}
 if (!function_exists('is_admin')) {
     function is_admin() { return false; }
+}
+if (!class_exists('Elementor\\Widget_Base')) {
+    eval('namespace Elementor; class Widget_Base {}');
 }
 
 class QuantityDiscountsTest extends WP_UnitTestCase {
@@ -65,5 +73,38 @@ class QuantityDiscountsTest extends WP_UnitTestCase {
         $qd->run();
         $qd->adjust_prices($cart);
         $this->assertSame(50.0, $cart->cart_contents['item']['data']->get_price());
+    }
+
+    public function test_calculate_discounted_price_matches_adjust_prices() {
+        require_once GM2_PLUGIN_DIR . 'includes/widgets/class-gm2-qd-widget.php';
+        $widget = new \Gm2\GM2_QD_Widget();
+
+        $rule = [ 'min' => 2, 'type' => 'percent', 'amount' => 10 ];
+
+        $calc_product = new WC_Product(100);
+        $method = new ReflectionMethod($widget, 'calculate_discounted_price');
+        $method->setAccessible(true);
+        $calc = $method->invoke($widget, $calc_product, $rule);
+
+        $m = new Gm2_Quantity_Discount_Manager();
+        $m->add_group([
+            'name'     => 'Test',
+            'products' => [1],
+            'rules'    => [ $rule ],
+        ]);
+
+        $cart_product = new WC_Product(100);
+        $cart = new WC_Cart();
+        $cart->cart_contents['item'] = [
+            'product_id' => 1,
+            'quantity'   => 2,
+            'data'       => $cart_product,
+        ];
+        $qd = new Gm2_Quantity_Discounts_Public();
+        $qd->run();
+        $qd->adjust_prices($cart);
+        $expected = $cart->cart_contents['item']['data']->get_price();
+
+        $this->assertSame($expected, $calc);
     }
 }
