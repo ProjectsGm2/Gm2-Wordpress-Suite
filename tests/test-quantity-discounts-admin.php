@@ -23,7 +23,7 @@ class QuantityDiscountsAdminAjaxTest extends WP_Ajax_UnitTestCase {
         $admin->register_hooks();
 
         $this->_setRole('administrator');
-        $_GET['category'] = $cat;
+        $_GET['categories'] = [$cat];
         $_GET['nonce'] = wp_create_nonce('gm2_qd_nonce');
         try { $this->_handleAjax('gm2_qd_get_category_products'); } catch (WPAjaxDieContinueException $e) {}
         $resp = json_decode($this->_last_response, true);
@@ -47,6 +47,7 @@ class QuantityDiscountsAdminAjaxTest extends WP_Ajax_UnitTestCase {
         $this->_setRole('administrator');
         $_GET['term'] = 'Fi';
         $_GET['nonce'] = wp_create_nonce('gm2_qd_nonce');
+        $_GET['categories'] = [];
         try { $this->_handleAjax('gm2_qd_search_products'); } catch (WPAjaxDieContinueException $e) {}
         $resp = json_decode($this->_last_response, true);
         $this->assertTrue($resp['success']);
@@ -117,7 +118,7 @@ class QuantityDiscountsAdminAjaxTest extends WP_Ajax_UnitTestCase {
         $admin->register_hooks();
 
         $this->_setRole('administrator');
-        $_GET['category'] = $cat;
+        $_GET['categories'] = [$cat];
         $_GET['nonce']    = wp_create_nonce('gm2_qd_nonce');
         try { $this->_handleAjax('gm2_qd_get_category_products'); } catch (WPAjaxDieContinueException $e) {}
         $resp = json_decode($this->_last_response, true);
