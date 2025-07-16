@@ -15,6 +15,7 @@ Key features include:
 * ChatGPT-powered content generation and keyword research
 * WooCommerce quantity discounts with a dedicated Elementor widget
 * Tariff management and redirects
+* Expanded SEO Context feeds AI prompts with business details
 
 == Installation ==
 1. Upload the plugin files to the `/wp-content/plugins/gm2-wordpress-suite` directory.
@@ -170,7 +171,16 @@ Example JSON response:
 ```
 
 == SEO Context ==
-Open the **Context** tab under **SEO** to store your business model, industry, audience, revenue streams, primary goal, brand voice and more. These answers are automatically added to ChatGPT prompts so AI-generated titles, descriptions and keywords match your brand.
+Open the **Context** tab under **SEO** to store detailed business information used in AI prompts. Answer each question and the plugin will append your responses to every ChatGPT request:
+
+* Business Model
+* Industry Category
+* Target Audience
+* Unique Selling Points
+* Revenue Streams
+* Primary Goal
+* Brand Voice
+* Competitors
 
 == SEO Settings ==
 The SEO meta box appears when editing posts, pages, any public custom post types and taxonomy terms. In the

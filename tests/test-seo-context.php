@@ -9,6 +9,9 @@ class SeoContextHelperTest extends WP_UnitTestCase {
         delete_option('gm2_context_primary_goal');
         delete_option('gm2_context_brand_voice');
         delete_option('gm2_context_competitors');
+        delete_option('gm2_context_project_description');
+        delete_option('gm2_context_custom_prompts');
+        delete_option('gm2_project_description');
         remove_all_filters('gm2_seo_context');
         parent::tearDown();
     }
