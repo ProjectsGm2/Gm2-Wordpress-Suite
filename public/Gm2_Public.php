@@ -28,7 +28,12 @@ class Gm2_Public {
             true
         );
 
-        if (function_exists('is_product') && is_product()) {
+        $in_edit_mode = false;
+        if (class_exists('\\Elementor\\Plugin') && \Elementor\Plugin::$instance->editor) {
+            $in_edit_mode = \Elementor\Plugin::$instance->editor->is_edit_mode();
+        }
+
+        if ((function_exists('is_product') && is_product()) || $in_edit_mode) {
             wp_enqueue_style(
                 'gm2-qd-widget',
                 GM2_PLUGIN_URL . 'public/css/gm2-qd-widget.css',
