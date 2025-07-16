@@ -1,0 +1,15 @@
+.gm2-qd-header {
+    background:#f1f1f1;
+    border:1px solid #ccc;
+    padding:6px 10px;
+    cursor:pointer;
+}
+.gm2-qd-accordion .gm2-qd-group {
+    border:1px solid #ccc;
+    border-top:0;
+    padding:10px;
+    display:none;
+}
+.gm2-qd-accordion.open .gm2-qd-group {
+    display:block;
+}

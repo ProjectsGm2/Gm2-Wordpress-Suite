@@ -27,6 +27,12 @@ class Gm2_Quantity_Discounts_Admin {
         if ( $hook !== 'gm2_page_gm2-quantity-discounts' ) {
             return;
         }
+        wp_enqueue_style(
+            'gm2-quantity-discounts',
+            GM2_PLUGIN_URL . 'admin/css/gm2-quantity-discounts.css',
+            [],
+            GM2_VERSION
+        );
         wp_enqueue_script(
             'gm2-quantity-discounts',
             GM2_PLUGIN_URL . 'admin/js/gm2-quantity-discounts.js',

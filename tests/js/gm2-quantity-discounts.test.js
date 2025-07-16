@@ -18,6 +18,7 @@ test('renders groups from gm2Qd', async () => {
   await new Promise(r => setTimeout(r, 0));
 
   expect($('.gm2-qd-name').val()).toBe('Group A');
+  expect($('.gm2-qd-accordion').length).toBe(1);
 });
 
 test('submits group data via ajax', async () => {
@@ -51,4 +52,32 @@ test('submits group data via ajax', async () => {
   const data = $.post.mock.calls[0][1].groups[0];
   expect(data.name).toBe('Test');
   expect(data.rules[0]).toEqual({ min: 2, type: 'percent', amount: 10 });
+});
+
+test('accordion toggles visibility', async () => {
+  const dom = new JSDOM(`
+    <form id="gm2-qd-form">
+      <div id="gm2-qd-groups"></div>
+    </form>
+  `, { url: 'http://localhost' });
+  const $ = jquery(dom.window);
+  Object.assign(global, { window: dom.window, document: dom.window.document, jQuery: $, $ });
+  global.gm2Qd = { nonce: 'n', ajax_url: '/fake', groups: [{ name: 'A', products: [], rules: [] }], categories: [] };
+
+  jest.resetModules();
+  require('../../admin/js/gm2-quantity-discounts.js');
+  await new Promise(r => setTimeout(r, 0));
+  await new Promise(r => setTimeout(r, 0));
+
+  const accordion = $('.gm2-qd-accordion');
+  const body = accordion.find('.gm2-qd-group');
+  expect(body.css('display')).not.toBe('none');
+
+  accordion.find('.gm2-qd-header').trigger('click');
+  await new Promise(r => setTimeout(r, 0));
+  expect(body.css('display')).toBe('none');
+
+  accordion.find('.gm2-qd-header').trigger('click');
+  await new Promise(r => setTimeout(r, 0));
+  expect(body.css('display')).not.toBe('none');
 });
