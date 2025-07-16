@@ -173,14 +173,14 @@ Example JSON response:
 == SEO Context ==
 Open the **Context** tab under **SEO** to store detailed business information used in AI prompts. Answer each question and the plugin will append your responses to every ChatGPT request:
 
-* Business Model
-* Industry Category
-* Target Audience
-* Unique Selling Points
-* Revenue Streams
-* Primary Goal
-* Brand Voice
-* Competitors
+* **Business Model** – How does the company make money (product sales, services, subscriptions, ads, affiliate, hybrid)?
+* **Industry Category** – Which industry best describes your business? If e-commerce, list main product categories and any flagship items. For services or SaaS, outline your core offerings and modules.
+* **Target Audience** – Who are your core customer segments and where are they located?
+* **Unique Selling Points** – What differentiates your brand from competitors in terms of price, quality, experience, or mission?
+* **Revenue Streams** – List the major sources of revenue such as products, services, subscriptions or ads.
+* **Primary Goal** – What is the website's main objective and which KPIs indicate success?
+* **Brand Voice** – Describe the desired style or tone (professional, casual, luxury, authoritative, playful, eco-friendly, etc.).
+* **Competitors** – List main online competitors and what makes your offer stronger or unique.
 
 == SEO Settings ==
 The SEO meta box appears when editing posts, pages, any public custom post types and taxonomy terms. In the

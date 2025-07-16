@@ -709,16 +709,56 @@ class Gm2_SEO_Admin {
 
             echo '<table class="form-table"><tbody>';
             $fields = [
-                'gm2_context_business_model'        => [ 'label' => __( 'Business Model', 'gm2-wordpress-suite' ), 'type' => 'textarea' ],
-                'gm2_context_industry_category'     => [ 'label' => __( 'Industry Category', 'gm2-wordpress-suite' ), 'type' => 'text' ],
-                'gm2_context_target_audience'       => [ 'label' => __( 'Target Audience', 'gm2-wordpress-suite' ), 'type' => 'textarea' ],
-                'gm2_context_unique_selling_points' => [ 'label' => __( 'Unique Selling Points', 'gm2-wordpress-suite' ), 'type' => 'textarea' ],
-                'gm2_context_revenue_streams'       => [ 'label' => __( 'Revenue Streams', 'gm2-wordpress-suite' ), 'type' => 'textarea' ],
-                'gm2_context_primary_goal'          => [ 'label' => __( 'Primary Goal', 'gm2-wordpress-suite' ), 'type' => 'textarea' ],
-                'gm2_context_brand_voice'           => [ 'label' => __( 'Brand Voice', 'gm2-wordpress-suite' ), 'type' => 'textarea' ],
-                'gm2_context_competitors'           => [ 'label' => __( 'Competitors', 'gm2-wordpress-suite' ), 'type' => 'textarea' ],
-                'gm2_context_project_description'   => [ 'label' => __( 'Project Description', 'gm2-wordpress-suite' ), 'type' => 'textarea' ],
-                'gm2_context_custom_prompts'        => [ 'label' => __( 'Custom Prompts', 'gm2-wordpress-suite' ), 'type' => 'textarea' ],
+                'gm2_context_business_model'        => [
+                    'label' => __( 'Business Model', 'gm2-wordpress-suite' ),
+                    'type'  => 'textarea',
+                    'desc'  => __( 'How does the company make money (product sales, services, subscriptions, ads, affiliate, hybrid)?', 'gm2-wordpress-suite' ),
+                ],
+                'gm2_context_industry_category'     => [
+                    'label' => __( 'Industry Category', 'gm2-wordpress-suite' ),
+                    'type'  => 'text',
+                    'desc'  => __( 'Which industry best describes your business? If e-commerce, list key product categories and flagship items. For services, describe core offerings. For SaaS, summarize primary modules. Include your Google taxonomy label if known.', 'gm2-wordpress-suite' ),
+                ],
+                'gm2_context_target_audience'       => [
+                    'label' => __( 'Target Audience', 'gm2-wordpress-suite' ),
+                    'type'  => 'textarea',
+                    'desc'  => __( 'Who are your core customer segments and where are they located?', 'gm2-wordpress-suite' ),
+                ],
+                'gm2_context_unique_selling_points' => [
+                    'label' => __( 'Unique Selling Points', 'gm2-wordpress-suite' ),
+                    'type'  => 'textarea',
+                    'desc'  => __( 'What differentiates your brand from competitors in terms of price, quality, experience, or mission?', 'gm2-wordpress-suite' ),
+                ],
+                'gm2_context_revenue_streams'       => [
+                    'label' => __( 'Revenue Streams', 'gm2-wordpress-suite' ),
+                    'type'  => 'textarea',
+                    'desc'  => __( 'List your main sources of revenue such as products, services, subscriptions, advertising, or affiliate programs.', 'gm2-wordpress-suite' ),
+                ],
+                'gm2_context_primary_goal'          => [
+                    'label' => __( 'Primary Goal', 'gm2-wordpress-suite' ),
+                    'type'  => 'textarea',
+                    'desc'  => __( 'What is the website\'s main objective and which KPIs indicate success?', 'gm2-wordpress-suite' ),
+                ],
+                'gm2_context_brand_voice'           => [
+                    'label' => __( 'Brand Voice', 'gm2-wordpress-suite' ),
+                    'type'  => 'textarea',
+                    'desc'  => __( 'Describe the desired style or tone (professional, casual, luxury, authoritative, playful, eco-friendly, etc.).', 'gm2-wordpress-suite' ),
+                ],
+                'gm2_context_competitors'           => [
+                    'label' => __( 'Competitors', 'gm2-wordpress-suite' ),
+                    'type'  => 'textarea',
+                    'desc'  => __( 'List main online competitors and what makes your offer stronger or unique.', 'gm2-wordpress-suite' ),
+                ],
+                'gm2_context_project_description'   => [
+                    'label' => __( 'Project Description', 'gm2-wordpress-suite' ),
+                    'type'  => 'textarea',
+                    'desc'  => __( 'Short summary of your project or website. Used when other fields are empty.', 'gm2-wordpress-suite' ),
+                ],
+                'gm2_context_custom_prompts'        => [
+                    'label' => __( 'Custom Prompts', 'gm2-wordpress-suite' ),
+                    'type'  => 'textarea',
+                    'desc'  => __( 'Default instructions appended to AI requests.', 'gm2-wordpress-suite' ),
+                ],
             ];
             foreach ( $fields as $opt => $data ) {
                 $val = get_option( $opt, '' );
@@ -727,6 +767,9 @@ class Gm2_SEO_Admin {
                     echo '<input type="text" id="' . esc_attr( $opt ) . '" name="' . esc_attr( $opt ) . '" value="' . esc_attr( $val ) . '" class="regular-text" />';
                 } else {
                     echo '<textarea id="' . esc_attr( $opt ) . '" name="' . esc_attr( $opt ) . '" rows="3" class="large-text">' . esc_textarea( $val ) . '</textarea>';
+                }
+                if ( isset( $data['desc'] ) ) {
+                    echo '<p class="description">' . esc_html( $data['desc'] ) . '</p>';
                 }
                 echo '</td></tr>';
             }
