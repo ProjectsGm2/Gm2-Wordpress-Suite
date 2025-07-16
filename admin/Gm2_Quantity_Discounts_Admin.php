@@ -42,6 +42,22 @@ class Gm2_Quantity_Discounts_Admin {
             true
         );
         $groups = get_option( 'gm2_quantity_discount_groups', [] );
+        foreach ( $groups as &$g ) {
+            if ( empty( $g['products'] ) || ! is_array( $g['products'] ) ) {
+                $g['products'] = [];
+                continue;
+            }
+            $info = [];
+            foreach ( $g['products'] as $pid ) {
+                $info[] = [
+                    'id'    => (int) $pid,
+                    'title' => get_the_title( $pid ),
+                    'sku'   => get_post_meta( $pid, '_sku', true ),
+                ];
+            }
+            $g['products'] = $info;
+        }
+        unset( $g );
         $cats   = [];
         if ( taxonomy_exists( 'product_cat' ) ) {
             $terms = get_terms( [
@@ -98,8 +114,10 @@ class Gm2_Quantity_Discounts_Admin {
         $result = [];
         foreach ( $q->posts as $p ) {
             $result[] = [
-                'id'   => $p->ID,
-                'text' => $p->post_title,
+                'id'    => $p->ID,
+                'text'  => $p->post_title,
+                'title' => $p->post_title,
+                'sku'   => get_post_meta( $p->ID, '_sku', true ),
             ];
         }
         wp_send_json_success( $result );
@@ -129,7 +147,12 @@ class Gm2_Quantity_Discounts_Admin {
         $q      = new \WP_Query( $args );
         $result = [];
         foreach ( $q->posts as $p ) {
-            $result[] = [ 'id' => $p->ID, 'text' => $p->post_title ];
+            $result[] = [
+                'id'    => $p->ID,
+                'text'  => $p->post_title,
+                'title' => $p->post_title,
+                'sku'   => get_post_meta( $p->ID, '_sku', true ),
+            ];
         }
         wp_send_json_success( $result );
     }
