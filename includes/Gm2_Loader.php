@@ -33,9 +33,14 @@ class Gm2_Loader {
         $seo_public = new Gm2_SEO_Public();
         $seo_public->run();
 
-        if (class_exists('Elementor\\Plugin') && class_exists('Elementor\\Widget_Base')) {
+        if (did_action('elementor/loaded')) {
             new Gm2_Elementor_SEO();
             new Gm2_Elementor_Quantity_Discounts();
+        } else {
+            add_action('elementor/loaded', function () {
+                new Gm2_Elementor_SEO();
+                new Gm2_Elementor_Quantity_Discounts();
+            });
         }
     }
 }
