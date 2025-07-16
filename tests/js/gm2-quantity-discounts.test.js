@@ -87,3 +87,51 @@ test('accordion toggles visibility', async () => {
   await new Promise(r => setTimeout(r, 0));
   expect(body.css('display')).not.toBe('none');
 });
+
+test('search results use checkboxes and add selected button', async () => {
+  const dom = new JSDOM(`
+    <form id="gm2-qd-form">
+      <div id="gm2-qd-groups"></div>
+    </form>
+  `, { url: 'http://localhost' });
+  const $ = jquery(dom.window);
+  Object.assign(global, { window: dom.window, document: dom.window.document, jQuery: $, $ });
+  global.gm2Qd = {
+    nonce: 'n',
+    ajax_url: '/fake',
+    groups: [{ name: 'A', products: [], rules: [] }],
+    categories: [],
+    productTitles: {}
+  };
+  $.get = jest.fn(() => $.Deferred().resolve({
+    success: true,
+    data: [
+      { id: 1, title: 'Prod1', sku: 'S1' },
+      { id: 2, title: 'Prod2', sku: 'S2' }
+    ]
+  }));
+
+  jest.resetModules();
+  require('../../admin/js/gm2-quantity-discounts.js');
+  await new Promise(r => setTimeout(r, 0));
+  await new Promise(r => setTimeout(r, 0));
+
+  const group = $('.gm2-qd-group');
+  group.find('.gm2-qd-search').val('pr');
+  group.find('.gm2-qd-search-btn').trigger('click');
+  await new Promise(r => setTimeout(r, 0));
+
+  const checkboxes = group.find('.gm2-qd-product-chk');
+  expect(checkboxes.length).toBe(2);
+
+  group.find('.gm2-qd-select-all').prop('checked', true).trigger('change');
+  expect(checkboxes.filter(':checked').length).toBe(2);
+
+  group.find('.gm2-qd-add-selected').trigger('click');
+  await new Promise(r => setTimeout(r, 0));
+
+  const selected = group.find('.gm2-qd-selected li');
+  expect(selected.length).toBe(2);
+  expect(selected.eq(0).text()).toContain('Prod1');
+  expect(selected.eq(1).text()).toContain('Prod2');
+});
