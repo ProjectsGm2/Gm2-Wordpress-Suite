@@ -17,7 +17,7 @@ jQuery(function($){
         header.append('<input type="text" class="gm2-qd-name" placeholder="Group name" value="'+(g.name||'')+'"> <button type="button" class="button gm2-qd-remove-group">&times;</button>');
         accordion.append(header);
         var container = $('<div class="gm2-qd-group"></div>');
-        var prodSection = $('<div class="gm2-qd-products"><select class="gm2-qd-cat"><option value="">All Categories</option></select> <input type="text" class="gm2-qd-search" placeholder="Search products"> <ul class="gm2-qd-results"></ul><ul class="gm2-qd-selected"></ul></div>');
+        var prodSection = $('<div class="gm2-qd-products"><select class="gm2-qd-cat"><option value="">All Categories</option></select> <div class="gm2-qd-cat-products"></div> <input type="text" class="gm2-qd-search" placeholder="Search products"> <ul class="gm2-qd-results"></ul><ul class="gm2-qd-selected"></ul></div>');
         categories.forEach(function(c){prodSection.find('select').append('<option value="'+c.id+'">'+c.name+'</option>');});
         container.append(prodSection);
         var table = $('<table class="widefat gm2-qd-rules"><thead><tr><th>Min Qty</th><th>% Off</th><th>Fixed Off</th><th></th></tr></thead><tbody></tbody></table>');
@@ -34,6 +34,24 @@ jQuery(function($){
         var ul = group.find('.gm2-qd-selected');
         if( ul.find('li[data-id="'+item.id+'"]').length ) return;
         ul.append('<li data-id="'+item.id+'">'+item.text+' <span class="remove">x</span></li>');
+    }
+
+    function loadCategoryProducts(group, cat){
+        var box = group.find('.gm2-qd-cat-products').html('');
+        if(!cat){ return; }
+        $.get(gm2Qd.ajax_url,{action:'gm2_qd_get_category_products',nonce:gm2Qd.nonce,category:cat}).done(function(res){
+            if(!res.success) return;
+            var html = '<label><input type="checkbox" class="gm2-qd-select-all"> Select all</label><ul class="gm2-qd-checkboxes"></ul>';
+            box.append(html);
+            var list = box.find('.gm2-qd-checkboxes');
+            res.data.forEach(function(p){
+                var li = $('<li><label><input type="checkbox" class="gm2-qd-product-chk" value="'+p.id+'"> '+p.text+'</label></li>');
+                if(group.find('.gm2-qd-selected li[data-id="'+p.id+'"]').length){
+                    li.find('input').prop('checked',true);
+                }
+                list.append(li);
+            });
+        });
     }
     function renderGroups(){
         var holder = $('#gm2-qd-groups').empty();
@@ -58,6 +76,25 @@ jQuery(function($){
     });
     $(document).on('click','.gm2-qd-remove-rule',function(){
         $(this).closest('tr').remove();
+    });
+    $(document).on('change','.gm2-qd-cat',function(){
+        var group=$(this).closest('.gm2-qd-group');
+        loadCategoryProducts(group,$(this).val());
+    });
+    $(document).on('change','.gm2-qd-select-all',function(){
+        var group=$(this).closest('.gm2-qd-group');
+        var c=$(this).is(':checked');
+        group.find('.gm2-qd-product-chk').prop('checked',c).trigger('change');
+    });
+    $(document).on('change','.gm2-qd-product-chk',function(){
+        var group=$(this).closest('.gm2-qd-group');
+        var id=$(this).val();
+        var name=$(this).closest('label').text().trim();
+        if($(this).is(':checked')){
+            addSelectedProduct(group,{id:id,text:name});
+        }else{
+            group.find('.gm2-qd-selected li[data-id="'+id+'"]').remove();
+        }
     });
     $(document).on('input','.gm2-qd-search',function(){
         var group=$(this).closest('.gm2-qd-group');
