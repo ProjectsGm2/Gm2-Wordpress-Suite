@@ -5,7 +5,9 @@ if (!defined('ABSPATH')) { exit; }
 
 class Gm2_Elementor_Quantity_Discounts {
     public function __construct() {
-        add_action('init', [ $this, 'init' ]);
+        // Register the widget after Elementor initializes so the
+        // `elementor/widgets/register` hook is available.
+        add_action('elementor/init', [ $this, 'init' ]);
     }
 
     public function init() {
