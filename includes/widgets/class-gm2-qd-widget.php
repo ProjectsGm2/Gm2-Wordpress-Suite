@@ -231,6 +231,22 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
             'price_style_normal',
             [ 'label' => __( 'Normal', 'gm2-wordpress-suite' ) ]
         );
+        $this->add_responsive_control(
+            'icon_size',
+            [
+                'label' => __( 'Icon Size', 'gm2-wordpress-suite' ),
+                'type'  => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => [ 'px', 'em', 'rem' ],
+                'range' => [
+                    'px'  => [ 'min' => 1,  'max' => 100 ],
+                    'em'  => [ 'min' => 0.1, 'max' => 10, 'step' => 0.1 ],
+                    'rem' => [ 'min' => 0.1, 'max' => 10, 'step' => 0.1 ],
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .gm2-qd-currency-icon' => 'font-size: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
         $this->add_control(
             'price_color',
             [
@@ -270,6 +286,22 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
             'price_style_hover',
             [ 'label' => __( 'Hover', 'gm2-wordpress-suite' ) ]
         );
+        $this->add_responsive_control(
+            'icon_size_hover',
+            [
+                'label' => __( 'Icon Size', 'gm2-wordpress-suite' ),
+                'type'  => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => [ 'px', 'em', 'rem' ],
+                'range' => [
+                    'px'  => [ 'min' => 1,  'max' => 100 ],
+                    'em'  => [ 'min' => 0.1, 'max' => 10, 'step' => 0.1 ],
+                    'rem' => [ 'min' => 0.1, 'max' => 10, 'step' => 0.1 ],
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .gm2-qd-option:hover .gm2-qd-currency-icon' => 'font-size: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
         $this->add_control(
             'price_hover_color',
             [
@@ -308,6 +340,22 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
         $this->start_controls_tab(
             'price_style_active',
             [ 'label' => __( 'Active', 'gm2-wordpress-suite' ) ]
+        );
+        $this->add_responsive_control(
+            'icon_size_active',
+            [
+                'label' => __( 'Icon Size', 'gm2-wordpress-suite' ),
+                'type'  => \Elementor\Controls_Manager::SLIDER,
+                'size_units' => [ 'px', 'em', 'rem' ],
+                'range' => [
+                    'px'  => [ 'min' => 1,  'max' => 100 ],
+                    'em'  => [ 'min' => 0.1, 'max' => 10, 'step' => 0.1 ],
+                    'rem' => [ 'min' => 0.1, 'max' => 10, 'step' => 0.1 ],
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .gm2-qd-option:active .gm2-qd-currency-icon' => 'font-size: {{SIZE}}{{UNIT}};',
+                ],
+            ]
         );
         $this->add_control(
             'price_active_color',
