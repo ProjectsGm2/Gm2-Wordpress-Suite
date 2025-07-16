@@ -40,6 +40,8 @@ Key features include:
 9. Install and activate Elementor **3.5** or later to use the Gm2 Qnty Discounts widget on product pages. The widget appears under the **WooCommerce** section when editing Single Product templates in Elementor.
 10. Open **Gm2 → Quantity Discounts** and create discount groups to define pricing rules.
 
+**Note:** WooCommerce must be active and Elementor 3.5+ is recommended. Older versions are supported with a fallback.
+
 If you plan to distribute or manually upload the plugin, you can create a ZIP
 archive with `bash bin/build-plugin.sh`. This command packages the plugin with
 all dependencies into `gm2-wordpress-suite.zip` for installation via the
@@ -254,6 +256,8 @@ checkout.
 
 == Quantity Discounts ==
 After activating WooCommerce, open **Gm2 → Quantity Discounts** and click **Add Discount Group** to define bulk pricing rules. Choose the products or categories to apply, enter the minimum quantity and specify either a percentage or fixed discount. When customers meet the threshold the discount is applied automatically in the cart. Install Elementor to add the **Gm2 Qnty Discounts** widget on product pages, giving shoppers buttons for preset quantities that match your rules. The widget resides in the **WooCommerce** section. The selected rule and discounted price are saved in order item meta and appear in emails and on the admin order screen.
+
+**Note:** WooCommerce must be active and Elementor 3.5+ is recommended. Older versions are supported with a fallback.
 
 == Redirects ==
 Create 301 or 302 redirects from the **SEO → Redirects** tab. The plugin logs
