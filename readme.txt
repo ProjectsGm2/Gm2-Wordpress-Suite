@@ -169,7 +169,7 @@ Example JSON response:
 ```
 
 == SEO Context ==
-Open the **Context** tab under **SEO** to store your business model, industry, target audience and unique selling points. These answers are automatically added to ChatGPT prompts so AI-generated titles, descriptions and keywords match your brand.
+Open the **Context** tab under **SEO** to store your business model, industry, audience, revenue streams, primary goal, brand voice and more. These answers are automatically added to ChatGPT prompts so AI-generated titles, descriptions and keywords match your brand.
 
 == SEO Settings ==
 The SEO meta box appears when editing posts, pages, any public custom post types and taxonomy terms. In the
