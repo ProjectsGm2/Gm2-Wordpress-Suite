@@ -8,6 +8,49 @@ if (!defined('ABSPATH')) {
 class Gm2_Quantity_Discounts_Public {
     public function run() {
         add_action('woocommerce_before_calculate_totals', [ $this, 'adjust_prices' ], 20);
+        add_filter('woocommerce_add_cart_item_data', [ $this, 'add_cart_item_data' ], 10, 4);
+        add_action('woocommerce_checkout_create_order_line_item', [ $this, 'add_order_item_meta' ], 10, 4);
+    }
+
+    private function get_applicable_rule($product_id, $qty) {
+        $groups = get_option('gm2_quantity_discount_groups', []);
+        if (empty($groups)) {
+            return null;
+        }
+
+        $group = null;
+        foreach ($groups as $g) {
+            if (!empty($g['products']) && in_array($product_id, $g['products'], true)) {
+                $group = $g;
+                break;
+            }
+        }
+        if (!$group || empty($group['rules'])) {
+            return null;
+        }
+
+        $rules = $group['rules'];
+        usort($rules, function($a, $b) {
+            return $b['min'] <=> $a['min'];
+        });
+        foreach ($rules as $rule) {
+            if ($qty >= intval($rule['min'])) {
+                return $rule;
+            }
+        }
+        return null;
+    }
+
+    public function add_cart_item_data($cart_item_data, $product_id, $variation_id, $quantity) {
+        $rule = $this->get_applicable_rule($product_id, $quantity);
+        if ($rule) {
+            $cart_item_data['gm2_qd_rule'] = $rule;
+            $product = wc_get_product($product_id);
+            if ($product) {
+                $cart_item_data['gm2_qd_original_price'] = (float) $product->get_price('edit');
+            }
+        }
+        return $cart_item_data;
     }
 
     public function adjust_prices($cart) {
@@ -64,7 +107,27 @@ class Gm2_Quantity_Discounts_Public {
                 }
                 $product->set_price($new_price);
                 $cart->cart_contents[$key]['data'] = $product;
+                $cart->cart_contents[$key]['gm2_qd_rule']            = $applied;
+                $cart->cart_contents[$key]['gm2_qd_discounted_price'] = $new_price;
+            } else {
+                unset($cart->cart_contents[$key]['gm2_qd_rule'], $cart->cart_contents[$key]['gm2_qd_discounted_price']);
             }
+        }
+    }
+
+    public function add_order_item_meta($item, $cart_item_key, $values, $order) {
+        if (isset($values['gm2_qd_rule'])) {
+            $rule = $values['gm2_qd_rule'];
+            if ($rule['type'] === 'percent') {
+                $desc = sprintf('%d+ units: %s%% off', $rule['min'], $rule['amount']);
+            } else {
+                $desc = sprintf('%d+ units: %s discount', $rule['min'], wc_price($rule['amount']));
+            }
+            $item->add_meta_data(__('Quantity Discount Rule', 'gm2-wordpress-suite'), $desc, true);
+        }
+        $item->add_meta_data(__('Purchased Quantity', 'gm2-wordpress-suite'), $item->get_quantity(), true);
+        if (isset($values['gm2_qd_discounted_price'])) {
+            $item->add_meta_data(__('Discounted Price', 'gm2-wordpress-suite'), wc_price($values['gm2_qd_discounted_price']), true);
         }
     }
 }
