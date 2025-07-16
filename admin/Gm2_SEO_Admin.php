@@ -272,6 +272,15 @@ class Gm2_SEO_Admin {
         register_setting('gm2_seo_options', 'gm2_context_competitors', [
             'sanitize_callback' => 'sanitize_textarea_field',
         ]);
+        register_setting('gm2_seo_options', 'gm2_context_project_description', [
+            'sanitize_callback' => 'sanitize_textarea_field',
+        ]);
+        register_setting('gm2_seo_options', 'gm2_context_custom_prompts', [
+            'sanitize_callback' => 'sanitize_textarea_field',
+        ]);
+        register_setting('gm2_seo_options', 'gm2_project_description', [
+            'sanitize_callback' => 'sanitize_textarea_field',
+        ]);
         foreach ($this->get_supported_post_types() as $pt) {
             register_setting('gm2_seo_options', 'gm2_seo_guidelines_post_' . $pt, [
                 'sanitize_callback' => 'sanitize_textarea_field',
@@ -708,6 +717,8 @@ class Gm2_SEO_Admin {
                 'gm2_context_primary_goal'          => [ 'label' => __( 'Primary Goal', 'gm2-wordpress-suite' ), 'type' => 'textarea' ],
                 'gm2_context_brand_voice'           => [ 'label' => __( 'Brand Voice', 'gm2-wordpress-suite' ), 'type' => 'textarea' ],
                 'gm2_context_competitors'           => [ 'label' => __( 'Competitors', 'gm2-wordpress-suite' ), 'type' => 'textarea' ],
+                'gm2_context_project_description'   => [ 'label' => __( 'Project Description', 'gm2-wordpress-suite' ), 'type' => 'textarea' ],
+                'gm2_context_custom_prompts'        => [ 'label' => __( 'Custom Prompts', 'gm2-wordpress-suite' ), 'type' => 'textarea' ],
             ];
             foreach ( $fields as $opt => $data ) {
                 $val = get_option( $opt, '' );
@@ -1070,6 +1081,10 @@ class Gm2_SEO_Admin {
         $canonical           = '';
         $focus_keywords      = '';
         $long_tail_keywords  = '';
+        $search_intent       = '';
+        $focus_limit         = '';
+        $number_of_words     = '';
+        $improve_readability = '1';
         $max_snippet         = '';
         $max_image_preview   = '';
         $max_video_preview   = '';
@@ -1083,6 +1098,10 @@ class Gm2_SEO_Admin {
             $canonical        = get_term_meta($term->term_id, '_gm2_canonical', true);
             $focus_keywords   = get_term_meta($term->term_id, '_gm2_focus_keywords', true);
             $long_tail_keywords = get_term_meta($term->term_id, '_gm2_long_tail_keywords', true);
+            $search_intent    = get_term_meta($term->term_id, '_gm2_search_intent', true);
+            $focus_limit      = get_term_meta($term->term_id, '_gm2_focus_keyword_limit', true);
+            $number_of_words  = get_term_meta($term->term_id, '_gm2_number_of_words', true);
+            $improve_readability = get_term_meta($term->term_id, '_gm2_improve_readability', true);
             $max_snippet      = get_term_meta($term->term_id, '_gm2_max_snippet', true);
             $max_image_preview = get_term_meta($term->term_id, '_gm2_max_image_preview', true);
             $max_video_preview = get_term_meta($term->term_id, '_gm2_max_video_preview', true);
@@ -1140,6 +1159,24 @@ class Gm2_SEO_Admin {
         echo '<input type="text" id="gm2_focus_keywords" name="gm2_focus_keywords" value="' . esc_attr($focus_keywords) . '" class="widefat" /></p>';
         echo '<p><label for="gm2_long_tail_keywords">' . esc_html__( 'Long Tail Keywords (comma separated)', 'gm2-wordpress-suite' ) . '</label>';
         echo '<input type="text" id="gm2_long_tail_keywords" name="gm2_long_tail_keywords" value="' . esc_attr($long_tail_keywords) . '" class="widefat" /></p>';
+        $search_intent = get_post_meta($post->ID, '_gm2_search_intent', true);
+        $focus_limit   = get_post_meta($post->ID, '_gm2_focus_keyword_limit', true);
+        $number_of_words = get_post_meta($post->ID, '_gm2_number_of_words', true);
+        $improve_readability = get_post_meta($post->ID, '_gm2_improve_readability', true);
+        echo '<p><label for="gm2_search_intent">' . esc_html__( 'Search Intent', 'gm2-wordpress-suite' ) . '</label>';
+        echo '<input type="text" id="gm2_search_intent" name="gm2_search_intent" value="' . esc_attr($search_intent) . '" class="widefat" /></p>';
+        echo '<p><label for="gm2_focus_keyword_limit">' . esc_html__( 'Focus Keyword Limit', 'gm2-wordpress-suite' ) . '</label>';
+        echo '<input type="number" id="gm2_focus_keyword_limit" name="gm2_focus_keyword_limit" value="' . esc_attr($focus_limit) . '" class="small-text" min="1" /></p>';
+        echo '<p><label for="gm2_number_of_words">' . esc_html__( 'Number of Words', 'gm2-wordpress-suite' ) . '</label>';
+        echo '<input type="number" id="gm2_number_of_words" name="gm2_number_of_words" value="' . esc_attr($number_of_words) . '" class="small-text" min="0" /></p>';
+        echo '<p><label><input type="checkbox" id="gm2_improve_readability" name="gm2_improve_readability" value="1" ' . checked($improve_readability, '1', false) . '> ' . esc_html__( 'Improve Readability', 'gm2-wordpress-suite' ) . '</label></p>';
+        echo '<p><label for="gm2_search_intent">' . esc_html__( 'Search Intent', 'gm2-wordpress-suite' ) . '</label>';
+        echo '<input type="text" id="gm2_search_intent" name="gm2_search_intent" value="' . esc_attr($search_intent) . '" class="widefat" /></p>';
+        echo '<p><label for="gm2_focus_keyword_limit">' . esc_html__( 'Focus Keyword Limit', 'gm2-wordpress-suite' ) . '</label>';
+        echo '<input type="number" id="gm2_focus_keyword_limit" name="gm2_focus_keyword_limit" value="' . esc_attr($focus_limit) . '" class="small-text" min="1" /></p>';
+        echo '<p><label for="gm2_number_of_words">' . esc_html__( 'Number of Words', 'gm2-wordpress-suite' ) . '</label>';
+        echo '<input type="number" id="gm2_number_of_words" name="gm2_number_of_words" value="' . esc_attr($number_of_words) . '" class="small-text" min="0" /></p>';
+        echo '<p><label><input type="checkbox" id="gm2_improve_readability" name="gm2_improve_readability" value="1" ' . checked($improve_readability, '1', false) . '> ' . esc_html__( 'Improve Readability', 'gm2-wordpress-suite' ) . '</label></p>';
         echo '<p><label><input type="checkbox" name="gm2_noindex" value="1" ' . checked($noindex, '1', false) . '> ' . esc_html__( 'noindex', 'gm2-wordpress-suite' ) . '</label></p>';
         echo '<p><label><input type="checkbox" name="gm2_nofollow" value="1" ' . checked($nofollow, '1', false) . '> ' . esc_html__( 'nofollow', 'gm2-wordpress-suite' ) . '</label></p>';
         echo '<p><label for="gm2_canonical_url">' . esc_html__( 'Canonical URL', 'gm2-wordpress-suite' ) . '</label>';
@@ -1220,6 +1257,10 @@ class Gm2_SEO_Admin {
         $canonical      = isset($_POST['gm2_canonical_url']) ? esc_url_raw($_POST['gm2_canonical_url']) : '';
         $focus_keywords   = isset($_POST['gm2_focus_keywords']) ? sanitize_text_field($_POST['gm2_focus_keywords']) : '';
         $long_tail_keywords = isset($_POST['gm2_long_tail_keywords']) ? sanitize_text_field($_POST['gm2_long_tail_keywords']) : '';
+        $search_intent    = isset($_POST['gm2_search_intent']) ? sanitize_text_field($_POST['gm2_search_intent']) : '';
+        $focus_limit      = isset($_POST['gm2_focus_keyword_limit']) ? absint($_POST['gm2_focus_keyword_limit']) : 0;
+        $number_of_words  = isset($_POST['gm2_number_of_words']) ? absint($_POST['gm2_number_of_words']) : 0;
+        $improve_readability = isset($_POST['gm2_improve_readability']) ? '1' : '0';
         $max_snippet      = isset($_POST['gm2_max_snippet']) ? sanitize_text_field($_POST['gm2_max_snippet']) : '';
         $max_image_preview = isset($_POST['gm2_max_image_preview']) ? sanitize_text_field($_POST['gm2_max_image_preview']) : '';
         $max_video_preview = isset($_POST['gm2_max_video_preview']) ? sanitize_text_field($_POST['gm2_max_video_preview']) : '';
@@ -1235,6 +1276,10 @@ class Gm2_SEO_Admin {
         update_post_meta($post_id, '_gm2_canonical', $canonical);
         update_post_meta($post_id, '_gm2_focus_keywords', $focus_keywords);
         update_post_meta($post_id, '_gm2_long_tail_keywords', $long_tail_keywords);
+        update_post_meta($post_id, '_gm2_search_intent', $search_intent);
+        update_post_meta($post_id, '_gm2_focus_keyword_limit', $focus_limit);
+        update_post_meta($post_id, '_gm2_number_of_words', $number_of_words);
+        update_post_meta($post_id, '_gm2_improve_readability', $improve_readability);
         update_post_meta($post_id, '_gm2_max_snippet', $max_snippet);
         update_post_meta($post_id, '_gm2_max_image_preview', $max_image_preview);
         update_post_meta($post_id, '_gm2_max_video_preview', $max_video_preview);
@@ -1256,6 +1301,10 @@ class Gm2_SEO_Admin {
         $canonical      = isset($_POST['gm2_canonical_url']) ? esc_url_raw($_POST['gm2_canonical_url']) : '';
         $focus_keywords   = isset($_POST['gm2_focus_keywords']) ? sanitize_text_field($_POST['gm2_focus_keywords']) : '';
         $long_tail_keywords = isset($_POST['gm2_long_tail_keywords']) ? sanitize_text_field($_POST['gm2_long_tail_keywords']) : '';
+        $search_intent    = isset($_POST['gm2_search_intent']) ? sanitize_text_field($_POST['gm2_search_intent']) : '';
+        $focus_limit      = isset($_POST['gm2_focus_keyword_limit']) ? absint($_POST['gm2_focus_keyword_limit']) : 0;
+        $number_of_words  = isset($_POST['gm2_number_of_words']) ? absint($_POST['gm2_number_of_words']) : 0;
+        $improve_readability = isset($_POST['gm2_improve_readability']) ? '1' : '0';
         $max_snippet      = isset($_POST['gm2_max_snippet']) ? sanitize_text_field($_POST['gm2_max_snippet']) : '';
         $max_image_preview = isset($_POST['gm2_max_image_preview']) ? sanitize_text_field($_POST['gm2_max_image_preview']) : '';
         $max_video_preview = isset($_POST['gm2_max_video_preview']) ? sanitize_text_field($_POST['gm2_max_video_preview']) : '';
@@ -1267,6 +1316,10 @@ class Gm2_SEO_Admin {
         update_term_meta($term_id, '_gm2_canonical', $canonical);
         update_term_meta($term_id, '_gm2_focus_keywords', $focus_keywords);
         update_term_meta($term_id, '_gm2_long_tail_keywords', $long_tail_keywords);
+        update_term_meta($term_id, '_gm2_search_intent', $search_intent);
+        update_term_meta($term_id, '_gm2_focus_keyword_limit', $focus_limit);
+        update_term_meta($term_id, '_gm2_number_of_words', $number_of_words);
+        update_term_meta($term_id, '_gm2_improve_readability', $improve_readability);
         update_term_meta($term_id, '_gm2_max_snippet', $max_snippet);
         update_term_meta($term_id, '_gm2_max_image_preview', $max_image_preview);
         update_term_meta($term_id, '_gm2_max_video_preview', $max_video_preview);
@@ -2907,6 +2960,10 @@ class Gm2_SEO_Admin {
         $canonical      = get_post_meta($post->ID, '_gm2_canonical', true);
         $focus_keywords      = get_post_meta($post->ID, '_gm2_focus_keywords', true);
         $long_tail_keywords  = get_post_meta($post->ID, '_gm2_long_tail_keywords', true);
+        $search_intent       = get_post_meta($post->ID, '_gm2_search_intent', true);
+        $focus_limit         = get_post_meta($post->ID, '_gm2_focus_keyword_limit', true);
+        $number_of_words     = get_post_meta($post->ID, '_gm2_number_of_words', true);
+        $improve_readability = get_post_meta($post->ID, '_gm2_improve_readability', true);
         $max_snippet         = get_post_meta($post->ID, '_gm2_max_snippet', true);
         $max_image_preview   = get_post_meta($post->ID, '_gm2_max_image_preview', true);
         $max_video_preview   = get_post_meta($post->ID, '_gm2_max_video_preview', true);

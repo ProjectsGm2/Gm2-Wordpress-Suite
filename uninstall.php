@@ -86,6 +86,9 @@ $option_names = array(
     'gm2_context_primary_goal',
     'gm2_context_brand_voice',
     'gm2_context_competitors',
+    'gm2_context_project_description',
+    'gm2_context_custom_prompts',
+    'gm2_project_description',
     'gm2_sc_query_limit',
     'gm2_analytics_days',
 );
