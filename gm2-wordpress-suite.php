@@ -48,6 +48,7 @@ require_once GM2_PLUGIN_DIR . 'includes/Gm2_Loader.php';
 require_once GM2_PLUGIN_DIR . 'public/Gm2_SEO_Public.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Sitemap.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_PageSpeed.php';
+require_once GM2_PLUGIN_DIR . 'includes/Gm2_SEO_Utils.php';
 
 function gm2_add_weekly_schedule($schedules) {
     if (!isset($schedules['weekly'])) {
