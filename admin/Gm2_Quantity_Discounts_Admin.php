@@ -41,16 +41,22 @@ class Gm2_Quantity_Discounts_Admin {
             GM2_VERSION,
             true
         );
-        $groups = get_option( 'gm2_quantity_discount_groups', [] );
+        $groups  = get_option( 'gm2_quantity_discount_groups', [] );
+        $titles  = [];
         foreach ( $groups as &$g ) {
             if ( empty( $g['products'] ) || ! is_array( $g['products'] ) ) {
                 $g['products'] = [];
             } else {
                 $info = [];
                 foreach ( $g['products'] as $pid ) {
+                    $title = get_the_title( $pid );
+                    if ( '' === $title ) {
+                        $title = (string) $pid;
+                    }
+                    $titles[ (int) $pid ] = $title;
                     $info[] = [
                         'id'    => (int) $pid,
-                        'title' => get_the_title( $pid ),
+                        'title' => $title,
                         'sku'   => get_post_meta( $pid, '_sku', true ),
                     ];
                 }
@@ -80,10 +86,11 @@ class Gm2_Quantity_Discounts_Admin {
             'gm2-quantity-discounts',
             'gm2Qd',
             [
-                'nonce'      => wp_create_nonce( 'gm2_qd_nonce' ),
-                'ajax_url'   => admin_url( 'admin-ajax.php' ),
-                'groups'     => $groups,
-                'categories' => $cats,
+                'nonce'         => wp_create_nonce( 'gm2_qd_nonce' ),
+                'ajax_url'      => admin_url( 'admin-ajax.php' ),
+                'groups'        => $groups,
+                'categories'    => $cats,
+                'productTitles' => $titles,
             ]
         );
     }

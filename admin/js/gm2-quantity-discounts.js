@@ -31,7 +31,16 @@ jQuery(function($){
         container.append(table);
         container.append('<p><button type="button" class="button gm2-qd-add-rule">Add Rule</button></p>');
         g.products.forEach(function(p){
-            if(typeof p!=='object'){p={id:p};}
+            if(typeof p!=='object'){
+                var t=null;
+                if(gm2Qd && gm2Qd.productTitles && gm2Qd.productTitles[p]){
+                    t=gm2Qd.productTitles[p];
+                }
+                p={id:p};
+                if(t){p.title=t;}
+            }else if(!p.title && gm2Qd && gm2Qd.productTitles && gm2Qd.productTitles[p.id]){
+                p.title=gm2Qd.productTitles[p.id];
+            }
             addSelectedProduct(container, p);
         });
         accordion.append(container);
