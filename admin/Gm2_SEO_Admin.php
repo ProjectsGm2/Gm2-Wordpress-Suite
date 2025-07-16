@@ -272,6 +272,24 @@ class Gm2_SEO_Admin {
         register_setting('gm2_seo_options', 'gm2_context_competitors', [
             'sanitize_callback' => 'sanitize_textarea_field',
         ]);
+        register_setting('gm2_seo_options', 'gm2_context_core_offerings', [
+            'sanitize_callback' => 'sanitize_textarea_field',
+        ]);
+        register_setting('gm2_seo_options', 'gm2_context_geographic_focus', [
+            'sanitize_callback' => 'sanitize_textarea_field',
+        ]);
+        register_setting('gm2_seo_options', 'gm2_context_keyword_data', [
+            'sanitize_callback' => 'sanitize_textarea_field',
+        ]);
+        register_setting('gm2_seo_options', 'gm2_context_competitor_landscape', [
+            'sanitize_callback' => 'sanitize_textarea_field',
+        ]);
+        register_setting('gm2_seo_options', 'gm2_context_success_metrics', [
+            'sanitize_callback' => 'sanitize_textarea_field',
+        ]);
+        register_setting('gm2_seo_options', 'gm2_context_buyer_personas', [
+            'sanitize_callback' => 'sanitize_textarea_field',
+        ]);
         register_setting('gm2_seo_options', 'gm2_context_project_description', [
             'sanitize_callback' => 'sanitize_textarea_field',
         ]);
@@ -748,6 +766,36 @@ class Gm2_SEO_Admin {
                     'label' => __( 'Competitors', 'gm2-wordpress-suite' ),
                     'type'  => 'textarea',
                     'desc'  => __( 'List main online competitors and what makes your offer stronger or unique.', 'gm2-wordpress-suite' ),
+                ],
+                'gm2_context_core_offerings'        => [
+                    'label' => __( 'Core Offerings', 'gm2-wordpress-suite' ),
+                    'type'  => 'textarea',
+                    'desc'  => __( 'What are the key products or services you provide?', 'gm2-wordpress-suite' ),
+                ],
+                'gm2_context_geographic_focus'      => [
+                    'label' => __( 'Geographic Focus', 'gm2-wordpress-suite' ),
+                    'type'  => 'textarea',
+                    'desc'  => __( 'Which regions or locations do you primarily target?', 'gm2-wordpress-suite' ),
+                ],
+                'gm2_context_keyword_data'          => [
+                    'label' => __( 'Keyword Data', 'gm2-wordpress-suite' ),
+                    'type'  => 'textarea',
+                    'desc'  => __( 'Do you have existing keyword research or rankings to share?', 'gm2-wordpress-suite' ),
+                ],
+                'gm2_context_competitor_landscape'  => [
+                    'label' => __( 'Competitor Landscape', 'gm2-wordpress-suite' ),
+                    'type'  => 'textarea',
+                    'desc'  => __( 'How would you describe the competitive landscape in your niche?', 'gm2-wordpress-suite' ),
+                ],
+                'gm2_context_success_metrics'       => [
+                    'label' => __( 'Success Metrics', 'gm2-wordpress-suite' ),
+                    'type'  => 'textarea',
+                    'desc'  => __( 'How will you measure SEO success (sales, leads, traffic, rankings)?', 'gm2-wordpress-suite' ),
+                ],
+                'gm2_context_buyer_personas'        => [
+                    'label' => __( 'Buyer Personas', 'gm2-wordpress-suite' ),
+                    'type'  => 'textarea',
+                    'desc'  => __( 'Describe your ideal buyers and their pain points.', 'gm2-wordpress-suite' ),
                 ],
                 'gm2_context_project_description'   => [
                     'label' => __( 'Project Description', 'gm2-wordpress-suite' ),
