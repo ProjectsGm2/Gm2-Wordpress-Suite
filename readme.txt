@@ -160,6 +160,9 @@ Example JSON response:
 }
 ```
 
+== SEO Context ==
+Open the **Context** tab under **SEO** to store your business model, industry, target audience and unique selling points. These answers are automatically added to ChatGPT prompts so AI-generated titles, descriptions and keywords match your brand.
+
 == SEO Settings ==
 The SEO meta box appears when editing posts, pages, any public custom post types and taxonomy terms. In the
 **SEO Settings** tab you can enter a custom title and description, focus keywords and long tail keywords, toggle
@@ -180,11 +183,7 @@ Enable **Clean Slugs** from **SEO → General** to strip stopwords from new
 permalinks. Enter the words to remove in the accompanying field.
 
 == AI SEO ==
-While editing a post or taxonomy term, open the **AI SEO** tab in the SEO meta
-box. Click **AI Research** to run a two-step workflow. You'll first be asked
-whether to use any existing SEO field values. If all fields are empty and no
-site context is set under **SEO → Context**, you'll be prompted for a short
-description so ChatGPT has extra context.
+While editing a post or taxonomy term, open the **AI SEO** tab in the SEO meta box. Click **AI Research** to run a two-step workflow. You'll first be asked whether to use any existing SEO field values. If all fields are empty and no site context is set under **SEO → Context**, you'll be prompted for a short description so ChatGPT has extra context. Answers saved in the Context tab are automatically included in each prompt, so you only need to provide extra details when those fields are empty.
 
 Step one sends the post content to ChatGPT which returns a title, description
 and a list of seed keywords. If no seed keywords are returned, the plugin
