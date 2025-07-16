@@ -181,6 +181,14 @@ Open the **Context** tab under **SEO** to store detailed business information us
 * **Primary Goal** – What is the website's main objective and which KPIs indicate success?
 * **Brand Voice** – Describe the desired style or tone (professional, casual, luxury, authoritative, playful, eco-friendly, etc.).
 * **Competitors** – List main online competitors and what makes your offer stronger or unique.
+* **Core Offerings** – What are the key products or services you provide?
+* **Geographic Focus** – Which regions or locations do you primarily target?
+* **Keyword Data** – Do you have existing keyword research or rankings to share?
+* **Competitor Landscape** – How would you describe the competitive landscape in your niche?
+* **Success Metrics** – How will you measure SEO success (sales, leads, traffic, rankings)?
+* **Buyer Personas** – Describe your ideal buyers and their pain points.
+* **Project Description** – Short summary of your project or website. Used when other fields are empty.
+* **Custom Prompts** – Default instructions appended to AI requests.
 
 == SEO Settings ==
 The SEO meta box appears when editing posts, pages, any public custom post types and taxonomy terms. In the
