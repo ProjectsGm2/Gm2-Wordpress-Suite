@@ -72,4 +72,57 @@ class QuantityDiscountsAdminAjaxTest extends WP_Ajax_UnitTestCase {
         $saved = get_option('gm2_quantity_discount_groups');
         $this->assertSame('First', $saved[0]['rules'][0]['label']);
     }
+
+    public function test_search_products_excludes_drafts() {
+        $published = self::factory()->post->create([
+            'post_type'   => 'product',
+            'post_title'  => 'Searchable',
+            'post_status' => 'publish',
+        ]);
+        $draft = self::factory()->post->create([
+            'post_type'   => 'product',
+            'post_title'  => 'Searchable',
+            'post_status' => 'draft',
+        ]);
+
+        $admin = new Gm2_Quantity_Discounts_Admin();
+        $admin->register_hooks();
+
+        $this->_setRole('administrator');
+        $_GET['term']  = 'Searchable';
+        $_GET['nonce'] = wp_create_nonce('gm2_qd_nonce');
+        try { $this->_handleAjax('gm2_qd_search_products'); } catch (WPAjaxDieContinueException $e) {}
+        $resp = json_decode($this->_last_response, true);
+        $ids  = array_map(function($i){return $i['id'];}, $resp['data']);
+        $this->assertContains($published, $ids);
+        $this->assertNotContains($draft, $ids);
+    }
+
+    public function test_get_category_products_excludes_drafts() {
+        $cat = self::factory()->term->create(['taxonomy' => 'product_cat']);
+        $published = self::factory()->post->create([
+            'post_type'   => 'product',
+            'post_title'  => 'In Cat',
+            'post_status' => 'publish',
+        ]);
+        $draft = self::factory()->post->create([
+            'post_type'   => 'product',
+            'post_title'  => 'In Cat',
+            'post_status' => 'draft',
+        ]);
+        wp_set_object_terms($published, [$cat], 'product_cat');
+        wp_set_object_terms($draft, [$cat], 'product_cat');
+
+        $admin = new Gm2_Quantity_Discounts_Admin();
+        $admin->register_hooks();
+
+        $this->_setRole('administrator');
+        $_GET['category'] = $cat;
+        $_GET['nonce']    = wp_create_nonce('gm2_qd_nonce');
+        try { $this->_handleAjax('gm2_qd_get_category_products'); } catch (WPAjaxDieContinueException $e) {}
+        $resp = json_decode($this->_last_response, true);
+        $ids  = array_map(function($i){return $i['id'];}, $resp['data']);
+        $this->assertContains($published, $ids);
+        $this->assertNotContains($draft, $ids);
+    }
 }
