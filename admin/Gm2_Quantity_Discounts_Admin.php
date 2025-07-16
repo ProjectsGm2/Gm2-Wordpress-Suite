@@ -66,7 +66,7 @@ class Gm2_Quantity_Discounts_Admin {
 
     public function render_page() {
         echo '<div class="wrap">';
-        echo '<h1>' . esc_html__( 'Quantity Discounts', 'gm2-wordpress-suite' ) . '</h1>';
+        echo '<h1 class="gm2-qd-title">' . esc_html__( 'Quantity Discounts', 'gm2-wordpress-suite' ) . '</h1>';
         echo '<div id="gm2-qd-msg" class="notice hidden"></div>';
         echo '<form id="gm2-qd-form"><div id="gm2-qd-groups"></div>';
         echo '<p><button type="button" id="gm2-qd-add-group" class="button">' . esc_html__( 'Add Group', 'gm2-wordpress-suite' ) . '</button></p>';
