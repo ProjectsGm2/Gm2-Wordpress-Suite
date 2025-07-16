@@ -9,8 +9,9 @@ class Gm2_Quantity_Discounts_Public {
     public function run() {
         add_action('woocommerce_before_calculate_totals', [ $this, 'adjust_prices' ], 20);
         add_filter('woocommerce_add_cart_item_data', [ $this, 'add_cart_item_data' ], 10, 4);
-        add_action('woocommerce_add_to_cart', [ $this, 'recalculate_after_add' ], 20, 6);
-        add_action('woocommerce_ajax_added_to_cart', [ $this, 'recalculate_after_add' ], 20);
+        add_action('woocommerce_add_to_cart', [ $this, 'recalculate_after_add' ], 5, 6);
+        add_action('woocommerce_ajax_added_to_cart', [ $this, 'recalculate_after_add' ], 5);
+        add_filter('woocommerce_cart_item_price', [ $this, 'filter_cart_item_price' ], 10, 3);
         add_action('woocommerce_checkout_create_order_line_item', [ $this, 'add_order_item_meta' ], 10, 4);
         add_filter('woocommerce_display_item_meta', [ $this, 'display_item_meta' ], 10, 3);
         add_filter('woocommerce_email_order_item_meta', [ $this, 'display_item_meta' ], 10, 3);
@@ -69,6 +70,13 @@ class Gm2_Quantity_Discounts_Public {
         if (function_exists('WC') && WC()->cart) {
             WC()->cart->calculate_totals();
         }
+    }
+
+    public function filter_cart_item_price($price_html, $cart_item, $cart_item_key) {
+        if (isset($cart_item['gm2_qd_discounted_price'])) {
+            return wc_price($cart_item['gm2_qd_discounted_price']);
+        }
+        return $price_html;
     }
 
     public function adjust_prices($cart) {
