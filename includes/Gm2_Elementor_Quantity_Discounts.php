@@ -38,7 +38,9 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
         return 'eicon-cart-medium';
     }
     public function get_categories() {
-        return [ 'general' ];
+        // Show the widget with other WooCommerce elements so
+        // it's easier to find when building product templates.
+        return [ 'woocommerce' ];
     }
 
     protected function register_controls() {
