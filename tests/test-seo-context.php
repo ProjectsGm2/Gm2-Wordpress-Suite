@@ -9,6 +9,12 @@ class SeoContextHelperTest extends WP_UnitTestCase {
         delete_option('gm2_context_primary_goal');
         delete_option('gm2_context_brand_voice');
         delete_option('gm2_context_competitors');
+        delete_option('gm2_context_core_offerings');
+        delete_option('gm2_context_geographic_focus');
+        delete_option('gm2_context_keyword_data');
+        delete_option('gm2_context_competitor_landscape');
+        delete_option('gm2_context_success_metrics');
+        delete_option('gm2_context_buyer_personas');
         delete_option('gm2_context_project_description');
         delete_option('gm2_context_custom_prompts');
         delete_option('gm2_project_description');
@@ -26,6 +32,12 @@ class SeoContextHelperTest extends WP_UnitTestCase {
             'gm2_context_primary_goal'          => '<i>Increase sales</i>',
             'gm2_context_brand_voice'           => 'Friendly <script>alert(1)</script>',
             'gm2_context_competitors'           => 'Comp <span>A</span>, CompB',
+            'gm2_context_core_offerings'        => '<b>Products</b> & Services',
+            'gm2_context_geographic_focus'      => 'US <script>bad()</script>',
+            'gm2_context_keyword_data'          => 'keyword1, keyword2',
+            'gm2_context_competitor_landscape'  => 'Crowded <b>market</b>',
+            'gm2_context_success_metrics'       => 'Sales &amp; Leads',
+            'gm2_context_buyer_personas'        => 'Persona <span>X</span>',
         ];
 
         foreach ($raw_options as $opt => $val) {
@@ -50,6 +62,12 @@ class SeoContextHelperTest extends WP_UnitTestCase {
             'primary_goal'          => sanitize_textarea_field($raw_options['gm2_context_primary_goal']),
             'brand_voice'           => sanitize_textarea_field($raw_options['gm2_context_brand_voice']),
             'competitors'           => sanitize_textarea_field($raw_options['gm2_context_competitors']),
+            'core_offerings'        => sanitize_textarea_field($raw_options['gm2_context_core_offerings']),
+            'geographic_focus'      => sanitize_textarea_field($raw_options['gm2_context_geographic_focus']),
+            'keyword_data'          => sanitize_textarea_field($raw_options['gm2_context_keyword_data']),
+            'competitor_landscape'  => sanitize_textarea_field($raw_options['gm2_context_competitor_landscape']),
+            'success_metrics'       => sanitize_textarea_field($raw_options['gm2_context_success_metrics']),
+            'buyer_personas'        => sanitize_textarea_field($raw_options['gm2_context_buyer_personas']),
         ];
 
         $this->assertIsArray($filtered);
