@@ -3,6 +3,12 @@ $_tests_dir = getenv('WP_TESTS_DIR');
 if (!$_tests_dir) {
     $_tests_dir = '/tmp/wordpress-tests-lib';
 }
+$polyfills_path = dirname(__DIR__) . '/vendor/yoast/phpunit-polyfills';
+if (!defined('WP_TESTS_PHPUNIT_POLYFILLS_PATH') && is_dir($polyfills_path)) {
+    define('WP_TESTS_PHPUNIT_POLYFILLS_PATH', $polyfills_path);
+} elseif (!defined('WP_TESTS_PHPUNIT_POLYFILLS_PATH') && is_dir('/tmp/wordpress-develop/vendor/yoast/phpunit-polyfills')) {
+    define('WP_TESTS_PHPUNIT_POLYFILLS_PATH', '/tmp/wordpress-develop/vendor/yoast/phpunit-polyfills');
+}
 require_once $_tests_dir . '/includes/functions.php';
 $vendor_autoload = dirname(__DIR__) . '/vendor/autoload.php';
 if (file_exists($vendor_autoload)) {
