@@ -17,6 +17,12 @@ namespace {
             'primary_goal'          => sanitize_textarea_field(get_option('gm2_context_primary_goal', '')),
             'brand_voice'           => sanitize_textarea_field(get_option('gm2_context_brand_voice', '')),
             'competitors'           => sanitize_textarea_field(get_option('gm2_context_competitors', '')),
+            'core_offerings'        => sanitize_textarea_field(get_option('gm2_context_core_offerings', '')),
+            'geographic_focus'      => sanitize_textarea_field(get_option('gm2_context_geographic_focus', '')),
+            'keyword_data'          => sanitize_textarea_field(get_option('gm2_context_keyword_data', '')),
+            'competitor_landscape'  => sanitize_textarea_field(get_option('gm2_context_competitor_landscape', '')),
+            'success_metrics'       => sanitize_textarea_field(get_option('gm2_context_success_metrics', '')),
+            'buyer_personas'        => sanitize_textarea_field(get_option('gm2_context_buyer_personas', '')),
             'project_description'   => sanitize_textarea_field(get_option('gm2_context_project_description', '')),
             'custom_prompts'        => sanitize_textarea_field(get_option('gm2_context_custom_prompts', '')),
         ];
