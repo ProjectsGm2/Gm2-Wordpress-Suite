@@ -230,5 +230,15 @@ class QuantityDiscountsTest extends WP_UnitTestCase {
 
         remove_all_filters('woocommerce_add_to_cart_fragments');
     }
+
+    public function test_filter_cart_item_price_returns_discounted_value() {
+        $cart_item = [
+            'gm2_qd_discounted_price' => 42.5,
+        ];
+        $qd = new Gm2_Quantity_Discounts_Public();
+        $qd->run();
+        $result = apply_filters('woocommerce_cart_item_price', '100', $cart_item, 'item');
+        $this->assertSame('42.5', $result);
+    }
 }
 
