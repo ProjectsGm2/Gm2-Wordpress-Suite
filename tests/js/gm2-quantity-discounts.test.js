@@ -19,6 +19,7 @@ test('renders groups from gm2Qd', async () => {
 
   expect($('.gm2-qd-name').val()).toBe('Group A');
   expect($('.gm2-qd-accordion').length).toBe(1);
+  expect($('.gm2-qd-selected-title').text()).toBe('Selected products');
   const text = $('.gm2-qd-selected li').text();
   expect(text).toContain('Prod');
   expect(text).toContain('P1');

@@ -50,3 +50,9 @@
 .gm2-qd-remove-actions button {
     margin-right:5px;
 }
+.gm2-qd-selected {
+    background:#D8F0FB;
+}
+.gm2-qd-selected-title {
+    margin-top:10px;
+}
