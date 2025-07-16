@@ -134,15 +134,15 @@ class Gm2_Quantity_Discounts_Public {
     }
 
     public function add_order_item_meta($item, $cart_item_key, $values, $order) {
+        $desc = '';
         if (isset($values['gm2_qd_rule_desc'])) {
             $desc = $values['gm2_qd_rule_desc'];
-            $item->add_meta_data(__('Quantity Discount Rule', 'gm2-wordpress-suite'), $desc, true);
         } elseif (isset($values['gm2_qd_rule'])) {
-            $item->add_meta_data(
-                __('Quantity Discount Rule', 'gm2-wordpress-suite'),
-                $this->format_rule_desc($values['gm2_qd_rule']),
-                true
-            );
+            $desc = $this->format_rule_desc($values['gm2_qd_rule']);
+        }
+
+        if ($desc !== '') {
+            $item->add_meta_data('_gm2_qd_rule_desc', $desc, true);
         }
         $item->add_meta_data('_gm2_purchased_qty', $item->get_quantity(), true);
         if (isset($values['gm2_qd_discounted_price'])) {
@@ -151,6 +151,14 @@ class Gm2_Quantity_Discounts_Public {
     }
 
     public function display_item_meta($html, $item, $args) {
+        $rule  = $item->get_meta('_gm2_qd_rule_desc', true);
+        if ($rule !== '') {
+            $show = (!empty($args['sent_to_admin']) && $args['sent_to_admin']) || current_user_can('manage_woocommerce');
+            if ($show) {
+                $html .= '<br><small>' . sprintf(__('Quantity Discount Rule: %s', 'gm2-wordpress-suite'), esc_html($rule)) . '</small>';
+            }
+        }
+
         $qty   = $item->get_meta('_gm2_purchased_qty', true);
         $price = $item->get_meta('_gm2_discounted_price', true);
         if ($qty !== '') {
