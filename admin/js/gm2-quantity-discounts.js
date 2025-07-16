@@ -12,8 +12,11 @@ jQuery(function($){
     }
     function createGroup(g){
         g = g || {name:'',products:[],rules:[]};
+        var accordion = $('<div class="gm2-qd-accordion open"></div>');
+        var header = $('<div class="gm2-qd-header"></div>');
+        header.append('<input type="text" class="gm2-qd-name" placeholder="Group name" value="'+(g.name||'')+'"> <button type="button" class="button gm2-qd-remove-group">&times;</button>');
+        accordion.append(header);
         var container = $('<div class="gm2-qd-group"></div>');
-        container.append('<h2><input type="text" class="gm2-qd-name" placeholder="Group name" value="'+(g.name||'')+'"> <button type="button" class="button gm2-qd-remove-group">&times;</button></h2>');
         var prodSection = $('<div class="gm2-qd-products"><select class="gm2-qd-cat"><option value="">All Categories</option></select> <input type="text" class="gm2-qd-search" placeholder="Search products"> <ul class="gm2-qd-results"></ul><ul class="gm2-qd-selected"></ul></div>');
         categories.forEach(function(c){prodSection.find('select').append('<option value="'+c.id+'">'+c.name+'</option>');});
         container.append(prodSection);
@@ -24,7 +27,8 @@ jQuery(function($){
         g.products.forEach(function(id){
             addSelectedProduct(container, {id:id,text:id});
         });
-        return container;
+        accordion.append(container);
+        return accordion;
     }
     function addSelectedProduct(group, item){
         var ul = group.find('.gm2-qd-selected');
@@ -40,7 +44,13 @@ jQuery(function($){
         $('#gm2-qd-groups').append(createGroup());
     });
     $(document).on('click','.gm2-qd-remove-group',function(){
-        $(this).closest('.gm2-qd-group').remove();
+        $(this).closest('.gm2-qd-accordion').remove();
+    });
+    $(document).on('click','.gm2-qd-header',function(e){
+        if($(e.target).closest('button').length) return;
+        var acc=$(this).closest('.gm2-qd-accordion');
+        acc.toggleClass('open');
+        acc.find('> .gm2-qd-group').toggle();
     });
     $(document).on('click','.gm2-qd-add-rule',function(){
         var group=$(this).closest('.gm2-qd-group');
@@ -69,8 +79,9 @@ jQuery(function($){
     $('#gm2-qd-form').on('submit',function(e){
         e.preventDefault();
         var data=[];
-        $('#gm2-qd-groups .gm2-qd-group').each(function(){
-            var g=$(this);var obj={name:g.find('.gm2-qd-name').val(),products:[],rules:[]};
+        $('#gm2-qd-groups .gm2-qd-accordion').each(function(){
+            var acc=$(this);var g=acc.find('> .gm2-qd-group');
+            var obj={name:acc.find('.gm2-qd-name').val(),products:[],rules:[]};
             g.find('.gm2-qd-selected li').each(function(){obj.products.push($(this).data('id'));});
             g.find('.gm2-qd-rules tbody tr').each(function(){
                 var min=parseInt($(this).find('.gm2-qd-min').val(),10)||0;
