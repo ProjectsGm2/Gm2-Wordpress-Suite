@@ -2325,6 +2325,17 @@ class Gm2_SEO_Admin {
             $guidelines = get_option('gm2_seo_guidelines_tax_' . $taxonomy, '');
         }
         $guidelines = trim($guidelines);
+
+        $context_parts = array_filter(array_map('trim', gm2_get_seo_context()));
+        $context_block = '';
+        if ($context_parts) {
+            $pairs = [];
+            foreach ($context_parts as $k => $v) {
+                $pairs[] = ucfirst(str_replace('_', ' ', $k)) . ': ' . $v;
+            }
+            $context_block = 'Site context: ' . implode('; ', $pairs);
+        }
+
         $prompt  = '';
         if ($guidelines !== '') {
             $prompt .= "SEO guidelines:\n" . $guidelines . "\n\n";
@@ -2332,6 +2343,9 @@ class Gm2_SEO_Admin {
         $prompt .= "Page title: {$title}\nURL: {$url}\n";
         $prompt .= "Existing SEO Title: {$seo_title}\nSEO Description: {$seo_description}\n";
         $prompt .= "Focus Keywords: {$focus}\nCanonical: {$canonical}\n";
+        if ($context_block !== '') {
+            $prompt .= $context_block . "\n";
+        }
         if ($extra_context !== '') {
             $prompt .= "Extra context: {$extra_context}\n";
         }
@@ -2457,6 +2471,9 @@ class Gm2_SEO_Admin {
         if ($final_long) {
             $prompt2 .= "Long-tail Keywords: " . implode(', ', $final_long) . "\n";
         }
+        if ($context_block !== '') {
+            $prompt2 .= $context_block . "\n";
+        }
         if ($extra_context !== '') {
             $prompt2 .= "Extra context: {$extra_context}\n";
         }
@@ -2550,6 +2567,15 @@ class Gm2_SEO_Admin {
             '{taxonomy}'   => $taxonomy,
             '{guidelines}' => $guidelines,
         ]);
+
+        $context_parts = array_filter(array_map('trim', gm2_get_seo_context()));
+        if ($context_parts) {
+            $pairs = [];
+            foreach ($context_parts as $k => $v) {
+                $pairs[] = ucfirst(str_replace('_', ' ', $k)) . ': ' . $v;
+            }
+            $prompt .= "\nSite context: " . implode('; ', $pairs);
+        }
 
         $chat = new Gm2_ChatGPT();
         $resp = $chat->query($prompt);
@@ -2668,6 +2694,14 @@ class Gm2_SEO_Admin {
                         }
                     }
                     return null;
+                })(),
+                'context_exists' => (function(){
+                    foreach (gm2_get_seo_context() as $val) {
+                        if (trim($val) !== '') {
+                            return true;
+                        }
+                    }
+                    return false;
                 })(),
                 'i18n'     => [
                     'researching' => __( 'Researching...', 'gm2-wordpress-suite' ),
@@ -2793,6 +2827,14 @@ class Gm2_SEO_Admin {
                         }
                     }
                     return null;
+                })(),
+                'context_exists' => (function(){
+                    foreach (gm2_get_seo_context() as $val) {
+                        if (trim($val) !== '') {
+                            return true;
+                        }
+                    }
+                    return false;
                 })(),
                 'i18n'     => [
                     'researching' => __( 'Researching...', 'gm2-wordpress-suite' ),

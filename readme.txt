@@ -182,8 +182,9 @@ permalinks. Enter the words to remove in the accompanying field.
 == AI SEO ==
 While editing a post or taxonomy term, open the **AI SEO** tab in the SEO meta
 box. Click **AI Research** to run a two-step workflow. You'll first be asked
-whether to use any existing SEO field values. If all fields are empty, provide a
-short description so ChatGPT has extra context.
+whether to use any existing SEO field values. If all fields are empty and no
+site context is set under **SEO → Context**, you'll be prompted for a short
+description so ChatGPT has extra context.
 
 Step one sends the post content to ChatGPT which returns a title, description
 and a list of seed keywords. If no seed keywords are returned, the plugin
