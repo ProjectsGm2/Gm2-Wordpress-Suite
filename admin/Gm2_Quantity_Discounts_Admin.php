@@ -116,6 +116,7 @@ class Gm2_Quantity_Discounts_Admin {
             'post_type'      => 'product',
             'posts_per_page' => 20,
             's'              => $term,
+            'post_status'    => 'publish',
         ];
         if ( $cat ) {
             $args['tax_query'] = [
@@ -150,6 +151,7 @@ class Gm2_Quantity_Discounts_Admin {
         $args = [
             'post_type'      => 'product',
             'posts_per_page' => -1,
+            'post_status'    => 'publish',
             'tax_query'      => [
                 [
                     'taxonomy' => 'product_cat',
