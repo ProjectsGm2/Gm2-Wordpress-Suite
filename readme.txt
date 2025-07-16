@@ -13,7 +13,7 @@ A powerful suite of WordPress enhancements including admin tools, frontend optim
 Key features include:
 * SEO tools with breadcrumbs, caching and structured data
 * ChatGPT-powered content generation and keyword research
-* WooCommerce quantity discounts with an Elementor widget
+* WooCommerce quantity discounts with a dedicated Elementor widget
 * Tariff management and redirects
 
 == Installation ==
@@ -37,6 +37,7 @@ Key features include:
    manually on the SEO settings screen if needed.
 8. Activate WooCommerce to enable Quantity Discounts.
 9. Install and activate Elementor to use the Quantity Options widget on product pages.
+10. Open **Gm2 → Quantity Discounts** and create discount groups to define pricing rules.
 
 If you plan to distribute or manually upload the plugin, you can create a ZIP
 archive with `bash bin/build-plugin.sh`. This command packages the plugin with
@@ -234,13 +235,7 @@ add or edit tariffs. Enabled tariffs add a fee to the cart total during
 checkout.
 
 == Quantity Discounts ==
-Create discount groups from **Gm2 → Quantity Discounts** to offer bulk pricing on
-WooCommerce products. Define rules with minimum quantities and either percentage
-or fixed discounts. Discounts are applied automatically in the cart.
-When Elementor is active, use the **GM2 Quantity Options** widget on product
-pages to display buttons that preselect quantities before adding to the cart.
-Each selected rule, the purchased quantity and the discounted price are stored
-in the order item meta and shown in emails and the admin order screen.
+After activating WooCommerce, open **Gm2 → Quantity Discounts** and click **Add Discount Group** to define bulk pricing rules. Choose the products or categories to apply, enter the minimum quantity and specify either a percentage or fixed discount. When customers meet the threshold the discount is applied automatically in the cart. Install Elementor to add the **GM2 Quantity Options** widget on product pages, giving shoppers buttons for preset quantities that match your rules. The selected rule and discounted price are saved in order item meta and appear in emails and on the admin order screen.
 
 == Redirects ==
 Create 301 or 302 redirects from the **SEO → Redirects** tab. The plugin logs
