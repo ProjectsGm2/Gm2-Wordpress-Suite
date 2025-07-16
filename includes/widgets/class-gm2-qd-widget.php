@@ -234,7 +234,7 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'icon_size',
             [
-                'label' => __( 'Icon Size', 'gm2-wordpress-suite' ),
+                'label' => __( 'Icon Size (Normal)', 'gm2-wordpress-suite' ),
                 'type'  => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => [ 'px', 'em', 'rem' ],
                 'range' => [
@@ -289,7 +289,7 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'icon_size_hover',
             [
-                'label' => __( 'Icon Size', 'gm2-wordpress-suite' ),
+                'label' => __( 'Icon Size (Hover)', 'gm2-wordpress-suite' ),
                 'type'  => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => [ 'px', 'em', 'rem' ],
                 'range' => [
@@ -344,7 +344,7 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'icon_size_active',
             [
-                'label' => __( 'Icon Size', 'gm2-wordpress-suite' ),
+                'label' => __( 'Icon Size (Active)', 'gm2-wordpress-suite' ),
                 'type'  => \Elementor\Controls_Manager::SLIDER,
                 'size_units' => [ 'px', 'em', 'rem' ],
                 'range' => [
