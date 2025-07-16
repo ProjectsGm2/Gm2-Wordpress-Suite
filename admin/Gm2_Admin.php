@@ -14,8 +14,8 @@ class Gm2_Admin {
         $this->diagnostics = new Gm2_Diagnostics();
         $this->diagnostics->run();
         $this->quantity_discounts = new Gm2_Quantity_Discounts_Admin();
-        $this->quantity_discounts->register_hooks();
         add_action('admin_menu', [$this, 'add_admin_menu']);
+        $this->quantity_discounts->register_hooks();
         add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_scripts']);
         add_action('wp_ajax_gm2_add_tariff', [$this, 'ajax_add_tariff']);
         add_action('wp_ajax_nopriv_gm2_add_tariff', [$this, 'ajax_add_tariff']);
