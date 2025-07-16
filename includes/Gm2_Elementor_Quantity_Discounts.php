@@ -5,7 +5,9 @@ if (!defined('ABSPATH')) { exit; }
 
 class Gm2_Elementor_Quantity_Discounts {
     public function __construct() {
-        add_action('init', [ $this, 'init' ]);
+        // Register the widget after Elementor initializes so the
+        // `elementor/widgets/register` hook is available.
+        add_action('elementor/init', [ $this, 'init' ]);
     }
 
     public function init() {
@@ -30,12 +32,22 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
         return 'gm2_quantity_discounts';
     }
     public function get_title() {
-        return __( 'GM2 Quantity Options', 'gm2-wordpress-suite' );
+        return __( 'Gm2 Qnty Discounts', 'gm2-wordpress-suite' );
     }
     public function get_icon() {
         return 'eicon-cart-medium';
     }
     public function get_categories() {
+        // Prefer the WooCommerce section if available. This requires
+        // Elementor Pro, otherwise widgets default to the General
+        // category so they remain visible in all installations.
+        $manager = \Elementor\Plugin::instance()->elements_manager;
+        if ( method_exists( $manager, 'get_categories' ) ) {
+            $categories = $manager->get_categories();
+            if ( isset( $categories['woocommerce'] ) ) {
+                return [ 'woocommerce' ];
+            }
+        }
         return [ 'general' ];
     }
 
