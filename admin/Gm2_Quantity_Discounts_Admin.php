@@ -10,6 +10,7 @@ class Gm2_Quantity_Discounts_Admin {
         add_action('admin_enqueue_scripts', [ $this, 'enqueue_scripts' ]);
         add_action('wp_ajax_gm2_qd_search_products', [ $this, 'ajax_search_products' ]);
         add_action('wp_ajax_gm2_qd_save_groups', [ $this, 'ajax_save_groups' ]);
+        add_action('wp_ajax_gm2_qd_get_category_products', [ $this, 'ajax_get_category_products' ]);
     }
 
     public function add_admin_menu() {
@@ -100,6 +101,35 @@ class Gm2_Quantity_Discounts_Admin {
                 'id'   => $p->ID,
                 'text' => $p->post_title,
             ];
+        }
+        wp_send_json_success( $result );
+    }
+
+    public function ajax_get_category_products() {
+        if ( ! current_user_can( 'edit_posts' ) ) {
+            wp_send_json_error( __( 'Permission denied', 'gm2-wordpress-suite' ) );
+        }
+        check_ajax_referer( 'gm2_qd_nonce', 'nonce' );
+        $cat = absint( $_GET['category'] ?? 0 );
+        if ( ! $cat ) {
+            wp_send_json_success( [] );
+        }
+        $args = [
+            'post_type'      => 'product',
+            'posts_per_page' => -1,
+            'tax_query'      => [
+                [
+                    'taxonomy' => 'product_cat',
+                    'terms'    => [ $cat ],
+                ],
+            ],
+            'orderby' => 'title',
+            'order'   => 'ASC',
+        ];
+        $q      = new \WP_Query( $args );
+        $result = [];
+        foreach ( $q->posts as $p ) {
+            $result[] = [ 'id' => $p->ID, 'text' => $p->post_title ];
         }
         wp_send_json_success( $result );
     }
