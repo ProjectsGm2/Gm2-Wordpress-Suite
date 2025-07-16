@@ -12,6 +12,9 @@
     font-weight:bold;
     font-size:20px;
 }
+.gm2-qd-accordion {
+    margin-bottom:15px;
+}
 .gm2-qd-accordion .gm2-qd-group {
     border:1px solid #ccc;
     border-top:0;
