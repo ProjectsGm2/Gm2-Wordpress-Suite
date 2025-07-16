@@ -30,7 +30,7 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
         return 'gm2_quantity_discounts';
     }
     public function get_title() {
-        return __( 'GM2 Quantity Options', 'gm2-wordpress-suite' );
+        return __( 'Gm2 Qnty Discounts', 'gm2-wordpress-suite' );
     }
     public function get_icon() {
         return 'eicon-cart-medium';
