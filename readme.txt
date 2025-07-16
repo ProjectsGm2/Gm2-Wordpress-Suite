@@ -10,6 +10,12 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 == Description ==
 A powerful suite of WordPress enhancements including admin tools, frontend optimizations, and ChatGPT-powered content generation.
 
+Key features include:
+* SEO tools with breadcrumbs, caching and structured data
+* ChatGPT-powered content generation and keyword research
+* WooCommerce quantity discounts with an Elementor widget
+* Tariff management and redirects
+
 == Installation ==
 1. Upload the plugin files to the `/wp-content/plugins/gm2-wordpress-suite` directory.
 2. Activate the plugin through the 'Plugins' screen in WordPress.
@@ -29,6 +35,8 @@ A powerful suite of WordPress enhancements including admin tools, frontend optim
 7. Select your Analytics Measurement ID and Ads Customer ID on the
    **SEO → Connect Google Account** page after connecting, or enter them
    manually on the SEO settings screen if needed.
+8. Activate WooCommerce to enable Quantity Discounts.
+9. Install and activate Elementor to use the Quantity Options widget on product pages.
 
 If you plan to distribute or manually upload the plugin, you can create a ZIP
 archive with `bash bin/build-plugin.sh`. This command packages the plugin with
@@ -224,6 +232,13 @@ and helps search engines understand your content.
 Manage percentage-based fees for WooCommerce orders. Open **Gm2 → Tariff** to
 add or edit tariffs. Enabled tariffs add a fee to the cart total during
 checkout.
+
+== Quantity Discounts ==
+Create discount groups from **Gm2 → Quantity Discounts** to offer bulk pricing on
+WooCommerce products. Define rules with minimum quantities and either percentage
+or fixed discounts. Discounts are applied automatically in the cart.
+When Elementor is active, use the **GM2 Quantity Options** widget on product
+pages to display buttons that preselect quantities before adding to the cart.
 
 == Redirects ==
 Create 301 or 302 redirects from the **SEO → Redirects** tab. The plugin logs
