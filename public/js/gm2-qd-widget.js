@@ -2,6 +2,7 @@ jQuery(function($){
     $(document).on('click','.gm2-qd-option',function(e){
         e.preventDefault();
         var $option = $(this);
+        $option.addClass('active').siblings('.gm2-qd-option').removeClass('active');
         var qty = $option.data('qty');
         var $form = $('form.cart');
         var $input = $form.find('input.qty');

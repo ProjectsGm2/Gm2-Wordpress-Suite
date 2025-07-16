@@ -169,7 +169,7 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
                 'label' => __( 'Color', 'gm2-wordpress-suite' ),
                 'type'  => \Elementor\Controls_Manager::COLOR,
                 'selectors' => [
-                    '{{WRAPPER}} .gm2-qd-option:active .gm2-qd-label' => 'color: {{VALUE}};',
+                    '{{WRAPPER}} .gm2-qd-option.active .gm2-qd-label' => 'color: {{VALUE}};',
                 ],
             ]
         );
@@ -177,7 +177,7 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
             \Elementor\Group_Control_Text_Shadow::get_type(),
             [
                 'name'     => 'label_active_shadow',
-                'selector' => '{{WRAPPER}} .gm2-qd-option:active .gm2-qd-label',
+                'selector' => '{{WRAPPER}} .gm2-qd-option.active .gm2-qd-label',
             ]
         );
         $this->add_responsive_control(
@@ -186,7 +186,7 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
                 'label' => __( 'Padding', 'gm2-wordpress-suite' ),
                 'type'  => \Elementor\Controls_Manager::DIMENSIONS,
                 'selectors' => [
-                    '{{WRAPPER}} .gm2-qd-option:active .gm2-qd-label' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                    '{{WRAPPER}} .gm2-qd-option.active .gm2-qd-label' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
                 ],
             ]
         );
@@ -194,7 +194,7 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
             \Elementor\Group_Control_Background::get_type(),
             [
                 'name'     => 'label_active_bg',
-                'selector' => '{{WRAPPER}} .gm2-qd-option:active .gm2-qd-label',
+                'selector' => '{{WRAPPER}} .gm2-qd-option.active .gm2-qd-label',
             ]
         );
         $this->end_controls_tab();
@@ -353,7 +353,7 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
                     'rem' => [ 'min' => 0.1, 'max' => 10, 'step' => 0.1 ],
                 ],
                 'selectors' => [
-                    '{{WRAPPER}} .gm2-qd-option:active .gm2-qd-currency-icon' => 'font-size: {{SIZE}}{{UNIT}};',
+                    '{{WRAPPER}} .gm2-qd-option.active .gm2-qd-currency-icon' => 'font-size: {{SIZE}}{{UNIT}};',
                 ],
             ]
         );
@@ -363,7 +363,7 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
                 'label' => __( 'Color', 'gm2-wordpress-suite' ),
                 'type'  => \Elementor\Controls_Manager::COLOR,
                 'selectors' => [
-                    '{{WRAPPER}} .gm2-qd-option:active .gm2-qd-price' => 'color: {{VALUE}};',
+                    '{{WRAPPER}} .gm2-qd-option.active .gm2-qd-price' => 'color: {{VALUE}};',
                 ],
             ]
         );
@@ -371,7 +371,7 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
             \Elementor\Group_Control_Text_Shadow::get_type(),
             [
                 'name'     => 'price_active_shadow',
-                'selector' => '{{WRAPPER}} .gm2-qd-option:active .gm2-qd-price',
+                'selector' => '{{WRAPPER}} .gm2-qd-option.active .gm2-qd-price',
             ]
         );
         $this->add_responsive_control(
@@ -380,7 +380,7 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
                 'label' => __( 'Padding', 'gm2-wordpress-suite' ),
                 'type'  => \Elementor\Controls_Manager::DIMENSIONS,
                 'selectors' => [
-                    '{{WRAPPER}} .gm2-qd-option:active .gm2-qd-price' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                    '{{WRAPPER}} .gm2-qd-option.active .gm2-qd-price' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
                 ],
             ]
         );
@@ -388,7 +388,7 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
             \Elementor\Group_Control_Background::get_type(),
             [
                 'name'     => 'price_active_bg',
-                'selector' => '{{WRAPPER}} .gm2-qd-option:active .gm2-qd-price',
+                'selector' => '{{WRAPPER}} .gm2-qd-option.active .gm2-qd-price',
             ]
         );
         $this->end_controls_tab();
