@@ -38,6 +38,8 @@ class SeoContextHelperTest extends WP_UnitTestCase {
             'gm2_context_competitor_landscape'  => 'Crowded <b>market</b>',
             'gm2_context_success_metrics'       => 'Sales &amp; Leads',
             'gm2_context_buyer_personas'        => 'Persona <span>X</span>',
+            'gm2_context_project_description'   => '<b>Important</b> project',
+            'gm2_context_custom_prompts'        => 'Custom <script>prompt()</script>',
         ];
 
         foreach ($raw_options as $opt => $val) {
@@ -68,6 +70,8 @@ class SeoContextHelperTest extends WP_UnitTestCase {
             'competitor_landscape'  => sanitize_textarea_field($raw_options['gm2_context_competitor_landscape']),
             'success_metrics'       => sanitize_textarea_field($raw_options['gm2_context_success_metrics']),
             'buyer_personas'        => sanitize_textarea_field($raw_options['gm2_context_buyer_personas']),
+            'project_description'   => sanitize_textarea_field($raw_options['gm2_context_project_description']),
+            'custom_prompts'        => sanitize_textarea_field($raw_options['gm2_context_custom_prompts']),
         ];
 
         $this->assertIsArray($filtered);
