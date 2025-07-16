@@ -34,6 +34,8 @@ class Gm2_Quantity_Discounts_Admin {
             [],
             GM2_VERSION
         );
+        wp_enqueue_script( 'selectWoo' );
+        wp_enqueue_style( 'select2' );
         wp_enqueue_script(
             'gm2-quantity-discounts',
             GM2_PLUGIN_URL . 'admin/js/gm2-quantity-discounts.js',

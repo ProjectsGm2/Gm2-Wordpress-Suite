@@ -10,12 +10,14 @@ test('renders groups from gm2Qd', async () => {
   `, { url: 'http://localhost' });
   const $ = jquery(dom.window);
   Object.assign(global, { window: dom.window, document: dom.window.document, jQuery: $, $ });
+  $.fn.selectWoo = jest.fn(function(){ return this; });
   global.gm2Qd = { nonce: 'n', ajax_url: '/fake', groups: [{ name: 'Group A', products: [{ id: 1, title: 'Prod', sku: 'P1' }], rules: [] }], categories: [], productTitles: { 1: 'Prod' } };
 
   jest.resetModules();
   require('../../admin/js/gm2-quantity-discounts.js');
   await new Promise(r => setTimeout(r, 0));
   await new Promise(r => setTimeout(r, 0));
+  expect($.fn.selectWoo).toHaveBeenCalled();
 
   expect($('.gm2-qd-name').val()).toBe('Group A');
   expect($('.gm2-qd-accordion').length).toBe(1);
@@ -35,6 +37,7 @@ test('submits group data via ajax', async () => {
   `, { url: 'http://localhost' });
   const $ = jquery(dom.window);
   Object.assign(global, { window: dom.window, document: dom.window.document, jQuery: $, $ });
+  $.fn.selectWoo = jest.fn(function(){ return this; });
   global.gm2Qd = { nonce: 'n', ajax_url: '/fake', groups: [], categories: [], productTitles: {} };
   $.post = jest.fn(() => $.Deferred().resolve({ success: true }));
 
@@ -69,6 +72,7 @@ test('accordion toggles visibility', async () => {
   `, { url: 'http://localhost' });
   const $ = jquery(dom.window);
   Object.assign(global, { window: dom.window, document: dom.window.document, jQuery: $, $ });
+  $.fn.selectWoo = jest.fn(function(){ return this; });
   global.gm2Qd = { nonce: 'n', ajax_url: '/fake', groups: [{ name: 'A', products: [], rules: [] }], categories: [], productTitles: {} };
 
   jest.resetModules();
@@ -97,6 +101,7 @@ test('search results use checkboxes and add selected button', async () => {
   `, { url: 'http://localhost' });
   const $ = jquery(dom.window);
   Object.assign(global, { window: dom.window, document: dom.window.document, jQuery: $, $ });
+  $.fn.selectWoo = jest.fn(function(){ return this; });
   global.gm2Qd = {
     nonce: 'n',
     ajax_url: '/fake',

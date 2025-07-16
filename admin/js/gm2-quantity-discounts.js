@@ -73,10 +73,13 @@ jQuery(function($){
     function renderGroups(){
         var holder = $('#gm2-qd-groups').empty();
         groups.forEach(function(g){holder.append(createGroup(g));});
+        $('.gm2-qd-cat').selectWoo({ width: '200px' });
     }
     renderGroups();
     $('#gm2-qd-add-group').on('click',function(){
-        $('#gm2-qd-groups').append(createGroup());
+        var group = createGroup();
+        $('#gm2-qd-groups').append(group);
+        group.find('.gm2-qd-cat').selectWoo({ width: '200px' });
     });
     $(document).on('click','.gm2-qd-remove-group',function(){
         $(this).closest('.gm2-qd-accordion').remove();
