@@ -114,19 +114,27 @@ jQuery(function($){
     function searchProducts(group){
         var term=group.find('.gm2-qd-search').val();
         var cat=group.find('.gm2-qd-cat').val();
-        if(term.length<2){group.find('.gm2-qd-results').empty();return;}
+        var box=group.find('.gm2-qd-results').empty();
+        if(term.length<2){return;}
         $.get(gm2Qd.ajax_url,{action:'gm2_qd_search_products',nonce:gm2Qd.nonce,term:term,category:cat}).done(function(res){
-            var ul=group.find('.gm2-qd-results').empty();
-            if(res.success){res.data.forEach(function(i){ul.append('<li data-id="'+i.id+'" data-title="'+i.title+'" data-sku="'+i.sku+'">'+labelFor(i)+'</li>');});}
+            if(!res.success) return;
+            var html='<label><input type="checkbox" class="gm2-qd-select-all"> Select all</label>'+
+                      '<ul class="gm2-qd-checkboxes"></ul>'+
+                      '<p><button type="button" class="button gm2-qd-add-selected">Add selected products</button></p>';
+            box.append(html);
+            var list=box.find('.gm2-qd-checkboxes');
+            res.data.forEach(function(i){
+                var li=$('<li><label><input type="checkbox" class="gm2-qd-product-chk" value="'+i.id+'" data-title="'+i.title+'" data-sku="'+i.sku+'"> '+labelFor(i)+'</label></li>');
+                if(group.find('.gm2-qd-selected li[data-id="'+i.id+'"]').length){
+                    li.find('input').prop('checked',true);
+                }
+                list.append(li);
+            });
         });
     }
     $(document).on('click','.gm2-qd-search-btn',function(){
         var group=$(this).closest('.gm2-qd-group');
         searchProducts(group);
-    });
-    $(document).on('click','.gm2-qd-results li',function(){
-        var group=$(this).closest('.gm2-qd-group');
-        addSelectedProduct(group,{id:$(this).data('id'),title:$(this).data('title'),sku:$(this).data('sku')});
     });
     $(document).on('click','.gm2-qd-remove-selected',function(){
         var group=$(this).closest('.gm2-qd-products');
