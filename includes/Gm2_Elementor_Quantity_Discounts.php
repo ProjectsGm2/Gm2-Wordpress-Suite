@@ -9,7 +9,11 @@ class Gm2_Elementor_Quantity_Discounts {
     }
 
     public function init() {
-        if (!class_exists('Elementor\\Plugin') || !class_exists('WooCommerce')) {
+        if (
+            ! class_exists('Elementor\\Plugin') ||
+            ! class_exists('WooCommerce') ||
+            ! class_exists('Elementor\\Widget_Base')
+        ) {
             return;
         }
         add_action('elementor/widgets/register', [ $this, 'register_widget' ]);
@@ -20,6 +24,7 @@ class Gm2_Elementor_Quantity_Discounts {
     }
 }
 
+if ( class_exists( '\\Elementor\\Widget_Base' ) ) {
 class GM2_QD_Widget extends \Elementor\Widget_Base {
     public function get_name() {
         return 'gm2_quantity_discounts';
@@ -106,4 +111,5 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
         }
         return [];
     }
+}
 }
