@@ -10,6 +10,7 @@ class Gm2_Quantity_Discounts_Public {
         add_action('woocommerce_before_calculate_totals', [ $this, 'adjust_prices' ], 20);
         add_filter('woocommerce_add_cart_item_data', [ $this, 'add_cart_item_data' ], 10, 4);
         add_action('woocommerce_add_to_cart', [ $this, 'recalculate_after_add' ], 20, 6);
+        add_action('woocommerce_ajax_added_to_cart', [ $this, 'recalculate_after_add' ], 20);
         add_action('woocommerce_checkout_create_order_line_item', [ $this, 'add_order_item_meta' ], 10, 4);
         add_filter('woocommerce_display_item_meta', [ $this, 'display_item_meta' ], 10, 3);
         add_filter('woocommerce_email_order_item_meta', [ $this, 'display_item_meta' ], 10, 3);

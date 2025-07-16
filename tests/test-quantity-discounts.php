@@ -9,6 +9,16 @@ if (!class_exists('WC_Cart')) {
     class WC_Cart {
         public $cart_contents = [];
         public function get_cart() { return $this->cart_contents; }
+        public function calculate_totals() {
+            do_action('woocommerce_before_calculate_totals', $this);
+        }
+        public function get_cart_total() {
+            $total = 0;
+            foreach ($this->cart_contents as $item) {
+                $total += $item['data']->get_price() * $item['quantity'];
+            }
+            return $total;
+        }
     }
 }
 if (!class_exists('WC_Product')) {
@@ -41,6 +51,18 @@ if (!function_exists('wc_price')) {
 }
 if (!function_exists('get_woocommerce_currency_symbol')) {
     function get_woocommerce_currency_symbol() { return '$'; }
+}
+if (!function_exists('WC')) {
+    function WC() {
+        static $instance = null;
+        if (!$instance) {
+            $instance = new class {
+                public $cart;
+                public function __construct() { $this->cart = new WC_Cart(); }
+            };
+        }
+        return $instance;
+    }
 }
 
 class QuantityDiscountsTest extends WP_UnitTestCase {
@@ -144,6 +166,38 @@ class QuantityDiscountsTest extends WP_UnitTestCase {
         $widget->render();
         $out = ob_get_clean();
         $this->assertStringContainsString('gm2-qd-options', $out);
+    }
+
+    public function test_ajax_recalculate_updates_fragments() {
+        $m = new Gm2_Quantity_Discount_Manager();
+        $m->add_group([
+            'name'     => 'Test',
+            'products' => [1],
+            'rules'    => [ [ 'min' => 2, 'type' => 'percent', 'amount' => 50 ] ],
+        ]);
+
+        $cart = WC()->cart;
+        $product = new WC_Product(100);
+        $cart->cart_contents['item'] = [
+            'product_id' => 1,
+            'quantity'   => 2,
+            'data'       => $product,
+        ];
+
+        $qd = new Gm2_Quantity_Discounts_Public();
+        $qd->run();
+
+        do_action('woocommerce_ajax_added_to_cart', 1);
+
+        add_filter('woocommerce_add_to_cart_fragments', function($fragments) {
+            $fragments['price'] = WC()->cart->cart_contents['item']['data']->get_price();
+            return $fragments;
+        });
+
+        $fragments = apply_filters('woocommerce_add_to_cart_fragments', []);
+        $this->assertSame(50.0, $fragments['price']);
+
+        remove_all_filters('woocommerce_add_to_cart_fragments');
     }
 }
 
