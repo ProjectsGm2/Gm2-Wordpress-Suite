@@ -9,6 +9,9 @@ class SeoContextHelperTest extends WP_UnitTestCase {
         delete_option('gm2_context_primary_goal');
         delete_option('gm2_context_brand_voice');
         delete_option('gm2_context_competitors');
+        delete_option('gm2_context_project_description');
+        delete_option('gm2_context_custom_prompts');
+        delete_option('gm2_project_description');
         remove_all_filters('gm2_seo_context');
         parent::tearDown();
     }
@@ -22,6 +25,8 @@ class SeoContextHelperTest extends WP_UnitTestCase {
         update_option('gm2_context_primary_goal', '<i>Increase sales</i>');
         update_option('gm2_context_brand_voice', 'Friendly <script>alert(1)</script>');
         update_option('gm2_context_competitors', 'Comp <span>A</span>, CompB');
+        update_option('gm2_context_project_description', '<b>Desc</b>');
+        update_option('gm2_context_custom_prompts', 'Prompt');
 
         $filtered = null;
         add_filter('gm2_seo_context', function($context) use (&$filtered) {
@@ -41,6 +46,8 @@ class SeoContextHelperTest extends WP_UnitTestCase {
         $this->assertSame(sanitize_textarea_field('<i>Increase sales</i>'), $filtered['primary_goal']);
         $this->assertSame(sanitize_textarea_field('Friendly <script>alert(1)</script>'), $filtered['brand_voice']);
         $this->assertSame(sanitize_textarea_field('Comp <span>A</span>, CompB'), $filtered['competitors']);
+        $this->assertSame(sanitize_textarea_field('<b>Desc</b>'), $filtered['project_description']);
+        $this->assertSame(sanitize_textarea_field('Prompt'), $filtered['custom_prompts']);
 
         $this->assertSame('filtered', $context['industry_category']);
         $this->assertSame($filtered['business_model'], $context['business_model']);
@@ -50,5 +57,7 @@ class SeoContextHelperTest extends WP_UnitTestCase {
         $this->assertSame($filtered['primary_goal'], $context['primary_goal']);
         $this->assertSame($filtered['brand_voice'], $context['brand_voice']);
         $this->assertSame($filtered['competitors'], $context['competitors']);
+        $this->assertSame($filtered['project_description'], $context['project_description']);
+        $this->assertSame($filtered['custom_prompts'], $context['custom_prompts']);
     }
 }
