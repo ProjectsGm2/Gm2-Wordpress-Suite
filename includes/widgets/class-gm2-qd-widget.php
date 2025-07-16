@@ -61,6 +61,34 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
         $this->end_controls_section();
     }
 
+    /**
+     * Calculate the discounted price for a product rule.
+     *
+     * @param \WC_Product $product The WooCommerce product.
+     * @param array       $rule    Discount rule data.
+     * @return float               Discounted price ready for display.
+     */
+    private function calculate_discounted_price( $product, $rule ) {
+        if ( ! function_exists( 'wc_get_price_to_display' ) ) {
+            return 0;
+        }
+
+        $base = (float) wc_get_price_to_display( $product );
+        $price = $base;
+
+        if ( isset( $rule['type'] ) && $rule['type'] === 'percent' ) {
+            $price = $base * ( 1 - ( (float) $rule['amount'] / 100 ) );
+        } else {
+            $price = $base - (float) $rule['amount'];
+        }
+
+        if ( $price < 0 ) {
+            $price = 0;
+        }
+
+        return $price;
+    }
+
     protected function render() {
         if ( ! function_exists( 'is_product' ) || ! is_product() ) {
             return;
@@ -76,8 +104,15 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
         echo '<div class="gm2-qd-options">';
         foreach ( $rules as $rule ) {
             $qty   = intval( $rule['min'] );
-            $label = sprintf( __( 'Qty: %d', 'gm2-wordpress-suite' ), $qty );
-            echo '<button type="button" class="gm2-qd-option" data-qty="' . esc_attr( $qty ) . '\">' . esc_html( $label ) . '</button>';
+            $label = ! empty( $rule['label'] )
+                ? $rule['label']
+                : sprintf( __( 'Qty: %d', 'gm2-wordpress-suite' ), $qty );
+            $price = wc_price( $this->calculate_discounted_price( $product, $rule ) );
+
+            echo '<button class="gm2-qd-option" data-qty="' . esc_attr( $qty ) . '">';
+            echo '<span class="gm2-qd-label">' . esc_html( $label ) . '</span>';
+            echo '<span class="gm2-qd-price">' . wp_kses_post( $price ) . '</span>';
+            echo '</button>';
         }
         echo '</div>';
     }
