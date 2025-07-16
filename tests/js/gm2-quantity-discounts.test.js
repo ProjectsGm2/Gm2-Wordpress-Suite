@@ -46,6 +46,7 @@ test('submits group data via ajax', async () => {
   $('.gm2-qd-add-rule').trigger('click');
   $('.gm2-qd-name').val('Test');
   $('.gm2-qd-min').val('2');
+  $('.gm2-qd-label').val('First');
   $('.gm2-qd-percent').val('10');
   $('.gm2-qd-selected').append('<li data-id="55"><label><input type="checkbox" class="gm2-qd-selected-chk"> Prod</label></li>');
 
@@ -56,7 +57,7 @@ test('submits group data via ajax', async () => {
   const data = $.post.mock.calls[0][1].groups[0];
   expect(data.name).toBe('Test');
   expect(data.products[0]).toBe(55);
-  expect(data.rules[0]).toEqual({ min: 2, type: 'percent', amount: 10 });
+  expect(data.rules[0]).toEqual({ min: 2, label: 'First', type: 'percent', amount: 10 });
 });
 
 test('accordion toggles visibility', async () => {

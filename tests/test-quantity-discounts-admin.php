@@ -52,4 +52,24 @@ class QuantityDiscountsAdminAjaxTest extends WP_Ajax_UnitTestCase {
         $this->assertTrue($resp['success']);
         $this->assertSame('FSKU', $resp['data'][0]['sku']);
     }
+
+    public function test_save_groups_persists_label() {
+        $admin = new Gm2_Quantity_Discounts_Admin();
+        $admin->register_hooks();
+
+        $this->_setRole('administrator');
+        $_POST['nonce'] = wp_create_nonce('gm2_qd_nonce');
+        $_POST['groups'] = [
+            [
+                'name'     => 'G',
+                'products' => [1],
+                'rules'    => [ [ 'min' => 1, 'type' => 'percent', 'amount' => 5, 'label' => 'First' ] ],
+            ],
+        ];
+        try { $this->_handleAjax('gm2_qd_save_groups'); } catch (WPAjaxDieContinueException $e) {}
+        $resp = json_decode($this->_last_response, true);
+        $this->assertTrue($resp['success']);
+        $saved = get_option('gm2_quantity_discount_groups');
+        $this->assertSame('First', $saved[0]['rules'][0]['label']);
+    }
 }

@@ -7,9 +7,10 @@ jQuery(function($){
         return l;
     }
     function createRuleRow(rule){
-        rule = rule || {min:'',type:'percent',amount:''};
+        rule = rule || {min:'',label:'',type:'percent',amount:''};
         var row = $('<tr class="gm2-qd-rule">\
             <td><input type="number" class="gm2-qd-min" value="'+rule.min+'" min="1"></td>\
+            <td><input type="text" class="gm2-qd-label" value="'+(rule.label||'')+'"></td>\
             <td><input type="number" step="0.01" class="gm2-qd-percent" '+(rule.type==='percent'?'' : 'disabled')+' value="'+(rule.type==='percent'?rule.amount:'')+'"></td>\
             <td><input type="number" step="0.01" class="gm2-qd-fixed" '+(rule.type==='fixed'?'' : 'disabled')+' value="'+(rule.type==='fixed'?rule.amount:'')+'"></td>\
             <td><button type="button" class="button gm2-qd-remove-rule">&times;</button></td></tr>');
@@ -25,7 +26,7 @@ jQuery(function($){
         var prodSection = $('<div class="gm2-qd-products"><select class="gm2-qd-cat"><option value="">All Categories</option></select> <input type="text" class="gm2-qd-search" placeholder="Search products"> <button type="button" class="button gm2-qd-search-btn">Search</button> <div class="gm2-qd-cat-products"></div><ul class="gm2-qd-results"></ul><ul class="gm2-qd-selected"></ul><p class="gm2-qd-remove-actions"><button type="button" class="button gm2-qd-remove-selected">Remove selected products</button> <button type="button" class="button gm2-qd-remove-all">Remove all</button></p></div>');
         categories.forEach(function(c){prodSection.find('select').append('<option value="'+c.id+'">'+c.name+'</option>');});
         container.append(prodSection);
-        var table = $('<table class="widefat gm2-qd-rules"><thead><tr><th>Min Qty</th><th>% Off</th><th>Fixed Off</th><th></th></tr></thead><tbody></tbody></table>');
+        var table = $('<table class="widefat gm2-qd-rules"><thead><tr><th>Min Qty</th><th>Label</th><th>% Off</th><th>Fixed Off</th><th></th></tr></thead><tbody></tbody></table>');
         g.rules.forEach(function(r){table.find('tbody').append(createRuleRow(r));});
         container.append(table);
         container.append('<p><button type="button" class="button gm2-qd-add-rule">Add Rule</button></p>');
@@ -140,11 +141,12 @@ jQuery(function($){
             g.find('.gm2-qd-selected li').each(function(){obj.products.push($(this).data('id'));});
             g.find('.gm2-qd-rules tbody tr').each(function(){
                 var min=parseInt($(this).find('.gm2-qd-min').val(),10)||0;
+                var label=$(this).find('.gm2-qd-label').val();
                 var percent=$(this).find('.gm2-qd-percent').val();
                 var fixed=$(this).find('.gm2-qd-fixed').val();
                 var type='percent';var amount=parseFloat(percent)||0;
                 if(fixed){type='fixed';amount=parseFloat(fixed)||0;}
-                obj.rules.push({min:min,type:type,amount:amount});
+                obj.rules.push({min:min,label:label,type:type,amount:amount});
             });
             data.push(obj);
         });
