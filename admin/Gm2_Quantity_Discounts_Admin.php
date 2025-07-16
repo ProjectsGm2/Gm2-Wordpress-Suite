@@ -45,17 +45,25 @@ class Gm2_Quantity_Discounts_Admin {
         foreach ( $groups as &$g ) {
             if ( empty( $g['products'] ) || ! is_array( $g['products'] ) ) {
                 $g['products'] = [];
-                continue;
+            } else {
+                $info = [];
+                foreach ( $g['products'] as $pid ) {
+                    $info[] = [
+                        'id'    => (int) $pid,
+                        'title' => get_the_title( $pid ),
+                        'sku'   => get_post_meta( $pid, '_sku', true ),
+                    ];
+                }
+                $g['products'] = $info;
             }
-            $info = [];
-            foreach ( $g['products'] as $pid ) {
-                $info[] = [
-                    'id'    => (int) $pid,
-                    'title' => get_the_title( $pid ),
-                    'sku'   => get_post_meta( $pid, '_sku', true ),
-                ];
+            if ( ! empty( $g['rules'] ) && is_array( $g['rules'] ) ) {
+                foreach ( $g['rules'] as &$r ) {
+                    if ( ! isset( $r['label'] ) ) {
+                        $r['label'] = '';
+                    }
+                }
+                unset( $r );
             }
-            $g['products'] = $info;
         }
         unset( $g );
         $cats   = [];
@@ -173,10 +181,12 @@ class Gm2_Quantity_Discounts_Admin {
                     $min    = intval( $r['min'] ?? 1 );
                     $type   = $r['type'] === 'fixed' ? 'fixed' : 'percent';
                     $amount = floatval( $r['amount'] ?? 0 );
+                    $label  = sanitize_text_field( $r['label'] ?? '' );
                     $rules[] = [
                         'min'    => $min,
                         'type'   => $type,
                         'amount' => $amount,
+                        'label'  => $label,
                     ];
                 }
             }
