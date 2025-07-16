@@ -182,13 +182,15 @@ class QuantityDiscountsTest extends WP_UnitTestCase {
         global $product, $post;
         $product = null;
 
-        $post_id = self::factory()->post->create();
-        $post    = get_post( $post_id );
+        $template_id = self::factory()->post->create();
+        $product_id  = self::factory()->post->create();
+        $post        = get_post( $template_id );
+        update_post_meta( $template_id, '_elementor_preview_id', $product_id );
 
         $m = new Gm2_Quantity_Discount_Manager();
         $m->add_group([
             'name'     => 'Test',
-            'products' => [ $post_id ],
+            'products' => [ $product_id ],
             'rules'    => [ [ 'min' => 1, 'type' => 'percent', 'amount' => 10, 'label' => 'L' ] ],
         ]);
 

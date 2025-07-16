@@ -435,7 +435,13 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
         }
         global $product;
         if ( ! $product && $in_edit_mode && function_exists( 'wc_get_product' ) ) {
-            $preview_id = get_the_ID();
+            $preview_id = 0;
+            if ( function_exists( 'get_post_meta' ) ) {
+                $preview_id = intval( get_post_meta( get_the_ID(), '_elementor_preview_id', true ) );
+            }
+            if ( ! $preview_id && isset( $_GET['preview_id'] ) ) {
+                $preview_id = intval( $_GET['preview_id'] );
+            }
             if ( $preview_id ) {
                 $product = wc_get_product( $preview_id );
             }
