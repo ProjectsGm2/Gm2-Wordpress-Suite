@@ -3038,5 +3038,13 @@ class Gm2_SEO_Admin {
                 ) . '</p>',
             ]
         );
+
+        $screen->add_help_tab(
+            [
+                'id'      => 'gm2-seo-context',
+                'title'   => __( 'SEO Context', 'gm2-wordpress-suite' ),
+                'content' => '<p>' . __( 'Use the Context tab to describe your business model, industry, audience and unique selling points. Saved answers are automatically included in ChatGPT prompts for AI SEO.', 'gm2-wordpress-suite' ) . '</p>',
+            ]
+        );
     }
 }
