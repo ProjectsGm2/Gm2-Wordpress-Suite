@@ -29,8 +29,8 @@ test('submits group data via ajax', async () => {
     <form id="gm2-qd-form">
       <div id="gm2-qd-groups"></div>
       <button id="gm2-qd-add-group" type="button"></button>
+      <div id="gm2-qd-msg" class="hidden"></div>
     </form>
-    <div id="gm2-qd-msg" class="hidden"></div>
   `, { url: 'http://localhost' });
   const $ = jquery(dom.window);
   Object.assign(global, { window: dom.window, document: dom.window.document, jQuery: $, $ });
