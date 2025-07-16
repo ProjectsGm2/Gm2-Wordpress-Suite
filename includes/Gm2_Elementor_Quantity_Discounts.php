@@ -13,7 +13,6 @@ class Gm2_Elementor_Quantity_Discounts {
     public function init() {
         if (
             ! class_exists('Elementor\\Plugin') ||
-            ! class_exists('WooCommerce') ||
             ! class_exists('Elementor\\Widget_Base')
         ) {
             return;
@@ -22,7 +21,11 @@ class Gm2_Elementor_Quantity_Discounts {
         add_action('elementor/widgets/widgets_registered', [ $this, 'register_widget' ]);
     }
 
-    public function register_widget( $widgets_manager ) {
+    public function register_widget( $widgets_manager = null ) {
+        if ( $widgets_manager === null && class_exists( '\\Elementor\\Plugin' ) ) {
+            $widgets_manager = \Elementor\Plugin::$instance->widgets_manager;
+        }
+
         // Only load the widget class if Elementor's Widget_Base exists.
         if ( ! class_exists( '\\Elementor\\Widget_Base' ) ) {
             return;
