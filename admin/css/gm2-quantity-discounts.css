@@ -37,3 +37,12 @@
     font-weight:bold;
     margin-left:4px;
 }
+.gm2-qd-selected input[type=checkbox] {
+    margin-right:4px;
+}
+.gm2-qd-remove-actions {
+    margin-top:5px;
+}
+.gm2-qd-remove-actions button {
+    margin-right:5px;
+}
