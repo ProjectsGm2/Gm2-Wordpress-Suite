@@ -80,3 +80,19 @@ test('svg currency icon width and height follow CSS rules', () => {
   expect($('.gm2-qd-currency-icon svg').css('height')).toBe('10px');
   expect($('.gm2-qd-currency-icon.e-font-icon-svg').css('height')).toBe('10px');
 });
+
+test('currency icon margin can be customized', () => {
+  const dom = new JSDOM(`
+    <style>
+      .gm2-qd-currency-icon { margin: 2px 3px 4px 5px; }
+    </style>
+    <span class="gm2-qd-currency-icon"></span>
+  `, { url: 'http://localhost' });
+
+  const $ = jquery(dom.window);
+
+  expect($('.gm2-qd-currency-icon').css('margin-top')).toBe('2px');
+  expect($('.gm2-qd-currency-icon').css('margin-right')).toBe('3px');
+  expect($('.gm2-qd-currency-icon').css('margin-bottom')).toBe('4px');
+  expect($('.gm2-qd-currency-icon').css('margin-left')).toBe('5px');
+});
