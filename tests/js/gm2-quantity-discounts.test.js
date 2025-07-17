@@ -171,3 +171,27 @@ test('remove button deletes entire list item', async () => {
 
   expect($('.gm2-qd-selected li').length).toBe(0);
 });
+
+test('category dropdown closes on select2 unselect', async () => {
+  const dom = new JSDOM(`
+    <form id="gm2-qd-form">
+      <div id="gm2-qd-groups"></div>
+      <select class="gm2-qd-cat" multiple></select>
+    </form>
+  `, { url: 'http://localhost' });
+  const $ = jquery(dom.window);
+  Object.assign(global, { window: dom.window, document: dom.window.document, jQuery: $, $ });
+  let closeCalled = false;
+  $.fn.selectWoo = jest.fn(function(arg){ if(arg === 'close') closeCalled = true; return this; });
+  global.gm2Qd = { nonce: 'n', ajax_url: '/fake', groups: [], categories: [], productTitles: {} };
+
+  jest.resetModules();
+  require('../../admin/js/gm2-quantity-discounts.js');
+  await new Promise(r => setTimeout(r, 0));
+  await new Promise(r => setTimeout(r, 0));
+
+  $('.gm2-qd-cat').trigger('select2:unselect');
+  await new Promise(r => setTimeout(r, 0));
+
+  expect(closeCalled).toBe(true);
+});
