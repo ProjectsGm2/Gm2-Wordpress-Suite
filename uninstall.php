@@ -45,6 +45,7 @@ $option_names = array(
     'gm2_404_logs',
     'gm2_sitemap_enabled',
     'gm2_sitemap_frequency',
+    'gm2_sitemap_path',
     'gm2_noindex_variants',
     'gm2_noindex_oos',
     'gm2_variation_canonical_parent',

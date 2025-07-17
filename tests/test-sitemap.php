@@ -1,6 +1,14 @@
 <?php
 use Gm2\Gm2_Sitemap;
 class SitemapTest extends WP_UnitTestCase {
+    public function tearDown(): void {
+        $file = get_option('gm2_sitemap_path', ABSPATH . 'sitemap.xml');
+        if (file_exists($file)) {
+            unlink($file);
+        }
+        delete_option('gm2_sitemap_path');
+        parent::tearDown();
+    }
     public function test_generate_sitemap_creates_file() {
         $post_id = self::factory()->post->create();
         $sitemap = new Gm2_Sitemap();
@@ -71,6 +79,14 @@ class SitemapTest extends WP_UnitTestCase {
 
         $this->assertContains($google, $urls);
         $this->assertContains($bing, $urls);
+    }
+
+    public function test_custom_sitemap_path_option() {
+        $custom = ABSPATH . 'custom-sitemap.xml';
+        update_option('gm2_sitemap_path', $custom);
+        $sitemap = new Gm2_Sitemap();
+        $sitemap->generate();
+        $this->assertFileExists($custom);
     }
 }
 

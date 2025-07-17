@@ -67,5 +67,11 @@ The Makefile includes a `test` target which automatically checks for the test su
 make test DB_NAME=wp_test DB_USER=root DB_PASS=pass
 ```
 
+## Sitemap Path Option
+
+The plugin stores the generated XML sitemap at `sitemap.xml` in the WordPress
+root directory. You can change this location by setting the `gm2_sitemap_path`
+option on the **SEO → Sitemap** settings page.
+
 
 
