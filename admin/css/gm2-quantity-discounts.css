@@ -64,3 +64,14 @@
 .select2-container--default .select2-search--inline {
     display: none;
 }
+
+/* Improve remove icon for selected categories */
+.gm2-qd-cat + .select2 .select2-selection__choice__remove {
+    color: red;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+.gm2-qd-cat + .select2 .select2-selection__choice {
+    padding-right: 8px;
+}
