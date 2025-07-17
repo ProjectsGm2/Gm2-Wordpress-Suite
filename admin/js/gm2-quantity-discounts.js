@@ -76,6 +76,9 @@ jQuery(function($){
         $('.gm2-qd-cat').selectWoo({ width: '200px' });
     }
     renderGroups();
+    $(document).on('select2:unselect','.gm2-qd-cat',function(){
+        $(this).selectWoo('close');
+    });
     $('#gm2-qd-add-group').on('click',function(){
         var group = createGroup();
         $('#gm2-qd-groups').append(group);
