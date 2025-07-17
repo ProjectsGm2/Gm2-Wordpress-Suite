@@ -77,7 +77,10 @@ jQuery(function($){
     }
     renderGroups();
     $(document).on('select2:unselect','.gm2-qd-cat',function(){
-        $(this).selectWoo('close');
+        var $select = $(this);
+        setTimeout(function(){
+            $select.selectWoo('close');
+        });
     });
     $('#gm2-qd-add-group').on('click',function(){
         var group = createGroup();
