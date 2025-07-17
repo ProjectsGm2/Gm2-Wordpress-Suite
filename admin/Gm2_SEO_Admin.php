@@ -2328,9 +2328,9 @@ class Gm2_SEO_Admin {
         }
 
         if (strpos($target, 'post_') === 0) {
-            $prompt_target = sprintf('for the %s post type', substr($target, 5));
+            $prompt_target = sprintf('for the %s post type', gm2_substr($target, 5));
         } else {
-            $prompt_target = sprintf('for the %s taxonomy', substr($target, 4));
+            $prompt_target = sprintf('for the %s taxonomy', gm2_substr($target, 4));
         }
 
         $prompt = sprintf(
