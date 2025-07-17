@@ -161,7 +161,9 @@ class Gm2_SEO_Public {
      *     canonical:string,
      *     max_snippet:string,
      *     max_image_preview:string,
-     *     max_video_preview:string
+     *     max_video_preview:string,
+     *     focus_keywords:string,
+     *     long_tail_keywords:string
      * }
      */
     private function get_seo_meta() {
@@ -174,6 +176,8 @@ class Gm2_SEO_Public {
         $max_snippet       = '';
         $max_image_preview = '';
         $max_video_preview = '';
+        $focus_keywords    = '';
+        $long_tail_keywords = '';
 
         if (is_singular()) {
             $post_id    = get_queried_object_id();
@@ -186,6 +190,8 @@ class Gm2_SEO_Public {
             $max_snippet       = get_post_meta($post_id, '_gm2_max_snippet', true);
             $max_image_preview = get_post_meta($post_id, '_gm2_max_image_preview', true);
             $max_video_preview = get_post_meta($post_id, '_gm2_max_video_preview', true);
+            $focus_keywords    = get_post_meta($post_id, '_gm2_focus_keywords', true);
+            $long_tail_keywords = get_post_meta($post_id, '_gm2_long_tail_keywords', true);
 
             if (class_exists('WooCommerce') && function_exists('is_product') && is_product()) {
                 $product = wc_get_product($post_id);
@@ -216,6 +222,8 @@ class Gm2_SEO_Public {
                 $max_snippet       = get_term_meta($term->term_id, '_gm2_max_snippet', true);
                 $max_image_preview = get_term_meta($term->term_id, '_gm2_max_image_preview', true);
                 $max_video_preview = get_term_meta($term->term_id, '_gm2_max_video_preview', true);
+                $focus_keywords    = get_term_meta($term->term_id, '_gm2_focus_keywords', true);
+                $long_tail_keywords = get_term_meta($term->term_id, '_gm2_long_tail_keywords', true);
             }
         }
 
@@ -247,6 +255,8 @@ class Gm2_SEO_Public {
             'max_snippet' => $max_snippet,
             'max_image_preview' => $max_image_preview,
             'max_video_preview' => $max_video_preview,
+            'focus_keywords'    => $focus_keywords,
+            'long_tail_keywords' => $long_tail_keywords,
         ];
     }
 
@@ -266,6 +276,23 @@ class Gm2_SEO_Public {
         if ($data['max_video_preview'] !== '') {
             $robots[] = 'max-video-preview:' . $data['max_video_preview'];
         }
+        $keywords = '';
+        $fw = trim($data['focus_keywords']);
+        $lt = trim($data['long_tail_keywords']);
+        if ($fw !== '' || $lt !== '') {
+            $parts = [];
+            foreach ([$fw, $lt] as $list) {
+                if ($list !== '') {
+                    foreach (explode(',', $list) as $k) {
+                        $k = trim($k);
+                        if ($k !== '') {
+                            $parts[] = $k;
+                        }
+                    }
+                }
+            }
+            $keywords = implode(', ', array_unique($parts));
+        }
         $canonical   = $data['canonical'];
         $og_image_id = $data['og_image'];
         if (!$og_image_id && is_singular()) {
@@ -283,6 +310,9 @@ class Gm2_SEO_Public {
         }
         echo '<meta name="description" content="' . esc_attr($description) . '" />' . "\n";
         echo '<meta name="robots" content="' . esc_attr(implode(',', $robots)) . '" />' . "\n";
+        if ($keywords !== '') {
+            echo '<meta name="keywords" content="' . esc_attr($keywords) . '" />' . "\n";
+        }
 
         $url  = $canonical;
         $type = is_singular() ? 'article' : 'website';

@@ -157,6 +157,40 @@ class MetaTagsTest extends WP_UnitTestCase {
         $this->assertStringContainsString('max-video-preview:10', $output);
     }
 
+    public function test_keywords_meta_tag_outputs_when_present() {
+        $post_id = self::factory()->post->create([
+            'post_title'   => 'KW Post',
+            'post_content' => 'Content',
+        ]);
+        update_post_meta($post_id, '_gm2_focus_keywords', 'alpha, beta');
+        update_post_meta($post_id, '_gm2_long_tail_keywords', 'gamma');
+
+        $seo = new Gm2_SEO_Public();
+        $this->go_to(get_permalink($post_id));
+        setup_postdata(get_post($post_id));
+        ob_start();
+        $seo->output_meta_tags();
+        $output = ob_get_clean();
+
+        $this->assertStringContainsString('<meta name="keywords" content="alpha, beta, gamma"', $output);
+    }
+
+    public function test_keywords_meta_tag_omitted_when_empty() {
+        $post_id = self::factory()->post->create([
+            'post_title'   => 'No KW',
+            'post_content' => 'Content',
+        ]);
+
+        $seo = new Gm2_SEO_Public();
+        $this->go_to(get_permalink($post_id));
+        setup_postdata(get_post($post_id));
+        ob_start();
+        $seo->output_meta_tags();
+        $output = ob_get_clean();
+
+        $this->assertStringNotContainsString('name="keywords"', $output);
+    }
+
     public function test_custom_og_image_in_meta_tags() {
         $post_id = self::factory()->post->create([
             'post_title'   => 'Image Post',
