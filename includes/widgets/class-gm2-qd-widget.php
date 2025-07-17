@@ -24,6 +24,30 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
 
     protected function register_controls() {
         $this->start_controls_section(
+            'gm2_qd_container_style',
+            [
+                'label' => __( 'Options Container', 'gm2-wordpress-suite' ),
+                'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
+            ]
+        );
+        $this->add_responsive_control(
+            'options_wrap',
+            [
+                'label'   => __( 'Wrap Options', 'gm2-wordpress-suite' ),
+                'type'    => \Elementor\Controls_Manager::SELECT,
+                'options' => [
+                    'nowrap' => __( 'No', 'gm2-wordpress-suite' ),
+                    'wrap'   => __( 'Yes', 'gm2-wordpress-suite' ),
+                ],
+                'default' => 'nowrap',
+                'selectors' => [
+                    '{{WRAPPER}} .gm2-qd-options' => 'flex-wrap: {{VALUE}};',
+                ],
+            ]
+        );
+        $this->end_controls_section();
+
+        $this->start_controls_section(
             'gm2_qd_style',
             [
                 'label' => __( 'Options Style', 'gm2-wordpress-suite' ),
