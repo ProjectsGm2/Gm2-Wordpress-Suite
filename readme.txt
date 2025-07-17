@@ -3,7 +3,7 @@ Contributors: gm2team
 Tags: admin, tools, suite, performance
 Requires at least: 6.0
 Tested up to: 6.5
-Stable tag: 1.6.14
+Stable tag: 1.6.15
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -202,7 +202,7 @@ Open the **Context** tab under **SEO** to store detailed business information us
 == SEO Settings ==
 The SEO meta box appears when editing posts, pages, any public custom post types and taxonomy terms. In the
 **SEO Settings** tab you can enter a custom title and description, focus keywords and long tail keywords, toggle
-`noindex` or `nofollow`, and upload an Open Graph image. Click **Select Image**
+`noindex` or `nofollow`, and upload an Open Graph image. Focus and long tail keywords are combined into a `<meta name="keywords">` tag on the front end. Click **Select Image**
 to open the WordPress media library and choose a picture for the `og:image` and
 `twitter:image` tags. When inserting a link, you can pick `nofollow` or `sponsored`
 from the link dialog and the plugin will automatically apply the attribute.
@@ -300,6 +300,8 @@ the last 100 missing URLs to help you create new redirects.
   `nofollow` or `sponsored` to outbound links.
 
 == Changelog ==
+= 1.6.15 =
+* Combined focus and long tail keywords into a `<meta name="keywords">` tag on the front end.
 = 1.6.14 =
 * Added wrap option to the Gm2 Qnty Discounts widget so quantity buttons can wrap on smaller screens.
 = 1.6.13 =
