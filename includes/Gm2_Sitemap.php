@@ -9,8 +9,10 @@ if (!defined('ABSPATH')) {
 class Gm2_Sitemap {
     private $file_path;
 
-    public function __construct() {
-        $this->file_path = ABSPATH . 'sitemap.xml';
+    public function __construct($file_path = '') {
+        $default = ABSPATH . 'sitemap.xml';
+        $opt     = get_option('gm2_sitemap_path', $default);
+        $this->file_path = $file_path !== '' ? $file_path : $opt;
     }
 
     private function get_post_types() {
@@ -40,7 +42,7 @@ class Gm2_Sitemap {
 
     public function generate() {
         if (get_option('gm2_sitemap_enabled', '1') !== '1') {
-            return;
+            return true;
         }
 
         $frequency = get_option('gm2_sitemap_frequency', 'daily');
@@ -88,9 +90,21 @@ class Gm2_Sitemap {
         }
         $xml .= "</urlset>\n";
 
-        file_put_contents($this->file_path, $xml);
+        if (!function_exists('WP_Filesystem')) {
+            require_once ABSPATH . 'wp-admin/includes/file.php';
+        }
+        global $wp_filesystem;
+        if (!WP_Filesystem()) {
+            return new \WP_Error('fs_init_failed', __('Unable to initialize filesystem', 'gm2-wordpress-suite'));
+        }
+
+        $written = $wp_filesystem->put_contents($this->file_path, $xml, FS_CHMOD_FILE);
+        if (!$written) {
+            return new \WP_Error('write_failed', sprintf(__('Could not write sitemap to %s', 'gm2-wordpress-suite'), $this->file_path));
+        }
 
         $this->ping_search_engines();
+        return true;
     }
 
     public function ping_search_engines() {
@@ -122,6 +136,6 @@ class Gm2_Sitemap {
 namespace {
     function gm2_generate_sitemap() {
         $s = new \Gm2\Gm2_Sitemap();
-        $s->generate();
+        return $s->generate();
     }
 }

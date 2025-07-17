@@ -69,7 +69,10 @@ class Gm2_SEO_Admin {
         }
 
         if ($new_status === 'publish' || $old_status === 'publish') {
-            gm2_generate_sitemap();
+            $result = gm2_generate_sitemap();
+            if (is_wp_error($result)) {
+                self::add_notice($result->get_error_message());
+            }
         }
     }
 
@@ -470,6 +473,7 @@ class Gm2_SEO_Admin {
         } elseif ($active === 'sitemap') {
             $enabled   = get_option('gm2_sitemap_enabled', '1');
             $frequency = get_option('gm2_sitemap_frequency', 'daily');
+            $path      = get_option('gm2_sitemap_path', ABSPATH . 'sitemap.xml');
             if (!empty($_GET['updated'])) {
                 echo '<div class="updated notice"><p>' . esc_html__('Settings saved.', 'gm2-wordpress-suite') . '</p></div>';
             }
@@ -484,6 +488,7 @@ class Gm2_SEO_Admin {
                 echo '<option value="' . esc_attr($opt) . '" ' . selected($frequency, $opt, false) . '>' . esc_html($label) . '</option>';
             }
             echo '</select></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Sitemap Path', 'gm2-wordpress-suite' ) . '</th><td><input type="text" name="gm2_sitemap_path" value="' . esc_attr($path) . '" class="regular-text" /></td></tr>';
             echo '</tbody></table>';
             submit_button( esc_html__( 'Save Settings', 'gm2-wordpress-suite' ) );
             echo '<input type="submit" name="gm2_regenerate" class="button" value="' . esc_attr__( 'Regenerate Sitemap', 'gm2-wordpress-suite' ) . '" />';
@@ -1434,8 +1439,14 @@ class Gm2_SEO_Admin {
         $frequency = isset($_POST['gm2_sitemap_frequency']) ? sanitize_text_field($_POST['gm2_sitemap_frequency']) : 'daily';
         update_option('gm2_sitemap_frequency', $frequency);
 
+        $path = isset($_POST['gm2_sitemap_path']) ? sanitize_text_field($_POST['gm2_sitemap_path']) : ABSPATH . 'sitemap.xml';
+        update_option('gm2_sitemap_path', $path);
+
         if (isset($_POST['gm2_regenerate'])) {
-            gm2_generate_sitemap();
+            $result = gm2_generate_sitemap();
+            if (is_wp_error($result)) {
+                self::add_notice($result->get_error_message());
+            }
         }
 
         wp_redirect(admin_url('admin.php?page=gm2-seo&tab=sitemap&updated=1'));

@@ -65,7 +65,10 @@ function gm2_activate_plugin() {
     $public = new Gm2_SEO_Public();
     $public->add_sitemap_rewrite();
     flush_rewrite_rules();
-    gm2_generate_sitemap();
+    $result = gm2_generate_sitemap();
+    if (is_wp_error($result) && defined('WP_DEBUG') && WP_DEBUG) {
+        error_log('Sitemap generation failed: ' . $result->get_error_message());
+    }
 
     $s = new Gm2_Sitemap();
     $s->ping_search_engines();
@@ -86,6 +89,7 @@ function gm2_activate_plugin() {
     add_option('gm2_enable_quantity_discounts', '1');
     add_option('gm2_enable_google_oauth', '1');
     add_option('gm2_enable_chatgpt', '1');
+    add_option('gm2_sitemap_path', ABSPATH . 'sitemap.xml');
 }
 register_activation_hook(__FILE__, 'gm2_activate_plugin');
 

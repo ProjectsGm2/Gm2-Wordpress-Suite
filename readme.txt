@@ -212,8 +212,10 @@ to control how search engines display your content. Values entered here are
 added to the robots meta tag.
 
 The **Sitemap** tab lets you regenerate your XML sitemap. Each time a sitemap is
-created, the plugin pings Google and Bing so they can re-crawl it. You can also
-edit your robots file from **SEO → Robots.txt**.
+created, the plugin pings Google and Bing so they can re-crawl it. The sitemap is
+written to `sitemap.xml` in your WordPress directory by default. This path can be
+changed via the **Sitemap Path** field. You can also edit your robots file from
+**SEO → Robots.txt**.
 
 Enable **Clean Slugs** from **SEO → General** to strip stopwords from new
 permalinks. Enter the words to remove in the accompanying field.
