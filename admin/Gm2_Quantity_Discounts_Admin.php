@@ -14,14 +14,16 @@ class Gm2_Quantity_Discounts_Admin {
     }
 
     public function add_admin_menu() {
-        add_submenu_page(
-            'gm2',
-            esc_html__( 'Quantity Discounts', 'gm2-wordpress-suite' ),
-            esc_html__( 'Quantity Discounts', 'gm2-wordpress-suite' ),
-            'manage_options',
-            'gm2-quantity-discounts',
-            [ $this, 'render_page' ]
-        );
+        if (get_option('gm2_enable_quantity_discounts', '1') === '1') {
+            add_submenu_page(
+                'gm2',
+                esc_html__( 'Quantity Discounts', 'gm2-wordpress-suite' ),
+                esc_html__( 'Quantity Discounts', 'gm2-wordpress-suite' ),
+                'manage_options',
+                'gm2-quantity-discounts',
+                [ $this, 'render_page' ]
+            );
+        }
     }
 
     public function enqueue_scripts( $hook ) {
