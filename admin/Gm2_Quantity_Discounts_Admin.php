@@ -191,7 +191,7 @@ class Gm2_Quantity_Discounts_Admin {
                     $min    = intval( $r['min'] ?? 1 );
                     $type   = $r['type'] === 'fixed' ? 'fixed' : 'percent';
                     $amount = floatval( $r['amount'] ?? 0 );
-                    $label  = sanitize_text_field( $r['label'] ?? '' );
+                    $label  = wp_kses( $r['label'] ?? '', [ 'br' => [] ] );
                     $rules[] = [
                         'min'    => $min,
                         'type'   => $type,
