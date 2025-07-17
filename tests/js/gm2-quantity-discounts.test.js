@@ -141,3 +141,33 @@ test('search results use checkboxes and add selected button', async () => {
   expect(selected.eq(0).text()).toContain('Prod1');
   expect(selected.eq(1).text()).toContain('Prod2');
 });
+
+test('remove button deletes entire list item', async () => {
+  const dom = new JSDOM(`
+    <form id="gm2-qd-form">
+      <div id="gm2-qd-groups"></div>
+    </form>
+  `, { url: 'http://localhost' });
+  const $ = jquery(dom.window);
+  Object.assign(global, { window: dom.window, document: dom.window.document, jQuery: $, $ });
+  $.fn.selectWoo = jest.fn(function(){ return this; });
+  global.gm2Qd = {
+    nonce: 'n',
+    ajax_url: '/fake',
+    groups: [{ name: 'A', products: [{ id: 1, title: 'Prod', sku: 'S1' }], rules: [] }],
+    categories: [],
+    productTitles: { 1: 'Prod' }
+  };
+
+  jest.resetModules();
+  require('../../admin/js/gm2-quantity-discounts.js');
+  await new Promise(r => setTimeout(r, 0));
+  await new Promise(r => setTimeout(r, 0));
+
+  const li = $('.gm2-qd-selected li');
+  expect(li.length).toBe(1);
+  li.find('.remove').trigger('click');
+  await new Promise(r => setTimeout(r, 0));
+
+  expect($('.gm2-qd-selected li').length).toBe(0);
+});
