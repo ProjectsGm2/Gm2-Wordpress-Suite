@@ -611,7 +611,7 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
             $price     = wc_price( $price_raw, [ 'currency' => '', 'price_format' => '%2$s' ] );
 
             echo '<button class="gm2-qd-option" data-qty="' . esc_attr( $qty ) . '">';
-            echo '<span class="gm2-qd-label">' . esc_html( $label ) . '</span>';
+            echo '<span class="gm2-qd-label">' . wp_kses( $label, [ 'br' => [] ] ) . '</span>';
             echo '<span class="gm2-qd-price">';
             if ( ! empty( $settings['currency_icon']['value'] ) ) {
                 Icons_Manager::render_icon( $settings['currency_icon'], [ 'aria-hidden' => 'true', 'class' => 'gm2-qd-currency-icon' ] );
