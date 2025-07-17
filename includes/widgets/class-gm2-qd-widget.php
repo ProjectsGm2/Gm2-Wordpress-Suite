@@ -274,7 +274,8 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
                     'rem' => [ 'min' => 0.1, 'max' => 10, 'step' => 0.1 ],
                 ],
                 'selectors' => [
-                    '{{WRAPPER}} .gm2-qd-currency-icon' => 'font-size: {{SIZE}}{{UNIT}};',
+                    '{{WRAPPER}} .gm2-qd-currency-icon'      => 'font-size: {{SIZE}}{{UNIT}} !important;',
+                    '{{WRAPPER}} .gm2-qd-currency-icon svg,\n                     {{WRAPPER}} .gm2-qd-currency-icon i' => 'width: {{SIZE}}{{UNIT}} !important; height: {{SIZE}}{{UNIT}} !important;',
                 ],
             ]
         );
@@ -329,7 +330,8 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
                     'rem' => [ 'min' => 0.1, 'max' => 10, 'step' => 0.1 ],
                 ],
                 'selectors' => [
-                    '{{WRAPPER}} .gm2-qd-option:hover .gm2-qd-currency-icon' => 'font-size: {{SIZE}}{{UNIT}};',
+                    '{{WRAPPER}} .gm2-qd-option:hover .gm2-qd-currency-icon'      => 'font-size: {{SIZE}}{{UNIT}} !important;',
+                    '{{WRAPPER}} .gm2-qd-option:hover .gm2-qd-currency-icon svg,\n                     {{WRAPPER}} .gm2-qd-option:hover .gm2-qd-currency-icon i' => 'width: {{SIZE}}{{UNIT}} !important; height: {{SIZE}}{{UNIT}} !important;',
                 ],
             ]
         );
@@ -384,7 +386,8 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
                     'rem' => [ 'min' => 0.1, 'max' => 10, 'step' => 0.1 ],
                 ],
                 'selectors' => [
-                    '{{WRAPPER}} .gm2-qd-option.active .gm2-qd-currency-icon' => 'font-size: {{SIZE}}{{UNIT}};',
+                    '{{WRAPPER}} .gm2-qd-option.active .gm2-qd-currency-icon'      => 'font-size: {{SIZE}}{{UNIT}} !important;',
+                    '{{WRAPPER}} .gm2-qd-option.active .gm2-qd-currency-icon svg,\n                     {{WRAPPER}} .gm2-qd-option.active .gm2-qd-currency-icon i' => 'width: {{SIZE}}{{UNIT}} !important; height: {{SIZE}}{{UNIT}} !important;',
                 ],
             ]
         );
