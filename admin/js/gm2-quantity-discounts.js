@@ -156,7 +156,7 @@ jQuery(function($){
         group.find('.gm2-qd-selected').empty();
     });
     $(document).on('click','.gm2-qd-selected .remove',function(){
-        $(this).parent().remove();
+        $(this).closest('li').remove();
     });
     $('#gm2-qd-form').on('submit',function(e){
         e.preventDefault();
