@@ -62,3 +62,21 @@ test('option background colors apply for normal and active states', () => {
   $('.gm2-qd-option').addClass('active');
   expect($('.gm2-qd-option.active').css('background-color')).toBe('rgb(0, 0, 255)');
 });
+
+test('svg currency icon width and height follow CSS rules', () => {
+  const dom = new JSDOM(`
+    <style>
+      .gm2-qd-currency-icon svg,
+      .gm2-qd-currency-icon.e-font-icon-svg { width:10px; height:10px; }
+    </style>
+    <span class="gm2-qd-currency-icon"><svg></svg></span>
+    <span class="gm2-qd-currency-icon e-font-icon-svg"></span>
+  `, { url: 'http://localhost' });
+
+  const $ = jquery(dom.window);
+
+  expect($('.gm2-qd-currency-icon svg').css('width')).toBe('10px');
+  expect($('.gm2-qd-currency-icon.e-font-icon-svg').css('width')).toBe('10px');
+  expect($('.gm2-qd-currency-icon svg').css('height')).toBe('10px');
+  expect($('.gm2-qd-currency-icon.e-font-icon-svg').css('height')).toBe('10px');
+});
