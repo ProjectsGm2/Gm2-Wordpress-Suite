@@ -2,8 +2,19 @@ jQuery(function($){
     var groups = gm2Qd.groups || [];
     var categories = gm2Qd.categories || [];
     let activeSearch = null;
+
+    function decodeEntities(str){
+        if(!str) return '';
+        var txt = document.createElement('textarea');
+        txt.innerHTML = str;
+        return txt.value;
+    }
+
     function labelFor(item){
         var l = item.title || item.text || item.id;
+        if(typeof l === 'string'){
+            l = decodeEntities(l);
+        }
         if(item.sku){ l += ' ('+item.sku+')'; }
         return l;
     }
