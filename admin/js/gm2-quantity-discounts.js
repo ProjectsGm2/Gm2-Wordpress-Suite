@@ -56,7 +56,10 @@ jQuery(function($){
     function loadCategoryProducts(group, cats){
         var box = group.find('.gm2-qd-cat-products').empty().hide();
         if(!cats || !cats.length){ return; }
+        var spinner = $('<span class="loading-spinner"></span>');
+        box.append(spinner).addClass('loading').show();
         $.get(gm2Qd.ajax_url,{action:'gm2_qd_get_category_products',nonce:gm2Qd.nonce,'categories[]':cats}).done(function(res){
+            box.removeClass('loading').empty();
             if(!res.success || !res.data || !res.data.length) return;
             var html = '<label><input type="checkbox" class="gm2-qd-select-all"> Select all</label><ul class="gm2-qd-checkboxes"></ul><p><button type="button" class="button gm2-qd-add-selected">Add selected products</button></p>';
             box.append(html).show();
@@ -68,6 +71,8 @@ jQuery(function($){
                 }
                 list.append(li);
             });
+        }).fail(function(){
+            box.removeClass('loading').empty();
         });
     }
     function renderGroups(){

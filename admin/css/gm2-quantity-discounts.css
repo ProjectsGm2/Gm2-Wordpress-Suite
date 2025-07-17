@@ -45,6 +45,23 @@
 .gm2-qd-cat-products {
     display:none;
 }
+.gm2-qd-cat-products.loading{
+    position:relative;
+    min-height:1em;
+}
+.gm2-qd-cat-products.loading .loading-spinner{
+    position:absolute;
+    top:50%;
+    left:50%;
+    width:1em;
+    height:1em;
+    margin-top:-.5em;
+    margin-left:-.5em;
+    border:2px solid currentColor;
+    border-top-color:transparent;
+    border-radius:50%;
+    animation:gm2-spin .6s linear infinite;
+}
 .gm2-qd-selected input[type=checkbox] {
     margin-right:4px;
 }
@@ -74,4 +91,8 @@
 
 .gm2-qd-cat + .select2 .select2-selection__choice {
     padding-right: 8px;
+}
+
+@keyframes gm2-spin{
+    to{transform:rotate(360deg);}
 }
