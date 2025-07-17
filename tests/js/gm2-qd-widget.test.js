@@ -46,6 +46,24 @@ test('currency icon font size changes with active class', () => {
   expect($('.gm2-qd-option.active .gm2-qd-currency-icon').css('font-size')).toBe('20px');
 });
 
+test('currency icon color changes with active class', () => {
+  const dom = new JSDOM(`
+    <style>
+      .gm2-qd-currency-icon{color:red}
+      .gm2-qd-option.active .gm2-qd-currency-icon{color:blue}
+    </style>
+    <div class="gm2-qd-option">
+      <span class="gm2-qd-currency-icon"></span>
+    </div>
+  `, { url: 'http://localhost' });
+
+  const $ = jquery(dom.window);
+
+  expect($('.gm2-qd-currency-icon').css('color')).toBe('rgb(255, 0, 0)');
+  $('.gm2-qd-option').addClass('active');
+  expect($('.gm2-qd-option.active .gm2-qd-currency-icon').css('color')).toBe('rgb(0, 0, 255)');
+});
+
 test('option background colors apply for normal and active states', () => {
   const dom = new JSDOM(`
     <style>
