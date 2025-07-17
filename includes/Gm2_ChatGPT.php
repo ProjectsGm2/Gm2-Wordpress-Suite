@@ -22,6 +22,9 @@ class Gm2_ChatGPT {
     }
 
     public function query($prompt) {
+        if (get_option('gm2_enable_chatgpt', '1') !== '1') {
+            return new \WP_Error('chatgpt_disabled', 'ChatGPT feature disabled');
+        }
         if ($this->api_key === '') {
             return new \WP_Error('no_api_key', 'ChatGPT API key not set');
         }

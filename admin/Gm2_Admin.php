@@ -9,10 +9,14 @@ if (!defined('ABSPATH')) {
 class Gm2_Admin {
     private $diagnostics;
     private $quantity_discounts;
+    private $oauth_enabled;
+    private $chatgpt_enabled;
 
     public function run() {
         $this->diagnostics = new Gm2_Diagnostics();
         $this->diagnostics->run();
+        $this->oauth_enabled   = get_option('gm2_enable_google_oauth', '1') === '1';
+        $this->chatgpt_enabled = get_option('gm2_enable_chatgpt', '1') === '1';
         add_action('admin_menu', [$this, 'add_admin_menu'], 9);
         if (get_option('gm2_enable_quantity_discounts', '1') === '1') {
             $this->quantity_discounts = new Gm2_Quantity_Discounts_Admin();
@@ -21,8 +25,10 @@ class Gm2_Admin {
         add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_scripts']);
         add_action('wp_ajax_gm2_add_tariff', [$this, 'ajax_add_tariff']);
         add_action('wp_ajax_nopriv_gm2_add_tariff', [$this, 'ajax_add_tariff']);
-        add_action('admin_post_gm2_chatgpt_settings', [$this, 'handle_chatgpt_form']);
-        add_action('wp_ajax_gm2_chatgpt_prompt', [$this, 'ajax_chatgpt_prompt']);
+        if ($this->chatgpt_enabled) {
+            add_action('admin_post_gm2_chatgpt_settings', [$this, 'handle_chatgpt_form']);
+            add_action('wp_ajax_gm2_chatgpt_prompt', [$this, 'ajax_chatgpt_prompt']);
+        }
     }
 
     public function enqueue_admin_scripts($hook) {
@@ -250,23 +256,27 @@ class Gm2_Admin {
             );
         }
 
-        add_submenu_page(
-            'gm2',
-            esc_html__( 'Google OAuth Setup', 'gm2-wordpress-suite' ),
-            esc_html__( 'Google OAuth Setup', 'gm2-wordpress-suite' ),
-            'manage_options',
-            'gm2-google-oauth-setup',
-            [ $this, 'display_google_oauth_setup_page' ]
-        );
+        if ($this->oauth_enabled) {
+            add_submenu_page(
+                'gm2',
+                esc_html__( 'Google OAuth Setup', 'gm2-wordpress-suite' ),
+                esc_html__( 'Google OAuth Setup', 'gm2-wordpress-suite' ),
+                'manage_options',
+                'gm2-google-oauth-setup',
+                [ $this, 'display_google_oauth_setup_page' ]
+            );
+        }
 
-        add_submenu_page(
-            'gm2',
-            esc_html__( 'ChatGPT', 'gm2-wordpress-suite' ),
-            esc_html__( 'ChatGPT', 'gm2-wordpress-suite' ),
-            'manage_options',
-            'gm2-chatgpt',
-            [ $this, 'display_chatgpt_page' ]
-        );
+        if ($this->chatgpt_enabled) {
+            add_submenu_page(
+                'gm2',
+                esc_html__( 'ChatGPT', 'gm2-wordpress-suite' ),
+                esc_html__( 'ChatGPT', 'gm2-wordpress-suite' ),
+                'manage_options',
+                'gm2-chatgpt',
+                [ $this, 'display_chatgpt_page' ]
+            );
+        }
     }
 
     public function display_dashboard() {
@@ -277,12 +287,16 @@ class Gm2_Admin {
             update_option('gm2_enable_tariff', empty($_POST['gm2_enable_tariff']) ? '0' : '1');
             update_option('gm2_enable_seo', empty($_POST['gm2_enable_seo']) ? '0' : '1');
             update_option('gm2_enable_quantity_discounts', empty($_POST['gm2_enable_quantity_discounts']) ? '0' : '1');
+            update_option('gm2_enable_google_oauth', empty($_POST['gm2_enable_google_oauth']) ? '0' : '1');
+            update_option('gm2_enable_chatgpt', empty($_POST['gm2_enable_chatgpt']) ? '0' : '1');
             echo '<div class="updated notice"><p>' . esc_html__( 'Settings saved.', 'gm2-wordpress-suite' ) . '</p></div>';
         }
 
         $tariff = get_option('gm2_enable_tariff', '1') === '1';
         $seo    = get_option('gm2_enable_seo', '1') === '1';
         $qd     = get_option('gm2_enable_quantity_discounts', '1') === '1';
+        $oauth  = get_option('gm2_enable_google_oauth', '1') === '1';
+        $chatgpt = get_option('gm2_enable_chatgpt', '1') === '1';
 
         echo '<div class="wrap">';
         echo '<h1>' . esc_html__( 'Gm2 Suite', 'gm2-wordpress-suite' ) . '</h1>';
@@ -292,6 +306,8 @@ class Gm2_Admin {
         echo '<tr><th scope="row">' . esc_html__( 'Tariff', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_enable_tariff"' . checked($tariff, true, false) . '> ' . esc_html__( 'Enabled', 'gm2-wordpress-suite' ) . '</label></td></tr>';
         echo '<tr><th scope="row">' . esc_html__( 'SEO', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_enable_seo"' . checked($seo, true, false) . '> ' . esc_html__( 'Enabled', 'gm2-wordpress-suite' ) . '</label></td></tr>';
         echo '<tr><th scope="row">' . esc_html__( 'Quantity Discounts', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_enable_quantity_discounts"' . checked($qd, true, false) . '> ' . esc_html__( 'Enabled', 'gm2-wordpress-suite' ) . '</label></td></tr>';
+        echo '<tr><th scope="row">' . esc_html__( 'Google OAuth Setup', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_enable_google_oauth"' . checked($oauth, true, false) . '> ' . esc_html__( 'Enabled', 'gm2-wordpress-suite' ) . '</label></td></tr>';
+        echo '<tr><th scope="row">' . esc_html__( 'ChatGPT', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_enable_chatgpt"' . checked($chatgpt, true, false) . '> ' . esc_html__( 'Enabled', 'gm2-wordpress-suite' ) . '</label></td></tr>';
         echo '</tbody></table>';
         submit_button();
         echo '</form></div>';

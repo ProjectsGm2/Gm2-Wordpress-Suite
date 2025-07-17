@@ -49,8 +49,9 @@ all dependencies into `gm2-wordpress-suite.zip` for installation via the
 
 == Feature Toggles ==
 The main **Gm2 Suite** page lets administrators enable or disable major modules.
-Check or uncheck **Tariff**, **SEO**, or **Quantity Discounts** and click *Save*
-to hide their menus and functionality. All features are enabled by default.
+Check or uncheck **Tariff**, **SEO**, **Quantity Discounts**, **Google OAuth Setup**
+or **ChatGPT** and click *Save* to hide their menus and functionality. All
+features are enabled by default.
 
 == Google integration ==
 These credentials must be copied from your Google accounts:
