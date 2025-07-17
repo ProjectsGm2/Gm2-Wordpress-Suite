@@ -10,7 +10,9 @@ class Gm2_Public {
 
     public function run() {
         add_action('wp_enqueue_scripts', [$this, 'enqueue_scripts']);
-        add_action('woocommerce_cart_calculate_fees', [$this, 'add_tariff_fees']);
+        if (get_option('gm2_enable_tariff', '1') === '1') {
+            add_action('woocommerce_cart_calculate_fees', [$this, 'add_tariff_fees']);
+        }
     }
 
     public function enqueue_scripts() {
@@ -34,19 +36,21 @@ class Gm2_Public {
         }
 
         if ((function_exists('is_product') && is_product()) || $in_edit_mode) {
-            wp_enqueue_style(
-                'gm2-qd-widget',
-                GM2_PLUGIN_URL . 'public/css/gm2-qd-widget.css',
-                [],
-                GM2_VERSION
-            );
-            wp_enqueue_script(
-                'gm2-qd-widget',
-                GM2_PLUGIN_URL . 'public/js/gm2-qd-widget.js',
-                [ 'jquery' ],
-                GM2_VERSION,
-                true
-            );
+            if (get_option('gm2_enable_quantity_discounts', '1') === '1') {
+                wp_enqueue_style(
+                    'gm2-qd-widget',
+                    GM2_PLUGIN_URL . 'public/css/gm2-qd-widget.css',
+                    [],
+                    GM2_VERSION
+                );
+                wp_enqueue_script(
+                    'gm2-qd-widget',
+                    GM2_PLUGIN_URL . 'public/js/gm2-qd-widget.js',
+                    [ 'jquery' ],
+                    GM2_VERSION,
+                    true
+                );
+            }
         }
     }
 

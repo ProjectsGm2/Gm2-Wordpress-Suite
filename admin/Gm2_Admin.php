@@ -13,9 +13,11 @@ class Gm2_Admin {
     public function run() {
         $this->diagnostics = new Gm2_Diagnostics();
         $this->diagnostics->run();
-        $this->quantity_discounts = new Gm2_Quantity_Discounts_Admin();
         add_action('admin_menu', [$this, 'add_admin_menu'], 9);
-        $this->quantity_discounts->register_hooks();
+        if (get_option('gm2_enable_quantity_discounts', '1') === '1') {
+            $this->quantity_discounts = new Gm2_Quantity_Discounts_Admin();
+            $this->quantity_discounts->register_hooks();
+        }
         add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_scripts']);
         add_action('wp_ajax_gm2_add_tariff', [$this, 'ajax_add_tariff']);
         add_action('wp_ajax_nopriv_gm2_add_tariff', [$this, 'ajax_add_tariff']);
@@ -225,27 +227,28 @@ class Gm2_Admin {
             'dashicons-admin-generic'
         );
 
-        add_submenu_page(
-            'gm2',
-            esc_html__( 'Tariff', 'gm2-wordpress-suite' ),
-            esc_html__( 'Tariff', 'gm2-wordpress-suite' ),
-            'manage_options',
-            'gm2-tariff',
-            [$this, 'display_tariff_page']
-        );
+        if (get_option('gm2_enable_tariff', '1') === '1') {
+            add_submenu_page(
+                'gm2',
+                esc_html__( 'Tariff', 'gm2-wordpress-suite' ),
+                esc_html__( 'Tariff', 'gm2-wordpress-suite' ),
+                'manage_options',
+                'gm2-tariff',
+                [$this, 'display_tariff_page']
+            );
 
-
-        // The add tariff form is now part of the Tariff page. The following
-        // submenu is kept for editing existing tariffs but hidden from the
-        // menu by setting the parent slug to null.
-        add_submenu_page(
-            null,
-            esc_html__( 'Edit Tariff', 'gm2-wordpress-suite' ),
-            esc_html__( 'Edit Tariff', 'gm2-wordpress-suite' ),
-            'manage_options',
-            'gm2-add-tariff',
-            [$this, 'display_add_tariff_page']
-        );
+            // The add tariff form is now part of the Tariff page. The following
+            // submenu is kept for editing existing tariffs but hidden from the
+            // menu by setting the parent slug to null.
+            add_submenu_page(
+                null,
+                esc_html__( 'Edit Tariff', 'gm2-wordpress-suite' ),
+                esc_html__( 'Edit Tariff', 'gm2-wordpress-suite' ),
+                'manage_options',
+                'gm2-add-tariff',
+                [$this, 'display_add_tariff_page']
+            );
+        }
 
         add_submenu_page(
             'gm2',
@@ -267,7 +270,31 @@ class Gm2_Admin {
     }
 
     public function display_dashboard() {
-        echo '<div class="wrap"><h1>' . esc_html__( 'Gm2 Suite', 'gm2-wordpress-suite' ) . '</h1><p>' . esc_html__( 'Welcome to the admin interface!', 'gm2-wordpress-suite' ) . '</p></div>';
+        if (
+            isset($_POST['gm2_feature_toggles_nonce']) &&
+            wp_verify_nonce($_POST['gm2_feature_toggles_nonce'], 'gm2_feature_toggles')
+        ) {
+            update_option('gm2_enable_tariff', empty($_POST['gm2_enable_tariff']) ? '0' : '1');
+            update_option('gm2_enable_seo', empty($_POST['gm2_enable_seo']) ? '0' : '1');
+            update_option('gm2_enable_quantity_discounts', empty($_POST['gm2_enable_quantity_discounts']) ? '0' : '1');
+            echo '<div class="updated notice"><p>' . esc_html__( 'Settings saved.', 'gm2-wordpress-suite' ) . '</p></div>';
+        }
+
+        $tariff = get_option('gm2_enable_tariff', '1') === '1';
+        $seo    = get_option('gm2_enable_seo', '1') === '1';
+        $qd     = get_option('gm2_enable_quantity_discounts', '1') === '1';
+
+        echo '<div class="wrap">';
+        echo '<h1>' . esc_html__( 'Gm2 Suite', 'gm2-wordpress-suite' ) . '</h1>';
+        echo '<form method="post">';
+        wp_nonce_field('gm2_feature_toggles', 'gm2_feature_toggles_nonce');
+        echo '<table class="form-table"><tbody>';
+        echo '<tr><th scope="row">' . esc_html__( 'Tariff', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_enable_tariff"' . checked($tariff, true, false) . '> ' . esc_html__( 'Enabled', 'gm2-wordpress-suite' ) . '</label></td></tr>';
+        echo '<tr><th scope="row">' . esc_html__( 'SEO', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_enable_seo"' . checked($seo, true, false) . '> ' . esc_html__( 'Enabled', 'gm2-wordpress-suite' ) . '</label></td></tr>';
+        echo '<tr><th scope="row">' . esc_html__( 'Quantity Discounts', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_enable_quantity_discounts"' . checked($qd, true, false) . '> ' . esc_html__( 'Enabled', 'gm2-wordpress-suite' ) . '</label></td></tr>';
+        echo '</tbody></table>';
+        submit_button();
+        echo '</form></div>';
     }
 
     private function handle_form_submission() {

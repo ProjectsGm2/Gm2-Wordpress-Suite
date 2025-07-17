@@ -47,6 +47,11 @@ archive with `bash bin/build-plugin.sh`. This command packages the plugin with
 all dependencies into `gm2-wordpress-suite.zip` for installation via the
 **Plugins → Add New** screen.
 
+== Feature Toggles ==
+The main **Gm2 Suite** page lets administrators enable or disable major modules.
+Check or uncheck **Tariff**, **SEO**, or **Quantity Discounts** and click *Save*
+to hide their menus and functionality. All features are enabled by default.
+
 == Google integration ==
 These credentials must be copied from your Google accounts:
 
