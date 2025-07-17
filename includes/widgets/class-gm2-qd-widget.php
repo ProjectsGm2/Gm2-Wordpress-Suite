@@ -339,6 +339,16 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
             ]
         );
         $this->add_control(
+            'icon_color',
+            [
+                'label' => __( 'Icon Color', 'gm2-wordpress-suite' ),
+                'type'  => \Elementor\Controls_Manager::COLOR,
+                'selectors' => [
+                    '{{WRAPPER}} .gm2-qd-currency-icon' => 'color: {{VALUE}};',
+                ],
+            ]
+        );
+        $this->add_control(
             'price_color',
             [
                 'label' => __( 'Color', 'gm2-wordpress-suite' ),
@@ -395,6 +405,16 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
             ]
         );
         $this->add_control(
+            'icon_hover_color',
+            [
+                'label' => __( 'Icon Color', 'gm2-wordpress-suite' ),
+                'type'  => \Elementor\Controls_Manager::COLOR,
+                'selectors' => [
+                    '{{WRAPPER}} .gm2-qd-option:hover .gm2-qd-currency-icon' => 'color: {{VALUE}};',
+                ],
+            ]
+        );
+        $this->add_control(
             'price_hover_color',
             [
                 'label' => __( 'Color', 'gm2-wordpress-suite' ),
@@ -447,6 +467,16 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
                 'selectors' => [
                     '{{WRAPPER}} .gm2-qd-option.active .gm2-qd-currency-icon'      => 'font-size: {{SIZE}}{{UNIT}} !important;',
                     '{{WRAPPER}} .gm2-qd-option.active .gm2-qd-currency-icon svg,\n                     {{WRAPPER}} .gm2-qd-option.active .gm2-qd-currency-icon.e-font-icon-svg,\n                     {{WRAPPER}} .gm2-qd-option.active .gm2-qd-currency-icon i' => 'width: {{SIZE}}{{UNIT}} !important; height: {{SIZE}}{{UNIT}} !important;',
+                ],
+            ]
+        );
+        $this->add_control(
+            'icon_active_color',
+            [
+                'label' => __( 'Icon Color', 'gm2-wordpress-suite' ),
+                'type'  => \Elementor\Controls_Manager::COLOR,
+                'selectors' => [
+                    '{{WRAPPER}} .gm2-qd-option.active .gm2-qd-currency-icon' => 'color: {{VALUE}};',
                 ],
             ]
         );
