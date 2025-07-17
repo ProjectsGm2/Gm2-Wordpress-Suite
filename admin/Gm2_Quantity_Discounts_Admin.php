@@ -102,8 +102,7 @@ class Gm2_Quantity_Discounts_Admin {
         echo '<h1 class="gm2-qd-title">' . esc_html__( 'Quantity Discounts', 'gm2-wordpress-suite' ) . '</h1>';
         echo '<form id="gm2-qd-form"><div id="gm2-qd-groups"></div>';
         echo '<p><button type="button" id="gm2-qd-add-group" class="button">' . esc_html__( 'Add Group', 'gm2-wordpress-suite' ) . '</button></p>';
-        echo '<div id="gm2-qd-msg" class="notice hidden"></div>';
-        submit_button( esc_html__( 'Save Changes', 'gm2-wordpress-suite' ) );
+        echo '<div class="gm2-qd-actions"><button type="submit" id="gm2-qd-save" class="button button-primary">' . esc_html__( 'Save Changes', 'gm2-wordpress-suite' ) . '</button> <span class="gm2-qd-spinner loading-spinner hidden"></span> <span id="gm2-qd-msg" class="notice hidden"></span></div>';
         echo '</form></div>';
     }
 
