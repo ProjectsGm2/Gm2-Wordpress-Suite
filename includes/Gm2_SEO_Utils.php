@@ -73,7 +73,7 @@ namespace {
         if ($api_key === '') {
             return new \WP_Error('no_api_key', 'ChatGPT API key not set');
         }
-        $model = in_array($args['language-model'], ['gpt-3.5-turbo', 'gpt-4'], true) ? $args['language-model'] : 'gpt-3.5-turbo';
+        $model = in_array($args['language-model'], ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo'], true) ? $args['language-model'] : 'gpt-3.5-turbo';
         $temperature = floatval($args['temperature']);
 
         $payload = [
