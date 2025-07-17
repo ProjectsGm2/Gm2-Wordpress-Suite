@@ -54,12 +54,12 @@ jQuery(function($){
     }
 
     function loadCategoryProducts(group, cats){
-        var box = group.find('.gm2-qd-cat-products').html('');
+        var box = group.find('.gm2-qd-cat-products').empty().hide();
         if(!cats || !cats.length){ return; }
         $.get(gm2Qd.ajax_url,{action:'gm2_qd_get_category_products',nonce:gm2Qd.nonce,'categories[]':cats}).done(function(res){
-            if(!res.success) return;
+            if(!res.success || !res.data || !res.data.length) return;
             var html = '<label><input type="checkbox" class="gm2-qd-select-all"> Select all</label><ul class="gm2-qd-checkboxes"></ul><p><button type="button" class="button gm2-qd-add-selected">Add selected products</button></p>';
-            box.append(html);
+            box.append(html).show();
             var list = box.find('.gm2-qd-checkboxes');
             res.data.forEach(function(p){
                 var li = $('<li><label><input type="checkbox" class="gm2-qd-product-chk" value="'+p.id+'" data-title="'+p.title+'" data-sku="'+p.sku+'"> '+labelFor(p)+'</label></li>');

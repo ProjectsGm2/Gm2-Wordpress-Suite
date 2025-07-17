@@ -37,9 +37,13 @@
 .gm2-qd-selected .remove {
     color:red;
     cursor:pointer;
-    font-size:14px;
+    font-size:18px;
     font-weight:bold;
     margin-left:4px;
+}
+
+.gm2-qd-cat-products {
+    display:none;
 }
 .gm2-qd-selected input[type=checkbox] {
     margin-right:4px;
