@@ -1,7 +1,7 @@
 .gm2-qd-options{display:flex;gap:6px;margin-bottom:10px;}
 .gm2-qd-option{cursor:pointer;padding:4px 8px;border:1px solid #ccc;background:#f8f8f8;}
 .gm2-qd-label,.gm2-qd-price{display:block;}
-.gm2-qd-currency-icon{display:inline-block;margin-right:4px;font-size:inherit;}
+.gm2-qd-currency-icon{display:inline-block;margin-right:4px;}
 .gm2-qd-option.active{border-color:#007cba;background:#e7f1ff;}
 .gm2-qd-option.active .gm2-qd-currency-icon{color:#007cba;}
 .gm2-qd-option.loading{position:relative;opacity:.5;pointer-events:none;}
