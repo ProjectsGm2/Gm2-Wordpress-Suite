@@ -162,14 +162,16 @@ class Gm2_SEO_Admin {
             add_action( 'load-' . $hook, [ $this, 'add_settings_help' ] );
         }
 
-        add_submenu_page(
-            'gm2',
-            esc_html__( 'Connect Google Account', 'gm2-wordpress-suite' ),
-            esc_html__( 'Connect Google Account', 'gm2-wordpress-suite' ),
-            'manage_options',
-            'gm2-google-connect',
-            [$this, 'display_google_connect_page']
-        );
+        if (get_option('gm2_enable_google_oauth', '1') === '1') {
+            add_submenu_page(
+                'gm2',
+                esc_html__( 'Connect Google Account', 'gm2-wordpress-suite' ),
+                esc_html__( 'Connect Google Account', 'gm2-wordpress-suite' ),
+                'manage_options',
+                'gm2-google-connect',
+                [$this, 'display_google_connect_page']
+            );
+        }
 
         add_submenu_page(
             'gm2',

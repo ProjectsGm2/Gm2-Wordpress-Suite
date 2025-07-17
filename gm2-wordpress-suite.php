@@ -84,6 +84,8 @@ function gm2_activate_plugin() {
     add_option('gm2_enable_tariff', '1');
     add_option('gm2_enable_seo', '1');
     add_option('gm2_enable_quantity_discounts', '1');
+    add_option('gm2_enable_google_oauth', '1');
+    add_option('gm2_enable_chatgpt', '1');
 }
 register_activation_hook(__FILE__, 'gm2_activate_plugin');
 
