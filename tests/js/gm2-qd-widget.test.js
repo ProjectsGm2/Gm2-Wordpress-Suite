@@ -96,3 +96,41 @@ test('currency icon margin can be customized', () => {
   expect($('.gm2-qd-currency-icon').css('margin-bottom')).toBe('4px');
   expect($('.gm2-qd-currency-icon').css('margin-left')).toBe('5px');
 });
+
+test('horizontal alignment modifies justify-content', () => {
+  const dom = new JSDOM(`
+    <style>
+      .gm2-qd-price { display:flex; }
+      .justify-start { justify-content:flex-start; }
+      .justify-center { justify-content:center; }
+      .justify-end { justify-content:flex-end; }
+    </style>
+    <span class="gm2-qd-price"></span>
+  `, { url: 'http://localhost' });
+
+  const $ = jquery(dom.window);
+  const price = $('.gm2-qd-price');
+  price.addClass('justify-end');
+  expect(price.css('justify-content')).toBe('flex-end');
+  price.removeClass('justify-end').addClass('justify-center');
+  expect(price.css('justify-content')).toBe('center');
+});
+
+test('vertical alignment modifies align-items', () => {
+  const dom = new JSDOM(`
+    <style>
+      .gm2-qd-price { display:flex; align-items:center; }
+      .align-top { align-items:flex-start; }
+      .align-bottom { align-items:flex-end; }
+    </style>
+    <span class="gm2-qd-price"></span>
+  `, { url: 'http://localhost' });
+
+  const $ = jquery(dom.window);
+  const price = $('.gm2-qd-price');
+  expect(price.css('align-items')).toBe('center');
+  price.addClass('align-top');
+  expect(price.css('align-items')).toBe('flex-start');
+  price.removeClass('align-top').addClass('align-bottom');
+  expect(price.css('align-items')).toBe('flex-end');
+});

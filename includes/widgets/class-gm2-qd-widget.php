@@ -268,6 +268,54 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
                 'selector' => '{{WRAPPER}} .gm2-qd-price',
             ]
         );
+        $this->add_responsive_control(
+            'price_horizontal_align',
+            [
+                'label' => __( 'Horizontal Align', 'gm2-wordpress-suite' ),
+                'type'  => \Elementor\Controls_Manager::CHOOSE,
+                'options' => [
+                    'flex-start' => [
+                        'title' => __( 'Start', 'gm2-wordpress-suite' ),
+                        'icon'  => 'eicon-text-align-left',
+                    ],
+                    'center' => [
+                        'title' => __( 'Center', 'gm2-wordpress-suite' ),
+                        'icon'  => 'eicon-text-align-center',
+                    ],
+                    'flex-end' => [
+                        'title' => __( 'End', 'gm2-wordpress-suite' ),
+                        'icon'  => 'eicon-text-align-right',
+                    ],
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .gm2-qd-price' => 'justify-content: {{VALUE}};',
+                ],
+            ]
+        );
+        $this->add_responsive_control(
+            'price_vertical_align',
+            [
+                'label' => __( 'Vertical Align', 'gm2-wordpress-suite' ),
+                'type'  => \Elementor\Controls_Manager::CHOOSE,
+                'options' => [
+                    'flex-start' => [
+                        'title' => __( 'Top', 'gm2-wordpress-suite' ),
+                        'icon'  => 'eicon-v-align-top',
+                    ],
+                    'center' => [
+                        'title' => __( 'Middle', 'gm2-wordpress-suite' ),
+                        'icon'  => 'eicon-v-align-middle',
+                    ],
+                    'flex-end' => [
+                        'title' => __( 'Bottom', 'gm2-wordpress-suite' ),
+                        'icon'  => 'eicon-v-align-bottom',
+                    ],
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .gm2-qd-price' => 'align-items: {{VALUE}};',
+                ],
+            ]
+        );
         $this->start_controls_tabs( 'price_style_tabs' );
         $this->start_controls_tab(
             'price_style_normal',
