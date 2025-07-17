@@ -344,7 +344,7 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
                 'label' => __( 'Icon Color', 'gm2-wordpress-suite' ),
                 'type'  => \Elementor\Controls_Manager::COLOR,
                 'selectors' => [
-                    '{{WRAPPER}} .gm2-qd-currency-icon, {{WRAPPER}} .gm2-qd-currency-icon svg, {{WRAPPER}} .gm2-qd-currency-icon.e-font-icon-svg, {{WRAPPER}} .gm2-qd-currency-icon i' => 'color: {{VALUE}}; fill: {{VALUE}};',
+                       '{{WRAPPER}} .gm2-qd-currency-icon, {{WRAPPER}} .gm2-qd-currency-icon svg, {{WRAPPER}} .gm2-qd-currency-icon.e-font-icon-svg, {{WRAPPER}} .gm2-qd-currency-icon i' => 'color: {{VALUE}}; fill: {{VALUE}};',
                 ],
             ]
         );
@@ -410,7 +410,7 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
                 'label' => __( 'Icon Color', 'gm2-wordpress-suite' ),
                 'type'  => \Elementor\Controls_Manager::COLOR,
                 'selectors' => [
-                    '{{WRAPPER}} .gm2-qd-option:hover .gm2-qd-currency-icon, {{WRAPPER}} .gm2-qd-option:hover .gm2-qd-currency-icon svg, {{WRAPPER}} .gm2-qd-option:hover .gm2-qd-currency-icon.e-font-icon-svg, {{WRAPPER}} .gm2-qd-option:hover .gm2-qd-currency-icon i' => 'color: {{VALUE}}; fill: {{VALUE}};',
+                      '{{WRAPPER}} .gm2-qd-option:hover .gm2-qd-currency-icon, {{WRAPPER}} .gm2-qd-option:hover .gm2-qd-currency-icon svg, {{WRAPPER}} .gm2-qd-option:hover .gm2-qd-currency-icon.e-font-icon-svg, {{WRAPPER}} .gm2-qd-option:hover .gm2-qd-currency-icon i' => 'color: {{VALUE}}; fill: {{VALUE}};',
                 ],
             ]
         );

@@ -2,8 +2,19 @@ jQuery(function($){
     var groups = gm2Qd.groups || [];
     var categories = gm2Qd.categories || [];
     let activeSearch = null;
+
+    function decodeEntities(str){
+        if(!str) return '';
+        var txt = document.createElement('textarea');
+        txt.innerHTML = str;
+        return txt.value;
+    }
+
     function labelFor(item){
         var l = item.title || item.text || item.id;
+        if(typeof l === 'string'){
+            l = decodeEntities(l);
+        }
         if(item.sku){ l += ' ('+item.sku+')'; }
         return l;
     }
@@ -50,7 +61,11 @@ jQuery(function($){
     function addSelectedProduct(group, item){
         var ul = group.find('.gm2-qd-selected');
         if( ul.find('li[data-id="'+item.id+'"]').length ) return;
-        ul.append('<li data-id="'+item.id+'"><label><input type="checkbox" class="gm2-qd-selected-chk"> '+labelFor(item)+' <span class="remove">x</span></label></li>');
+        var input = $('<input>', { type:'checkbox', class:'gm2-qd-selected-chk' });
+        var span = $('<span>', { 'class':'remove' }).text('x');
+        var label = $('<label>').append(input).append(' ').append($('<span>').text(labelFor(item))).append(' ').append(span);
+        var li = $('<li>').attr('data-id', item.id).append(label);
+        ul.append(li);
     }
 
     function loadCategoryProducts(group, cats){
@@ -61,11 +76,25 @@ jQuery(function($){
         $.get(gm2Qd.ajax_url,{action:'gm2_qd_get_category_products',nonce:gm2Qd.nonce,'categories[]':cats}).done(function(res){
             box.removeClass('loading').empty();
             if(!res.success || !res.data || !res.data.length) return;
-            var html = '<label><input type="checkbox" class="gm2-qd-select-all"> Select all</label><ul class="gm2-qd-checkboxes"></ul><p><button type="button" class="button gm2-qd-add-selected">Add selected products</button></p>';
-            box.append(html).show();
-            var list = box.find('.gm2-qd-checkboxes');
+            var selectAll = $('<label>').append(
+                $('<input>', { type:'checkbox', class:'gm2-qd-select-all' })
+            ).append(' Select all');
+            var list = $('<ul>', { class:'gm2-qd-checkboxes' });
+            var addBtn = $('<p>').append(
+                $('<button>', { type:'button', class:'button gm2-qd-add-selected' }).text('Add selected products')
+            );
+            box.append(selectAll, list, addBtn).show();
             res.data.forEach(function(p){
-                var li = $('<li><label><input type="checkbox" class="gm2-qd-product-chk" value="'+p.id+'" data-title="'+p.title+'" data-sku="'+p.sku+'"> '+labelFor(p)+'</label></li>');
+                var input = $('<input>', {
+                    type:'checkbox',
+                    class:'gm2-qd-product-chk',
+                    value:p.id,
+                    'data-title':p.title,
+                    'data-sku':p.sku
+                });
+                var li = $('<li>').append(
+                    $('<label>').append(input).append(' ').append($('<span>').text(labelFor(p)))
+                );
                 if(group.find('.gm2-qd-selected li[data-id="'+p.id+'"]').length){
                     li.find('input').prop('checked',true);
                 }
@@ -136,13 +165,25 @@ jQuery(function($){
         }
         activeSearch=$.get(gm2Qd.ajax_url,{action:'gm2_qd_search_products',nonce:gm2Qd.nonce,term:term,'categories[]':cats}).done(function(res){
             if(!res.success) return;
-            var html='<label><input type="checkbox" class="gm2-qd-select-all"> Select all</label>'+
-                      '<ul class="gm2-qd-checkboxes"></ul>'+
-                      '<p><button type="button" class="button gm2-qd-add-selected">Add selected products</button></p>';
-            box.html(html);
-            var list=box.find('.gm2-qd-checkboxes');
+            var selectAll = $('<label>').append(
+                $('<input>', { type:'checkbox', class:'gm2-qd-select-all' })
+            ).append(' Select all');
+            var list = $('<ul>', { class:'gm2-qd-checkboxes' });
+            var addBtn = $('<p>').append(
+                $('<button>', { type:'button', class:'button gm2-qd-add-selected' }).text('Add selected products')
+            );
+            box.append(selectAll, list, addBtn);
             res.data.forEach(function(i){
-                var li=$('<li><label><input type="checkbox" class="gm2-qd-product-chk" value="'+i.id+'" data-title="'+i.title+'" data-sku="'+i.sku+'"> '+labelFor(i)+'</label></li>');
+                var input = $('<input>', {
+                    type:'checkbox',
+                    class:'gm2-qd-product-chk',
+                    value:i.id,
+                    'data-title':i.title,
+                    'data-sku':i.sku
+                });
+                var li = $('<li>').append(
+                    $('<label>').append(input).append(' ').append($('<span>').text(labelFor(i)))
+                );
                 if(group.find('.gm2-qd-selected li[data-id="'+i.id+'"]').length){
                     li.find('input').prop('checked',true);
                 }
