@@ -250,6 +250,17 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
                 ],
             ]
         );
+        $this->add_responsive_control(
+            'currency_icon_margin',
+            [
+                'label' => __( 'Icon Margin', 'gm2-wordpress-suite' ),
+                'type'  => \Elementor\Controls_Manager::DIMENSIONS,
+                'default' => [ 'top' => '0', 'right' => '4', 'bottom' => '0', 'left' => '0', 'unit' => 'px' ],
+                'selectors' => [
+                    '{{WRAPPER}} .gm2-qd-currency-icon' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                ],
+            ]
+        );
         $this->add_group_control(
             \Elementor\Group_Control_Typography::get_type(),
             [
