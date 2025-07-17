@@ -61,10 +61,10 @@ JavaScript tests live in `tests/js` and are executed with:
 npm test
 ```
 
-The Makefile includes a `test` target which automatically checks for the test suite and runs PHPUnit and the Jest tests:
+The Makefile includes a `test` target which automatically checks for the test suite and runs PHPUnit and the Jest tests. When invoking this target you must supply your database credentials via the `DB_NAME`, `DB_USER`, and `DB_PASS` environment variables:
 
 ```bash
-make test
+make test DB_NAME=wp_test DB_USER=root DB_PASS=pass
 ```
 
 
