@@ -49,11 +49,11 @@ test('currency icon font size changes with active class', () => {
 test('currency icon color changes with active class', () => {
   const dom = new JSDOM(`
     <style>
-      .gm2-qd-currency-icon{color:red}
-      .gm2-qd-option.active .gm2-qd-currency-icon{color:blue}
+        .gm2-qd-currency-icon{color:red;fill:red}
+      .gm2-qd-option.active .gm2-qd-currency-icon{color:blue;fill:blue}
     </style>
     <div class="gm2-qd-option">
-      <span class="gm2-qd-currency-icon"></span>
+    <span class="gm2-qd-currency-icon"><svg><path d=""/></svg></span>
     </div>
   `, { url: 'http://localhost' });
 
@@ -62,6 +62,7 @@ test('currency icon color changes with active class', () => {
   expect($('.gm2-qd-currency-icon').css('color')).toBe('rgb(255, 0, 0)');
   $('.gm2-qd-option').addClass('active');
   expect($('.gm2-qd-option.active .gm2-qd-currency-icon').css('color')).toBe('rgb(0, 0, 255)');
+   // fill is applied to SVG paths but jsdom does not compute it reliably
 });
 
 test('option background colors apply for normal and active states', () => {
