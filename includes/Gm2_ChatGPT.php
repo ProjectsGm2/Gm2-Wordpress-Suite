@@ -60,7 +60,7 @@ class Gm2_ChatGPT {
 
         if ($status !== 200) {
             if (defined('WP_DEBUG') && WP_DEBUG) {
-                $snippet = substr($body, 0, 200);
+                $snippet = gm2_substr($body, 0, 200);
                 error_log(sprintf('Gm2_ChatGPT HTTP %s: %s', $status, $snippet));
             }
             $data    = json_decode($body, true);

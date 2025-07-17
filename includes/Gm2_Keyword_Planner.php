@@ -100,7 +100,7 @@ class Gm2_Keyword_Planner {
 
         if ($code < 200 || $code >= 300 || (!empty($data['error']['message']))) {
             if (defined('WP_DEBUG') && WP_DEBUG) {
-                $snippet = substr($body, 0, 200);
+                $snippet = gm2_substr($body, 0, 200);
                 error_log(sprintf('Keyword Planner HTTP %s: %s', $code, $snippet));
             }
             $msg = $data['error']['message'] ?? "HTTP $code response";

@@ -56,9 +56,19 @@ namespace {
         }
         if ($desc === '' && isset($GLOBALS['post']) && $GLOBALS['post'] instanceof \WP_Post) {
             $clean = wp_strip_all_tags($GLOBALS['post']->post_content);
-            $desc  = substr($clean, 0, 160);
+            $desc  = gm2_substr($clean, 0, 160);
         }
         return $desc;
+    }
+
+    /**
+     * Multibyte-safe substring helper.
+     */
+    function gm2_substr($string, $start, $length = null) {
+        if (function_exists('mb_substr')) {
+            return mb_substr($string, $start, $length, 'UTF-8');
+        }
+        return $length === null ? substr($string, $start) : substr($string, $start, $length);
     }
 
     function gm2_ai_send_prompt($prompt, $args = []) {
