@@ -275,6 +275,7 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
                 ],
                 'selectors' => [
                     '{{WRAPPER}} .gm2-qd-currency-icon' => 'font-size: {{SIZE}}{{UNIT}};',
+                    '{{WRAPPER}} .gm2-qd-currency-icon svg' => 'width: {{SIZE}}{{UNIT}}; height: {{SIZE}}{{UNIT}};',
                 ],
             ]
         );
@@ -330,6 +331,7 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
                 ],
                 'selectors' => [
                     '{{WRAPPER}} .gm2-qd-option:hover .gm2-qd-currency-icon' => 'font-size: {{SIZE}}{{UNIT}};',
+                    '{{WRAPPER}} .gm2-qd-option:hover .gm2-qd-currency-icon svg' => 'width: {{SIZE}}{{UNIT}}; height: {{SIZE}}{{UNIT}};',
                 ],
             ]
         );
@@ -385,6 +387,7 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
                 ],
                 'selectors' => [
                     '{{WRAPPER}} .gm2-qd-option.active .gm2-qd-currency-icon' => 'font-size: {{SIZE}}{{UNIT}};',
+                    '{{WRAPPER}} .gm2-qd-option.active .gm2-qd-currency-icon svg' => 'width: {{SIZE}}{{UNIT}}; height: {{SIZE}}{{UNIT}};',
                 ],
             ]
         );
