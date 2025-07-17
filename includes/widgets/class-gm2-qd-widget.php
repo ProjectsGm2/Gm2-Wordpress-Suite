@@ -31,13 +31,6 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
             ]
         );
         $this->add_group_control(
-            \Elementor\Group_Control_Background::get_type(),
-            [
-                'name'     => 'option_bg',
-                'selector' => '{{WRAPPER}} .gm2-qd-option',
-            ]
-        );
-        $this->add_group_control(
             \Elementor\Group_Control_Border::get_type(),
             [
                 'name'     => 'option_border',
@@ -64,6 +57,44 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
                 ],
             ]
         );
+        $this->start_controls_tabs( 'option_style_tabs' );
+        $this->start_controls_tab(
+            'option_style_normal',
+            [ 'label' => __( 'Normal', 'gm2-wordpress-suite' ) ]
+        );
+        $this->add_group_control(
+            \Elementor\Group_Control_Background::get_type(),
+            [
+                'name'     => 'option_bg_normal',
+                'selector' => '{{WRAPPER}} .gm2-qd-option',
+            ]
+        );
+        $this->end_controls_tab();
+        $this->start_controls_tab(
+            'option_style_hover',
+            [ 'label' => __( 'Hover', 'gm2-wordpress-suite' ) ]
+        );
+        $this->add_group_control(
+            \Elementor\Group_Control_Background::get_type(),
+            [
+                'name'     => 'option_bg_hover',
+                'selector' => '{{WRAPPER}} .gm2-qd-option:hover',
+            ]
+        );
+        $this->end_controls_tab();
+        $this->start_controls_tab(
+            'option_style_active',
+            [ 'label' => __( 'Active', 'gm2-wordpress-suite' ) ]
+        );
+        $this->add_group_control(
+            \Elementor\Group_Control_Background::get_type(),
+            [
+                'name'     => 'option_bg_active',
+                'selector' => '{{WRAPPER}} .gm2-qd-option.active',
+            ]
+        );
+        $this->end_controls_tab();
+        $this->end_controls_tabs();
         $this->end_controls_section();
 
         $this->start_controls_section(
