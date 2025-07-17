@@ -153,3 +153,20 @@ test('vertical alignment modifies align-items', () => {
   price.removeClass('align-top').addClass('align-bottom');
   expect(price.css('align-items')).toBe('flex-end');
 });
+
+test('container wrap toggles flex-wrap', () => {
+  const dom = new JSDOM(`
+    <style>
+      .gm2-qd-options { display:flex; }
+      .wrap { flex-wrap:wrap; }
+      .nowrap { flex-wrap:nowrap; }
+    </style>
+    <div class="gm2-qd-options wrap"></div>
+  `, { url: 'http://localhost' });
+
+  const $ = jquery(dom.window);
+  const container = $('.gm2-qd-options');
+  expect(container.css('flex-wrap')).toBe('wrap');
+  container.removeClass('wrap').addClass('nowrap');
+  expect(container.css('flex-wrap')).toBe('nowrap');
+});
