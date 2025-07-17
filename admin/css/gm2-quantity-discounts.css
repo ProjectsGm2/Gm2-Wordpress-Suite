@@ -60,3 +60,7 @@
 .gm2-qd-selected-title {
     margin-top:10px;
 }
+
+.select2-container--default .select2-search--inline {
+    display: none;
+}
