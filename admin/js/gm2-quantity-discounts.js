@@ -229,6 +229,10 @@ jQuery(function($){
             data.push(obj);
         });
         var $msg=$('#gm2-qd-msg');
+        var $spinner=$('.gm2-qd-spinner');
+        var $btn=$('#gm2-qd-save');
+        $btn.prop('disabled',true);
+        $spinner.removeClass('hidden');
         $msg.removeClass('notice-success notice-error').addClass('hidden');
         $.post(gm2Qd.ajax_url,{action:'gm2_qd_save_groups',nonce:gm2Qd.nonce,groups:data}).done(function(res){
             if(res.success){$msg.text('Saved.').addClass('notice-success');}
@@ -236,6 +240,8 @@ jQuery(function($){
         }).fail(function(){
             $msg.text('Error').addClass('notice-error');
         }).always(function(){
+            $spinner.addClass('hidden');
+            $btn.prop('disabled',false);
             $msg.removeClass('hidden');
         });
     });

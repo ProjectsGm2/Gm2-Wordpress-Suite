@@ -78,6 +78,25 @@
     margin-top:10px;
 }
 
+.gm2-qd-actions{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-top:15px;
+}
+.gm2-qd-actions .loading-spinner{
+    width:1em;
+    height:1em;
+    border:2px solid currentColor;
+    border-top-color:transparent;
+    border-radius:50%;
+    animation:gm2-spin .6s linear infinite;
+}
+.gm2-qd-actions #gm2-qd-msg{
+    display:inline-block;
+    margin:0;
+}
+
 .select2-container--default .select2-search--inline {
     display: none;
 }
