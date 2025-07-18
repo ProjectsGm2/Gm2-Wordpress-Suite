@@ -239,7 +239,7 @@ jQuery(function($){
         $btn.prop('disabled',true);
         $spinner.removeClass('hidden');
         $msg.removeClass('notice-success notice-error').addClass('hidden');
-        $.post(gm2Qd.ajax_url,{action:'gm2_qd_save_groups',nonce:gm2Qd.nonce,groups:data}).done(function(res){
+        $.post(gm2Qd.ajax_url,{action:'gm2_qd_save_groups',nonce:gm2Qd.nonce,groups:JSON.stringify(data)}).done(function(res){
             if(res.success){$msg.text('Saved.').addClass('notice-success');}
             else{$msg.text(res.data&&res.data.message?res.data.message:'Error').addClass('notice-error');}
         }).fail(function(){
