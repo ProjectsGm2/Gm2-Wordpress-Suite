@@ -24,43 +24,74 @@ class Gm2_Quantity_Discounts_Public {
         return sprintf('%d+ units: %s discount', $rule['min'], wc_price($rule['amount']));
     }
 
-    private function get_applicable_rule($product_id, $qty) {
+    private function get_applicable_rule($product_id, $qty, $base_price = null) {
         $groups = get_option('gm2_quantity_discount_groups', []);
         if (empty($groups)) {
             return null;
         }
 
-        $group = null;
+        $best_rule      = null;
+        $best_new_price = null;
         foreach ($groups as $g) {
-            if (!empty($g['products']) && in_array($product_id, $g['products'], true)) {
-                $group = $g;
-                break;
+            if (empty($g['products']) || !in_array($product_id, $g['products'], true) || empty($g['rules'])) {
+                continue;
             }
-        }
-        if (!$group || empty($group['rules'])) {
-            return null;
-        }
 
-        $rules = $group['rules'];
-        usort($rules, function($a, $b) {
-            return $b['min'] <=> $a['min'];
-        });
-        foreach ($rules as $rule) {
-            if ($qty >= intval($rule['min'])) {
-                return $rule;
+            $rules = $g['rules'];
+            usort($rules, function($a, $b) {
+                return $b['min'] <=> $a['min'];
+            });
+            foreach ($rules as $rule) {
+                if ($qty < intval($rule['min'])) {
+                    continue;
+                }
+
+                if ($base_price === null) {
+                    if ($best_rule === null) {
+                        $best_rule = $rule;
+                    } elseif ($rule['type'] === 'percent' && $best_rule['type'] === 'percent') {
+                        if ($rule['amount'] > $best_rule['amount']) {
+                            $best_rule = $rule;
+                        }
+                    } elseif ($rule['type'] === 'percent' && $best_rule['type'] !== 'percent') {
+                        $best_rule = $rule;
+                    } elseif ($rule['type'] !== 'percent' && $best_rule['type'] !== 'percent') {
+                        if ($rule['amount'] > $best_rule['amount']) {
+                            $best_rule = $rule;
+                        }
+                    }
+                } else {
+                    $new_price = $base_price;
+                    if ($rule['type'] === 'percent') {
+                        $new_price = $base_price * (1 - ($rule['amount'] / 100));
+                    } else {
+                        $new_price = $base_price - $rule['amount'];
+                    }
+                    if ($new_price < 0) {
+                        $new_price = 0;
+                    }
+                    if ($best_new_price === null || $new_price < $best_new_price) {
+                        $best_new_price = $new_price;
+                        $best_rule      = $rule;
+                    }
+                }
             }
         }
-        return null;
+        return $best_rule;
     }
 
     public function add_cart_item_data($cart_item_data, $product_id, $variation_id, $quantity) {
-        $rule = $this->get_applicable_rule($product_id, $quantity);
+        $product = wc_get_product($product_id);
+        $base    = 0;
+        if ($product) {
+            $base = (float) $product->get_price('edit');
+        }
+        $rule = $this->get_applicable_rule($product_id, $quantity, $base);
         if ($rule) {
             $cart_item_data['gm2_qd_rule']      = $rule;
             $cart_item_data['gm2_qd_rule_desc'] = $this->format_rule_desc($rule);
-            $product = wc_get_product($product_id);
-            if ($product) {
-                $cart_item_data['gm2_qd_original_price'] = (float) $product->get_price('edit');
+            if ($base > 0) {
+                $cart_item_data['gm2_qd_original_price'] = $base;
             }
         }
         return $cart_item_data;
@@ -92,17 +123,7 @@ class Gm2_Quantity_Discounts_Public {
         }
         foreach ($cart->get_cart() as $key => $item) {
             $product_id = $item['product_id'];
-            $group      = null;
-            foreach ($groups as $g) {
-                if (!empty($g['products']) && in_array($product_id, $g['products'], true)) {
-                    $group = $g;
-                    break;
-                }
-            }
-            if (!$group || empty($group['rules'])) {
-                continue;
-            }
-            $product = $item['data'];
+            $product    = $item['data'];
             if (!isset($cart->cart_contents[$key]['gm2_qd_original_price'])) {
                 $cart->cart_contents[$key]['gm2_qd_original_price'] = (float) $product->get_price('edit');
             } else {
@@ -110,17 +131,7 @@ class Gm2_Quantity_Discounts_Public {
             }
             $base  = $cart->cart_contents[$key]['gm2_qd_original_price'];
             $qty   = $item['quantity'];
-            $rules = $group['rules'];
-            usort($rules, function($a, $b) {
-                return $b['min'] <=> $a['min'];
-            });
-            $applied = null;
-            foreach ($rules as $rule) {
-                if ($qty >= intval($rule['min'])) {
-                    $applied = $rule;
-                    break;
-                }
-            }
+            $applied = $this->get_applicable_rule($product_id, $qty, $base);
             if ($applied) {
                 $new_price = $base;
                 if ($applied['type'] === 'percent') {
