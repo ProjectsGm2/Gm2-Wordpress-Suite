@@ -19,9 +19,17 @@ class Gm2_Quantity_Discounts_Public {
 
     private function format_rule_desc($rule) {
         if ($rule['type'] === 'percent') {
-            return sprintf('%d+ units: %s%% off', $rule['min'], $rule['amount']);
+            return sprintf(
+                __('%d+ units: %s%% off', 'gm2-wordpress-suite'),
+                $rule['min'],
+                $rule['amount']
+            );
         }
-        return sprintf('%d+ units: %s discount', $rule['min'], wc_price($rule['amount']));
+        return sprintf(
+            __('%d+ units: %s discount', 'gm2-wordpress-suite'),
+            $rule['min'],
+            wc_price($rule['amount'])
+        );
     }
 
     /**
