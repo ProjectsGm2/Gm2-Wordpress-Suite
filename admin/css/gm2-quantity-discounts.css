@@ -76,6 +76,25 @@
 }
 .gm2-qd-selected-title {
     margin-top:10px;
+    cursor:pointer;
+    position:relative;
+    padding-right:20px;
+}
+.gm2-qd-selected-title .gm2-qd-selected-toggle{
+    position:absolute;
+    right:0;
+    top:0;
+    font-weight:bold;
+}
+
+.gm2-qd-selected-wrap .gm2-qd-selected,
+.gm2-qd-selected-wrap .gm2-qd-remove-actions{
+    display:none;
+}
+
+.gm2-qd-selected-wrap.open .gm2-qd-selected,
+.gm2-qd-selected-wrap.open .gm2-qd-remove-actions{
+    display:block;
 }
 
 .gm2-qd-actions{

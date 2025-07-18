@@ -35,7 +35,7 @@ jQuery(function($){
         header.append('<input type="text" class="gm2-qd-name" placeholder="Group name" value="'+(g.name||'')+'"> <button type="button" class="button gm2-qd-remove-group">&times;</button><span class="gm2-qd-toggle">&#9650;</span>');
         accordion.append(header);
         var container = $('<div class="gm2-qd-group"></div>');
-        var prodSection = $('<div class="gm2-qd-products"><select class="gm2-qd-cat" multiple><option value="">All Categories</option></select> <input type="text" class="gm2-qd-search" placeholder="Search products"> <button type="button" class="button gm2-qd-search-btn">Search</button> <div class="gm2-qd-cat-products"></div><ul class="gm2-qd-results"></ul><h4 class="gm2-qd-selected-title">Selected products</h4><ul class="gm2-qd-selected"></ul><p class="gm2-qd-remove-actions"><button type="button" class="button gm2-qd-remove-selected">Remove selected products</button> <button type="button" class="button gm2-qd-remove-all">Remove all</button></p></div>');
+        var prodSection = $('<div class="gm2-qd-products"><select class="gm2-qd-cat" multiple><option value="">All Categories</option></select> <input type="text" class="gm2-qd-search" placeholder="Search products"> <button type="button" class="button gm2-qd-search-btn">Search</button> <div class="gm2-qd-cat-products"></div><ul class="gm2-qd-results"></ul><div class="gm2-qd-selected-wrap open"><h4 class="gm2-qd-selected-title">Selected products <span class="gm2-qd-selected-toggle">&#9650;</span></h4><ul class="gm2-qd-selected"></ul><p class="gm2-qd-remove-actions"><button type="button" class="button gm2-qd-remove-selected">Remove selected products</button> <button type="button" class="button gm2-qd-remove-all">Remove all</button></p></div></div>');
         categories.forEach(function(c){prodSection.find('select').append('<option value="'+c.id+'">'+c.name+'</option>');});
         container.append(prodSection);
         var table = $('<table class="widefat gm2-qd-rules"><thead><tr><th>Min Qty</th><th>Label</th><th>% Off</th><th>Fixed Off</th><th></th></tr></thead><tbody></tbody></table>');
@@ -209,6 +209,11 @@ jQuery(function($){
     });
     $(document).on('click','.gm2-qd-selected .remove',function(){
         $(this).closest('li').remove();
+    });
+    $(document).on('click','.gm2-qd-selected-title',function(e){
+        var wrap=$(this).closest('.gm2-qd-selected-wrap');
+        wrap.toggleClass('open');
+        $(this).find('.gm2-qd-selected-toggle').html(wrap.hasClass('open')?'\u25B2':'\u25BC');
     });
     $('#gm2-qd-form').on('submit',function(e){
         e.preventDefault();
