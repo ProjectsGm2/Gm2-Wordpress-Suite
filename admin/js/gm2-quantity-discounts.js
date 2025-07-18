@@ -56,6 +56,9 @@ jQuery(function($){
             addSelectedProduct(container, p);
         });
         accordion.append(container);
+        // ensure product list starts collapsed
+        container.find('.gm2-qd-selected-wrap').removeClass('open')
+            .find('.gm2-qd-selected-toggle').html('&#9660;');
         return accordion;
     }
     function addSelectedProduct(group, item){
