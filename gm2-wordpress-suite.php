@@ -15,7 +15,7 @@
 defined('ABSPATH') or die('No script kiddies please!');
 
 // Define constants
-define('GM2_VERSION', '1.6.15');
+define('GM2_VERSION', '1.6.16');
 define('GM2_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('GM2_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('GM2_CONTENT_RULES_VERSION', 2);

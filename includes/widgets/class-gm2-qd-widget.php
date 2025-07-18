@@ -626,14 +626,44 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
     }
 
     private function get_rules( $product_id ) {
-        $m = new Gm2_Quantity_Discount_Manager();
+        $m      = new Gm2_Quantity_Discount_Manager();
         $groups = $m->get_groups();
+        $rules  = [];
         foreach ( $groups as $g ) {
-            if ( ! empty( $g['products'] ) && in_array( $product_id, $g['products'], true ) ) {
-                return $g['rules'] ?? [];
+            if ( empty( $g['products'] ) || ! in_array( $product_id, $g['products'], true ) ) {
+                continue;
+            }
+            if ( empty( $g['rules'] ) || ! is_array( $g['rules'] ) ) {
+                continue;
+            }
+            foreach ( $g['rules'] as $rule ) {
+                $min = intval( $rule['min'] ?? 0 );
+                if ( $min <= 0 ) {
+                    continue;
+                }
+                if ( ! isset( $rules[ $min ] ) ) {
+                    $rules[ $min ] = $rule;
+                    continue;
+                }
+                $existing = $rules[ $min ];
+                if ( $rule['type'] === 'percent' && $existing['type'] === 'percent' ) {
+                    if ( $rule['amount'] > $existing['amount'] ) {
+                        $rules[ $min ] = $rule;
+                    }
+                } elseif ( $rule['type'] === 'percent' && $existing['type'] !== 'percent' ) {
+                    $rules[ $min ] = $rule;
+                } elseif ( $rule['type'] !== 'percent' && $existing['type'] !== 'percent' ) {
+                    if ( $rule['amount'] > $existing['amount'] ) {
+                        $rules[ $min ] = $rule;
+                    }
+                }
             }
         }
-        return [];
+        if ( empty( $rules ) ) {
+            return [];
+        }
+        ksort( $rules );
+        return array_values( $rules );
     }
 }
 }
