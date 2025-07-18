@@ -58,7 +58,8 @@ test('submits group data via ajax', async () => {
   await new Promise(r => setTimeout(r, 0));
 
   expect($.post).toHaveBeenCalled();
-  const data = $.post.mock.calls[0][1].groups[0];
+  const sent = $.post.mock.calls[0][1].groups;
+  const data = Array.isArray(sent) ? sent[0] : JSON.parse(sent)[0];
   expect(data.name).toBe('Test');
   expect(data.products[0]).toBe(55);
   expect(data.rules[0]).toEqual({ min: 2, label: 'First', type: 'percent', amount: 10 });

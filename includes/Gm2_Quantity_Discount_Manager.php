@@ -61,4 +61,17 @@ class Gm2_Quantity_Discount_Manager {
         });
         update_option($this->option_name, array_values($groups));
     }
+
+    /**
+     * Replace all groups with the provided array.
+     *
+     * @param array $groups Group data to store.
+     * @return void
+     */
+    public function set_groups($groups) {
+        if (!is_array($groups)) {
+            $groups = [];
+        }
+        update_option($this->option_name, $groups);
+    }
 }

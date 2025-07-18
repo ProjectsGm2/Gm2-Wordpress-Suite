@@ -45,7 +45,8 @@ class Gm2_Quantity_Discounts_Admin {
             GM2_VERSION,
             true
         );
-        $groups  = get_option( 'gm2_quantity_discount_groups', [] );
+        $manager = new Gm2_Quantity_Discount_Manager();
+        $groups  = $manager->get_groups();
         $titles  = [];
         foreach ( $groups as &$g ) {
             if ( empty( $g['products'] ) || ! is_array( $g['products'] ) ) {
@@ -220,7 +221,8 @@ class Gm2_Quantity_Discounts_Admin {
                 ];
             }
         }
-        update_option( 'gm2_quantity_discount_groups', $clean );
+        $manager = new Gm2_Quantity_Discount_Manager();
+        $manager->set_groups( $clean );
         wp_send_json_success( [ 'saved' => true ] );
     }
 }
