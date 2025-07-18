@@ -24,59 +24,84 @@ class Gm2_Quantity_Discounts_Public {
         return sprintf('%d+ units: %s discount', $rule['min'], wc_price($rule['amount']));
     }
 
-    private function get_applicable_rule($product_id, $qty, $base_price = null) {
-        $groups = get_option('gm2_quantity_discount_groups', []);
-        if (empty($groups)) {
-            return null;
-        }
+    /**
+     * Return the group containing the product with the highest percentage rule.
+     *
+     * @param int $product_id Product ID to search for.
+     * @return array|null Best group or null when none found.
+     */
+    public function get_best_group($product_id) {
+        $groups      = get_option('gm2_quantity_discount_groups', []);
+        $best_group  = null;
+        $best_amount = -1;
 
-        $best_rule      = null;
-        $best_new_price = null;
         foreach ($groups as $g) {
             if (empty($g['products']) || !in_array($product_id, $g['products'], true) || empty($g['rules'])) {
                 continue;
             }
-
-            $rules = $g['rules'];
-            usort($rules, function($a, $b) {
-                return $b['min'] <=> $a['min'];
-            });
-            foreach ($rules as $rule) {
-                if ($qty < intval($rule['min'])) {
-                    continue;
-                }
-
-                if ($base_price === null) {
-                    if ($best_rule === null) {
-                        $best_rule = $rule;
-                    } elseif ($rule['type'] === 'percent' && $best_rule['type'] === 'percent') {
-                        if ($rule['amount'] > $best_rule['amount']) {
-                            $best_rule = $rule;
-                        }
-                    } elseif ($rule['type'] === 'percent' && $best_rule['type'] !== 'percent') {
-                        $best_rule = $rule;
-                    } elseif ($rule['type'] !== 'percent' && $best_rule['type'] !== 'percent') {
-                        if ($rule['amount'] > $best_rule['amount']) {
-                            $best_rule = $rule;
-                        }
-                    }
-                } else {
-                    $new_price = $base_price;
-                    if ($rule['type'] === 'percent') {
-                        $new_price = $base_price * (1 - ($rule['amount'] / 100));
-                    } else {
-                        $new_price = $base_price - $rule['amount'];
-                    }
-                    if ($new_price < 0) {
-                        $new_price = 0;
-                    }
-                    if ($best_new_price === null || $new_price < $best_new_price) {
-                        $best_new_price = $new_price;
-                        $best_rule      = $rule;
+            foreach ($g['rules'] as $rule) {
+                if ($rule['type'] === 'percent') {
+                    $amt = floatval($rule['amount']);
+                    if ($amt > $best_amount) {
+                        $best_amount = $amt;
+                        $best_group  = $g;
                     }
                 }
             }
         }
+
+        return $best_group;
+    }
+
+    private function get_applicable_rule($product_id, $qty, $base_price = null) {
+        $group = $this->get_best_group($product_id);
+        if (!$group || empty($group['rules'])) {
+            return null;
+        }
+
+        $rules = $group['rules'];
+        usort($rules, function($a, $b) {
+            return $b['min'] <=> $a['min'];
+        });
+
+        $best_rule      = null;
+        $best_new_price = null;
+        foreach ($rules as $rule) {
+            if ($qty < intval($rule['min'])) {
+                continue;
+            }
+
+            if ($base_price === null) {
+                if ($best_rule === null) {
+                    $best_rule = $rule;
+                } elseif ($rule['type'] === 'percent' && $best_rule['type'] === 'percent') {
+                    if ($rule['amount'] > $best_rule['amount']) {
+                        $best_rule = $rule;
+                    }
+                } elseif ($rule['type'] === 'percent' && $best_rule['type'] !== 'percent') {
+                    $best_rule = $rule;
+                } elseif ($rule['type'] !== 'percent' && $best_rule['type'] !== 'percent') {
+                    if ($rule['amount'] > $best_rule['amount']) {
+                        $best_rule = $rule;
+                    }
+                }
+            } else {
+                $new_price = $base_price;
+                if ($rule['type'] === 'percent') {
+                    $new_price = $base_price * (1 - ($rule['amount'] / 100));
+                } else {
+                    $new_price = $base_price - $rule['amount'];
+                }
+                if ($new_price < 0) {
+                    $new_price = 0;
+                }
+                if ($best_new_price === null || $new_price < $best_new_price) {
+                    $best_new_price = $new_price;
+                    $best_rule      = $rule;
+                }
+            }
+        }
+
         return $best_rule;
     }
 
