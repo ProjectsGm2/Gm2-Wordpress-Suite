@@ -21,7 +21,7 @@ test('renders groups from gm2Qd', async () => {
 
   expect($('.gm2-qd-name').val()).toBe('Group A');
   expect($('.gm2-qd-accordion').length).toBe(1);
-  expect($('.gm2-qd-selected-title').text()).toBe('Selected products ▲');
+  expect($('.gm2-qd-selected-title').text()).toBe('Selected products ▼');
   const text = $('.gm2-qd-selected li').text();
   expect(text).toContain('Prod');
   expect(text).toContain('P1');
@@ -272,15 +272,15 @@ test('selected product list toggles visibility', async () => {
   await new Promise(r => setTimeout(r, 0));
 
   const wrap = $('.gm2-qd-selected-wrap');
-  expect(wrap.hasClass('open')).toBe(true);
-
-  wrap.find('.gm2-qd-selected-title').trigger('click');
-  await new Promise(r => setTimeout(r, 0));
   expect(wrap.hasClass('open')).toBe(false);
 
   wrap.find('.gm2-qd-selected-title').trigger('click');
   await new Promise(r => setTimeout(r, 0));
   expect(wrap.hasClass('open')).toBe(true);
+
+  wrap.find('.gm2-qd-selected-title').trigger('click');
+  await new Promise(r => setTimeout(r, 0));
+  expect(wrap.hasClass('open')).toBe(false);
 });
 
 test('category dropdown closes on select2 unselect', async () => {
