@@ -109,30 +109,48 @@ class QuantityDiscountsTest extends WP_UnitTestCase {
     }
 
     public function test_multiple_groups_use_highest_percentage() {
+        require_once GM2_PLUGIN_DIR . 'includes/widgets/class-gm2-qd-widget.php';
+
         $m = new Gm2_Quantity_Discount_Manager();
         $m->add_group([
             'name'     => 'Low',
             'products' => [1],
-            'rules'    => [ [ 'min' => 1, 'type' => 'percent', 'amount' => 10 ] ],
+            'rules'    => [
+                [ 'min' => 1, 'type' => 'percent', 'amount' => 10 ],
+                [ 'min' => 5, 'type' => 'percent', 'amount' => 15 ],
+            ],
         ]);
         $m->add_group([
             'name'     => 'High',
             'products' => [1],
-            'rules'    => [ [ 'min' => 1, 'type' => 'percent', 'amount' => 20 ] ],
+            'rules'    => [
+                [ 'min' => 1, 'type' => 'percent', 'amount' => 20 ],
+                [ 'min' => 5, 'type' => 'percent', 'amount' => 25 ],
+            ],
         ]);
 
-        $cart = new WC_Cart();
+        // Verify that the discount table only lists rules from the group with
+        // the highest percentage.
+        $widget = new \Gm2\GM2_QD_Widget();
+        $method = new ReflectionMethod($widget, 'get_rules');
+        $method->setAccessible(true);
+        $rules  = $method->invoke($widget, 1);
+        $this->assertCount(2, $rules);
+        $this->assertSame([20, 25], array_column($rules, 'amount'));
+
+        // Confirm the cart discount also uses the rule from that group.
+        $cart    = new WC_Cart();
         $product = new WC_Product(100);
         $cart->cart_contents['item'] = [
             'product_id' => 1,
-            'quantity'   => 1,
+            'quantity'   => 5,
             'data'       => $product,
         ];
         $qd = new Gm2_Quantity_Discounts_Public();
         $qd->run();
         $qd->adjust_prices($cart);
 
-        $this->assertSame(80.0, $cart->cart_contents['item']['data']->get_price());
+        $this->assertSame(75.0, $cart->cart_contents['item']['data']->get_price());
     }
 
     public function test_calculate_discounted_price_matches_adjust_prices() {
