@@ -58,6 +58,10 @@ phpunit
 JavaScript tests live in `tests/js` and are executed with:
 
 ```bash
+# Install dependencies if you haven't already
+npm install
+
+# Run the test suite
 npm test
 ```
 
