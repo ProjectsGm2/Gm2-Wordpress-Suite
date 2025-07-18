@@ -182,7 +182,17 @@ class Gm2_Quantity_Discounts_Admin {
             wp_send_json_error( __( 'Permission denied', 'gm2-wordpress-suite' ) );
         }
         check_ajax_referer( 'gm2_qd_nonce', 'nonce' );
-        $groups = isset( $_POST['groups'] ) && is_array( $_POST['groups'] ) ? $_POST['groups'] : [];
+        $groups = [];
+        if ( isset( $_POST['groups'] ) ) {
+            if ( is_string( $_POST['groups'] ) ) {
+                $decoded = json_decode( wp_unslash( $_POST['groups'] ), true );
+                if ( is_array( $decoded ) ) {
+                    $groups = $decoded;
+                }
+            } elseif ( is_array( $_POST['groups'] ) ) {
+                $groups = $_POST['groups'];
+            }
+        }
         $clean  = [];
         foreach ( $groups as $g ) {
             $name     = sanitize_text_field( $g['name'] ?? '' );
