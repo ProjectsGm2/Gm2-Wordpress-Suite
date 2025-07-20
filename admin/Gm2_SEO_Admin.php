@@ -301,6 +301,9 @@ class Gm2_SEO_Admin {
         register_setting('gm2_seo_options', 'gm2_context_custom_prompts', [
             'sanitize_callback' => 'sanitize_textarea_field',
         ]);
+        register_setting('gm2_seo_options', 'gm2_context_ai_prompt', [
+            'sanitize_callback' => 'sanitize_textarea_field',
+        ]);
         register_setting('gm2_seo_options', 'gm2_project_description', [
             'sanitize_callback' => 'sanitize_textarea_field',
         ]);
@@ -828,6 +831,12 @@ class Gm2_SEO_Admin {
                 }
                 echo '</td></tr>';
             }
+            $val = get_option( 'gm2_context_ai_prompt', '' );
+            echo '<tr><th scope="row"><label for="gm2_context_ai_prompt">' . esc_html__( 'AI Prompt', 'gm2-wordpress-suite' ) . '</label></th><td>';
+            echo '<textarea id="gm2_context_ai_prompt" name="gm2_context_ai_prompt" rows="4" class="large-text">' . esc_textarea( $val ) . '</textarea>';
+            echo '<p><button type="button" class="button gm2-build-ai-prompt">' . esc_html__( 'Build AI Prompt', 'gm2-wordpress-suite' ) . '</button></p>';
+            echo '<p class="description">' . esc_html__( 'Creates a single prompt summarizing your answers above.', 'gm2-wordpress-suite' ) . '</p>';
+            echo '</td></tr>';
             echo '</tbody></table>';
             submit_button( esc_html__( 'Save Context', 'gm2-wordpress-suite' ) );
             echo '</form>';
