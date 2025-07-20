@@ -548,12 +548,23 @@ class Gm2_Admin {
 
     public function ajax_chatgpt_prompt() {
         check_ajax_referer('gm2_chatgpt_nonce');
+
+        if (get_option('gm2_enable_chatgpt', '1') !== '1') {
+            wp_send_json_error( __( 'ChatGPT is disabled', 'gm2-wordpress-suite' ) );
+        }
+
+        if (trim(get_option('gm2_chatgpt_api_key', '')) === '') {
+            wp_send_json_error( __( 'ChatGPT API key not set', 'gm2-wordpress-suite' ) );
+        }
+
         $prompt = sanitize_textarea_field($_POST['prompt'] ?? '');
-        $chat = new Gm2_ChatGPT();
-        $resp = $chat->query($prompt);
+        $chat   = new Gm2_ChatGPT();
+        $resp   = $chat->query($prompt);
+
         if (is_wp_error($resp)) {
             wp_send_json_error($resp->get_error_message());
         }
+
         wp_send_json_success($resp);
     }
 }
