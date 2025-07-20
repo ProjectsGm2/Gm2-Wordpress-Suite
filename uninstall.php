@@ -100,6 +100,7 @@ $option_names = array(
     'gm2_context_buyer_personas',
     'gm2_context_project_description',
     'gm2_context_custom_prompts',
+    'gm2_context_ai_prompt',
     'gm2_project_description',
     'gm2_sc_query_limit',
     'gm2_analytics_days',

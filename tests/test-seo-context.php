@@ -17,6 +17,7 @@ class SeoContextHelperTest extends WP_UnitTestCase {
         delete_option('gm2_context_buyer_personas');
         delete_option('gm2_context_project_description');
         delete_option('gm2_context_custom_prompts');
+        delete_option('gm2_context_ai_prompt');
         delete_option('gm2_project_description');
         remove_all_filters('gm2_seo_context');
         parent::tearDown();
