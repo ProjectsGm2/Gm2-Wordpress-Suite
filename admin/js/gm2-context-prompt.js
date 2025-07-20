@@ -48,5 +48,11 @@ jQuery(function($){
             $('#gm2_context_ai_prompt').val(prompt);
         }
     });
+
+    $(document).on('click', '.gm2-generate-context-prompt', function(e){
+        e.preventDefault();
+        var val = $('#gm2_context_ai_prompt').val();
+        $('#gm2_context_final_prompt').val(val);
+    });
 });
 
