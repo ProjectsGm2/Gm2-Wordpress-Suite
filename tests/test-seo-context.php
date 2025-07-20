@@ -88,4 +88,17 @@ class SeoContextHelperTest extends WP_UnitTestCase {
             $this->assertSame($val, $context[$key]);
         }
     }
+
+    public function test_uninstall_removes_ai_prompt_option() {
+        update_option('gm2_context_ai_prompt', 'prompt');
+        $this->assertSame('prompt', get_option('gm2_context_ai_prompt'));
+
+        if (!defined('WP_UNINSTALL_PLUGIN')) {
+            define('WP_UNINSTALL_PLUGIN', true);
+        }
+
+        include dirname(__DIR__) . '/uninstall.php';
+
+        $this->assertFalse(get_option('gm2_context_ai_prompt'));
+    }
 }
