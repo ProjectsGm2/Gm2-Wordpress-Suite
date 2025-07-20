@@ -1,6 +1,7 @@
 jQuery(function($){
     $(document).on('click', '.gm2-build-ai-prompt', function(e){
         e.preventDefault();
+        var $btn = $(this).prop('disabled', true);
         var prompt = [
             'You are a strategic SEO assistant. Based on the detailed business information below, summarize the company\u2019s background into a concise, 1-paragraph context that can be prefixed to other SEO prompts. This context summary should:',
             '',
@@ -37,15 +38,31 @@ jQuery(function($){
                     prompt: prompt,
                     _ajax_nonce: gm2ChatGPT.nonce
                 },
-                dataType: 'json',
-                success: function(resp){
-                    if(resp && resp.success){
-                        $('#gm2_context_ai_prompt').val(resp.data);
-                    }
+                dataType: 'json'
+            }).done(function(resp){
+                console.log('gm2-context-prompt response:', resp);
+                if (resp === '0') {
+                    $('#gm2_context_ai_prompt').val('ChatGPT disabled or endpoint missing');
+                } else if (resp && resp.success) {
+                    $('#gm2_context_ai_prompt').val(resp.data);
+                } else if (resp && resp.data) {
+                    $('#gm2_context_ai_prompt').val(resp.data);
+                } else {
+                    $('#gm2_context_ai_prompt').val(gm2ChatGPT.error || 'Error');
                 }
+            }).fail(function(jqXHR){
+                var msg = jqXHR && jqXHR.responseJSON && jqXHR.responseJSON.data;
+                if(!msg){
+                    msg = jqXHR && jqXHR.responseText ? jqXHR.responseText : 'Error';
+                }
+                if(msg === '0'){ msg = 'ChatGPT disabled or endpoint missing'; }
+                $('#gm2_context_ai_prompt').val(msg);
+            }).always(function(){
+                $btn.prop('disabled', false);
             });
         } else {
             $('#gm2_context_ai_prompt').val(prompt);
+            $btn.prop('disabled', false);
         }
     });
 });
