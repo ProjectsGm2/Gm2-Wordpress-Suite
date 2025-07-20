@@ -51,8 +51,24 @@ jQuery(function($){
 
     $(document).on('click', '.gm2-generate-context-prompt', function(e){
         e.preventDefault();
-        var val = $('#gm2_context_ai_prompt').val();
-        $('#gm2_context_final_prompt').val(val);
+        var prompt = $('#gm2_context_ai_prompt').val();
+        if(window.gm2ChatGPT){
+            $.post({
+                url: gm2ChatGPT.ajax_url,
+                data: {
+                    action: 'gm2_chatgpt_prompt',
+                    prompt: prompt,
+                    _ajax_nonce: gm2ChatGPT.nonce
+                },
+                dataType: 'json'
+            }).done(function(resp){
+                if(resp && resp.success){
+                    $('#gm2_context_final_prompt').val(resp.data);
+                }
+            });
+        }else{
+            $('#gm2_context_final_prompt').val(prompt);
+        }
     });
 });
 
