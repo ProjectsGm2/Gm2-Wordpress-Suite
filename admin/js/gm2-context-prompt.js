@@ -29,7 +29,24 @@ jQuery(function($){
             'Project Description: ' + $('#gm2_context_project_description').val(),
             'Custom Prompts: ' + $('#gm2_context_custom_prompts').val()
         ].join('\n');
-        $('#gm2_context_ai_prompt').val(prompt);
+        if (window.gm2ChatGPT) {
+            $.post({
+                url: gm2ChatGPT.ajax_url,
+                data: {
+                    action: 'gm2_chatgpt_prompt',
+                    prompt: prompt,
+                    _ajax_nonce: gm2ChatGPT.nonce
+                },
+                dataType: 'json',
+                success: function(resp){
+                    if(resp && resp.success){
+                        $('#gm2_context_ai_prompt').val(resp.data);
+                    }
+                }
+            });
+        } else {
+            $('#gm2_context_ai_prompt').val(prompt);
+        }
     });
 });
 
