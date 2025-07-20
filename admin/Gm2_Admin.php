@@ -29,6 +29,7 @@ class Gm2_Admin {
             add_action('admin_post_gm2_chatgpt_settings', [$this, 'handle_chatgpt_form']);
             add_action('wp_ajax_gm2_chatgpt_prompt', [$this, 'ajax_chatgpt_prompt']);
         }
+        add_action('admin_notices', [$this, 'maybe_show_chatgpt_notice']);
     }
 
     public function enqueue_admin_scripts($hook) {
@@ -566,5 +567,27 @@ class Gm2_Admin {
         }
 
         wp_send_json_success($resp);
+    }
+
+    public function maybe_show_chatgpt_notice() {
+        $key = trim(get_option('gm2_chatgpt_api_key', ''));
+        if ($this->chatgpt_enabled && $key !== '') {
+            return;
+        }
+        if (!function_exists('get_current_screen')) {
+            return;
+        }
+        $screen = get_current_screen();
+        $seo_pages = [
+            'gm2_page_gm2-seo',
+            'gm2_page_gm2-bulk-ai-review',
+        ];
+        if ($screen && in_array($screen->id, $seo_pages, true)) {
+            $url = admin_url('admin.php?page=gm2-chatgpt');
+            $link = '<a href="' . esc_url($url) . '">Gm2 &rarr; ChatGPT</a>';
+            echo '<div class="notice notice-warning"><p>' .
+                sprintf(esc_html__('Configure ChatGPT under %s.', 'gm2-wordpress-suite'), $link) .
+                '</p></div>';
+        }
     }
 }
