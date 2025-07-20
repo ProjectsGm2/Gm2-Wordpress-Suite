@@ -103,4 +103,42 @@ class ChatGPTAjaxTest extends WP_Ajax_UnitTestCase {
         remove_filter('pre_http_request', $filter, 10);
         $this->assertSame("line1\nline2", $captured);
     }
+
+    public function test_error_when_chatgpt_disabled() {
+        update_option('gm2_enable_chatgpt', '0');
+
+        $this->_setRole('administrator');
+        $_POST['prompt'] = 'hi';
+        $_POST['_ajax_nonce'] = wp_create_nonce('gm2_chatgpt_nonce');
+        $_REQUEST['_ajax_nonce'] = $_POST['_ajax_nonce'];
+
+        try {
+            $this->_handleAjax('gm2_chatgpt_prompt');
+        } catch (WPAjaxDieContinueException $e) {
+        }
+
+        $resp = json_decode($this->_last_response, true);
+        $this->assertFalse($resp['success']);
+        $this->assertSame('ChatGPT is disabled', $resp['data']);
+
+        update_option('gm2_enable_chatgpt', '1');
+    }
+
+    public function test_error_when_api_key_missing() {
+        update_option('gm2_chatgpt_api_key', '');
+
+        $this->_setRole('administrator');
+        $_POST['prompt'] = 'hi';
+        $_POST['_ajax_nonce'] = wp_create_nonce('gm2_chatgpt_nonce');
+        $_REQUEST['_ajax_nonce'] = $_POST['_ajax_nonce'];
+
+        try {
+            $this->_handleAjax('gm2_chatgpt_prompt');
+        } catch (WPAjaxDieContinueException $e) {
+        }
+
+        $resp = json_decode($this->_last_response, true);
+        $this->assertFalse($resp['success']);
+        $this->assertSame('ChatGPT API key not set', $resp['data']);
+    }
 }
