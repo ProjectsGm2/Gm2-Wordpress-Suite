@@ -17,4 +17,4 @@ Existing prompt logic automatically includes these options via `gm2_get_seo_cont
 
 ## Building the AI Prompt
 
-Before using the AI Prompt builder make sure your ChatGPT API key and model are configured under **Gm2 → ChatGPT**. Then open **SEO → Context** and click **Build AI Prompt** below the AI Prompt field. The plugin assembles a single prompt from all of your Context answers and sends it to ChatGPT. The resulting text appears in the textarea ready for review and editing.
+Before using the AI Prompt builder make sure the ChatGPT feature is enabled and your API key and model are configured under **Gm2 → ChatGPT**. Then open **SEO → Context** and click **Build AI Prompt** below the AI Prompt field. The plugin assembles a single prompt from all of your Context answers and sends it to ChatGPT. The resulting text appears in the textarea ready for review and editing.

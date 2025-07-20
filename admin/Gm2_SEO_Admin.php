@@ -831,11 +831,16 @@ class Gm2_SEO_Admin {
                 }
                 echo '</td></tr>';
             }
-            $val = get_option( 'gm2_context_ai_prompt', '' );
+            $val     = get_option( 'gm2_context_ai_prompt', '' );
+            $enabled = get_option( 'gm2_enable_chatgpt', '1' ) === '1';
             echo '<tr><th scope="row"><label for="gm2_context_ai_prompt">' . esc_html__( 'AI Prompt', 'gm2-wordpress-suite' ) . '</label></th><td>';
-            echo '<textarea id="gm2_context_ai_prompt" name="gm2_context_ai_prompt" rows="4" class="large-text">' . esc_textarea( $val ) . '</textarea>';
-            echo '<p><button type="button" class="button gm2-build-ai-prompt">' . esc_html__( 'Build AI Prompt', 'gm2-wordpress-suite' ) . '</button></p>';
-            echo '<p class="description">' . esc_html__( 'Creates a single prompt summarizing your answers above.', 'gm2-wordpress-suite' ) . '</p>';
+            echo '<textarea id="gm2_context_ai_prompt" name="gm2_context_ai_prompt" rows="4" class="large-text"' . disabled( $enabled, false, false ) . '>' . esc_textarea( $val ) . '</textarea>';
+            if ( $enabled ) {
+                echo '<p><button type="button" class="button gm2-build-ai-prompt">' . esc_html__( 'Build AI Prompt', 'gm2-wordpress-suite' ) . '</button></p>';
+            } else {
+                echo '<p><em>' . esc_html__( 'ChatGPT is disabled.', 'gm2-wordpress-suite' ) . '</em></p>';
+            }
+            echo '<p class="description">' . esc_html__( 'Creates a single prompt summarizing your answers above. ChatGPT must be enabled and configured.', 'gm2-wordpress-suite' ) . '</p>';
             echo '</td></tr>';
             echo '</tbody></table>';
             submit_button( esc_html__( 'Save Context', 'gm2-wordpress-suite' ) );
@@ -3229,7 +3234,7 @@ class Gm2_SEO_Admin {
             [
                 'id'      => 'gm2-seo-context',
                 'title'   => __( 'SEO Context', 'gm2-wordpress-suite' ),
-                'content' => '<p>' . __( 'Use the Context tab to describe your business model, industry, audience, unique selling points and more. Saved answers are automatically included in ChatGPT prompts for AI SEO.', 'gm2-wordpress-suite' ) . '</p>',
+                'content' => '<p>' . __( 'Use the Context tab to describe your business model, industry, audience, unique selling points and more. Saved answers are automatically included in ChatGPT prompts for AI SEO. ChatGPT must be enabled and configured.', 'gm2-wordpress-suite' ) . '</p>',
             ]
         );
     }

@@ -121,13 +121,15 @@ class Gm2_Admin {
                 GM2_VERSION,
                 true
             );
-            wp_enqueue_script(
-                'gm2-context-prompt',
-                GM2_PLUGIN_URL . 'admin/js/gm2-context-prompt.js',
-                ['jquery'],
-                GM2_VERSION,
-                true
-            );
+            if ($this->chatgpt_enabled) {
+                wp_enqueue_script(
+                    'gm2-context-prompt',
+                    GM2_PLUGIN_URL . 'admin/js/gm2-context-prompt.js',
+                    ['jquery'],
+                    GM2_VERSION,
+                    true
+                );
+            }
             $gads_ready = trim(get_option('gm2_gads_developer_token', '')) !== '' &&
                 trim(get_option('gm2_gads_customer_id', '')) !== '' &&
                 get_option('gm2_google_refresh_token', '') !== '';
