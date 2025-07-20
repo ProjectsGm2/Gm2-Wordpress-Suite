@@ -29,7 +29,19 @@ jQuery(function($){
             'Project Description: ' + $('#gm2_context_project_description').val(),
             'Custom Prompts: ' + $('#gm2_context_custom_prompts').val()
         ].join('\n');
-        $('#gm2_context_ai_prompt').val(prompt);
+
+        var $out = $('#gm2_context_ai_prompt').val(gm2ContextPrompt.loading);
+        $.post(gm2ContextPrompt.ajax_url, {
+            action: 'gm2_chatgpt_prompt',
+            prompt: prompt,
+            _ajax_nonce: gm2ContextPrompt.nonce
+        }, function(resp){
+            if(resp && resp.success){
+                $out.val(resp.data);
+            } else {
+                $out.val(resp.data || gm2ContextPrompt.error);
+            }
+        });
     });
 });
 

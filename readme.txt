@@ -198,7 +198,7 @@ Open the **Context** tab under **SEO** to store detailed business information us
 * **Buyer Personas** – Describe your ideal buyers and their pain points.
 * **Project Description** – Short summary of your project or website. Used when other fields are empty.
 * **Custom Prompts** – Default instructions appended to AI requests.
-* **AI Prompt** – One-click builder that combines your answers into a single prompt summarizing the business.
+* **AI Prompt** – One-click builder that uses ChatGPT to generate a short summary from your answers.
 
 == SEO Settings ==
 The SEO meta box appears when editing posts, pages, any public custom post types and taxonomy terms. In the

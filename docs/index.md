@@ -3,7 +3,7 @@
 This release adds several new SEO and AI options:
 
 - **Project Description** and **Custom Prompts** fields under **SEO → Context**. The project description falls back to the site tagline or a snippet of post content if empty.
-- **AI Prompt** builder that compiles your Context answers into a single prompt for generating a short business summary.
+- **AI Prompt** builder that sends your Context answers to ChatGPT and returns a short business summary.
 - Each context field now includes a guiding question so users know what to enter.
 - Additional context fields: **Core Offerings**, **Geographic Focus**, **Keyword Data**, **Competitor Landscape**, **Success Metrics** and **Buyer Personas**.
 - Additional meta fields on post and taxonomy edit screens for Search Intent, Focus Keyword Limit, Number of Words and an "Improve Readability" checkbox.
