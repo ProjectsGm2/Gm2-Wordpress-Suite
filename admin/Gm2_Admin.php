@@ -109,13 +109,6 @@ class Gm2_Admin {
                 true
             );
             wp_enqueue_script(
-                'gm2-guidelines',
-                GM2_PLUGIN_URL . 'admin/js/gm2-guidelines.js',
-                ['jquery'],
-                filemtime(GM2_PLUGIN_DIR . 'admin/js/gm2-guidelines.js'),
-                true
-            );
-            wp_enqueue_script(
                 'gm2-content-rules',
                 GM2_PLUGIN_URL . 'admin/js/gm2-content-rules.js',
                 ['jquery'],
@@ -160,14 +153,6 @@ class Gm2_Admin {
                     'i18n'     => [
                         'metricsUnavailable' => __( 'Keyword metrics unavailable; showing AI-generated ideas only.', 'gm2-wordpress-suite' ),
                     ],
-                ]
-            );
-            wp_localize_script(
-                'gm2-guidelines',
-                'gm2Guidelines',
-                [
-                    'nonce'    => wp_create_nonce('gm2_research_guidelines'),
-                    'ajax_url' => admin_url('admin-ajax.php'),
                 ]
             );
             wp_localize_script(

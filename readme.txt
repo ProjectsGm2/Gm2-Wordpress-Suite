@@ -134,11 +134,10 @@ Use the **Test Prompt** box on the same page to send a message and verify your
 settings before generating content.
 
 == SEO Guidelines ==
-Before researching guidelines, enter your ChatGPT API key on the **Gm2 → ChatGPT**
-page. Navigate to **SEO → SEO Guidelines** where each post type and taxonomy
-has its own textarea. Click **Research SEO Guidelines** next to a content type
-to generate best-practice rules. The generated text is saved automatically so
-you can revisit this screen later and adjust the guidelines as needed.
+Use **SEO → SEO Guidelines** to define rule sets for each post type and taxonomy.
+Click **AI Research Guideline Rules** to have ChatGPT suggest best-practice rules
+for the selected content type. Saved rules are stored in the `gm2_guideline_rules`
+option and are combined automatically when generating AI content.
 
 == Content Rules ==
 Open the **Rules** tab under **SEO** to define checks for each post type and
@@ -278,7 +277,7 @@ the last 100 missing URLs to help you create new redirects.
 == Planned Features ==
 * **Search Console metrics** – new **SEO → Analytics** tab will show clicks and
   impressions from connected sites.
-* **Expanded rules** – additional guidelines per content type editable under
+* **Expanded rules** – guideline rules for each content type editable under
   **SEO → SEO Guidelines**.
 * **Duplicate checks** – upcoming report in **SEO → Tools** that flags posts
   with duplicate titles or descriptions.
