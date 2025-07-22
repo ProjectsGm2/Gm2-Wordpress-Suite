@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Gm2 WordPress Suite
  * Description:       A powerful suite of tools and features for WordPress, by Gm2.
- * Version:           1.6.15
+ * Version:           1.6.16
  * Author:            Your Name or Team Gm2
  * Author URI:        https://yourwebsite.com
  * License:           GPL-2.0+
