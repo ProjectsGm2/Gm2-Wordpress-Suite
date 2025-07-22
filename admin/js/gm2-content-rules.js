@@ -16,15 +16,12 @@ jQuery(function($){
         }
         return String(val);
     }
-    const RULE_SLUGS = [
-        'seo_title',
-        'seo_description',
-        'focus_keywords',
-        'long_tail_keywords',
-        'canonical_url',
-        'content',
-        'general'
-    ];
+    var ruleSlugs = [];
+    if(window.gm2ContentRules && gm2ContentRules.categories){
+        ruleSlugs = gm2ContentRules.categories.split(',').map(function(slug){
+            return slug.trim();
+        }).filter(Boolean);
+    }
 
     $('.gm2-research-rules').on('click', function(e){
         e.preventDefault();
@@ -32,7 +29,7 @@ jQuery(function($){
         var $btn = $(this);
         var base = $btn.data('base');
         if(!base) return;
-        var cats = RULE_SLUGS.join(',');
+        var cats = ruleSlugs.join(',');
         var loadingText = gm2ContentRules.loading || 'Researching...';
         var originalText = $btn.text();
         $btn.prop('disabled', true).text(loadingText);
