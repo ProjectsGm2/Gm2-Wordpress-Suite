@@ -154,10 +154,12 @@ Within the Rules table, each post type or taxonomy row now includes a single
 textareas. Click this button to fetch best-practice suggestions from ChatGPT for
 the selected content type. ChatGPT is told which content type is being analyzed
 and instructed to
-return an array of short, measurable rules for each requested category. The
-results are saved automatically so you can refine them at any time. ChatGPT is
-instructed to respond **only with JSON** where each key matches one of the slugs
-you provided and each value is an array of rules.
+return an array of short, measurable rules for each requested category. Each
+array should contain 3–5 concise guidelines. Focus and long-tail keyword entries
+should describe how to research or choose keywords rather than listing any
+specific phrases. The results are saved automatically so you can refine them at
+any time. ChatGPT is instructed to respond **only with JSON** where each key
+matches one of the slugs you provided and each value is an array of rules.
 
 Category names returned by ChatGPT may contain spaces or hyphens. These are
 normalized to use underscores when saving so keys like "SEO Title" or

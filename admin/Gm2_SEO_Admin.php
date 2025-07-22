@@ -2455,9 +2455,16 @@ class Gm2_SEO_Admin {
             $prompt .= $context . "\n\n";
         }
         $prompt .= sprintf(
-            'You are an SEO content strategist. Using the business context above, create actionable rules for %s in WordPress. ' .
-            'Cover SEO Title, SEO Description, Focus Keywords, Long Tail Keywords, Canonical URL, Content and General Cohesive SEO Rules. ' .
-            'Use these categories: %s. Respond ONLY with JSON using those slugs as keys.',
+            'You are an SEO content strategist. Using the business context above, generate unique content rules and guidelines for %1$s in WordPress. ' .
+            'Cover each of the following elements with specific best practices and recommendations:\n' .
+            '* SEO Title – Guidelines for crafting effective titles (For example, optimal length ~60 characters, include primary keyword early, include brand name if appropriate, ensure uniqueness for each %1$s).\n' .
+            '* SEO Description – Guidelines for writing compelling meta descriptions (For example, length ~155 characters, 1-3 sentences summarizing the page, use an active voice and a call-to-action, include primary keyword naturally).\n' .
+            '* Focus Keywords – Guidelines for selecting a primary focus keyword for this %1$s (For example, highly relevant to the content, good search volume, aligns with user intent). Include tips like using one focus keyword per page and keeping it unique across the site to avoid cannibalization.\n' .
+            '* Long-Tail Keywords – Guidelines for identifying and using secondary long-tail keywords (For example, specific 3-5 word phrases related to the focus keyword. Explain how long-tail terms can target niche queries with less competition and higher conversion potential, and how to incorporate them naturally into content.)\n' .
+            '* Canonical URL – Guidelines for setting the canonical URL for this %1$s (For example, point to the preferred URL to prevent duplicate content issues – for example, ensure category pagination or filtered pages canonically point to the main page).\n' .
+            '* Content – Guidelines for the main content of the %1$s (For example, ideal length or word count, content structure with headings, keyword usage frequency, internal linking suggestions, tone of voice aligned with business context, use of images or media, etc.). Tailor advice to the nature of %1$s (e.g., a Category Page might include an introductory SEO text and links to posts, while a Blog Post focuses on informative content).\n' .
+            '* General Cohesive SEO Rules – Guidelines to ensure all the above elements work together harmoniously for best SEO results. (For example, the focus keyword should appear in the SEO title, description, and content naturally; long-tail keywords should be sprinkled without stuffing; meta tags should accurately reflect page content to avoid search engines rewriting them; each page’s metadata must be unique; and all elements should align with the user intent and the business’s marketing goals.)\n' .
+            'Provide an array of 3-5 short, measurable rules for each category. Do not output actual keywords for Focus Keywords or Long-Tail Keywords—only guidelines on choosing them. Use these categories: %2$s. Respond ONLY with JSON using those slugs as keys.',
             $prompt_target,
             $cats
         );
@@ -2499,6 +2506,19 @@ class Gm2_SEO_Admin {
             'content_in_product'     => 'content',
         ];
 
+        $requested_slugs = [];
+        foreach (array_filter(array_map('trim', explode(',', strtolower($cats)))) as $req) {
+            $r = str_replace([' ', '-'], '_', $req);
+            $r = preg_replace('/[^a-z0-9_]/', '', $r);
+            if (isset($alias_map[$r])) {
+                $r = $alias_map[$r];
+            }
+            if (in_array($r, $valid_slugs, true)) {
+                $requested_slugs[] = $r;
+            }
+        }
+        $requested_slugs = array_unique($requested_slugs);
+
         $formatted = [];
         foreach ($data as $cat => $text) {
             $key = strtolower(str_replace([' ', '-'], '_', $cat));
@@ -2507,7 +2527,7 @@ class Gm2_SEO_Admin {
                 $key = $alias_map[$key];
             }
 
-            if (!in_array($key, $valid_slugs, true)) {
+            if (!in_array($key, $valid_slugs, true) || !in_array($key, $requested_slugs, true)) {
                 if (defined('WP_DEBUG') && WP_DEBUG) {
                     error_log('Discarded content rule category: ' . $key);
                 }
@@ -2570,9 +2590,16 @@ class Gm2_SEO_Admin {
             $prompt .= $context . "\n\n";
         }
         $prompt .= sprintf(
-            'You are an SEO content strategist. Using the business context above, create actionable guidelines for %s in WordPress. ' .
-            'Cover SEO Title, SEO Description, Focus Keywords, Long Tail Keywords, Canonical URL, Content and General Cohesive SEO Rules. ' .
-            'Use these categories: %s. Respond ONLY with JSON using those slugs as keys.',
+            'You are an SEO content strategist. Using the business context above, generate unique content rules and guidelines for %1$s in WordPress. ' .
+            'Cover each of the following elements with specific best practices and recommendations:\n' .
+            '* SEO Title – Guidelines for crafting effective titles (For example, optimal length ~60 characters, include primary keyword early, include brand name if appropriate, ensure uniqueness for each %1$s).\n' .
+            '* SEO Description – Guidelines for writing compelling meta descriptions (For example, length ~155 characters, 1-3 sentences summarizing the page, use an active voice and a call-to-action, include primary keyword naturally).\n' .
+            '* Focus Keywords – Guidelines for selecting a primary focus keyword for this %1$s (For example, highly relevant to the content, good search volume, aligns with user intent). Include tips like using one focus keyword per page and keeping it unique across the site to avoid cannibalization.\n' .
+            '* Long-Tail Keywords – Guidelines for identifying and using secondary long-tail keywords (For example, specific 3-5 word phrases related to the focus keyword. Explain how long-tail terms can target niche queries with less competition and higher conversion potential, and how to incorporate them naturally into content.)\n' .
+            '* Canonical URL – Guidelines for setting the canonical URL for this %1$s (For example, point to the preferred URL to prevent duplicate content issues – for example, ensure category pagination or filtered pages canonically point to the main page).\n' .
+            '* Content – Guidelines for the main content of the %1$s (For example, ideal length or word count, content structure with headings, keyword usage frequency, internal linking suggestions, tone of voice aligned with business context, use of images or media, etc.). Tailor advice to the nature of %1$s (e.g., a Category Page might include an introductory SEO text and links to posts, while a Blog Post focuses on informative content).\n' .
+            '* General Cohesive SEO Rules – Guidelines to ensure all the above elements work together harmoniously for best SEO results. (For example, the focus keyword should appear in the SEO title, description, and content naturally; long-tail keywords should be sprinkled without stuffing; meta tags should accurately reflect page content to avoid search engines rewriting them; each page’s metadata must be unique; and all elements should align with the user intent and the business’s marketing goals.)\n' .
+            'Provide an array of 3-5 short, measurable rules for each category. Do not output actual keywords for Focus Keywords or Long-Tail Keywords—only guidelines on choosing them. Use these categories: %2$s. Respond ONLY with JSON using those slugs as keys.',
             $prompt_target,
             $cats
         );
@@ -2614,6 +2641,19 @@ class Gm2_SEO_Admin {
             'content_in_product'     => 'content',
         ];
 
+        $requested_slugs = [];
+        foreach (array_filter(array_map('trim', explode(',', strtolower($cats)))) as $req) {
+            $r = str_replace([' ', '-'], '_', $req);
+            $r = preg_replace('/[^a-z0-9_]/', '', $r);
+            if (isset($alias_map[$r])) {
+                $r = $alias_map[$r];
+            }
+            if (in_array($r, $valid_slugs, true)) {
+                $requested_slugs[] = $r;
+            }
+        }
+        $requested_slugs = array_unique($requested_slugs);
+
         $formatted = [];
         foreach ($data as $cat => $text) {
             $key = strtolower(str_replace([' ', '-'], '_', $cat));
@@ -2622,7 +2662,7 @@ class Gm2_SEO_Admin {
                 $key = $alias_map[$key];
             }
 
-            if (!in_array($key, $valid_slugs, true)) {
+            if (!in_array($key, $valid_slugs, true) || !in_array($key, $requested_slugs, true)) {
                 if (defined('WP_DEBUG') && WP_DEBUG) {
                     error_log('Discarded guideline rule category: ' . $key);
                 }
