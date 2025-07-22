@@ -38,7 +38,7 @@ class Gm2_Admin {
                 'gm2-tariff',
                 GM2_PLUGIN_URL . 'admin/js/gm2-tariff.js',
                 ['jquery'],
-                GM2_VERSION,
+                filemtime(GM2_PLUGIN_DIR . 'admin/js/gm2-tariff.js'),
                 true
             );
             wp_localize_script(
@@ -62,7 +62,7 @@ class Gm2_Admin {
                 'gm2-chatgpt',
                 GM2_PLUGIN_URL . 'admin/js/gm2-chatgpt.js',
                 ['jquery'],
-                GM2_VERSION,
+                filemtime(GM2_PLUGIN_DIR . 'admin/js/gm2-chatgpt.js'),
                 true
             );
             wp_localize_script(
@@ -88,7 +88,7 @@ class Gm2_Admin {
                 'gm2-seo',
                 GM2_PLUGIN_URL . 'admin/js/gm2-seo.js',
                 ['jquery'],
-                GM2_VERSION,
+                filemtime(GM2_PLUGIN_DIR . 'admin/js/gm2-seo.js'),
                 true
             );
             wp_localize_script(
@@ -105,21 +105,21 @@ class Gm2_Admin {
                 'gm2-keyword-research',
                 GM2_PLUGIN_URL . 'admin/js/gm2-keyword-research.js',
                 ['jquery'],
-                GM2_VERSION,
+                filemtime(GM2_PLUGIN_DIR . 'admin/js/gm2-keyword-research.js'),
                 true
             );
             wp_enqueue_script(
                 'gm2-guidelines',
                 GM2_PLUGIN_URL . 'admin/js/gm2-guidelines.js',
                 ['jquery'],
-                GM2_VERSION,
+                filemtime(GM2_PLUGIN_DIR . 'admin/js/gm2-guidelines.js'),
                 true
             );
             wp_enqueue_script(
                 'gm2-content-rules',
                 GM2_PLUGIN_URL . 'admin/js/gm2-content-rules.js',
                 ['jquery'],
-                GM2_VERSION,
+                filemtime(GM2_PLUGIN_DIR . 'admin/js/gm2-content-rules.js'),
                 true
             );
             if ($this->chatgpt_enabled) {
@@ -127,7 +127,7 @@ class Gm2_Admin {
                     'gm2-context-prompt',
                     GM2_PLUGIN_URL . 'admin/js/gm2-context-prompt.js',
                     ['jquery'],
-                    GM2_VERSION,
+                    filemtime(GM2_PLUGIN_DIR . 'admin/js/gm2-context-prompt.js'),
                     true
                 );
                 wp_localize_script(
@@ -178,7 +178,7 @@ class Gm2_Admin {
                     'gm2-bulk-ai',
                     GM2_PLUGIN_URL . 'admin/js/gm2-bulk-ai.js',
                     ['jquery'],
-                    GM2_VERSION,
+                    filemtime(GM2_PLUGIN_DIR . 'admin/js/gm2-bulk-ai.js'),
                     true
                 );
                 wp_localize_script(
