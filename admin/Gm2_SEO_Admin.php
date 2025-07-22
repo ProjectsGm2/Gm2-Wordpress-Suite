@@ -2364,8 +2364,22 @@ class Gm2_SEO_Admin {
         }
 
         $prompt = sprintf(
-            'Provide an array of short, measurable rules %s. Use these categories: %s. ' .
-            'Respond ONLY with JSON where each key matches the provided slugs and each value is an array of rules.',
+            "You are an SEO content strategist. Using the business context above, generate unique content rules and guidelines %s in WordPress. " .
+            "Cover each of the following elements with specific best practices and recommendations:\n" .
+            "* SEO Title – Guidelines for crafting effective titles (optimal length ~60 characters, include primary keyword early, include brand name if appropriate, ensure uniqueness for each %s).\n" .
+            "* SEO Description – Guidelines for writing compelling meta descriptions (length ~155 characters, 1-3 sentences summarizing the page, use an active voice and a call-to-action, include primary keyword naturally).\n" .
+            "* Focus Keywords – Guidelines for selecting a primary focus keyword for this %s (highly relevant to the content, good search volume, aligns with user intent). Include tips like using one focus keyword per page and keeping it unique across the site to avoid cannibalization.\n" .
+            "* Long-Tail Keywords – Guidelines for identifying and using secondary long-tail keywords (specific 3-5 word phrases related to the focus keyword). Explain how long-tail terms can target niche queries with less competition and higher conversion potential, and how to incorporate them naturally into content.\n" .
+            "* Canonical URL – Guidelines for setting the canonical URL for this %s (point to the preferred URL to prevent duplicate content issues – for example, ensure category pagination or filtered pages canonically point to the main page).\n" .
+            "* Content – Guidelines for the main content of the %s (ideal length or word count, content structure with headings, keyword usage frequency, internal linking suggestions, tone of voice aligned with business context, use of images or media, etc.). Tailor advice to the nature of %s (e.g., a Category Page might include an introductory SEO text and links to posts, while a Blog Post focuses on informative content).\n" .
+            "* General Cohesive SEO Rules – Guidelines to ensure all the above elements work together harmoniously for best SEO results. For example, the focus keyword should appear in the SEO title, description, and content naturally; long-tail keywords should be sprinkled without stuffing; meta tags should accurately reflect page content to avoid search engines rewriting them; each page's metadata must be unique; and all elements should align with the user intent and the business's marketing goals.\n" .
+            "Use these categories: %s. Respond ONLY with JSON where each key matches the provided slugs and each value is an array of rules.",
+            $prompt_target,
+            $prompt_target,
+            $prompt_target,
+            $prompt_target,
+            $prompt_target,
+            $prompt_target,
             $prompt_target,
             $cats
         );
