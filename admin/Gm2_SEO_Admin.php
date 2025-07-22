@@ -699,9 +699,9 @@ class Gm2_SEO_Admin {
                     $val = $vals[$c] ?? '';
                     $val = $this->flatten_rule_value($val);
                     echo '<p><label for="gm2_rule_post_' . esc_attr($pt . '_' . $c) . '">' . esc_html($clabel) . '</label><br />';
-                    echo '<textarea id="gm2_rule_post_' . esc_attr($pt . '_' . $c) . '" name="gm2_content_rules[post_' . esc_attr($pt) . '][' . esc_attr($c) . ']" rows="3" class="large-text">' . esc_textarea($val) . '</textarea>';
-                    echo ' <button type="button" class="button gm2-research-rules" data-base="post_' . esc_attr($pt) . '" data-category="' . esc_attr($c) . '">' . esc_html__( 'AI Research Content Rules', 'gm2-wordpress-suite' ) . '</button></p>';
+                    echo '<textarea id="gm2_rule_post_' . esc_attr($pt . '_' . $c) . '" name="gm2_content_rules[post_' . esc_attr($pt) . '][' . esc_attr($c) . ']" rows="3" class="large-text">' . esc_textarea($val) . '</textarea></p>';
                 }
+                echo '<p><button type="button" class="button gm2-research-rules" data-base="post_' . esc_attr($pt) . '">' . esc_html__( 'AI Research Content Rules', 'gm2-wordpress-suite' ) . '</button></p>';
                 echo '</td></tr>';
             }
             foreach ($this->get_supported_taxonomies() as $tax) {
@@ -719,9 +719,9 @@ class Gm2_SEO_Admin {
                     $val = $vals[$c] ?? '';
                     $val = $this->flatten_rule_value($val);
                     echo '<p><label for="gm2_rule_tax_' . esc_attr($tax . '_' . $c) . '">' . esc_html($clabel) . '</label><br />';
-                    echo '<textarea id="gm2_rule_tax_' . esc_attr($tax . '_' . $c) . '" name="gm2_content_rules[tax_' . esc_attr($tax) . '][' . esc_attr($c) . ']" rows="3" class="large-text">' . esc_textarea($val) . '</textarea>';
-                    echo ' <button type="button" class="button gm2-research-rules" data-base="tax_' . esc_attr($tax) . '" data-category="' . esc_attr($c) . '">' . esc_html__( 'AI Research Content Rules', 'gm2-wordpress-suite' ) . '</button></p>';
+                    echo '<textarea id="gm2_rule_tax_' . esc_attr($tax . '_' . $c) . '" name="gm2_content_rules[tax_' . esc_attr($tax) . '][' . esc_attr($c) . ']" rows="3" class="large-text">' . esc_textarea($val) . '</textarea></p>';
                 }
+                echo '<p><button type="button" class="button gm2-research-rules" data-base="tax_' . esc_attr($tax) . '">' . esc_html__( 'AI Research Content Rules', 'gm2-wordpress-suite' ) . '</button></p>';
                 echo '</td></tr>';
             }
             $min_int = (int) get_option('gm2_min_internal_links', 1);
