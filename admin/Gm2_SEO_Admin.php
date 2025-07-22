@@ -2525,19 +2525,25 @@ class Gm2_SEO_Admin {
             $prompt .= $context . "\n\n";
         }
         $prompt .= sprintf(
-            'You are an SEO content strategist. Using the business context above, generate unique content rules and guidelines for %1$s in WordPress. ' .
-            'Cover each of the following elements with specific best practices and recommendations:\n' .
-            '* SEO Title – Guidelines for crafting effective titles (For example, optimal length ~60 characters, include primary keyword early, include brand name if appropriate, ensure uniqueness for each %1$s).\n' .
-            '* SEO Description – Guidelines for writing compelling meta descriptions (For example, length ~155 characters, 1-3 sentences summarizing the page, use an active voice and a call-to-action, include primary keyword naturally).\n' .
-            '* Focus Keywords – Guidelines for selecting a primary focus keyword for this %1$s (For example, highly relevant to the content, good search volume, aligns with user intent). Include tips like using one focus keyword per page and keeping it unique across the site to avoid cannibalization.\n' .
-            '* Long-Tail Keywords – Guidelines for identifying and using secondary long-tail keywords (For example, specific 3-5 word phrases related to the focus keyword. Explain how long-tail terms can target niche queries with less competition and higher conversion potential, and how to incorporate them naturally into content.)\n' .
-            '* Canonical URL – Guidelines for setting the canonical URL for this %1$s (For example, point to the preferred URL to prevent duplicate content issues – for example, ensure category pagination or filtered pages canonically point to the main page).\n' .
-            '* Content – Guidelines for the main content of the %1$s (For example, ideal length or word count, content structure with headings, keyword usage frequency, internal linking suggestions, tone of voice aligned with business context, use of images or media, etc.). Tailor advice to the nature of %1$s (e.g., a Category Page might include an introductory SEO text and links to posts, while a Blog Post focuses on informative content).\n' .
-            '* General Cohesive SEO Rules – Guidelines to ensure all the above elements work together harmoniously for best SEO results. (For example, the focus keyword should appear in the SEO title, description, and content naturally; long-tail keywords should be sprinkled without stuffing; meta tags should accurately reflect page content to avoid search engines rewriting them; each page’s metadata must be unique; and all elements should align with the user intent and the business’s marketing goals.)\n' .
-            'Provide an array of 5 short, measurable rules for each category. Each rule should be easy to verify within the published content. Do not output actual keywords for Focus Keywords or Long-Tail Keywords—only guidelines on choosing them. Use these categories: %2$s. Respond ONLY with JSON using those slugs as keys.',
+            "You are an SEO content strategist. Use the business context provided above as the foundation for every suggestion and recommendation in this task. " .
+            "All guidelines must be tailored to the business’s niche, audience, tone, product focus, and SEO objectives. Do not provide generic or one-size-fits-all advice—contextualize every point.\n\n" .
+        
+            "Generate actionable SEO content guidelines and strategic suggestions %1\$s in WordPress. Do not generate hard rules—your output should provide helpful, business-relevant recommendations that a strategist or writer can interpret creatively.\n\n" .
+        
+            "* SEO Title – Provide 5 helpful tips or best practices for crafting effective SEO titles for this content type. Align with the business's branding and keyword approach.\n" .
+            "* SEO Description – Provide 5 natural-language suggestions for writing meta descriptions that suit the business’s tone and page purpose.\n" .
+            "* Focus Keywords – Suggest 5 keyword selection principles for choosing a primary keyword per %1\$s. Relate to the brand's offerings, search behavior of the target audience, and marketing intent.\n" .
+            "* Long-Tail Keywords – Provide 5 suggestions on how to discover and integrate relevant long-tail phrases for this type of content. Reference user behavior in this industry.\n" .
+            "* Canonical URL – Offer 5 tips on setting canonical URLs properly for this %1\$s, especially to prevent duplicates in the site's structure.\n" .
+            "* Content – Offer 5 suggestions for creating engaging, SEO-aligned content for this %1\$s. Consider ideal structure, media use, internal links, and tone relevant to the business’s audience.\n" .
+            "* General Cohesive SEO Guidelines – Provide 5 overarching suggestions that ensure the above elements work together smoothly and reflect the business context. Think in terms of user experience, search intent, and SEO consistency.\n\n" .
+        
+            "Do not return rules or technical directives. These should be easy-to-understand, context-aware writing and SEO suggestions that support future content creation.\n\n" .
+            "Return ONLY a JSON object. Use the following keys: %2\$s. Each key maps to an array of 5 thoughtful, business-specific guidelines or tips.",
             $prompt_target,
             $cats
         );
+        
         $chat   = new Gm2_ChatGPT();
         $resp   = $chat->query($prompt);
 
