@@ -154,7 +154,7 @@ textareas. Click this button to fetch best-practice suggestions from ChatGPT for
 the selected content type. ChatGPT is told which content type is being analyzed
 and instructed to
 return an array of short, measurable rules for each requested category. Each
-array should contain 3–5 concise guidelines. Focus and long-tail keyword entries
+array should contain exactly 5 concise guidelines that are easy to verify within the final content. Focus and long-tail keyword entries
 should describe how to research or choose keywords rather than listing any
 specific phrases. The results are saved automatically so you can refine them at
 any time. ChatGPT is instructed to respond **only with JSON** where each key
