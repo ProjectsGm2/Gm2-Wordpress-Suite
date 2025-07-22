@@ -19,6 +19,7 @@ define('GM2_VERSION', '1.6.16');
 define('GM2_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('GM2_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('GM2_CONTENT_RULES_VERSION', 2);
+define('GM2_GUIDELINE_RULES_VERSION', 2);
 if (!defined('GM2_GCLOUD_PROJECT_ID')) {
     $project = getenv('GM2_GCLOUD_PROJECT_ID');
     if ($project === false || $project === '') {
@@ -82,7 +83,9 @@ function gm2_activate_plugin() {
     }
 
     gm2_initialize_content_rules();
+    gm2_initialize_guideline_rules();
     gm2_maybe_migrate_content_rules();
+    gm2_maybe_migrate_guideline_rules();
 
     add_option('gm2_enable_tariff', '1');
     add_option('gm2_enable_seo', '1');
@@ -197,6 +200,95 @@ function gm2_initialize_content_rules() {
     add_option('gm2_min_external_links', 1);
 }
 
+function gm2_initialize_guideline_rules() {
+    $existing = get_option('gm2_guideline_rules', null);
+    if ($existing !== null && $existing !== false && !empty($existing)) {
+        return;
+    }
+
+    $rules = [];
+
+    $args  = [
+        'public'             => true,
+        'show_ui'            => true,
+        'exclude_from_search' => false,
+    ];
+    $posts = get_post_types($args, 'names');
+    unset($posts['attachment']);
+    $posts = apply_filters('gm2_supported_post_types', array_values($posts));
+    $post_defaults = [
+        'seo_title' => [
+            'Title length between 30 and 60 characters',
+            'SEO title is unique',
+        ],
+        'seo_description' => [
+            'Description length between 50 and 160 characters',
+            'Meta description is unique',
+            'Focus keyword included in meta description',
+        ],
+        'focus_keywords' => [
+            'At least one focus keyword',
+        ],
+        'long_tail_keywords' => [
+            'Consider including long-tail keywords',
+        ],
+        'canonical_url' => [
+            'Use a canonical URL',
+        ],
+        'content' => [
+            'Content has at least 300 words',
+            'Focus keyword appears in first paragraph',
+            'Only one H1 tag present',
+            'At least one internal link',
+            'At least one external link',
+            'Image alt text contains focus keyword',
+        ],
+        'general' => [],
+    ];
+    foreach ($posts as $pt) {
+        $rules['post_' . $pt] = [];
+        foreach ($post_defaults as $key => $vals) {
+            $rules['post_' . $pt][$key] = implode("\n", $vals);
+        }
+    }
+
+    $taxonomies = ['category'];
+    if (taxonomy_exists('product_cat')) {
+        $taxonomies[] = 'product_cat';
+    }
+    if (taxonomy_exists('brand')) {
+        $taxonomies[] = 'brand';
+    }
+    if (taxonomy_exists('product_brand')) {
+        $taxonomies[] = 'product_brand';
+    }
+    $tax_defaults = [
+        'seo_title' => [
+            'Title length between 30 and 60 characters',
+            'SEO title is unique',
+        ],
+        'seo_description' => [
+            'Description length between 50 and 160 characters',
+            'Meta description is unique',
+        ],
+        'focus_keywords' => [],
+        'long_tail_keywords' => [],
+        'canonical_url' => [],
+        'content' => [
+            'Description has at least 150 words',
+        ],
+        'general' => [],
+    ];
+    foreach ($taxonomies as $tax) {
+        $rules['tax_' . $tax] = [];
+        foreach ($tax_defaults as $key => $vals) {
+            $rules['tax_' . $tax][$key] = implode("\n", $vals);
+        }
+    }
+
+    add_option('gm2_guideline_rules', $rules);
+}
+
 // Initialize plugin
 function gm2_init_plugin() {
     $plugin = new Gm2_Loader();
@@ -270,4 +362,54 @@ function gm2_content_rules_migration_notice() {
     }
 }
 add_action('admin_notices', 'gm2_content_rules_migration_notice');
+
+function gm2_maybe_migrate_guideline_rules() {
+    $current = (int) get_option('gm2_guideline_rules_version', 1);
+    if ($current >= GM2_GUIDELINE_RULES_VERSION) {
+        return;
+    }
+
+    $rules   = get_option('gm2_guideline_rules', []);
+    $changed = false;
+
+    if (is_array($rules)) {
+        foreach ($rules as $base => $cats) {
+            if (is_string($cats)) {
+                $rules[$base] = [ 'general' => $cats ];
+                $changed      = true;
+            } elseif (is_array($cats)) {
+                $new_cats = [];
+                foreach ($cats as $cat => $lines) {
+                    if (is_array($lines)) {
+                        $new_cats[$cat] = implode("\n", array_values($lines));
+                    } else {
+                        $new_cats[$cat] = (string) $lines;
+                    }
+                }
+                $rules[$base] = $new_cats;
+                $changed      = true;
+            }
+        }
+    }
+
+    if ($changed) {
+        update_option('gm2_guideline_rules', $rules);
+        update_option('gm2_guideline_rules_migrated', 1);
+    }
+    update_option('gm2_guideline_rules_version', GM2_GUIDELINE_RULES_VERSION);
+}
+add_action('plugins_loaded', 'gm2_maybe_migrate_guideline_rules');
+
+function gm2_guideline_rules_migration_notice() {
+    if (!current_user_can('manage_options')) {
+        return;
+    }
+    if (get_option('gm2_guideline_rules_migrated')) {
+        echo '<div class="notice notice-warning is-dismissible"><p>' .
+             esc_html__( 'Guideline rules have been migrated. Please review them on the SEO settings page.', 'gm2-wordpress-suite' ) .
+             '</p></div>';
+        delete_option('gm2_guideline_rules_migrated');
+    }
+}
+add_action('admin_notices', 'gm2_guideline_rules_migration_notice');
 

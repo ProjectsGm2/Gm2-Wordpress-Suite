@@ -122,6 +122,13 @@ class Gm2_Admin {
                 filemtime(GM2_PLUGIN_DIR . 'admin/js/gm2-content-rules.js'),
                 true
             );
+            wp_enqueue_script(
+                'gm2-guideline-rules',
+                GM2_PLUGIN_URL . 'admin/js/gm2-guideline-rules.js',
+                ['jquery'],
+                filemtime(GM2_PLUGIN_DIR . 'admin/js/gm2-guideline-rules.js'),
+                true
+            );
             if ($this->chatgpt_enabled) {
                 wp_enqueue_script(
                     'gm2-context-prompt',
@@ -168,6 +175,16 @@ class Gm2_Admin {
                 'gm2ContentRules',
                 [
                     'nonce'      => wp_create_nonce('gm2_research_content_rules'),
+                    'ajax_url'   => admin_url('admin-ajax.php'),
+                    'categories' => 'seo_title, seo_description, focus_keywords, long_tail_keywords, canonical_url, content, general',
+                    'loading'    => __( 'Researching...', 'gm2-wordpress-suite' ),
+                ]
+            );
+            wp_localize_script(
+                'gm2-guideline-rules',
+                'gm2GuidelineRules',
+                [
+                    'nonce'      => wp_create_nonce('gm2_research_guideline_rules'),
                     'ajax_url'   => admin_url('admin-ajax.php'),
                     'categories' => 'seo_title, seo_description, focus_keywords, long_tail_keywords, canonical_url, content, general',
                     'loading'    => __( 'Researching...', 'gm2-wordpress-suite' ),

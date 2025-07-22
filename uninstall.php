@@ -27,6 +27,7 @@ $option_names = array(
     'gm2_suite_settings',
     'gm2_suite_version',
     'gm2_content_rules',
+    'gm2_guideline_rules',
     'gm2_ga_measurement_id',
     'gm2_search_console_verification',
     'gm2_gads_developer_token',

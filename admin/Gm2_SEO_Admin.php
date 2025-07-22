@@ -29,6 +29,7 @@ class Gm2_SEO_Admin {
         add_action('admin_post_gm2_performance_settings', [$this, 'handle_performance_form']);
         add_action('admin_post_gm2_redirects', [$this, 'handle_redirects_form']);
         add_action('admin_post_gm2_content_rules', [$this, 'handle_content_rules_form']);
+        add_action('admin_post_gm2_guideline_rules', [$this, 'handle_guideline_rules_form']);
         add_action('admin_post_gm2_general_settings', [$this, 'handle_general_settings_form']);
         add_action('admin_post_gm2_keyword_settings', [$this, 'handle_keyword_settings_form']);
 
@@ -36,6 +37,7 @@ class Gm2_SEO_Admin {
         add_action('wp_ajax_gm2_keyword_ideas', [$this, 'ajax_keyword_ideas']);
         add_action('wp_ajax_gm2_research_guidelines', [$this, 'ajax_research_guidelines']);
         add_action('wp_ajax_gm2_research_content_rules', [$this, 'ajax_research_content_rules']);
+        add_action('wp_ajax_gm2_research_guideline_rules', [$this, 'ajax_research_guideline_rules']);
         add_action('wp_ajax_gm2_ai_research', [$this, 'ajax_ai_research']);
         add_action('wp_ajax_gm2_ai_generate_tax_description', [$this, 'ajax_generate_tax_description']);
         add_action('wp_ajax_gm2_bulk_ai_apply', [$this, 'ajax_bulk_ai_apply']);
@@ -876,6 +878,58 @@ class Gm2_SEO_Admin {
 
             submit_button( esc_html__( 'Save Guidelines', 'gm2-wordpress-suite' ) );
             echo '</form>';
+
+            $all_rules = get_option('gm2_guideline_rules', []);
+            echo '<h2>' . esc_html__( 'Guideline Rules', 'gm2-wordpress-suite' ) . '</h2>';
+            echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
+            wp_nonce_field('gm2_guideline_rules_save', 'gm2_guideline_rules_nonce');
+            echo '<input type="hidden" name="action" value="gm2_guideline_rules" />';
+            echo '<table class="form-table"><tbody>';
+            $cats = [
+                'seo_title'        => __( 'SEO Title', 'gm2-wordpress-suite' ),
+                'seo_description'  => __( 'SEO Description', 'gm2-wordpress-suite' ),
+                'focus_keywords'   => __( 'Focus Keywords', 'gm2-wordpress-suite' ),
+                'long_tail_keywords' => __( 'Long Tail Keywords', 'gm2-wordpress-suite' ),
+                'canonical_url'    => __( 'Canonical URL', 'gm2-wordpress-suite' ),
+                'content'          => __( 'Content', 'gm2-wordpress-suite' ),
+                'general'          => __( 'General', 'gm2-wordpress-suite' ),
+            ];
+            foreach ($this->get_supported_post_types() as $pt) {
+                $label = get_post_type_object($pt)->labels->singular_name ?? ucfirst($pt);
+                $vals  = $all_rules['post_' . $pt] ?? [];
+                echo '<tr><th scope="row"><label>' . esc_html($label) . '</label></th><td>';
+                foreach ($cats as $c => $clabel) {
+                    $val = $vals[$c] ?? '';
+                    $val = $this->flatten_rule_value($val);
+                    echo '<p><label for="gm2_guideline_post_' . esc_attr($pt . '_' . $c) . '">' . esc_html($clabel) . '</label><br />';
+                    echo '<textarea id="gm2_guideline_post_' . esc_attr($pt . '_' . $c) . '" name="gm2_guideline_rules[post_' . esc_attr($pt) . '][' . esc_attr($c) . ']" rows="3" class="large-text">' . esc_textarea($val) . '</textarea></p>';
+                }
+                echo '<p><button type="button" class="button gm2-research-guideline-rules" data-base="post_' . esc_attr($pt) . '">' . esc_html__( 'AI Research Guideline Rules', 'gm2-wordpress-suite' ) . '</button></p>';
+                echo '</td></tr>';
+            }
+            foreach ($this->get_supported_taxonomies() as $tax) {
+                $tax_obj = get_taxonomy($tax);
+                if ($tax === 'category') {
+                    $label = __('Post Category', 'gm2-wordpress-suite');
+                } elseif ($tax === 'product_cat') {
+                    $label = __('Product Category', 'gm2-wordpress-suite');
+                } else {
+                    $label = $tax_obj ? $tax_obj->labels->singular_name : $tax;
+                }
+                $vals = $all_rules['tax_' . $tax] ?? [];
+                echo '<tr><th scope="row"><label>' . esc_html($label) . '</label></th><td>';
+                foreach ($cats as $c => $clabel) {
+                    $val = $vals[$c] ?? '';
+                    $val = $this->flatten_rule_value($val);
+                    echo '<p><label for="gm2_guideline_tax_' . esc_attr($tax . '_' . $c) . '">' . esc_html($clabel) . '</label><br />';
+                    echo '<textarea id="gm2_guideline_tax_' . esc_attr($tax . '_' . $c) . '" name="gm2_guideline_rules[tax_' . esc_attr($tax) . '][' . esc_attr($c) . ']" rows="3" class="large-text">' . esc_textarea($val) . '</textarea></p>';
+                }
+                echo '<p><button type="button" class="button gm2-research-guideline-rules" data-base="tax_' . esc_attr($tax) . '">' . esc_html__( 'AI Research Guideline Rules', 'gm2-wordpress-suite' ) . '</button></p>';
+                echo '</td></tr>';
+            }
+            echo '</tbody></table>';
+            submit_button( esc_html__( 'Save Guideline Rules', 'gm2-wordpress-suite' ) );
+            echo '</form>';
         } else {
             echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
             wp_nonce_field('gm2_general_settings_save', 'gm2_general_settings_nonce');
@@ -1676,6 +1730,38 @@ class Gm2_SEO_Admin {
         exit;
     }
 
+    public function handle_guideline_rules_form() {
+        if (!current_user_can('manage_options')) {
+            wp_die( esc_html__( 'Permission denied', 'gm2-wordpress-suite' ) );
+        }
+
+        if (!isset($_POST['gm2_guideline_rules_nonce']) || !wp_verify_nonce($_POST['gm2_guideline_rules_nonce'], 'gm2_guideline_rules_save')) {
+            wp_die( esc_html__( 'Invalid nonce', 'gm2-wordpress-suite' ) );
+        }
+
+        $rules = [];
+        if (isset($_POST['gm2_guideline_rules']) && is_array($_POST['gm2_guideline_rules'])) {
+            foreach ($_POST['gm2_guideline_rules'] as $k => $v) {
+                $rules[$k] = [];
+                if (is_array($v)) {
+                    foreach ($v as $cat => $val) {
+                        $rules[$k][$cat] = sanitize_textarea_field(
+                            wp_unslash($this->flatten_rule_value($val))
+                        );
+                    }
+                } else {
+                    $rules[$k]['general'] = sanitize_textarea_field(
+                        wp_unslash($this->flatten_rule_value($v))
+                    );
+                }
+            }
+        }
+        update_option('gm2_guideline_rules', $rules);
+
+        wp_redirect(admin_url('admin.php?page=gm2-seo&tab=guidelines&updated=1'));
+        exit;
+    }
+
     public function handle_keyword_settings_form() {
         if (!current_user_can('manage_options')) {
             wp_die( esc_html__( 'Permission denied', 'gm2-wordpress-suite' ) );
@@ -2444,6 +2530,121 @@ class Gm2_SEO_Admin {
         }
 
         update_option('gm2_content_rules', $rules);
+
+        wp_send_json_success($formatted);
+    }
+
+    public function ajax_research_guideline_rules() {
+        check_ajax_referer('gm2_research_guideline_rules');
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error( __( 'permission denied', 'gm2-wordpress-suite' ), 403 );
+        }
+
+        $cats   = isset($_POST['categories']) ? sanitize_text_field(wp_unslash($_POST['categories'])) : '';
+        $target = isset($_POST['target']) ? sanitize_key($_POST['target']) : '';
+
+        if ($cats === '' || $target === '') {
+            wp_send_json_error( __( 'missing parameters', 'gm2-wordpress-suite' ) );
+        }
+
+        $allowed = [];
+        foreach ($this->get_supported_post_types() as $pt) {
+            $allowed[] = 'post_' . $pt;
+        }
+        foreach ($this->get_supported_taxonomies() as $tax) {
+            $allowed[] = 'tax_' . $tax;
+        }
+        if (!in_array($target, $allowed, true)) {
+            wp_send_json_error( __( 'invalid target', 'gm2-wordpress-suite' ) );
+        }
+
+        if (strpos($target, 'post_') === 0) {
+            $prompt_target = sprintf('for the %s post type', gm2_substr($target, 5));
+        } else {
+            $prompt_target = sprintf('for the %s taxonomy', gm2_substr($target, 4));
+        }
+
+        $context = gm2_get_business_context_prompt();
+        $prompt  = '';
+        if ($context !== '') {
+            $prompt .= $context . "\n\n";
+        }
+        $prompt .= sprintf(
+            'You are an SEO content strategist. Using the business context above, create actionable guidelines for %s in WordPress. ' .
+            'Cover SEO Title, SEO Description, Focus Keywords, Long Tail Keywords, Canonical URL, Content and General Cohesive SEO Rules. ' .
+            'Use these categories: %s. Respond ONLY with JSON using those slugs as keys.',
+            $prompt_target,
+            $cats
+        );
+        $chat   = new Gm2_ChatGPT();
+        $resp   = $chat->query($prompt);
+
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('Guideline rules response: ' . $resp);
+        }
+
+        if (is_wp_error($resp)) {
+            wp_send_json_error($resp->get_error_message());
+        }
+
+        $data = json_decode($resp, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            if (preg_match('/\{.*\}/s', $resp, $m)) {
+                $data = json_decode($m[0], true);
+            }
+        }
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($data)) {
+            wp_send_json_error( __( 'Invalid AI response', 'gm2-wordpress-suite' ) );
+        }
+
+        $rules = get_option('gm2_guideline_rules', []);
+        if (!isset($rules[$target]) || !is_array($rules[$target])) {
+            $rules[$target] = [];
+        }
+
+        $valid_slugs = [
+            'seo_title', 'seo_description', 'focus_keywords',
+            'long_tail_keywords', 'canonical_url', 'content', 'general'
+        ];
+
+        $alias_map = [
+            'content_in_post'        => 'content',
+            'content_in_page'        => 'content',
+            'content_in_custom_post' => 'content',
+            'content_in_product'     => 'content',
+        ];
+
+        $formatted = [];
+        foreach ($data as $cat => $text) {
+            $key = strtolower(str_replace([' ', '-'], '_', $cat));
+            $key = preg_replace('/[^a-z0-9_]/', '', $key);
+            if (isset($alias_map[$key])) {
+                $key = $alias_map[$key];
+            }
+
+            if (!in_array($key, $valid_slugs, true)) {
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                    error_log('Discarded guideline rule category: ' . $key);
+                }
+                continue;
+            }
+
+            $text = sanitize_textarea_field(
+                $this->flatten_rule_value($text)
+            );
+            $rules[$target][$key] = $text;
+            $formatted[$key]     = $text;
+        }
+
+        if (empty($formatted)) {
+            wp_send_json_error( __( 'Unrecognized categories', 'gm2-wordpress-suite' ) );
+        }
+
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('Guideline rules formatted: ' . print_r($formatted, true));
+        }
+
+        update_option('gm2_guideline_rules', $rules);
 
         wp_send_json_success($formatted);
     }
