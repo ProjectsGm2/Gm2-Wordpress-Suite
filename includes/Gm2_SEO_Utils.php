@@ -71,6 +71,11 @@ namespace {
         return $length === null ? substr($string, $start) : substr($string, $start, $length);
     }
 
+    function gm2_get_business_context_prompt() {
+        $prompt = trim(get_option('gm2_context_ai_prompt', ''));
+        return $prompt === '' ? '' : $prompt;
+    }
+
     function gm2_ai_send_prompt($prompt, $args = []) {
         $defaults = [
             'language-model' => 'gpt-3.5-turbo',
