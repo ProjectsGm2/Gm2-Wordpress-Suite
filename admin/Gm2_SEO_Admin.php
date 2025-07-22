@@ -1354,6 +1354,10 @@ class Gm2_SEO_Admin {
                 $sanitized_content = wp_strip_all_tags($post->post_content);
                 $snippet_content   = $this->safe_truncate($sanitized_content, 400);
                 $prompt  = "Write a short SEO description for the following content:\n\n" . $snippet_content;
+                $context = gm2_get_business_context_prompt();
+                if ($context !== '') {
+                    $prompt = $context . "\n\n" . $prompt;
+                }
                 $chat    = new Gm2_ChatGPT();
                 $resp    = $chat->query($prompt);
                 if (!is_wp_error($resp) && $resp !== '') {
@@ -1725,6 +1729,10 @@ class Gm2_SEO_Admin {
             $alt   = sanitize_text_field($title);
             if (trim(get_option('gm2_chatgpt_api_key', '')) !== '') {
                 $prompt = "Provide a short descriptive alt text for an image titled: {$title}";
+                $context = gm2_get_business_context_prompt();
+                if ($context !== '') {
+                    $prompt = $context . "\n\n" . $prompt;
+                }
                 $chat   = new Gm2_ChatGPT();
                 $resp   = $chat->query($prompt);
                 if (!is_wp_error($resp) && $resp !== '') {
@@ -2021,6 +2029,10 @@ class Gm2_SEO_Admin {
             'Provide a comma-separated list of short keyword ideas related to: %s',
             $query
         );
+        $context = gm2_get_business_context_prompt();
+        if ($context !== '') {
+            $prompt = $context . "\n\n" . $prompt;
+        }
         $chat = new Gm2_ChatGPT();
         try {
             $resp = $chat->query($prompt);
@@ -2299,6 +2311,10 @@ class Gm2_SEO_Admin {
         }
 
         $prompt = 'Provide SEO best practice guidelines for the following categories: ' . $cats;
+        $context = gm2_get_business_context_prompt();
+        if ($context !== '') {
+            $prompt = $context . "\n\n" . $prompt;
+        }
         $chat   = new Gm2_ChatGPT();
         $resp   = $chat->query($prompt);
 
@@ -2353,6 +2369,10 @@ class Gm2_SEO_Admin {
             $prompt_target,
             $cats
         );
+        $context = gm2_get_business_context_prompt();
+        if ($context !== '') {
+            $prompt = $context . "\n\n" . $prompt;
+        }
         $chat   = new Gm2_ChatGPT();
         $resp   = $chat->query($prompt);
 
@@ -2541,6 +2561,11 @@ class Gm2_SEO_Admin {
         }
         $prompt .= "Provide JSON with keys seo_title, description, focus_keywords, long_tail_keywords, seed_keywords, canonical, page_name, slug, content_suggestions, html_issues.";
 
+        $context = gm2_get_business_context_prompt();
+        if ($context !== '') {
+            $prompt = $context . "\n\n" . $prompt;
+        }
+
         $chat = new Gm2_ChatGPT();
         try {
             $resp = $chat->query($prompt);
@@ -2669,6 +2694,11 @@ class Gm2_SEO_Admin {
         }
         $prompt2 .= "Provide JSON with keys seo_title, description, focus_keywords, long_tail_keywords, canonical, page_name, slug, content_suggestions, html_issues.";
 
+        $context = gm2_get_business_context_prompt();
+        if ($context !== '') {
+            $prompt2 = $context . "\n\n" . $prompt2;
+        }
+
         try {
             $resp2 = $chat->query($prompt2);
         } catch (\Throwable $e) {
@@ -2762,6 +2792,11 @@ class Gm2_SEO_Admin {
                 $pairs[] = ucfirst(str_replace('_', ' ', $k)) . ': ' . $v;
             }
             $prompt .= "\nSite context: " . implode('; ', $pairs);
+        }
+
+        $context = gm2_get_business_context_prompt();
+        if ($context !== '') {
+            $prompt = $context . "\n\n" . $prompt;
         }
 
         $chat = new Gm2_ChatGPT();
