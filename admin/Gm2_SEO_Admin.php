@@ -2390,7 +2390,15 @@ class Gm2_SEO_Admin {
         $prompt .= sprintf(
             'You are an SEO content strategist. Using the business context above, create actionable rules for %s in WordPress. ' .
             'Cover SEO Title, SEO Description, Focus Keywords, Long Tail Keywords, Canonical URL, Content and General Cohesive SEO Rules. ' .
-            'Use these categories: %s. Respond ONLY with JSON using those slugs as keys.',
+            "Here are example guidelines:\n" .
+            "- SEO Title: keep under 60 characters and include the focus keyword.\n" .
+            "- SEO Description: keep under 160 characters and include the focus keyword.\n" .
+            "- Focus Keywords: list 1-3 target keywords.\n" .
+            "- Long-Tail Keywords: list 1-3 longer keyword phrases.\n" .
+            "- Canonical URL: specify the canonical link to avoid duplicates.\n" .
+            "- Content: use headings and short paragraphs with keywords naturally.\n" .
+            "- General Cohesive SEO Rules: maintain consistent tone and avoid keyword stuffing.\n" .
+            'Provide an array of short, measurable rules. Use these categories: %s. Respond ONLY with JSON using those slugs as keys.',
             $prompt_target,
             $cats
         );
@@ -2432,6 +2440,19 @@ class Gm2_SEO_Admin {
             'content_in_product'     => 'content',
         ];
 
+        $requested_slugs = [];
+        foreach (array_filter(array_map('trim', explode(',', strtolower($cats)))) as $req) {
+            $r = str_replace([' ', '-'], '_', $req);
+            $r = preg_replace('/[^a-z0-9_]/', '', $r);
+            if (isset($alias_map[$r])) {
+                $r = $alias_map[$r];
+            }
+            if (in_array($r, $valid_slugs, true)) {
+                $requested_slugs[] = $r;
+            }
+        }
+        $requested_slugs = array_unique($requested_slugs);
+
         $formatted = [];
         foreach ($data as $cat => $text) {
             $key = strtolower(str_replace([' ', '-'], '_', $cat));
@@ -2440,7 +2461,7 @@ class Gm2_SEO_Admin {
                 $key = $alias_map[$key];
             }
 
-            if (!in_array($key, $valid_slugs, true)) {
+            if (!in_array($key, $valid_slugs, true) || !in_array($key, $requested_slugs, true)) {
                 if (defined('WP_DEBUG') && WP_DEBUG) {
                     error_log('Discarded content rule category: ' . $key);
                 }
@@ -2505,7 +2526,15 @@ class Gm2_SEO_Admin {
         $prompt .= sprintf(
             'You are an SEO content strategist. Using the business context above, create actionable guidelines for %s in WordPress. ' .
             'Cover SEO Title, SEO Description, Focus Keywords, Long Tail Keywords, Canonical URL, Content and General Cohesive SEO Rules. ' .
-            'Use these categories: %s. Respond ONLY with JSON using those slugs as keys.',
+            "Here are example guidelines:\n" .
+            "- SEO Title: keep under 60 characters and include the focus keyword.\n" .
+            "- SEO Description: keep under 160 characters and include the focus keyword.\n" .
+            "- Focus Keywords: list 1-3 target keywords.\n" .
+            "- Long-Tail Keywords: list 1-3 longer keyword phrases.\n" .
+            "- Canonical URL: specify the canonical link to avoid duplicates.\n" .
+            "- Content: use headings and short paragraphs with keywords naturally.\n" .
+            "- General Cohesive SEO Rules: maintain consistent tone and avoid keyword stuffing.\n" .
+            'Provide an array of short, measurable rules. Use these categories: %s. Respond ONLY with JSON using those slugs as keys.',
             $prompt_target,
             $cats
         );
@@ -2547,6 +2576,19 @@ class Gm2_SEO_Admin {
             'content_in_product'     => 'content',
         ];
 
+        $requested_slugs = [];
+        foreach (array_filter(array_map('trim', explode(',', strtolower($cats)))) as $req) {
+            $r = str_replace([' ', '-'], '_', $req);
+            $r = preg_replace('/[^a-z0-9_]/', '', $r);
+            if (isset($alias_map[$r])) {
+                $r = $alias_map[$r];
+            }
+            if (in_array($r, $valid_slugs, true)) {
+                $requested_slugs[] = $r;
+            }
+        }
+        $requested_slugs = array_unique($requested_slugs);
+
         $formatted = [];
         foreach ($data as $cat => $text) {
             $key = strtolower(str_replace([' ', '-'], '_', $cat));
@@ -2555,7 +2597,7 @@ class Gm2_SEO_Admin {
                 $key = $alias_map[$key];
             }
 
-            if (!in_array($key, $valid_slugs, true)) {
+            if (!in_array($key, $valid_slugs, true) || !in_array($key, $requested_slugs, true)) {
                 if (defined('WP_DEBUG') && WP_DEBUG) {
                     error_log('Discarded guideline rule category: ' . $key);
                 }
