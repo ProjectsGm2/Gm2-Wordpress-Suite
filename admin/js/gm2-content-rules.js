@@ -16,16 +16,23 @@ jQuery(function($){
         }
         return String(val);
     }
+    const RULE_SLUGS = [
+        'seo_title',
+        'seo_description',
+        'focus_keywords',
+        'long_tail_keywords',
+        'canonical_url',
+        'content',
+        'general'
+    ];
+
     $('.gm2-research-rules').on('click', function(e){
         e.preventDefault();
         if(!window.gm2ContentRules) return;
         var $btn = $(this);
         var base = $btn.data('base');
-        var cat  = $btn.data('category');
         if(!base) return;
-        var promptText = gm2ContentRules.prompt || 'Enter rule categories (comma separated):';
-        var cats = prompt(promptText, cat);
-        if(cats === null || !cats.trim()) return;
+        var cats = RULE_SLUGS.join(',');
         var loadingText = gm2ContentRules.loading || 'Researching...';
         var originalText = $btn.text();
         $btn.prop('disabled', true).text(loadingText);
