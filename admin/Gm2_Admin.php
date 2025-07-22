@@ -167,10 +167,10 @@ class Gm2_Admin {
                 'gm2-content-rules',
                 'gm2ContentRules',
                 [
-                    'nonce'    => wp_create_nonce('gm2_research_content_rules'),
-                    'ajax_url' => admin_url('admin-ajax.php'),
-                    'prompt'   => __( 'Enter rule categories (comma separated):', 'gm2-wordpress-suite' ),
-                    'loading'  => __( 'Researching...', 'gm2-wordpress-suite' ),
+                    'nonce'      => wp_create_nonce('gm2_research_content_rules'),
+                    'ajax_url'   => admin_url('admin-ajax.php'),
+                    'categories' => 'seo_title, seo_description, focus_keywords, long_tail_keywords, canonical_url, content, general',
+                    'loading'    => __( 'Researching...', 'gm2-wordpress-suite' ),
                 ]
             );
             if ($hook === 'gm2_page_gm2-bulk-ai-review') {
