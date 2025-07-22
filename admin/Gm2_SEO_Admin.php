@@ -2364,7 +2364,7 @@ class Gm2_SEO_Admin {
         }
 
         $prompt = sprintf(
-            'You are an SEO content strategist. Using the business context below, create actionable rules for %s in WordPress. ' .
+            'You are an SEO content strategist. Using the business context provided, create actionable rules for %s in WordPress. ' .
             'Cover SEO Title, SEO Description, Focus Keywords, Long Tail Keywords, Canonical URL, Content and General Cohesive SEO Rules. ' .
             'Use these categories: %s. Respond ONLY with JSON using those slugs as keys.',
             $prompt_target,
