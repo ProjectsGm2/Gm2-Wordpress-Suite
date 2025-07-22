@@ -35,7 +35,6 @@ class Gm2_SEO_Admin {
 
         add_action('wp_ajax_gm2_check_rules', [$this, 'ajax_check_rules']);
         add_action('wp_ajax_gm2_keyword_ideas', [$this, 'ajax_keyword_ideas']);
-        add_action('wp_ajax_gm2_research_guidelines', [$this, 'ajax_research_guidelines']);
         add_action('wp_ajax_gm2_research_content_rules', [$this, 'ajax_research_content_rules']);
         add_action('wp_ajax_gm2_research_guideline_rules', [$this, 'ajax_research_guideline_rules']);
         add_action('wp_ajax_gm2_ai_research', [$this, 'ajax_ai_research']);
@@ -309,16 +308,6 @@ class Gm2_SEO_Admin {
         register_setting('gm2_seo_options', 'gm2_project_description', [
             'sanitize_callback' => 'sanitize_textarea_field',
         ]);
-        foreach ($this->get_supported_post_types() as $pt) {
-            register_setting('gm2_seo_options', 'gm2_seo_guidelines_post_' . $pt, [
-                'sanitize_callback' => 'sanitize_textarea_field',
-            ]);
-        }
-        foreach ($this->get_supported_taxonomies() as $tax) {
-            register_setting('gm2_seo_options', 'gm2_seo_guidelines_tax_' . $tax, [
-                'sanitize_callback' => 'sanitize_textarea_field',
-            ]);
-        }
 
         register_setting('gm2_robots_options', 'gm2_robots_txt', [
             'sanitize_callback' => 'sanitize_textarea_field',
@@ -848,37 +837,6 @@ class Gm2_SEO_Admin {
             submit_button( esc_html__( 'Save Context', 'gm2-wordpress-suite' ) );
             echo '</form>';
         } elseif ($active === 'guidelines') {
-            echo '<form method="post" action="options.php">';
-            settings_fields('gm2_seo_options');
-
-            foreach ($this->get_supported_post_types() as $pt) {
-                $opt   = 'gm2_seo_guidelines_post_' . $pt;
-                $label = get_post_type_object($pt)->labels->singular_name ?? ucfirst($pt);
-                $val   = get_option($opt, '');
-                echo '<h3>' . esc_html($label) . '</h3>';
-                echo '<textarea name="' . esc_attr($opt) . '" rows="6" class="large-text">' . esc_textarea($val) . '</textarea>';
-                echo '<p><button class="button gm2-research-guidelines" data-target="' . esc_attr($opt) . '">' . esc_html__( 'Research SEO Guidelines', 'gm2-wordpress-suite' ) . '</button></p>';
-            }
-
-            foreach ($this->get_supported_taxonomies() as $tax) {
-                $opt   = 'gm2_seo_guidelines_tax_' . $tax;
-                $tax_obj = get_taxonomy($tax);
-                if ($tax === 'category') {
-                    $label = __('Post Category', 'gm2-wordpress-suite');
-                } elseif ($tax === 'product_cat') {
-                    $label = __('Product Category', 'gm2-wordpress-suite');
-                } else {
-                    $label = $tax_obj ? $tax_obj->labels->singular_name : ucfirst($tax);
-                }
-                $val   = get_option($opt, '');
-                echo '<h3>' . esc_html($label) . '</h3>';
-                echo '<textarea name="' . esc_attr($opt) . '" rows="6" class="large-text">' . esc_textarea($val) . '</textarea>';
-                echo '<p><button class="button gm2-research-guidelines" data-target="' . esc_attr($opt) . '">' . esc_html__( 'Research SEO Guidelines', 'gm2-wordpress-suite' ) . '</button></p>';
-            }
-
-            submit_button( esc_html__( 'Save Guidelines', 'gm2-wordpress-suite' ) );
-            echo '</form>';
-
             $all_rules = get_option('gm2_guideline_rules', []);
             echo '<h2>' . esc_html__( 'Guideline Rules', 'gm2-wordpress-suite' ) . '</h2>';
             echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
@@ -2023,6 +1981,27 @@ class Gm2_SEO_Admin {
     }
 
     /**
+     * Build a newline-separated guidelines string from stored rules.
+     *
+     * @param string $base Option base like post_{type} or tax_{taxonomy}.
+     * @return string
+     */
+    private function build_guidelines_text($base) {
+        $rules = get_option('gm2_guideline_rules', []);
+        if (!isset($rules[$base]) || !is_array($rules[$base])) {
+            return '';
+        }
+        $parts = [];
+        foreach ($rules[$base] as $text) {
+            $flat = $this->flatten_rule_value($text);
+            if ($flat !== '') {
+                $parts[] = $flat;
+            }
+        }
+        return implode("\n", $parts);
+    }
+
+    /**
      * Choose the best focus and long-tail keywords from Keyword Planner ideas.
      *
      * @param array $ideas Raw ideas array from Keyword Planner.
@@ -2372,52 +2351,6 @@ class Gm2_SEO_Admin {
         ]);
     }
 
-    public function ajax_research_guidelines() {
-        check_ajax_referer('gm2_research_guidelines');
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error( __( 'permission denied', 'gm2-wordpress-suite' ), 403 );
-        }
-
-        $cats   = isset($_POST['categories']) ? sanitize_text_field(wp_unslash($_POST['categories'])) : '';
-        $target = isset($_POST['target']) ? sanitize_key($_POST['target']) : '';
-
-        if ($cats === '' || $target === '') {
-            wp_send_json_error( __( 'missing parameters', 'gm2-wordpress-suite' ) );
-        }
-
-        $allowed = [];
-        foreach ($this->get_supported_post_types() as $pt) {
-            $allowed[] = 'gm2_seo_guidelines_post_' . $pt;
-        }
-        foreach ($this->get_supported_taxonomies() as $tax) {
-            $allowed[] = 'gm2_seo_guidelines_tax_' . $tax;
-        }
-        if (!in_array($target, $allowed, true)) {
-            wp_send_json_error( __( 'invalid target', 'gm2-wordpress-suite' ) );
-        }
-
-        $prompt = 'Provide SEO best practice guidelines for the following categories: ' . $cats;
-        $context = gm2_get_business_context_prompt();
-        if ($context !== '') {
-            $prompt = $context . "\n\n" . $prompt;
-        }
-        $chat   = new Gm2_ChatGPT();
-        $resp   = $chat->query($prompt);
-
-        if (is_wp_error($resp)) {
-            wp_send_json_error($resp->get_error_message());
-        }
-
-        $decoded = json_decode($resp, true);
-        if (json_last_error() === JSON_ERROR_NONE) {
-            $resp = $decoded;
-        }
-
-        $flat = $this->flatten_rule_value($resp);
-
-        update_option($target, $flat);
-        wp_send_json_success($flat);
-    }
 
     public function ajax_research_content_rules() {
         check_ajax_referer('gm2_research_content_rules');
@@ -2730,9 +2663,9 @@ class Gm2_SEO_Admin {
 
         $guidelines = '';
         if ($post_id && !empty($post)) {
-            $guidelines = get_option('gm2_seo_guidelines_post_' . $post->post_type, '');
+            $guidelines = $this->build_guidelines_text('post_' . $post->post_type);
         } elseif ($term_id && $taxonomy) {
-            $guidelines = get_option('gm2_seo_guidelines_tax_' . $taxonomy, '');
+            $guidelines = $this->build_guidelines_text('tax_' . $taxonomy);
         }
         $guidelines = trim($guidelines);
 
@@ -2979,7 +2912,7 @@ class Gm2_SEO_Admin {
             }
         }
 
-        $guidelines = trim(get_option('gm2_seo_guidelines_tax_' . $taxonomy, ''));
+        $guidelines = trim($this->build_guidelines_text('tax_' . $taxonomy));
         $template   = get_option('gm2_tax_desc_prompt', 'Write a short SEO description for the term "{name}". {guidelines}');
 
         $prompt = strtr($template, [

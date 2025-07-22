@@ -21,8 +21,7 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 // gm2_compression_api_key, gm2_compression_api_url, gm2_minify_html, gm2_minify_css,
 // gm2_minify_js, gm2_chatgpt_api_key, gm2_chatgpt_model, gm2_chatgpt_temperature,
 // gm2_chatgpt_max_tokens, gm2_chatgpt_endpoint, gm2_pagespeed_api_key, gm2_pagespeed_scores,
-// gm2_bulk_ai_page_size, gm2_bulk_ai_status, gm2_bulk_ai_post_type, gm2_bulk_ai_term,
-// gm2_seo_guidelines_post_*, gm2_seo_guidelines_tax_*.
+// gm2_bulk_ai_page_size, gm2_bulk_ai_status, gm2_bulk_ai_post_type, gm2_bulk_ai_term.
 $option_names = array(
     'gm2_suite_settings',
     'gm2_suite_version',
@@ -116,39 +115,6 @@ foreach ( $option_names as $option ) {
 }
 
 // Remove dynamic SEO guideline options for supported post types and taxonomies.
-$args  = array(
-    'public'             => true,
-    'show_ui'            => true,
-    'exclude_from_search' => false,
-);
-$post_types = get_post_types( $args, 'names' );
-unset( $post_types['attachment'] );
-$post_types = apply_filters( 'gm2_supported_post_types', array_values( $post_types ) );
-foreach ( $post_types as $pt ) {
-    $opt = 'gm2_seo_guidelines_post_' . $pt;
-    delete_option( $opt );
-    if ( is_multisite() ) {
-        delete_site_option( $opt );
-    }
-}
-
-$taxonomies = array( 'category' );
-if ( taxonomy_exists( 'product_cat' ) ) {
-    $taxonomies[] = 'product_cat';
-}
-if ( taxonomy_exists( 'brand' ) ) {
-    $taxonomies[] = 'brand';
-}
-if ( taxonomy_exists( 'product_brand' ) ) {
-    $taxonomies[] = 'product_brand';
-}
-foreach ( $taxonomies as $tax ) {
-    $opt = 'gm2_seo_guidelines_tax_' . $tax;
-    delete_option( $opt );
-    if ( is_multisite() ) {
-        delete_site_option( $opt );
-    }
-}
 
 // Example table cleanup.
 global $wpdb;
