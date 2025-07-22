@@ -149,10 +149,11 @@ line-based rules. These category rules work alongside the text in **SEO
 Guidelines** and are considered when running **AI Research** on a post or
 taxonomy term.
 
-Within the Rules table, every category textarea now includes an **AI Research
-Content Rules** button. The button sits directly below the textarea label and
-fetches best-practice suggestions from ChatGPT for the selected post type or
-taxonomy. ChatGPT is told which content type is being analyzed and instructed to
+Within the Rules table, each post type or taxonomy row now includes a single
+**AI Research Content Rules** button positioned beneath all of its category
+textareas. Click this button to fetch best-practice suggestions from ChatGPT for
+the selected content type. ChatGPT is told which content type is being analyzed
+and instructed to
 return an array of short, measurable rules for each requested category. The
 results are saved automatically so you can refine them at any time. ChatGPT is
 instructed to respond **only with JSON** where each key matches one of the slugs
