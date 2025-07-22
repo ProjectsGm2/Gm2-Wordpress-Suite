@@ -2363,17 +2363,18 @@ class Gm2_SEO_Admin {
             $prompt_target = sprintf('for the %s taxonomy', gm2_substr($target, 4));
         }
 
-        $prompt = sprintf(
-            'You are an SEO content strategist. Using the business context below, create actionable rules for %s in WordPress. ' .
+        $context = gm2_get_business_context_prompt();
+        $prompt  = '';
+        if ($context !== '') {
+            $prompt .= $context . "\n\n";
+        }
+        $prompt .= sprintf(
+            'You are an SEO content strategist. Using the business context above, create actionable rules for %s in WordPress. ' .
             'Cover SEO Title, SEO Description, Focus Keywords, Long Tail Keywords, Canonical URL, Content and General Cohesive SEO Rules. ' .
             'Use these categories: %s. Respond ONLY with JSON using those slugs as keys.',
             $prompt_target,
             $cats
         );
-        $context = gm2_get_business_context_prompt();
-        if ($context !== '') {
-            $prompt = $context . "\n\n" . $prompt;
-        }
         $chat   = new Gm2_ChatGPT();
         $resp   = $chat->query($prompt);
 
