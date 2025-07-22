@@ -833,10 +833,10 @@ class Gm2_SEO_Admin {
             }
             $val     = get_option( 'gm2_context_ai_prompt', '' );
             $enabled = get_option( 'gm2_enable_chatgpt', '1' ) === '1';
-            echo '<tr><th scope="row"><label for="gm2_context_ai_prompt">' . esc_html__( 'AI Prompt', 'gm2-wordpress-suite' ) . '</label></th><td>';
+            echo '<tr><th scope="row"><label for="gm2_context_ai_prompt">' . esc_html__( 'Business Context Prompt', 'gm2-wordpress-suite' ) . '</label></th><td>';
             echo '<textarea id="gm2_context_ai_prompt" name="gm2_context_ai_prompt" rows="4" class="large-text"' . disabled( $enabled, false, false ) . '>' . esc_textarea( $val ) . '</textarea>';
             if ( $enabled ) {
-                echo '<p><button type="button" class="button gm2-build-ai-prompt">' . esc_html__( 'Build AI Prompt', 'gm2-wordpress-suite' ) . '</button></p>';
+                echo '<p><button type="button" class="button gm2-build-ai-prompt">' . esc_html__( 'Generate AI Prompt', 'gm2-wordpress-suite' ) . '</button></p>';
             } else {
                 echo '<p><em>' . esc_html__( 'ChatGPT is disabled.', 'gm2-wordpress-suite' ) . '</em></p>';
             }

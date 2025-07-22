@@ -198,9 +198,9 @@ Open the **Context** tab under **SEO** to store detailed business information us
 * **Buyer Personas** – Describe your ideal buyers and their pain points.
 * **Project Description** – Short summary of your project or website. Used when other fields are empty.
 * **Custom Prompts** – Default instructions appended to AI requests.
-* **AI Prompt** – One-click builder that combines your answers into a single prompt summarizing the business.
+* **Business Context Prompt** – One-click builder that combines your answers into a single prompt summarizing the business.
 
-To build the prompt, ensure the ChatGPT feature is enabled and save your API key and model under **Gm2 → ChatGPT**. Then return to **SEO → Context** and click **Build AI Prompt** below the AI Prompt field. The plugin merges all of your Context answers and sends them to ChatGPT. The response is inserted into the textarea so you can tweak it before saving.
+To build the prompt, ensure the ChatGPT feature is enabled and save your API key and model under **Gm2 → ChatGPT**. Then return to **SEO → Context** and click **Generate AI Prompt** below the Business Context Prompt field. The plugin merges all of your Context answers and sends them to ChatGPT. The response is inserted into the textarea so you can tweak it before saving.
 
 == SEO Settings ==
 The SEO meta box appears when editing posts, pages, any public custom post types and taxonomy terms. In the
