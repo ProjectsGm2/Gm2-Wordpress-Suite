@@ -108,6 +108,34 @@ class ChatGPTTest extends WP_UnitTestCase {
         $this->assertStringContainsString('<textarea', $out);
         $this->assertStringContainsString('log entry', $out);
     }
+
+    public function test_chatgpt_page_contains_reset_button() {
+        $admin = new Gm2_Admin();
+        update_option('gm2_enable_chatgpt_logging', '1');
+        file_put_contents(GM2_CHATGPT_LOG_FILE, 'log entry');
+        ob_start();
+        $admin->display_chatgpt_page();
+        $out = ob_get_clean();
+        @unlink(GM2_CHATGPT_LOG_FILE);
+        update_option('gm2_enable_chatgpt_logging', '0');
+        $this->assertStringContainsString('gm2_reset_chatgpt_logs', $out);
+        $this->assertStringContainsString('Reset Logs', $out);
+    }
+
+    public function test_handle_reset_chatgpt_logs_clears_file() {
+        $admin = new Gm2_Admin();
+        $user = self::factory()->user->create(['role' => 'administrator']);
+        wp_set_current_user($user);
+
+        file_put_contents(GM2_CHATGPT_LOG_FILE, 'log entry');
+        $_POST['_wpnonce'] = wp_create_nonce('gm2_reset_chatgpt_logs');
+
+        $admin->handle_reset_chatgpt_logs();
+
+        $this->assertFileExists(GM2_CHATGPT_LOG_FILE);
+        $this->assertSame('', file_get_contents(GM2_CHATGPT_LOG_FILE));
+        @unlink(GM2_CHATGPT_LOG_FILE);
+    }
 }
 
 class ChatGPTAjaxTest extends WP_Ajax_UnitTestCase {
