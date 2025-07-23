@@ -2007,6 +2007,40 @@ class Gm2_SEO_Admin {
                 $comment->parentNode->removeChild($comment);
             }
 
+            // Convert <br> tags to newline text nodes.
+            $brs = $doc->getElementsByTagName('br');
+            for ($i = $brs->length - 1; $i >= 0; $i--) {
+                $br = $brs->item($i);
+                $br->parentNode->replaceChild($doc->createTextNode("\n"), $br);
+            }
+
+            // Trim whitespace and add line breaks after block elements for readability.
+            $blocks    = ['p', 'ul', 'ol', 'li', 'blockquote', 'pre', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'];
+            $blockList = [];
+            foreach ($blocks as $tag) {
+                $list = $doc->getElementsByTagName($tag);
+                for ($i = 0; $i < $list->length; $i++) {
+                    $blockList[] = $list->item($i);
+                }
+            }
+
+            foreach ($blockList as $node) {
+                foreach ($node->childNodes as $child) {
+                    if ($child->nodeType === XML_TEXT_NODE) {
+                        $child->nodeValue = trim($child->nodeValue);
+                    }
+                }
+                $next = $node->nextSibling;
+                $line = $doc->createTextNode("\n");
+                if ($next) {
+                    if ($next->nodeType !== XML_TEXT_NODE || strpos($next->nodeValue, "\n") !== 0) {
+                        $node->parentNode->insertBefore($line, $next);
+                    }
+                } else {
+                    $node->parentNode->appendChild($line);
+                }
+            }
+
             $body = $doc->getElementsByTagName('body')->item(0);
             $html = '';
             if ($body) {
@@ -2016,9 +2050,18 @@ class Gm2_SEO_Admin {
             } else {
                 $html = $doc->saveHTML();
             }
+
+            // Collapse consecutive newlines.
+            $html = preg_replace("/\n{2,}/", "\n", $html);
         }
 
-        return wp_kses($html, $allowed);
+        $html = wp_kses($html, $allowed);
+
+        // Replace any remaining <br> tags in case DOMDocument is unavailable.
+        $html = preg_replace('/(<br\s*\/?\s*>\s*)+/i', "\n", $html);
+        $html = preg_replace('/\n{2,}/', "\n", $html);
+
+        return trim($html);
     }
 
     /**
