@@ -71,6 +71,29 @@ class ChatGPTTest extends WP_UnitTestCase {
         $this->assertStringContainsString('<select id="gm2_chatgpt_model"', $out);
         $this->assertMatchesRegularExpression('/<select[^>]*id="gm2_chatgpt_model"[^>]*>.*<option/i', $out);
     }
+
+    public function test_chatgpt_page_logging_checkbox() {
+        $admin = new Gm2_Admin();
+        ob_start();
+        $admin->display_chatgpt_page();
+        $out = ob_get_clean();
+        $this->assertStringContainsString('gm2_enable_chatgpt_logging', $out);
+        $this->assertStringContainsString('Enable Logging', $out);
+    }
+
+    public function test_logging_option_saved_by_form() {
+        $admin = new Gm2_Admin();
+        $user = self::factory()->user->create(['role' => 'administrator']);
+        wp_set_current_user($user);
+
+        $_POST['_wpnonce'] = wp_create_nonce('gm2_chatgpt_settings');
+        $_POST['gm2_enable_chatgpt_logging'] = '1';
+        $_POST['gm2_chatgpt_api_key'] = 'key';
+
+        $admin->handle_chatgpt_form();
+
+        $this->assertSame('1', get_option('gm2_enable_chatgpt_logging'));
+    }
 }
 
 class ChatGPTAjaxTest extends WP_Ajax_UnitTestCase {

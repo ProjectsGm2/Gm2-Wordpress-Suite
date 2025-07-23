@@ -20,6 +20,9 @@ if (!defined('GM2_GCLOUD_PROJECT_ID') && getenv('GM2_GCLOUD_PROJECT_ID')) {
 if (!defined('GM2_SERVICE_ACCOUNT_JSON') && getenv('GM2_SERVICE_ACCOUNT_JSON')) {
     define('GM2_SERVICE_ACCOUNT_JSON', getenv('GM2_SERVICE_ACCOUNT_JSON'));
 }
+if (!defined('GM2_TESTING')) {
+    define('GM2_TESTING', true);
+}
 function _manually_load_plugin() {
     require dirname(__DIR__) . '/gm2-wordpress-suite.php';
 }

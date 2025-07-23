@@ -48,32 +48,42 @@ class Gm2_ChatGPT {
             error_log('Gm2_ChatGPT request: ' . wp_json_encode($payload));
         }
         $response = wp_remote_post($this->endpoint, $args);
+
+        $result = null;
         if (is_wp_error($response)) {
             if (defined('WP_DEBUG') && WP_DEBUG) {
                 error_log('Gm2_ChatGPT error: ' . $response->get_error_message());
             }
-            return $response;
-        }
+            $result = $response;
+        } else {
+            $status = wp_remote_retrieve_response_code($response);
+            $body   = wp_remote_retrieve_body($response);
 
-        $status = wp_remote_retrieve_response_code($response);
-        $body   = wp_remote_retrieve_body($response);
-
-        if ($status !== 200) {
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-                $snippet = gm2_substr($body, 0, 200);
-                error_log(sprintf('Gm2_ChatGPT HTTP %s: %s', $status, $snippet));
+            if ($status !== 200) {
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                    $snippet = gm2_substr($body, 0, 200);
+                    error_log(sprintf('Gm2_ChatGPT HTTP %s: %s', $status, $snippet));
+                }
+                $data    = json_decode($body, true);
+                $message = $data['error']['message'] ?? 'Non-200 response';
+                $result  = new \WP_Error('api_error', $message);
+            } else {
+                if ($body === '') {
+                    $result = '';
+                } else {
+                    $data = json_decode($body, true);
+                    $result = $data['choices'][0]['message']['content'] ?? '';
+                }
             }
-            $data    = json_decode($body, true);
-            $message = $data['error']['message'] ?? 'Non-200 response';
-            return new \WP_Error('api_error', $message);
         }
 
-        if ($body === '') {
-            return '';
+        if (get_option('gm2_enable_chatgpt_logging', '0') === '1') {
+            $log_resp = is_wp_error($result) ? $result->get_error_message() : $result;
+            error_log('ChatGPT prompt: ' . $prompt);
+            error_log('ChatGPT response: ' . $log_resp);
         }
 
-        $data = json_decode($body, true);
-        return $data['choices'][0]['message']['content'] ?? '';
+        return $result;
     }
 
     public static function get_available_models() {

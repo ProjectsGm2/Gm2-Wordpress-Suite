@@ -492,6 +492,7 @@ class Gm2_Admin {
         $temperature = get_option('gm2_chatgpt_temperature', '1.0');
         $max_tokens  = get_option('gm2_chatgpt_max_tokens', '');
         $endpoint    = get_option('gm2_chatgpt_endpoint', 'https://api.openai.com/v1/chat/completions');
+        $logging     = get_option('gm2_enable_chatgpt_logging', '0');
         $notice = '';
         if (!empty($_GET['updated'])) {
             $notice = '<div class="updated notice"><p>' . esc_html__('Settings saved.', 'gm2-wordpress-suite') . '</p></div>';
@@ -520,6 +521,8 @@ class Gm2_Admin {
         echo '<td><input type="number" id="gm2_chatgpt_max_tokens" name="gm2_chatgpt_max_tokens" value="' . esc_attr($max_tokens) . '" class="small-text" /></td></tr>';
         echo '<tr><th scope="row"><label for="gm2_chatgpt_endpoint">' . esc_html__( 'API Endpoint', 'gm2-wordpress-suite' ) . '</label></th>';
         echo '<td><input type="text" id="gm2_chatgpt_endpoint" name="gm2_chatgpt_endpoint" value="' . esc_attr($endpoint) . '" class="regular-text" /></td></tr>';
+        echo '<tr><th scope="row"><label for="gm2_enable_chatgpt_logging">' . esc_html__( 'Enable Logging', 'gm2-wordpress-suite' ) . '</label></th>';
+        echo '<td><input type="checkbox" id="gm2_enable_chatgpt_logging" name="gm2_enable_chatgpt_logging" value="1"' . checked('1', $logging, false) . ' /></td></tr>';
         echo '</tbody></table>';
         submit_button();
         $show = esc_js( __( 'Show', 'gm2-wordpress-suite' ) );
@@ -547,14 +550,19 @@ class Gm2_Admin {
         $temperature = isset($_POST['gm2_chatgpt_temperature']) ? floatval($_POST['gm2_chatgpt_temperature']) : 1.0;
         $max_tokens  = isset($_POST['gm2_chatgpt_max_tokens']) ? intval($_POST['gm2_chatgpt_max_tokens']) : 0;
         $endpoint    = isset($_POST['gm2_chatgpt_endpoint']) ? esc_url_raw($_POST['gm2_chatgpt_endpoint']) : '';
+        $logging     = isset($_POST['gm2_enable_chatgpt_logging']) ? '1' : '0';
 
         update_option('gm2_chatgpt_api_key', $key);
         update_option('gm2_chatgpt_model', $model);
         update_option('gm2_chatgpt_temperature', $temperature);
         update_option('gm2_chatgpt_max_tokens', $max_tokens);
         update_option('gm2_chatgpt_endpoint', $endpoint);
+        update_option('gm2_enable_chatgpt_logging', $logging);
 
         wp_redirect(admin_url('admin.php?page=gm2-chatgpt&updated=1'));
+        if (defined('GM2_TESTING') && GM2_TESTING) {
+            return;
+        }
         exit;
     }
 
