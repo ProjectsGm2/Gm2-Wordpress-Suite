@@ -1878,7 +1878,11 @@ class Gm2_SEO_Admin {
                 $prev_post = $post;
                 $post      = $post_obj;
                 setup_postdata($post);
-                $html = apply_filters('the_content', $post_obj->post_content);
+                $content = $post_obj->post_content;
+                if ($post_obj->post_excerpt !== '') {
+                    $content = $post_obj->post_excerpt . "\n\n" . $content;
+                }
+                $html = apply_filters('the_content', $content);
                 wp_reset_postdata();
                 $post = $prev_post;
                 return $html;
@@ -1899,6 +1903,18 @@ class Gm2_SEO_Admin {
             $html = apply_filters('the_content', $desc);
             wp_reset_postdata();
             $post = $prev_post;
+
+            $url = get_term_link($term_id, $taxonomy);
+            if (!is_wp_error($url)) {
+                $response = wp_remote_get($url, ['timeout' => 10]);
+                if (!is_wp_error($response)) {
+                    $body = wp_remote_retrieve_body($response);
+                    if ($body !== '') {
+                        $html .= "\n" . $body;
+                    }
+                }
+            }
+
             return $html;
         }
         return '';
@@ -1988,6 +2004,27 @@ class Gm2_SEO_Admin {
      */
     private function build_guidelines_text($base) {
         $rules = get_option('gm2_guideline_rules', []);
+        if (!isset($rules[$base]) || !is_array($rules[$base])) {
+            return '';
+        }
+        $parts = [];
+        foreach ($rules[$base] as $text) {
+            $flat = $this->flatten_rule_value($text);
+            if ($flat !== '') {
+                $parts[] = $flat;
+            }
+        }
+        return implode("\n", $parts);
+    }
+
+    /**
+     * Build a newline-separated content rules string from stored rules.
+     *
+     * @param string $base Option base like post_{type} or tax_{taxonomy}.
+     * @return string
+     */
+    private function build_content_rules_text($base) {
+        $rules = get_option('gm2_content_rules', []);
         if (!isset($rules[$base]) || !is_array($rules[$base])) {
             return '';
         }
@@ -2713,46 +2750,38 @@ class Gm2_SEO_Admin {
         }
 
         $html        = $this->get_rendered_html($post_id, $term_id, $taxonomy);
-        $focus_main  = trim(explode(',', $focus)[0]);
-        $html_issues = $this->detect_html_issues($html, $canonical, $focus_main);
-        $clean_html  = wp_strip_all_tags($html);
-        $snippet     = $this->safe_truncate($clean_html, 400);
+        $html_issues = [];
+        $snippet     = trim($html);
 
         $guidelines = '';
+        $content_rules = '';
         if ($post_id && !empty($post)) {
-            $guidelines = $this->build_guidelines_text('post_' . $post->post_type);
+            $guidelines    = $this->build_guidelines_text('post_' . $post->post_type);
+            $content_rules = $this->build_content_rules_text('post_' . $post->post_type);
         } elseif ($term_id && $taxonomy) {
-            $guidelines = $this->build_guidelines_text('tax_' . $taxonomy);
+            $guidelines    = $this->build_guidelines_text('tax_' . $taxonomy);
+            $content_rules = $this->build_content_rules_text('tax_' . $taxonomy);
         }
-        $guidelines = trim($guidelines);
-
-        $context_parts = array_filter(array_map('trim', gm2_get_seo_context()));
-        $context_block = '';
-        if ($context_parts) {
-            $pairs = [];
-            foreach ($context_parts as $k => $v) {
-                $pairs[] = ucfirst(str_replace('_', ' ', $k)) . ': ' . $v;
-            }
-            $context_block = 'Site context: ' . implode('; ', $pairs);
-        }
+        $guidelines    = trim($guidelines);
+        $content_rules = trim($content_rules);
 
         $prompt  = '';
         if ($guidelines !== '') {
             $prompt .= "SEO guidelines:\n" . $guidelines . "\n\n";
         }
+        if ($content_rules !== '') {
+            $prompt .= "Content Rules:\n" . $content_rules . "\n\n";
+        }
         $prompt .= "Page title: {$title}\nURL: {$url}\n";
         $prompt .= "Existing SEO Title: {$seo_title}\nSEO Description: {$seo_description}\n";
         $prompt .= "Focus Keywords: {$focus}\nCanonical: {$canonical}\n";
-        if ($context_block !== '') {
-            $prompt .= $context_block . "\n";
-        }
         if ($extra_context !== '') {
             $prompt .= "Extra context: {$extra_context}\n";
         }
         if ($snippet !== '') {
-            $prompt .= "Content snippet: {$snippet}\n";
+            $prompt .= "Page HTML: {$snippet}\n";
         }
-        $prompt .= "Provide JSON with keys seo_title, description, focus_keywords, long_tail_keywords, seed_keywords, canonical, page_name, slug, content_suggestions, html_issues.";
+        $prompt .= "Check the above HTML and metadata for SEO best practices using the focus keywords and suggest improvements without removing existing information. Provide JSON with keys seo_title, description, focus_keywords, long_tail_keywords, seed_keywords, canonical, page_name, slug, updated_html, content_suggestions, html_issues.";
 
         $context = gm2_get_business_context_prompt();
         if ($context !== '') {
@@ -2871,21 +2900,21 @@ class Gm2_SEO_Admin {
         if ($guidelines !== '') {
             $prompt2 .= "SEO guidelines:\n" . $guidelines . "\n\n";
         }
+        if ($content_rules !== '') {
+            $prompt2 .= "Content Rules:\n" . $content_rules . "\n\n";
+        }
         $prompt2 .= "Page title: {$title}\nURL: {$url}\n";
         $prompt2 .= "Focus Keyword: {$final_focus}\n";
         if ($final_long) {
             $prompt2 .= "Long-tail Keywords: " . implode(', ', $final_long) . "\n";
         }
-        if ($context_block !== '') {
-            $prompt2 .= $context_block . "\n";
-        }
         if ($extra_context !== '') {
             $prompt2 .= "Extra context: {$extra_context}\n";
         }
         if ($snippet !== '') {
-            $prompt2 .= "Content snippet: {$snippet}\n";
+            $prompt2 .= "Page HTML: {$snippet}\n";
         }
-        $prompt2 .= "Provide JSON with keys seo_title, description, focus_keywords, long_tail_keywords, canonical, page_name, slug, content_suggestions, html_issues.";
+        $prompt2 .= "Check the above HTML for SEO best practices and suggest improvements without removing meaning. Provide JSON with keys seo_title, description, focus_keywords, long_tail_keywords, canonical, page_name, slug, updated_html, content_suggestions, html_issues.";
 
         $context = gm2_get_business_context_prompt();
         if ($context !== '') {
