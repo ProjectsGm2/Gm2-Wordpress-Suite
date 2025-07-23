@@ -1,0 +1,15 @@
+.gm2-chatgpt-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.gm2-chatgpt-table th,
+.gm2-chatgpt-table td {
+    padding: 8px;
+    border: 1px solid #ccc;
+    text-align: left;
+}
+
+.gm2-chatgpt-table th {
+    background: #f1f1f1;
+}
