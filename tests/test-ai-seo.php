@@ -122,6 +122,18 @@ class AiResearchAjaxTest extends WP_Ajax_UnitTestCase {
         $this->assertSame('Parsed', $resp['data']['seo_title']);
     }
 
+    public function test_sanitize_ai_json_handles_newlines() {
+        $admin  = new Gm2_SEO_Admin();
+        $method = new ReflectionMethod(Gm2_SEO_Admin::class, 'sanitize_ai_json');
+        $method->setAccessible(true);
+
+        $raw  = "{ \"updated_html\": \"<p>line1\nline2</p>\" }";
+        $clean = $method->invoke($admin, $raw);
+        $data  = json_decode($clean, true);
+
+        $this->assertSame("<p>line1\nline2</p>", $data['updated_html']);
+    }
+
     public function test_ai_research_invalid_json_returns_error() {
         update_option('gm2_chatgpt_api_key', 'key');
         $filter = function($pre, $args, $url) {
