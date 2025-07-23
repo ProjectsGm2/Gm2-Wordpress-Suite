@@ -578,6 +578,13 @@ class Gm2_Admin {
         $resp_prefix   = 'ChatGPT response: ';
         $prompt = null;
         foreach ($lines as $line) {
+            $data = json_decode($line, true);
+            if (is_array($data) && isset($data['prompt']) && isset($data['response'])) {
+                $pairs[] = [ 'prompt' => $data['prompt'], 'response' => $data['response'] ];
+                continue;
+            }
+
+            // Fallback for legacy two-line log format
             if (strpos($line, $prompt_prefix) === 0) {
                 $prompt = substr($line, strlen($prompt_prefix));
             } elseif (strpos($line, $resp_prefix) === 0 && $prompt !== null) {
