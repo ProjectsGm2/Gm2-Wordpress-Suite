@@ -59,6 +59,12 @@ class Gm2_Admin {
         ];
 
         if ($hook === 'gm2_page_gm2-chatgpt') {
+            wp_enqueue_style(
+                'gm2-chatgpt-style',
+                GM2_PLUGIN_URL . 'admin/css/gm2-chatgpt.css',
+                [],
+                GM2_VERSION
+            );
             wp_enqueue_script(
                 'gm2-chatgpt',
                 GM2_PLUGIN_URL . 'admin/js/gm2-chatgpt.js',
