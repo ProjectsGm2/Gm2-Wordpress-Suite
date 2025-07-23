@@ -536,6 +536,11 @@ class Gm2_Admin {
         echo '<p><button class="button">' . esc_html__( 'Send', 'gm2-wordpress-suite' ) . '</button></p>';
         echo '</form>';
         echo '<pre id="gm2-chatgpt-output"></pre>';
+        if (get_option('gm2_enable_chatgpt_logging', '0') === '1' && file_exists(GM2_CHATGPT_LOG_FILE)) {
+            echo '<h2>' . esc_html__( 'ChatGPT Logs', 'gm2-wordpress-suite' ) . '</h2>';
+            $logs = file_get_contents(GM2_CHATGPT_LOG_FILE);
+            echo '<textarea readonly rows="10" class="large-text">' . esc_textarea($logs) . '</textarea>';
+        }
         echo '</div>';
     }
 
