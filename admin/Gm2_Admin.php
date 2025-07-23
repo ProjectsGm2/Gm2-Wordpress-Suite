@@ -552,14 +552,20 @@ class Gm2_Admin {
                 echo '<p>' . esc_html__( 'No logs found.', 'gm2-wordpress-suite' ) . '</p>';
             } else {
                 echo '<div class="gm2-chatgpt-logs">';
+                echo '<table class="widefat fixed gm2-chatgpt-table"><thead><tr><th>' . esc_html__( 'Prompt', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'Response', 'gm2-wordpress-suite' ) . '</th></tr></thead><tbody>';
                 foreach ($entries as $e) {
-                    echo '<div class="gm2-log-entry">';
+                    echo '<tr class="gm2-log-entry">';
+                    echo '<td>';
                     echo '<div class="gm2-log-toggle">' . esc_html__( 'Prompt sent', 'gm2-wordpress-suite' ) . '</div>';
                     echo '<pre class="gm2-log-content">' . esc_html($e['prompt']) . '</pre>';
+                    echo '</td>';
+                    echo '<td>';
                     echo '<div class="gm2-log-toggle">' . esc_html__( 'Response received', 'gm2-wordpress-suite' ) . '</div>';
                     echo '<pre class="gm2-log-content">' . esc_html($e['response']) . '</pre>';
-                    echo '</div>';
+                    echo '</td>';
+                    echo '</tr>';
                 }
+                echo '</tbody></table>';
                 echo '</div>';
             }
             if (file_exists(GM2_CHATGPT_LOG_FILE)) {
