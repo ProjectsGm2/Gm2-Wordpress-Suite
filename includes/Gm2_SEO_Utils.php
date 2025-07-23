@@ -112,22 +112,32 @@ namespace {
 
         $response = wp_remote_post($endpoint, $http_args);
 
+        $result = null;
         if (is_wp_error($response)) {
-            return $response;
+            $result = $response;
+        } else {
+            $status = wp_remote_retrieve_response_code($response);
+            $body   = wp_remote_retrieve_body($response);
+            if ($status !== 200) {
+                $data    = json_decode($body, true);
+                $message = $data['error']['message'] ?? 'Non-200 response';
+                $result  = new \WP_Error('api_error', $message);
+            } else {
+                if ($body === '') {
+                    $result = '';
+                } else {
+                    $data = json_decode($body, true);
+                    $result = $data['choices'][0]['message']['content'] ?? '';
+                }
+            }
         }
 
-        $status = wp_remote_retrieve_response_code($response);
-        $body   = wp_remote_retrieve_body($response);
-        if ($status !== 200) {
-            $data    = json_decode($body, true);
-            $message = $data['error']['message'] ?? 'Non-200 response';
-            return new \WP_Error('api_error', $message);
+        if (get_option('gm2_enable_chatgpt_logging', '0') === '1') {
+            $log_resp = is_wp_error($result) ? $result->get_error_message() : $result;
+            error_log('ChatGPT prompt: ' . $prompt);
+            error_log('ChatGPT response: ' . $log_resp);
         }
 
-        if ($body === '') {
-            return '';
-        }
-        $data = json_decode($body, true);
-        return $data['choices'][0]['message']['content'] ?? '';
+        return $result;
     }
 }
