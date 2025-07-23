@@ -112,8 +112,14 @@ class ChatGPTTest extends WP_UnitTestCase {
         $this->assertStringContainsString('gm2-log-entry', $out);
         $this->assertStringContainsString('Prompt sent', $out);
         $this->assertStringContainsString('Response received', $out);
-        $this->assertStringContainsString('hi', $out);
-        $this->assertStringContainsString("there\nbuddy", $out);
+        $this->assertStringContainsString(
+            '<pre class="gm2-log-content">hi</pre>',
+            $out
+        );
+        $this->assertStringContainsString(
+            "<pre class=\"gm2-log-content\">there\nbuddy</pre>",
+            $out
+        );
     }
 
     public function test_chatgpt_page_shows_no_logs_message() {
