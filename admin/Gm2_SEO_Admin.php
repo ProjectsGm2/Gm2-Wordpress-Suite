@@ -1959,6 +1959,24 @@ class Gm2_SEO_Admin {
     }
 
     /**
+     * Extract and clean a JSON object from a raw AI response.
+     *
+     * @param string $response Raw response text.
+     * @return string Clean JSON string ready for decoding.
+     */
+    private function sanitize_ai_json($response) {
+        if (preg_match('/\{.*\}/s', $response, $m)) {
+            $json = $m[0];
+        } else {
+            $json = $response;
+        }
+
+        return preg_replace_callback('/"(?:\\\\.|[^"\\\\])*"/s', function($matches) {
+            return str_replace("\n", "\\n", $matches[0]);
+        }, $json);
+    }
+
+    /**
      * Remove page builder wrapper markup leaving only semantic content tags.
      *
      * @param string $html Raw HTML output from the_content filter.
@@ -2554,13 +2572,10 @@ class Gm2_SEO_Admin {
             wp_send_json_error($resp->get_error_message());
         }
 
-        $data = json_decode($resp, true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            if (preg_match('/\{.*\}/s', $resp, $m)) {
-                $data = json_decode($m[0], true);
-            }
-        }
+        $clean = $this->sanitize_ai_json($resp);
+        $data  = json_decode($clean, true);
         if (json_last_error() !== JSON_ERROR_NONE || !is_array($data)) {
+            error_log('Content rules JSON decode error: ' . json_last_error_msg());
             wp_send_json_error( __( 'Invalid AI response', 'gm2-wordpress-suite' ) );
         }
 
@@ -2698,13 +2713,10 @@ class Gm2_SEO_Admin {
             wp_send_json_error($resp->get_error_message());
         }
 
-        $data = json_decode($resp, true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            if (preg_match('/\{.*\}/s', $resp, $m)) {
-                $data = json_decode($m[0], true);
-            }
-        }
+        $clean = $this->sanitize_ai_json($resp);
+        $data  = json_decode($clean, true);
         if (json_last_error() !== JSON_ERROR_NONE || !is_array($data)) {
+            error_log('Guideline rules JSON decode error: ' . json_last_error_msg());
             wp_send_json_error( __( 'Invalid AI response', 'gm2-wordpress-suite' ) );
         }
 
@@ -2933,27 +2945,11 @@ TEXT;
             wp_send_json_error(__('AI request failed', 'gm2-wordpress-suite'));
         }
 
-        try {
-            $data = json_decode($resp, true, 512, JSON_THROW_ON_ERROR);
-        } catch (\Throwable $e) {
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log('AI Research JSON decode failed: ' . $resp);
-                error_log('AI Research JSON error: ' . json_last_error_msg());
-            }
-            if (preg_match('/\{.*\}/s', $resp, $m)) {
-                try {
-                    $data = json_decode($m[0], true, 512, JSON_THROW_ON_ERROR);
-                } catch (\Throwable $e2) {
-                    error_log('AI Research JSON decode failed after extraction: ' . $m[0]);
-                    wp_send_json_error(__('Invalid AI response', 'gm2-wordpress-suite'));
-                }
-            } else {
-                wp_send_json_error(__('Invalid AI response', 'gm2-wordpress-suite'));
-            }
-        }
-
-        if (!is_array($data)) {
-            wp_send_json_error( __( 'Invalid AI response', 'gm2-wordpress-suite' ) );
+        $clean = $this->sanitize_ai_json($resp);
+        $data  = json_decode($clean, true);
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($data)) {
+            error_log('AI Research JSON decode error: ' . json_last_error_msg());
+            wp_send_json_error(__('Invalid AI response', 'gm2-wordpress-suite'));
         }
 
 
