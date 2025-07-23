@@ -15,4 +15,9 @@ jQuery(function($){
             }
         });
     });
+
+    // Toggle log visibility for prompt/response entries
+    $('.gm2-log-toggle').on('click', function(){
+        $(this).next('.gm2-log-content').toggle();
+    });
 });

@@ -551,11 +551,16 @@ class Gm2_Admin {
             if (empty($entries)) {
                 echo '<p>' . esc_html__( 'No logs found.', 'gm2-wordpress-suite' ) . '</p>';
             } else {
-                echo '<table class="widefat fixed"><thead><tr><th>' . esc_html__( 'Prompt', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'Response', 'gm2-wordpress-suite' ) . '</th></tr></thead><tbody>';
+                echo '<div class="gm2-chatgpt-logs">';
                 foreach ($entries as $e) {
-                    echo '<tr><td>' . esc_html($e['prompt']) . '</td><td>' . esc_html($e['response']) . '</td></tr>';
+                    echo '<div class="gm2-log-entry">';
+                    echo '<div class="gm2-log-toggle">' . esc_html__( 'Prompt sent', 'gm2-wordpress-suite' ) . '</div>';
+                    echo '<pre class="gm2-log-content">' . esc_html($e['prompt']) . '</pre>';
+                    echo '<div class="gm2-log-toggle">' . esc_html__( 'Response received', 'gm2-wordpress-suite' ) . '</div>';
+                    echo '<pre class="gm2-log-content">' . esc_html($e['response']) . '</pre>';
+                    echo '</div>';
                 }
-                echo '</tbody></table>';
+                echo '</div>';
             }
             if (file_exists(GM2_CHATGPT_LOG_FILE)) {
                 echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
