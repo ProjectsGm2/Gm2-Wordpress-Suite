@@ -21,4 +21,8 @@ Before using the Business Context Prompt builder make sure the ChatGPT feature i
 
 ## ChatGPT Logging
 
-When logging is enabled, the **Gm2 → ChatGPT** page shows a table of recent prompts and responses. This data is written to `chatgpt.log` inside the plugin directory. Use the **Enable Logging** checkbox on the ChatGPT settings page to turn logging on or off. If you need to clear the entries, click the **Reset Logs** button below the table.
+When logging is enabled, the **Gm2 → ChatGPT** page shows a table of recent prompts and responses. This data is written to `chatgpt.log` inside the plugin directory. Use the **Enable Logging** checkbox on the ChatGPT settings page to turn logging on or off.
+
+Each log row now includes small expand/collapse controls. Click the **Prompt sent** or **Response received** label to toggle the full text of that entry. This makes it easier to browse long conversations without leaving the page cluttered.
+
+If you need to clear the log and start over, click the **Reset Logs** button below the table.
