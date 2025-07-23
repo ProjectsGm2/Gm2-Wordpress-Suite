@@ -134,8 +134,11 @@ namespace {
 
         if (get_option('gm2_enable_chatgpt_logging', '0') === '1') {
             $log_resp = is_wp_error($result) ? $result->get_error_message() : $result;
-            error_log('ChatGPT prompt: ' . $prompt . PHP_EOL, 3, GM2_CHATGPT_LOG_FILE);
-            error_log('ChatGPT response: ' . $log_resp . PHP_EOL, 3, GM2_CHATGPT_LOG_FILE);
+            $entry = wp_json_encode([
+                'prompt'   => $prompt,
+                'response' => $log_resp,
+            ]);
+            error_log($entry . PHP_EOL, 3, GM2_CHATGPT_LOG_FILE);
         }
 
         return $result;

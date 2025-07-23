@@ -98,8 +98,11 @@ class ChatGPTTest extends WP_UnitTestCase {
     public function test_chatgpt_page_shows_logs_when_file_exists() {
         $admin = new Gm2_Admin();
         update_option('gm2_enable_chatgpt_logging', '1');
-        $log = "ChatGPT prompt: hi\nChatGPT response: there\n";
-        file_put_contents(GM2_CHATGPT_LOG_FILE, $log);
+        $entry = json_encode([
+            'prompt'   => 'hi',
+            'response' => "there\nbuddy",
+        ]) . "\n";
+        file_put_contents(GM2_CHATGPT_LOG_FILE, $entry);
         ob_start();
         $admin->display_chatgpt_page();
         $out = ob_get_clean();
@@ -107,7 +110,7 @@ class ChatGPTTest extends WP_UnitTestCase {
         update_option('gm2_enable_chatgpt_logging', '0');
         $this->assertStringContainsString('ChatGPT Logs', $out);
         $this->assertStringContainsString('<table', $out);
-        $this->assertStringContainsString('<tr><td>hi</td><td>there</td></tr>', $out);
+        $this->assertStringContainsString("<tr><td>hi</td><td>there\nbuddy</td></tr>", $out);
     }
 
     public function test_chatgpt_page_shows_no_logs_message() {
@@ -124,8 +127,8 @@ class ChatGPTTest extends WP_UnitTestCase {
     public function test_chatgpt_page_contains_reset_button() {
         $admin = new Gm2_Admin();
         update_option('gm2_enable_chatgpt_logging', '1');
-        $log = "ChatGPT prompt: hi\nChatGPT response: there\n";
-        file_put_contents(GM2_CHATGPT_LOG_FILE, $log);
+        $entry = json_encode(['prompt' => 'hi', 'response' => 'there']) . "\n";
+        file_put_contents(GM2_CHATGPT_LOG_FILE, $entry);
         ob_start();
         $admin->display_chatgpt_page();
         $out = ob_get_clean();
