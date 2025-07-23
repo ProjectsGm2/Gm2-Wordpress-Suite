@@ -28,6 +28,7 @@ class Gm2_Admin {
         if ($this->chatgpt_enabled) {
             add_action('admin_post_gm2_chatgpt_settings', [$this, 'handle_chatgpt_form']);
             add_action('wp_ajax_gm2_chatgpt_prompt', [$this, 'ajax_chatgpt_prompt']);
+            add_action('admin_post_gm2_reset_chatgpt_logs', [$this, 'handle_reset_chatgpt_logs']);
         }
         add_action('admin_notices', [$this, 'maybe_show_chatgpt_notice']);
     }
@@ -496,6 +497,8 @@ class Gm2_Admin {
         $notice = '';
         if (!empty($_GET['updated'])) {
             $notice = '<div class="updated notice"><p>' . esc_html__('Settings saved.', 'gm2-wordpress-suite') . '</p></div>';
+        } elseif (!empty($_GET['logs_reset'])) {
+            $notice = '<div class="updated notice"><p>' . esc_html__('Logs reset.', 'gm2-wordpress-suite') . '</p></div>';
         }
 
         echo '<div class="wrap">';
@@ -540,6 +543,11 @@ class Gm2_Admin {
             echo '<h2>' . esc_html__( 'ChatGPT Logs', 'gm2-wordpress-suite' ) . '</h2>';
             $logs = file_get_contents(GM2_CHATGPT_LOG_FILE);
             echo '<textarea readonly rows="10" class="large-text">' . esc_textarea($logs) . '</textarea>';
+            echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
+            wp_nonce_field('gm2_reset_chatgpt_logs');
+            echo '<input type="hidden" name="action" value="gm2_reset_chatgpt_logs" />';
+            submit_button( esc_html__( 'Reset Logs', 'gm2-wordpress-suite' ), 'delete' );
+            echo '</form>';
         }
         echo '</div>';
     }
@@ -565,6 +573,24 @@ class Gm2_Admin {
         update_option('gm2_enable_chatgpt_logging', $logging);
 
         wp_redirect(admin_url('admin.php?page=gm2-chatgpt&updated=1'));
+        if (defined('GM2_TESTING') && GM2_TESTING) {
+            return;
+        }
+        exit;
+    }
+
+    public function handle_reset_chatgpt_logs() {
+        if (!current_user_can('manage_options')) {
+            wp_die( esc_html__( 'Permission denied', 'gm2-wordpress-suite' ) );
+        }
+
+        check_admin_referer('gm2_reset_chatgpt_logs');
+
+        if (defined('GM2_CHATGPT_LOG_FILE') && file_exists(GM2_CHATGPT_LOG_FILE)) {
+            file_put_contents(GM2_CHATGPT_LOG_FILE, '');
+        }
+
+        wp_redirect(admin_url('admin.php?page=gm2-chatgpt&logs_reset=1'));
         if (defined('GM2_TESTING') && GM2_TESTING) {
             return;
         }
