@@ -131,7 +131,8 @@ jQuery(function($){
             focus_keywords: labels.focusKeywords || 'Focus Keywords',
             long_tail_keywords: labels.longTailKeywords || 'Long Tail Keywords',
             canonical: labels.canonical || 'Canonical URL',
-            page_name: labels.pageName || 'Page Name'
+            page_name: labels.pageName || 'Page Name',
+            updated_html: labels.updatedHtml || 'Updated HTML'
         };
         if(typeof data.slug !== 'undefined'){
             fields.slug = labels.slug || 'Slug';
