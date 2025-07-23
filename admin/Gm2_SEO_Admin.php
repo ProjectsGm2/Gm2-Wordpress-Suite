@@ -1904,17 +1904,6 @@ class Gm2_SEO_Admin {
             wp_reset_postdata();
             $post = $prev_post;
 
-            $url = get_term_link($term_id, $taxonomy);
-            if (!is_wp_error($url)) {
-                $response = wp_remote_get($url, ['timeout' => 10]);
-                if (!is_wp_error($response)) {
-                    $body = wp_remote_retrieve_body($response);
-                    if ($body !== '') {
-                        $html .= "\n" . $body;
-                    }
-                }
-            }
-
             return $html;
         }
         return '';
