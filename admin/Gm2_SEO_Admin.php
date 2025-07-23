@@ -2936,7 +2936,10 @@ TEXT;
         try {
             $data = json_decode($resp, true, 512, JSON_THROW_ON_ERROR);
         } catch (\Throwable $e) {
-            error_log('AI Research JSON decode failed: ' . $resp);
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('AI Research JSON decode failed: ' . $resp);
+                error_log('AI Research JSON error: ' . json_last_error_msg());
+            }
             if (preg_match('/\{.*\}/s', $resp, $m)) {
                 try {
                     $data = json_decode($m[0], true, 512, JSON_THROW_ON_ERROR);
@@ -3068,7 +3071,10 @@ TEXT;
         try {
             $data2 = json_decode($resp2, true, 512, JSON_THROW_ON_ERROR);
         } catch (\Throwable $e) {
-            error_log('AI Research JSON decode failed: ' . $resp2);
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('AI Research JSON decode failed: ' . $resp2);
+                error_log('AI Research JSON error: ' . json_last_error_msg());
+            }
             if (preg_match('/\{.*\}/s', $resp2, $m)) {
                 try {
                     $data2 = json_decode($m[0], true, 512, JSON_THROW_ON_ERROR);
