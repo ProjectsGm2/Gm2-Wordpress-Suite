@@ -18,3 +18,7 @@ Existing prompt logic automatically includes these options via `gm2_get_seo_cont
 ## Building the Business Context Prompt
 
 Before using the Business Context Prompt builder make sure the ChatGPT feature is enabled and your API key and model are configured under **Gm2 → ChatGPT**. Then open **SEO → Context** and click **Generate AI Prompt** below the Business Context Prompt field. The plugin assembles a single prompt from all of your Context answers and sends it to ChatGPT. The resulting text appears in the textarea ready for review and editing.
+
+## ChatGPT Logging
+
+When logging is enabled, the **Gm2 → ChatGPT** page shows a table of recent prompts and responses. This data is written to `chatgpt.log` inside the plugin directory. Use the **Enable Logging** checkbox on the ChatGPT settings page to turn logging on or off. If you need to clear the entries, click the **Reset Logs** button below the table.
