@@ -98,21 +98,35 @@ class ChatGPTTest extends WP_UnitTestCase {
     public function test_chatgpt_page_shows_logs_when_file_exists() {
         $admin = new Gm2_Admin();
         update_option('gm2_enable_chatgpt_logging', '1');
-        file_put_contents(GM2_CHATGPT_LOG_FILE, 'log entry');
+        $log = "ChatGPT prompt: hi\nChatGPT response: there\n";
+        file_put_contents(GM2_CHATGPT_LOG_FILE, $log);
         ob_start();
         $admin->display_chatgpt_page();
         $out = ob_get_clean();
         @unlink(GM2_CHATGPT_LOG_FILE);
         update_option('gm2_enable_chatgpt_logging', '0');
         $this->assertStringContainsString('ChatGPT Logs', $out);
-        $this->assertStringContainsString('<textarea', $out);
-        $this->assertStringContainsString('log entry', $out);
+        $this->assertStringContainsString('<table', $out);
+        $this->assertStringContainsString('hi', $out);
+        $this->assertStringContainsString('there', $out);
+    }
+
+    public function test_chatgpt_page_shows_no_logs_message() {
+        $admin = new Gm2_Admin();
+        update_option('gm2_enable_chatgpt_logging', '1');
+        @unlink(GM2_CHATGPT_LOG_FILE);
+        ob_start();
+        $admin->display_chatgpt_page();
+        $out = ob_get_clean();
+        update_option('gm2_enable_chatgpt_logging', '0');
+        $this->assertStringContainsString('No logs found.', $out);
     }
 
     public function test_chatgpt_page_contains_reset_button() {
         $admin = new Gm2_Admin();
         update_option('gm2_enable_chatgpt_logging', '1');
-        file_put_contents(GM2_CHATGPT_LOG_FILE, 'log entry');
+        $log = "ChatGPT prompt: hi\nChatGPT response: there\n";
+        file_put_contents(GM2_CHATGPT_LOG_FILE, $log);
         ob_start();
         $admin->display_chatgpt_page();
         $out = ob_get_clean();
