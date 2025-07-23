@@ -85,7 +85,8 @@ class AiResearchAjaxTest extends WP_Ajax_UnitTestCase {
         }
         remove_filter('pre_http_request', $filter, 10);
 
-        $this->assertStringContainsString('Content snippet: Hello', $captured);
+        $this->assertStringContainsString('[PAGE HTML]', $captured);
+        $this->assertStringContainsString('Hello', $captured);
     }
 
     public function test_ai_research_parses_json_with_extra_text() {

@@ -2765,28 +2765,63 @@ class Gm2_SEO_Admin {
         $guidelines    = trim($guidelines);
         $content_rules = trim($content_rules);
 
+        $context = gm2_get_business_context_prompt();
+
         $prompt  = '';
+        if ($context !== '') {
+            $prompt .= "[BUSINESS CONTEXT]\n" . $context . "\n\n";
+        }
         if ($guidelines !== '') {
-            $prompt .= "SEO guidelines:\n" . $guidelines . "\n\n";
+            $prompt .= "[SEO GUIDELINES]\n" . $guidelines . "\n\n";
         }
         if ($content_rules !== '') {
-            $prompt .= "Content Rules:\n" . $content_rules . "\n\n";
+            $prompt .= "[CONTENT RULES]\n" . $content_rules . "\n\n";
         }
-        $prompt .= "Page title: {$title}\nURL: {$url}\n";
+
+        $prompt .= "[PAGE DETAILS]\n";
+        $prompt .= "Title: {$title}\nURL: {$url}\n";
         $prompt .= "Existing SEO Title: {$seo_title}\nSEO Description: {$seo_description}\n";
         $prompt .= "Focus Keywords: {$focus}\nCanonical: {$canonical}\n";
+
         if ($extra_context !== '') {
             $prompt .= "Extra context: {$extra_context}\n";
         }
-        if ($snippet !== '') {
-            $prompt .= "Page HTML: {$snippet}\n";
-        }
-        $prompt .= "Check the above HTML and metadata for SEO best practices using the focus keywords and suggest improvements without removing existing information. Provide JSON with keys seo_title, description, focus_keywords, long_tail_keywords, seed_keywords, canonical, page_name, slug, updated_html, content_suggestions, html_issues.";
 
-        $context = gm2_get_business_context_prompt();
-        if ($context !== '') {
-            $prompt = $context . "\n\n" . $prompt;
+        if ($snippet !== '') {
+            $prompt .= "\n[PAGE HTML]\n" . $snippet . "\n";
         }
+
+        $prompt .= "\n[SEO TASK]\n";
+        $prompt .= <<<TEXT
+Act as an advanced SEO expert. Your goal is to optimize this page to rank in the **top 3 search results on Google** for the provided focus keywords.
+
+Analyze the provided HTML, metadata, business context, and guidelines. Then improve the SEO Title, Meta Description, Canonical URL, Focus Keywords, and Long-Tail Keywords to:
+- Match user search intent in this niche
+- Improve CTR and topical relevance
+- Preserve brand tone and factual accuracy
+- Strengthen keyword targeting
+- Avoid keyword cannibalization and duplication
+- Follow content rules and business-specific SEO strategy
+- Preserve essential existing content but enhance performance-driven copy where needed
+
+Return a clean, structured JSON object with the following keys:
+
+{
+  "seo_title": "...",
+  "description": "...",
+  "focus_keywords": ["...", "..."],
+  "long_tail_keywords": ["...", "..."],
+  "seed_keywords": ["...", "..."],
+  "canonical": "...",
+  "page_name": "...",
+  "slug": "...",
+  "updated_html": "...",  // edited HTML version with suggested on-page changes
+  "content_suggestions": ["...", "..."], // explain key improvements
+  "html_issues": ["...", "..."] // if any issues exist in tags, metadata, headings, alt tags, etc.
+}
+
+Only output this JSON. Do not include any narrative or explanation outside the JSON.
+TEXT;
 
         $chat = new Gm2_ChatGPT();
         try {
