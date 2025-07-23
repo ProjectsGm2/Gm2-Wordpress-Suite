@@ -94,6 +94,20 @@ class ChatGPTTest extends WP_UnitTestCase {
 
         $this->assertSame('1', get_option('gm2_enable_chatgpt_logging'));
     }
+
+    public function test_chatgpt_page_shows_logs_when_file_exists() {
+        $admin = new Gm2_Admin();
+        update_option('gm2_enable_chatgpt_logging', '1');
+        file_put_contents(GM2_CHATGPT_LOG_FILE, 'log entry');
+        ob_start();
+        $admin->display_chatgpt_page();
+        $out = ob_get_clean();
+        @unlink(GM2_CHATGPT_LOG_FILE);
+        update_option('gm2_enable_chatgpt_logging', '0');
+        $this->assertStringContainsString('ChatGPT Logs', $out);
+        $this->assertStringContainsString('<textarea', $out);
+        $this->assertStringContainsString('log entry', $out);
+    }
 }
 
 class ChatGPTAjaxTest extends WP_Ajax_UnitTestCase {
