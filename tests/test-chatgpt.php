@@ -107,8 +107,7 @@ class ChatGPTTest extends WP_UnitTestCase {
         update_option('gm2_enable_chatgpt_logging', '0');
         $this->assertStringContainsString('ChatGPT Logs', $out);
         $this->assertStringContainsString('<table', $out);
-        $this->assertStringContainsString('hi', $out);
-        $this->assertStringContainsString('there', $out);
+        $this->assertStringContainsString('<tr><td>hi</td><td>there</td></tr>', $out);
     }
 
     public function test_chatgpt_page_shows_no_logs_message() {
