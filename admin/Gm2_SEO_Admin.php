@@ -1985,6 +1985,39 @@ class Gm2_SEO_Admin {
             'pre' => [],
             'br' => [],
         ];
+
+        if (class_exists('\\DOMDocument') && function_exists('libxml_use_internal_errors')) {
+            $doc = new \DOMDocument();
+            libxml_use_internal_errors(true);
+            $doc->loadHTML('<?xml encoding="utf-8" ?>' . $html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+            libxml_clear_errors();
+
+            // Remove style and script tags.
+            foreach (['style', 'script'] as $tag) {
+                $nodes = $doc->getElementsByTagName($tag);
+                for ($i = $nodes->length - 1; $i >= 0; $i--) {
+                    $node = $nodes->item($i);
+                    $node->parentNode->removeChild($node);
+                }
+            }
+
+            // Remove HTML comments.
+            $xpath = new \DOMXPath($doc);
+            foreach ($xpath->query('//comment()') as $comment) {
+                $comment->parentNode->removeChild($comment);
+            }
+
+            $body = $doc->getElementsByTagName('body')->item(0);
+            $html = '';
+            if ($body) {
+                foreach ($body->childNodes as $child) {
+                    $html .= $doc->saveHTML($child);
+                }
+            } else {
+                $html = $doc->saveHTML();
+            }
+        }
+
         return wp_kses($html, $allowed);
     }
 
