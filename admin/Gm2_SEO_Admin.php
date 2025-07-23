@@ -2018,6 +2018,27 @@ class Gm2_SEO_Admin {
     }
 
     /**
+     * Build a newline-separated content rules string from stored rules.
+     *
+     * @param string $base Option base like post_{type} or tax_{taxonomy}.
+     * @return string
+     */
+    private function build_content_rules_text($base) {
+        $rules = get_option('gm2_content_rules', []);
+        if (!isset($rules[$base]) || !is_array($rules[$base])) {
+            return '';
+        }
+        $parts = [];
+        foreach ($rules[$base] as $text) {
+            $flat = $this->flatten_rule_value($text);
+            if ($flat !== '') {
+                $parts[] = $flat;
+            }
+        }
+        return implode("\n", $parts);
+    }
+
+    /**
      * Choose the best focus and long-tail keywords from Keyword Planner ideas.
      *
      * @param array $ideas Raw ideas array from Keyword Planner.
@@ -2733,16 +2754,23 @@ class Gm2_SEO_Admin {
         $snippet     = trim($html);
 
         $guidelines = '';
+        $content_rules = '';
         if ($post_id && !empty($post)) {
-            $guidelines = $this->build_guidelines_text('post_' . $post->post_type);
+            $guidelines    = $this->build_guidelines_text('post_' . $post->post_type);
+            $content_rules = $this->build_content_rules_text('post_' . $post->post_type);
         } elseif ($term_id && $taxonomy) {
-            $guidelines = $this->build_guidelines_text('tax_' . $taxonomy);
+            $guidelines    = $this->build_guidelines_text('tax_' . $taxonomy);
+            $content_rules = $this->build_content_rules_text('tax_' . $taxonomy);
         }
-        $guidelines = trim($guidelines);
+        $guidelines    = trim($guidelines);
+        $content_rules = trim($content_rules);
 
         $prompt  = '';
         if ($guidelines !== '') {
             $prompt .= "SEO guidelines:\n" . $guidelines . "\n\n";
+        }
+        if ($content_rules !== '') {
+            $prompt .= "Content Rules:\n" . $content_rules . "\n\n";
         }
         $prompt .= "Page title: {$title}\nURL: {$url}\n";
         $prompt .= "Existing SEO Title: {$seo_title}\nSEO Description: {$seo_description}\n";
@@ -2871,6 +2899,9 @@ class Gm2_SEO_Admin {
         $prompt2 = '';
         if ($guidelines !== '') {
             $prompt2 .= "SEO guidelines:\n" . $guidelines . "\n\n";
+        }
+        if ($content_rules !== '') {
+            $prompt2 .= "Content Rules:\n" . $content_rules . "\n\n";
         }
         $prompt2 .= "Page title: {$title}\nURL: {$url}\n";
         $prompt2 .= "Focus Keyword: {$final_focus}\n";
