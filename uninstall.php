@@ -122,3 +122,7 @@ global $wpdb;
 $table_name = $wpdb->prefix . 'gm2_suite_data';
 $wpdb->query( "DROP TABLE IF EXISTS {$table_name}" );
 
+if (defined('GM2_CHATGPT_LOG_FILE') && file_exists(GM2_CHATGPT_LOG_FILE)) {
+    @unlink(GM2_CHATGPT_LOG_FILE);
+}
+

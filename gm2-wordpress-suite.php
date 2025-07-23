@@ -18,6 +18,7 @@ defined('ABSPATH') or die('No script kiddies please!');
 define('GM2_VERSION', '1.6.16');
 define('GM2_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('GM2_PLUGIN_URL', plugin_dir_url(__FILE__));
+define('GM2_CHATGPT_LOG_FILE', GM2_PLUGIN_DIR . 'chatgpt.log');
 define('GM2_CONTENT_RULES_VERSION', 2);
 define('GM2_GUIDELINE_RULES_VERSION', 2);
 if (!defined('GM2_GCLOUD_PROJECT_ID')) {
