@@ -539,17 +539,48 @@ class Gm2_Admin {
         echo '<p><button class="button">' . esc_html__( 'Send', 'gm2-wordpress-suite' ) . '</button></p>';
         echo '</form>';
         echo '<pre id="gm2-chatgpt-output"></pre>';
-        if (get_option('gm2_enable_chatgpt_logging', '0') === '1' && file_exists(GM2_CHATGPT_LOG_FILE)) {
+        if (get_option('gm2_enable_chatgpt_logging', '0') === '1') {
             echo '<h2>' . esc_html__( 'ChatGPT Logs', 'gm2-wordpress-suite' ) . '</h2>';
-            $logs = file_get_contents(GM2_CHATGPT_LOG_FILE);
-            echo '<textarea readonly rows="10" class="large-text">' . esc_textarea($logs) . '</textarea>';
-            echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
-            wp_nonce_field('gm2_reset_chatgpt_logs');
-            echo '<input type="hidden" name="action" value="gm2_reset_chatgpt_logs" />';
-            submit_button( esc_html__( 'Reset Logs', 'gm2-wordpress-suite' ), 'delete' );
-            echo '</form>';
+            $entries = $this->parse_chatgpt_logs();
+            if (empty($entries)) {
+                echo '<p>' . esc_html__( 'No logs found.', 'gm2-wordpress-suite' ) . '</p>';
+            } else {
+                echo '<table class="widefat fixed"><thead><tr><th>' . esc_html__( 'Prompt', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'Response', 'gm2-wordpress-suite' ) . '</th></tr></thead><tbody>';
+                foreach ($entries as $e) {
+                    echo '<tr><td>' . esc_html($e['prompt']) . '</td><td>' . esc_html($e['response']) . '</td></tr>';
+                }
+                echo '</tbody></table>';
+            }
+            if (file_exists(GM2_CHATGPT_LOG_FILE)) {
+                echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
+                wp_nonce_field('gm2_reset_chatgpt_logs');
+                echo '<input type="hidden" name="action" value="gm2_reset_chatgpt_logs" />';
+                submit_button( esc_html__( 'Reset Logs', 'gm2-wordpress-suite' ), 'delete' );
+                echo '</form>';
+            }
         }
         echo '</div>';
+    }
+
+    private function parse_chatgpt_logs() {
+        $pairs = [];
+        if (!defined('GM2_CHATGPT_LOG_FILE') || !file_exists(GM2_CHATGPT_LOG_FILE)) {
+            return $pairs;
+        }
+        $lines = file(GM2_CHATGPT_LOG_FILE, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        $prompt_prefix = 'ChatGPT prompt: ';
+        $resp_prefix   = 'ChatGPT response: ';
+        $prompt = null;
+        foreach ($lines as $line) {
+            if (strpos($line, $prompt_prefix) === 0) {
+                $prompt = substr($line, strlen($prompt_prefix));
+            } elseif (strpos($line, $resp_prefix) === 0 && $prompt !== null) {
+                $resp = substr($line, strlen($resp_prefix));
+                $pairs[] = [ 'prompt' => $prompt, 'response' => $resp ];
+                $prompt = null;
+            }
+        }
+        return $pairs;
     }
 
     public function handle_chatgpt_form() {
