@@ -1883,6 +1883,7 @@ class Gm2_SEO_Admin {
                     $content = $post_obj->post_excerpt . "\n\n" . $content;
                 }
                 $html = apply_filters('the_content', $content);
+                $html = $this->sanitize_snippet_html($html);
                 wp_reset_postdata();
                 $post = $prev_post;
                 return $html;
@@ -1901,6 +1902,7 @@ class Gm2_SEO_Admin {
             $post      = $post_obj;
             setup_postdata($post);
             $html = apply_filters('the_content', $desc);
+            $html = $this->sanitize_snippet_html($html);
             wp_reset_postdata();
             $post = $prev_post;
 
@@ -1954,6 +1956,36 @@ class Gm2_SEO_Admin {
             return $m[0];
         }
         return substr($text, 0, $length);
+    }
+
+    /**
+     * Remove page builder wrapper markup leaving only semantic content tags.
+     *
+     * @param string $html Raw HTML output from the_content filter.
+     * @return string Sanitized snippet HTML.
+     */
+    private function sanitize_snippet_html($html) {
+        $allowed = [
+            'h1' => [],
+            'h2' => [],
+            'h3' => [],
+            'h4' => [],
+            'h5' => [],
+            'h6' => [],
+            'p'  => [],
+            'ul' => [],
+            'ol' => [],
+            'li' => [],
+            'strong' => [],
+            'em' => [],
+            'a' => [ 'href' => true, 'title' => true ],
+            'img' => [ 'src' => true, 'alt' => true ],
+            'blockquote' => [],
+            'code' => [],
+            'pre' => [],
+            'br' => [],
+        ];
+        return wp_kses($html, $allowed);
     }
 
     /**
