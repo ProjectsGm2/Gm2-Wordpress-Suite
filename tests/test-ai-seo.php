@@ -830,4 +830,47 @@ class AiResearchErrorHandlingTest extends WP_Ajax_UnitTestCase {
         $this->assertSame('AI response contained no seed keywords—using generated suggestions.', $resp['data']['kwp_notice']);
         $this->assertStringContainsString('alpha', $captured);
     }
+
+    public function test_seed_keywords_array_is_accepted() {
+        update_option('gm2_chatgpt_api_key', 'key');
+
+        $step = 0;
+        $filter = function($pre, $args, $url) use (&$step) {
+            if ($url === 'https://api.openai.com/v1/chat/completions') {
+                if ($step === 0) {
+                    $step++;
+                    return [
+                        'response' => ['code' => 200],
+                        'body' => json_encode([
+                            'choices' => [ ['message' => ['content' => json_encode(['seed_keywords' => ['a','b']])]] ]
+                        ])
+                    ];
+                }
+                return [
+                    'response' => ['code' => 200],
+                    'body' => json_encode([
+                        'choices' => [ ['message' => ['content' => json_encode(['seo_title' => 'Title'])]] ]
+                    ])
+                ];
+            }
+            return false;
+        };
+        add_filter('pre_http_request', $filter, 10, 3);
+
+        $post_id = self::factory()->post->create(['post_title' => 'Post', 'post_content' => 'Content']);
+
+        $this->_setRole('administrator');
+        $_POST['post_id'] = $post_id;
+        $_POST['_ajax_nonce'] = wp_create_nonce('gm2_ai_research');
+        $_REQUEST['_ajax_nonce'] = $_POST['_ajax_nonce'];
+        try { $this->_handleAjax('gm2_ai_research'); } catch (WPAjaxDieContinueException $e) {}
+        remove_filter('pre_http_request', $filter, 10);
+
+        $resp = json_decode($this->_last_response, true);
+        $this->assertTrue($resp['success']);
+        $this->assertSame('Title', $resp['data']['seo_title']);
+        $this->assertSame('a', $resp['data']['focus_keywords']);
+        $this->assertContains('b', $resp['data']['long_tail_keywords']);
+        $this->assertSame('a, b', $resp['data']['seed_keywords']);
+    }
 }
