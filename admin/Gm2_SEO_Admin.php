@@ -3724,6 +3724,7 @@ class Gm2_SEO_Admin {
                 'ajax_url' => admin_url('admin-ajax.php'),
                 'term_id'  => isset($_GET['tag_ID']) ? absint($_GET['tag_ID']) : 0,
                 'taxonomy' => $screen->taxonomy,
+                'loading'  => __( 'Researching...', 'gm2-wordpress-suite' ),
             ]
         );
         wp_enqueue_style(

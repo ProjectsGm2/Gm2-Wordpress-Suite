@@ -13,6 +13,9 @@ jQuery(function($){
         var $btn = $(this);
         var $ta = $btn.closest('p').prev('textarea');
         var name = $('#tag-name').val() || $('#name').val() || '';
+        var loadingText = (window.gm2TaxDesc && gm2TaxDesc.loading) ? gm2TaxDesc.loading : 'Researching...';
+        var originalText = $btn.text();
+        $btn.prop('disabled', true).text(loadingText);
         $.post(gm2TaxDesc.ajax_url, {
             action: 'gm2_ai_generate_tax_description',
             term_id: gm2TaxDesc.term_id,
@@ -29,6 +32,8 @@ jQuery(function($){
             }
         }).fail(function(){
             alert('Request failed');
+        }).always(function(){
+            $btn.prop('disabled', false).text(originalText);
         });
     });
 });
