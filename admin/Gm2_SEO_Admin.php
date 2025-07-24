@@ -1965,8 +1965,25 @@ class Gm2_SEO_Admin {
      * @return string Clean JSON string ready for decoding.
      */
     private function sanitize_ai_json($response) {
-        if (preg_match('/\{(?:[^{}]|(?R))*\}/s', $response, $m)) {
-            $json = $m[0];
+        $start = strpos($response, '{');
+        $end   = strrpos($response, '}');
+
+        if ($start !== false && $end !== false && $end > $start) {
+            $json    = substr($response, $start, $end - $start + 1);
+            $trimmed = $json;
+
+            while ($trimmed !== '') {
+                json_decode($trimmed);
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    $json = $trimmed;
+                    break;
+                }
+                $pos = strrpos($trimmed, '}');
+                if ($pos === false) {
+                    break;
+                }
+                $trimmed = substr($trimmed, 0, $pos);
+            }
         } else {
             $json = $response;
         }

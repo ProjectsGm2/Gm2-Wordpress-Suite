@@ -179,6 +179,19 @@ class AiResearchAjaxTest extends WP_Ajax_UnitTestCase {
         $this->assertSame("<p>line1\nline2</p>", $data['updated_html']);
     }
 
+    public function test_sanitize_ai_json_handles_braces_in_quotes() {
+        $admin  = new Gm2_SEO_Admin();
+        $method = new ReflectionMethod(Gm2_SEO_Admin::class, 'sanitize_ai_json');
+        $method->setAccessible(true);
+
+        $raw  = '{ "updated_html": "<p>{example}</p>" }';
+        $clean = $method->invoke($admin, $raw);
+        $data  = json_decode($clean, true);
+
+        $this->assertNotNull($data);
+        $this->assertSame('<p>{example}</p>', $data['updated_html']);
+    }
+
     public function test_sanitize_ai_json_converts_braced_lists() {
         $admin  = new Gm2_SEO_Admin();
         $method = new ReflectionMethod(Gm2_SEO_Admin::class, 'sanitize_ai_json');
