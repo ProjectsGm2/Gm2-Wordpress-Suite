@@ -10,8 +10,20 @@ jQuery(function($){
         if(!ids.length) return;
         ids.forEach(function(id){
             var row=$('#gm2-row-'+id);row.find('.gm2-result').text('...');
-            $.post(gm2BulkAi.ajax_url,{action:'gm2_ai_research',post_id:id,_ajax_nonce:gm2BulkAi.nonce})
+            // Use $.ajax so jQuery handles JSON parsing for us
+            $.ajax({
+                url: gm2BulkAi.ajax_url,
+                method: 'POST',
+                data: {action:'gm2_ai_research',post_id:id,_ajax_nonce:gm2BulkAi.nonce},
+                dataType: 'json'
+            })
             .done(function(resp){
+                if(typeof resp === 'string'){
+                    try{ resp = JSON.parse(resp); }catch(e){
+                        row.find('.gm2-result').text('Invalid JSON response');
+                        return;
+                    }
+                }
                 if(resp&&resp.success&&resp.data){
                     var html='';
                     if(resp.data.seo_title){html+='<p><label><input type="checkbox" class="gm2-apply" data-field="seo_title" data-value="'+resp.data.seo_title.replace(/"/g,'&quot;')+'"> '+resp.data.seo_title+'</label></p>';}
@@ -26,6 +38,9 @@ jQuery(function($){
                 var msg = (jqXHR && jqXHR.responseJSON && jqXHR.responseJSON.data)
                     ? jqXHR.responseJSON.data
                     : (jqXHR && jqXHR.responseText ? jqXHR.responseText : textStatus);
+                if(textStatus === 'parsererror'){
+                    msg = 'Invalid JSON response';
+                }
                 row.find('.gm2-result').text(msg || 'Error');
             });
         });
