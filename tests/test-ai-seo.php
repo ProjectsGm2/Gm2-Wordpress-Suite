@@ -122,6 +122,51 @@ class AiResearchAjaxTest extends WP_Ajax_UnitTestCase {
         $this->assertSame('Parsed', $resp['data']['seo_title']);
     }
 
+    public function test_ai_research_second_response_with_newlines_and_comments() {
+        update_option('gm2_chatgpt_api_key', 'key');
+
+        $first = ['seed_keywords' => 'alpha'];
+        $second_raw = "{ \"seo_title\": \"Line1\nLine2\", \"description\": \"Desc\" } // comment";
+        $step = 0;
+        $filter = function($pre, $args, $url) use (&$step, $first, $second_raw) {
+            if ($url === 'https://api.openai.com/v1/chat/completions') {
+                if ($step === 0) {
+                    $step++;
+                    return [
+                        'response' => ['code' => 200],
+                        'body' => json_encode([
+                            'choices' => [ ['message' => ['content' => json_encode($first)]] ]
+                        ])
+                    ];
+                }
+                return [
+                    'response' => ['code' => 200],
+                    'body' => json_encode([
+                        'choices' => [ ['message' => ['content' => $second_raw]] ]
+                    ])
+                ];
+            }
+            return false;
+        };
+        add_filter('pre_http_request', $filter, 10, 3);
+
+        $post_id = self::factory()->post->create(['post_title' => 'Post', 'post_content' => 'Content']);
+
+        $this->_setRole('administrator');
+        $_POST['post_id'] = $post_id;
+        $_POST['_ajax_nonce'] = wp_create_nonce('gm2_ai_research');
+        $_REQUEST['_ajax_nonce'] = $_POST['_ajax_nonce'];
+        try {
+            $this->_handleAjax('gm2_ai_research');
+        } catch (WPAjaxDieContinueException $e) {
+        }
+        remove_filter('pre_http_request', $filter, 10);
+
+        $resp = json_decode($this->_last_response, true);
+        $this->assertTrue($resp['success']);
+        $this->assertSame("Line1\nLine2", $resp['data']['seo_title']);
+    }
+
     public function test_sanitize_ai_json_handles_newlines() {
         $admin  = new Gm2_SEO_Admin();
         $method = new ReflectionMethod(Gm2_SEO_Admin::class, 'sanitize_ai_json');

@@ -3091,8 +3091,9 @@ TEXT;
             wp_send_json_error(__('AI request failed', 'gm2-wordpress-suite'));
         }
 
+        $resp2_clean = $this->sanitize_ai_json($resp2);
         try {
-            $data2 = json_decode($resp2, true, 512, JSON_THROW_ON_ERROR);
+            $data2 = json_decode($resp2_clean, true, 512, JSON_THROW_ON_ERROR);
         } catch (\Throwable $e) {
             if (defined('WP_DEBUG') && WP_DEBUG) {
                 error_log('AI Research JSON decode failed: ' . $resp2);
