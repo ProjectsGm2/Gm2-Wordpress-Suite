@@ -254,7 +254,10 @@ using a sanitized version of the attachment title.
 On taxonomy edit screens you'll also find a **Generate Description** button next
 to the description field. The prompt can be customised via the
 `gm2_tax_desc_prompt` setting and includes any saved SEO guidelines for that
-taxonomy.
+taxonomy. The prompt now automatically notes whether the term is a post category,
+product category or other custom taxonomy. If the taxonomy already has SEO
+metadata (title, description, keywords, long-tail keywords or a canonical URL)
+those values are also included in the prompt sent to ChatGPT.
 
 
 The SEO Settings tab also lets you set `max-snippet`, `max-image-preview`, and

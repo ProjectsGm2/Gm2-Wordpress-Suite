@@ -108,6 +108,27 @@ class Gm2_SEO_Admin {
         return $taxonomies;
     }
 
+    private function describe_taxonomy_type($taxonomy) {
+        $tax_obj = get_taxonomy($taxonomy);
+        if (!$tax_obj) {
+            return '';
+        }
+        if ($taxonomy === 'category') {
+            return 'post category';
+        }
+        if ($taxonomy === 'product_cat') {
+            return 'product category';
+        }
+        $objects = (array) $tax_obj->object_type;
+        if (in_array('product', $objects, true)) {
+            return 'product taxonomy';
+        }
+        if ($objects === ['post']) {
+            return 'post taxonomy';
+        }
+        return 'custom taxonomy';
+    }
+
     public function register_taxonomy_hooks() {
         $taxonomies = $this->get_supported_taxonomies();
         foreach ($taxonomies as $tax) {
@@ -3313,6 +3334,40 @@ class Gm2_SEO_Admin {
             '{taxonomy}'   => $taxonomy,
             '{guidelines}' => $guidelines,
         ]);
+
+        $seo_title          = '';
+        $seo_description    = '';
+        $focus_keywords     = '';
+        $long_tail_keywords = '';
+        $canonical          = '';
+        if ($term_id) {
+            $seo_title          = get_term_meta($term_id, '_gm2_title', true);
+            $seo_description    = get_term_meta($term_id, '_gm2_description', true);
+            $focus_keywords     = get_term_meta($term_id, '_gm2_focus_keywords', true);
+            $long_tail_keywords = get_term_meta($term_id, '_gm2_long_tail_keywords', true);
+            $canonical          = get_term_meta($term_id, '_gm2_canonical', true);
+        }
+
+        $tax_type = $this->describe_taxonomy_type($taxonomy);
+        if ($tax_type !== '') {
+            $prompt .= "\nTaxonomy type: " . $tax_type;
+        }
+
+        if ($seo_title !== '') {
+            $prompt .= "\nSEO Title: " . $seo_title;
+        }
+        if ($seo_description !== '') {
+            $prompt .= "\nSEO Description: " . $seo_description;
+        }
+        if ($focus_keywords !== '') {
+            $prompt .= "\nFocus Keywords: " . $focus_keywords;
+        }
+        if ($long_tail_keywords !== '') {
+            $prompt .= "\nLong-tail Keywords: " . $long_tail_keywords;
+        }
+        if ($canonical !== '') {
+            $prompt .= "\nCanonical URL: " . $canonical;
+        }
 
         $context_parts = array_filter(array_map('trim', gm2_get_seo_context()));
         if ($context_parts) {
