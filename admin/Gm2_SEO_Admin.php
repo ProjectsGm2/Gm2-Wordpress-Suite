@@ -2188,6 +2188,11 @@ class Gm2_SEO_Admin {
         $html = preg_replace('/(<br\s*\/?\s*>\s*)+/i', "\n", $html);
         $html = preg_replace('/\n{2,}/', "\n", $html);
 
+        // Decode entities and normalize whitespace.
+        $html = html_entity_decode($html, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $html = str_replace(["\xc2\xa0", '&nbsp;'], ' ', $html);
+        $html = preg_replace('/ {2,}/', ' ', $html);
+
         return trim($html);
     }
 
