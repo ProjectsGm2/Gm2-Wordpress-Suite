@@ -41,5 +41,6 @@ class TaxDescriptionAjaxTest extends WP_Ajax_UnitTestCase {
         $this->assertSame('desc', $term->description);
         $this->assertStringContainsString('Books', $captured);
         $this->assertStringContainsString('guidelines', $captured);
+        $this->assertStringContainsString('Taxonomy type: post category', $captured);
     }
 }
