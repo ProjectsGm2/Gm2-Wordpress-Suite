@@ -217,6 +217,20 @@ class AiResearchAjaxTest extends WP_Ajax_UnitTestCase {
         $this->assertSame('Approx 17.5" screen', $data['size']);
     }
 
+    public function test_sanitize_ai_json_allows_steel_wheels_string() {
+        $admin  = new Gm2_SEO_Admin();
+        $method = new ReflectionMethod(Gm2_SEO_Admin::class, 'sanitize_ai_json');
+        $method->setAccessible(true);
+
+        $raw  = '{ "spec": "17.5" steel wheels" }';
+        $clean = $method->invoke($admin, $raw);
+        $data  = json_decode($clean, true);
+
+        $this->assertSame(JSON_ERROR_NONE, json_last_error());
+        $this->assertNotNull($data);
+        $this->assertSame('17.5" steel wheels', $data['spec']);
+    }
+
     public function test_sanitize_ai_json_escapes_unescaped_quotes() {
         $admin  = new Gm2_SEO_Admin();
         $method = new ReflectionMethod(Gm2_SEO_Admin::class, 'sanitize_ai_json');
