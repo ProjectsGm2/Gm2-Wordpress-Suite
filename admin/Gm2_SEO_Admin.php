@@ -3368,56 +3368,73 @@ class Gm2_SEO_Admin {
             }
         }
 
-        $template = get_option('gm2_tax_desc_prompt', 'Write a short SEO description for the term "{name}".');
+        $template = get_option('gm2_tax_desc_prompt', 'Generate a unique, SEO-optimized description for the term "{name}". The goal is to help this taxonomy page rank in the **top 3 Google search results** for its target keyword. The description must be relevant, engaging, and built on the business context.');
 
         $prompt = strtr($template, [
             '{name}'     => $name,
             '{taxonomy}' => $taxonomy,
         ]);
-
+        
         $seo_title       = '';
         $seo_description = '';
         $focus_keywords  = '';
         $canonical       = '';
-
+        
         if ($term_id) {
             $seo_title       = sanitize_text_field(get_term_meta($term_id, '_gm2_title', true));
             $seo_description = sanitize_text_field(get_term_meta($term_id, '_gm2_description', true));
             $focus_keywords  = sanitize_text_field(get_term_meta($term_id, '_gm2_focus_keywords', true));
             $canonical       = esc_url_raw(get_term_meta($term_id, '_gm2_canonical', true));
         }
-
+        
+        $prompt .= "\n\n[SEO METADATA]\n";
         if ($seo_title !== '') {
-            $prompt .= "\nExisting SEO Title: {$seo_title}";
+            $prompt .= "Existing SEO Title: {$seo_title}\n";
         }
         if ($seo_description !== '') {
-            $prompt .= "\nSEO Description: {$seo_description}";
+            $prompt .= "SEO Description: {$seo_description}\n";
         }
         if ($focus_keywords !== '') {
-            $prompt .= "\nFocus Keywords: {$focus_keywords}";
+            $prompt .= "Focus Keywords: {$focus_keywords}\n";
         }
         if ($canonical !== '') {
-            $prompt .= "\nCanonical: {$canonical}";
+            $prompt .= "Canonical: {$canonical}\n";
         }
-
+        
         $tax_type = $this->describe_taxonomy_type($taxonomy);
         if ($tax_type !== '') {
-            $prompt .= "\nTaxonomy type: " . $tax_type;
+            $prompt .= "Taxonomy Type: {$tax_type}\n";
         }
-
+        
         $context_parts = array_filter(array_map('trim', gm2_get_seo_context()));
         if ($context_parts) {
-            $pairs = [];
+            $prompt .= "\n[SEO CONTEXT]\n";
             foreach ($context_parts as $k => $v) {
-                $pairs[] = ucfirst(str_replace('_', ' ', $k)) . ': ' . $v;
+                $prompt .= ucfirst(str_replace('_', ' ', $k)) . ": {$v}\n";
             }
-            $prompt .= "\nSite context: " . implode('; ', $pairs);
         }
-
+        
         $context = gm2_get_business_context_prompt();
         if ($context !== '') {
-            $prompt = $context . "\n\n" . $prompt;
+            $prompt = "[BUSINESS CONTEXT]\n" . $context . "\n\n" . $prompt;
         }
+        
+        $prompt .= <<<TEXT
+        
+        [SEO TASK]\n
+        Generate a compelling and SEO-optimized taxonomy description for the term "{$name}". This is for a {$tax_type} page.
+        
+        Requirements:
+        - Integrate the focus keyword naturally within the first 160 characters
+        - Match user search intent and improve search engine ranking performance
+        - Incorporate semantically relevant variations if applicable
+        - Use brand tone and voice as reflected in the business context
+        - Be informative, unique, and engaging — avoid generic fluff
+        - Keep the length between 100–250 words, optimized for Google snippet display
+        - Include a subtle call-to-action or forward-navigation cue where possible
+        
+        Output ONLY the description text. Do not include labels, JSON, or commentary.
+        TEXT;
 
         $chat = new Gm2_ChatGPT();
         $resp = $chat->query($prompt);
