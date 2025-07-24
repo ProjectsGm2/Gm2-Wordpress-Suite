@@ -1971,6 +1971,10 @@ class Gm2_SEO_Admin {
             $json = $response;
         }
 
+        // Strip JavaScript-style comments before further processing.
+        $json = preg_replace('#/\*.*?\*/#s', '', $json);
+        $json = preg_replace('#//.*$#m', '', $json);
+
         $json = preg_replace_callback(
             '/:\s*\{\s*("(?:\\\\.|[^"\\])*"\s*(?:,\s*"(?:\\\\.|[^"\\])*"\s*)*)\}/s',
             function($m) {
@@ -1982,7 +1986,7 @@ class Gm2_SEO_Admin {
             $json
         );
 
-        return preg_replace_callback('/"(?:\\\\.|[^"\\\\])*"/s', function($matches) {
+        $json = preg_replace_callback('/"(?:\\\\.|[^"\\\\])*"/s', function($matches) {
             $str = str_replace("\n", "\\n", $matches[0]);
 
             $inner = substr($str, 1, -1);
@@ -1990,6 +1994,13 @@ class Gm2_SEO_Admin {
 
             return '"' . $inner . '"';
         }, $json);
+
+        $end = strrpos($json, '}');
+        if ($end !== false) {
+            $json = substr($json, 0, $end + 1);
+        }
+
+        return trim($json);
     }
 
     /**
