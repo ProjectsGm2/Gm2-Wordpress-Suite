@@ -255,6 +255,7 @@ On taxonomy edit screens you'll also find a **Generate Description** button next
 to the description field. The prompt can be customised via the
 `gm2_tax_desc_prompt` setting and includes any saved SEO guidelines for that
 taxonomy.
+The prompt now automatically notes whether the term is a post category, product category or other custom taxonomy.
 
 
 The SEO Settings tab also lets you set `max-snippet`, `max-image-preview`, and

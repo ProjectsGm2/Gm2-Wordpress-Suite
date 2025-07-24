@@ -108,6 +108,27 @@ class Gm2_SEO_Admin {
         return $taxonomies;
     }
 
+    private function describe_taxonomy_type($taxonomy) {
+        $tax_obj = get_taxonomy($taxonomy);
+        if (!$tax_obj) {
+            return '';
+        }
+        if ($taxonomy === 'category') {
+            return 'post category';
+        }
+        if ($taxonomy === 'product_cat') {
+            return 'product category';
+        }
+        $objects = (array) $tax_obj->object_type;
+        if (in_array('product', $objects, true)) {
+            return 'product taxonomy';
+        }
+        if ($objects === ['post']) {
+            return 'post taxonomy';
+        }
+        return 'custom taxonomy';
+    }
+
     public function register_taxonomy_hooks() {
         $taxonomies = $this->get_supported_taxonomies();
         foreach ($taxonomies as $tax) {
@@ -3313,6 +3334,11 @@ class Gm2_SEO_Admin {
             '{taxonomy}'   => $taxonomy,
             '{guidelines}' => $guidelines,
         ]);
+
+        $tax_type = $this->describe_taxonomy_type($taxonomy);
+        if ($tax_type !== '') {
+            $prompt .= "\nTaxonomy type: " . $tax_type;
+        }
 
         $context_parts = array_filter(array_map('trim', gm2_get_seo_context()));
         if ($context_parts) {
