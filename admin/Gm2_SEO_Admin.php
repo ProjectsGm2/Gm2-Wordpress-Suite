@@ -3148,14 +3148,24 @@ TEXT;
                 error_log('AI Research JSON decode failed: ' . $resp2);
                 error_log('AI Research JSON error: ' . json_last_error_msg());
             }
-            if (preg_match('/\{(?:[^{}]|(?R))*\}/s', $resp2, $m)) {
-                try {
-                    $data2 = json_decode($m[0], true, 512, JSON_THROW_ON_ERROR);
-                } catch (\Throwable $e2) {
-                    error_log('AI Research JSON decode failed after extraction: ' . $m[0]);
-                    wp_send_json_error(__('Invalid AI response', 'gm2-wordpress-suite'));
+
+            $trimmed = rtrim($resp2_clean);
+            $data2   = null;
+            while ($trimmed !== '') {
+                $result = json_decode($trimmed, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($result)) {
+                    $data2 = $result;
+                    break;
                 }
-            } else {
+                $pos = strrpos($trimmed, '}');
+                if ($pos === false) {
+                    $trimmed = substr($trimmed, 0, -1);
+                } else {
+                    $trimmed = substr($trimmed, 0, $pos);
+                }
+            }
+
+            if ($data2 === null) {
                 wp_send_json_error(__('Invalid AI response', 'gm2-wordpress-suite'));
             }
         }
