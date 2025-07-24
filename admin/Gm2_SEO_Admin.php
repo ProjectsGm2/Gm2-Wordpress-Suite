@@ -1965,6 +1965,7 @@ class Gm2_SEO_Admin {
      * @return string Clean JSON string ready for decoding.
      */
     private function sanitize_ai_json($response) {
+        $original = $response;
         $start = strpos($response, '{');
         $end   = strrpos($response, '}');
 
@@ -1992,6 +1993,7 @@ class Gm2_SEO_Admin {
         $json = str_replace(["\xE2\x80\x9C", "\xE2\x80\x9D"], '"', $json);
 
         // Convert single-quoted keys and values to standard double quotes.
+        $before = $json;
         $json = preg_replace_callback(
             "#'(?:\\\\.|[^'\\\\])*'#s",
             function($m) {
@@ -2000,13 +2002,28 @@ class Gm2_SEO_Admin {
                 $inner = str_replace('"', '\\"', $inner);
                 return '"' . $inner . '"';
             },
-            $json
+            $before
         );
+        if ($json === null) {
+            $this->debug_log('sanitize_ai_json regex failure: "#\'(?:\\\\.|[^\'\\\\])*\'#s" on ' . $this->safe_truncate($before, 200));
+            return $original;
+        }
 
         // Strip JavaScript-style comments before further processing.
-        $json = preg_replace('#/\*.*?\*/#s', '', $json);
-        $json = preg_replace('#//.*$#m', '', $json);
+        $before = $json;
+        $json = preg_replace('#/\*.*?\*/#s', '', $before);
+        if ($json === null) {
+            $this->debug_log('sanitize_ai_json regex failure: "#/\*.*?\*/#s" on ' . $this->safe_truncate($before, 200));
+            return $original;
+        }
+        $before = $json;
+        $json = preg_replace('#//.*$#m', '', $before);
+        if ($json === null) {
+            $this->debug_log('sanitize_ai_json regex failure: "#//.*$#m" on ' . $this->safe_truncate($before, 200));
+            return $original;
+        }
 
+        $before = $json;
         $json = preg_replace_callback('/"(?:\\\\.|[^"\\\\])*"/s', function($matches) {
             $str = str_replace("\n", "\\n", $matches[0]);
 
@@ -2015,20 +2032,35 @@ class Gm2_SEO_Admin {
             $inner = preg_replace('/(?<!\\)"/', '\\"', $inner);
 
             return '"' . $inner . '"';
-        }, $json);
+        }, $before);
+        if ($json === null) {
+            $this->debug_log('sanitize_ai_json regex failure: "/\"(?:\\\\.|[^\"\\\\])*\"/s" on ' . $this->safe_truncate($before, 200));
+            return $original;
+        }
 
         // Remove ellipses or stray characters after JSON strings.
-        $json = preg_replace('/("(?:\\.|[^"\\])*")\s*[^,:}\]]+(?=\s*[}\]])/u', '$1', $json);
+        $before = $json;
+        $json = preg_replace('/("(?:\\.|[^"\\])*")\s*[^,:}\]]+(?=\s*[}\]])/u', '$1', $before);
+        if ($json === null) {
+            $this->debug_log('sanitize_ai_json regex failure: "(/\"(?:\\.|[^\"\\])*\")\\s*[^,:}\\]]+(?=\\s*[}\\]])/u" on ' . $this->safe_truncate($before, 200));
+            return $original;
+        }
 
         // Remove trailing commas before closing braces or brackets.
+        $before = $json;
         $json = preg_replace_callback(
             '/"(?:\\.|[^"\\])*"|,(?=\s*[}\]])/s',
             function($m) {
                 return ($m[0][0] === '"') ? $m[0] : '';
             },
-            $json
+            $before
         );
+        if ($json === null) {
+            $this->debug_log('sanitize_ai_json regex failure: "/\"(?:\\.|[^\"\\])*\"|,(?=\\s*[}\\]])/s" on ' . $this->safe_truncate($before, 200));
+            return $original;
+        }
 
+        $before = $json;
         $json = preg_replace_callback(
             '/:\s*\{\s*("(?:\\\\.|[^"\\])*"\s*(?:,\s*"(?:\\\\.|[^"\\])*"\s*)*)\}/s',
             function($m) {
@@ -2037,8 +2069,12 @@ class Gm2_SEO_Admin {
                 }
                 return ':[' . $m[1] . ']';
             },
-            $json
+            $before
         );
+        if ($json === null) {
+            $this->debug_log('sanitize_ai_json regex failure: "/:\\s*\\{\\s*(\"(?:\\\\.|[^\"\\])*\"\\s*(?:,\\s*\"(?:\\\\.|[^\"\\])*\"\\s*)*)\\}/s" on ' . $this->safe_truncate($before, 200));
+            return $original;
+        }
 
 
         $end = strrpos($json, '}');
