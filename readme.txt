@@ -91,7 +91,7 @@ If AI Research fails or returns unexpected results, enable WordPress debugging a
 The AI features depend on the DOM/LibXML extension. Verify it is installed by running `php -m | grep -i dom` before using AI Research.
 
 == Diagnostics ==
-As a first step, open **Gm2 → Diagnostics** to detect plugin conflicts, missing files or theme customizations that may disable SEO output. Any detected issues are listed as an admin notice with steps to resolve them.
+As a first step, open **Gm2 → Diagnostics** to detect plugin conflicts, missing files or theme customizations that may disable SEO output. Any detected issues are listed as an admin notice with steps to resolve them. Diagnostics run only when the SEO module is enabled on the **Gm2 Suite** page.
 
 == Breadcrumbs ==
 Display a breadcrumb trail anywhere using the `[gm2_breadcrumbs]` shortcode. The output

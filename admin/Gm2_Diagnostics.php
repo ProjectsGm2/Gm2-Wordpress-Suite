@@ -23,6 +23,9 @@ class Gm2_Diagnostics {
     }
 
     private function check_plugins() {
+        if (get_option('gm2_enable_seo', '1') !== '1') {
+            return;
+        }
         $active    = (array) get_option('active_plugins');
         $patterns  = ['wordpress-seo', 'all-in-one-seo', 'aioseo', 'rank-math', 'seopress'];
         foreach ($active as $plugin) {
