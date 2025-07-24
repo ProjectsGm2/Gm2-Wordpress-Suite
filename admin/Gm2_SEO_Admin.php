@@ -1971,9 +1971,21 @@ class Gm2_SEO_Admin {
             $json = $response;
         }
 
+        // Normalize curly double quotes which often appear in AI output.
+        $json = str_replace(["\xE2\x80\x9C", "\xE2\x80\x9D"], '"', $json);
+
         // Strip JavaScript-style comments before further processing.
         $json = preg_replace('#/\*.*?\*/#s', '', $json);
         $json = preg_replace('#//.*$#m', '', $json);
+
+        // Remove trailing commas before closing braces or brackets.
+        $json = preg_replace_callback(
+            '/"(?:\\.|[^"\\])*"|,(?=\s*[}\]])/s',
+            function($m) {
+                return ($m[0][0] === '"') ? $m[0] : '';
+            },
+            $json
+        );
 
         $json = preg_replace_callback(
             '/:\s*\{\s*("(?:\\\\.|[^"\\])*"\s*(?:,\s*"(?:\\\\.|[^"\\])*"\s*)*)\}/s',
