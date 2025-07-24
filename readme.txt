@@ -16,6 +16,7 @@ Key features include:
 * WooCommerce quantity discounts with a dedicated Elementor widget (requires WooCommerce)
 * Tariff management and redirects
 * Expanded SEO Context feeds AI prompts with business details
+* Focus keywords are tracked to prevent duplicates in AI suggestions
 
 == Installation ==
 1. Upload the plugin files to the `/wp-content/plugins/gm2-wordpress-suite` directory.

@@ -2361,6 +2361,7 @@ class Gm2_SEO_Admin {
             $query
         );
         $context = gm2_get_business_context_prompt();
+        $used_keywords = gm2_get_used_focus_keywords();
         if ($context !== '') {
             $prompt = $context . "\n\n" . $prompt;
         }
@@ -2443,6 +2444,7 @@ class Gm2_SEO_Admin {
                     __( 'At least one internal link', 'gm2-wordpress-suite' ),
                     __( 'At least one external link', 'gm2-wordpress-suite' ),
                     __( 'Focus keyword included in meta description', 'gm2-wordpress-suite' ),
+                    __( 'Focus keyword is unique', 'gm2-wordpress-suite' ),
                     __( 'SEO title is unique', 'gm2-wordpress-suite' ),
                     __( 'Meta description is unique', 'gm2-wordpress-suite' ),
                 ];
@@ -2487,6 +2489,7 @@ class Gm2_SEO_Admin {
 
         $dup_title = false;
         $dup_desc  = false;
+        $dup_focus = false;
         if ($title !== '') {
             $dup_title = !empty(get_posts([
                 'post_type'      => $this->get_supported_post_types(),
@@ -2528,6 +2531,28 @@ class Gm2_SEO_Admin {
             }
         }
 
+        if ($focus !== '') {
+            $dup_focus = !empty(get_posts([
+                'post_type'      => $this->get_supported_post_types(),
+                'post_status'    => 'any',
+                'meta_key'       => '_gm2_focus_keywords',
+                'meta_value'     => $focus,
+                'meta_compare'   => 'LIKE',
+                'fields'         => 'ids',
+                'posts_per_page' => 1,
+            ]));
+            $t = get_terms([
+                'taxonomy'   => $this->get_supported_taxonomies(),
+                'hide_empty' => false,
+                'meta_query' => [ [ 'key' => '_gm2_focus_keywords', 'value' => $focus, 'compare' => 'LIKE' ] ],
+                'fields'     => 'ids',
+                'number'     => 1,
+            ]);
+            if (!is_wp_error($t) && !empty($t)) {
+                $dup_focus = true;
+            }
+        }
+
         $results = [];
         $min_internal = (int) get_option('gm2_min_internal_links', 1);
         $min_external = (int) get_option('gm2_min_external_links', 1);
@@ -2566,6 +2591,8 @@ class Gm2_SEO_Admin {
                 $pass = !$dup_title;
             } elseif (stripos($line, 'description') !== false && stripos($line, 'unique') !== false) {
                 $pass = !$dup_desc;
+            } elseif (stripos($line, 'focus keyword') !== false && stripos($line, 'unique') !== false) {
+                $pass = !$dup_focus;
             } elseif (stripos($line, 'focus keyword') !== false) {
                 $pass = trim($focus) !== '';
             } elseif (preg_match('/(\d+).*words/i', $line, $m)) {
@@ -2999,6 +3026,9 @@ class Gm2_SEO_Admin {
             $prompt .= "Title: {$title}\nURL: {$url}\n";
             $prompt .= "Existing SEO Title: {$seo_title}\nSEO Description: {$seo_description}\n";
             $prompt .= "Focus Keywords: {$focus}\nCanonical: {$canonical}\n";
+            if (!empty($used_keywords)) {
+                $prompt .= "Existing focus keywords: " . implode(', ', $used_keywords) . "\n";
+            }
             
             if ($extra_context !== '') {
                 $prompt .= "Extra context: {$extra_context}\n";
@@ -3058,6 +3088,13 @@ class Gm2_SEO_Admin {
             $seeds = array_filter(array_map('trim', $seed_value));
         } else {
             $seeds = array_filter(array_map('trim', explode(',', (string) $seed_value)));
+        }
+
+        if ($seeds) {
+            $used_lower = array_map('strtolower', $used_keywords);
+            $seeds = array_values(array_filter($seeds, function($kw) use ($used_lower) {
+                return !in_array(strtolower($kw), $used_lower, true);
+            }));
         }
 
         $final_focus = '';
