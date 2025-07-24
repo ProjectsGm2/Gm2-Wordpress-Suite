@@ -26,3 +26,15 @@ When logging is enabled, the **Gm2 → ChatGPT** page shows a table of recent pr
 Each log row now includes small expand/collapse controls. Click the **Prompt sent** or **Response received** label to toggle the full text of that entry. This makes it easier to browse long conversations without leaving the page cluttered.
 
 If you need to clear the log and start over, click the **Reset Logs** button below the table.
+
+## Seed Keywords Format
+
+The first AI SEO response should return the `seed_keywords` value as an array of strings:
+
+```json
+{
+  "seed_keywords": ["alpha", "beta"]
+}
+```
+
+These seed keywords are refined with Google Ads data before the final results are presented.

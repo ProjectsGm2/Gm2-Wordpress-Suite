@@ -125,7 +125,7 @@ class AiResearchAjaxTest extends WP_Ajax_UnitTestCase {
     public function test_ai_research_second_response_with_newlines_and_comments() {
         update_option('gm2_chatgpt_api_key', 'key');
 
-        $first = ['seed_keywords' => 'alpha'];
+        $first = ['seed_keywords' => ['alpha']];
         $second_raw = "{ \"seo_title\": \"Line1\nLine2\", \"description\": \"Desc\" } // comment";
         $step = 0;
         $filter = function($pre, $args, $url) use (&$step, $first, $second_raw) {
@@ -577,7 +577,7 @@ class AiResearchKeywordSelectionTest extends WP_Ajax_UnitTestCase {
         update_option('gm2_google_access_token', 'access');
         update_option('gm2_google_expires_at', time() + 3600);
 
-        $first = ['seed_keywords' => 'alpha,beta'];
+        $first = ['seed_keywords' => ['alpha', 'beta']];
         $second = ['seo_title' => 'Final'];
         $kwp = [
             'results' => [
@@ -682,7 +682,7 @@ class AiResearchErrorHandlingTest extends WP_Ajax_UnitTestCase {
             if ($url === 'https://api.openai.com/v1/chat/completions') {
                 if ($step === 0) {
                     $step++;
-                    return [ 'response' => ['code' => 200], 'body' => json_encode(['choices' => [ ['message' => ['content' => json_encode(['seed_keywords' => 'alpha'])]] ]]) ];
+                    return [ 'response' => ['code' => 200], 'body' => json_encode(['choices' => [ ['message' => ['content' => json_encode(['seed_keywords' => ['alpha']])]] ]]) ];
                 }
                 return [ 'response' => ['code' => 200], 'body' => json_encode(['choices' => [ ['message' => ['content' => '{}']] ]]) ];
             }
@@ -722,7 +722,7 @@ class AiResearchErrorHandlingTest extends WP_Ajax_UnitTestCase {
             if ($url === 'https://api.openai.com/v1/chat/completions') {
                 if ($step === 0) {
                     $step++;
-                    return [ 'response' => ['code' => 200], 'body' => json_encode(['choices' => [ ['message' => ['content' => json_encode(['seed_keywords' => 'alpha'])]] ]]) ];
+                    return [ 'response' => ['code' => 200], 'body' => json_encode(['choices' => [ ['message' => ['content' => json_encode(['seed_keywords' => ['alpha']])]] ]]) ];
                 }
                 return [ 'response' => ['code' => 200], 'body' => json_encode(['choices' => [ ['message' => ['content' => '{}']] ]]) ];
             }
@@ -756,7 +756,7 @@ class AiResearchErrorHandlingTest extends WP_Ajax_UnitTestCase {
             if ($url === 'https://api.openai.com/v1/chat/completions') {
                 if ($step === 0) {
                     $step++;
-                    return [ 'response' => ['code' => 200], 'body' => json_encode(['choices' => [ ['message' => ['content' => json_encode(['seed_keywords' => 'alpha,beta'])]] ]]) ];
+                    return [ 'response' => ['code' => 200], 'body' => json_encode(['choices' => [ ['message' => ['content' => json_encode(['seed_keywords' => ['alpha','beta']])]] ]]) ];
                 }
                 return [ 'response' => ['code' => 200], 'body' => json_encode(['choices' => [ ['message' => ['content' => '{}']] ]]) ];
             }
