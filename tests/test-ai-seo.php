@@ -204,6 +204,22 @@ class AiResearchAjaxTest extends WP_Ajax_UnitTestCase {
         $this->assertSame('Approx 17.5" screen', $data['size']);
     }
 
+    public function test_sanitize_ai_json_escapes_unescaped_quotes() {
+        $admin  = new Gm2_SEO_Admin();
+        $method = new ReflectionMethod(Gm2_SEO_Admin::class, 'sanitize_ai_json');
+        $method->setAccessible(true);
+
+        $raw  = '{ "seo_title":"New "Special" Title" }';
+        $clean = $method->invoke($admin, $raw);
+
+        $this->assertStringContainsString('New \"Special\" Title', $clean);
+
+        $data  = json_decode($clean, true);
+
+        $this->assertNotNull($data);
+        $this->assertSame('New "Special" Title', $data['seo_title']);
+    }
+
     public function test_sanitize_ai_json_strips_comments() {
         $admin  = new Gm2_SEO_Admin();
         $method = new ReflectionMethod(Gm2_SEO_Admin::class, 'sanitize_ai_json');

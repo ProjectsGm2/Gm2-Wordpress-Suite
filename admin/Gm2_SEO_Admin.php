@@ -1991,6 +1991,7 @@ class Gm2_SEO_Admin {
 
             $inner = substr($str, 1, -1);
             $inner = preg_replace('/(?<!\\\\)(\d+(?:\.\d+)?(?:-inch)?)"/', '$1\\"', $inner);
+            $inner = preg_replace('/(?<!\\)"/', '\\"', $inner);
 
             return '"' . $inner . '"';
         }, $json);
