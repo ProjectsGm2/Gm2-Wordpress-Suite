@@ -23,6 +23,11 @@ class TaxDescriptionAjaxTest extends WP_Ajax_UnitTestCase {
 
         $term_id = self::factory()->term->create(['taxonomy' => 'category', 'name' => 'Books']);
 
+        update_term_meta($term_id, '_gm2_title', '  <b>Title</b>  ');
+        update_term_meta($term_id, '_gm2_description', " <em>Desc</em> ");
+        update_term_meta($term_id, '_gm2_focus_keywords', ' one, <i>two</i> ');
+        update_term_meta($term_id, '_gm2_canonical', ' https://example.com/cat ');
+
         $this->_setRole('administrator');
         $_POST['taxonomy'] = 'category';
         $_POST['term_id'] = $term_id;
@@ -39,6 +44,10 @@ class TaxDescriptionAjaxTest extends WP_Ajax_UnitTestCase {
         $this->assertSame('desc', $resp['data']);
         $term = get_term($term_id, 'category');
         $this->assertSame('desc', $term->description);
+        $this->assertStringContainsString('Title', $captured);
+        $this->assertStringContainsString('Desc', $captured);
+        $this->assertStringContainsString('one, two', $captured);
+        $this->assertStringContainsString('https://example.com/cat', $captured);
         $this->assertStringContainsString('Books', $captured);
         $this->assertStringContainsString('guidelines', $captured);
         $this->assertStringContainsString('Taxonomy type: post category', $captured);

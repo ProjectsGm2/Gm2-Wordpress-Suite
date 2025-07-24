@@ -108,6 +108,20 @@ class Gm2_SEO_Admin {
         return $taxonomies;
     }
 
+    /**
+     * Provide a short, human readable classification for a taxonomy.
+     *
+     * Returns one of the following labels based on the taxonomy's
+     * registered object types:
+     * - `post category` for the built in `category` taxonomy.
+     * - `product category` for WooCommerce's `product_cat` taxonomy.
+     * - `product taxonomy` if attached to the `product` post type.
+     * - `post taxonomy` when used only with posts.
+     * - `custom taxonomy` for anything else.
+     *
+     * @param string $taxonomy Taxonomy slug.
+     * @return string Taxonomy classification or empty string if unknown.
+     */
     private function describe_taxonomy_type($taxonomy) {
         $tax_obj = get_taxonomy($taxonomy);
         if (!$tax_obj) {
@@ -3335,6 +3349,31 @@ class Gm2_SEO_Admin {
             '{taxonomy}'   => $taxonomy,
             '{guidelines}' => $guidelines,
         ]);
+
+        $seo_title       = '';
+        $seo_description = '';
+        $focus_keywords  = '';
+        $canonical       = '';
+
+        if ($term_id) {
+            $seo_title       = sanitize_text_field(get_term_meta($term_id, '_gm2_title', true));
+            $seo_description = sanitize_text_field(get_term_meta($term_id, '_gm2_description', true));
+            $focus_keywords  = sanitize_text_field(get_term_meta($term_id, '_gm2_focus_keywords', true));
+            $canonical       = esc_url_raw(get_term_meta($term_id, '_gm2_canonical', true));
+        }
+
+        if ($seo_title !== '') {
+            $prompt .= "\nExisting SEO Title: {$seo_title}";
+        }
+        if ($seo_description !== '') {
+            $prompt .= "\nSEO Description: {$seo_description}";
+        }
+        if ($focus_keywords !== '') {
+            $prompt .= "\nFocus Keywords: {$focus_keywords}";
+        }
+        if ($canonical !== '') {
+            $prompt .= "\nCanonical: {$canonical}";
+        }
 
         $tax_type = $this->describe_taxonomy_type($taxonomy);
         if ($tax_type !== '') {
