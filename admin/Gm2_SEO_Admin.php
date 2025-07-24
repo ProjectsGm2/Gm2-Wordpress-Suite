@@ -2990,32 +2990,41 @@ class Gm2_SEO_Admin {
 
         $context = gm2_get_business_context_prompt();
 
-        $prompt  = '';
-        if ($context !== '') {
-            $prompt .= "[BUSINESS CONTEXT]\n" . $context . "\n\n";
-        }
+            $prompt  = '';
+            if ($context !== '') {
+                $prompt .= "[BUSINESS CONTEXT]\n" . $context . "\n\n";
+            }
+            
+            $prompt .= "[PAGE DETAILS]\n";
+            $prompt .= "Title: {$title}\nURL: {$url}\n";
+            $prompt .= "Existing SEO Title: {$seo_title}\nSEO Description: {$seo_description}\n";
+            $prompt .= "Focus Keywords: {$focus}\nCanonical: {$canonical}\n";
+            
+            if ($extra_context !== '') {
+                $prompt .= "Extra context: {$extra_context}\n";
+            }
+            if ($snippet !== '') {
+                $prompt .= "\n[PAGE HTML]\n" . $snippet . "\n";
+            }
+            
+            $prompt .= "\n[SEO TASK]\n";
+            $prompt .= <<<TEXT
+            Act as a senior SEO strategist. Based on the provided metadata, business context, and page HTML, generate a concise list of high-quality **seed keywords** that can be expanded into long-tail keywords later. 
+            
+            Requirements:
+            - Keywords must be closely tied to the page’s main topic, content structure, and business audience.
+            - Avoid overly broad keywords; focus on high-intent, mid-difficulty search phrases.
+            - Output only relevant keywords that will serve as strong input to keyword planner tools.
+            
+            Return ONLY a flat JSON array named `seed_keywords`, like this:
+            
+            {
+              "seed_keywords": ["keyword one", "keyword two", "keyword three"]
+            }
+            
+            Do NOT include explanation or formatting outside the JSON.
+            TEXT;
 
-        $prompt .= "[PAGE DETAILS]\n";
-        $prompt .= "Title: {$title}\nURL: {$url}\n";
-        $prompt .= "Existing SEO Title: {$seo_title}\nSEO Description: {$seo_description}\n";
-        $prompt .= "Focus Keywords: {$focus}\nCanonical: {$canonical}\n";
-
-        if ($extra_context !== '') {
-            $prompt .= "Extra context: {$extra_context}\n";
-        }
-
-        if ($snippet !== '') {
-            $prompt .= "\n[PAGE HTML]\n" . $snippet . "\n";
-        }
-
-        $prompt .= "\n[FIRST PROMPT - SEED KEYWORD GENERATION]\n";
-        $prompt .= <<<TEXT
-Act as an SEO specialist and review the details above. Provide a concise list of relevant seed keywords for further research.
-
-Return only the JSON object:
-
-{ "seed_keywords": ["..."] }
-TEXT;
 
         $chat = new Gm2_ChatGPT();
         try {
@@ -3117,31 +3126,56 @@ TEXT;
         }
 
         $prompt2 = '';
-        if ($context !== '') {
-            $prompt2 .= "[BUSINESS CONTEXT]\n" . $context . "\n\n";
-        }
-        if ($guidelines !== '') {
-            $prompt2 .= "[SEO GUIDELINES]\n" . $guidelines . "\n\n";
-        }
-        if ($content_rules !== '') {
-            $prompt2 .= "[CONTENT RULES]\n" . $content_rules . "\n\n";
-        }
+            if ($context !== '') {
+                $prompt2 .= "[BUSINESS CONTEXT]\n" . $context . "\n\n";
+            }
+            if ($guidelines !== '') {
+                $prompt2 .= "SEO guidelines:\n" . $guidelines . "\n\n";
+            }
+            if ($content_rules !== '') {
+                $prompt2 .= "Content Rules:\n" . $content_rules . "\n\n";
+            }
+            
+            $prompt2 .= "Page title: {$title}\nURL: {$url}\n";
+            $prompt2 .= "Focus Keyword: {$final_focus}\n";
+            if ($final_long) {
+                $prompt2 .= "Long-tail Keywords: " . implode(', ', $final_long) . "\n";
+            }
+            if ($extra_context !== '') {
+                $prompt2 .= "Extra context: {$extra_context}\n";
+            }
+            if ($snippet !== '') {
+                $prompt2 .= "Page HTML: {$snippet}\n";
+            }
+            
+            $prompt2 .= "\n[FINAL SEO TASK]\n";
+            $prompt2 .= <<<TEXT
+            Act as a senior SEO expert. Using the provided business context, focus and long-tail keywords, content rules, and HTML, optimize this page for maximum search engine visibility and user engagement. 
+            Your task is to return final SEO metadata and improvement instructions that align with the goal of ranking this page in the **top 3 Google results** for the target keyword.
+            
+            Ensure:
+            - All outputs follow the guidelines and are contextual to the business.
+            - Preserve meaningful content and tone, but update metadata and structure where needed.
+            - Include long-tail support and highlight content opportunities.
+            
+            Return only a JSON object with the following keys:
+            {
+              "seo_title": "...",
+              "description": "...",
+              "focus_keywords": ["...", "..."],
+              "long_tail_keywords": ["...", "..."],
+              "seed_keywords": ["...", "..."],
+              "canonical": "...",
+              "page_name": "...",
+              "slug": "...",
+              "updated_html": "...",  // edited HTML version with suggested on-page changes
+              "content_suggestions": ["...", "..."],
+              "html_issues": ["...", "..."]
+            }
+            
+            Only output this JSON. Do not include any commentary, labels, or extra formatting.
+            TEXT;
 
-        $prompt2 .= "[PAGE DETAILS]\n";
-        $prompt2 .= "Title: {$title}\nURL: {$url}\n";
-        $prompt2 .= "Focus Keyword: {$final_focus}\n";
-        if ($final_long) {
-            $prompt2 .= "Long-tail Keywords: " . implode(', ', $final_long) . "\n";
-        }
-        if ($extra_context !== '') {
-            $prompt2 .= "Extra context: {$extra_context}\n";
-        }
-        if ($snippet !== '') {
-            $prompt2 .= "\n[PAGE HTML]\n{$snippet}\n";
-        }
-
-        $prompt2 .= "\n[SECOND PROMPT - FINAL SEO OPTIMIZATION]\n";
-        $prompt2 .= "Check the HTML for SEO best practices and suggest improvements. Return JSON with keys seo_title, description, focus_keywords, long_tail_keywords, canonical, page_name, slug, updated_html, content_suggestions, html_issues.";
 
         try {
             $resp2 = $chat->query($prompt2);
