@@ -1965,7 +1965,7 @@ class Gm2_SEO_Admin {
      * @return string Clean JSON string ready for decoding.
      */
     private function sanitize_ai_json($response) {
-        if (preg_match('/\{.*\}/s', $response, $m)) {
+        if (preg_match('/\{(?:[^{}]|(?R))*\}/s', $response, $m)) {
             $json = $m[0];
         } else {
             $json = $response;
@@ -3100,7 +3100,7 @@ TEXT;
                 error_log('AI Research JSON decode failed: ' . $resp2);
                 error_log('AI Research JSON error: ' . json_last_error_msg());
             }
-            if (preg_match('/\{.*\}/s', $resp2, $m)) {
+            if (preg_match('/\{(?:[^{}]|(?R))*\}/s', $resp2, $m)) {
                 try {
                     $data2 = json_decode($m[0], true, 512, JSON_THROW_ON_ERROR);
                 } catch (\Throwable $e2) {
