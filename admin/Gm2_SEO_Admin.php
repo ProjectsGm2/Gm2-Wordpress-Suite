@@ -3211,6 +3211,9 @@ class Gm2_SEO_Admin {
             
             $prompt2 .= "Page title: {$title}\nURL: {$url}\n";
             $prompt2 .= "Focus Keyword: {$final_focus}\n";
+            if (!empty($used_keywords)) {
+                $prompt2 .= "Existing focus keywords: " . implode(', ', $used_keywords) . "\n";
+            }
             if ($final_long) {
                 $prompt2 .= "Long-tail Keywords: " . implode(', ', $final_long) . "\n";
             }
@@ -3309,6 +3312,30 @@ class Gm2_SEO_Admin {
         $slug = isset($data2['slug']) ? sanitize_title($data2['slug']) : '';
         if ($slug !== '') {
             $data2['slug'] = $slug;
+        }
+
+        $used_lower = array_map('strtolower', $used_keywords);
+        if (isset($data2['focus_keywords'])) {
+            if (is_array($data2['focus_keywords'])) {
+                $data2['focus_keywords'] = array_values(array_filter($data2['focus_keywords'], function($kw) use ($used_lower) {
+                    return !in_array(strtolower($kw), $used_lower, true);
+                }));
+                if (count($data2['focus_keywords']) === 1) {
+                    $data2['focus_keywords'] = $data2['focus_keywords'][0];
+                }
+            } else {
+                if (in_array(strtolower($data2['focus_keywords']), $used_lower, true)) {
+                    $data2['focus_keywords'] = '';
+                }
+            }
+        }
+        if (isset($data2['long_tail_keywords'])) {
+            if (!is_array($data2['long_tail_keywords'])) {
+                $data2['long_tail_keywords'] = array_filter(array_map('trim', explode(',', (string) $data2['long_tail_keywords'])));
+            }
+            $data2['long_tail_keywords'] = array_values(array_filter($data2['long_tail_keywords'], function($kw) use ($used_lower) {
+                return !in_array(strtolower($kw), $used_lower, true);
+            }));
         }
 
         if ($post_id) {

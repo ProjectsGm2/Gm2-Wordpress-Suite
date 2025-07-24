@@ -126,6 +126,46 @@ class AiResearchAjaxTest extends WP_Ajax_UnitTestCase {
         $this->assertStringContainsString('existing focus keywords: alpha, beta', strtolower($captured));
     }
 
+    public function test_second_prompt_includes_existing_keywords() {
+        update_option('gm2_chatgpt_api_key', 'key');
+
+        $p1 = self::factory()->post->create();
+        $p2 = self::factory()->post->create();
+        update_post_meta($p1, '_gm2_focus_keywords', 'Alpha');
+        update_post_meta($p2, '_gm2_focus_keywords', 'Beta');
+
+        $first  = ['seed_keywords' => ['gamma']];
+        $second = ['seo_title' => 'Final'];
+        $step   = 0;
+        $captured = null;
+        $filter = function($pre, $args, $url) use (&$step, $first, $second, &$captured) {
+            if ($url === 'https://api.openai.com/v1/chat/completions') {
+                $body = json_decode($args['body'], true);
+                if ($step === 0) {
+                    $step++;
+                    return [ 'response' => ['code' => 200], 'body' => json_encode(['choices' => [ ['message' => ['content' => json_encode($first)]] ]]) ];
+                }
+                $captured = $body['messages'][0]['content'];
+                return [ 'response' => ['code' => 200], 'body' => json_encode(['choices' => [ ['message' => ['content' => json_encode($second)]] ]]) ];
+            }
+            return false;
+        };
+        add_filter('pre_http_request', $filter, 10, 3);
+
+        $post_id = self::factory()->post->create(['post_title' => 'Post', 'post_content' => 'Content']);
+
+        $this->_setRole('administrator');
+        $_POST['post_id'] = $post_id;
+        $_POST['_ajax_nonce'] = wp_create_nonce('gm2_ai_research');
+        $_REQUEST['_ajax_nonce'] = $_POST['_ajax_nonce'];
+        try {
+            $this->_handleAjax('gm2_ai_research');
+        } catch (WPAjaxDieContinueException $e) {}
+        remove_filter('pre_http_request', $filter, 10);
+
+        $this->assertStringContainsString('existing focus keywords: alpha, beta', strtolower($captured));
+    }
+
     public function test_ai_research_parses_json_with_extra_text() {
         update_option('gm2_chatgpt_api_key', 'key');
         $json = json_encode(['seo_title' => 'Parsed']);
@@ -1094,5 +1134,64 @@ class AiResearchErrorHandlingTest extends WP_Ajax_UnitTestCase {
         $this->assertSame('Title', $resp['data']['seo_title']);
         $this->assertSame('Beta', $resp['data']['focus_keywords']);
         $this->assertSame('Beta', $resp['data']['seed_keywords']);
+    }
+
+    public function test_duplicate_focus_keywords_filtered() {
+        update_option('gm2_chatgpt_api_key', 'key');
+
+        $p = self::factory()->post->create();
+        update_post_meta($p, '_gm2_focus_keywords', 'Alpha');
+
+        $first = ['seed_keywords' => ['beta']];
+        $kwp = [
+            'results' => [
+                [
+                    'text' => 'Alpha',
+                    'keyword_idea_metrics' => [
+                        'avg_monthly_searches' => 100,
+                        'competition' => 'LOW',
+                        'monthly_search_volumes' => []
+                    ]
+                ],
+                [
+                    'text' => 'Alpha',
+                    'keyword_idea_metrics' => [
+                        'avg_monthly_searches' => 90,
+                        'competition' => 'LOW',
+                        'monthly_search_volumes' => []
+                    ]
+                ]
+            ]
+        ];
+        $second = ['seo_title' => 'Title'];
+        $step = 0;
+        $filter = function($pre, $args, $url) use (&$step, $first, $second, $kwp) {
+            if ($url === 'https://api.openai.com/v1/chat/completions') {
+                if ($step === 0) {
+                    $step++;
+                    return [ 'response' => ['code' => 200], 'body' => json_encode(['choices' => [ ['message' => ['content' => json_encode($first)]] ]]) ];
+                }
+                return [ 'response' => ['code' => 200], 'body' => json_encode(['choices' => [ ['message' => ['content' => json_encode($second)]] ]]) ];
+            }
+            if (false !== strpos($url, 'generateKeywordIdeas')) {
+                return [ 'response' => ['code' => 200], 'body' => json_encode($kwp) ];
+            }
+            return false;
+        };
+        add_filter('pre_http_request', $filter, 10, 3);
+
+        $post_id = self::factory()->post->create(['post_title' => 'Post', 'post_content' => 'Content']);
+
+        $this->_setRole('administrator');
+        $_POST['post_id'] = $post_id;
+        $_POST['_ajax_nonce'] = wp_create_nonce('gm2_ai_research');
+        $_REQUEST['_ajax_nonce'] = $_POST['_ajax_nonce'];
+        try { $this->_handleAjax('gm2_ai_research'); } catch (WPAjaxDieContinueException $e) {}
+        remove_filter('pre_http_request', $filter, 10);
+
+        $resp = json_decode($this->_last_response, true);
+        $this->assertTrue($resp['success']);
+        $this->assertSame('', $resp['data']['focus_keywords']);
+        $this->assertSame([], $resp['data']['long_tail_keywords']);
     }
 }
