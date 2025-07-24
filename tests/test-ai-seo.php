@@ -528,6 +528,34 @@ class AiResearchAjaxTest extends WP_Ajax_UnitTestCase {
         $this->assertTrue($resp['success']);
         $this->assertStringContainsString('URL: \n', $captured);
     }
+
+    public function test_ai_research_truncated_json_is_handled() {
+        update_option('gm2_chatgpt_api_key', 'key');
+        $raw = '{"seo_title":"Truncated {brace}", "description":"Desc"}{';
+        $filter = function($pre, $args, $url) use ($raw) {
+            if ($url === 'https://api.openai.com/v1/chat/completions') {
+                return [
+                    'response' => ['code' => 200],
+                    'body' => json_encode(['choices' => [ ['message' => ['content' => $raw]] ]])
+                ];
+            }
+            return false;
+        };
+        add_filter('pre_http_request', $filter, 10, 3);
+
+        $post_id = self::factory()->post->create(['post_title' => 'Post', 'post_content' => 'Content']);
+
+        $this->_setRole('administrator');
+        $_POST['post_id'] = $post_id;
+        $_POST['_ajax_nonce'] = wp_create_nonce('gm2_ai_research');
+        $_REQUEST['_ajax_nonce'] = $_POST['_ajax_nonce'];
+        try { $this->_handleAjax('gm2_ai_research'); } catch (WPAjaxDieContinueException $e) {}
+        remove_filter('pre_http_request', $filter, 10);
+
+        $resp = json_decode($this->_last_response, true);
+        $this->assertTrue($resp['success']);
+        $this->assertSame('Truncated {brace}', $resp['data']['seo_title']);
+    }
 }
 
 class AdminTabsTest extends WP_UnitTestCase {
