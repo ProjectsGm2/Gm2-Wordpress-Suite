@@ -143,4 +143,53 @@ namespace {
 
         return $result;
     }
+
+    /**
+     * Retrieve a deduplicated list of all focus keywords used across posts and terms.
+     *
+     * @return string[] Lowercase focus keywords.
+     */
+    function gm2_get_used_focus_keywords() {
+        $values = [];
+
+        $post_ids = get_posts([
+            'post_type'      => get_post_types(['public' => true], 'names'),
+            'post_status'    => 'any',
+            'meta_key'       => '_gm2_focus_keywords',
+            'posts_per_page' => -1,
+            'fields'         => 'ids',
+        ]);
+        foreach ($post_ids as $pid) {
+            $val = get_post_meta($pid, '_gm2_focus_keywords', true);
+            if ($val !== '') {
+                $values[] = $val;
+            }
+        }
+
+        $term_ids = get_terms([
+            'taxonomy'   => get_taxonomies([], 'names'),
+            'hide_empty' => false,
+            'meta_query' => [ [ 'key' => '_gm2_focus_keywords' ] ],
+            'fields'     => 'ids',
+        ]);
+        if (!is_wp_error($term_ids)) {
+            foreach ($term_ids as $tid) {
+                $val = get_term_meta($tid, '_gm2_focus_keywords', true);
+                if ($val !== '') {
+                    $values[] = $val;
+                }
+            }
+        }
+
+        $list = [];
+        foreach ($values as $str) {
+            foreach (explode(',', $str) as $kw) {
+                $kw = strtolower(trim($kw));
+                if ($kw !== '') {
+                    $list[] = $kw;
+                }
+            }
+        }
+        return array_values(array_unique($list));
+    }
 }

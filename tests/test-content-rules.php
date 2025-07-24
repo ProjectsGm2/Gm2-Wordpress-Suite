@@ -73,6 +73,28 @@ class ContentRulesAjaxTest extends WP_Ajax_UnitTestCase {
         $this->assertFalse($resp['data']['meta-description-is-unique']);
     }
 
+    public function test_duplicate_focus_keywords_fail() {
+        $existing = self::factory()->post->create([
+            'post_title'   => 'Focus Post',
+            'post_content' => 'Content',
+        ]);
+        update_post_meta($existing, '_gm2_focus_keywords', 'Alpha');
+
+        $this->_setRole('administrator');
+        $_POST['title'] = str_repeat('T', 35);
+        $_POST['description'] = str_repeat('D', 80);
+        $_POST['focus'] = 'Alpha';
+        $_POST['content'] = str_repeat('word ', 300);
+        $_POST['_ajax_nonce'] = wp_create_nonce('gm2_check_rules');
+        $_REQUEST['_ajax_nonce'] = $_POST['_ajax_nonce'];
+        try {
+            $this->_handleAjax('gm2_check_rules');
+        } catch (WPAjaxDieContinueException $e) {}
+        $resp = json_decode($this->_last_response, true);
+        $this->assertTrue($resp['success']);
+        $this->assertFalse($resp['data']['focus-keyword-is-unique']);
+    }
+
     public function test_dashboard_handles_legacy_rule_array() {
         $_GET['tab'] = 'rules';
         $legacy = [

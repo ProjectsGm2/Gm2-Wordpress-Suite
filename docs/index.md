@@ -38,3 +38,9 @@ The first AI SEO response should return the `seed_keywords` value as an array of
 ```
 
 These seed keywords are refined with Google Ads data before the final results are presented.
+
+## SEO Tools
+
+Focus keywords used across posts and terms are now tracked. AI Research includes
+the list of existing keywords in its prompt and filters them from suggestions.
+The "Check Rules" action fails when a focus keyword is already in use.
