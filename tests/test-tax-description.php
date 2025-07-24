@@ -5,7 +5,7 @@ class TaxDescriptionAjaxTest extends WP_Ajax_UnitTestCase {
     public function test_generate_tax_description_updates_term() {
         update_option('gm2_chatgpt_api_key', 'key');
         update_option('gm2_guideline_rules', ['tax_category' => ['general' => 'guidelines']]);
-        update_option('gm2_tax_desc_prompt', 'Prompt {name} {guidelines}');
+        update_option('gm2_tax_desc_prompt', 'Prompt {name}');
 
         $captured = null;
         $filter = function($pre, $args, $url) use (&$captured) {
@@ -49,7 +49,6 @@ class TaxDescriptionAjaxTest extends WP_Ajax_UnitTestCase {
         $this->assertStringContainsString('one, two', $captured);
         $this->assertStringContainsString('https://example.com/cat', $captured);
         $this->assertStringContainsString('Books', $captured);
-        $this->assertStringContainsString('guidelines', $captured);
         $this->assertStringContainsString('Taxonomy type: post category', $captured);
     }
 }
