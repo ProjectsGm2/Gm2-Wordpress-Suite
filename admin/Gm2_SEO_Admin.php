@@ -431,9 +431,9 @@ class Gm2_SEO_Admin {
             'gm2_tax_desc_prompt',
             'Taxonomy Description Prompt',
             function () {
-                $value = get_option('gm2_tax_desc_prompt', __( 'Write a short SEO description for the term "{name}". {guidelines}', 'gm2-wordpress-suite' ) );
+                $value = get_option('gm2_tax_desc_prompt', __( 'Write a short SEO description for the term "{name}".', 'gm2-wordpress-suite' ) );
                 echo '<textarea name="gm2_tax_desc_prompt" rows="3" class="large-text">' . esc_textarea($value) . '</textarea>';
-                echo '<p class="description">' . esc_html__( 'Available tags: {name}, {taxonomy}, {guidelines}', 'gm2-wordpress-suite' ) . '</p>';
+                echo '<p class="description">' . esc_html__( 'Available tags: {name}, {taxonomy}', 'gm2-wordpress-suite' ) . '</p>';
             },
             'gm2_seo',
             'gm2_seo_main'
@@ -3368,13 +3368,11 @@ class Gm2_SEO_Admin {
             }
         }
 
-        $guidelines = trim($this->build_guidelines_text('tax_' . $taxonomy));
-        $template   = get_option('gm2_tax_desc_prompt', 'Write a short SEO description for the term "{name}". {guidelines}');
+        $template = get_option('gm2_tax_desc_prompt', 'Write a short SEO description for the term "{name}".');
 
         $prompt = strtr($template, [
-            '{name}'       => $name,
-            '{taxonomy}'   => $taxonomy,
-            '{guidelines}' => $guidelines,
+            '{name}'     => $name,
+            '{taxonomy}' => $taxonomy,
         ]);
 
         $seo_title       = '';
