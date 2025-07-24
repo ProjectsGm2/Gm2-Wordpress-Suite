@@ -3406,14 +3406,6 @@ class Gm2_SEO_Admin {
             $prompt .= "Taxonomy Type: {$tax_type}\n";
         }
         
-        $context_parts = array_filter(array_map('trim', gm2_get_seo_context()));
-        if ($context_parts) {
-            $prompt .= "\n[SEO CONTEXT]\n";
-            foreach ($context_parts as $k => $v) {
-                $prompt .= ucfirst(str_replace('_', ' ', $k)) . ": {$v}\n";
-            }
-        }
-        
         $context = gm2_get_business_context_prompt();
         if ($context !== '') {
             $prompt = "[BUSINESS CONTEXT]\n" . $context . "\n\n" . $prompt;
