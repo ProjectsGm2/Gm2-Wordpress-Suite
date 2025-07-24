@@ -3368,7 +3368,7 @@ class Gm2_SEO_Admin {
         if ($canonical !== '') {
             $prompt .= "\nCanonical URL: " . $canonical;
         }
-
+      
         $context_parts = array_filter(array_map('trim', gm2_get_seo_context()));
         if ($context_parts) {
             $pairs = [];
