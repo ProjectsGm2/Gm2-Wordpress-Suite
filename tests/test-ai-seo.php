@@ -324,6 +324,21 @@ class AiResearchAjaxTest extends WP_Ajax_UnitTestCase {
         $this->assertSame('Single', $data['seo_title']);
     }
 
+    public function test_sanitize_ai_json_handles_preg_failure() {
+        $admin  = new Gm2_SEO_Admin();
+        $method = new ReflectionMethod(Gm2_SEO_Admin::class, 'sanitize_ai_json');
+        $method->setAccessible(true);
+
+        $raw = '{ "seo_title": "Title" }';
+
+        $old = ini_get('pcre.backtrack_limit');
+        ini_set('pcre.backtrack_limit', '0');
+        $clean = $method->invoke($admin, $raw);
+        ini_set('pcre.backtrack_limit', $old);
+
+        $this->assertSame($raw, $clean);
+    }
+
     public function test_ai_research_invalid_json_returns_error() {
         update_option('gm2_chatgpt_api_key', 'key');
         $filter = function($pre, $args, $url) {
