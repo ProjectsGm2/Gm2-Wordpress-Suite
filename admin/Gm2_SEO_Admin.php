@@ -1991,9 +1991,24 @@ class Gm2_SEO_Admin {
         // Normalize curly double quotes which often appear in AI output.
         $json = str_replace(["\xE2\x80\x9C", "\xE2\x80\x9D"], '"', $json);
 
+        // Convert single-quoted keys and values to standard double quotes.
+        $json = preg_replace_callback(
+            "#'(?:\\\\.|[^'\\\\])*'#s",
+            function($m) {
+                $inner = substr($m[0], 1, -1);
+                $inner = str_replace("\\'", "'", $inner);
+                $inner = str_replace('"', '\\"', $inner);
+                return '"' . $inner . '"';
+            },
+            $json
+        );
+
         // Strip JavaScript-style comments before further processing.
         $json = preg_replace('#/\*.*?\*/#s', '', $json);
         $json = preg_replace('#//.*$#m', '', $json);
+
+        // Remove ellipses or stray characters after JSON strings.
+        $json = preg_replace('/("(?:\\\\.|[^"\\])*")\s*[^,:}\]]+(?=\s*[},\]])/u', '$1', $json);
 
         // Remove trailing commas before closing braces or brackets.
         $json = preg_replace_callback(
