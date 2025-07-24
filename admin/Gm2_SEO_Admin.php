@@ -2993,14 +2993,19 @@ TEXT;
         }
 
 
-        $seed_string = '';
+        $seed_value = '';
         if (!empty($data['seed_keywords'])) {
-            $seed_string = $data['seed_keywords'];
+            $seed_value = $data['seed_keywords'];
         } elseif (!empty($data['focus_keywords'])) {
-            $seed_string = $data['focus_keywords'];
+            $seed_value = $data['focus_keywords'];
         }
 
-        $seeds = array_filter(array_map('trim', explode(',', $seed_string)));
+        if (is_array($seed_value)) {
+            $seeds = array_filter(array_map('trim', $seed_value));
+        } else {
+            $seed_string = $seed_value;
+            $seeds = array_filter(array_map('trim', explode(',', $seed_string)));
+        }
 
         $final_focus = '';
         $final_long  = [];
