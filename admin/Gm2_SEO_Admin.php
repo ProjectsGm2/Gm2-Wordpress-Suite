@@ -2007,8 +2007,18 @@ class Gm2_SEO_Admin {
         $json = preg_replace('#/\*.*?\*/#s', '', $json);
         $json = preg_replace('#//.*$#m', '', $json);
 
+        $json = preg_replace_callback('/"(?:\\\\.|[^"\\\\])*"/s', function($matches) {
+            $str = str_replace("\n", "\\n", $matches[0]);
+
+            $inner = substr($str, 1, -1);
+            $inner = preg_replace('/(?<!\\\\)(\d+(?:\.\d+)?(?:-inch)?)"/', '$1\\"', $inner);
+            $inner = preg_replace('/(?<!\\)"/', '\\"', $inner);
+
+            return '"' . $inner . '"';
+        }, $json);
+
         // Remove ellipses or stray characters after JSON strings.
-        $json = preg_replace('/("(?:\\\\.|[^"\\])*")\s*[^,:}\]]+(?=\s*[},\]])/u', '$1', $json);
+        $json = preg_replace('/("(?:\\.|[^"\\])*")\s*[^,:}\]]+(?=\s*[}\]])/u', '$1', $json);
 
         // Remove trailing commas before closing braces or brackets.
         $json = preg_replace_callback(
@@ -2030,15 +2040,6 @@ class Gm2_SEO_Admin {
             $json
         );
 
-        $json = preg_replace_callback('/"(?:\\\\.|[^"\\\\])*"/s', function($matches) {
-            $str = str_replace("\n", "\\n", $matches[0]);
-
-            $inner = substr($str, 1, -1);
-            $inner = preg_replace('/(?<!\\\\)(\d+(?:\.\d+)?(?:-inch)?)"/', '$1\\"', $inner);
-            $inner = preg_replace('/(?<!\\)"/', '\\"', $inner);
-
-            return '"' . $inner . '"';
-        }, $json);
 
         $end = strrpos($json, '}');
         if ($end !== false) {
