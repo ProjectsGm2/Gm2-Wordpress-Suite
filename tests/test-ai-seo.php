@@ -146,6 +146,19 @@ class AiResearchAjaxTest extends WP_Ajax_UnitTestCase {
         $this->assertSame(['One', 'Two'], $data['content_suggestions']);
     }
 
+    public function test_sanitize_ai_json_escapes_inch_quotes() {
+        $admin  = new Gm2_SEO_Admin();
+        $method = new ReflectionMethod(Gm2_SEO_Admin::class, 'sanitize_ai_json');
+        $method->setAccessible(true);
+
+        $raw  = '{ "size": "Approx 17.5" screen" }';
+        $clean = $method->invoke($admin, $raw);
+        $data  = json_decode($clean, true);
+
+        $this->assertNotNull($data);
+        $this->assertSame('Approx 17.5" screen', $data['size']);
+    }
+
     public function test_ai_research_invalid_json_returns_error() {
         update_option('gm2_chatgpt_api_key', 'key');
         $filter = function($pre, $args, $url) {

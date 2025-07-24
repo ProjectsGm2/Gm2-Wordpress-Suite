@@ -1983,7 +1983,12 @@ class Gm2_SEO_Admin {
         );
 
         return preg_replace_callback('/"(?:\\\\.|[^"\\\\])*"/s', function($matches) {
-            return str_replace("\n", "\\n", $matches[0]);
+            $str = str_replace("\n", "\\n", $matches[0]);
+
+            $inner = substr($str, 1, -1);
+            $inner = preg_replace('/(?<!\\\\)(\d+(?:\.\d+)?(?:-inch)?)"/', '$1\\"', $inner);
+
+            return '"' . $inner . '"';
         }, $json);
     }
 
