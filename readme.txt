@@ -79,6 +79,7 @@ If you see errors when connecting your Google account:
 * **Viewing debug logs** – Add `define('WP_DEBUG', true);` and `define('WP_DEBUG_LOG', true);` to your `wp-config.php` file, then check `wp-content/debug.log` for errors.
 * **Check DOM extension** – Run `php -m | grep -i dom` to verify the DOM/LibXML extension is loaded. The plugin requires this for HTML analysis.
 * **Gm2 Qnty Discounts widget missing** – Ensure Elementor is active and loads before this plugin, or deactivate and reactivate plugins so Elementor triggers the `elementor/loaded` action.
+* **Leftover SEO conflict warning** – Re-save the **Gm2 Suite** settings or update to version 1.6.16 or higher to clear outdated notices.
 
 === WP Debugging ===
 If AI Research fails or returns unexpected results, enable WordPress debugging and check for PHP errors:

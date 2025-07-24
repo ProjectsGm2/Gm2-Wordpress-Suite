@@ -23,6 +23,7 @@ class Gm2_Diagnostics {
     }
 
     private function check_plugins() {
+        // Skip conflict checks when the SEO module is disabled.
         if (get_option('gm2_enable_seo', '1') !== '1') {
             return;
         }
