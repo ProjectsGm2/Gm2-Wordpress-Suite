@@ -3037,6 +3037,7 @@ class Gm2_SEO_Admin {
         $content_rules = trim($content_rules);
 
         $context = gm2_get_business_context_prompt();
+        $used_keywords = gm2_get_used_focus_keywords();
 
             $prompt  = '';
             if ($context !== '') {
