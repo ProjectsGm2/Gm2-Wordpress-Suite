@@ -3335,9 +3335,38 @@ class Gm2_SEO_Admin {
             '{guidelines}' => $guidelines,
         ]);
 
+        $seo_title          = '';
+        $seo_description    = '';
+        $focus_keywords     = '';
+        $long_tail_keywords = '';
+        $canonical          = '';
+        if ($term_id) {
+            $seo_title          = get_term_meta($term_id, '_gm2_title', true);
+            $seo_description    = get_term_meta($term_id, '_gm2_description', true);
+            $focus_keywords     = get_term_meta($term_id, '_gm2_focus_keywords', true);
+            $long_tail_keywords = get_term_meta($term_id, '_gm2_long_tail_keywords', true);
+            $canonical          = get_term_meta($term_id, '_gm2_canonical', true);
+        }
+
         $tax_type = $this->describe_taxonomy_type($taxonomy);
         if ($tax_type !== '') {
             $prompt .= "\nTaxonomy type: " . $tax_type;
+        }
+
+        if ($seo_title !== '') {
+            $prompt .= "\nSEO Title: " . $seo_title;
+        }
+        if ($seo_description !== '') {
+            $prompt .= "\nSEO Description: " . $seo_description;
+        }
+        if ($focus_keywords !== '') {
+            $prompt .= "\nFocus Keywords: " . $focus_keywords;
+        }
+        if ($long_tail_keywords !== '') {
+            $prompt .= "\nLong-tail Keywords: " . $long_tail_keywords;
+        }
+        if ($canonical !== '') {
+            $prompt .= "\nCanonical URL: " . $canonical;
         }
 
         $context_parts = array_filter(array_map('trim', gm2_get_seo_context()));

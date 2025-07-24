@@ -22,6 +22,11 @@ class TaxDescriptionAjaxTest extends WP_Ajax_UnitTestCase {
         add_filter('pre_http_request', $filter, 10, 3);
 
         $term_id = self::factory()->term->create(['taxonomy' => 'category', 'name' => 'Books']);
+        update_term_meta($term_id, '_gm2_title', 'SEO T');
+        update_term_meta($term_id, '_gm2_description', 'SEO D');
+        update_term_meta($term_id, '_gm2_focus_keywords', 'focus');
+        update_term_meta($term_id, '_gm2_long_tail_keywords', 'long');
+        update_term_meta($term_id, '_gm2_canonical', 'https://ex.com');
 
         $this->_setRole('administrator');
         $_POST['taxonomy'] = 'category';
@@ -42,5 +47,10 @@ class TaxDescriptionAjaxTest extends WP_Ajax_UnitTestCase {
         $this->assertStringContainsString('Books', $captured);
         $this->assertStringContainsString('guidelines', $captured);
         $this->assertStringContainsString('Taxonomy type: post category', $captured);
+        $this->assertStringContainsString('SEO Title: SEO T', $captured);
+        $this->assertStringContainsString('SEO Description: SEO D', $captured);
+        $this->assertStringContainsString('Focus Keywords: focus', $captured);
+        $this->assertStringContainsString('Long-tail Keywords: long', $captured);
+        $this->assertStringContainsString('Canonical URL: https://ex.com', $captured);
     }
 }
