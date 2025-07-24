@@ -1971,6 +1971,17 @@ class Gm2_SEO_Admin {
             $json = $response;
         }
 
+        $json = preg_replace_callback(
+            '/:\s*\{\s*("(?:\\\\.|[^"\\])*"\s*(?:,\s*"(?:\\\\.|[^"\\])*"\s*)*)\}/s',
+            function($m) {
+                if (strpos($m[1], ':') !== false) {
+                    return $m[0];
+                }
+                return ':[' . $m[1] . ']';
+            },
+            $json
+        );
+
         return preg_replace_callback('/"(?:\\\\.|[^"\\\\])*"/s', function($matches) {
             return str_replace("\n", "\\n", $matches[0]);
         }, $json);
