@@ -22,4 +22,18 @@ class DiagnosticsTest extends WP_UnitTestCase {
         $output = ob_get_clean();
         $this->assertStringContainsString('Conflicting SEO plugins', $output);
     }
+
+    public function test_check_plugins_returns_early_when_seo_disabled() {
+        update_option('gm2_enable_seo', '0');
+        update_option('active_plugins', ['wordpress-seo/wp-seo.php']);
+        $diag = new Gm2_Diagnostics();
+
+        $reflect   = new ReflectionMethod($diag, 'check_plugins');
+        $reflect->setAccessible(true);
+        $reflect->invoke($diag);
+
+        $prop = new ReflectionProperty($diag, 'conflicts');
+        $prop->setAccessible(true);
+        $this->assertSame([], $prop->getValue($diag));
+    }
 }
