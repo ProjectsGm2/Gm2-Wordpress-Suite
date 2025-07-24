@@ -2994,12 +2994,6 @@ class Gm2_SEO_Admin {
         if ($context !== '') {
             $prompt .= "[BUSINESS CONTEXT]\n" . $context . "\n\n";
         }
-        if ($guidelines !== '') {
-            $prompt .= "[SEO GUIDELINES]\n" . $guidelines . "\n\n";
-        }
-        if ($content_rules !== '') {
-            $prompt .= "[CONTENT RULES]\n" . $content_rules . "\n\n";
-        }
 
         $prompt .= "[PAGE DETAILS]\n";
         $prompt .= "Title: {$title}\nURL: {$url}\n";
@@ -3014,36 +3008,13 @@ class Gm2_SEO_Admin {
             $prompt .= "\n[PAGE HTML]\n" . $snippet . "\n";
         }
 
-        $prompt .= "\n[SEO TASK]\n";
+        $prompt .= "\n[FIRST PROMPT - SEED KEYWORD GENERATION]\n";
         $prompt .= <<<TEXT
-Act as an advanced SEO expert. Your goal is to optimize this page to rank in the **top 3 search results on Google** for the provided focus keywords.
+Act as an SEO specialist and review the details above. Provide a concise list of relevant seed keywords for further research.
 
-Analyze the provided HTML, metadata, business context, and guidelines. Then improve the SEO Title, Meta Description, Canonical URL, Focus Keywords, and Long-Tail Keywords to:
-- Match user search intent in this niche
-- Improve CTR and topical relevance
-- Preserve brand tone and factual accuracy
-- Strengthen keyword targeting
-- Avoid keyword cannibalization and duplication
-- Follow content rules and business-specific SEO strategy
-- Preserve essential existing content but enhance performance-driven copy where needed
+Return only the JSON object:
 
-Return a clean, structured JSON object with the following keys:
-
-{
-  "seo_title": "...",
-  "description": "...",
-  "focus_keywords": ["...", "..."],
-  "long_tail_keywords": ["...", "..."],
-  "seed_keywords": ["...", "..."],
-  "canonical": "...",
-  "page_name": "...",
-  "slug": "...",
-  "updated_html": "...",  // edited HTML version with suggested on-page changes
-  "content_suggestions": ["...", "..."], // explain key improvements
-  "html_issues": ["...", "..."] // if any issues exist in tags, metadata, headings, alt tags, etc.
-}
-
-Only output this JSON. Do not include any narrative or explanation outside the JSON.
+{ "seed_keywords": ["..."] }
 TEXT;
 
         $chat = new Gm2_ChatGPT();
@@ -3146,13 +3117,18 @@ TEXT;
         }
 
         $prompt2 = '';
+        if ($context !== '') {
+            $prompt2 .= "[BUSINESS CONTEXT]\n" . $context . "\n\n";
+        }
         if ($guidelines !== '') {
-            $prompt2 .= "SEO guidelines:\n" . $guidelines . "\n\n";
+            $prompt2 .= "[SEO GUIDELINES]\n" . $guidelines . "\n\n";
         }
         if ($content_rules !== '') {
-            $prompt2 .= "Content Rules:\n" . $content_rules . "\n\n";
+            $prompt2 .= "[CONTENT RULES]\n" . $content_rules . "\n\n";
         }
-        $prompt2 .= "Page title: {$title}\nURL: {$url}\n";
+
+        $prompt2 .= "[PAGE DETAILS]\n";
+        $prompt2 .= "Title: {$title}\nURL: {$url}\n";
         $prompt2 .= "Focus Keyword: {$final_focus}\n";
         if ($final_long) {
             $prompt2 .= "Long-tail Keywords: " . implode(', ', $final_long) . "\n";
@@ -3161,14 +3137,11 @@ TEXT;
             $prompt2 .= "Extra context: {$extra_context}\n";
         }
         if ($snippet !== '') {
-            $prompt2 .= "Page HTML: {$snippet}\n";
+            $prompt2 .= "\n[PAGE HTML]\n{$snippet}\n";
         }
-        $prompt2 .= "Check the above HTML for SEO best practices and suggest improvements without removing meaning. Provide JSON with keys seo_title, description, focus_keywords, long_tail_keywords, canonical, page_name, slug, updated_html, content_suggestions, html_issues.";
 
-        $context = gm2_get_business_context_prompt();
-        if ($context !== '') {
-            $prompt2 = $context . "\n\n" . $prompt2;
-        }
+        $prompt2 .= "\n[SECOND PROMPT - FINAL SEO OPTIMIZATION]\n";
+        $prompt2 .= "Check the HTML for SEO best practices and suggest improvements. Return JSON with keys seo_title, description, focus_keywords, long_tail_keywords, canonical, page_name, slug, updated_html, content_suggestions, html_issues.";
 
         try {
             $resp2 = $chat->query($prompt2);
