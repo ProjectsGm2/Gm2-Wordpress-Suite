@@ -245,6 +245,34 @@ class AiResearchAjaxTest extends WP_Ajax_UnitTestCase {
         $this->assertSame(['one' => 1], $data);
     }
 
+    public function test_sanitize_ai_json_normalizes_curly_quotes() {
+        $admin  = new Gm2_SEO_Admin();
+        $method = new ReflectionMethod(Gm2_SEO_Admin::class, 'sanitize_ai_json');
+        $method->setAccessible(true);
+
+        $raw  = "{ “seo_title”: “Curly” }";
+        $clean = $method->invoke($admin, $raw);
+        $data  = json_decode($clean, true);
+
+        $this->assertSame('Curly', $data['seo_title']);
+    }
+
+    public function test_sanitize_ai_json_removes_trailing_commas() {
+        $admin  = new Gm2_SEO_Admin();
+        $method = new ReflectionMethod(Gm2_SEO_Admin::class, 'sanitize_ai_json');
+        $method->setAccessible(true);
+
+        $raw  = '{ "x": 1, }';
+        $clean = $method->invoke($admin, $raw);
+        $data  = json_decode($clean, true);
+        $this->assertSame(['x' => 1], $data);
+
+        $raw  = '{ "arr": ["a","b",] }';
+        $clean = $method->invoke($admin, $raw);
+        $data  = json_decode($clean, true);
+        $this->assertSame(['arr' => ['a','b']], $data);
+    }
+
     public function test_ai_research_invalid_json_returns_error() {
         update_option('gm2_chatgpt_api_key', 'key');
         $filter = function($pre, $args, $url) {
