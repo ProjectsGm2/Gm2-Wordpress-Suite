@@ -19,6 +19,12 @@ class Gm2_Abandoned_Carts {
             created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
             abandoned_at datetime DEFAULT NULL,
             recovered_order_id bigint(20) unsigned DEFAULT NULL,
+            email varchar(200) DEFAULT NULL,
+            ip_address varchar(45) DEFAULT NULL,
+            user_agent text DEFAULT NULL,
+            entry_url text DEFAULT NULL,
+            exit_url text DEFAULT NULL,
+            cart_total decimal(10,2) DEFAULT 0,
             PRIMARY KEY  (id),
             KEY cart_token (cart_token)
         ) $charset_collate;";
@@ -50,32 +56,67 @@ class Gm2_Abandoned_Carts {
         if (!$cart) {
             return;
         }
-        $contents = maybe_serialize($cart->get_cart());
-        $token    = WC()->session->get_customer_id();
+        $contents   = maybe_serialize($cart->get_cart());
+        $token      = WC()->session->get_customer_id();
+        $ip         = $_SERVER['REMOTE_ADDR'] ?? '';
+        $agent      = $_SERVER['HTTP_USER_AGENT'] ?? '';
+        $current_url = home_url($_SERVER['REQUEST_URI'] ?? '/');
+        $total      = (float) $cart->get_cart_contents_total();
         global $wpdb;
         $table = $wpdb->prefix . 'wc_ac_carts';
-        $row = $wpdb->get_row($wpdb->prepare("SELECT id FROM $table WHERE cart_token = %s", $token));
+        $row = $wpdb->get_row($wpdb->prepare("SELECT id, entry_url FROM $table WHERE cart_token = %s", $token));
         if ($row) {
             $wpdb->update(
                 $table,
-                ['cart_contents' => $contents, 'created_at' => current_time('mysql')],
+                [
+                    'cart_contents' => $contents,
+                    'created_at'    => current_time('mysql'),
+                    'ip_address'    => $ip,
+                    'user_agent'    => $agent,
+                    'cart_total'    => $total
+                ],
                 ['id' => $row->id]
             );
+            if (empty($row->entry_url)) {
+                $wpdb->update(
+                    $table,
+                    ['entry_url' => $current_url],
+                    ['id' => $row->id]
+                );
+            }
         } else {
             $wpdb->insert($table, [
                 'cart_token'   => $token,
                 'user_id'      => get_current_user_id(),
                 'cart_contents'=> $contents,
                 'created_at'   => current_time('mysql'),
+                'ip_address'   => $ip,
+                'user_agent'   => $agent,
+                'entry_url'    => $current_url,
+                'cart_total'   => $total,
             ]);
         }
     }
 
     public function maybe_mark_cart_abandoned() {
-        // Mark carts without orders after timeout
-        $timeout = absint(get_option('gm2_ac_timeout', 60));
+        // Update the exit URL for the current visitor
+        $token = '';
+        if (class_exists('WC_Session') && WC()->session) {
+            $token = WC()->session->get_customer_id();
+        }
+
         global $wpdb;
         $table = $wpdb->prefix . 'wc_ac_carts';
+        if (!empty($token)) {
+            $wpdb->update(
+                $table,
+                ['exit_url' => home_url($_SERVER['REQUEST_URI'] ?? '/')],
+                ['cart_token' => $token]
+            );
+        }
+
+        // Mark carts without orders after timeout
+        $timeout = absint(get_option('gm2_ac_timeout', 60));
         $threshold = gmdate('Y-m-d H:i:s', time() - $timeout * 60);
         $wpdb->query(
             $wpdb->prepare(

@@ -51,7 +51,11 @@ class Gm2_Abandoned_Carts_Public {
         $table = $wpdb->prefix . 'wc_ac_carts';
         $row   = $wpdb->get_row($wpdb->prepare("SELECT id FROM $table WHERE cart_token = %s", $token));
         if ($row) {
-            $wpdb->update($table, [ 'email' => $email ], [ 'id' => $row->id ]);
+            $wpdb->update(
+                $table,
+                [ 'email' => $email ],
+                [ 'id' => $row->id ]
+            );
         } else {
             $wpdb->insert($table, [
                 'cart_token'    => $token,
