@@ -43,6 +43,15 @@ class Gm2_Abandoned_Carts_Admin {
         echo '<td><input name="gm2_ac_timeout" id="gm2_ac_timeout" type="number" value="' . esc_attr($timeout) . '" class="small-text"></td></tr>';
         echo '</tbody></table>';
         submit_button();
+        echo '</form>';
+
+        $table = new GM2_AC_Table();
+        $table->prepare_items();
+        echo '<hr />';
+        echo '<form method="get">';
+        echo '<input type="hidden" name="page" value="' . esc_attr($_GET['page']) . '" />';
+        $table->search_box(__('Search', 'gm2-wordpress-suite'), 'gm2-ac');
+        $table->display();
         echo '</form></div>';
     }
 }
