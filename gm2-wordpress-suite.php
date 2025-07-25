@@ -39,6 +39,7 @@ if (!defined('GM2_SERVICE_ACCOUNT_JSON')) {
 use Gm2\Gm2_Loader;
 use Gm2\Gm2_SEO_Public;
 use Gm2\Gm2_Sitemap;
+use Gm2\Gm2_Abandoned_Carts;
 $gm2_autoload = GM2_PLUGIN_DIR . 'vendor/autoload.php';
 if (file_exists($gm2_autoload)) {
     require_once $gm2_autoload;
@@ -51,6 +52,10 @@ require_once GM2_PLUGIN_DIR . 'public/Gm2_SEO_Public.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Sitemap.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_PageSpeed.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_SEO_Utils.php';
+require_once GM2_PLUGIN_DIR . 'includes/Gm2_Abandoned_Carts.php';
+require_once GM2_PLUGIN_DIR . 'includes/Gm2_Abandoned_Carts_Messaging.php';
+require_once GM2_PLUGIN_DIR . 'admin/Gm2_Abandoned_Carts_Admin.php';
+require_once GM2_PLUGIN_DIR . 'public/Gm2_Abandoned_Carts_Public.php';
 
 function gm2_add_weekly_schedule($schedules) {
     if (!isset($schedules['weekly'])) {
@@ -88,6 +93,9 @@ function gm2_activate_plugin() {
     gm2_maybe_migrate_content_rules();
     gm2_maybe_migrate_guideline_rules();
 
+    $ac = new Gm2_Abandoned_Carts();
+    $ac->install();
+
     add_option('gm2_enable_tariff', '1');
     add_option('gm2_enable_seo', '1');
     add_option('gm2_enable_quantity_discounts', '1');
@@ -95,6 +103,7 @@ function gm2_activate_plugin() {
     add_option('gm2_enable_chatgpt', '1');
     add_option('gm2_enable_chatgpt_logging', '0');
     add_option('gm2_sitemap_path', ABSPATH . 'sitemap.xml');
+    add_option('gm2_enable_abandoned_carts', '0');
 }
 register_activation_hook(__FILE__, 'gm2_activate_plugin');
 

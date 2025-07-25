@@ -77,5 +77,11 @@ The plugin stores the generated XML sitemap at `sitemap.xml` in the WordPress
 root directory. You can change this location by setting the `gm2_sitemap_path`
 option on the **SEO → Sitemap** settings page.
 
+## Abandoned Carts Module
+
+When enabled from the Gm2 dashboard, the plugin tracks WooCommerce carts and
+sends recovery emails after a configurable timeout. Configure the timeout and
+message schedule under **Gm2 → Abandoned Carts**.
+
 
 

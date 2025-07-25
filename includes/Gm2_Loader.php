@@ -23,6 +23,7 @@ class Gm2_Loader {
 
         $enable_seo = get_option('gm2_enable_seo', '1') === '1';
         $enable_qd  = get_option('gm2_enable_quantity_discounts', '1') === '1';
+        $enable_ac  = get_option('gm2_enable_abandoned_carts', '0') === '1';
 
         if ($enable_seo) {
             $seo_admin = new Gm2_SEO_Admin();
@@ -31,6 +32,22 @@ class Gm2_Loader {
 
         $public = new Gm2_Public();
         $public->run();
+
+        if ($enable_ac) {
+            $ac = new Gm2_Abandoned_Carts();
+            $ac->run();
+
+            $ac_msg = new Gm2_Abandoned_Carts_Messaging();
+            $ac_msg->run();
+
+            if (is_admin()) {
+                $ac_admin = new Gm2_Abandoned_Carts_Admin();
+                $ac_admin->run();
+            } else {
+                $ac_public = new Gm2_Abandoned_Carts_Public();
+                $ac_public->run();
+            }
+        }
 
         if ($enable_qd) {
             $qd_public = new Gm2_Quantity_Discounts_Public();

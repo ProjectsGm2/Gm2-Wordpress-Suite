@@ -317,6 +317,7 @@ class Gm2_Admin {
             update_option('gm2_enable_quantity_discounts', empty($_POST['gm2_enable_quantity_discounts']) ? '0' : '1');
             update_option('gm2_enable_google_oauth', empty($_POST['gm2_enable_google_oauth']) ? '0' : '1');
             update_option('gm2_enable_chatgpt', empty($_POST['gm2_enable_chatgpt']) ? '0' : '1');
+            update_option('gm2_enable_abandoned_carts', empty($_POST['gm2_enable_abandoned_carts']) ? '0' : '1');
             echo '<div class="updated notice"><p>' . esc_html__( 'Settings saved.', 'gm2-wordpress-suite' ) . '</p></div>';
         }
 
@@ -325,6 +326,7 @@ class Gm2_Admin {
         $qd     = get_option('gm2_enable_quantity_discounts', '1') === '1';
         $oauth  = get_option('gm2_enable_google_oauth', '1') === '1';
         $chatgpt = get_option('gm2_enable_chatgpt', '1') === '1';
+        $abandoned = get_option('gm2_enable_abandoned_carts', '0') === '1';
 
         echo '<div class="wrap">';
         echo '<h1>' . esc_html__( 'Gm2 Suite', 'gm2-wordpress-suite' ) . '</h1>';
@@ -336,6 +338,7 @@ class Gm2_Admin {
         echo '<tr><th scope="row">' . esc_html__( 'Quantity Discounts', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_enable_quantity_discounts"' . checked($qd, true, false) . '> ' . esc_html__( 'Enabled', 'gm2-wordpress-suite' ) . '</label></td></tr>';
         echo '<tr><th scope="row">' . esc_html__( 'Google OAuth Setup', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_enable_google_oauth"' . checked($oauth, true, false) . '> ' . esc_html__( 'Enabled', 'gm2-wordpress-suite' ) . '</label></td></tr>';
         echo '<tr><th scope="row">' . esc_html__( 'ChatGPT', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_enable_chatgpt"' . checked($chatgpt, true, false) . '> ' . esc_html__( 'Enabled', 'gm2-wordpress-suite' ) . '</label></td></tr>';
+        echo '<tr><th scope="row">' . esc_html__( 'Abandoned Carts', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_enable_abandoned_carts"' . checked($abandoned, true, false) . '> ' . esc_html__( 'Enabled', 'gm2-wordpress-suite' ) . '</label></td></tr>';
         echo '</tbody></table>';
         submit_button();
         echo '</form></div>';

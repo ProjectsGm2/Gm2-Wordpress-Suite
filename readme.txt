@@ -14,6 +14,7 @@ Key features include:
 * SEO tools with breadcrumbs, caching and structured data
 * ChatGPT-powered content generation and keyword research
 * WooCommerce quantity discounts with a dedicated Elementor widget (requires WooCommerce)
+* Abandoned cart tracking and recovery emails
 * Tariff management and redirects
 * Expanded SEO Context feeds AI prompts with business details
 * Focus keywords are tracked to prevent duplicates in AI suggestions
@@ -37,9 +38,10 @@ Key features include:
 7. Select your Analytics Measurement ID and Ads Customer ID on the
    **SEO → Connect Google Account** page after connecting, or enter them
    manually on the SEO settings screen if needed.
-8. Install and activate WooCommerce (required for Quantity Discounts).
+8. Install and activate WooCommerce (required for Quantity Discounts and Abandoned Carts).
 9. Install and activate Elementor to use the Gm2 Qnty Discounts widget on product pages. With Elementor Pro the widget appears in the **WooCommerce** section when editing Single Product templates. Otherwise look under **General**.
 10. Open **Gm2 → Quantity Discounts** and create discount groups to define pricing rules.
+11. Configure cart recovery options under **Gm2 → Abandoned Carts**.
 
 **Note:** WooCommerce and Elementor Pro must be active. Elementor 3.5+ is recommended and older versions are supported with a fallback.
 
@@ -50,8 +52,8 @@ all dependencies into `gm2-wordpress-suite.zip` for installation via the
 
 == Feature Toggles ==
 The main **Gm2 Suite** page lets administrators enable or disable major modules.
-Check or uncheck **Tariff**, **SEO**, **Quantity Discounts**, **Google OAuth Setup**
-or **ChatGPT** and click *Save* to hide their menus and functionality. All
+Check or uncheck **Tariff**, **SEO**, **Quantity Discounts**, **Google OAuth Setup**,
+**ChatGPT**, or **Abandoned Carts** and click *Save* to hide their menus and functionality. All
 features are enabled by default.
 
 == Google integration ==
