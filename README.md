@@ -79,9 +79,21 @@ option on the **SEO → Sitemap** settings page.
 
 ## Abandoned Carts Module
 
-When enabled from the Gm2 dashboard, the plugin tracks WooCommerce carts and
-sends recovery emails after a configurable timeout. Configure the timeout and
-message schedule under **Gm2 → Abandoned Carts**.
+Enable this feature from **Gm2 → Dashboard** to create two database tables used
+for tracking carts and queuing recovery emails. The cart table stores the cart
+contents along with the shopper's email address, IP, detected location and
+device type, the first and last URLs visited, and the cart total. A small
+JavaScript file captures the email as soon as it is entered on the checkout
+page so the address is available even if the customer never completes the
+order.
+
+The admin screen under **Gm2 → Abandoned Carts** displays a table of abandoned
+carts showing the IP address, email, location, device, products, cart value,
+entry and exit URLs, and the abandonment time. Recovery emails are added to a
+queue which is processed hourly by WP&nbsp;Cron via the `gm2_ac_process_queue`
+action. Developers can hook `gm2_ac_send_message` to send the actual email
+content. The cart timeout in minutes can be configured on the same settings
+page.
 
 
 
