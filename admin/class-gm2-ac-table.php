@@ -83,18 +83,11 @@ class GM2_AC_Table extends \WP_List_Table {
             if ($cart_value <= 0 && $row->cart_total) {
                 $cart_value = (float) $row->cart_total;
             }
-            $location = '';
-            if (class_exists('WC_Geolocation') && !empty($row->ip_address)) {
-                $geo = \WC_Geolocation::geolocate_ip($row->ip_address, false, false);
-                if (!empty($geo['country'])) {
-                    $location = $geo['country'];
-                }
-            }
             $items[] = [
                 'ip_address'  => esc_html($row->ip_address),
                 'email'       => esc_html($row->email),
-                'location'    => esc_html($location),
-                'device'      => esc_html($row->user_agent),
+                'location'    => esc_html($row->location),
+                'device'      => esc_html($row->device),
                 'products'    => esc_html(implode(', ', $products)),
                 'cart_value'  => wc_price($cart_value),
                 'entry_url'   => esc_url($row->entry_url),

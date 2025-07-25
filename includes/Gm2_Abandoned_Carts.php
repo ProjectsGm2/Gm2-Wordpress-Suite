@@ -22,6 +22,8 @@ class Gm2_Abandoned_Carts {
             email varchar(200) DEFAULT NULL,
             ip_address varchar(45) DEFAULT NULL,
             user_agent text DEFAULT NULL,
+            location varchar(100) DEFAULT NULL,
+            device varchar(20) DEFAULT NULL,
             entry_url text DEFAULT NULL,
             exit_url text DEFAULT NULL,
             cart_total decimal(10,2) DEFAULT 0,
@@ -60,6 +62,27 @@ class Gm2_Abandoned_Carts {
         $token      = WC()->session->get_customer_id();
         $ip         = $_SERVER['REMOTE_ADDR'] ?? '';
         $agent      = $_SERVER['HTTP_USER_AGENT'] ?? '';
+        $location   = '';
+        if (class_exists('WC_Geolocation') && !empty($ip)) {
+            $geo = \WC_Geolocation::geolocate_ip($ip, false, false);
+            if (!empty($geo['country'])) {
+                $location = $geo['country'];
+                if (!empty($geo['state'])) {
+                    $location .= '-' . $geo['state'];
+                }
+            }
+        }
+        $device = 'Desktop';
+        if (file_exists(GM2_PLUGIN_DIR . 'includes/MobileDetect.php')) {
+            require_once GM2_PLUGIN_DIR . 'includes/MobileDetect.php';
+            $detect = new \Mobile_Detect();
+            $detect->setUserAgent($agent);
+            if ($detect->isTablet()) {
+                $device = 'Tablet';
+            } elseif ($detect->isMobile()) {
+                $device = 'Mobile';
+            }
+        }
         $current_url = home_url($_SERVER['REQUEST_URI'] ?? '/');
         $total      = (float) $cart->get_cart_contents_total();
         global $wpdb;
@@ -73,6 +96,8 @@ class Gm2_Abandoned_Carts {
                     'created_at'    => current_time('mysql'),
                     'ip_address'    => $ip,
                     'user_agent'    => $agent,
+                    'location'      => $location,
+                    'device'        => $device,
                     'cart_total'    => $total
                 ],
                 ['id' => $row->id]
@@ -92,6 +117,8 @@ class Gm2_Abandoned_Carts {
                 'created_at'   => current_time('mysql'),
                 'ip_address'   => $ip,
                 'user_agent'   => $agent,
+                'location'     => $location,
+                'device'       => $device,
                 'entry_url'    => $current_url,
                 'cart_total'   => $total,
             ]);
