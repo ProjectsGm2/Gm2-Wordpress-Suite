@@ -96,6 +96,22 @@ class BulkAiPaginationTest extends WP_UnitTestCase {
     }
 }
 
+class BulkAiCachedResultsTest extends WP_UnitTestCase {
+    public function test_cached_results_preloaded() {
+        $post_id = self::factory()->post->create(['post_title' => 'Post']);
+        update_post_meta($post_id, '_gm2_ai_research', wp_json_encode(['seo_title' => 'Cached Title']));
+
+        $admin = new Gm2_SEO_Admin();
+        $user  = self::factory()->user->create(['role' => 'administrator']);
+        wp_set_current_user($user);
+        ob_start();
+        $admin->display_bulk_ai_page();
+        $html = ob_get_clean();
+        $this->assertStringContainsString('Cached Title', $html);
+        $this->assertStringContainsString('gm2-refresh-btn', $html);
+    }
+}
+
 class BulkAiApplyBatchAjaxTest extends WP_Ajax_UnitTestCase {
     public function test_batch_apply_updates_posts() {
         $posts = self::factory()->post->create_many(2);
