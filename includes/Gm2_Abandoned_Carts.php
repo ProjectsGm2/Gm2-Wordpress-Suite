@@ -6,6 +6,7 @@ if (!defined('ABSPATH')) {
 }
 
 class Gm2_Abandoned_Carts {
+    const CRON_HOOK = 'gm2_ac_mark_abandoned';
     public function install() {
         global $wpdb;
         $charset_collate = $wpdb->get_charset_collate();
@@ -48,6 +49,11 @@ class Gm2_Abandoned_Carts {
         add_action('woocommerce_update_cart_action_cart_updated', [$this, 'capture_cart']);
         add_action('template_redirect', [$this, 'maybe_mark_cart_abandoned']);
         add_action('woocommerce_thankyou', [$this, 'mark_cart_recovered']);
+
+        // Hook cron to mark carts abandoned even when no pages are loaded
+        add_action(self::CRON_HOOK, [$this, 'maybe_mark_cart_abandoned']);
+
+        self::schedule_event();
     }
 
     public function capture_cart() {
@@ -167,6 +173,19 @@ class Gm2_Abandoned_Carts {
         $row = $wpdb->get_row($wpdb->prepare("SELECT id FROM $table WHERE cart_token = %s", $token));
         if ($row) {
             $wpdb->update($table, [ 'recovered_order_id' => $order_id ], ['id' => $row->id]);
+        }
+    }
+
+    public static function schedule_event() {
+        if (!wp_next_scheduled(self::CRON_HOOK)) {
+            wp_schedule_event(time(), 'hourly', self::CRON_HOOK);
+        }
+    }
+
+    public static function clear_scheduled_event() {
+        $ts = wp_next_scheduled(self::CRON_HOOK);
+        if ($ts) {
+            wp_unschedule_event($ts, self::CRON_HOOK);
         }
     }
 }

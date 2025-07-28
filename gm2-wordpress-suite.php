@@ -118,6 +118,8 @@ function gm2_deactivate_plugin() {
     if ($ts) {
         wp_unschedule_event($ts, 'gm2_pagespeed_check');
     }
+
+    \Gm2\Gm2_Abandoned_Carts::clear_scheduled_event();
 }
 register_deactivation_hook(__FILE__, 'gm2_deactivate_plugin');
 
@@ -323,6 +325,15 @@ function gm2_run_pagespeed_check() {
     }
 }
 add_action('gm2_pagespeed_check', 'gm2_run_pagespeed_check');
+
+function gm2_handle_ac_option_change($old, $new) {
+    if ($new === '1') {
+        \Gm2\Gm2_Abandoned_Carts::schedule_event();
+    } else {
+        \Gm2\Gm2_Abandoned_Carts::clear_scheduled_event();
+    }
+}
+add_action('update_option_gm2_enable_abandoned_carts', 'gm2_handle_ac_option_change', 10, 2);
 
 function gm2_maybe_migrate_content_rules() {
     $current = (int) get_option('gm2_content_rules_version', 1);
