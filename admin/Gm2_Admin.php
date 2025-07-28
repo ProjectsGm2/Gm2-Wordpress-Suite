@@ -333,6 +333,20 @@ class Gm2_Admin {
             update_option('gm2_enable_google_oauth', empty($_POST['gm2_enable_google_oauth']) ? '0' : '1');
             update_option('gm2_enable_chatgpt', empty($_POST['gm2_enable_chatgpt']) ? '0' : '1');
             update_option('gm2_enable_abandoned_carts', empty($_POST['gm2_enable_abandoned_carts']) ? '0' : '1');
+
+            $enabled = !empty($_POST['gm2_enable_abandoned_carts']);
+            if ($enabled) {
+                global $wpdb;
+                $carts_table = $wpdb->prefix . 'wc_ac_carts';
+                $queue_table = $wpdb->prefix . 'wc_ac_email_queue';
+                $carts_exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $carts_table));
+                $queue_exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $queue_table));
+                if (!$carts_exists || !$queue_exists) {
+                    $ac = new Gm2_Abandoned_Carts();
+                    $ac->install();
+                }
+            }
+
             echo '<div class="updated notice"><p>' . esc_html__( 'Settings saved.', 'gm2-wordpress-suite' ) . '</p></div>';
         }
 
