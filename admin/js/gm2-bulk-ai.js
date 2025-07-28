@@ -1,4 +1,20 @@
 jQuery(function($){
+    var totalPosts = 0;
+    var applied = 0;
+
+    function initBar(max){
+        var $bar = $('#gm2-bulk-progress-bar');
+        if(!$bar.length){
+            $bar = $('<progress>',{id:'gm2-bulk-progress-bar',value:0,max:max,style:'width:100%;'});
+            $('#gm2-bulk-analyze').parent().after($bar);
+        }
+        $bar.attr('max',max).val(0).show();
+    }
+
+    function updateBar(val){
+        $('#gm2-bulk-progress-bar').val(val);
+    }
+
     $('#gm2-bulk-ai').on('click','#gm2-bulk-select-all',function(){
         var c=$(this).prop('checked');
         $('#gm2-bulk-list .gm2-select').prop('checked',c);
@@ -9,10 +25,14 @@ jQuery(function($){
         $('#gm2-bulk-list .gm2-select:checked').each(function(){ids.push($(this).val());});
         if(!ids.length) return;
 
+        totalPosts = ids.length;
+        applied = 0;
+        initBar(totalPosts);
+
         var $progress = $('#gm2-bulk-progress');
         if(!$progress.length){
             $progress = $('<p>',{id:'gm2-bulk-progress'});
-            $('#gm2-bulk-analyze').parent().after($progress);
+            $('#gm2-bulk-progress-bar').after($progress);
         }
         var total = ids.length, processed = 0, fatal = false;
 
@@ -22,6 +42,7 @@ jQuery(function($){
             }else{
                 $progress.text('Processing '+processed+' / '+total);
             }
+            updateBar(processed);
         }
 
         function processNext(){
@@ -33,7 +54,6 @@ jQuery(function($){
                 return;
             }
             var id = ids.shift();
-            processed++;
             updateProgress();
             var row=$('#gm2-row-'+id);row.find('.gm2-result').text('...');
             $.ajax({
@@ -59,6 +79,8 @@ jQuery(function($){
                     if(resp.data.page_name){html+='<p><label><input type="checkbox" class="gm2-apply" data-field="title" data-value="'+resp.data.page_name.replace(/"/g,'&quot;')+'"> Title: '+resp.data.page_name+'</label></p>';}
                     html+='<p><button class="button gm2-apply-btn" data-id="'+id+'">Apply</button></p>';
                     row.find('.gm2-result').html(html);
+                    processed++;
+                    updateProgress();
                     processNext();
                 }else{
                     fatal = true;
@@ -91,6 +113,8 @@ jQuery(function($){
         });
         $.post(gm2BulkAi.ajax_url,data).done(function(){
             $('#gm2-row-'+id+' .gm2-result').append('<span> ✓</span>');
+            applied++;
+            updateBar(applied);
         });
     });
 
@@ -120,6 +144,8 @@ jQuery(function($){
                     $('#gm2-row-'+id+' .gm2-result').append('<span> ✓</span>');
                 });
                 $msg.text('Done');
+                applied += Object.keys(posts).length;
+                updateBar(applied);
             }else{
                 $msg.text((resp&&resp.data)?resp.data:'Error');
             }
