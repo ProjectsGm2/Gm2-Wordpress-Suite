@@ -38,6 +38,7 @@ class Gm2_SEO_Admin {
         add_action('wp_ajax_gm2_research_content_rules', [$this, 'ajax_research_content_rules']);
         add_action('wp_ajax_gm2_research_guideline_rules', [$this, 'ajax_research_guideline_rules']);
         add_action('wp_ajax_gm2_ai_research', [$this, 'ajax_ai_research']);
+        add_action('wp_ajax_gm2_ai_research_clear', [$this, 'ajax_ai_research_clear']);
         add_action('wp_ajax_gm2_ai_generate_tax_description', [$this, 'ajax_generate_tax_description']);
         add_action('wp_ajax_gm2_bulk_ai_apply', [$this, 'ajax_bulk_ai_apply']);
         add_action('wp_ajax_gm2_bulk_ai_apply_batch', [$this, 'ajax_bulk_ai_apply_batch']);
@@ -1031,13 +1032,21 @@ class Gm2_SEO_Admin {
         foreach ($query->posts as $post) {
             $seo_title   = get_post_meta($post->ID, '_gm2_title', true);
             $description = get_post_meta($post->ID, '_gm2_description', true);
+            $stored      = get_post_meta($post->ID, '_gm2_ai_research', true);
+            $result_html = '';
+            if ($stored) {
+                $data = json_decode($stored, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($data)) {
+                    $result_html = $this->render_bulk_ai_result($data, $post->ID);
+                }
+            }
             echo '<tr id="gm2-row-' . intval($post->ID) . '">';
             echo '<th scope="row" class="check-column"><input type="checkbox" class="gm2-select" value="' . intval($post->ID) . '"></th>';
             echo '<td>' . esc_html($post->post_title) . '</td>';
             echo '<td>' . esc_html($seo_title) . '</td>';
             echo '<td>' . esc_html($description) . '</td>';
             echo '<td>' . esc_html($post->post_name) . '</td>';
-            echo '<td class="gm2-result"></td>';
+            echo '<td class="gm2-result">' . $result_html . '</td>';
             echo '</tr>';
         }
         echo '</tbody></table>';
@@ -1055,6 +1064,28 @@ class Gm2_SEO_Admin {
             '<span id="gm2-bulk-apply-msg"></span></p>';
         echo '<p><progress id="gm2-bulk-progress-bar" value="0" max="100" style="width:100%;display:none"></progress></p>';
         echo '</div>';
+    }
+
+    private function render_bulk_ai_result($data, $post_id) {
+        $html = '';
+        if (!empty($data['seo_title'])) {
+            $html .= '<p><label><input type="checkbox" class="gm2-apply" data-field="seo_title" data-value="' . esc_attr($data['seo_title']) . '"> ' . esc_html($data['seo_title']) . '</label></p>';
+        }
+        if (!empty($data['description'])) {
+            $html .= '<p><label><input type="checkbox" class="gm2-apply" data-field="seo_description" data-value="' . esc_attr($data['description']) . '"> ' . esc_html($data['description']) . '</label></p>';
+        }
+        if (!empty($data['slug'])) {
+            $html .= '<p><label><input type="checkbox" class="gm2-apply" data-field="slug" data-value="' . esc_attr($data['slug']) . '"> Slug: ' . esc_html($data['slug']) . '</label></p>';
+        }
+        if (!empty($data['page_name'])) {
+            $html .= '<p><label><input type="checkbox" class="gm2-apply" data-field="title" data-value="' . esc_attr($data['page_name']) . '"> Title: ' . esc_html($data['page_name']) . '</label></p>';
+        }
+        if ($html !== '') {
+            $html .= '<p><button class="button gm2-apply-btn" data-id="' . intval($post_id) . '">' . esc_html__( 'Apply', 'gm2-wordpress-suite' ) . '</button> ';
+            $html .= '<button class="button gm2-refresh-btn" data-id="' . intval($post_id) . '">' . esc_html__( 'Refresh', 'gm2-wordpress-suite' ) . '</button> ';
+            $html .= '<button class="button gm2-clear-btn" data-id="' . intval($post_id) . '">' . esc_html__( 'Clear', 'gm2-wordpress-suite' ) . '</button></p>';
+        }
+        return $html;
     }
 
     public function display_google_connect_page() {
@@ -2984,6 +3015,23 @@ class Gm2_SEO_Admin {
             }
         }
 
+        $refresh = !empty($_POST['refresh']);
+
+        if (!$refresh) {
+            $stored = '';
+            if ($post_id) {
+                $stored = get_post_meta($post_id, '_gm2_ai_research', true);
+            } elseif ($term_id && $taxonomy) {
+                $stored = get_term_meta($term_id, '_gm2_ai_research', true);
+            }
+            if ($stored) {
+                $data = json_decode($stored, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($data)) {
+                    wp_send_json_success($data);
+                }
+            }
+        }
+
         $title = $url = '';
         $seo_title = $seo_description = $focus = $canonical = '';
 
@@ -3507,6 +3555,30 @@ class Gm2_SEO_Admin {
         }
 
         wp_send_json_success();
+    }
+
+    public function ajax_ai_research_clear() {
+        check_ajax_referer('gm2_ai_research');
+
+        $post_id  = isset($_POST['post_id']) ? absint($_POST['post_id']) : 0;
+        $term_id  = isset($_POST['term_id']) ? absint($_POST['term_id']) : 0;
+        $taxonomy = isset($_POST['taxonomy']) ? sanitize_key($_POST['taxonomy']) : '';
+
+        if ($post_id) {
+            if (!current_user_can('edit_post', $post_id)) {
+                wp_send_json_error( __( 'permission denied', 'gm2-wordpress-suite' ), 403 );
+            }
+            delete_post_meta($post_id, '_gm2_ai_research');
+            wp_send_json_success();
+        } elseif ($term_id && $taxonomy) {
+            if (!current_user_can('edit_term', $term_id)) {
+                wp_send_json_error( __( 'permission denied', 'gm2-wordpress-suite' ), 403 );
+            }
+            delete_term_meta($term_id, '_gm2_ai_research');
+            wp_send_json_success();
+        }
+
+        wp_send_json_error( __( 'invalid parameters', 'gm2-wordpress-suite' ) );
     }
 
     public function enqueue_editor_scripts($hook = null) {
