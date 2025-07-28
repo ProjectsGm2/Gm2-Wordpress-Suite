@@ -93,4 +93,39 @@ jQuery(function($){
             $('#gm2-row-'+id+' .gm2-result').append('<span> ✓</span>');
         });
     });
+
+    $('#gm2-bulk-ai').on('click','#gm2-bulk-apply-all',function(e){
+        e.preventDefault();
+        var posts={};
+        $('#gm2-bulk-list tr').each(function(){
+            var id=$(this).attr('id');
+            if(!id) return;id=id.replace('gm2-row-','');
+            var fields={};
+            $(this).find('.gm2-apply:checked').each(function(){
+                fields[$(this).data('field')]= $(this).data('value');
+            });
+            if(Object.keys(fields).length){posts[id]=fields;}
+        });
+        if($.isEmptyObject(posts)) return;
+        var $msg=$('#gm2-bulk-apply-msg');
+        $msg.text('Saving...');
+        $.ajax({
+            url: gm2BulkAi.ajax_url,
+            method:'POST',
+            data:{action:'gm2_bulk_ai_apply_batch',posts:JSON.stringify(posts),_ajax_nonce:gm2BulkAi.apply_nonce},
+            dataType:'json'
+        }).done(function(resp){
+            if(resp&&resp.success){
+                $.each(posts,function(id){
+                    $('#gm2-row-'+id+' .gm2-result').append('<span> ✓</span>');
+                });
+                $msg.text('Done');
+            }else{
+                $msg.text((resp&&resp.data)?resp.data:'Error');
+            }
+        }).fail(function(jqXHR,textStatus){
+            var msg=(jqXHR&&jqXHR.responseJSON&&jqXHR.responseJSON.data)?jqXHR.responseJSON.data:(jqXHR&&jqXHR.responseText?jqXHR.responseText:textStatus);
+            $msg.text(msg||'Error');
+        });
+    });
 });
