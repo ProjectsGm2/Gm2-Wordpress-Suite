@@ -14,6 +14,7 @@ class GM2_AC_Table extends \WP_List_Table {
 
     public function get_columns() {
         return [
+            'status'      => __('Status', 'gm2-wordpress-suite'),
             'ip_address'  => __('IP Address', 'gm2-wordpress-suite'),
             'email'       => __('Email', 'gm2-wordpress-suite'),
             'location'    => __('Location', 'gm2-wordpress-suite'),
@@ -37,7 +38,7 @@ class GM2_AC_Table extends \WP_List_Table {
         $paged    = $this->get_pagenum();
         $search   = isset($_REQUEST['s']) ? trim($_REQUEST['s']) : '';
 
-        $where  = 'WHERE abandoned_at IS NOT NULL AND recovered_order_id IS NULL';
+        $where  = 'WHERE recovered_order_id IS NULL';
         $params = [];
         if ($search !== '') {
             $where .= ' AND (email LIKE %s OR ip_address LIKE %s)';
@@ -50,7 +51,7 @@ class GM2_AC_Table extends \WP_List_Table {
         $total_items = $wpdb->get_var($wpdb->prepare($total_sql, ...$params));
 
         $offset   = ($paged - 1) * $per_page;
-        $data_sql = "SELECT * FROM $table $where ORDER BY abandoned_at DESC LIMIT %d OFFSET %d";
+        $data_sql = "SELECT * FROM $table $where ORDER BY created_at DESC LIMIT %d OFFSET %d";
         $params2  = array_merge($params, [ $per_page, $offset ]);
         $rows     = $wpdb->get_results($wpdb->prepare($data_sql, ...$params2));
 
@@ -83,7 +84,15 @@ class GM2_AC_Table extends \WP_List_Table {
             if ($cart_value <= 0 && $row->cart_total) {
                 $cart_value = (float) $row->cart_total;
             }
+
+            $status = $row->abandoned_at ? __('Abandoned', 'gm2-wordpress-suite') : __('Active', 'gm2-wordpress-suite');
+            $abandoned_at = '';
+            if ($row->abandoned_at) {
+                $abandoned_at = mysql2date(get_option('date_format').' '.get_option('time_format'), $row->abandoned_at);
+            }
+
             $items[] = [
+                'status'      => esc_html($status),
                 'ip_address'  => esc_html($row->ip_address),
                 'email'       => esc_html($row->email),
                 'location'    => esc_html($row->location),
@@ -92,7 +101,7 @@ class GM2_AC_Table extends \WP_List_Table {
                 'cart_value'  => wc_price($cart_value),
                 'entry_url'   => esc_url($row->entry_url),
                 'exit_url'    => esc_url($row->exit_url),
-                'abandoned_at'=> esc_html(mysql2date(get_option('date_format').' '.get_option('time_format'), $row->abandoned_at)),
+                'abandoned_at'=> esc_html($abandoned_at),
             ];
         }
 
