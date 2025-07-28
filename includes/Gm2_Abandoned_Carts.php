@@ -144,7 +144,10 @@ class Gm2_Abandoned_Carts {
 
         // Mark carts without orders after timeout
         $timeout = absint(get_option('gm2_ac_timeout', 60));
-        $threshold = gmdate('Y-m-d H:i:s', time() - $timeout * 60);
+        $threshold = gmdate(
+            'Y-m-d H:i:s',
+            current_time('timestamp') - $timeout * 60
+        );
         $wpdb->query(
             $wpdb->prepare(
                 "UPDATE $table SET abandoned_at = %s WHERE abandoned_at IS NULL AND cart_contents <> '' AND created_at <= %s",
