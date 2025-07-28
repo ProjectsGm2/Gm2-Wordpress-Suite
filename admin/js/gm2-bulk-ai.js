@@ -16,7 +16,8 @@ jQuery(function($){
     }
 
     function buildHtml(data,id){
-        var html='';
+        var selectLabel = window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.selectAll : 'Select all';
+        var html='<p><label><input type="checkbox" class="gm2-row-select-all"> '+selectLabel+'</label></p>';
         if(data.seo_title){html+='<p><label><input type="checkbox" class="gm2-apply" data-field="seo_title" data-value="'+data.seo_title.replace(/"/g,'&quot;')+'"> '+data.seo_title+'</label></p>';}
         if(data.description){html+='<p><label><input type="checkbox" class="gm2-apply" data-field="seo_description" data-value="'+data.description.replace(/"/g,'&quot;')+'"> '+data.description+'</label></p>';}
         if(data.slug){
@@ -35,6 +36,10 @@ jQuery(function($){
     $('#gm2-bulk-ai').on('click','#gm2-bulk-select-all',function(){
         var c=$(this).prop('checked');
         $('#gm2-bulk-list .gm2-select').prop('checked',c);
+    });
+    $('#gm2-bulk-list').on('click','.gm2-row-select-all',function(){
+        var checked=$(this).prop('checked');
+        $(this).closest('.gm2-result').find('.gm2-apply').prop('checked',checked);
     });
     $('#gm2-bulk-ai').on('click','#gm2-bulk-analyze',function(e){
         e.preventDefault();
