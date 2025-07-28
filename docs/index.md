@@ -22,6 +22,9 @@ Existing prompt logic automatically includes these options via `gm2_get_seo_cont
 - The new "Apply All" button for applying suggestions in bulk.
 - The global progress indicator tracking analysis and apply actions.
 - Reuse of cached AI results with options to refresh or clear them.
+- Progress messages now use translation functions for localization.
+- Each row in the table includes a "Select All" checkbox to quickly apply that post's suggestions.
+- Rows highlight after applying suggestions so you can see what changed.
 
 ## Building the Business Context Prompt
 
