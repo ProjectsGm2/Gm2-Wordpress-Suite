@@ -18,6 +18,9 @@ Key features include:
 * Tariff management and redirects
 * Expanded SEO Context feeds AI prompts with business details
 * Focus keywords are tracked to prevent duplicates in AI suggestions
+* Bulk AI progress messages support localization
+* Row-level "Select all" checkboxes apply suggestions per post
+* Updated rows are briefly highlighted after applying suggestions
 
 == Installation ==
 1. Upload the plugin files to the `/wp-content/plugins/gm2-wordpress-suite` directory.
