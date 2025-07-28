@@ -40,6 +40,7 @@ class Gm2_SEO_Admin {
         add_action('wp_ajax_gm2_ai_research', [$this, 'ajax_ai_research']);
         add_action('wp_ajax_gm2_ai_generate_tax_description', [$this, 'ajax_generate_tax_description']);
         add_action('wp_ajax_gm2_bulk_ai_apply', [$this, 'ajax_bulk_ai_apply']);
+        add_action('wp_ajax_gm2_bulk_ai_apply_batch', [$this, 'ajax_bulk_ai_apply_batch']);
 
         add_action('add_attachment', [$this, 'auto_fill_alt_on_upload']);
         add_action('admin_notices', [$this, 'admin_notices']);
@@ -1049,7 +1050,9 @@ class Gm2_SEO_Admin {
         if ($links) {
             echo '<div class="tablenav"><div class="tablenav-pages">' . $links . '</div></div>';
         }
-        echo '<p><button type="button" class="button" id="gm2-bulk-analyze">' . esc_html__( 'Analyze Selected', 'gm2-wordpress-suite' ) . '</button></p>';
+        echo '<p><button type="button" class="button" id="gm2-bulk-analyze">' . esc_html__( 'Analyze Selected', 'gm2-wordpress-suite' ) . '</button> ' .
+            '<button type="button" class="button" id="gm2-bulk-apply-all">' . esc_html__( 'Apply All', 'gm2-wordpress-suite' ) . '</button> ' .
+            '<span id="gm2-bulk-apply-msg"></span></p>';
         echo '</div>';
     }
 
@@ -3465,6 +3468,41 @@ class Gm2_SEO_Admin {
         }
         if (isset($_POST['seo_description'])) {
             update_post_meta($post_id, '_gm2_description', sanitize_textarea_field(wp_unslash($_POST['seo_description'])));
+        }
+
+        wp_send_json_success();
+    }
+
+    public function ajax_bulk_ai_apply_batch() {
+        check_ajax_referer('gm2_bulk_ai_apply');
+
+        $posts = isset($_POST['posts']) ? json_decode(wp_unslash($_POST['posts']), true) : null;
+        if (!is_array($posts)) {
+            wp_send_json_error( __( 'invalid data', 'gm2-wordpress-suite' ) );
+        }
+
+        foreach ($posts as $post_id => $fields) {
+            $post_id = absint($post_id);
+            if (!$post_id || !current_user_can('edit_post', $post_id)) {
+                continue;
+            }
+
+            $data = ['ID' => $post_id];
+            if (isset($fields['title'])) {
+                $data['post_title'] = sanitize_text_field($fields['title']);
+            }
+            if (isset($fields['slug'])) {
+                $data['post_name'] = sanitize_title($fields['slug']);
+            }
+            if (count($data) > 1) {
+                wp_update_post($data);
+            }
+            if (isset($fields['seo_title'])) {
+                update_post_meta($post_id, '_gm2_title', sanitize_text_field($fields['seo_title']));
+            }
+            if (isset($fields['seo_description'])) {
+                update_post_meta($post_id, '_gm2_description', sanitize_textarea_field($fields['seo_description']));
+            }
         }
 
         wp_send_json_success();

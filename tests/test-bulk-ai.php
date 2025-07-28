@@ -95,3 +95,25 @@ class BulkAiPaginationTest extends WP_UnitTestCase {
         unset($_GET['paged']);
     }
 }
+
+class BulkAiApplyBatchAjaxTest extends WP_Ajax_UnitTestCase {
+    public function test_batch_apply_updates_posts() {
+        $posts = self::factory()->post->create_many(2);
+        $this->_setRole('administrator');
+        $payload = [
+            $posts[0] => [ 'seo_title' => 'One', 'seo_description' => 'Desc1' ],
+            $posts[1] => [ 'slug' => 'two', 'title' => 'Two' ],
+        ];
+        $_POST['posts'] = wp_json_encode($payload);
+        $_POST['_ajax_nonce'] = wp_create_nonce('gm2_bulk_ai_apply');
+        $_REQUEST['_ajax_nonce'] = $_POST['_ajax_nonce'];
+        try { $this->_handleAjax('gm2_bulk_ai_apply_batch'); } catch (WPAjaxDieContinueException $e) {}
+        $resp = json_decode($this->_last_response, true);
+        $this->assertTrue($resp['success']);
+        $this->assertSame('One', get_post_meta($posts[0], '_gm2_title', true));
+        $this->assertSame('Desc1', get_post_meta($posts[0], '_gm2_description', true));
+        $post2 = get_post($posts[1]);
+        $this->assertSame('two', $post2->post_name);
+        $this->assertSame('Two', $post2->post_title);
+    }
+}
