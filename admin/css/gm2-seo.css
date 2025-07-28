@@ -24,3 +24,6 @@
 
 #gm2-elementor-seo-panel { padding:10px; }
 #elementor-panel-footer #gm2-elementor-seo-panel .gm2-tab-panel { border:none; }
+.gm2-applied {
+    background:#f9f9f9;
+}
