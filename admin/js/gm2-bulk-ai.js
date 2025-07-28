@@ -19,9 +19,16 @@ jQuery(function($){
         var html='';
         if(data.seo_title){html+='<p><label><input type="checkbox" class="gm2-apply" data-field="seo_title" data-value="'+data.seo_title.replace(/"/g,'&quot;')+'"> '+data.seo_title+'</label></p>';}
         if(data.description){html+='<p><label><input type="checkbox" class="gm2-apply" data-field="seo_description" data-value="'+data.description.replace(/"/g,'&quot;')+'"> '+data.description+'</label></p>';}
-        if(data.slug){html+='<p><label><input type="checkbox" class="gm2-apply" data-field="slug" data-value="'+data.slug+'"> Slug: '+data.slug+'</label></p>';}
-        if(data.page_name){html+='<p><label><input type="checkbox" class="gm2-apply" data-field="title" data-value="'+data.page_name.replace(/"/g,'&quot;')+'"> Title: '+data.page_name+'</label></p>';}
-        html+='<p><button class="button gm2-apply-btn" data-id="'+id+'">Apply</button> <button class="button gm2-refresh-btn" data-id="'+id+'">Refresh</button> <button class="button gm2-clear-btn" data-id="'+id+'">Clear</button></p>';
+        if(data.slug){
+            var slugLabel = window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.slug : 'Slug';
+            html+='<p><label><input type="checkbox" class="gm2-apply" data-field="slug" data-value="'+data.slug+'"> '+slugLabel+': '+data.slug+'</label></p>';}
+        if(data.page_name){
+            var titleLabel = window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.title : 'Title';
+            html+='<p><label><input type="checkbox" class="gm2-apply" data-field="title" data-value="'+data.page_name.replace(/"/g,'&quot;')+'"> '+titleLabel+': '+data.page_name+'</label></p>';}
+        var applyText = window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.apply : 'Apply';
+        var refreshText = window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.refresh : 'Refresh';
+        var clearText = window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.clear : 'Clear';
+        html+='<p><button class="button gm2-apply-btn" data-id="'+id+'">'+applyText+'</button> <button class="button gm2-refresh-btn" data-id="'+id+'">'+refreshText+'</button> <button class="button gm2-clear-btn" data-id="'+id+'">'+clearText+'</button></p>';
         return html;
     }
 
@@ -50,7 +57,8 @@ jQuery(function($){
             if(msg){
                 $progress.text(msg);
             }else{
-                $progress.text('Processing '+processed+' / '+total);
+                var procText = window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.processing : 'Processing %1$s / %2$s';
+                $progress.text(procText.replace('%1$s', processed).replace('%2$s', total));
             }
             updateBar(processed);
         }
@@ -60,7 +68,8 @@ jQuery(function($){
                 return;
             }
             if(!ids.length){
-                updateProgress('Complete');
+                var doneMsg = window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.complete : 'Complete';
+                updateProgress(doneMsg);
                 return;
             }
             var id = ids.shift();
@@ -76,8 +85,9 @@ jQuery(function($){
                 if(typeof resp === 'string'){
                     try{ resp = JSON.parse(resp); }catch(e){
                         fatal = true;
-                        row.find('.gm2-result').text('Invalid JSON response');
-                        updateProgress('Stopped: Invalid JSON');
+                        var inv = window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.invalidJson : 'Invalid JSON response';
+                        row.find('.gm2-result').text(inv);
+                        updateProgress((window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.stopped : 'Stopped:')+' '+inv);
                         return;
                     }
                 }
@@ -89,9 +99,9 @@ jQuery(function($){
                     processNext();
                 }else{
                     fatal = true;
-                    var msg = (resp && resp.data) ? (resp.data.message || resp.data) : 'Error';
+                    var msg = (resp && resp.data) ? (resp.data.message || resp.data) : (window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.error : 'Error');
                     row.find('.gm2-result').text(msg);
-                    updateProgress('Stopped: '+msg);
+                    updateProgress((window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.stopped : 'Stopped:')+' '+msg);
                 }
             })
             .fail(function(jqXHR, textStatus){
@@ -100,10 +110,12 @@ jQuery(function($){
                     ? jqXHR.responseJSON.data
                     : (jqXHR && jqXHR.responseText ? jqXHR.responseText : textStatus);
                 if(textStatus === 'parsererror'){
-                    msg = 'Invalid JSON response';
+                    msg = window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.invalidJson : 'Invalid JSON response';
                 }
-                row.find('.gm2-result').text(msg || 'Error');
-                updateProgress('Stopped: '+(msg || 'Error'));
+                row.find('.gm2-result').text(msg || (window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.error : 'Error'));
+                var stopMsg = window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.stopped : 'Stopped:';
+                var errWord = window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.error : 'Error';
+                updateProgress(stopMsg+' '+(msg || errWord));
             });
         }
         updateProgress();
@@ -183,7 +195,8 @@ jQuery(function($){
         });
         if($.isEmptyObject(posts)) return;
         var $msg=$('#gm2-bulk-apply-msg');
-        $msg.text('Saving...');
+        var savingText = window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.saving : 'Saving...';
+        $msg.text(savingText);
         $.ajax({
             url: gm2BulkAi.ajax_url,
             method:'POST',
@@ -194,15 +207,15 @@ jQuery(function($){
                 $.each(posts,function(id){
                     $('#gm2-row-'+id+' .gm2-result').append('<span> ✓</span>');
                 });
-                $msg.text('Done');
+                $msg.text(window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.done : 'Done');
                 applied += Object.keys(posts).length;
                 updateBar(applied);
             }else{
-                $msg.text((resp&&resp.data)?resp.data:'Error');
+                $msg.text((resp&&resp.data)?resp.data:(window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.error : 'Error'));
             }
         }).fail(function(jqXHR,textStatus){
             var msg=(jqXHR&&jqXHR.responseJSON&&jqXHR.responseJSON.data)?jqXHR.responseJSON.data:(jqXHR&&jqXHR.responseText?jqXHR.responseText:textStatus);
-            $msg.text(msg||'Error');
+            $msg.text(msg || (window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.error : 'Error'));
         });
     });
 });

@@ -197,6 +197,20 @@ class Gm2_Admin {
                         'nonce'       => wp_create_nonce('gm2_ai_research'),
                         'apply_nonce' => wp_create_nonce('gm2_bulk_ai_apply'),
                         'ajax_url'    => admin_url('admin-ajax.php'),
+                        'i18n'        => [
+                            'processing'   => __( 'Processing %1$s / %2$s', 'gm2-wordpress-suite' ),
+                            'complete'     => __( 'Complete', 'gm2-wordpress-suite' ),
+                            'stopped'      => __( 'Stopped:', 'gm2-wordpress-suite' ),
+                            'invalidJson'  => __( 'Invalid JSON response', 'gm2-wordpress-suite' ),
+                            'error'        => __( 'Error', 'gm2-wordpress-suite' ),
+                            'saving'       => __( 'Saving...', 'gm2-wordpress-suite' ),
+                            'done'         => __( 'Done', 'gm2-wordpress-suite' ),
+                            'slug'         => __( 'Slug', 'gm2-wordpress-suite' ),
+                            'title'        => __( 'Title', 'gm2-wordpress-suite' ),
+                            'apply'        => __( 'Apply', 'gm2-wordpress-suite' ),
+                            'refresh'      => __( 'Refresh', 'gm2-wordpress-suite' ),
+                            'clear'        => __( 'Clear', 'gm2-wordpress-suite' ),
+                        ],
                     ]
                 );
             }
