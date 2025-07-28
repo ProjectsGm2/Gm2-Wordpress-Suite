@@ -1067,24 +1067,30 @@ class Gm2_SEO_Admin {
     }
 
     private function render_bulk_ai_result($data, $post_id) {
-        $html = '';
+        $html        = '';
+        $suggestions = '';
+
         if (!empty($data['seo_title'])) {
-            $html .= '<p><label><input type="checkbox" class="gm2-apply" data-field="seo_title" data-value="' . esc_attr($data['seo_title']) . '"> ' . esc_html($data['seo_title']) . '</label></p>';
+            $suggestions .= '<p><label><input type="checkbox" class="gm2-apply" data-field="seo_title" data-value="' . esc_attr($data['seo_title']) . '"> ' . esc_html($data['seo_title']) . '</label></p>';
         }
         if (!empty($data['description'])) {
-            $html .= '<p><label><input type="checkbox" class="gm2-apply" data-field="seo_description" data-value="' . esc_attr($data['description']) . '"> ' . esc_html($data['description']) . '</label></p>';
+            $suggestions .= '<p><label><input type="checkbox" class="gm2-apply" data-field="seo_description" data-value="' . esc_attr($data['description']) . '"> ' . esc_html($data['description']) . '</label></p>';
         }
         if (!empty($data['slug'])) {
-            $html .= '<p><label><input type="checkbox" class="gm2-apply" data-field="slug" data-value="' . esc_attr($data['slug']) . '"> ' . esc_html__( 'Slug', 'gm2-wordpress-suite' ) . ': ' . esc_html($data['slug']) . '</label></p>';
+            $suggestions .= '<p><label><input type="checkbox" class="gm2-apply" data-field="slug" data-value="' . esc_attr($data['slug']) . '"> ' . esc_html__( 'Slug', 'gm2-wordpress-suite' ) . ': ' . esc_html($data['slug']) . '</label></p>';
         }
         if (!empty($data['page_name'])) {
-            $html .= '<p><label><input type="checkbox" class="gm2-apply" data-field="title" data-value="' . esc_attr($data['page_name']) . '"> ' . esc_html__( 'Title', 'gm2-wordpress-suite' ) . ': ' . esc_html($data['page_name']) . '</label></p>';
+            $suggestions .= '<p><label><input type="checkbox" class="gm2-apply" data-field="title" data-value="' . esc_attr($data['page_name']) . '"> ' . esc_html__( 'Title', 'gm2-wordpress-suite' ) . ': ' . esc_html($data['page_name']) . '</label></p>';
         }
-        if ($html !== '') {
+
+        if ($suggestions !== '') {
+            $html .= '<p><label><input type="checkbox" class="gm2-row-select-all"> ' . esc_html__( 'Select all', 'gm2-wordpress-suite' ) . '</label></p>';
+            $html .= $suggestions;
             $html .= '<p><button class="button gm2-apply-btn" data-id="' . intval($post_id) . '">' . esc_html__( 'Apply', 'gm2-wordpress-suite' ) . '</button> ';
-            $html .= '<button class="button gm2-refresh-btn" data-id="' . intval($post_id) . '">' . esc_html__( 'Refresh', 'gm2-wordpress-suite' ) . '</button> ';
+            $html .= '<button class="button gm2-refresh-btn" data-id="' . intval($post_id) . '">' . esc_html__( 'Refresh', 'gm2-wordpress-suite' ) . '</button>';
             $html .= '<button class="button gm2-clear-btn" data-id="' . intval($post_id) . '">' . esc_html__( 'Clear', 'gm2-wordpress-suite' ) . '</button></p>';
         }
+
         return $html;
     }
 

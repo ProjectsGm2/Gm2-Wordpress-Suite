@@ -210,6 +210,7 @@ class Gm2_Admin {
                             'apply'        => __( 'Apply', 'gm2-wordpress-suite' ),
                             'refresh'      => __( 'Refresh', 'gm2-wordpress-suite' ),
                             'clear'        => __( 'Clear', 'gm2-wordpress-suite' ),
+                            'selectAll'    => __( 'Select all', 'gm2-wordpress-suite' ),
                         ],
                     ]
                 );
