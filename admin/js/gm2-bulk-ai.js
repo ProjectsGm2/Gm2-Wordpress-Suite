@@ -8,9 +8,34 @@ jQuery(function($){
         var ids=[];
         $('#gm2-bulk-list .gm2-select:checked').each(function(){ids.push($(this).val());});
         if(!ids.length) return;
-        ids.forEach(function(id){
+
+        var $progress = $('#gm2-bulk-progress');
+        if(!$progress.length){
+            $progress = $('<p>',{id:'gm2-bulk-progress'});
+            $('#gm2-bulk-analyze').parent().after($progress);
+        }
+        var total = ids.length, processed = 0, fatal = false;
+
+        function updateProgress(msg){
+            if(msg){
+                $progress.text(msg);
+            }else{
+                $progress.text('Processing '+processed+' / '+total);
+            }
+        }
+
+        function processNext(){
+            if(fatal){
+                return;
+            }
+            if(!ids.length){
+                updateProgress('Complete');
+                return;
+            }
+            var id = ids.shift();
+            processed++;
+            updateProgress();
             var row=$('#gm2-row-'+id);row.find('.gm2-result').text('...');
-            // Use $.ajax so jQuery handles JSON parsing for us
             $.ajax({
                 url: gm2BulkAi.ajax_url,
                 method: 'POST',
@@ -20,7 +45,9 @@ jQuery(function($){
             .done(function(resp){
                 if(typeof resp === 'string'){
                     try{ resp = JSON.parse(resp); }catch(e){
+                        fatal = true;
                         row.find('.gm2-result').text('Invalid JSON response');
+                        updateProgress('Stopped: Invalid JSON');
                         return;
                     }
                 }
@@ -32,9 +59,16 @@ jQuery(function($){
                     if(resp.data.page_name){html+='<p><label><input type="checkbox" class="gm2-apply" data-field="title" data-value="'+resp.data.page_name.replace(/"/g,'&quot;')+'"> Title: '+resp.data.page_name+'</label></p>';}
                     html+='<p><button class="button gm2-apply-btn" data-id="'+id+'">Apply</button></p>';
                     row.find('.gm2-result').html(html);
-                }else{row.find('.gm2-result').text('Error');}
+                    processNext();
+                }else{
+                    fatal = true;
+                    var msg = (resp && resp.data) ? (resp.data.message || resp.data) : 'Error';
+                    row.find('.gm2-result').text(msg);
+                    updateProgress('Stopped: '+msg);
+                }
             })
             .fail(function(jqXHR, textStatus){
+                fatal = true;
                 var msg = (jqXHR && jqXHR.responseJSON && jqXHR.responseJSON.data)
                     ? jqXHR.responseJSON.data
                     : (jqXHR && jqXHR.responseText ? jqXHR.responseText : textStatus);
@@ -42,8 +76,11 @@ jQuery(function($){
                     msg = 'Invalid JSON response';
                 }
                 row.find('.gm2-result').text(msg || 'Error');
+                updateProgress('Stopped: '+(msg || 'Error'));
             });
-        });
+        }
+        updateProgress();
+        processNext();
     });
     $('#gm2-bulk-list').on('click','.gm2-apply-btn',function(e){
         e.preventDefault();
