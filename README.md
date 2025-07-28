@@ -87,13 +87,7 @@ JavaScript file captures the email as soon as it is entered on the checkout
 page so the address is available even if the customer never completes the
 order.
 
-The admin screen under **Gm2 → Abandoned Carts** displays a table of abandoned
-carts showing the IP address, email, location, device, products, cart value,
-entry and exit URLs, and the abandonment time. Recovery emails are added to a
-queue which is processed hourly by WP&nbsp;Cron via the `gm2_ac_process_queue`
-action. Developers can hook `gm2_ac_send_message` to send the actual email
-content. The cart timeout in minutes can be configured on the same settings
-page.
+The admin screen under **Gm2 → Abandoned Carts** displays a table of all carts (both active and abandoned) showing the IP address, email, location, device, products, cart value, entry and exit URLs, and the abandonment time. Each row includes a **Status** column so you can see whether a cart is still active or has been abandoned. Recovery emails are added to a queue which is processed hourly by WP&nbsp;Cron via the `gm2_ac_process_queue` action. Developers can hook `gm2_ac_send_message` to send the actual email content. The cart timeout in minutes can be configured on the same settings page.
 
 
 
