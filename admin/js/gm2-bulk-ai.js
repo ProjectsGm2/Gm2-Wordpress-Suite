@@ -134,7 +134,9 @@ jQuery(function($){
             data[$(this).data('field')]= $(this).data('value');
         });
         $.post(gm2BulkAi.ajax_url,data).done(function(){
-            $('#gm2-row-'+id+' .gm2-result').append('<span> ✓</span>');
+            var row = $('#gm2-row-'+id);
+            row.find('.gm2-result').append('<span> ✓</span>');
+            row.addClass('gm2-applied');
             applied++;
             updateBar(applied);
         });
@@ -176,6 +178,7 @@ jQuery(function($){
         }).done(function(resp){
             if(resp&&resp.success){
                 row.find('.gm2-result').empty();
+                row.removeClass('gm2-applied');
             }else{
                 var msg=(resp&&resp.data)?(resp.data.message||resp.data):'Error';
                 row.find('.gm2-result').text(msg);
@@ -210,7 +213,9 @@ jQuery(function($){
         }).done(function(resp){
             if(resp&&resp.success){
                 $.each(posts,function(id){
-                    $('#gm2-row-'+id+' .gm2-result').append('<span> ✓</span>');
+                    var row = $('#gm2-row-'+id);
+                    row.find('.gm2-result').append('<span> ✓</span>');
+                    row.addClass('gm2-applied');
                 });
                 $msg.text(window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.done : 'Done');
                 applied += Object.keys(posts).length;
