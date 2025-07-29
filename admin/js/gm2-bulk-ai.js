@@ -157,6 +157,9 @@ jQuery(function($){
                 hideSpinner($res);
                 row.find('.gm2-result').append('<span> ✓</span>');
                 row.addClass('gm2-applied');
+                setTimeout(function(){
+                    row.removeClass('gm2-applied');
+                },3000);
                 applied++;
                 updateBar(applied);
             })
@@ -249,6 +252,9 @@ jQuery(function($){
                     hideSpinner(row.find('.gm2-result'));
                     row.find('.gm2-result').append('<span> ✓</span>');
                     row.addClass('gm2-applied');
+                    setTimeout(function(){
+                        row.removeClass('gm2-applied');
+                    },3000);
                 });
                 $msg.text(window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.done : 'Done');
                 applied += Object.keys(posts).length;
