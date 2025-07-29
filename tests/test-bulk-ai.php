@@ -89,6 +89,36 @@ class BulkAiFilterTest extends WP_UnitTestCase {
         $this->assertStringContainsString('In', $html);
         $this->assertStringNotContainsString('Out', $html);
     }
+
+    public function test_missing_title_filter_limits_results() {
+        $has = self::factory()->post->create(['post_title' => 'Has']);
+        update_post_meta($has, '_gm2_title', 't');
+        $missing = self::factory()->post->create(['post_title' => 'Missing']);
+        update_option('gm2_bulk_ai_missing_title', '1');
+        $admin = new Gm2_SEO_Admin();
+        $user  = self::factory()->user->create(['role' => 'administrator']);
+        wp_set_current_user($user);
+        ob_start();
+        $admin->display_bulk_ai_page();
+        $html = ob_get_clean();
+        $this->assertStringContainsString('Missing', $html);
+        $this->assertStringNotContainsString('Has', $html);
+    }
+
+    public function test_missing_description_filter_limits_results() {
+        $has = self::factory()->post->create(['post_title' => 'HasD']);
+        update_post_meta($has, '_gm2_description', 'd');
+        $missing = self::factory()->post->create(['post_title' => 'MissingD']);
+        update_option('gm2_bulk_ai_missing_description', '1');
+        $admin = new Gm2_SEO_Admin();
+        $user  = self::factory()->user->create(['role' => 'administrator']);
+        wp_set_current_user($user);
+        ob_start();
+        $admin->display_bulk_ai_page();
+        $html = ob_get_clean();
+        $this->assertStringContainsString('MissingD', $html);
+        $this->assertStringNotContainsString('HasD', $html);
+    }
 }
 
 class BulkAiPaginationTest extends WP_UnitTestCase {
