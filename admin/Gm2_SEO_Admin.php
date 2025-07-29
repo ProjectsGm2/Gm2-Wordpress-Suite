@@ -965,10 +965,11 @@ class Gm2_SEO_Admin {
             return;
         }
 
-        $page_size     = max(1, absint(get_option('gm2_bulk_ai_page_size', 10)));
-        $status        = get_option('gm2_bulk_ai_status', 'publish');
-        $post_type     = get_option('gm2_bulk_ai_post_type', 'all');
-        $term          = get_option('gm2_bulk_ai_term', '');
+        $user_id       = get_current_user_id();
+        $page_size     = max(1, absint(get_user_meta($user_id, 'gm2_bulk_ai_page_size', true) ?: 10));
+        $status        = get_user_meta($user_id, 'gm2_bulk_ai_status', true) ?: 'publish';
+        $post_type     = get_user_meta($user_id, 'gm2_bulk_ai_post_type', true) ?: 'all';
+        $term          = get_user_meta($user_id, 'gm2_bulk_ai_term', true) ?: '';
         $missing_title = get_option('gm2_bulk_ai_missing_title', '0');
         $missing_desc  = get_option('gm2_bulk_ai_missing_description', '0');
         $search_title  = get_option('gm2_bulk_ai_search_title', '');
@@ -982,10 +983,10 @@ class Gm2_SEO_Admin {
             $missing_title = isset($_POST['gm2_missing_title']) ? '1' : '0';
             $missing_desc  = isset($_POST['gm2_missing_description']) ? '1' : '0';
             $search_title  = sanitize_text_field($_POST['gm2_search_title'] ?? '');
-            update_option('gm2_bulk_ai_page_size', $page_size);
-            update_option('gm2_bulk_ai_status', $status);
-            update_option('gm2_bulk_ai_post_type', $post_type);
-            update_option('gm2_bulk_ai_term', $term);
+            update_user_meta($user_id, 'gm2_bulk_ai_page_size', $page_size);
+            update_user_meta($user_id, 'gm2_bulk_ai_status', $status);
+            update_user_meta($user_id, 'gm2_bulk_ai_post_type', $post_type);
+            update_user_meta($user_id, 'gm2_bulk_ai_term', $term);
             update_option('gm2_bulk_ai_missing_title', $missing_title);
             update_option('gm2_bulk_ai_missing_description', $missing_desc);
             update_option('gm2_bulk_ai_search_title', $search_title);
@@ -1151,10 +1152,11 @@ class Gm2_SEO_Admin {
             wp_die( esc_html__( 'Permission denied', 'gm2-wordpress-suite' ) );
         }
 
-        $page_size     = max(1, absint(get_option('gm2_bulk_ai_page_size', 10)));
-        $status        = get_option('gm2_bulk_ai_status', 'publish');
-        $post_type     = get_option('gm2_bulk_ai_post_type', 'all');
-        $term          = get_option('gm2_bulk_ai_term', '');
+        $user_id       = get_current_user_id();
+        $page_size     = max(1, absint(get_user_meta($user_id, 'gm2_bulk_ai_page_size', true) ?: 10));
+        $status        = get_user_meta($user_id, 'gm2_bulk_ai_status', true) ?: 'publish';
+        $post_type     = get_user_meta($user_id, 'gm2_bulk_ai_post_type', true) ?: 'all';
+        $term          = get_user_meta($user_id, 'gm2_bulk_ai_term', true) ?: '';
         $missing_title = get_option('gm2_bulk_ai_missing_title', '0');
         $missing_desc  = get_option('gm2_bulk_ai_missing_description', '0');
         $search_title  = get_option('gm2_bulk_ai_search_title', '');

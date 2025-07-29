@@ -62,9 +62,9 @@ class BulkAiFilterTest extends WP_UnitTestCase {
     public function test_post_type_filter_limits_results() {
         $post1 = self::factory()->post->create(['post_title' => 'Post One']);
         $page1 = self::factory()->post->create(['post_type' => 'page', 'post_title' => 'Page One']);
-        update_option('gm2_bulk_ai_post_type', 'page');
-        $admin = new Gm2_SEO_Admin();
         $user = self::factory()->user->create(['role' => 'administrator']);
+        update_user_meta($user, 'gm2_bulk_ai_post_type', 'page');
+        $admin = new Gm2_SEO_Admin();
         wp_set_current_user($user);
         ob_start();
         $admin->display_bulk_ai_page();
@@ -78,10 +78,10 @@ class BulkAiFilterTest extends WP_UnitTestCase {
         $cat2 = self::factory()->term->create(['taxonomy' => 'category', 'name' => 'Beta']);
         $in = self::factory()->post->create(['post_title' => 'In', 'post_category' => [$cat1]]);
         $out_post = self::factory()->post->create(['post_title' => 'Out', 'post_category' => [$cat2]]);
-        update_option('gm2_bulk_ai_post_type', 'post');
-        update_option('gm2_bulk_ai_term', 'category:' . $cat1);
-        $admin = new Gm2_SEO_Admin();
         $user = self::factory()->user->create(['role' => 'administrator']);
+        update_user_meta($user, 'gm2_bulk_ai_post_type', 'post');
+        update_user_meta($user, 'gm2_bulk_ai_term', 'category:' . $cat1);
+        $admin = new Gm2_SEO_Admin();
         wp_set_current_user($user);
         ob_start();
         $admin->display_bulk_ai_page();
@@ -123,10 +123,10 @@ class BulkAiFilterTest extends WP_UnitTestCase {
 
 class BulkAiPaginationTest extends WP_UnitTestCase {
     public function test_second_page_shows_expected_posts() {
-        update_option('gm2_bulk_ai_page_size', 2);
+        $user = self::factory()->user->create(['role' => 'administrator']);
+        update_user_meta($user, 'gm2_bulk_ai_page_size', 2);
         $posts = self::factory()->post->create_many(3);
         $admin = new Gm2_SEO_Admin();
-        $user = self::factory()->user->create(['role' => 'administrator']);
         wp_set_current_user($user);
         $_GET['paged'] = 2;
         ob_start();
