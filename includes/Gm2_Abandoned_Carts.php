@@ -47,6 +47,7 @@ class Gm2_Abandoned_Carts {
     public function run() {
         add_action('woocommerce_add_to_cart', [$this, 'capture_cart'], 10, 6);
         add_action('woocommerce_update_cart_action_cart_updated', [$this, 'capture_cart']);
+        add_action('woocommerce_cart_loaded_from_session', [$this, 'capture_cart']);
         add_action('template_redirect', [$this, 'maybe_mark_cart_abandoned']);
         add_action('woocommerce_thankyou', [$this, 'mark_cart_recovered']);
 
@@ -62,6 +63,9 @@ class Gm2_Abandoned_Carts {
         }
         $cart = WC()->cart;
         if (!$cart) {
+            return;
+        }
+        if ($cart->is_empty()) {
             return;
         }
         $contents   = maybe_serialize($cart->get_cart());
