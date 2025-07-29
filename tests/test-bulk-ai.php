@@ -176,3 +176,26 @@ class BulkAiApplyBatchAjaxTest extends WP_Ajax_UnitTestCase {
         $this->assertSame('Two', $post2->post_title);
     }
 }
+
+class BulkAiExportTest extends WP_UnitTestCase {
+    public function test_csv_export_contains_suggestions() {
+        $post_id = self::factory()->post->create(['post_title' => 'Post']);
+        update_post_meta($post_id, '_gm2_ai_research', wp_json_encode([
+            'seo_title'  => 'Suggested Title',
+            'description'=> 'Suggested Desc',
+            'slug'       => 'suggested-slug',
+            'page_name'  => 'Suggested Name',
+        ]));
+
+        $admin = new Gm2_SEO_Admin();
+        $user  = self::factory()->user->create(['role' => 'administrator']);
+        wp_set_current_user($user);
+
+        ob_start();
+        $admin->handle_bulk_ai_export();
+        $csv = ob_get_clean();
+
+        $this->assertStringContainsString('Suggested Title', $csv);
+        $this->assertStringContainsString('suggested-slug', $csv);
+    }
+}

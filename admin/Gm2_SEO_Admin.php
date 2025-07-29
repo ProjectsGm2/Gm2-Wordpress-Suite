@@ -32,6 +32,7 @@ class Gm2_SEO_Admin {
         add_action('admin_post_gm2_guideline_rules', [$this, 'handle_guideline_rules_form']);
         add_action('admin_post_gm2_general_settings', [$this, 'handle_general_settings_form']);
         add_action('admin_post_gm2_keyword_settings', [$this, 'handle_keyword_settings_form']);
+        add_action('admin_post_gm2_bulk_ai_export', [$this, 'handle_bulk_ai_export']);
 
         add_action('wp_ajax_gm2_check_rules', [$this, 'ajax_check_rules']);
         add_action('wp_ajax_gm2_keyword_ideas', [$this, 'ajax_keyword_ideas']);
@@ -1039,6 +1040,7 @@ class Gm2_SEO_Admin {
 
         echo '<div class="wrap" id="gm2-bulk-ai">';
         echo '<h1>' . esc_html__( 'Bulk AI Review', 'gm2-wordpress-suite' ) . '</h1>';
+        echo '<p><a href="' . esc_url( admin_url( 'admin-post.php?action=gm2_bulk_ai_export' ) ) . '" class="button">' . esc_html__( 'Export CSV', 'gm2-wordpress-suite' ) . '</a></p>';
         echo '<p class="description">' . esc_html__( 'Select posts, click', 'gm2-wordpress-suite' ) . ' <strong>' . esc_html__( 'Analyze Selected', 'gm2-wordpress-suite' ) . '</strong> ' . esc_html__( 'to generate suggestions. Review the suggestions and choose what to apply.', 'gm2-wordpress-suite' ) . '</p>';
         echo '<form method="post" action="' . esc_url( admin_url( 'admin.php?page=gm2-bulk-ai-review' ) ) . '">';
         wp_nonce_field('gm2_bulk_ai_settings');
@@ -1142,6 +1144,94 @@ class Gm2_SEO_Admin {
         }
 
         return $html;
+    }
+
+    public function handle_bulk_ai_export() {
+        if (!current_user_can('edit_posts')) {
+            wp_die( esc_html__( 'Permission denied', 'gm2-wordpress-suite' ) );
+        }
+
+        $page_size     = max(1, absint(get_option('gm2_bulk_ai_page_size', 10)));
+        $status        = get_option('gm2_bulk_ai_status', 'publish');
+        $post_type     = get_option('gm2_bulk_ai_post_type', 'all');
+        $term          = get_option('gm2_bulk_ai_term', '');
+        $missing_title = get_option('gm2_bulk_ai_missing_title', '0');
+        $missing_desc  = get_option('gm2_bulk_ai_missing_description', '0');
+        $search_title  = get_option('gm2_bulk_ai_search_title', '');
+
+        $types = $this->get_supported_post_types();
+        if ($post_type !== 'all' && in_array($post_type, $types, true)) {
+            $types = [$post_type];
+        }
+        $args = [
+            'post_type'      => $types,
+            'post_status'    => $status,
+            'posts_per_page' => -1,
+        ];
+        if ($search_title !== '') {
+            $args['s'] = $search_title;
+        }
+        if ($term && strpos($term, ':') !== false) {
+            list($tax, $id) = explode(':', $term);
+            $taxonomies = $this->get_supported_taxonomies();
+            if (in_array($tax, $taxonomies, true)) {
+                $args['tax_query'] = [
+                    [
+                        'taxonomy' => $tax,
+                        'field'    => 'term_id',
+                        'terms'    => absint($id),
+                    ],
+                ];
+            }
+        }
+
+        $meta_query = [];
+        if ($missing_title === '1') {
+            $meta_query[] = [
+                'relation' => 'OR',
+                [ 'key' => '_gm2_title', 'compare' => 'NOT EXISTS' ],
+                [ 'key' => '_gm2_title', 'value' => '', 'compare' => '=' ],
+            ];
+        }
+        if ($missing_desc === '1') {
+            $meta_query[] = [
+                'relation' => 'OR',
+                [ 'key' => '_gm2_description', 'compare' => 'NOT EXISTS' ],
+                [ 'key' => '_gm2_description', 'value' => '', 'compare' => '=' ],
+            ];
+        }
+        if ($meta_query) {
+            $args['meta_query'] = array_merge(['relation' => 'AND'], $meta_query);
+        }
+
+        $query = new \WP_Query($args);
+
+        $rows   = [ ['ID', 'Title', 'SEO Title', 'Description', 'Slug', 'Page Name'] ];
+        foreach ($query->posts as $post) {
+            $data = [];
+            $stored = get_post_meta($post->ID, '_gm2_ai_research', true);
+            if ($stored) {
+                $tmp = json_decode($stored, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($tmp)) {
+                    $data = $tmp;
+                }
+            }
+            $rows[] = [
+                $post->ID,
+                $post->post_title,
+                $data['seo_title'] ?? '',
+                $data['description'] ?? '',
+                $data['slug'] ?? '',
+                $data['page_name'] ?? '',
+            ];
+        }
+
+        \Gm2\Gm2_CSV_Helper::output($rows, 'gm2-bulk-ai.csv');
+
+        if (defined('GM2_TESTING') && GM2_TESTING) {
+            return;
+        }
+        exit;
     }
 
     public function display_google_connect_page() {
