@@ -27,3 +27,10 @@
 .gm2-applied {
     background:#f9f9f9;
 }
+
+/* Spinner for bulk AI actions */
+.gm2-ai-spinner.spinner{
+    float:none;
+    margin-left:4px;
+    vertical-align:middle;
+}
