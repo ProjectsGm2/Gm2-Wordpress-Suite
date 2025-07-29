@@ -179,8 +179,12 @@ jQuery(function($){
                 applied++;
                 updateBar(applied);
             })
-            .fail(function(){
+            .fail(function(jqXHR, textStatus){
                 hideSpinner($res);
+                var msg = (jqXHR && jqXHR.responseJSON && jqXHR.responseJSON.data)
+                    ? jqXHR.responseJSON.data
+                    : (jqXHR && jqXHR.responseText ? jqXHR.responseText : textStatus);
+                $res.text(msg || (window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.error : 'Error'));
             });
     });
 
@@ -282,10 +286,14 @@ jQuery(function($){
                 $msg.text((resp&&resp.data)?resp.data:(window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.error : 'Error'));
             }
         }).fail(function(jqXHR,textStatus){
+            var msg=(jqXHR && jqXHR.responseJSON && jqXHR.responseJSON.data)
+                ? jqXHR.responseJSON.data
+                : (jqXHR && jqXHR.responseText ? jqXHR.responseText : textStatus);
             $.each(posts,function(id){
-                hideSpinner($('#gm2-row-'+id).find('.gm2-result'));
+                var cell = $('#gm2-row-'+id).find('.gm2-result');
+                hideSpinner(cell);
+                cell.text(msg || (window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.error : 'Error'));
             });
-            var msg=(jqXHR&&jqXHR.responseJSON&&jqXHR.responseJSON.data)?jqXHR.responseJSON.data:(jqXHR&&jqXHR.responseText?jqXHR.responseText:textStatus);
             $msg.text(msg || (window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.error : 'Error'));
         });
     });
