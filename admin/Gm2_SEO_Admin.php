@@ -2853,7 +2853,8 @@ class Gm2_SEO_Admin {
         }
 
         if (is_wp_error($ideas)) {
-            wp_send_json_error( $ideas->get_error_message() );
+            error_log('Keyword ideas error: ' . $ideas->get_error_message());
+            wp_send_json_error( __( 'Keyword ideas request failed', 'gm2-wordpress-suite' ) );
         }
 
         wp_send_json_success([
@@ -2928,7 +2929,8 @@ class Gm2_SEO_Admin {
         }
 
         if (is_wp_error($resp)) {
-            wp_send_json_error($resp->get_error_message());
+            error_log('Content rules request failed: ' . $resp->get_error_message());
+            wp_send_json_error( __( 'AI request failed', 'gm2-wordpress-suite' ) );
         }
 
         $clean = $this->sanitize_ai_json($resp);
@@ -3069,7 +3071,8 @@ class Gm2_SEO_Admin {
         }
 
         if (is_wp_error($resp)) {
-            wp_send_json_error($resp->get_error_message());
+            error_log('Guideline rules request failed: ' . $resp->get_error_message());
+            wp_send_json_error( __( 'AI request failed', 'gm2-wordpress-suite' ) );
         }
 
         $clean = $this->sanitize_ai_json($resp);
@@ -3632,7 +3635,8 @@ class Gm2_SEO_Admin {
         $resp = $chat->query($prompt);
 
         if (is_wp_error($resp)) {
-            wp_send_json_error($resp->get_error_message());
+            error_log('Tax description request failed: ' . $resp->get_error_message());
+            wp_send_json_error( __( 'AI request failed', 'gm2-wordpress-suite' ) );
         }
 
         if ($term_id) {
