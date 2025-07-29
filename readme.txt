@@ -318,7 +318,7 @@ the last 100 missing URLs to help you create new redirects.
 
 == Changelog ==
 = 1.6.17 =
-* Abandoned cart checks now run every 5 minutes by default. Adjust the frequency via the `gm2_ac_mark_abandoned_interval` filter or `gm2_ac_mark_abandoned_interval` option.
+* Abandoned cart checks now run every 5 minutes by default. The interval can be lowered to one minute using the `gm2_ac_mark_abandoned_interval` filter or corresponding option.
 = 1.6.16 =
 * When multiple discount groups include the same product, the product now gets the highest available percentage.
 = 1.6.15 =
