@@ -183,7 +183,7 @@ class Gm2_Abandoned_Carts {
     public static function schedule_event() {
         $minutes = absint(apply_filters('gm2_ac_mark_abandoned_interval', (int) get_option('gm2_ac_mark_abandoned_interval', 5)));
         if ($minutes < 1) {
-            $minutes = 5;
+            $minutes = 1;
         }
         $schedule = 'gm2_ac_' . $minutes . '_mins';
         $existing = wp_next_scheduled(self::CRON_HOOK);

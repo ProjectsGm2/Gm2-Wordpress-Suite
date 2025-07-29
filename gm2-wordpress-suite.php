@@ -72,7 +72,7 @@ add_filter('cron_schedules', 'gm2_add_weekly_schedule');
 function gm2_add_ac_schedule($schedules) {
     $minutes = absint(apply_filters('gm2_ac_mark_abandoned_interval', (int) get_option('gm2_ac_mark_abandoned_interval', 5)));
     if ($minutes < 1) {
-        $minutes = 5;
+        $minutes = 1;
     }
     $schedules['gm2_ac_' . $minutes . '_mins'] = [
         'interval' => $minutes * MINUTE_IN_SECONDS,
