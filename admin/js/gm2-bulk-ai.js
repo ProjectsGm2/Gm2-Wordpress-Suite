@@ -1,6 +1,7 @@
 jQuery(function($){
     var totalPosts = 0;
     var applied = 0;
+    var stopProcessing = false;
 
     function initBar(max){
         var $bar = $('#gm2-bulk-progress-bar');
@@ -55,6 +56,7 @@ jQuery(function($){
     });
     $('#gm2-bulk-ai').on('click','#gm2-bulk-analyze',function(e){
         e.preventDefault();
+        stopProcessing = false;
         var ids=[];
         $('#gm2-bulk-list .gm2-select:checked').each(function(){ids.push($(this).val());});
         if(!ids.length) return;
@@ -68,6 +70,7 @@ jQuery(function($){
             $progress = $('<p>',{id:'gm2-bulk-progress'});
             $('#gm2-bulk-progress-bar').after($progress);
         }
+        $progress.text('');
         var total = ids.length, processed = 0, fatal = false;
 
         function updateProgress(msg){
@@ -81,7 +84,9 @@ jQuery(function($){
         }
 
         function processNext(){
-            if(fatal){
+            if(fatal || stopProcessing){
+                $('#gm2-bulk-progress-bar').hide();
+                $progress.text('');
                 return;
             }
             if(!ids.length){
@@ -141,6 +146,12 @@ jQuery(function($){
         }
         updateProgress();
         processNext();
+    });
+    $('#gm2-bulk-ai').on('click','#gm2-bulk-cancel',function(e){
+        e.preventDefault();
+        stopProcessing = true;
+        $('#gm2-bulk-progress-bar').hide();
+        $('#gm2-bulk-progress').text('');
     });
     $('#gm2-bulk-list').on('click','.gm2-apply-btn',function(e){
         e.preventDefault();

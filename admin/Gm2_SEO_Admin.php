@@ -1063,6 +1063,7 @@ class Gm2_SEO_Admin {
             echo '<div class="tablenav"><div class="tablenav-pages">' . $links . '</div></div>';
         }
         echo '<p><button type="button" class="button" id="gm2-bulk-analyze">' . esc_html__( 'Analyze Selected', 'gm2-wordpress-suite' ) . '</button> ' .
+            '<button type="button" class="button" id="gm2-bulk-cancel">' . esc_html__( 'Cancel', 'gm2-wordpress-suite' ) . '</button> ' .
             '<button type="button" class="button" id="gm2-bulk-apply-all">' . esc_html__( 'Apply All', 'gm2-wordpress-suite' ) . '</button> ' .
             '<span id="gm2-bulk-apply-msg"></span></p>';
         echo '<p><progress id="gm2-bulk-progress-bar" value="0" max="100" style="width:100%;display:none"></progress></p>';
