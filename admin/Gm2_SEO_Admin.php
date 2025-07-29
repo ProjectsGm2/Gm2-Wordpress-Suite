@@ -297,6 +297,9 @@ class Gm2_SEO_Admin {
         register_setting('gm2_seo_options', 'gm2_bulk_ai_missing_description', [
             'sanitize_callback' => 'sanitize_text_field',
         ]);
+        register_setting('gm2_seo_options', 'gm2_bulk_ai_search_title', [
+            'sanitize_callback' => 'sanitize_text_field',
+        ]);
         register_setting('gm2_seo_options', 'gm2_context_business_model', [
             'sanitize_callback' => 'sanitize_textarea_field',
         ]);
@@ -961,27 +964,30 @@ class Gm2_SEO_Admin {
             return;
         }
 
-        $page_size  = max(1, absint(get_option('gm2_bulk_ai_page_size', 10)));
-        $status     = get_option('gm2_bulk_ai_status', 'publish');
-        $post_type  = get_option('gm2_bulk_ai_post_type', 'all');
-        $term       = get_option('gm2_bulk_ai_term', '');
+        $page_size     = max(1, absint(get_option('gm2_bulk_ai_page_size', 10)));
+        $status        = get_option('gm2_bulk_ai_status', 'publish');
+        $post_type     = get_option('gm2_bulk_ai_post_type', 'all');
+        $term          = get_option('gm2_bulk_ai_term', '');
         $missing_title = get_option('gm2_bulk_ai_missing_title', '0');
         $missing_desc  = get_option('gm2_bulk_ai_missing_description', '0');
+        $search_title  = get_option('gm2_bulk_ai_search_title', '');
         $current_page = isset($_GET['paged']) ? max(1, absint($_GET['paged'])) : 1;
 
         if (isset($_POST['gm2_bulk_ai_save']) && check_admin_referer('gm2_bulk_ai_settings')) {
-            $page_size = max(1, absint($_POST['page_size'] ?? 10));
-            $status    = sanitize_key($_POST['status'] ?? 'publish');
-            $post_type = sanitize_key($_POST['gm2_post_type'] ?? 'all');
-            $term      = sanitize_text_field($_POST['term'] ?? '');
+            $page_size    = max(1, absint($_POST['page_size'] ?? 10));
+            $status       = sanitize_key($_POST['status'] ?? 'publish');
+            $post_type    = sanitize_key($_POST['gm2_post_type'] ?? 'all');
+            $term         = sanitize_text_field($_POST['term'] ?? '');
             $missing_title = isset($_POST['gm2_missing_title']) ? '1' : '0';
             $missing_desc  = isset($_POST['gm2_missing_description']) ? '1' : '0';
+            $search_title  = sanitize_text_field($_POST['gm2_search_title'] ?? '');
             update_option('gm2_bulk_ai_page_size', $page_size);
             update_option('gm2_bulk_ai_status', $status);
             update_option('gm2_bulk_ai_post_type', $post_type);
             update_option('gm2_bulk_ai_term', $term);
             update_option('gm2_bulk_ai_missing_title', $missing_title);
             update_option('gm2_bulk_ai_missing_description', $missing_desc);
+            update_option('gm2_bulk_ai_search_title', $search_title);
         }
 
         $types = $this->get_supported_post_types();
@@ -994,6 +1000,9 @@ class Gm2_SEO_Admin {
             'posts_per_page' => $page_size,
             'paged'          => $current_page,
         ];
+        if ($search_title !== '') {
+            $args['s'] = $search_title;
+        }
         if ($term && strpos($term, ':') !== false) {
             list($tax, $id) = explode(':', $term);
             $taxonomies = $this->get_supported_taxonomies();
@@ -1059,6 +1068,7 @@ class Gm2_SEO_Admin {
             echo '<option value="' . esc_attr($value) . '"' . selected($term, $value, false) . '>' . esc_html($label) . '</option>';
         }
         echo '</select></label> ';
+        echo '<label>' . esc_html__( 'Search Title', 'gm2-wordpress-suite' ) . ' <input type="text" name="gm2_search_title" value="' . esc_attr($search_title) . '"></label> ';
         echo '<label><input type="checkbox" name="gm2_missing_title" value="1" ' . checked($missing_title, '1', false) . '> ' . esc_html__( 'Only posts missing SEO Title', 'gm2-wordpress-suite' ) . '</label> ';
         echo '<label><input type="checkbox" name="gm2_missing_description" value="1" ' . checked($missing_desc, '1', false) . '> ' . esc_html__( 'Only posts missing Description', 'gm2-wordpress-suite' ) . '</label> ';
         submit_button( esc_html__( 'Save', 'gm2-wordpress-suite' ), 'secondary', 'gm2_bulk_ai_save', false );
