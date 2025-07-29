@@ -11,6 +11,19 @@ class BulkAiPageTest extends WP_UnitTestCase {
         $out = ob_get_clean();
         $this->assertStringContainsString('Permission denied', $out);
     }
+
+    public function test_titles_link_to_edit_page() {
+        $post_id = self::factory()->post->create(['post_title' => 'Linked']);
+        $admin   = new Gm2_SEO_Admin();
+        $user    = self::factory()->user->create(['role' => 'administrator']);
+        wp_set_current_user($user);
+        ob_start();
+        $admin->display_bulk_ai_page();
+        $html = ob_get_clean();
+        $edit_link = get_edit_post_link($post_id);
+        $this->assertStringContainsString('href="' . $edit_link . '"', $html);
+        $this->assertStringContainsString('target="_blank"', $html);
+    }
 }
 
 class BulkAiApplyAjaxTest extends WP_Ajax_UnitTestCase {

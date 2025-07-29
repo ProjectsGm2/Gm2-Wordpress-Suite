@@ -1042,7 +1042,9 @@ class Gm2_SEO_Admin {
             }
             echo '<tr id="gm2-row-' . intval($post->ID) . '">';
             echo '<th scope="row" class="check-column"><input type="checkbox" class="gm2-select" value="' . intval($post->ID) . '"></th>';
-            echo '<td>' . esc_html($post->post_title) . '</td>';
+            $edit_link = get_edit_post_link($post->ID);
+            $title     = $edit_link ? '<a href="' . esc_url($edit_link) . '" target="_blank">' . esc_html($post->post_title) . '</a>' : esc_html($post->post_title);
+            echo '<td>' . $title . '</td>';
             echo '<td>' . esc_html($seo_title) . '</td>';
             echo '<td>' . esc_html($description) . '</td>';
             echo '<td>' . esc_html($post->post_name) . '</td>';
