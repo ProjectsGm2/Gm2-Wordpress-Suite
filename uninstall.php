@@ -117,6 +117,20 @@ foreach ( $option_names as $option ) {
     delete_option( $option );
 }
 
+// Remove per-user Bulk AI settings stored as user meta.
+$user_meta_keys = array(
+    'gm2_bulk_ai_page_size',
+    'gm2_bulk_ai_status',
+    'gm2_bulk_ai_post_type',
+    'gm2_bulk_ai_term',
+);
+$user_ids = get_users( array( 'fields' => 'ID' ) );
+foreach ( $user_ids as $uid ) {
+    foreach ( $user_meta_keys as $key ) {
+        delete_user_meta( $uid, $key );
+    }
+}
+
 // Remove dynamic SEO guideline options for supported post types and taxonomies.
 
 // Example table cleanup.
