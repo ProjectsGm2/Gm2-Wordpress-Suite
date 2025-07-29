@@ -3,7 +3,7 @@ Contributors: gm2team
 Tags: admin, tools, suite, performance
 Requires at least: 6.0
 Tested up to: 6.5
-Stable tag: 1.6.16
+Stable tag: 1.6.17
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -317,6 +317,8 @@ the last 100 missing URLs to help you create new redirects.
   `nofollow` or `sponsored` to outbound links.
 
 == Changelog ==
+= 1.6.17 =
+* Abandoned cart checks now run every 5 minutes by default. Adjust the frequency via the `gm2_ac_mark_abandoned_interval` filter or `gm2_ac_mark_abandoned_interval` option.
 = 1.6.16 =
 * When multiple discount groups include the same product, the product now gets the highest available percentage.
 = 1.6.15 =

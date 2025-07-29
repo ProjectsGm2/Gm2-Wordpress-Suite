@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Gm2 WordPress Suite
  * Description:       A powerful suite of tools and features for WordPress, by Gm2.
- * Version:           1.6.16
+ * Version:           1.6.17
  * Author:            Your Name or Team Gm2
  * Author URI:        https://yourwebsite.com
  * License:           GPL-2.0+
@@ -15,7 +15,7 @@
 defined('ABSPATH') or die('No script kiddies please!');
 
 // Define constants
-define('GM2_VERSION', '1.6.16');
+define('GM2_VERSION', '1.6.17');
 define('GM2_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('GM2_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('GM2_CHATGPT_LOG_FILE', GM2_PLUGIN_DIR . 'chatgpt.log');
@@ -69,6 +69,19 @@ function gm2_add_weekly_schedule($schedules) {
 }
 add_filter('cron_schedules', 'gm2_add_weekly_schedule');
 
+function gm2_add_ac_schedule($schedules) {
+    $minutes = absint(apply_filters('gm2_ac_mark_abandoned_interval', (int) get_option('gm2_ac_mark_abandoned_interval', 5)));
+    if ($minutes < 1) {
+        $minutes = 5;
+    }
+    $schedules['gm2_ac_' . $minutes . '_mins'] = [
+        'interval' => $minutes * MINUTE_IN_SECONDS,
+        'display'  => sprintf(_n('Every %d minute', 'Every %d minutes', $minutes, 'gm2-wordpress-suite'), $minutes)
+    ];
+    return $schedules;
+}
+add_filter('cron_schedules', 'gm2_add_ac_schedule');
+
 function gm2_activate_plugin() {
     $public = new Gm2_SEO_Public();
     $public->add_sitemap_rewrite();
@@ -105,6 +118,7 @@ function gm2_activate_plugin() {
     add_option('gm2_enable_chatgpt_logging', '0');
     add_option('gm2_sitemap_path', ABSPATH . 'sitemap.xml');
     add_option('gm2_enable_abandoned_carts', '0');
+    add_option('gm2_ac_mark_abandoned_interval', 5);
 }
 register_activation_hook(__FILE__, 'gm2_activate_plugin');
 
@@ -334,6 +348,14 @@ function gm2_handle_ac_option_change($old, $new) {
     }
 }
 add_action('update_option_gm2_enable_abandoned_carts', 'gm2_handle_ac_option_change', 10, 2);
+
+function gm2_handle_ac_interval_change($old, $new) {
+    if (get_option('gm2_enable_abandoned_carts', '0') === '1') {
+        \Gm2\Gm2_Abandoned_Carts::clear_scheduled_event();
+        \Gm2\Gm2_Abandoned_Carts::schedule_event();
+    }
+}
+add_action('update_option_gm2_ac_mark_abandoned_interval', 'gm2_handle_ac_interval_change', 10, 2);
 
 function gm2_maybe_migrate_content_rules() {
     $current = (int) get_option('gm2_content_rules_version', 1);
