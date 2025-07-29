@@ -177,8 +177,20 @@ class Gm2_Abandoned_Carts {
     }
 
     public static function schedule_event() {
-        if (!wp_next_scheduled(self::CRON_HOOK)) {
-            wp_schedule_event(time(), 'hourly', self::CRON_HOOK);
+        $minutes = absint(apply_filters('gm2_ac_mark_abandoned_interval', (int) get_option('gm2_ac_mark_abandoned_interval', 5)));
+        if ($minutes < 1) {
+            $minutes = 5;
+        }
+        $schedule = 'gm2_ac_' . $minutes . '_mins';
+        $existing = wp_next_scheduled(self::CRON_HOOK);
+        if ($existing) {
+            $current = wp_get_schedule(self::CRON_HOOK);
+            if ($current !== $schedule) {
+                self::clear_scheduled_event();
+                wp_schedule_event(time(), $schedule, self::CRON_HOOK);
+            }
+        } else {
+            wp_schedule_event(time(), $schedule, self::CRON_HOOK);
         }
     }
 
