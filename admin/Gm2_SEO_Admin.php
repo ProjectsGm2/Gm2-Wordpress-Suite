@@ -1097,11 +1097,11 @@ class Gm2_SEO_Admin {
         if ($links) {
             echo '<div class="tablenav"><div class="tablenav-pages">' . $links . '</div></div>';
         }
-        echo '<p><button type="button" class="button" id="gm2-bulk-analyze">' . esc_html__( 'Analyze Selected', 'gm2-wordpress-suite' ) . '</button> ' .
+        echo '<p><button type="button" class="button" id="gm2-bulk-analyze" aria-label="' . esc_attr__( 'Analyze Selected', 'gm2-wordpress-suite' ) . '">' . esc_html__( 'Analyze Selected', 'gm2-wordpress-suite' ) . '</button> ' .
             '<button type="button" class="button" id="gm2-bulk-cancel">' . esc_html__( 'Cancel', 'gm2-wordpress-suite' ) . '</button> ' .
             '<button type="button" class="button" id="gm2-bulk-apply-all">' . esc_html__( 'Apply All', 'gm2-wordpress-suite' ) . '</button> ' .
             '<span id="gm2-bulk-apply-msg"></span></p>';
-        echo '<p><progress id="gm2-bulk-progress-bar" value="0" max="100" style="width:100%;display:none"></progress></p>';
+        echo '<p><progress id="gm2-bulk-progress-bar" value="0" max="100" style="width:100%;display:none" role="progressbar" aria-live="polite"></progress></p>';
         echo '</div>';
     }
 
@@ -1125,9 +1125,9 @@ class Gm2_SEO_Admin {
         if ($suggestions !== '') {
             $html .= '<p><label><input type="checkbox" class="gm2-row-select-all"> ' . esc_html__( 'Select all', 'gm2-wordpress-suite' ) . '</label></p>';
             $html .= $suggestions;
-            $html .= '<p><button class="button gm2-apply-btn" data-id="' . intval($post_id) . '">' . esc_html__( 'Apply', 'gm2-wordpress-suite' ) . '</button> ';
-            $html .= '<button class="button gm2-refresh-btn" data-id="' . intval($post_id) . '">' . esc_html__( 'Refresh', 'gm2-wordpress-suite' ) . '</button>';
-            $html .= '<button class="button gm2-clear-btn" data-id="' . intval($post_id) . '">' . esc_html__( 'Clear', 'gm2-wordpress-suite' ) . '</button></p>';
+            $html .= '<p><button class="button gm2-apply-btn" data-id="' . intval($post_id) . '" aria-label="' . esc_attr__( 'Apply', 'gm2-wordpress-suite' ) . '">' . esc_html__( 'Apply', 'gm2-wordpress-suite' ) . '</button> ';
+            $html .= '<button class="button gm2-refresh-btn" data-id="' . intval($post_id) . '" aria-label="' . esc_attr__( 'Refresh', 'gm2-wordpress-suite' ) . '">' . esc_html__( 'Refresh', 'gm2-wordpress-suite' ) . '</button>';
+            $html .= '<button class="button gm2-clear-btn" data-id="' . intval($post_id) . '" aria-label="' . esc_attr__( 'Clear', 'gm2-wordpress-suite' ) . '">' . esc_html__( 'Clear', 'gm2-wordpress-suite' ) . '</button></p>';
         }
 
         return $html;

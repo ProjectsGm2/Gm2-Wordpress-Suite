@@ -6,10 +6,10 @@ jQuery(function($){
     function initBar(max){
         var $bar = $('#gm2-bulk-progress-bar');
         if(!$bar.length){
-            $bar = $('<progress>',{id:'gm2-bulk-progress-bar',value:0,max:max,style:'width:100%;'});
+            $bar = $('<progress>',{id:'gm2-bulk-progress-bar',value:0,max:max,style:'width:100%;',role:'progressbar','aria-live':'polite'});
             $('#gm2-bulk-analyze').parent().after($bar);
         }
-        $bar.attr('max',max).val(0).show();
+        $bar.attr({max:max,role:'progressbar','aria-live':'polite'}).val(0).show();
     }
 
     function updateBar(val){
@@ -42,7 +42,7 @@ jQuery(function($){
         var applyText = window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.apply : 'Apply';
         var refreshText = window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.refresh : 'Refresh';
         var clearText = window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.clear : 'Clear';
-        html+='<p><button class="button gm2-apply-btn" data-id="'+id+'">'+applyText+'</button> <button class="button gm2-refresh-btn" data-id="'+id+'">'+refreshText+'</button> <button class="button gm2-clear-btn" data-id="'+id+'">'+clearText+'</button></p>';
+        html+='<p><button class="button gm2-apply-btn" data-id="'+id+'" aria-label="'+applyText+'">'+applyText+'</button> <button class="button gm2-refresh-btn" data-id="'+id+'" aria-label="'+refreshText+'">'+refreshText+'</button> <button class="button gm2-clear-btn" data-id="'+id+'" aria-label="'+clearText+'">'+clearText+'</button></p>';
         return html;
     }
 
