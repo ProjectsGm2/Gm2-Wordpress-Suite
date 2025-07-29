@@ -52,6 +52,7 @@ require_once GM2_PLUGIN_DIR . 'public/Gm2_SEO_Public.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Sitemap.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_PageSpeed.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_SEO_Utils.php';
+require_once GM2_PLUGIN_DIR . 'includes/Gm2_CSV_Helper.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Abandoned_Carts.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Abandoned_Carts_Messaging.php';
 require_once GM2_PLUGIN_DIR . 'admin/Gm2_Abandoned_Carts_Admin.php';
