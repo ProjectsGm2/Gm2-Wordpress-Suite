@@ -1511,13 +1511,13 @@ class Gm2_SEO_Admin {
 
         echo '<div id="gm2-seo-settings" class="gm2-tab-panel active" role="tabpanel">';
         echo '<p><label for="gm2_seo_title">' . esc_html__( 'SEO Title', 'gm2-wordpress-suite' ) . '</label>';
-        echo '<input type="text" id="gm2_seo_title" name="gm2_seo_title" value="' . esc_attr($title) . '" class="widefat" /></p>';
+        echo '<input type="text" id="gm2_seo_title" name="gm2_seo_title" value="' . esc_attr($title) . '" placeholder="' . esc_attr__( 'Best Product Ever | My Brand', 'gm2-wordpress-suite' ) . '" class="widefat" /> <span class="dashicons dashicons-info" title="' . esc_attr__( 'Include main keyword and brand', 'gm2-wordpress-suite' ) . '"></span></p>';
         echo '<p><label for="gm2_seo_description">' . esc_html__( 'SEO Description', 'gm2-wordpress-suite' ) . '</label>';
-        echo '<textarea id="gm2_seo_description" name="gm2_seo_description" class="widefat" rows="3">' . esc_textarea($description) . '</textarea></p>';
+        echo '<textarea id="gm2_seo_description" name="gm2_seo_description" class="widefat" rows="3" placeholder="' . esc_attr__( 'One sentence summary shown in search results', 'gm2-wordpress-suite' ) . '">' . esc_textarea($description) . '</textarea> <span class="dashicons dashicons-info" title="' . esc_attr__( 'Keep under 160 characters', 'gm2-wordpress-suite' ) . '"></span></p>';
         echo '<p><label for="gm2_focus_keywords">' . esc_html__( 'Focus Keywords (comma separated)', 'gm2-wordpress-suite' ) . '</label>';
-        echo '<input type="text" id="gm2_focus_keywords" name="gm2_focus_keywords" value="' . esc_attr($focus_keywords) . '" class="widefat" /></p>';
+        echo '<input type="text" id="gm2_focus_keywords" name="gm2_focus_keywords" value="' . esc_attr($focus_keywords) . '" placeholder="' . esc_attr__( 'keyword1, keyword2', 'gm2-wordpress-suite' ) . '" class="widefat" /> <span class="dashicons dashicons-info" title="' . esc_attr__( 'Separate with commas', 'gm2-wordpress-suite' ) . '"></span></p>';
         echo '<p><label for="gm2_long_tail_keywords">' . esc_html__( 'Long Tail Keywords (comma separated)', 'gm2-wordpress-suite' ) . '</label>';
-        echo '<input type="text" id="gm2_long_tail_keywords" name="gm2_long_tail_keywords" value="' . esc_attr($long_tail_keywords) . '" class="widefat" /></p>';
+        echo '<input type="text" id="gm2_long_tail_keywords" name="gm2_long_tail_keywords" value="' . esc_attr($long_tail_keywords) . '" placeholder="' . esc_attr__( 'longer keyword phrase', 'gm2-wordpress-suite' ) . '" class="widefat" /> <span class="dashicons dashicons-info" title="' . esc_attr__( 'Lower volume phrases', 'gm2-wordpress-suite' ) . '"></span></p>';
         $search_intent = get_post_meta($post->ID, '_gm2_search_intent', true);
         $focus_limit   = get_post_meta($post->ID, '_gm2_focus_keyword_limit', true);
         $number_of_words = get_post_meta($post->ID, '_gm2_number_of_words', true);
@@ -1539,7 +1539,7 @@ class Gm2_SEO_Admin {
         echo '<p><label><input type="checkbox" name="gm2_noindex" value="1" ' . checked($noindex, '1', false) . '> ' . esc_html__( 'noindex', 'gm2-wordpress-suite' ) . '</label></p>';
         echo '<p><label><input type="checkbox" name="gm2_nofollow" value="1" ' . checked($nofollow, '1', false) . '> ' . esc_html__( 'nofollow', 'gm2-wordpress-suite' ) . '</label></p>';
         echo '<p><label for="gm2_canonical_url">' . esc_html__( 'Canonical URL', 'gm2-wordpress-suite' ) . '</label>';
-        echo '<input type="url" id="gm2_canonical_url" name="gm2_canonical_url" value="' . esc_attr($canonical) . '" class="widefat" /></p>';
+        echo '<input type="url" id="gm2_canonical_url" name="gm2_canonical_url" value="' . esc_attr($canonical) . '" placeholder="https://example.com/original-page" class="widefat" /> <span class="dashicons dashicons-info" title="' . esc_attr__( 'Point to the preferred URL', 'gm2-wordpress-suite' ) . '"></span></p>';
 
         echo '<p><label for="gm2_max_snippet">' . esc_html__( 'Max Snippet', 'gm2-wordpress-suite' ) . '</label>';
         echo '<input type="text" id="gm2_max_snippet" name="gm2_max_snippet" value="' . esc_attr($max_snippet) . '" class="small-text" /></p>';
@@ -4107,17 +4107,17 @@ class Gm2_SEO_Admin {
 
         echo '<div id="gm2-seo-settings" class="gm2-tab-panel active" role="tabpanel">';
         echo '<p><label for="gm2_seo_title">SEO Title</label>';
-        echo '<input type="text" id="gm2_seo_title" name="gm2_seo_title" value="' . esc_attr($title) . '" class="widefat" /></p>';
+        echo '<input type="text" id="gm2_seo_title" name="gm2_seo_title" value="' . esc_attr($title) . '" placeholder="' . esc_attr__( 'Best Product Ever | My Brand', 'gm2-wordpress-suite' ) . '" class="widefat" /> <span class="dashicons dashicons-info" title="' . esc_attr__( 'Include main keyword and brand', 'gm2-wordpress-suite' ) . '"></span></p>';
         echo '<p><label for="gm2_seo_description">SEO Description</label>';
-        echo '<textarea id="gm2_seo_description" name="gm2_seo_description" class="widefat" rows="3">' . esc_textarea($description) . '</textarea></p>';
+        echo '<textarea id="gm2_seo_description" name="gm2_seo_description" class="widefat" rows="3" placeholder="' . esc_attr__( 'One sentence summary shown in search results', 'gm2-wordpress-suite' ) . '">' . esc_textarea($description) . '</textarea> <span class="dashicons dashicons-info" title="' . esc_attr__( 'Keep under 160 characters', 'gm2-wordpress-suite' ) . '"></span></p>';
         echo '<p><label for="gm2_focus_keywords">' . esc_html__( 'Focus Keywords (comma separated)', 'gm2-wordpress-suite' ) . '</label>';
-        echo '<input type="text" id="gm2_focus_keywords" name="gm2_focus_keywords" value="' . esc_attr($focus_keywords) . '" class="widefat" /></p>';
+        echo '<input type="text" id="gm2_focus_keywords" name="gm2_focus_keywords" value="' . esc_attr($focus_keywords) . '" placeholder="' . esc_attr__( 'keyword1, keyword2', 'gm2-wordpress-suite' ) . '" class="widefat" /> <span class="dashicons dashicons-info" title="' . esc_attr__( 'Separate with commas', 'gm2-wordpress-suite' ) . '"></span></p>';
         echo '<p><label for="gm2_long_tail_keywords">' . esc_html__( 'Long Tail Keywords (comma separated)', 'gm2-wordpress-suite' ) . '</label>';
-        echo '<input type="text" id="gm2_long_tail_keywords" name="gm2_long_tail_keywords" value="' . esc_attr($long_tail_keywords) . '" class="widefat" /></p>';
+        echo '<input type="text" id="gm2_long_tail_keywords" name="gm2_long_tail_keywords" value="' . esc_attr($long_tail_keywords) . '" placeholder="' . esc_attr__( 'longer keyword phrase', 'gm2-wordpress-suite' ) . '" class="widefat" /> <span class="dashicons dashicons-info" title="' . esc_attr__( 'Lower volume phrases', 'gm2-wordpress-suite' ) . '"></span></p>';
         echo '<p><label><input type="checkbox" name="gm2_noindex" value="1" ' . checked($noindex, '1', false) . '> ' . esc_html__( 'noindex', 'gm2-wordpress-suite' ) . '</label></p>';
         echo '<p><label><input type="checkbox" name="gm2_nofollow" value="1" ' . checked($nofollow, '1', false) . '> ' . esc_html__( 'nofollow', 'gm2-wordpress-suite' ) . '</label></p>';
         echo '<p><label for="gm2_canonical_url">' . esc_html__( 'Canonical URL', 'gm2-wordpress-suite' ) . '</label>';
-        echo '<input type="url" id="gm2_canonical_url" name="gm2_canonical_url" value="' . esc_attr($canonical) . '" class="widefat" /></p>';
+        echo '<input type="url" id="gm2_canonical_url" name="gm2_canonical_url" value="' . esc_attr($canonical) . '" placeholder="https://example.com/original-page" class="widefat" /> <span class="dashicons dashicons-info" title="' . esc_attr__( 'Point to the preferred URL', 'gm2-wordpress-suite' ) . '"></span></p>';
 
         echo '<p><label for="gm2_max_snippet">' . esc_html__( 'Max Snippet', 'gm2-wordpress-suite' ) . '</label>';
         echo '<input type="text" id="gm2_max_snippet" name="gm2_max_snippet" value="' . esc_attr($max_snippet) . '" class="small-text" /></p>';
