@@ -212,6 +212,7 @@ class Gm2_Admin {
                             'clear'        => __( 'Clear', 'gm2-wordpress-suite' ),
                             'selectAll'    => __( 'Select all', 'gm2-wordpress-suite' ),
                             'cancel'       => __( 'Cancel', 'gm2-wordpress-suite' ),
+                            'undo'         => __( 'Undo', 'gm2-wordpress-suite' ),
                         ],
                     ]
                 );

@@ -28,7 +28,7 @@ jQuery(function($){
         $cell.find('.gm2-ai-spinner').remove();
     }
 
-    function buildHtml(data,id){
+    function buildHtml(data,id,undo){
         var selectLabel = window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.selectAll : 'Select all';
         var html='<p><label><input type="checkbox" class="gm2-row-select-all"> '+selectLabel+'</label></p>';
         if(data.seo_title){html+='<p><label><input type="checkbox" class="gm2-apply" data-field="seo_title" data-value="'+data.seo_title.replace(/"/g,'&quot;')+'"> '+data.seo_title+'</label></p>';}
@@ -42,7 +42,8 @@ jQuery(function($){
         var applyText = window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.apply : 'Apply';
         var refreshText = window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.refresh : 'Refresh';
         var clearText = window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.clear : 'Clear';
-        html+='<p><button class="button gm2-apply-btn" data-id="'+id+'" aria-label="'+applyText+'">'+applyText+'</button> <button class="button gm2-refresh-btn" data-id="'+id+'" aria-label="'+refreshText+'">'+refreshText+'</button> <button class="button gm2-clear-btn" data-id="'+id+'" aria-label="'+clearText+'">'+clearText+'</button></p>';
+        var undoText = window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.undo : 'Undo';
+        html+='<p><button class="button gm2-apply-btn" data-id="'+id+'" aria-label="'+applyText+'">'+applyText+'</button> <button class="button gm2-refresh-btn" data-id="'+id+'" aria-label="'+refreshText+'">'+refreshText+'</button> <button class="button gm2-clear-btn" data-id="'+id+'" aria-label="'+clearText+'">'+clearText+'</button>'+(undo? ' <button class="button gm2-undo-btn" data-id="'+id+'" aria-label="'+undoText+'">'+undoText+'</button>':'')+'</p>';
         return html;
     }
 
@@ -122,7 +123,7 @@ jQuery(function($){
                     }
                 }
                 if(resp&&resp.success&&resp.data){
-                    var html = buildHtml(resp.data,id);
+                    var html = buildHtml(resp.data,id,resp.data.undo);
                     $res.html(html);
                     processed++;
                     updateProgress();
@@ -171,7 +172,8 @@ jQuery(function($){
         $.post(gm2BulkAi.ajax_url,data)
             .done(function(){
                 hideSpinner($res);
-                row.find('.gm2-result').append('<span> ✓</span>');
+                row.find('.gm2-result .gm2-undo-btn').remove();
+                row.find('.gm2-result').append(' <button class="button gm2-undo-btn" data-id="'+id+'">'+(gm2BulkAi.i18n?gm2BulkAi.i18n.undo:'Undo')+'</button> <span> ✓</span>');
                 row.addClass('gm2-applied');
                 setTimeout(function(){
                     row.removeClass('gm2-applied');
@@ -202,7 +204,7 @@ jQuery(function($){
         }).done(function(resp){
             hideSpinner($res);
             if(resp&&resp.success&&resp.data){
-                $res.html(buildHtml(resp.data,id));
+                $res.html(buildHtml(resp.data,id,resp.data.undo));
             }else{
                 var msg=(resp&&resp.data)?(resp.data.message||resp.data):'Error';
                 $res.text(msg);
@@ -241,6 +243,33 @@ jQuery(function($){
         });
     });
 
+    $('#gm2-bulk-list').on('click','.gm2-undo-btn',function(e){
+        e.preventDefault();
+        var id=$(this).data('id');
+        var row=$('#gm2-row-'+id);
+        var $res=row.find('.gm2-result');
+        showSpinner($res);
+        $.post(gm2BulkAi.ajax_url,{action:'gm2_bulk_ai_undo',post_id:id,_ajax_nonce:gm2BulkAi.apply_nonce})
+            .done(function(resp){
+                hideSpinner($res);
+                if(resp&&resp.success){
+                    row.find('td').eq(0).text(resp.data.title);
+                    row.find('td').eq(1).text(resp.data.seo_title);
+                    row.find('td').eq(2).text(resp.data.description);
+                    row.find('td').eq(3).text(resp.data.slug);
+                    $res.empty();
+                }else{
+                    var msg=(resp&&resp.data)?(resp.data.message||resp.data):'Error';
+                    $res.text(msg);
+                }
+            })
+            .fail(function(jqXHR,textStatus){
+                hideSpinner($res);
+                var msg=(jqXHR&&jqXHR.responseJSON&&jqXHR.responseJSON.data)?jqXHR.responseJSON.data:(jqXHR&&jqXHR.responseText?jqXHR.responseText:textStatus);
+                $res.text(msg||'Error');
+            });
+    });
+
     $('#gm2-bulk-ai').on('click','#gm2-bulk-apply-all',function(e){
         e.preventDefault();
         var posts={};
@@ -269,8 +298,10 @@ jQuery(function($){
             if(resp&&resp.success){
                 $.each(posts,function(id){
                     var row = $('#gm2-row-'+id);
-                    hideSpinner(row.find('.gm2-result'));
-                    row.find('.gm2-result').append('<span> ✓</span>');
+                    var cell = row.find('.gm2-result');
+                    hideSpinner(cell);
+                    cell.find('.gm2-undo-btn').remove();
+                    cell.append(' <button class="button gm2-undo-btn" data-id="'+id+'">'+(gm2BulkAi.i18n?gm2BulkAi.i18n.undo:'Undo')+'</button> <span> ✓</span>');
                     row.addClass('gm2-applied');
                     setTimeout(function(){
                         row.removeClass('gm2-applied');
