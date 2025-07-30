@@ -45,6 +45,8 @@ class Gm2_Abandoned_Carts {
     }
 
     public function run() {
+        $this->maybe_install();
+
         add_action('woocommerce_add_to_cart', [$this, 'capture_cart'], 10, 6);
         add_action('woocommerce_update_cart_action_cart_updated', [$this, 'capture_cart']);
         add_action('woocommerce_cart_loaded_from_session', [$this, 'capture_cart']);
@@ -85,12 +87,20 @@ class Gm2_Abandoned_Carts {
         $device = 'Desktop';
         if (file_exists(GM2_PLUGIN_DIR . 'includes/MobileDetect.php')) {
             require_once GM2_PLUGIN_DIR . 'includes/MobileDetect.php';
-            $detect = new \Mobile_Detect();
-            $detect->setUserAgent($agent);
-            if ($detect->isTablet()) {
-                $device = 'Tablet';
-            } elseif ($detect->isMobile()) {
-                $device = 'Mobile';
+            if (class_exists('Detection\\MobileDetect')) {
+                $detect = new \Detection\MobileDetect();
+            } elseif (class_exists('Mobile_Detect')) {
+                $detect = new \Mobile_Detect();
+            } else {
+                $detect = null;
+            }
+            if ($detect) {
+                $detect->setUserAgent($agent);
+                if ($detect->isTablet()) {
+                    $device = 'Tablet';
+                } elseif ($detect->isMobile()) {
+                    $device = 'Mobile';
+                }
             }
         }
         $current_url = home_url($_SERVER['REQUEST_URI'] ?? '/');
@@ -177,6 +187,17 @@ class Gm2_Abandoned_Carts {
         $row = $wpdb->get_row($wpdb->prepare("SELECT id FROM $table WHERE cart_token = %s", $token));
         if ($row) {
             $wpdb->update($table, [ 'recovered_order_id' => $order_id ], ['id' => $row->id]);
+        }
+    }
+
+    private function maybe_install() {
+        global $wpdb;
+        $carts_table = $wpdb->prefix . 'wc_ac_carts';
+        $queue_table = $wpdb->prefix . 'wc_ac_email_queue';
+        $carts_exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $carts_table));
+        $queue_exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $queue_table));
+        if ($carts_exists !== $carts_table || $queue_exists !== $queue_table) {
+            $this->install();
         }
     }
 
