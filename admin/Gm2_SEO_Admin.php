@@ -65,6 +65,12 @@ class Gm2_SEO_Admin {
         if (get_option('gm2_clean_slugs', '0') === '1') {
             add_filter('sanitize_title', [$this, 'clean_slug'], 20, 3);
         }
+
+        add_filter('bulk_actions-edit-post', [$this, 'register_clean_slug_bulk_action']);
+        add_filter('handle_bulk_actions-edit-post', [$this, 'redirect_clean_slug_bulk_action'], 10, 3);
+        add_action('admin_post_gm2_bulk_clean_slugs', [$this, 'handle_bulk_clean_slugs']);
+        add_action('load-edit.php', [$this, 'maybe_confirm_clean_slugs']);
+        add_action('admin_notices', [$this, 'maybe_show_clean_slug_notice']);
     }
 
     public function maybe_generate_sitemap($new_status = null, $old_status = null, $post = null) {
@@ -190,6 +196,89 @@ class Gm2_SEO_Admin {
         }
         $slug = trim(preg_replace('/-+/', '-', $slug), '-');
         return $slug;
+    }
+
+    public function register_clean_slug_bulk_action($actions) {
+        $actions['gm2_bulk_clean_slugs'] = esc_html__( 'Clean Slugs', 'gm2-wordpress-suite' );
+        return $actions;
+    }
+
+    public function redirect_clean_slug_bulk_action($redirect, $action, $post_ids) {
+        if ($action === 'gm2_bulk_clean_slugs') {
+            $redirect = add_query_arg('gm2_clean_slugs_ids', implode(',', array_map('absint', $post_ids)), $redirect);
+        }
+        return $redirect;
+    }
+
+    public function maybe_confirm_clean_slugs() {
+        if (!isset($_GET['gm2_clean_slugs_ids'])) {
+            return;
+        }
+        $screen = get_current_screen();
+        if (!$screen || $screen->id !== 'edit-post') {
+            return;
+        }
+
+        $ids  = array_filter(array_map('absint', explode(',', $_GET['gm2_clean_slugs_ids'])));
+        $count = count($ids);
+        if (!$count) {
+            return;
+        }
+
+        $nonce = wp_create_nonce('gm2_bulk_clean_slugs');
+        $confirm_url = add_query_arg([
+            'action' => 'gm2_bulk_clean_slugs',
+        ], admin_url('admin-post.php'));
+
+        echo '<div class="notice notice-warning"><p>' .
+            sprintf(esc_html(_n('Clean slugs for %d selected post?', 'Clean slugs for %d selected posts?', $count, 'gm2-wordpress-suite')), $count) .
+            '</p><p><form method="post" action="' . esc_url($confirm_url) . '">' .
+            '<input type="hidden" name="ids" value="' . esc_attr(implode(',', $ids)) . '" />' .
+            wp_nonce_field('gm2_bulk_clean_slugs', '_wpnonce', true, false) .
+            get_submit_button(esc_html__('Confirm', 'gm2-wordpress-suite'), 'primary', 'submit', false) .
+            ' <a href="' . esc_url(remove_query_arg('gm2_clean_slugs_ids')) . '" class="button">' . esc_html__('Cancel', 'gm2-wordpress-suite') . '</a>' .
+            '</form></p></div>';
+    }
+
+    public function handle_bulk_clean_slugs() {
+        if (!current_user_can('edit_posts')) {
+            wp_die( esc_html__( 'Permission denied', 'gm2-wordpress-suite' ) );
+        }
+
+        check_admin_referer('gm2_bulk_clean_slugs');
+
+        $ids   = array_filter(array_map('absint', explode(',', $_POST['ids'] ?? '')));
+        $count = 0;
+        foreach ($ids as $post_id) {
+            if (!current_user_can('edit_post', $post_id)) {
+                continue;
+            }
+            $post   = get_post($post_id);
+            if (!$post) {
+                continue;
+            }
+            $clean  = $this->clean_slug($post->post_name);
+            if ($clean !== $post->post_name) {
+                wp_update_post(['ID' => $post_id, 'post_name' => $clean]);
+                $count++;
+            }
+        }
+
+        $url = add_query_arg('gm2_slugs_cleaned', $count, admin_url('edit.php'));
+        wp_redirect($url);
+        if (defined('GM2_TESTING') && GM2_TESTING) {
+            return;
+        }
+        exit;
+    }
+
+    public function maybe_show_clean_slug_notice() {
+        if (isset($_GET['gm2_slugs_cleaned'])) {
+            $count = absint($_GET['gm2_slugs_cleaned']);
+            echo '<div class="notice notice-success is-dismissible"><p>' .
+                sprintf(esc_html(_n('%d slug cleaned.', '%d slugs cleaned.', $count, 'gm2-wordpress-suite')), $count) .
+                '</p></div>';
+        }
     }
 
     public function add_settings_pages() {
