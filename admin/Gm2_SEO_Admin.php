@@ -43,6 +43,7 @@ class Gm2_SEO_Admin {
         add_action('wp_ajax_gm2_ai_generate_tax_description', [$this, 'ajax_generate_tax_description']);
         add_action('wp_ajax_gm2_bulk_ai_apply', [$this, 'ajax_bulk_ai_apply']);
         add_action('wp_ajax_gm2_bulk_ai_apply_batch', [$this, 'ajax_bulk_ai_apply_batch']);
+        add_action('wp_ajax_gm2_bulk_ai_undo', [$this, 'ajax_bulk_ai_undo']);
 
         add_action('add_attachment', [$this, 'auto_fill_alt_on_upload']);
         add_action('admin_notices', [$this, 'admin_notices']);
@@ -1083,11 +1084,21 @@ class Gm2_SEO_Admin {
             $description = get_post_meta($post->ID, '_gm2_description', true);
             $stored      = get_post_meta($post->ID, '_gm2_ai_research', true);
             $result_html = '';
+            $has_prev    = (bool) (
+                get_post_meta($post->ID, '_gm2_prev_title', true) !== '' ||
+                get_post_meta($post->ID, '_gm2_prev_description', true) !== '' ||
+                get_post_meta($post->ID, '_gm2_prev_slug', true) !== '' ||
+                get_post_meta($post->ID, '_gm2_prev_post_title', true) !== ''
+            );
             if ($stored) {
                 $data = json_decode($stored, true);
                 if (json_last_error() === JSON_ERROR_NONE && is_array($data)) {
-                    $result_html = $this->render_bulk_ai_result($data, $post->ID);
+                    $result_html = $this->render_bulk_ai_result($data, $post->ID, $has_prev);
+                } elseif ($has_prev) {
+                    $result_html = $this->render_bulk_ai_result([], $post->ID, true);
                 }
+            } elseif ($has_prev) {
+                $result_html = $this->render_bulk_ai_result([], $post->ID, true);
             }
             echo '<tr id="gm2-row-' . intval($post->ID) . '">';
             echo '<th scope="row" class="check-column"><input type="checkbox" class="gm2-select" value="' . intval($post->ID) . '"></th>';
@@ -1119,7 +1130,7 @@ class Gm2_SEO_Admin {
         echo '</div>';
     }
 
-    private function render_bulk_ai_result($data, $post_id) {
+    private function render_bulk_ai_result($data, $post_id, $has_prev = false) {
         $html        = '';
         $suggestions = '';
 
@@ -1136,12 +1147,18 @@ class Gm2_SEO_Admin {
             $suggestions .= '<p><label><input type="checkbox" class="gm2-apply" data-field="title" data-value="' . esc_attr($data['page_name']) . '"> ' . esc_html__( 'Title', 'gm2-wordpress-suite' ) . ': ' . esc_html($data['page_name']) . '</label></p>';
         }
 
-        if ($suggestions !== '') {
-            $html .= '<p><label><input type="checkbox" class="gm2-row-select-all"> ' . esc_html__( 'Select all', 'gm2-wordpress-suite' ) . '</label></p>';
-            $html .= $suggestions;
+        if ($suggestions !== '' || $has_prev) {
+            if ($suggestions !== '') {
+                $html .= '<p><label><input type="checkbox" class="gm2-row-select-all"> ' . esc_html__( 'Select all', 'gm2-wordpress-suite' ) . '</label></p>';
+                $html .= $suggestions;
+            }
             $html .= '<p><button class="button gm2-apply-btn" data-id="' . intval($post_id) . '" aria-label="' . esc_attr__( 'Apply', 'gm2-wordpress-suite' ) . '">' . esc_html__( 'Apply', 'gm2-wordpress-suite' ) . '</button> ';
-            $html .= '<button class="button gm2-refresh-btn" data-id="' . intval($post_id) . '" aria-label="' . esc_attr__( 'Refresh', 'gm2-wordpress-suite' ) . '">' . esc_html__( 'Refresh', 'gm2-wordpress-suite' ) . '</button>';
-            $html .= '<button class="button gm2-clear-btn" data-id="' . intval($post_id) . '" aria-label="' . esc_attr__( 'Clear', 'gm2-wordpress-suite' ) . '">' . esc_html__( 'Clear', 'gm2-wordpress-suite' ) . '</button></p>';
+            $html .= '<button class="button gm2-refresh-btn" data-id="' . intval($post_id) . '" aria-label="' . esc_attr__( 'Refresh', 'gm2-wordpress-suite' ) . '">' . esc_html__( 'Refresh', 'gm2-wordpress-suite' ) . '</button> ';
+            $html .= '<button class="button gm2-clear-btn" data-id="' . intval($post_id) . '" aria-label="' . esc_attr__( 'Clear', 'gm2-wordpress-suite' ) . '">' . esc_html__( 'Clear', 'gm2-wordpress-suite' ) . '</button>';
+            if ($has_prev) {
+                $html .= ' <button class="button gm2-undo-btn" data-id="' . intval($post_id) . '" aria-label="' . esc_attr__( 'Undo', 'gm2-wordpress-suite' ) . '">' . esc_html__( 'Undo', 'gm2-wordpress-suite' ) . '</button>';
+            }
+            $html .= '</p>';
         }
 
         return $html;
@@ -3543,6 +3560,12 @@ class Gm2_SEO_Admin {
 
         if ($post_id) {
             update_post_meta($post_id, '_gm2_ai_research', wp_json_encode($data2));
+            $data2['undo'] = (bool) (
+                get_post_meta($post_id, '_gm2_prev_title', true) !== '' ||
+                get_post_meta($post_id, '_gm2_prev_description', true) !== '' ||
+                get_post_meta($post_id, '_gm2_prev_slug', true) !== '' ||
+                get_post_meta($post_id, '_gm2_prev_post_title', true) !== ''
+            );
         } elseif ($term_id) {
             update_term_meta($term_id, '_gm2_ai_research', wp_json_encode($data2));
         }
@@ -3656,18 +3679,22 @@ class Gm2_SEO_Admin {
 
         $data = ['ID' => $post_id];
         if (isset($_POST['title'])) {
+            update_post_meta($post_id, '_gm2_prev_post_title', get_post_field('post_title', $post_id));
             $data['post_title'] = sanitize_text_field(wp_unslash($_POST['title']));
         }
         if (isset($_POST['slug'])) {
+            update_post_meta($post_id, '_gm2_prev_slug', get_post_field('post_name', $post_id));
             $data['post_name'] = sanitize_title(wp_unslash($_POST['slug']));
         }
         if (count($data) > 1) {
             wp_update_post($data);
         }
         if (isset($_POST['seo_title'])) {
+            update_post_meta($post_id, '_gm2_prev_title', get_post_meta($post_id, '_gm2_title', true));
             update_post_meta($post_id, '_gm2_title', sanitize_text_field(wp_unslash($_POST['seo_title'])));
         }
         if (isset($_POST['seo_description'])) {
+            update_post_meta($post_id, '_gm2_prev_description', get_post_meta($post_id, '_gm2_description', true));
             update_post_meta($post_id, '_gm2_description', sanitize_textarea_field(wp_unslash($_POST['seo_description'])));
         }
 
@@ -3690,23 +3717,78 @@ class Gm2_SEO_Admin {
 
             $data = ['ID' => $post_id];
             if (isset($fields['title'])) {
+                update_post_meta($post_id, '_gm2_prev_post_title', get_post_field('post_title', $post_id));
                 $data['post_title'] = sanitize_text_field($fields['title']);
             }
             if (isset($fields['slug'])) {
+                update_post_meta($post_id, '_gm2_prev_slug', get_post_field('post_name', $post_id));
                 $data['post_name'] = sanitize_title($fields['slug']);
             }
             if (count($data) > 1) {
                 wp_update_post($data);
             }
             if (isset($fields['seo_title'])) {
+                update_post_meta($post_id, '_gm2_prev_title', get_post_meta($post_id, '_gm2_title', true));
                 update_post_meta($post_id, '_gm2_title', sanitize_text_field($fields['seo_title']));
             }
             if (isset($fields['seo_description'])) {
+                update_post_meta($post_id, '_gm2_prev_description', get_post_meta($post_id, '_gm2_description', true));
                 update_post_meta($post_id, '_gm2_description', sanitize_textarea_field($fields['seo_description']));
             }
         }
 
         wp_send_json_success();
+    }
+
+    public function ajax_bulk_ai_undo() {
+        check_ajax_referer('gm2_bulk_ai_apply');
+
+        $post_id = isset($_POST['post_id']) ? absint($_POST['post_id']) : 0;
+        if (!$post_id || !current_user_can('edit_post', $post_id)) {
+            wp_send_json_error( __( 'permission denied', 'gm2-wordpress-suite' ), 403 );
+        }
+
+        $data     = ['ID' => $post_id];
+        $changed  = false;
+
+        $prev = get_post_meta($post_id, '_gm2_prev_post_title', true);
+        if ($prev !== '') {
+            $data['post_title'] = $prev;
+            delete_post_meta($post_id, '_gm2_prev_post_title');
+            $changed = true;
+        }
+
+        $prev = get_post_meta($post_id, '_gm2_prev_slug', true);
+        if ($prev !== '') {
+            $data['post_name'] = $prev;
+            delete_post_meta($post_id, '_gm2_prev_slug');
+            $changed = true;
+        }
+
+        if ($changed) {
+            wp_update_post($data);
+        }
+
+        $seo_title = get_post_meta($post_id, '_gm2_prev_title', true);
+        if ($seo_title !== '') {
+            update_post_meta($post_id, '_gm2_title', $seo_title);
+            delete_post_meta($post_id, '_gm2_prev_title');
+        }
+
+        $seo_desc = get_post_meta($post_id, '_gm2_prev_description', true);
+        if ($seo_desc !== '') {
+            update_post_meta($post_id, '_gm2_description', $seo_desc);
+            delete_post_meta($post_id, '_gm2_prev_description');
+        }
+
+        $response = [
+            'title'       => get_the_title($post_id),
+            'seo_title'   => get_post_meta($post_id, '_gm2_title', true),
+            'description' => get_post_meta($post_id, '_gm2_description', true),
+            'slug'        => get_post_field('post_name', $post_id),
+        ];
+
+        wp_send_json_success($response);
     }
 
     public function ajax_ai_research_clear() {
