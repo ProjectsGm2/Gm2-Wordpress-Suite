@@ -227,6 +227,7 @@ function gm2_initialize_content_rules() {
     add_option('gm2_content_rules', $rules);
     add_option('gm2_min_internal_links', 1);
     add_option('gm2_min_external_links', 1);
+    add_option('gm2_tax_min_length', 150);
 }
 
 function gm2_initialize_guideline_rules() {

@@ -370,6 +370,9 @@ class Gm2_SEO_Admin {
         register_setting('gm2_seo_options', 'gm2_tax_desc_prompt', [
             'sanitize_callback' => 'sanitize_textarea_field',
         ]);
+        register_setting('gm2_seo_options', 'gm2_tax_min_length', [
+            'sanitize_callback' => 'absint',
+        ]);
         register_setting('gm2_seo_options', 'gm2_bulk_ai_page_size', [
             'sanitize_callback' => 'absint',
         ]);
@@ -554,6 +557,7 @@ class Gm2_SEO_Admin {
             'analytics'   => esc_html__( 'Analytics', 'gm2-wordpress-suite' ),
             'rules'       => esc_html__( 'Content Rules', 'gm2-wordpress-suite' ),
             'guidelines'  => esc_html__( 'SEO Guidelines', 'gm2-wordpress-suite' ),
+            'taxonomies'  => esc_html__( 'Taxonomies', 'gm2-wordpress-suite' ),
             'context'     => esc_html__( 'Context', 'gm2-wordpress-suite' ),
         ];
 
@@ -891,6 +895,15 @@ class Gm2_SEO_Admin {
             echo '<tr><th scope="row">' . esc_html__( 'Minimum External Links', 'gm2-wordpress-suite' ) . '</th><td><input type="number" name="gm2_min_external_links" value="' . esc_attr($min_ext) . '" class="small-text" /></td></tr>';
             echo '</tbody></table>';
             submit_button( esc_html__( 'Save Rules', 'gm2-wordpress-suite' ) );
+            echo '</form>';
+        } elseif ($active === 'taxonomies') {
+            echo '<form method="post" action="options.php">';
+            settings_fields('gm2_seo_options');
+            $min = (int) get_option('gm2_tax_min_length', 150);
+            echo '<table class="form-table"><tbody>';
+            echo '<tr><th scope="row"><label for="gm2_tax_min_length">' . esc_html__( 'Minimum Description Length', 'gm2-wordpress-suite' ) . '</label></th><td><input type="number" id="gm2_tax_min_length" name="gm2_tax_min_length" value="' . esc_attr($min) . '" class="small-text" /></td></tr>';
+            echo '</tbody></table>';
+            submit_button( esc_html__( 'Save Settings', 'gm2-wordpress-suite' ) );
             echo '</form>';
         } elseif ($active === 'context') {
             echo '<form method="post" action="options.php">';
@@ -1794,6 +1807,14 @@ class Gm2_SEO_Admin {
         $max_image_preview = isset($_POST['gm2_max_image_preview']) ? sanitize_text_field($_POST['gm2_max_image_preview']) : '';
         $max_video_preview = isset($_POST['gm2_max_video_preview']) ? sanitize_text_field($_POST['gm2_max_video_preview']) : '';
         $og_image         = isset($_POST['gm2_og_image']) ? absint($_POST['gm2_og_image']) : 0;
+
+        $min_len = (int) get_option('gm2_tax_min_length', 0);
+        if ($min_len > 0 && isset($_POST['description'])) {
+            $word_count = str_word_count( wp_strip_all_tags( wp_unslash( $_POST['description'] ) ) );
+            if ($word_count < $min_len) {
+                self::add_notice( sprintf( __( 'Description has %d words; minimum is %d.', 'gm2-wordpress-suite' ), $word_count, $min_len ) );
+            }
+        }
         update_term_meta($term_id, '_gm2_title', $title);
         update_term_meta($term_id, '_gm2_description', $description);
         update_term_meta($term_id, '_gm2_noindex', $noindex);
