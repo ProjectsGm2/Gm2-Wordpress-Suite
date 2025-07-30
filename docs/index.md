@@ -74,3 +74,11 @@ These seed keywords are refined with Google Ads data before the final results ar
 Focus keywords used across posts and terms are now tracked. AI Research includes
 the list of existing keywords in its prompt and filters them from suggestions.
 The "Check Rules" action fails when a focus keyword is already in use.
+
+## Planned Features
+
+- Accessible tabs with ARIA roles and keyboard controls.
+- Spinner feedback during AI SEO research.
+- SEO input placeholders with help tooltips.
+- Live search snippet preview in the SEO meta box.
+- "Test Connection" button on the Google Connect screen.
