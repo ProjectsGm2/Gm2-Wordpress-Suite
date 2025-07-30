@@ -295,8 +295,8 @@ the last 100 missing URLs to help you create new redirects.
   **SEO → SEO Guidelines**.
 * **Duplicate checks** – upcoming report in **SEO → Tools** that flags posts
   with duplicate titles or descriptions.
-* **Slug cleanup** – bulk action in **SEO → General** to remove stopwords from
-  existing slugs.
+* **Slug cleanup** – bulk action in **SEO → General** or from the posts list to
+  remove stopwords from existing slugs.
 * **Canonical for variations** – meta box option to set a canonical URL on
   individual product variations.
 * **Image alt keyword checks** – SEO meta box warning when alt text is missing
