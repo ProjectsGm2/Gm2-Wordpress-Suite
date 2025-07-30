@@ -315,6 +315,14 @@ the last 100 missing URLs to help you create new redirects.
   suggestions for multiple items with post type and category filters.
 * **Outbound link rel controls** – dropdown in the link dialog to apply
   `nofollow` or `sponsored` to outbound links.
+* **Accessible tabs** – admin tabs use ARIA roles and keyboard controls for
+  better accessibility.
+* **Spinner during AI SEO research** – provides feedback while requests run.
+* **Field placeholders and tooltips** – SEO inputs offer guidance and context.
+* **Real-time snippet preview** – view how titles and descriptions appear in
+  search results as you type.
+* **Test Connection button** – quickly confirm Google integration on the
+  connect screen.
 
 == Changelog ==
 = 1.6.17 =
