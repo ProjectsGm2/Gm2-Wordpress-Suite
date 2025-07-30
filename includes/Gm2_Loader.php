@@ -21,6 +21,11 @@ class Gm2_Loader {
         $admin = new Gm2_Admin();
         $admin->run();
 
+        if (is_admin()) {
+            $links = new Gm2_Link_Counts();
+            $links->run();
+        }
+
         $enable_seo = get_option('gm2_enable_seo', '1') === '1';
         $enable_qd  = get_option('gm2_enable_quantity_discounts', '1') === '1';
         $enable_ac  = get_option('gm2_enable_abandoned_carts', '0') === '1';
