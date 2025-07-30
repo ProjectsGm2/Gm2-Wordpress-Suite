@@ -34,3 +34,14 @@
     margin-left:4px;
     vertical-align:middle;
 }
+
+/* Row state styles for Bulk AI table */
+.gm2-status-new {
+    background: #fff;
+}
+.gm2-status-analyzed {
+    background: #ffffe0;
+}
+.gm2-status-applied {
+    background: #f0fff0;
+}

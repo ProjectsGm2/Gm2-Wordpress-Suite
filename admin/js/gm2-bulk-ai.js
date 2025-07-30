@@ -3,6 +3,9 @@ jQuery(function($){
     var applied = 0;
     var stopProcessing = false;
 
+    // Mark all rows as new on initial load
+    $('#gm2-bulk-list tr[id^="gm2-row-"]').addClass('gm2-status-new');
+
     function initBar(max){
         var $bar = $('#gm2-bulk-progress-bar');
         if(!$bar.length){
@@ -125,6 +128,7 @@ jQuery(function($){
                 if(resp&&resp.success&&resp.data){
                     var html = buildHtml(resp.data,id,resp.data.undo);
                     $res.html(html);
+                    row.removeClass('gm2-status-new gm2-status-applied').addClass('gm2-status-analyzed');
                     processed++;
                     updateProgress();
                     processNext();
@@ -174,7 +178,8 @@ jQuery(function($){
                 hideSpinner($res);
                 row.find('.gm2-result .gm2-undo-btn').remove();
                 row.find('.gm2-result').append(' <button class="button gm2-undo-btn" data-id="'+id+'">'+(gm2BulkAi.i18n?gm2BulkAi.i18n.undo:'Undo')+'</button> <span> ✓</span>');
-                row.addClass('gm2-applied');
+                row.removeClass('gm2-status-new gm2-status-analyzed')
+                    .addClass('gm2-status-applied gm2-applied');
                 setTimeout(function(){
                     row.removeClass('gm2-applied');
                 },3000);
@@ -205,6 +210,7 @@ jQuery(function($){
             hideSpinner($res);
             if(resp&&resp.success&&resp.data){
                 $res.html(buildHtml(resp.data,id,resp.data.undo));
+                row.removeClass('gm2-status-new gm2-status-applied').addClass('gm2-status-analyzed');
             }else{
                 var msg=(resp&&resp.data)?(resp.data.message||resp.data):'Error';
                 $res.text(msg);
@@ -231,7 +237,8 @@ jQuery(function($){
             hideSpinner($res);
             if(resp&&resp.success){
                 $res.empty();
-                row.removeClass('gm2-applied');
+                row.removeClass('gm2-applied gm2-status-analyzed gm2-status-applied')
+                   .addClass('gm2-status-new');
             }else{
                 var msg=(resp&&resp.data)?(resp.data.message||resp.data):'Error';
                 $res.text(msg);
@@ -258,6 +265,8 @@ jQuery(function($){
                     row.find('td').eq(2).text(resp.data.description);
                     row.find('td').eq(3).text(resp.data.slug);
                     $res.empty();
+                    row.removeClass('gm2-status-applied gm2-status-analyzed gm2-applied')
+                       .addClass('gm2-status-new');
                 }else{
                     var msg=(resp&&resp.data)?(resp.data.message||resp.data):'Error';
                     $res.text(msg);
@@ -302,7 +311,8 @@ jQuery(function($){
                     hideSpinner(cell);
                     cell.find('.gm2-undo-btn').remove();
                     cell.append(' <button class="button gm2-undo-btn" data-id="'+id+'">'+(gm2BulkAi.i18n?gm2BulkAi.i18n.undo:'Undo')+'</button> <span> ✓</span>');
-                    row.addClass('gm2-applied');
+                    row.removeClass('gm2-status-new gm2-status-analyzed')
+                        .addClass('gm2-status-applied gm2-applied');
                     setTimeout(function(){
                         row.removeClass('gm2-applied');
                     },3000);
