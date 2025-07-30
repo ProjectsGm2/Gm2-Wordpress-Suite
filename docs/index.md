@@ -26,6 +26,24 @@ Existing prompt logic automatically includes these options via `gm2_get_seo_cont
 - Each row in the table includes a "Select All" checkbox to quickly apply that post's suggestions.
 - Rows highlight after applying suggestions so you can see what changed.
 
+### Bulk AI Task Summary
+
+- **Edit Post links** – titles link to each edit screen from `display_bulk_ai_page()` in `admin/Gm2_SEO_Admin.php`.
+- **Usage instructions** – short description printed in the same function before the settings form.
+- **Spinner during analysis** – handled by `showSpinner()` and `hideSpinner()` in `admin/js/gm2-bulk-ai.js`.
+- **Fade-out rows** – `gm2-applied` class removed after a delay in `gm2-bulk-ai.js` with styles in `admin/css/gm2-seo.css`.
+- **Cancel analysis** – `#gm2-bulk-cancel` listener in `gm2-bulk-ai.js` stops the queue.
+- **Missing metadata filters** – checkboxes `gm2_missing_title` and `gm2_missing_description` saved in `display_bulk_ai_page()`.
+- **ARIA progress bar** – `<progress>` element with `role="progressbar"` and button `aria-label` attributes in `display_bulk_ai_page()`.
+- **Select None control** – `#gm2-select-none` button in `gm2-bulk-ai.js` clears all selections.
+- **Search field** – `gm2_search_title` input filters posts by title.
+- **CSV export** – `handle_bulk_ai_export()` outputs a `gm2-bulk-ai.csv` file.
+- **User settings** – page size and filters stored per user via `update_user_meta()`.
+- **Improved AJAX errors** – `.fail()` blocks in `gm2-bulk-ai.js` display parsed messages.
+- **Scheduled via WP‑Cron** – planned feature to queue analysis jobs.
+- **Undo option** – `.gm2-undo-btn` triggers `ajax_bulk_ai_undo()` in `Gm2_SEO_Admin.php`.
+- **Color-coded statuses** – row classes `gm2-status-new`, `gm2-status-analyzed` and `gm2-status-applied` styled in `admin/css/gm2-seo.css`.
+
 ## Building the Business Context Prompt
 
 Before using the Business Context Prompt builder make sure the ChatGPT feature is enabled and your API key and model are configured under **Gm2 → ChatGPT**. Then open **SEO → Context** and click **Generate AI Prompt** below the Business Context Prompt field. The plugin assembles a single prompt from all of your Context answers and sends it to ChatGPT. The resulting text appears in the textarea ready for review and editing.
