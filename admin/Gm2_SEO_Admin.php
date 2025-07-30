@@ -1105,7 +1105,8 @@ class Gm2_SEO_Admin {
         $page_size     = max(1, absint(get_user_meta($user_id, 'gm2_bulk_ai_page_size', true) ?: 10));
         $status        = get_user_meta($user_id, 'gm2_bulk_ai_status', true) ?: 'publish';
         $post_type     = get_user_meta($user_id, 'gm2_bulk_ai_post_type', true) ?: 'all';
-        $term          = get_user_meta($user_id, 'gm2_bulk_ai_term', true) ?: '';
+        $term_raw      = get_user_meta($user_id, 'gm2_bulk_ai_term', true) ?: '';
+        $term          = $term_raw === '' ? [] : array_map('trim', explode(',', $term_raw));
         $missing_title = get_option('gm2_bulk_ai_missing_title', '0');
         $missing_desc  = get_option('gm2_bulk_ai_missing_description', '0');
         $search_title  = get_option('gm2_bulk_ai_search_title', '');
@@ -1115,14 +1116,16 @@ class Gm2_SEO_Admin {
             $page_size    = max(1, absint($_POST['page_size'] ?? 10));
             $status       = sanitize_key($_POST['status'] ?? 'publish');
             $post_type    = sanitize_key($_POST['gm2_post_type'] ?? 'all');
-            $term         = sanitize_text_field($_POST['term'] ?? '');
+            $term_input   = isset($_POST['term']) ? (array) $_POST['term'] : [];
+            $term_input   = array_map('sanitize_text_field', $term_input);
+            $term         = array_filter(array_map('trim', $term_input));
             $missing_title = isset($_POST['gm2_missing_title']) ? '1' : '0';
             $missing_desc  = isset($_POST['gm2_missing_description']) ? '1' : '0';
             $search_title  = sanitize_text_field($_POST['gm2_search_title'] ?? '');
             update_user_meta($user_id, 'gm2_bulk_ai_page_size', $page_size);
             update_user_meta($user_id, 'gm2_bulk_ai_status', $status);
             update_user_meta($user_id, 'gm2_bulk_ai_post_type', $post_type);
-            update_user_meta($user_id, 'gm2_bulk_ai_term', $term);
+            update_user_meta($user_id, 'gm2_bulk_ai_term', implode(',', $term));
             update_option('gm2_bulk_ai_missing_title', $missing_title);
             update_option('gm2_bulk_ai_missing_description', $missing_desc);
             update_option('gm2_bulk_ai_search_title', $search_title);
@@ -1141,17 +1144,24 @@ class Gm2_SEO_Admin {
         if ($search_title !== '') {
             $args['s'] = $search_title;
         }
-        if ($term && strpos($term, ':') !== false) {
-            list($tax, $id) = explode(':', $term);
+        if ($term) {
             $taxonomies = $this->get_supported_taxonomies();
-            if (in_array($tax, $taxonomies, true)) {
-                $args['tax_query'] = [
-                    [
+            $tax_query  = ['relation' => 'OR'];
+            foreach ($term as $t) {
+                if (strpos($t, ':') === false) {
+                    continue;
+                }
+                list($tax, $id) = explode(':', $t);
+                if (in_array($tax, $taxonomies, true)) {
+                    $tax_query[] = [
                         'taxonomy' => $tax,
                         'field'    => 'term_id',
                         'terms'    => absint($id),
-                    ],
-                ];
+                    ];
+                }
+            }
+            if (count($tax_query) > 1) {
+                $args['tax_query'] = $tax_query;
             }
         }
 
@@ -1194,8 +1204,10 @@ class Gm2_SEO_Admin {
             echo '<option value="' . esc_attr($pt) . '"' . selected($post_type, $pt, false) . '>' . esc_html($name) . '</option>';
         }
         echo '</select></label> ';
-        echo '<label>' . esc_html__( 'Category', 'gm2-wordpress-suite' ) . ' <select name="term">';
-        echo '<option value=""' . selected($term, '', false) . '>' . esc_html__( 'All', 'gm2-wordpress-suite' ) . '</option>';
+        echo '<label>' . esc_html__( 'Categories', 'gm2-wordpress-suite' ) . ' <select name="term[]" multiple size="5">';
+        $selected_terms = $term;
+        $none_selected  = empty($selected_terms) ? 'selected="selected"' : '';
+        echo '<option value="" ' . $none_selected . '>' . esc_html__( 'All', 'gm2-wordpress-suite' ) . '</option>';
         $dropdown_terms = get_terms([
             'taxonomy'   => $this->get_supported_taxonomies(),
             'hide_empty' => false,
@@ -1204,7 +1216,8 @@ class Gm2_SEO_Admin {
             $tax_obj = get_taxonomy($t->taxonomy);
             $label = ($tax_obj ? $tax_obj->labels->singular_name : $t->taxonomy) . ': ' . $t->name;
             $value = $t->taxonomy . ':' . $t->term_id;
-            echo '<option value="' . esc_attr($value) . '"' . selected($term, $value, false) . '>' . esc_html($label) . '</option>';
+            $sel = in_array($value, $selected_terms, true) ? 'selected="selected"' : '';
+            echo '<option value="' . esc_attr($value) . '" ' . $sel . '>' . esc_html($label) . '</option>';
         }
         echo '</select></label> ';
         echo '<label>' . esc_html__( 'Search Title', 'gm2-wordpress-suite' ) . ' <input type="text" name="gm2_search_title" value="' . esc_attr($search_title) . '"></label> ';
@@ -1308,7 +1321,8 @@ class Gm2_SEO_Admin {
         $page_size     = max(1, absint(get_user_meta($user_id, 'gm2_bulk_ai_page_size', true) ?: 10));
         $status        = get_user_meta($user_id, 'gm2_bulk_ai_status', true) ?: 'publish';
         $post_type     = get_user_meta($user_id, 'gm2_bulk_ai_post_type', true) ?: 'all';
-        $term          = get_user_meta($user_id, 'gm2_bulk_ai_term', true) ?: '';
+        $term_raw      = get_user_meta($user_id, 'gm2_bulk_ai_term', true) ?: '';
+        $term          = $term_raw === '' ? [] : array_map('trim', explode(',', $term_raw));
         $missing_title = get_option('gm2_bulk_ai_missing_title', '0');
         $missing_desc  = get_option('gm2_bulk_ai_missing_description', '0');
         $search_title  = get_option('gm2_bulk_ai_search_title', '');
@@ -1325,17 +1339,24 @@ class Gm2_SEO_Admin {
         if ($search_title !== '') {
             $args['s'] = $search_title;
         }
-        if ($term && strpos($term, ':') !== false) {
-            list($tax, $id) = explode(':', $term);
+        if ($term) {
             $taxonomies = $this->get_supported_taxonomies();
-            if (in_array($tax, $taxonomies, true)) {
-                $args['tax_query'] = [
-                    [
+            $tax_query  = ['relation' => 'OR'];
+            foreach ($term as $t) {
+                if (strpos($t, ':') === false) {
+                    continue;
+                }
+                list($tax, $id) = explode(':', $t);
+                if (in_array($tax, $taxonomies, true)) {
+                    $tax_query[] = [
                         'taxonomy' => $tax,
                         'field'    => 'term_id',
                         'terms'    => absint($id),
-                    ],
-                ];
+                    ];
+                }
+            }
+            if (count($tax_query) > 1) {
+                $args['tax_query'] = $tax_query;
             }
         }
 

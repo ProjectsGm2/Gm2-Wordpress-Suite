@@ -90,6 +90,45 @@ class BulkAiFilterTest extends WP_UnitTestCase {
         $this->assertStringNotContainsString('Out', $html);
     }
 
+    public function test_multiple_category_filter_includes_both() {
+        $cat1 = self::factory()->term->create(['taxonomy' => 'category', 'name' => 'Alpha']);
+        $cat2 = self::factory()->term->create(['taxonomy' => 'category', 'name' => 'Beta']);
+        $in1 = self::factory()->post->create(['post_title' => 'In1', 'post_category' => [$cat1]]);
+        $in2 = self::factory()->post->create(['post_title' => 'In2', 'post_category' => [$cat2]]);
+
+        $user = self::factory()->user->create(['role' => 'administrator']);
+        update_user_meta($user, 'gm2_bulk_ai_post_type', 'post');
+        update_user_meta($user, 'gm2_bulk_ai_term', 'category:' . $cat1 . ',category:' . $cat2);
+        $admin = new Gm2_SEO_Admin();
+        wp_set_current_user($user);
+        ob_start();
+        $admin->display_bulk_ai_page();
+        $html = ob_get_clean();
+        $this->assertStringContainsString('In1', $html);
+        $this->assertStringContainsString('In2', $html);
+    }
+
+    public function test_product_category_filter_limits_results() {
+        register_post_type('product');
+        register_taxonomy('product_cat', 'product');
+
+        $cat = self::factory()->term->create(['taxonomy' => 'product_cat', 'name' => 'One']);
+        $in  = self::factory()->post->create(['post_type' => 'product', 'post_title' => 'ProdIn']);
+        $out = self::factory()->post->create(['post_type' => 'product', 'post_title' => 'ProdOut']);
+        wp_set_object_terms($in, [$cat], 'product_cat');
+
+        $user = self::factory()->user->create(['role' => 'administrator']);
+        update_user_meta($user, 'gm2_bulk_ai_post_type', 'product');
+        update_user_meta($user, 'gm2_bulk_ai_term', 'product_cat:' . $cat);
+        $admin = new Gm2_SEO_Admin();
+        wp_set_current_user($user);
+        ob_start();
+        $admin->display_bulk_ai_page();
+        $html = ob_get_clean();
+        $this->assertStringContainsString('ProdIn', $html);
+        $this->assertStringNotContainsString('ProdOut', $html);
+    }
+
     public function test_missing_title_filter_limits_results() {
         $has = self::factory()->post->create(['post_title' => 'Has']);
         update_post_meta($has, '_gm2_title', 't');
