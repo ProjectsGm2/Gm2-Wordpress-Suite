@@ -84,6 +84,7 @@ $option_names = array(
     'gm2_bulk_ai_term',
     'gm2_bulk_ai_missing_title',
     'gm2_bulk_ai_missing_description',
+    'gm2_tax_min_length',
     'gm2_clean_slugs',
     'gm2_slug_stopwords',
     'gm2_tax_desc_prompt',
