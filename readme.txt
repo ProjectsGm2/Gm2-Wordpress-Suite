@@ -289,7 +289,7 @@ Create 301 or 302 redirects from the **SEO → Redirects** tab. The plugin logs
 the last 100 missing URLs to help you create new redirects.
 
 == Planned Features ==
-* **Search Console metrics** – new **SEO → Analytics** tab will show clicks and
+* **Search Console metrics** – the **SEO → Analytics** tab shows clicks and
   impressions from connected sites.
 * **Expanded rules** – guideline rules for each content type editable under
   **SEO → SEO Guidelines**.

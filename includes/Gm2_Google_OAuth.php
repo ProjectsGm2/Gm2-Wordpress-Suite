@@ -383,6 +383,56 @@ class Gm2_Google_OAuth {
         return $queries;
     }
 
+    /**
+     * Fetch top queries with click and impression metrics from Search Console.
+     *
+     * @param string $site_url Site URL registered in Search Console.
+     * @param int    $limit    Number of rows to return.
+     * @return array[] Array of [ 'query' => string, 'clicks' => int, 'impressions' => int ]
+     */
+    public function get_search_console_metrics($site_url, $limit = 10) {
+        if (!$this->is_connected()) {
+            return [];
+        }
+        $token = $this->get_access_token();
+        if (!$token) {
+            return [];
+        }
+
+        $body = [
+            'startDate' => date('Y-m-d', strtotime('-30 days')),
+            'endDate'   => date('Y-m-d'),
+            'dimensions' => ['query'],
+            'rowLimit'   => absint($limit),
+            'orderBy'    => [ [ 'field' => 'clicks', 'descending' => true ] ],
+        ];
+
+        $url = sprintf(
+            'https://searchconsole.googleapis.com/webmasters/v3/sites/%s/searchAnalytics/query',
+            rawurlencode($site_url)
+        );
+
+        $resp = $this->api_request('POST', $url, $body, [
+            'Authorization' => 'Bearer ' . $token,
+        ]);
+
+        if (is_wp_error($resp) || empty($resp['rows'])) {
+            return [];
+        }
+
+        $data = [];
+        foreach ($resp['rows'] as $row) {
+            if (!empty($row['keys'][0])) {
+                $data[] = [
+                    'query'       => $row['keys'][0],
+                    'clicks'      => (int) ($row['clicks'] ?? 0),
+                    'impressions' => (int) ($row['impressions'] ?? 0),
+                ];
+            }
+        }
+        return $data;
+    }
+
     public function list_ads_accounts() {
         if (!$this->is_connected()) {
             return [];
