@@ -1,9 +1,22 @@
 jQuery(function($){
     var LS_KEY = 'gm2_ai_seo_results';
+
+    function showSpinner($el){
+        if(!$el.find('.gm2-ai-spinner').length){
+            $('<span>',{class:'spinner is-active gm2-ai-spinner'}).appendTo($el);
+        }else{
+            $el.find('.gm2-ai-spinner').addClass('is-active');
+        }
+    }
+
+    function hideSpinner($el){
+        $el.find('.gm2-ai-spinner').remove();
+    }
     $('#gm2-ai-seo').on('click', '.gm2-ai-research', function(e){
         e.preventDefault();
         var researchingText = window.gm2AiSeo && gm2AiSeo.i18n ? gm2AiSeo.i18n.researching : 'Researching...';
         var $out = $('#gm2-ai-results').text(researchingText);
+        showSpinner($out);
         var data = {
             action: 'gm2_ai_research',
             _ajax_nonce: (window.gm2AiSeo && gm2AiSeo.nonce) ? gm2AiSeo.nonce : ''
@@ -44,6 +57,7 @@ jQuery(function($){
         }
         $.post((window.gm2AiSeo ? gm2AiSeo.ajax_url : ajaxurl), data)
         .done(function(resp){
+            hideSpinner($out);
             $out.empty();
             if(resp && resp.success && resp.data){
                 if(window.gm2AiSeo){
@@ -93,6 +107,7 @@ jQuery(function($){
             }
         })
         .fail(function(jqXHR, textStatus){
+            hideSpinner($out);
             var msg = (jqXHR && jqXHR.responseJSON && jqXHR.responseJSON.data)
                 ? jqXHR.responseJSON.data
                 : (jqXHR && jqXHR.responseText ? jqXHR.responseText : textStatus);
