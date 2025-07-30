@@ -1,15 +1,42 @@
 jQuery(function($){
     function switchTab($container, tab){
-        $container.find('.gm2-nav-tab').removeClass('active');
-        $container.find('.gm2-nav-tab[data-tab="'+tab+'"]').addClass('active');
+        $container.find('.gm2-nav-tab')
+            .removeClass('active')
+            .attr('aria-selected','false');
+        var $newTab = $container.find('.gm2-nav-tab[data-tab="'+tab+'"]')
+            .addClass('active')
+            .attr('aria-selected','true');
         $container.find('.gm2-tab-panel').removeClass('active').hide();
         $container.find('#'+tab).addClass('active').show();
+        return $newTab;
     }
 
     $(document).on('click', '.gm2-nav-tab', function(e){
         e.preventDefault();
         var $c = $(this).closest('.gm2-seo-tabs');
-        switchTab($c, $(this).data('tab'));
+        switchTab($c, $(this).data('tab')).focus();
+    });
+
+    $(document).on('keydown', '.gm2-nav-tab', function(e){
+        if($.inArray(e.which, [37,38,39,40,13,32]) === -1){
+            return;
+        }
+        e.preventDefault();
+        var $tab = $(this);
+        var $c = $tab.closest('.gm2-seo-tabs');
+        var $tabs = $c.find('.gm2-nav-tab');
+        var idx = $tabs.index($tab);
+        if(e.which === 37 || e.which === 38){
+            idx = (idx > 0) ? idx - 1 : $tabs.length - 1;
+        }else if(e.which === 39 || e.which === 40){
+            idx = (idx < $tabs.length - 1) ? idx + 1 : 0;
+        }else if(e.which === 13 || e.which === 32){
+            switchTab($c, $tab.data('tab'));
+            return;
+        }
+        var $target = $tabs.eq(idx);
+        switchTab($c, $target.data('tab'));
+        $target.focus();
     });
 
     $(document).on('click', '.gm2-upload-image', function(e){
