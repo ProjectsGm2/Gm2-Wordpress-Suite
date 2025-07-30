@@ -77,6 +77,13 @@ The plugin stores the generated XML sitemap at `sitemap.xml` in the WordPress
 root directory. You can change this location by setting the `gm2_sitemap_path`
 option on the **SEO → Sitemap** settings page.
 
+## Bulk AI for Taxonomies
+
+The **Bulk AI Taxonomies** page under **Gm2 → Bulk AI Taxonomies** lists terms
+from supported taxonomies like categories and WooCommerce product categories.
+Select multiple terms to generate AI SEO titles and descriptions in bulk then
+apply the suggestions with one click.
+
 ## Abandoned Carts Module
 
 Enable this feature from **Gm2 → Dashboard** to create two database tables used
