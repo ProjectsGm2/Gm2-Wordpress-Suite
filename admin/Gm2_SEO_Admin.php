@@ -1503,13 +1503,13 @@ class Gm2_SEO_Admin {
 
         echo $wrapper_start;
         echo '<div class="gm2-seo-tabs">';
-        echo '<nav class="gm2-nav-tabs">';
-        echo '<a href="#" class="gm2-nav-tab active" data-tab="gm2-seo-settings">' . esc_html__( 'SEO Settings', 'gm2-wordpress-suite' ) . '</a>';
-        echo '<a href="#" class="gm2-nav-tab" data-tab="gm2-content-analysis">' . esc_html__( 'Content Analysis', 'gm2-wordpress-suite' ) . '</a>';
-        echo '<a href="#" class="gm2-nav-tab" data-tab="gm2-ai-seo">' . esc_html__( 'AI SEO', 'gm2-wordpress-suite' ) . '</a>';
+        echo '<nav class="gm2-nav-tabs" role="tablist">';
+        echo '<a href="#" class="gm2-nav-tab active" role="tab" aria-controls="gm2-seo-settings" aria-selected="true" data-tab="gm2-seo-settings">' . esc_html__( 'SEO Settings', 'gm2-wordpress-suite' ) . '</a>';
+        echo '<a href="#" class="gm2-nav-tab" role="tab" aria-controls="gm2-content-analysis" aria-selected="false" data-tab="gm2-content-analysis">' . esc_html__( 'Content Analysis', 'gm2-wordpress-suite' ) . '</a>';
+        echo '<a href="#" class="gm2-nav-tab" role="tab" aria-controls="gm2-ai-seo" aria-selected="false" data-tab="gm2-ai-seo">' . esc_html__( 'AI SEO', 'gm2-wordpress-suite' ) . '</a>';
         echo '</nav>';
 
-        echo '<div id="gm2-seo-settings" class="gm2-tab-panel active">';
+        echo '<div id="gm2-seo-settings" class="gm2-tab-panel active" role="tabpanel">';
         echo '<p><label for="gm2_seo_title">' . esc_html__( 'SEO Title', 'gm2-wordpress-suite' ) . '</label>';
         echo '<input type="text" id="gm2_seo_title" name="gm2_seo_title" value="' . esc_attr($title) . '" class="widefat" /></p>';
         echo '<p><label for="gm2_seo_description">' . esc_html__( 'SEO Description', 'gm2-wordpress-suite' ) . '</label>';
@@ -1558,7 +1558,7 @@ class Gm2_SEO_Admin {
         echo '<span class="gm2-image-preview">' . ($og_image_url ? '<img src="' . esc_url($og_image_url) . '" style="max-width:100%;height:auto;" />' : '') . '</span></p>';
         echo '</div>';
 
-        echo '<div id="gm2-content-analysis" class="gm2-tab-panel">';
+        echo '<div id="gm2-content-analysis" class="gm2-tab-panel" role="tabpanel">';
         if ($desc_warning) {
             echo '<p class="gm2-warning" style="color:#d63638;">' . esc_html($desc_warning) . '</p>';
         }
@@ -1573,7 +1573,7 @@ class Gm2_SEO_Admin {
         }
         echo '</ul>';
         echo '</div>';
-        echo '<div id="gm2-ai-seo" class="gm2-tab-panel">';
+        echo '<div id="gm2-ai-seo" class="gm2-tab-panel" role="tabpanel">';
         echo '<p><button type="button" class="button gm2-ai-research">' . esc_html__( 'AI Research', 'gm2-wordpress-suite' ) . '</button></p>';
         echo '<div id="gm2-ai-results"></div>';
         echo '<p><button type="button" class="button gm2-ai-implement">' . esc_html__( 'Implement Selected', 'gm2-wordpress-suite' ) . '</button></p>';
@@ -4099,13 +4099,13 @@ class Gm2_SEO_Admin {
         wp_nonce_field('gm2_save_seo_meta', 'gm2_seo_nonce');
 
         echo '<div class="gm2-seo-tabs">';
-        echo '<nav class="gm2-nav-tabs">';
-        echo '<a href="#" class="gm2-nav-tab active" data-tab="gm2-seo-settings">SEO Settings</a>';
-        echo '<a href="#" class="gm2-nav-tab" data-tab="gm2-content-analysis">Content Analysis</a>';
-        echo '<a href="#" class="gm2-nav-tab" data-tab="gm2-ai-seo">AI SEO</a>';
+        echo '<nav class="gm2-nav-tabs" role="tablist">';
+        echo '<a href="#" class="gm2-nav-tab active" role="tab" aria-controls="gm2-seo-settings" aria-selected="true" data-tab="gm2-seo-settings">SEO Settings</a>';
+        echo '<a href="#" class="gm2-nav-tab" role="tab" aria-controls="gm2-content-analysis" aria-selected="false" data-tab="gm2-content-analysis">Content Analysis</a>';
+        echo '<a href="#" class="gm2-nav-tab" role="tab" aria-controls="gm2-ai-seo" aria-selected="false" data-tab="gm2-ai-seo">AI SEO</a>';
         echo '</nav>';
 
-        echo '<div id="gm2-seo-settings" class="gm2-tab-panel active">';
+        echo '<div id="gm2-seo-settings" class="gm2-tab-panel active" role="tabpanel">';
         echo '<p><label for="gm2_seo_title">SEO Title</label>';
         echo '<input type="text" id="gm2_seo_title" name="gm2_seo_title" value="' . esc_attr($title) . '" class="widefat" /></p>';
         echo '<p><label for="gm2_seo_description">SEO Description</label>';
@@ -4138,7 +4138,7 @@ class Gm2_SEO_Admin {
         echo '<p class="description">' . esc_html__( 'Use the link dialog to mark external links as', 'gm2-wordpress-suite' ) . ' <code>nofollow</code> ' . esc_html__( 'or', 'gm2-wordpress-suite' ) . ' <code>sponsored</code>.</p>';
         echo '</div>';
 
-        echo '<div id="gm2-content-analysis" class="gm2-tab-panel">';
+        echo '<div id="gm2-content-analysis" class="gm2-tab-panel" role="tabpanel">';
         echo '<ul class="gm2-analysis-rules">';
         $rules_option = get_option('gm2_content_rules', []);
         $rule_lines = [];
@@ -4177,7 +4177,7 @@ class Gm2_SEO_Admin {
         echo '<p>' . esc_html__( 'Suggested Links', 'gm2-wordpress-suite' ) . ':</p><ul id="gm2-content-analysis-links"></ul>';
         echo '</div>';
         echo '</div>';
-        echo '<div id="gm2-ai-seo" class="gm2-tab-panel">';
+        echo '<div id="gm2-ai-seo" class="gm2-tab-panel" role="tabpanel">';
         echo '<p><button type="button" class="button gm2-ai-research">' . esc_html__( 'AI Research', 'gm2-wordpress-suite' ) . '</button></p>';
         echo '<div id="gm2-ai-results"></div>';
         echo '<p><button type="button" class="button gm2-ai-implement">' . esc_html__( 'Implement Selected', 'gm2-wordpress-suite' ) . '</button></p>';
