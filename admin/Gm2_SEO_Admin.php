@@ -462,6 +462,7 @@ class Gm2_SEO_Admin {
             'schema'      => esc_html__( 'Structured Data', 'gm2-wordpress-suite' ),
             'performance' => esc_html__( 'Performance', 'gm2-wordpress-suite' ),
             'keywords'    => esc_html__( 'Keyword Research', 'gm2-wordpress-suite' ),
+            'analytics'   => esc_html__( 'Analytics', 'gm2-wordpress-suite' ),
             'rules'       => esc_html__( 'Content Rules', 'gm2-wordpress-suite' ),
             'guidelines'  => esc_html__( 'SEO Guidelines', 'gm2-wordpress-suite' ),
             'context'     => esc_html__( 'Context', 'gm2-wordpress-suite' ),
@@ -711,6 +712,38 @@ class Gm2_SEO_Admin {
                 }
             } else {
                 echo '<p>' . esc_html__('Connect your Google account to fetch query and analytics data.', 'gm2-wordpress-suite') . '</p>';
+            }
+        } elseif ($active === 'analytics') {
+            $limit  = get_option('gm2_sc_query_limit', 10);
+            $days   = get_option('gm2_analytics_days', 30);
+            $oauth  = apply_filters('gm2_google_oauth_instance', new Gm2_Google_OAuth());
+
+            if ($oauth->is_connected()) {
+                $site    = home_url('/');
+                $prop    = get_option('gm2_ga_measurement_id', '');
+                $queries = $oauth->get_search_console_metrics($site, $limit);
+                $metrics = $oauth->get_analytics_metrics($prop, $days);
+
+                echo '<h3>' . esc_html__( 'Analytics Overview', 'gm2-wordpress-suite' ) . '</h3>';
+                if (!empty($metrics)) {
+                    echo '<p>Sessions: ' . esc_html($metrics['sessions']) . '</p>';
+                    echo '<p>Bounce Rate: ' . esc_html($metrics['bounce_rate']) . '</p>';
+                } else {
+                    echo '<p>' . esc_html__('No analytics data found.', 'gm2-wordpress-suite') . '</p>';
+                }
+
+                echo '<h3>' . esc_html__( 'Top Queries', 'gm2-wordpress-suite' ) . '</h3>';
+                if ($queries) {
+                    echo '<table class="widefat"><thead><tr><th>' . esc_html__( 'Query', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'Clicks', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'Impressions', 'gm2-wordpress-suite' ) . '</th></tr></thead><tbody>';
+                    foreach ($queries as $row) {
+                        echo '<tr><td>' . esc_html($row['query']) . '</td><td>' . esc_html($row['clicks']) . '</td><td>' . esc_html($row['impressions']) . '</td></tr>';
+                    }
+                    echo '</tbody></table>';
+                } else {
+                    echo '<p>' . esc_html__('No search console data found.', 'gm2-wordpress-suite') . '</p>';
+                }
+            } else {
+                echo '<p>' . esc_html__('Connect your Google account to view analytics.', 'gm2-wordpress-suite') . '</p>';
             }
         } elseif ($active === 'rules') {
             $all_rules = get_option('gm2_content_rules', []);
