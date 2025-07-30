@@ -3873,6 +3873,14 @@ class Gm2_SEO_Admin {
             GM2_VERSION,
             true
         );
+
+        wp_enqueue_script(
+            'gm2-snippet-preview',
+            GM2_PLUGIN_URL . 'admin/js/gm2-snippet-preview.js',
+            ['jquery'],
+            GM2_VERSION,
+            true
+        );
         wp_localize_script(
             'gm2-ai-seo',
             'gm2AiSeo',
@@ -4001,6 +4009,14 @@ class Gm2_SEO_Admin {
         wp_enqueue_script(
             'gm2-ai-seo',
             GM2_PLUGIN_URL . 'admin/js/gm2-ai-seo.js',
+            ['jquery'],
+            GM2_VERSION,
+            true
+        );
+
+        wp_enqueue_script(
+            'gm2-snippet-preview',
+            GM2_PLUGIN_URL . 'admin/js/gm2-snippet-preview.js',
             ['jquery'],
             GM2_VERSION,
             true
