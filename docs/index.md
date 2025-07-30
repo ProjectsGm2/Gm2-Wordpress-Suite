@@ -15,6 +15,7 @@ Existing prompt logic automatically includes these options via `gm2_get_seo_cont
 - The price section now uses flexbox by default and includes responsive **Horizontal** and **Vertical** alignment controls to adjust `justify-content` and `align-items`.
 - New **Wrap Options** control lets you enable flex wrapping so quantity buttons can stack on tablets and mobile.
 - Bulk AI research requests now use JSON-formatted AJAX calls for more robust error handling.
+- Bulk AI now supports categories and product categories on the **Bulk AI Taxonomies** page.
 
 ## Bulk AI
 

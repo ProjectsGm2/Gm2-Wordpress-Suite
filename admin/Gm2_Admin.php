@@ -56,6 +56,7 @@ class Gm2_Admin {
         $seo_pages = [
             'gm2_page_gm2-seo',
             'gm2_page_gm2-bulk-ai-review',
+            'gm2_page_gm2-bulk-ai-taxonomies',
         ];
 
         if ($hook === 'gm2_page_gm2-chatgpt') {
@@ -213,6 +214,27 @@ class Gm2_Admin {
                             'selectAll'    => __( 'Select all', 'gm2-wordpress-suite' ),
                             'cancel'       => __( 'Cancel', 'gm2-wordpress-suite' ),
                             'undo'         => __( 'Undo', 'gm2-wordpress-suite' ),
+                        ],
+                    ]
+                );
+            } elseif ($hook === 'gm2_page_gm2-bulk-ai-taxonomies') {
+                wp_enqueue_script(
+                    'gm2-bulk-ai-tax',
+                    GM2_PLUGIN_URL . 'admin/js/gm2-bulk-ai-tax.js',
+                    ['jquery'],
+                    filemtime(GM2_PLUGIN_DIR . 'admin/js/gm2-bulk-ai-tax.js'),
+                    true
+                );
+                wp_localize_script(
+                    'gm2-bulk-ai-tax',
+                    'gm2BulkAiTax',
+                    [
+                        'nonce'       => wp_create_nonce('gm2_ai_research'),
+                        'apply_nonce' => wp_create_nonce('gm2_bulk_ai_apply'),
+                        'ajax_url'    => admin_url('admin-ajax.php'),
+                        'i18n'        => [
+                            'apply'   => __( 'Apply', 'gm2-wordpress-suite' ),
+                            'error'   => __( 'Error', 'gm2-wordpress-suite' ),
                         ],
                     ]
                 );
@@ -720,6 +742,7 @@ class Gm2_Admin {
         $seo_pages = [
             'gm2_page_gm2-seo',
             'gm2_page_gm2-bulk-ai-review',
+            'gm2_page_gm2-bulk-ai-taxonomies',
         ];
         if ($screen && in_array($screen->id, $seo_pages, true)) {
             $url = admin_url('admin.php?page=gm2-chatgpt');
