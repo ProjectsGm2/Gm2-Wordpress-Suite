@@ -6,9 +6,24 @@ if (!defined('ABSPATH')) {
 }
 
 class Gm2_Link_Counts {
+
+    /**
+     * Post types that should receive link counting features.
+     *
+     * @var string[]
+     */
+    private $post_types = [];
+
     public function run() {
-        add_filter('manage_post_posts_columns', [ $this, 'add_columns' ]);
-        add_action('manage_post_posts_custom_column', [ $this, 'render_column' ], 10, 2);
+        $types = get_post_types(['public' => true], 'names');
+        unset($types['attachment']);
+        $this->post_types = apply_filters('gm2_supported_post_types', array_values($types));
+
+        foreach ($this->post_types as $type) {
+            add_filter("manage_{$type}_posts_columns", [ $this, 'add_columns' ]);
+            add_action("manage_{$type}_posts_custom_column", [ $this, 'render_column' ], 10, 2);
+        }
+
         add_action('save_post', [ $this, 'save_post_counts' ], 10, 3);
         add_action('wp_dashboard_setup', [ $this, 'add_dashboard_widget' ]);
     }
@@ -35,7 +50,7 @@ class Gm2_Link_Counts {
     }
 
     public function save_post_counts($post_id, $post, $update) {
-        if ($post->post_type !== 'post') {
+        if (!in_array($post->post_type, $this->post_types, true)) {
             return;
         }
         if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
@@ -73,14 +88,13 @@ class Gm2_Link_Counts {
 
     public function dashboard_widget() {
         global $wpdb;
-        $internal = (int) $wpdb->get_var($wpdb->prepare(
-            "SELECT SUM(CAST(pm.meta_value AS UNSIGNED)) FROM {$wpdb->postmeta} pm JOIN {$wpdb->posts} p ON pm.post_id = p.ID WHERE pm.meta_key = '_gm2_internal_links' AND p.post_type = %s AND p.post_status = 'publish'",
-            'post'
-        ));
-        $external = (int) $wpdb->get_var($wpdb->prepare(
-            "SELECT SUM(CAST(pm.meta_value AS UNSIGNED)) FROM {$wpdb->postmeta} pm JOIN {$wpdb->posts} p ON pm.post_id = p.ID WHERE pm.meta_key = '_gm2_external_links' AND p.post_type = %s AND p.post_status = 'publish'",
-            'post'
-        ));
+        $types_in = "'" . implode("','", array_map('esc_sql', $this->post_types)) . "'";
+        $internal = (int) $wpdb->get_var(
+            "SELECT SUM(CAST(pm.meta_value AS UNSIGNED)) FROM {$wpdb->postmeta} pm JOIN {$wpdb->posts} p ON pm.post_id = p.ID WHERE pm.meta_key = '_gm2_internal_links' AND p.post_type IN ($types_in) AND p.post_status = 'publish'"
+        );
+        $external = (int) $wpdb->get_var(
+            "SELECT SUM(CAST(pm.meta_value AS UNSIGNED)) FROM {$wpdb->postmeta} pm JOIN {$wpdb->posts} p ON pm.post_id = p.ID WHERE pm.meta_key = '_gm2_external_links' AND p.post_type IN ($types_in) AND p.post_status = 'publish'"
+        );
         echo '<p>' . esc_html__('Internal Links:', 'gm2-wordpress-suite') . ' ' . esc_html($internal) . '</p>';
         echo '<p>' . esc_html__('External Links:', 'gm2-wordpress-suite') . ' ' . esc_html($external) . '</p>';
     }
