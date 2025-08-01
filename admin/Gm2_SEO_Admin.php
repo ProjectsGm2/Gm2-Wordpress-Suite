@@ -34,6 +34,7 @@ class Gm2_SEO_Admin {
         add_action('admin_post_gm2_keyword_settings', [$this, 'handle_keyword_settings_form']);
         add_action('admin_post_gm2_bulk_ai_export', [$this, 'handle_bulk_ai_export']);
         add_action('admin_post_gm2_google_test', [$this, 'handle_google_test_connection']);
+        add_action('admin_post_gm2_clear_404_logs', [$this, 'handle_clear_404_logs']);
 
         add_action('wp_ajax_gm2_check_rules', [$this, 'ajax_check_rules']);
         add_action('wp_ajax_gm2_keyword_ideas', [$this, 'ajax_keyword_ideas']);
@@ -676,6 +677,9 @@ class Gm2_SEO_Admin {
             echo '</form>';
         } elseif ($active === 'redirects') {
             $redirects = get_option('gm2_redirects', []);
+            if (!empty($_GET['logs_cleared'])) {
+                echo '<div class="updated notice"><p>' . esc_html__( '404 logs cleared.', 'gm2-wordpress-suite' ) . '</p></div>';
+            }
             if (!empty($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
                 $id = absint($_GET['id']);
                 check_admin_referer('gm2_delete_redirect_' . $id);
@@ -729,6 +733,12 @@ class Gm2_SEO_Admin {
                 }
                 echo '</tbody></table>';
             }
+
+            echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
+            wp_nonce_field('gm2_clear_404_logs');
+            echo '<input type="hidden" name="action" value="gm2_clear_404_logs" />';
+            submit_button( esc_html__( 'Clear 404 Logs', 'gm2-wordpress-suite' ), 'delete' );
+            echo '</form>';
         } elseif ($active === 'performance') {
             $auto_fill = get_option('gm2_auto_fill_alt', '0');
             $clean_files = get_option('gm2_clean_image_filenames', '0');
@@ -2148,6 +2158,19 @@ class Gm2_SEO_Admin {
         }
 
         wp_redirect(admin_url('admin.php?page=gm2-seo&tab=redirects&updated=1'));
+        exit;
+    }
+
+    public function handle_clear_404_logs() {
+        if (!current_user_can('edit_posts')) {
+            wp_die( esc_html__( 'Permission denied', 'gm2-wordpress-suite' ) );
+        }
+
+        check_admin_referer('gm2_clear_404_logs');
+
+        delete_option('gm2_404_logs');
+
+        wp_redirect(admin_url('admin.php?page=gm2-seo&tab=redirects&logs_cleared=1'));
         exit;
     }
 
