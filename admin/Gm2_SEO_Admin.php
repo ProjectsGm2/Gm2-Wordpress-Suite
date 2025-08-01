@@ -33,6 +33,7 @@ class Gm2_SEO_Admin {
         add_action('admin_post_gm2_general_settings', [$this, 'handle_general_settings_form']);
         add_action('admin_post_gm2_keyword_settings', [$this, 'handle_keyword_settings_form']);
         add_action('admin_post_gm2_bulk_ai_export', [$this, 'handle_bulk_ai_export']);
+        add_action('admin_post_gm2_google_test', [$this, 'handle_google_test_connection']);
 
         add_action('wp_ajax_gm2_check_rules', [$this, 'ajax_check_rules']);
         add_action('wp_ajax_gm2_keyword_ideas', [$this, 'ajax_keyword_ideas']);
@@ -73,6 +74,7 @@ class Gm2_SEO_Admin {
         add_action('admin_post_gm2_bulk_clean_slugs', [$this, 'handle_bulk_clean_slugs']);
         add_action('load-edit.php', [$this, 'maybe_confirm_clean_slugs']);
         add_action('admin_notices', [$this, 'maybe_show_clean_slug_notice']);
+        add_action('admin_notices', [$this, 'maybe_show_google_test_notice']);
     }
 
     public function maybe_generate_sitemap($new_status = null, $old_status = null, $post = null) {
@@ -280,6 +282,15 @@ class Gm2_SEO_Admin {
             echo '<div class="notice notice-success is-dismissible"><p>' .
                 sprintf(esc_html(_n('%d slug cleaned.', '%d slugs cleaned.', $count, 'gm2-wordpress-suite')), $count) .
                 '</p></div>';
+        }
+    }
+
+    public function maybe_show_google_test_notice() {
+        if (isset($_GET['gm2_google_test'])) {
+            $msg   = sanitize_text_field(wp_unslash($_GET['gm2_google_test']));
+            $error = isset($_GET['gm2_google_test_error']) ? absint($_GET['gm2_google_test_error']) : 0;
+            $type  = $error ? 'error' : 'success';
+            echo '<div class="notice notice-' . esc_attr($type) . ' is-dismissible"><p>' . esc_html($msg) . '</p></div>';
         }
     }
 
@@ -1649,6 +1660,12 @@ class Gm2_SEO_Admin {
                 echo '</form>';
             }
 
+            echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
+            wp_nonce_field('gm2_google_test', 'gm2_google_test_nonce');
+            echo '<input type="hidden" name="action" value="gm2_google_test" />';
+            submit_button(esc_html__('Test Connection', 'gm2-wordpress-suite'));
+            echo '</form>';
+
             echo '<form method="post">';
             wp_nonce_field('gm2_google_disconnect', 'gm2_google_disconnect');
             submit_button(__('Disconnect Google', 'gm2-wordpress-suite'), 'delete');
@@ -2225,6 +2242,52 @@ class Gm2_SEO_Admin {
         update_option('gm2_analytics_days', $days);
 
         wp_redirect(admin_url('admin.php?page=gm2-seo&tab=keywords&updated=1'));
+        exit;
+    }
+
+    public function handle_google_test_connection() {
+        if (!current_user_can('manage_options')) {
+            wp_die( esc_html__( 'Permission denied', 'gm2-wordpress-suite' ) );
+        }
+
+        if (!isset($_POST['gm2_google_test_nonce']) || !wp_verify_nonce($_POST['gm2_google_test_nonce'], 'gm2_google_test')) {
+            wp_die( esc_html__( 'Invalid nonce', 'gm2-wordpress-suite' ) );
+        }
+
+        $oauth = apply_filters('gm2_google_oauth_instance', new Gm2_Google_OAuth());
+
+        if (!$oauth->is_connected()) {
+            $msg = __( 'Google account not connected.', 'gm2-wordpress-suite' );
+            $url = add_query_arg([
+                'gm2_google_test' => rawurlencode($msg),
+                'gm2_google_test_error' => 1,
+            ], admin_url('admin.php?page=gm2-google-connect'));
+            wp_redirect($url);
+            if (defined('GM2_TESTING') && GM2_TESTING) {
+                return;
+            }
+            exit;
+        }
+
+        $result = $oauth->list_analytics_properties();
+        if (is_wp_error($result)) {
+            $msg = $result->get_error_message();
+            $url = add_query_arg([
+                'gm2_google_test' => rawurlencode($msg),
+                'gm2_google_test_error' => 1,
+            ], admin_url('admin.php?page=gm2-google-connect'));
+        } else {
+            $msg = __( 'Connection successful.', 'gm2-wordpress-suite' );
+            $url = add_query_arg([
+                'gm2_google_test' => rawurlencode($msg),
+                'gm2_google_test_error' => 0,
+            ], admin_url('admin.php?page=gm2-google-connect'));
+        }
+
+        wp_redirect($url);
+        if (defined('GM2_TESTING') && GM2_TESTING) {
+            return;
+        }
         exit;
     }
     public function auto_fill_alt_on_upload($attachment_id, $keyword = '') {
