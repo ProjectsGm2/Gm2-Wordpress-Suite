@@ -311,37 +311,41 @@ class Gm2_SEO_Public {
             $og_image_id = get_post_thumbnail_id();
         }
         $og_image_url = $og_image_id ? wp_get_attachment_url($og_image_id) : '';
+        $og_image_url = apply_filters('gm2_og_image_url', $og_image_url, $og_image_id, $data);
 
         // Output the canonical link tag first if it isn't already hooked.
         if (!has_action('wp_head', [$this, 'output_canonical_url'])) {
             $this->output_canonical_url();
         }
 
+        $html = '';
         if (!current_theme_supports('title-tag')) {
-            echo '<title>' . esc_html($title) . "</title>\n";
+            $html .= '<title>' . esc_html($title) . "</title>\n";
         }
-        echo '<meta name="description" content="' . esc_attr($description) . '" />' . "\n";
-        echo '<meta name="robots" content="' . esc_attr(implode(',', $robots)) . '" />' . "\n";
+        $html .= '<meta name="description" content="' . esc_attr($description) . '" />' . "\n";
+        $html .= '<meta name="robots" content="' . esc_attr(implode(',', $robots)) . '" />' . "\n";
         if ($keywords !== '') {
-            echo '<meta name="keywords" content="' . esc_attr($keywords) . '" />' . "\n";
+            $html .= '<meta name="keywords" content="' . esc_attr($keywords) . '" />' . "\n";
         }
 
         $url  = $canonical;
         $type = is_singular() ? 'article' : 'website';
 
-        echo '<meta property="og:title" content="' . esc_attr($title) . '" />' . "\n";
-        echo '<meta property="og:description" content="' . esc_attr($description) . '" />' . "\n";
-        echo '<meta property="og:url" content="' . esc_url($url) . '" />' . "\n";
-        echo '<meta property="og:type" content="' . esc_attr($type) . '" />' . "\n";
+        $html .= '<meta property="og:title" content="' . esc_attr($title) . '" />' . "\n";
+        $html .= '<meta property="og:description" content="' . esc_attr($description) . '" />' . "\n";
+        $html .= '<meta property="og:url" content="' . esc_url($url) . '" />' . "\n";
+        $html .= '<meta property="og:type" content="' . esc_attr($type) . '" />' . "\n";
 
         if ($og_image_url) {
-            echo '<meta property="og:image" content="' . esc_url($og_image_url) . '" />' . "\n";
-            echo '<meta name="twitter:image" content="' . esc_url($og_image_url) . '" />' . "\n";
+            $html .= '<meta property="og:image" content="' . esc_url($og_image_url) . '" />' . "\n";
+            $html .= '<meta name="twitter:image" content="' . esc_url($og_image_url) . '" />' . "\n";
         }
 
-        echo '<meta name="twitter:card" content="summary" />' . "\n";
-        echo '<meta name="twitter:title" content="' . esc_attr($title) . '" />' . "\n";
-        echo '<meta name="twitter:description" content="' . esc_attr($description) . '" />' . "\n";
+        $html .= '<meta name="twitter:card" content="summary" />' . "\n";
+        $html .= '<meta name="twitter:title" content="' . esc_attr($title) . '" />' . "\n";
+        $html .= '<meta name="twitter:description" content="' . esc_attr($description) . '" />' . "\n";
+
+        echo apply_filters('gm2_meta_tags', $html, $data);
     }
 
     public function output_product_schema() {
