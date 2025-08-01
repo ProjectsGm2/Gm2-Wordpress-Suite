@@ -2230,6 +2230,8 @@ class Gm2_SEO_Admin {
 
         delete_option('gm2_404_logs');
 
+        self::add_notice( __( '404 logs cleared.', 'gm2-wordpress-suite' ), 'success' );
+
         wp_redirect(admin_url('admin.php?page=gm2-seo&tab=redirects&logs_cleared=1'));
         exit;
     }
