@@ -323,6 +323,10 @@ the last 100 missing URLs to help you create new redirects.
   search results as you type.
 * **Test Connection button** – quickly confirm Google integration on the
   connect screen.
+* **Clear 404 Logs button** – reset missing URL history from the Redirects tab.
+* **Link counts** – track internal and external links for all public post types.
+* **Sitemap Path placeholder** – field shows the default path with a tooltip.
+* **Real-time character counts** – monitor title and description length in the SEO meta box.
 
 == Changelog ==
 = 1.6.17 =
