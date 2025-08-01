@@ -32,7 +32,9 @@ class Gm2_SEO_Wizard {
             return;
         }
 
-        if (get_option('gm2_setup_complete') !== '1') {
+        $flag = get_option('gm2_do_activation_redirect');
+        if ($flag === '1') {
+            delete_option('gm2_do_activation_redirect');
             if (!isset($_GET['page'])) {
                 wp_safe_redirect(admin_url('index.php?page=gm2-setup-wizard'));
                 exit;

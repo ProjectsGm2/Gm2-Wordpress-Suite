@@ -53,7 +53,7 @@ archive with `bash bin/build-plugin.sh`. This command packages the plugin with
 all dependencies into `gm2-wordpress-suite.zip` for installation via the
 **Plugins → Add New** screen.
 == Setup Wizard ==
-Activating the plugin redirects administrators to the **Gm2 Setup Wizard** (`index.php?page=gm2-setup-wizard`). The wizard walks through entering your ChatGPT API key, Google OAuth credentials, sitemap settings and which modules to enable. You can revisit it from the Gm2 Suite menu until **Finish Setup** is clicked. Have your OpenAI key and Google developer token ready.
+After activation the **Gm2 Setup Wizard** (`index.php?page=gm2-setup-wizard`) opens once to walk through entering your ChatGPT API key, Google OAuth credentials, sitemap settings and which modules to enable. The wizard is optional and can be launched again from the **Gm2 Suite** dashboard at any time.
 
 
 == Feature Toggles ==
