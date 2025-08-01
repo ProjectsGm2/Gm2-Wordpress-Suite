@@ -8,6 +8,11 @@ namespace Gm2 {
 
 namespace {
     function gm2_get_seo_context() {
+        static $cached = null;
+        if (is_array($cached)) {
+            return $cached;
+        }
+
         $context = [
             'business_model'        => sanitize_textarea_field(get_option('gm2_context_business_model', '')),
             'industry_category'     => sanitize_text_field(get_option('gm2_context_industry_category', '')),
@@ -46,6 +51,7 @@ namespace {
          * @param array $context Associative array of context strings.
          */
         $context = apply_filters('gm2_seo_context', $context);
+        $cached  = $context;
         return $context;
     }
 

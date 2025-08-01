@@ -3,7 +3,7 @@ Contributors: gm2team
 Tags: admin, tools, suite, performance
 Requires at least: 6.0
 Tested up to: 6.5
-Stable tag: 1.6.17
+Stable tag: 1.6.18
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -347,6 +347,8 @@ the last 100 missing URLs to help you create new redirects.
 * **Real-time character counts** – display running totals in the SEO meta box.
 
 == Changelog ==
+= 1.6.18 =
+* SEO context options are cached per request so repeated calls avoid extra database queries.
 = 1.6.17 =
 * Abandoned cart checks now run every 5 minutes by default. The interval can be lowered to one minute using the `gm2_ac_mark_abandoned_interval` filter or corresponding option.
 = 1.6.16 =
