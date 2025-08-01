@@ -1666,7 +1666,7 @@ class MobileDetect
      *
      * @return string|float|false The version of the property we are trying to extract.
      */
-    public function version(string $propertyName, string $type = self::VERSION_TYPE_STRING): float|bool|string
+    public function version(string $propertyName, string $type = self::VERSION_TYPE_STRING)
     {
         if (empty($propertyName) || !$this->hasUserAgent()) {
             return false;
