@@ -52,6 +52,9 @@ If you plan to distribute or manually upload the plugin, you can create a ZIP
 archive with `bash bin/build-plugin.sh`. This command packages the plugin with
 all dependencies into `gm2-wordpress-suite.zip` for installation via the
 **Plugins → Add New** screen.
+== Setup Wizard ==
+Activating the plugin redirects administrators to the **Gm2 Setup Wizard** (`index.php?page=gm2-setup-wizard`). The wizard walks through entering your ChatGPT API key, Google OAuth credentials, sitemap settings and which modules to enable. You can revisit it from the Gm2 Suite menu until **Finish Setup** is clicked. Have your OpenAI key and Google developer token ready.
+
 
 == Feature Toggles ==
 The main **Gm2 Suite** page lets administrators enable or disable major modules.
@@ -125,6 +128,9 @@ After configuring credentials in **Gm2 → Google OAuth Setup**, connect your Go
 Keyword metrics include **Avg. Monthly Searches**, **competition**, **3‑month change** and **year-over-year change**. These values refine the seed keywords returned by ChatGPT and are sorted by popularity when displayed in the AI SEO modal.
 
 The Google Ads request also requires a language constant and a geo target constant. These values are configurable on the same screen and default to `languageConstants/1000` (English) and `geoTargetConstants/2840` (United States). If either option is missing or invalid, the keyword search will fail with an error.
+
+== Analytics ==
+After connecting a Google account, open the **Analytics** tab under SEO (`admin.php?page=gm2-seo&tab=analytics`). Line and bar charts powered by Chart.js display sessions, bounce rate and top search queries. Select an Analytics property and Search Console site on the **Connect Google Account** screen before viewing the charts.
 
 == Image Optimization ==
 Enter your compression API key and enable the service from the SEO &gt; Performance screen.
@@ -234,6 +240,13 @@ changed via the **Sitemap Path** field. You can also edit your robots file from
 
 Enable **Clean Slugs** from **SEO → General** to strip stopwords from new
 permalinks. Enter the words to remove in the accompanying field.
+== Managing SEO Settings ==
+The bottom of the main **SEO** page (`admin.php?page=gm2-seo`) includes advanced tools:
+* **Export Settings** – download a `gm2-seo-settings.json` file with all options starting with `gm2_`.
+* **Import Settings** – upload the same JSON format to restore or migrate settings.
+* **Reset to Defaults** – revert all SEO options to their original values.
+Only administrators can perform these actions.
+
 
 == AI SEO ==
 While editing a post or taxonomy term, open the **AI SEO** tab in the SEO meta box. Click **AI Research** to run a two-step workflow. You'll first be asked whether to use any existing SEO field values. If all fields are empty and no site context is set under **SEO → Context**, you'll be prompted for a short description so ChatGPT has extra context. Answers saved in the Context tab are automatically included in each prompt, so you only need to provide extra details when those fields are empty.
@@ -267,6 +280,9 @@ values are cleaned before being sent to ChatGPT.
 
 The SEO Settings tab also lets you set `max-snippet`, `max-image-preview`, and
 `max-video-preview` values that will be added to the robots meta tag.
+== Bulk AI ==
+The **Bulk AI Review** page (`admin.php?page=gm2-bulk-ai-review`) lets you analyze many posts at once. Select posts and click **Schedule Batch** to queue them. WP‐Cron runs the `gm2_ai_batch_process` event hourly to fetch suggestions in the background. Ensure ChatGPT and Ads credentials are configured before scheduling.
+
 
 == Structured Data ==
 Enable **Article Schema** from **SEO → Schema** to output Schema.org Article
@@ -292,7 +308,6 @@ Create 301 or 302 redirects from the **SEO → Redirects** tab. The plugin logs
 the last 100 missing URLs to help you create new redirects.
 
 == Planned Features ==
-* **Search Console metrics** – the **SEO → Analytics** tab shows clicks and
   impressions from connected sites.
 * **Expanded rules** – guideline rules for each content type editable under
   **SEO → SEO Guidelines**.
