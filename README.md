@@ -105,7 +105,7 @@ from supported taxonomies like categories and WooCommerce product categories.
 Select multiple terms to generate AI SEO titles and descriptions in bulk then
 apply the suggestions with one click.
 
-By default this page requires the `edit_terms` capability. Developers can
+By default this page requires the `manage_categories` capability. Developers can
 override the required capability using the following filter:
 
 ```php

@@ -17,7 +17,7 @@ Existing prompt logic automatically includes these options via `gm2_get_seo_cont
 - New **Wrap Options** control lets you enable flex wrapping so quantity buttons can stack on tablets and mobile.
 - Bulk AI research requests now use JSON-formatted AJAX calls for more robust error handling.
 - Bulk AI now supports categories and product categories on the **Bulk AI Taxonomies** page.
-- The **Bulk AI Taxonomies** screen defaults to the `edit_terms` capability which can be adjusted via the `gm2_bulk_ai_tax_capability` filter.
+- The **Bulk AI Taxonomies** screen defaults to the `manage_categories` capability which can be adjusted via the `gm2_bulk_ai_tax_capability` filter.
 
 ## Bulk AI
 
