@@ -8,6 +8,7 @@ if (!defined('ABSPATH')) {
 
 class Gm2_Admin {
     private $diagnostics;
+    private $site_health;
     private $quantity_discounts;
     private $oauth_enabled;
     private $chatgpt_enabled;
@@ -15,6 +16,8 @@ class Gm2_Admin {
     public function run() {
         $this->diagnostics = new Gm2_Diagnostics();
         $this->diagnostics->run();
+        $this->site_health = new Gm2_Site_Health();
+        $this->site_health->run();
         $this->oauth_enabled   = get_option('gm2_enable_google_oauth', '1') === '1';
         $this->chatgpt_enabled = get_option('gm2_enable_chatgpt', '1') === '1';
         add_action('admin_menu', [$this, 'add_admin_menu'], 9);

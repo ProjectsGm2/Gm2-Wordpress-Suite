@@ -86,4 +86,16 @@ class Gm2_Diagnostics {
         echo esc_html__('Please resolve these issues to ensure all SEO features work as expected.', 'gm2-wordpress-suite');
         echo '</p></div>';
     }
+
+    public function get_conflicts() {
+        return $this->conflicts;
+    }
+
+    public function get_integrity_errors() {
+        return $this->integrity_errors;
+    }
+
+    public function get_hook_issues() {
+        return $this->hook_issues;
+    }
 }
