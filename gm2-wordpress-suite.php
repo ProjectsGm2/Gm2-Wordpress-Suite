@@ -118,6 +118,7 @@ function gm2_activate_plugin() {
     add_option('gm2_enable_chatgpt', '1');
     add_option('gm2_enable_chatgpt_logging', '0');
     add_option('gm2_sitemap_path', ABSPATH . 'sitemap.xml');
+    add_option('gm2_sitemap_max_urls', 1000);
     add_option('gm2_enable_abandoned_carts', '0');
     add_option('gm2_ac_mark_abandoned_interval', 5);
 }
