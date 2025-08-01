@@ -1049,7 +1049,7 @@ class MobileDetect
      */
     public function __construct(
         ?CacheInterface $cache = null,
-        array $config = [],
+        array $config = []
     ) {
         // If no custom cache provided then use our own.
         $this->cache = $cache ?? new Cache();
