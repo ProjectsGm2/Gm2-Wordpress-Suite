@@ -2028,8 +2028,14 @@ class Gm2_SEO_Admin {
         $frequency = isset($_POST['gm2_sitemap_frequency']) ? sanitize_text_field($_POST['gm2_sitemap_frequency']) : 'daily';
         update_option('gm2_sitemap_frequency', $frequency);
 
-        $path = isset($_POST['gm2_sitemap_path']) ? sanitize_text_field($_POST['gm2_sitemap_path']) : ABSPATH . 'sitemap.xml';
-        update_option('gm2_sitemap_path', $path);
+        $path     = isset($_POST['gm2_sitemap_path']) ? sanitize_text_field($_POST['gm2_sitemap_path']) : ABSPATH . 'sitemap.xml';
+        $old_path = get_option('gm2_sitemap_path', ABSPATH . 'sitemap.xml');
+        $dir      = trailingslashit(dirname($path));
+        if ($path === $old_path || wp_is_writable($dir)) {
+            update_option('gm2_sitemap_path', $path);
+        } else {
+            self::add_notice( __( 'Sitemap directory is not writable.', 'gm2-wordpress-suite' ) );
+        }
 
         $max_urls = isset($_POST['gm2_sitemap_max_urls']) ? intval($_POST['gm2_sitemap_max_urls']) : 1000;
         update_option('gm2_sitemap_max_urls', $max_urls);
