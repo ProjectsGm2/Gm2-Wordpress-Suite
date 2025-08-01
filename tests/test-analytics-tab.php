@@ -28,6 +28,13 @@ class AnalyticsTabTest extends WP_UnitTestCase {
                 }
                 public function get_search_console_queries($site, $limit) { return ['alpha', 'beta']; }
                 public function get_analytics_metrics($prop, $days) { return ['sessions' => 10, 'bounce_rate' => 20]; }
+                public function get_analytics_trends($prop, $days) {
+                    return [
+                        'dates'       => ['2024-01-01'],
+                        'sessions'    => [1],
+                        'bounce_rate' => [50],
+                    ];
+                }
             };
         });
 
@@ -40,6 +47,8 @@ class AnalyticsTabTest extends WP_UnitTestCase {
         $this->assertStringContainsString('5', $out);
         $this->assertStringContainsString('Sessions', $out);
         $this->assertStringContainsString('10', $out);
+        $this->assertStringContainsString('gm2-analytics-trend', $out);
+        $this->assertStringContainsString('gm2-query-chart', $out);
     }
 }
 ?>

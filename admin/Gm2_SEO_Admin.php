@@ -857,11 +857,23 @@ class Gm2_SEO_Admin {
                 $prop    = get_option('gm2_ga_measurement_id', '');
                 $queries = $oauth->get_search_console_metrics($site, $limit);
                 $metrics = $oauth->get_analytics_metrics($prop, $days);
+                $trends  = $oauth->get_analytics_trends($prop, $days);
+                wp_localize_script(
+                    'gm2-analytics',
+                    'gm2Analytics',
+                    [
+                        'dates'       => $trends['dates'] ?? [],
+                        'sessions'    => $trends['sessions'] ?? [],
+                        'bounce_rate' => $trends['bounce_rate'] ?? [],
+                        'queries'     => $queries,
+                    ]
+                );
 
                 echo '<h3>' . esc_html__( 'Analytics Overview', 'gm2-wordpress-suite' ) . '</h3>';
                 if (!empty($metrics)) {
                     echo '<p>Sessions: ' . esc_html($metrics['sessions']) . '</p>';
                     echo '<p>Bounce Rate: ' . esc_html($metrics['bounce_rate']) . '</p>';
+                    echo '<canvas id="gm2-analytics-trend" width="400" height="200" aria-hidden="true"></canvas>';
                 } else {
                     echo '<p>' . esc_html__('No analytics data found.', 'gm2-wordpress-suite') . '</p>';
                 }
@@ -873,6 +885,7 @@ class Gm2_SEO_Admin {
                         echo '<tr><td>' . esc_html($row['query']) . '</td><td>' . esc_html($row['clicks']) . '</td><td>' . esc_html($row['impressions']) . '</td></tr>';
                     }
                     echo '</tbody></table>';
+                    echo '<canvas id="gm2-query-chart" width="400" height="200" aria-hidden="true"></canvas>';
                 } else {
                     echo '<p>' . esc_html__('No search console data found.', 'gm2-wordpress-suite') . '</p>';
                 }
