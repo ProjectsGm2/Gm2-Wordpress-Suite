@@ -31,6 +31,9 @@ if (!class_exists('WC_Product')) {
         public function get_id() { return $this->id; }
     }
 }
+if (!class_exists('WC_Product_With_ID')) {
+    class WC_Product_With_ID extends WC_Product { public function get_id() { return 1; } }
+}
 if (!function_exists('wc_get_product')) {
     function wc_get_product($id) { return new WC_Product(100, $id); }
 }
@@ -195,11 +198,10 @@ class QuantityDiscountsTest extends WP_UnitTestCase {
             \Elementor\Plugin::$instance = new class { public $editor; public function __construct(){ $this->editor = new class { public function is_edit_mode(){ return true; } }; } };
         }
 
-        if ( ! class_exists( 'WC_Product_With_ID' ) ) {
-            class WC_Product_With_ID extends WC_Product { public function get_id() { return 1; } }
+        if ( class_exists( 'WC_Product_With_ID' ) ) {
+            global $product;
+            $product = new WC_Product_With_ID(100);
         }
-        global $product;
-        $product = new WC_Product_With_ID(100);
 
         $m = new Gm2_Quantity_Discount_Manager();
         $m->add_group([
@@ -255,11 +257,10 @@ class QuantityDiscountsTest extends WP_UnitTestCase {
             \Elementor\Plugin::$instance = new class { public $editor; public function __construct(){ $this->editor = new class { public function is_edit_mode(){ return true; } }; } };
         }
 
-        if ( ! class_exists( 'WC_Product_With_ID' ) ) {
-            class WC_Product_With_ID extends WC_Product { public function get_id() { return 1; } }
+        if ( class_exists( 'WC_Product_With_ID' ) ) {
+            global $product;
+            $product = new WC_Product_With_ID(100);
         }
-        global $product;
-        $product = new WC_Product_With_ID(100);
 
         $m = new Gm2_Quantity_Discount_Manager();
         $m->add_group([
