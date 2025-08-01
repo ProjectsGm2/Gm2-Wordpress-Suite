@@ -57,6 +57,19 @@ Each log row now includes small expand/collapse controls. Click the **Prompt sen
 
 If you need to clear the log and start over, click the **Reset Logs** button below the table.
 
+## Exporting SEO Settings
+
+Use the **Export Settings** button on the SEO dashboard to download a `gm2-seo-settings.json` file containing all options that start with `gm2_`. The matching **Import Settings** form accepts the same JSON format and updates each option. The file is a simple key/value object:
+
+```json
+{
+  "gm2_sitemap_enabled": "1",
+  "gm2_schema_product": "1"
+}
+```
+
+Nonce fields on both forms ensure only authorized users can perform these actions.
+
 ## Seed Keywords Format
 
 The first AI SEO response should return the `seed_keywords` value as an array of strings:
