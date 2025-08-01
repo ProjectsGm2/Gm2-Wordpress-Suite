@@ -23,6 +23,15 @@ class Gm2_SEO_Wizard {
     }
 
     public function handle_redirect() {
+        // Bail out when handling wizard form submissions.
+        if (
+            (isset($_GET['action']) && $_GET['action'] === 'gm2_save_wizard') ||
+            (isset($_POST['action']) && $_POST['action'] === 'gm2_save_wizard') ||
+            (isset($_SERVER['SCRIPT_NAME']) && basename($_SERVER['SCRIPT_NAME']) === 'admin-post.php')
+        ) {
+            return;
+        }
+
         if (get_option('gm2_setup_complete') !== '1') {
             if (!isset($_GET['page'])) {
                 wp_safe_redirect(admin_url('index.php?page=gm2-setup-wizard'));
