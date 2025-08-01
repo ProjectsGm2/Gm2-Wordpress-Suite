@@ -73,18 +73,17 @@ class Gm2_Diagnostics {
             return;
         }
 
-        echo '<div class="notice notice-warning"><p><strong>' . esc_html__('Gm2 Diagnostics detected issues:', 'gm2-wordpress-suite') . '</strong><br />';
+        echo '<div class="notice notice-warning"><p><strong>' . esc_html__('Gm2 Diagnostics detected issues:', 'gm2-wordpress-suite') . '</strong></p><ul>';
         if (!empty($this->conflicts)) {
-            echo esc_html__('Conflicting SEO plugins: ', 'gm2-wordpress-suite') . esc_html(implode(', ', $this->conflicts)) . '.<br />';
+            echo '<li>' . esc_html__('Conflicting SEO plugins:', 'gm2-wordpress-suite') . ' ' . esc_html(implode(', ', $this->conflicts)) . '. ' . esc_html__('Disable them or turn off the SEO module.', 'gm2-wordpress-suite') . '</li>';
         }
         if (!empty($this->integrity_errors)) {
-            echo esc_html__('Missing plugin files: ', 'gm2-wordpress-suite') . esc_html(implode(', ', $this->integrity_errors)) . '.<br />';
+            echo '<li>' . esc_html__('Missing plugin files:', 'gm2-wordpress-suite') . ' ' . esc_html(implode(', ', $this->integrity_errors)) . '. ' . esc_html__('Restore these files or reinstall the plugin.', 'gm2-wordpress-suite') . '</li>';
         }
         if (!empty($this->hook_issues)) {
-            echo esc_html__('Theme hooks removed: ', 'gm2-wordpress-suite') . esc_html(implode(', ', $this->hook_issues)) . '.<br />';
+            echo '<li>' . esc_html__('Theme hooks removed:', 'gm2-wordpress-suite') . ' ' . esc_html(implode(', ', $this->hook_issues)) . '. ' . esc_html__('Add the hooks back to your theme templates.', 'gm2-wordpress-suite') . '</li>';
         }
-        echo esc_html__('Please resolve these issues to ensure all SEO features work as expected.', 'gm2-wordpress-suite');
-        echo '</p></div>';
+        echo '</ul><p>' . esc_html__('Please resolve these issues to ensure all SEO features work as expected.', 'gm2-wordpress-suite') . '</p></div>';
     }
 
     public function get_conflicts() {
