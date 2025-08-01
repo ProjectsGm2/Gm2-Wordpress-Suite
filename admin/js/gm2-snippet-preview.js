@@ -10,12 +10,24 @@ jQuery(function($){
         $('#gm2-snippet-preview .gm2-snippet-title').text(title);
         $('#gm2-snippet-preview .gm2-snippet-url').text(url);
         $('#gm2-snippet-preview .gm2-snippet-description').text(desc);
+
+        $('.gm2-title-count').text(title.length + '/60');
+        $('.gm2-desc-count').text(desc.length + '/160');
     }
     function init(){
-        var $desc = $('#gm2_seo_description');
+        var $title = $('#gm2_seo_title');
+        var $desc  = $('#gm2_seo_description');
         if(!$desc.length || $('#gm2-snippet-preview').length){
             return;
         }
+
+        if(!$title.next('.gm2-char-count').length){
+            $('<span class="gm2-char-count gm2-title-count"></span>').insertAfter($title);
+        }
+        if(!$desc.next('.gm2-char-count').length){
+            $('<span class="gm2-char-count gm2-desc-count"></span>').insertAfter($desc);
+        }
+
         var box = $('<div id="gm2-snippet-preview" class="gm2-snippet-preview">'+
             '<div class="gm2-snippet-title"></div>'+
             '<div class="gm2-snippet-url"></div>'+
