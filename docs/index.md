@@ -100,3 +100,17 @@ The "Check Rules" action fails when a focus keyword is already in use.
 - Link counts for all public post types to track internal and external links.
 - Sitemap Path field placeholder with tooltip guidance.
 - Real-time character counts displayed in the SEO meta box.
+
+## Development Task List
+
+The following tasks track upcoming enhancements for the Gm2 WordPress Suite. Each item briefly explains the goal of the improvement so contributors know what to tackle next.
+
+1. **Accessible admin tabs** – replace current tab markup with ARIA roles and keyboard navigation patterns.
+2. **Spinner feedback during AI SEO research** – show a loader while requests run so users know work is in progress.
+3. **SEO field placeholders** – add example text and tooltips that clarify what to enter in each input.
+4. **Live snippet preview** – display a real-time view of how titles and descriptions will appear in search results.
+5. **Google Connect test button** – verify Analytics and Ads credentials right from the connect page.
+6. **404 log clearing** – provide a button on the Redirects tab to reset the list of missing URLs.
+7. **Post link counts** – track internal and external link totals across all public post types.
+8. **Sitemap path guidance** – show the default sitemap path in a placeholder with a short explanation.
+9. **Character count display** – update the SEO meta box to show running character totals for each field.
