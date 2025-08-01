@@ -338,4 +338,17 @@ jQuery(function($){
             $msg.text(msg || (window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.error : 'Error'));
         });
     });
+
+    $('#gm2-bulk-ai').on('click','#gm2-bulk-schedule',function(e){
+        e.preventDefault();
+        var ids=[];
+        $('#gm2-bulk-list .gm2-select:checked').each(function(){ids.push($(this).val());});
+        if(!ids.length) return;
+        $.post(gm2BulkAi.ajax_url,{action:'gm2_ai_batch_schedule',ids:JSON.stringify(ids),_ajax_nonce:gm2BulkAi.batch_nonce});
+    });
+
+    $('#gm2-bulk-ai').on('click','#gm2-bulk-cancel-batch',function(e){
+        e.preventDefault();
+        $.post(gm2BulkAi.ajax_url,{action:'gm2_ai_batch_cancel',_ajax_nonce:gm2BulkAi.batch_nonce});
+    });
 });
