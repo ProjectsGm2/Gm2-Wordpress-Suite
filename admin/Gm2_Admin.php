@@ -130,6 +130,20 @@ class Gm2_Admin {
                 filemtime(GM2_PLUGIN_DIR . 'admin/js/gm2-guideline-rules.js'),
                 true
             );
+            wp_enqueue_script(
+                'chart-js',
+                'https://cdn.jsdelivr.net/npm/chart.js',
+                [],
+                '4.4.2',
+                true
+            );
+            wp_enqueue_script(
+                'gm2-analytics',
+                GM2_PLUGIN_URL . 'admin/js/gm2-analytics.js',
+                ['jquery', 'chart-js'],
+                filemtime(GM2_PLUGIN_DIR . 'admin/js/gm2-analytics.js'),
+                true
+            );
             if ($this->chatgpt_enabled) {
                 wp_enqueue_script(
                     'gm2-context-prompt',

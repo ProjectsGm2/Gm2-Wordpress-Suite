@@ -538,6 +538,91 @@ class Gm2_Google_OAuth {
         return [];
     }
 
+    /**
+     * Fetch daily sessions and bounce rate data for charting.
+     *
+     * @param string $property_id Analytics property ID.
+     * @param int    $days        Number of days to fetch.
+     * @return array{
+     *   dates:string[],
+     *   sessions:int[],
+     *   bounce_rate:float[]
+     * }
+     */
+    public function get_analytics_trends($property_id, $days = 30) {
+        if (!$this->is_connected()) {
+            return [];
+        }
+        $token = $this->get_access_token();
+        if (!$token) {
+            return [];
+        }
+
+        $end   = date('Y-m-d');
+        $start = date('Y-m-d', strtotime('-' . absint($days) . ' days'));
+
+        if (strpos($property_id, 'UA-') === 0) {
+            $url  = 'https://analyticsreporting.googleapis.com/v4/reports:batchGet';
+            $body = [
+                'reportRequests' => [
+                    [
+                        'viewId'    => $property_id,
+                        'dateRanges'=> [ [ 'startDate' => $start, 'endDate' => $end ] ],
+                        'dimensions'=> [ [ 'name' => 'ga:date' ] ],
+                        'metrics'   => [
+                            [ 'expression' => 'ga:sessions' ],
+                            [ 'expression' => 'ga:bounceRate' ],
+                        ],
+                    ],
+                ],
+            ];
+        } else {
+            $prop = preg_replace('/^properties\//', '', $property_id);
+            $url  = sprintf('https://analyticsdata.googleapis.com/v1beta/properties/%s:runReport', $prop);
+            $body = [
+                'dimensions' => [ [ 'name' => 'date' ] ],
+                'dateRanges' => [ [ 'startDate' => $start, 'endDate' => $end ] ],
+                'metrics'    => [
+                    [ 'name' => 'sessions' ],
+                    [ 'name' => 'bounceRate' ],
+                ],
+            ];
+        }
+
+        $resp = $this->api_request('POST', $url, $body, [
+            'Authorization' => 'Bearer ' . $token,
+        ]);
+
+        if (is_wp_error($resp)) {
+            return [];
+        }
+
+        $dates = [];
+        $sessions = [];
+        $rates = [];
+
+        if (!empty($resp['reports'][0]['data']['rows'])) {
+            foreach ($resp['reports'][0]['data']['rows'] as $row) {
+                $dates[]    = date('Y-m-d', strtotime($row['dimensions'][0]));
+                $vals       = $row['metrics'][0]['values'];
+                $sessions[] = (int) ($vals[0] ?? 0);
+                $rates[]    = (float) ($vals[1] ?? 0);
+            }
+        } elseif (!empty($resp['rows'])) {
+            foreach ($resp['rows'] as $row) {
+                $dates[]    = $row['dimensionValues'][0]['value'];
+                $sessions[] = (int) ($row['metricValues'][0]['value'] ?? 0);
+                $rates[]    = (float) ($row['metricValues'][1]['value'] ?? 0);
+            }
+        }
+
+        return [
+            'dates'       => $dates,
+            'sessions'    => $sessions,
+            'bounce_rate' => $rates,
+        ];
+    }
+
     public function disconnect() {
         delete_option('gm2_google_refresh_token');
         delete_option('gm2_google_access_token');
