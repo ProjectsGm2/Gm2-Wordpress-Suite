@@ -28,7 +28,7 @@ jQuery(function($){
             $('<span class="gm2-char-count gm2-desc-count"></span>').insertAfter($desc);
         }
 
-        var box = $('<div id="gm2-snippet-preview" class="gm2-snippet-preview">'+
+        var box = $('<div id="gm2-snippet-preview" class="gm2-snippet-preview" role="region" aria-live="polite" aria-label="Search result preview">'+
             '<div class="gm2-snippet-title"></div>'+
             '<div class="gm2-snippet-url"></div>'+
             '<div class="gm2-snippet-description"></div>'+
