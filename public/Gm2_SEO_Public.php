@@ -8,6 +8,12 @@ if (!defined('ABSPATH')) {
 
 class Gm2_SEO_Public {
     private $buffer_started = false;
+    /**
+     * Cache for breadcrumb items generated during a request.
+     *
+     * @var array|null
+     */
+    private $breadcrumbs_cache = null;
 
     public function run() {
         add_action('init', [$this, 'add_sitemap_rewrite']);
@@ -88,6 +94,10 @@ class Gm2_SEO_Public {
     }
 
     private function get_breadcrumb_items() {
+        if (is_array($this->breadcrumbs_cache)) {
+            return $this->breadcrumbs_cache;
+        }
+
         $breadcrumbs   = [];
         $breadcrumbs[] = [
             'name' => get_bloginfo('name'),
@@ -143,7 +153,9 @@ class Gm2_SEO_Public {
             ];
         }
 
-        return $breadcrumbs;
+        $this->breadcrumbs_cache = $breadcrumbs;
+
+        return $this->breadcrumbs_cache;
     }
 
     /**
@@ -421,9 +433,10 @@ class Gm2_SEO_Public {
         if (get_option('gm2_schema_breadcrumbs', '1') !== '1') {
             return;
         }
-        $items    = [];
-        $position = 1;
-        foreach ($this->get_breadcrumb_items() as $crumb) {
+        $breadcrumbs = $this->get_breadcrumb_items();
+        $items       = [];
+        $position    = 1;
+        foreach ($breadcrumbs as $crumb) {
             $items[] = [
                 '@type'    => 'ListItem',
                 'position' => $position++,
@@ -542,7 +555,7 @@ class Gm2_SEO_Public {
     }
 
     public function output_breadcrumbs() {
-        echo do_shortcode('[gm2_breadcrumbs]');
+        echo $this->gm2_breadcrumbs_shortcode();
     }
 
     public function output_canonical_url() {
