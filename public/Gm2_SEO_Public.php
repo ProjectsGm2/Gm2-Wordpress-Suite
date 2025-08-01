@@ -569,7 +569,8 @@ class Gm2_SEO_Public {
     public function output_search_console_meta() {
         $code = get_option('gm2_search_console_verification', '');
         if ($code) {
-            echo '<meta name="google-site-verification" content="' . esc_attr($code) . '" />' . "\n";
+            $html = '<meta name="google-site-verification" content="' . esc_attr($code) . '" />' . "\n";
+            echo apply_filters('gm2_search_console_meta', $html, $code);
         }
     }
 
