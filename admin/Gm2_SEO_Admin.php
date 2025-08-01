@@ -36,6 +36,8 @@ class Gm2_SEO_Admin {
         add_action('admin_post_gm2_google_test', [$this, 'handle_google_test_connection']);
         add_action('admin_post_gm2_clear_404_logs', [$this, 'handle_clear_404_logs']);
         add_action('admin_post_gm2_reset_seo', [$this, 'handle_reset_seo']);
+        add_action('admin_post_gm2_export_settings', [$this, 'handle_export_settings']);
+        add_action('admin_post_gm2_import_settings', [$this, 'handle_import_settings']);
 
         add_action('wp_ajax_gm2_check_rules', [$this, 'ajax_check_rules']);
         add_action('wp_ajax_gm2_keyword_ideas', [$this, 'ajax_keyword_ideas']);
@@ -1116,6 +1118,20 @@ class Gm2_SEO_Admin {
             submit_button();
             echo '</form>';
         }
+
+        echo '<hr />';
+        echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
+        wp_nonce_field('gm2_export_settings');
+        echo '<input type="hidden" name="action" value="gm2_export_settings" />';
+        submit_button( esc_html__( 'Export Settings', 'gm2-wordpress-suite' ), 'secondary' );
+        echo '</form>';
+
+        echo '<form method="post" action="' . admin_url('admin-post.php') . '" enctype="multipart/form-data">';
+        wp_nonce_field('gm2_import_settings');
+        echo '<input type="hidden" name="action" value="gm2_import_settings" />';
+        echo '<input type="file" name="gm2_settings_file" accept="application/json" /> ';
+        submit_button( esc_html__( 'Import Settings', 'gm2-wordpress-suite' ), 'secondary' );
+        echo '</form>';
 
         echo '<hr />';
         echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
@@ -2203,6 +2219,66 @@ class Gm2_SEO_Admin {
         }
 
         wp_redirect(admin_url('admin.php?page=gm2-seo&reset=1'));
+        exit;
+    }
+
+    public function handle_export_settings() {
+        if (!current_user_can('manage_options')) {
+            wp_die( esc_html__( 'Permission denied', 'gm2-wordpress-suite' ) );
+        }
+
+        check_admin_referer('gm2_export_settings');
+
+        global $wpdb;
+        $names = $wpdb->get_col($wpdb->prepare(
+            "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s",
+            $wpdb->esc_like('gm2_') . '%'
+        ));
+
+        $data = [];
+        foreach ($names as $name) {
+            $data[$name] = get_option($name);
+        }
+
+        $json = wp_json_encode($data, JSON_PRETTY_PRINT);
+
+        nocache_headers();
+        header('Content-Type: application/json');
+        header('Content-Disposition: attachment; filename="gm2-seo-settings.json"');
+        echo $json;
+
+        if (defined('GM2_TESTING') && GM2_TESTING) {
+            return;
+        }
+        exit;
+    }
+
+    public function handle_import_settings() {
+        if (!current_user_can('manage_options')) {
+            wp_die( esc_html__( 'Permission denied', 'gm2-wordpress-suite' ) );
+        }
+
+        check_admin_referer('gm2_import_settings');
+
+        if (!isset($_FILES['gm2_settings_file']) || !is_uploaded_file($_FILES['gm2_settings_file']['tmp_name'])) {
+            wp_die( esc_html__( 'No file uploaded', 'gm2-wordpress-suite' ) );
+        }
+
+        $raw  = file_get_contents($_FILES['gm2_settings_file']['tmp_name']);
+        $data = json_decode($raw, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($data)) {
+            wp_die( esc_html__( 'Invalid JSON file', 'gm2-wordpress-suite' ) );
+        }
+
+        foreach ($data as $name => $value) {
+            if (strpos($name, 'gm2_') !== 0) {
+                continue;
+            }
+            update_option($name, $value);
+        }
+
+        wp_redirect(admin_url('admin.php?page=gm2-seo&import=1'));
         exit;
     }
 
