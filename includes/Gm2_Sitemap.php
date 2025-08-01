@@ -46,6 +46,10 @@ class Gm2_Sitemap {
         }
 
         $frequency = get_option('gm2_sitemap_frequency', 'daily');
+        $max_urls  = intval(get_option('gm2_sitemap_max_urls', 1000));
+        if ($max_urls <= 0) {
+            $max_urls = 1000;
+        }
 
         $urls = [];
         foreach ($this->get_post_types() as $type) {
@@ -79,16 +83,37 @@ class Gm2_Sitemap {
             }
         }
 
-        $xml  = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-        $xml .= "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n";
-        foreach ($urls as $u) {
-            $xml .= "  <url>\n";
-            $xml .= "    <loc>" . esc_url($u['loc']) . "</loc>\n";
-            $xml .= "    <lastmod>{$u['lastmod']}</lastmod>\n";
-            $xml .= "    <changefreq>{$u['changefreq']}</changefreq>\n";
-            $xml .= "  </url>\n";
+        $chunks = array_chunk($urls, $max_urls);
+
+        $dir       = trailingslashit(dirname($this->file_path));
+        $base_name = basename($this->file_path, '.xml');
+
+        $index_entries = [];
+        $i = 1;
+        foreach ($chunks as $set) {
+            $part_path = $dir . $base_name . '-' . $i . '.xml';
+
+            $xml  = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+            $xml .= "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n";
+            foreach ($set as $u) {
+                $xml .= "  <url>\n";
+                $xml .= "    <loc>" . esc_url($u['loc']) . "</loc>\n";
+                $xml .= "    <lastmod>{$u['lastmod']}</lastmod>\n";
+                $xml .= "    <changefreq>{$u['changefreq']}</changefreq>\n";
+                $xml .= "  </url>\n";
+            }
+            $xml .= "</urlset>\n";
+
+            $index_entries[] = [
+                'loc'     => home_url('/' . ltrim(str_replace(ABSPATH, '', $part_path), '/')),
+                'lastmod' => date('c'),
+                'path'    => $part_path,
+                'xml'     => $xml,
+            ];
+
+            $i++;
         }
-        $xml .= "</urlset>\n";
+
 
         if (!function_exists('WP_Filesystem')) {
             require_once ABSPATH . 'wp-admin/includes/file.php';
@@ -98,7 +123,29 @@ class Gm2_Sitemap {
             return new \WP_Error('fs_init_failed', __('Unable to initialize filesystem', 'gm2-wordpress-suite'));
         }
 
-        $written = $wp_filesystem->put_contents($this->file_path, $xml, FS_CHMOD_FILE);
+        // Remove old parts
+        $old_parts = glob($dir . $base_name . '-*.xml');
+        if (is_array($old_parts)) {
+            foreach ($old_parts as $old) {
+                $wp_filesystem->delete($old);
+            }
+        }
+
+        foreach ($index_entries as $entry) {
+            $wp_filesystem->put_contents($entry['path'], $entry['xml'], FS_CHMOD_FILE);
+        }
+
+        $index_xml  = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+        $index_xml .= "<sitemapindex xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n";
+        foreach ($index_entries as $entry) {
+            $index_xml .= "  <sitemap>\n";
+            $index_xml .= "    <loc>" . esc_url($entry['loc']) . "</loc>\n";
+            $index_xml .= "    <lastmod>{$entry['lastmod']}</lastmod>\n";
+            $index_xml .= "  </sitemap>\n";
+        }
+        $index_xml .= "</sitemapindex>\n";
+
+        $written = $wp_filesystem->put_contents($this->file_path, $index_xml, FS_CHMOD_FILE);
         if (!$written) {
             return new \WP_Error('write_failed', sprintf(__('Could not write sitemap to %s', 'gm2-wordpress-suite'), $this->file_path));
         }
@@ -108,7 +155,7 @@ class Gm2_Sitemap {
     }
 
     public function ping_search_engines() {
-        $sitemap_url = home_url('/sitemap.xml');
+        $sitemap_url = home_url('/' . ltrim(str_replace(ABSPATH, '', $this->file_path), '/'));
         $endpoints    = [
             'https://www.google.com/ping?sitemap=' . rawurlencode($sitemap_url),
             'https://www.bing.com/ping?sitemap=' . rawurlencode($sitemap_url),

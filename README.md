@@ -77,6 +77,11 @@ The plugin stores the generated XML sitemap at `sitemap.xml` in the WordPress
 root directory. You can change this location by setting the `gm2_sitemap_path`
 option on the **SEO → Sitemap** settings page.
 
+Use the `gm2_sitemap_max_urls` option to limit how many URLs are written to each
+sitemap file. When a file reaches this number the plugin creates additional
+files like `sitemap-1.xml` and `sitemap-2.xml` and updates the index at
+`sitemap.xml`.
+
 ## Bulk AI for Taxonomies
 
 The **Bulk AI Taxonomies** page under **Gm2 → Bulk AI Taxonomies** lists terms

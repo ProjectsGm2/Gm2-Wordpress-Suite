@@ -6,6 +6,11 @@ class SitemapTest extends WP_UnitTestCase {
         if (file_exists($file)) {
             unlink($file);
         }
+        $base = basename($file, '.xml');
+        $dir  = trailingslashit(dirname($file));
+        foreach (glob($dir . $base . '-*.xml') as $part) {
+            unlink($part);
+        }
         delete_option('gm2_sitemap_path');
         parent::tearDown();
     }
@@ -16,8 +21,12 @@ class SitemapTest extends WP_UnitTestCase {
         $file = ABSPATH . 'sitemap.xml';
         $this->assertFileExists($file);
         $content = file_get_contents($file);
-        $this->assertStringContainsString('<urlset', $content);
-        $this->assertStringContainsString(get_permalink($post_id), $content);
+        $this->assertStringContainsString('<sitemapindex', $content);
+
+        $part = ABSPATH . 'sitemap-1.xml';
+        $this->assertFileExists($part);
+        $pcontent = file_get_contents($part);
+        $this->assertStringContainsString(get_permalink($post_id), $pcontent);
     }
 
     public function test_product_and_category_in_sitemap() {
@@ -39,7 +48,8 @@ class SitemapTest extends WP_UnitTestCase {
 
         $sitemap = new Gm2_Sitemap();
         $sitemap->generate();
-        $content = file_get_contents(ABSPATH . 'sitemap.xml');
+        $part = ABSPATH . 'sitemap-1.xml';
+        $content = file_get_contents($part);
 
         $this->assertStringContainsString(get_permalink($post_id), $content);
         $this->assertStringContainsString(get_term_link($term_id, 'product_cat'), $content);
@@ -56,7 +66,7 @@ class SitemapTest extends WP_UnitTestCase {
         $sitemap = new Gm2_Sitemap();
         $sitemap->generate();
 
-        $content = file_get_contents(ABSPATH . 'sitemap.xml');
+        $content = file_get_contents(ABSPATH . 'sitemap-1.xml');
         $this->assertStringContainsString(get_permalink($post_id), $content);
     }
 
@@ -87,6 +97,7 @@ class SitemapTest extends WP_UnitTestCase {
         $sitemap = new Gm2_Sitemap();
         $sitemap->generate();
         $this->assertFileExists($custom);
+        $this->assertFileExists(ABSPATH . 'custom-sitemap-1.xml');
     }
 }
 

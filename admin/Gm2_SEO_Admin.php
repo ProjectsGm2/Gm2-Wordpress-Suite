@@ -640,6 +640,7 @@ class Gm2_SEO_Admin {
             $enabled   = get_option('gm2_sitemap_enabled', '1');
             $frequency = get_option('gm2_sitemap_frequency', 'daily');
             $path      = get_option('gm2_sitemap_path', ABSPATH . 'sitemap.xml');
+            $max_urls  = get_option('gm2_sitemap_max_urls', 1000);
             if (!empty($_GET['updated'])) {
                 echo '<div class="updated notice"><p>' . esc_html__('Settings saved.', 'gm2-wordpress-suite') . '</p></div>';
             }
@@ -655,6 +656,7 @@ class Gm2_SEO_Admin {
             }
             echo '</select></td></tr>';
             echo '<tr><th scope="row">' . esc_html__( 'Sitemap Path', 'gm2-wordpress-suite' ) . '</th><td><input type="text" name="gm2_sitemap_path" value="' . esc_attr($path) . '" placeholder="' . esc_attr(ABSPATH . 'sitemap.xml') . '" class="regular-text" /> <span class="dashicons dashicons-info" title="' . esc_attr__( 'Path must be writable by WordPress', 'gm2-wordpress-suite' ) . '"></span></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Max URLs per File', 'gm2-wordpress-suite' ) . '</th><td><input type="number" name="gm2_sitemap_max_urls" value="' . esc_attr($max_urls) . '" class="small-text" /></td></tr>';
             echo '</tbody></table>';
             submit_button( esc_html__( 'Save Settings', 'gm2-wordpress-suite' ) );
             echo '<input type="submit" name="gm2_regenerate" class="button" value="' . esc_attr__( 'Regenerate Sitemap', 'gm2-wordpress-suite' ) . '" />';
@@ -2008,6 +2010,9 @@ class Gm2_SEO_Admin {
 
         $path = isset($_POST['gm2_sitemap_path']) ? sanitize_text_field($_POST['gm2_sitemap_path']) : ABSPATH . 'sitemap.xml';
         update_option('gm2_sitemap_path', $path);
+
+        $max_urls = isset($_POST['gm2_sitemap_max_urls']) ? intval($_POST['gm2_sitemap_max_urls']) : 1000;
+        update_option('gm2_sitemap_max_urls', $max_urls);
 
         if (isset($_POST['gm2_regenerate'])) {
             $result = gm2_generate_sitemap();
