@@ -82,6 +82,22 @@ sitemap file. When a file reaches this number the plugin creates additional
 files like `sitemap-1.xml` and `sitemap-2.xml` and updates the index at
 `sitemap.xml`.
 
+## WP-CLI Commands
+
+The suite exposes a `gm2` command group when run under WP-CLI.
+
+Generate the sitemap:
+
+```bash
+wp gm2 sitemap generate
+```
+
+Clear cached AI data and ChatGPT logs:
+
+```bash
+wp gm2 ai clear
+```
+
 ## Bulk AI for Taxonomies
 
 The **Bulk AI Taxonomies** page under **Gm2 → Bulk AI Taxonomies** lists terms
