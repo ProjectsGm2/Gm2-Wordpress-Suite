@@ -105,6 +105,13 @@ from supported taxonomies like categories and WooCommerce product categories.
 Select multiple terms to generate AI SEO titles and descriptions in bulk then
 apply the suggestions with one click.
 
+By default this page requires the `edit_terms` capability. Developers can
+override the required capability using the following filter:
+
+```php
+add_filter( 'gm2_bulk_ai_tax_capability', function() { return 'edit_posts'; } );
+```
+
 ## Abandoned Carts Module
 
 Enable this feature from **Gm2 → Dashboard** to create two database tables used

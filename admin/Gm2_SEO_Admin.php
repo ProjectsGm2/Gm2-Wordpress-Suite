@@ -345,11 +345,12 @@ class Gm2_SEO_Admin {
             [$this, 'display_bulk_ai_page']
         );
 
+        $cap = apply_filters('gm2_bulk_ai_tax_capability', 'edit_terms');
         add_submenu_page(
             'gm2',
             esc_html__( 'Bulk AI Taxonomies', 'gm2-wordpress-suite' ),
             esc_html__( 'Bulk AI Taxonomies', 'gm2-wordpress-suite' ),
-            'edit_terms',
+            $cap,
             'gm2-bulk-ai-taxonomies',
             [$this, 'display_bulk_ai_tax_page']
         );
