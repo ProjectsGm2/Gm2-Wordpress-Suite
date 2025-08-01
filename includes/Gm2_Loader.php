@@ -22,6 +22,9 @@ class Gm2_Loader {
         $admin->run();
 
         if (is_admin()) {
+            $wizard = new Gm2_SEO_Wizard();
+            $wizard->run();
+
             $links = new Gm2_Link_Counts();
             $links->run();
         }

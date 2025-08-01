@@ -121,6 +121,8 @@ function gm2_activate_plugin() {
     add_option('gm2_sitemap_max_urls', 1000);
     add_option('gm2_enable_abandoned_carts', '0');
     add_option('gm2_ac_mark_abandoned_interval', 5);
+    add_option('gm2_setup_complete', '0');
+    add_option('gm2_do_activation_redirect', '1');
 }
 register_activation_hook(__FILE__, 'gm2_activate_plugin');
 
@@ -138,6 +140,17 @@ function gm2_deactivate_plugin() {
     \Gm2\Gm2_Abandoned_Carts::clear_scheduled_event();
 }
 register_deactivation_hook(__FILE__, 'gm2_deactivate_plugin');
+
+function gm2_maybe_run_setup_wizard() {
+    if (get_option('gm2_do_activation_redirect') === '1') {
+        delete_option('gm2_do_activation_redirect');
+        if (!isset($_GET['activate-multi'])) {
+            wp_safe_redirect(admin_url('index.php?page=gm2-setup-wizard'));
+            exit;
+        }
+    }
+}
+add_action('admin_init', 'gm2_maybe_run_setup_wizard');
 
 function gm2_initialize_content_rules() {
     $existing = get_option('gm2_content_rules', null);
