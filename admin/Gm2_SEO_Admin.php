@@ -35,6 +35,7 @@ class Gm2_SEO_Admin {
         add_action('admin_post_gm2_bulk_ai_export', [$this, 'handle_bulk_ai_export']);
         add_action('admin_post_gm2_google_test', [$this, 'handle_google_test_connection']);
         add_action('admin_post_gm2_clear_404_logs', [$this, 'handle_clear_404_logs']);
+        add_action('admin_post_gm2_reset_seo', [$this, 'handle_reset_seo']);
 
         add_action('wp_ajax_gm2_check_rules', [$this, 'ajax_check_rules']);
         add_action('wp_ajax_gm2_keyword_ideas', [$this, 'ajax_keyword_ideas']);
@@ -612,6 +613,10 @@ class Gm2_SEO_Admin {
         }
         echo '</h2>';
 
+        if (!empty($_GET['reset'])) {
+            echo '<div class="updated notice"><p>' . esc_html__( 'Settings reset to defaults.', 'gm2-wordpress-suite' ) . '</p></div>';
+        }
+
         if ($active === 'meta') {
             $variants       = get_option('gm2_noindex_variants', '0');
             $oos            = get_option('gm2_noindex_oos', '0');
@@ -1112,6 +1117,12 @@ class Gm2_SEO_Admin {
             echo '</form>';
         }
 
+        echo '<hr />';
+        echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
+        wp_nonce_field('gm2_reset_seo');
+        echo '<input type="hidden" name="action" value="gm2_reset_seo" />';
+        submit_button( esc_html__( 'Reset to Defaults', 'gm2-wordpress-suite' ), 'secondary' );
+        echo '</form>';
         echo '</div>';
     }
 
@@ -2171,6 +2182,27 @@ class Gm2_SEO_Admin {
         delete_option('gm2_404_logs');
 
         wp_redirect(admin_url('admin.php?page=gm2-seo&tab=redirects&logs_cleared=1'));
+        exit;
+    }
+
+    public function handle_reset_seo() {
+        if (!current_user_can('manage_options')) {
+            wp_die( esc_html__( 'Permission denied', 'gm2-wordpress-suite' ) );
+        }
+
+        check_admin_referer('gm2_reset_seo');
+
+        global $wpdb;
+        $names = $wpdb->get_col($wpdb->prepare(
+            "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s",
+            $wpdb->esc_like('gm2_') . '%'
+        ));
+
+        foreach ($names as $name) {
+            delete_option($name);
+        }
+
+        wp_redirect(admin_url('admin.php?page=gm2-seo&reset=1'));
         exit;
     }
 
