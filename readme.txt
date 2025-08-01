@@ -100,6 +100,9 @@ The AI features depend on the DOM/LibXML extension. Verify it is installed by ru
 == Diagnostics ==
 As a first step, open **Gm2 → Diagnostics** to detect plugin conflicts, missing files or theme customizations that may disable SEO output. Any detected issues are listed as an admin notice with steps to resolve them. Diagnostics run only when the SEO module is enabled on the **Gm2 Suite** page.
 
+== Site Health ==
+Open **Tools → Site Health** to run these diagnostics automatically. The Gm2 Suite section lists any conflicts, missing plugin files or removed theme hooks with recommended steps to resolve them.
+
 == Breadcrumbs ==
 Display a breadcrumb trail anywhere using the `[gm2_breadcrumbs]` shortcode. The output
 is an ordered list wrapped in a `<nav>` element with accompanying JSON-LD for search engines.
