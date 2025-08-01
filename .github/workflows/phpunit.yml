@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        php-version: ['7.3', '8.1']
+        php-version: ['8.0', '8.1']
     services:
       mysql:
         image: mysql:5.7
