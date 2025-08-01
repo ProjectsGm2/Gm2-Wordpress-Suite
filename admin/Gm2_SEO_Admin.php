@@ -345,7 +345,7 @@ class Gm2_SEO_Admin {
             [$this, 'display_bulk_ai_page']
         );
 
-        $cap = apply_filters('gm2_bulk_ai_tax_capability', 'edit_terms');
+        $cap = apply_filters('gm2_bulk_ai_tax_capability', 'manage_categories');
         add_submenu_page(
             'gm2',
             esc_html__( 'Bulk AI Taxonomies', 'gm2-wordpress-suite' ),
@@ -1395,7 +1395,8 @@ class Gm2_SEO_Admin {
     }
 
     public function display_bulk_ai_tax_page() {
-        if (!current_user_can('edit_terms')) {
+        $cap = apply_filters('gm2_bulk_ai_tax_capability', 'manage_categories');
+        if (!current_user_can($cap)) {
             esc_html_e( 'Permission denied', 'gm2-wordpress-suite' );
             return;
         }
@@ -4067,7 +4068,8 @@ class Gm2_SEO_Admin {
                 wp_send_json_error( __( 'permission denied', 'gm2-wordpress-suite' ), 403 );
             }
         } else {
-            if (!current_user_can('edit_terms')) {
+            $cap = apply_filters('gm2_bulk_ai_tax_capability', 'manage_categories');
+            if (!current_user_can($cap)) {
                 wp_send_json_error( __( 'permission denied', 'gm2-wordpress-suite' ), 403 );
             }
         }
