@@ -192,4 +192,35 @@ namespace {
         }
         return array_values(array_unique($list));
     }
+
+    function gm2_ai_clear() {
+        $post_ids = get_posts([
+            'post_type'      => get_post_types(['public' => true], 'names'),
+            'post_status'    => 'any',
+            'meta_key'       => '_gm2_ai_research',
+            'posts_per_page' => -1,
+            'fields'         => 'ids',
+        ]);
+        foreach ($post_ids as $pid) {
+            delete_post_meta($pid, '_gm2_ai_research');
+        }
+
+        $terms = get_terms([
+            'taxonomy'   => get_taxonomies([], 'names'),
+            'hide_empty' => false,
+            'meta_query' => [ [ 'key' => '_gm2_ai_research' ] ],
+            'fields'     => 'ids',
+        ]);
+        if (!is_wp_error($terms)) {
+            foreach ($terms as $tid) {
+                delete_term_meta($tid, '_gm2_ai_research');
+            }
+        }
+
+        if (defined('GM2_CHATGPT_LOG_FILE') && file_exists(GM2_CHATGPT_LOG_FILE)) {
+            file_put_contents(GM2_CHATGPT_LOG_FILE, '');
+        }
+
+        return true;
+    }
 }

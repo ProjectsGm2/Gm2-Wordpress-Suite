@@ -461,3 +461,7 @@ function gm2_guideline_rules_migration_notice() {
 }
 add_action('admin_notices', 'gm2_guideline_rules_migration_notice');
 
+if (defined('WP_CLI') && WP_CLI) {
+    require_once GM2_PLUGIN_DIR . 'includes/cli/class-gm2-cli.php';
+}
+
