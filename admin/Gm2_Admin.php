@@ -214,6 +214,7 @@ class Gm2_Admin {
                     [
                         'nonce'       => wp_create_nonce('gm2_ai_research'),
                         'apply_nonce' => wp_create_nonce('gm2_bulk_ai_apply'),
+                        'batch_nonce' => wp_create_nonce('gm2_ai_batch'),
                         'ajax_url'    => admin_url('admin-ajax.php'),
                         'i18n'        => [
                             'processing'   => __( 'Processing %1$s / %2$s', 'gm2-wordpress-suite' ),
