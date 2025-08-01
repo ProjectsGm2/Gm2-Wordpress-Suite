@@ -7,9 +7,9 @@ if (!defined('ABSPATH')) {
 
 class Gm2_SEO_Wizard {
     public function run() {
-        add_action('admin_menu', [\$this, 'add_pages']);
-        add_action('admin_init', [\$this, 'handle_redirect']);
-        add_action('admin_post_gm2_save_wizard', [\$this, 'handle_post']);
+        add_action('admin_menu', [$this, 'add_pages']);
+        add_action('admin_init', [$this, 'handle_redirect']);
+        add_action('admin_post_gm2_save_wizard', [$this, 'handle_post']);
     }
 
     public function add_pages() {
@@ -18,13 +18,13 @@ class Gm2_SEO_Wizard {
             __('Gm2 Setup Wizard', 'gm2-wordpress-suite'),
             'manage_options',
             'gm2-setup-wizard',
-            [\$this, 'render']
+            [$this, 'render']
         );
     }
 
     public function handle_redirect() {
         if (get_option('gm2_setup_complete') !== '1') {
-            if (!isset(\$_GET['page'])) {
+            if (!isset($_GET['page'])) {
                 wp_safe_redirect(admin_url('index.php?page=gm2-setup-wizard'));
                 exit;
             }
@@ -36,34 +36,34 @@ class Gm2_SEO_Wizard {
             wp_die(esc_html__('Permission denied', 'gm2-wordpress-suite'));
         }
         check_admin_referer('gm2_save_wizard');
-        $step = isset(\$_POST['gm2_wizard_step']) ? sanitize_text_field(\$_POST['gm2_wizard_step']) : '';
+        $step = isset($_POST['gm2_wizard_step']) ? sanitize_text_field($_POST['gm2_wizard_step']) : '';
         switch ($step) {
             case 'chatgpt':
-                update_option('gm2_chatgpt_api_key', sanitize_text_field(\$_POST['gm2_chatgpt_api_key'] ?? ''));
+                update_option('gm2_chatgpt_api_key', sanitize_text_field($_POST['gm2_chatgpt_api_key'] ?? ''));
                 break;
             case 'oauth':
-                update_option('gm2_gads_client_id', sanitize_text_field(\$_POST['gm2_gads_client_id'] ?? ''));
-                update_option('gm2_gads_client_secret', sanitize_text_field(\$_POST['gm2_gads_client_secret'] ?? ''));
-                update_option('gm2_gads_developer_token', sanitize_text_field(\$_POST['gm2_gads_developer_token'] ?? ''));
+                update_option('gm2_gads_client_id', sanitize_text_field($_POST['gm2_gads_client_id'] ?? ''));
+                update_option('gm2_gads_client_secret', sanitize_text_field($_POST['gm2_gads_client_secret'] ?? ''));
+                update_option('gm2_gads_developer_token', sanitize_text_field($_POST['gm2_gads_developer_token'] ?? ''));
                 break;
             case 'sitemap':
-                update_option('gm2_sitemap_path', sanitize_text_field(\$_POST['gm2_sitemap_path'] ?? ''));
-                update_option('gm2_sitemap_max_urls', absint(\$_POST['gm2_sitemap_max_urls'] ?? 1000));
+                update_option('gm2_sitemap_path', sanitize_text_field($_POST['gm2_sitemap_path'] ?? ''));
+                update_option('gm2_sitemap_max_urls', absint($_POST['gm2_sitemap_max_urls'] ?? 1000));
                 break;
             case 'defaults':
-                update_option('gm2_enable_seo', isset(\$_POST['gm2_enable_seo']) ? '1' : '0');
-                update_option('gm2_enable_chatgpt', isset(\$_POST['gm2_enable_chatgpt']) ? '1' : '0');
-                update_option('gm2_enable_google_oauth', isset(\$_POST['gm2_enable_google_oauth']) ? '1' : '0');
+                update_option('gm2_enable_seo', isset($_POST['gm2_enable_seo']) ? '1' : '0');
+                update_option('gm2_enable_chatgpt', isset($_POST['gm2_enable_chatgpt']) ? '1' : '0');
+                update_option('gm2_enable_google_oauth', isset($_POST['gm2_enable_google_oauth']) ? '1' : '0');
                 update_option('gm2_setup_complete', '1');
                 break;
         }
-        $next = isset(\$_POST['gm2_next_step']) ? sanitize_text_field(\$_POST['gm2_next_step']) : '';
+        $next = isset($_POST['gm2_next_step']) ? sanitize_text_field($_POST['gm2_next_step']) : '';
         wp_safe_redirect(admin_url('index.php?page=gm2-setup-wizard&step=' . $next));
         exit;
     }
 
     public function render() {
-        $step = isset(\$_GET['step']) ? sanitize_text_field(\$_GET['step']) : 'chatgpt';
+        $step = isset($_GET['step']) ? sanitize_text_field($_GET['step']) : 'chatgpt';
         echo '<div class="wrap">';
         echo '<h1>' . esc_html__('Gm2 Setup Wizard', 'gm2-wordpress-suite') . '</h1>';
         switch ($step) {
