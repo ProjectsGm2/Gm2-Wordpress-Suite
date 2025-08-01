@@ -647,7 +647,7 @@ class Gm2_SEO_Admin {
                 echo '<option value="' . esc_attr($opt) . '" ' . selected($frequency, $opt, false) . '>' . esc_html($label) . '</option>';
             }
             echo '</select></td></tr>';
-            echo '<tr><th scope="row">' . esc_html__( 'Sitemap Path', 'gm2-wordpress-suite' ) . '</th><td><input type="text" name="gm2_sitemap_path" value="' . esc_attr($path) . '" class="regular-text" /></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Sitemap Path', 'gm2-wordpress-suite' ) . '</th><td><input type="text" name="gm2_sitemap_path" value="' . esc_attr($path) . '" placeholder="' . esc_attr(ABSPATH . 'sitemap.xml') . '" class="regular-text" /> <span class="dashicons dashicons-info" title="' . esc_attr__( 'Path must be writable by WordPress', 'gm2-wordpress-suite' ) . '"></span></td></tr>';
             echo '</tbody></table>';
             submit_button( esc_html__( 'Save Settings', 'gm2-wordpress-suite' ) );
             echo '<input type="submit" name="gm2_regenerate" class="button" value="' . esc_attr__( 'Regenerate Sitemap', 'gm2-wordpress-suite' ) . '" />';
