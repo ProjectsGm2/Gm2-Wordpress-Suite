@@ -308,7 +308,7 @@ Create 301 or 302 redirects from the **SEO → Redirects** tab. The plugin logs
 the last 100 missing URLs to help you create new redirects.
 
 == Planned Features ==
-  impressions from connected sites.
+* **Search Console metrics** – the **SEO → Analytics** tab shows clicks and impressions from connected sites.
 * **Expanded rules** – guideline rules for each content type editable under
   **SEO → SEO Guidelines**.
 * **Duplicate checks** – upcoming report in **SEO → Tools** that flags posts
@@ -341,10 +341,10 @@ the last 100 missing URLs to help you create new redirects.
   search results as you type.
 * **Test Connection button** – quickly confirm Google integration on the
   connect screen.
-* **Clear 404 Logs button** – reset missing URL history from the Redirects tab.
-* **Link counts** – track internal and external links for all public post types.
-* **Sitemap Path placeholder** – field shows the default path with a tooltip.
-* **Real-time character counts** – monitor title and description length in the SEO meta box.
+* **Clear 404 Logs button** – reset missing URL history from the **Redirects** tab.
+* **Link counts for all public post types** – track internal and external links.
+* **Sitemap Path placeholder and tooltip** – shows the default path with guidance.
+* **Real-time character counts** – display running totals in the SEO meta box.
 
 == Changelog ==
 = 1.6.17 =

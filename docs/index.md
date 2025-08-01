@@ -95,7 +95,7 @@ The "Check Rules" action fails when a focus keyword is already in use.
 - SEO input placeholders with help tooltips.
 - Live search snippet preview in the SEO meta box.
 - "Test Connection" button on the Google Connect screen.
-- Clear 404 Logs button on the Redirects tab.
-- Link counts for all public post types.
-- Sitemap Path field placeholder with tooltip.
-- Real-time character counts in the SEO meta box.
+- Clear 404 Logs button on the **Redirects** tab.
+- Link counts for all public post types to track internal and external links.
+- Sitemap Path field placeholder with tooltip guidance.
+- Real-time character counts displayed in the SEO meta box.
