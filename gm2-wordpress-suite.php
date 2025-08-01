@@ -9,7 +9,7 @@
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:       gm2-wordpress-suite
  * Domain Path:       /languages
- * Requires PHP:      7.3
+ * Requires PHP:      8.0
  */
 
 defined('ABSPATH') or die('No script kiddies please!');

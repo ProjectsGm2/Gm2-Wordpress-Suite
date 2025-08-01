@@ -8,7 +8,7 @@ The PHPUnit tests rely on the official WordPress test suite. Before running the 
 
 ### Prerequisites
 
-- **PHP** 7.3 or higher
+ - **PHP** 8.0 or higher
 - **Composer** for installing PHPUnit
 - **Node.js** and **npm** for running JavaScript tests
 
