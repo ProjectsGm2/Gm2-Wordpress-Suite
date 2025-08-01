@@ -2044,6 +2044,8 @@ class Gm2_SEO_Admin {
             $result = gm2_generate_sitemap();
             if (is_wp_error($result)) {
                 self::add_notice($result->get_error_message());
+            } else {
+                self::add_notice( __( 'Sitemap generated', 'gm2-wordpress-suite' ), 'success' );
             }
         }
 
