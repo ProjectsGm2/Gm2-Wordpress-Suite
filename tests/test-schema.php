@@ -86,4 +86,22 @@ class SchemaOutputTest extends WP_UnitTestCase {
         $this->assertIsArray($data);
         $this->assertSame('Article', $data['@type']);
     }
+
+    public function test_webpage_schema_json_ld_output() {
+        register_post_type('book');
+        $post_id = self::factory()->post->create(['post_type' => 'book', 'post_title' => 'Book Title']);
+        $seo = new Gm2_SEO_Public();
+        $this->go_to(get_permalink($post_id));
+        setup_postdata(get_post($post_id));
+        ob_start();
+        $seo->output_webpage_schema();
+        $output = ob_get_clean();
+        $this->assertNotEmpty($output);
+        preg_match('/<script type="application\/ld\+json">(.*?)<\/script>/s', $output, $m);
+        $json = $m[1] ?? '';
+        $data = json_decode($json, true);
+        $this->assertIsArray($data);
+        $this->assertSame('WebPage', $data['@type']);
+        $this->assertSame(get_permalink($post_id), $data['url']);
+    }
 }
