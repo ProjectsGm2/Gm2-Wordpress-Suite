@@ -30,6 +30,7 @@ class Gm2_SEO_Public {
         add_action('wp_head', [$this, 'output_breadcrumb_schema'], 20);
         add_action('wp_head', [$this, 'output_review_schema'], 20);
         add_action('wp_head', [$this, 'output_article_schema'], 20);
+        add_action('wp_head', [$this, 'output_taxonomy_schema'], 20);
         add_filter('the_content', [$this, 'apply_link_rel']);
         if (get_option('gm2_show_footer_breadcrumbs', '1') === '1') {
             add_action('wp_footer', [$this, 'output_breadcrumbs']);
@@ -489,6 +490,42 @@ class Gm2_SEO_Public {
                 'ratingValue' => $rating,
                 'bestRating'  => '5',
             ],
+        ];
+
+        echo '<script type="application/ld+json">' . wp_json_encode($data) . "</script>\n";
+    }
+
+    public function output_taxonomy_schema() {
+        if (get_option('gm2_schema_taxonomy', '1') !== '1') {
+            return;
+        }
+
+        if (!is_category() && !is_tag() && !is_tax()) {
+            return;
+        }
+
+        global $wp_query;
+        if (empty($wp_query->posts)) {
+            return;
+        }
+
+        $items    = [];
+        $position = 1;
+        foreach ($wp_query->posts as $post) {
+            $items[] = [
+                '@type'    => 'ListItem',
+                'position' => $position++,
+                'url'      => get_permalink($post),
+                'name'     => wp_strip_all_tags(get_the_title($post)),
+            ];
+        }
+
+        $data = [
+            '@context'        => 'https://schema.org/',
+            '@type'           => 'ItemList',
+            'name'            => single_term_title('', false),
+            'numberOfItems'   => count($items),
+            'itemListElement' => $items,
         ];
 
         echo '<script type="application/ld+json">' . wp_json_encode($data) . "</script>\n";

@@ -665,12 +665,13 @@ class Gm2_SEO_Admin {
             echo '<input type="submit" name="gm2_regenerate" class="button" value="' . esc_attr__( 'Regenerate Sitemap', 'gm2-wordpress-suite' ) . '" />';
             echo '</form>';
         } elseif ($active === 'schema') {
-            $product     = get_option('gm2_schema_product', '1');
-            $brand       = get_option('gm2_schema_brand', '1');
-            $breadcrumbs = get_option('gm2_schema_breadcrumbs', '1');
-            $article     = get_option('gm2_schema_article', '1');
-            $review      = get_option('gm2_schema_review', '1');
-            $footer_bc   = get_option('gm2_show_footer_breadcrumbs', '1');
+            $product       = get_option('gm2_schema_product', '1');
+            $brand         = get_option('gm2_schema_brand', '1');
+            $breadcrumbs   = get_option('gm2_schema_breadcrumbs', '1');
+            $taxonomy_list = get_option('gm2_schema_taxonomy', '1');
+            $article       = get_option('gm2_schema_article', '1');
+            $review        = get_option('gm2_schema_review', '1');
+            $footer_bc     = get_option('gm2_show_footer_breadcrumbs', '1');
             if (!empty($_GET['updated'])) {
                 echo '<div class="updated notice"><p>' . esc_html__('Settings saved.', 'gm2-wordpress-suite') . '</p></div>';
             }
@@ -681,6 +682,7 @@ class Gm2_SEO_Admin {
             echo '<tr><th scope="row">' . esc_html__( 'Product Schema', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="gm2_schema_product" value="1" ' . checked($product, '1', false) . '></td></tr>';
             echo '<tr><th scope="row">' . esc_html__( 'Brand Schema', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="gm2_schema_brand" value="1" ' . checked($brand, '1', false) . '></td></tr>';
             echo '<tr><th scope="row">' . esc_html__( 'Breadcrumb Schema', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="gm2_schema_breadcrumbs" value="1" ' . checked($breadcrumbs, '1', false) . '></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Taxonomy ItemList Schema', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="gm2_schema_taxonomy" value="1" ' . checked($taxonomy_list, '1', false) . '></td></tr>';
             echo '<tr><th scope="row">' . esc_html__( 'Article Schema', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="gm2_schema_article" value="1" ' . checked($article, '1', false) . '></td></tr>';
             echo '<tr><th scope="row">' . esc_html__( 'Show Breadcrumbs in Footer', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="gm2_show_footer_breadcrumbs" value="1" ' . checked($footer_bc, '1', false) . '></td></tr>';
             echo '<tr><th scope="row">' . esc_html__( 'Review Schema', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="gm2_schema_review" value="1" ' . checked($review, '1', false) . '></td></tr>';
@@ -2019,8 +2021,11 @@ class Gm2_SEO_Admin {
         $brand      = isset($_POST['gm2_schema_brand']) ? '1' : '0';
         update_option('gm2_schema_brand', $brand);
 
-        $breadcrumbs = isset($_POST['gm2_schema_breadcrumbs']) ? '1' : '0';
+        $breadcrumbs   = isset($_POST['gm2_schema_breadcrumbs']) ? '1' : '0';
         update_option('gm2_schema_breadcrumbs', $breadcrumbs);
+
+        $taxonomy_list = isset($_POST['gm2_schema_taxonomy']) ? '1' : '0';
+        update_option('gm2_schema_taxonomy', $taxonomy_list);
 
         $article = isset($_POST['gm2_schema_article']) ? '1' : '0';
         update_option('gm2_schema_article', $article);
