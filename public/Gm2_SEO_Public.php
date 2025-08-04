@@ -14,6 +14,12 @@ class Gm2_SEO_Public {
      * @var array|null
      */
     private $breadcrumbs_cache = null;
+    /**
+     * Whether a primary schema type (Product or Article) has been output.
+     *
+     * @var bool
+     */
+    private $primary_schema_output = false;
 
     public function run() {
         add_action('init', [$this, 'add_sitemap_rewrite']);
@@ -31,6 +37,7 @@ class Gm2_SEO_Public {
         add_action('wp_head', [$this, 'output_review_schema'], 20);
         add_action('wp_head', [$this, 'output_article_schema'], 20);
         add_action('wp_head', [$this, 'output_taxonomy_schema'], 20);
+        add_action('wp_head', [$this, 'output_webpage_schema'], 20);
         add_filter('the_content', [$this, 'apply_link_rel']);
         if (get_option('gm2_show_footer_breadcrumbs', '1') === '1') {
             add_action('wp_footer', [$this, 'output_breadcrumbs']);
@@ -379,6 +386,7 @@ class Gm2_SEO_Public {
         ];
 
         echo '<script type="application/ld+json">' . wp_json_encode($data) . "</script>\n";
+        $this->primary_schema_output = true;
     }
 
     public function output_article_schema() {
@@ -408,6 +416,7 @@ class Gm2_SEO_Public {
         }
 
         echo '<script type="application/ld+json">' . wp_json_encode($data) . "</script>\n";
+        $this->primary_schema_output = true;
     }
 
     public function output_brand_schema() {
@@ -432,6 +441,27 @@ class Gm2_SEO_Public {
         ];
 
         echo '<script type="application/ld+json">' . wp_json_encode($data) . "</script>\n";
+    }
+
+    public function output_webpage_schema() {
+        if (!is_singular()) {
+            return;
+        }
+        if ($this->primary_schema_output) {
+            return;
+        }
+
+        $data = $this->get_seo_meta();
+        $schema = [
+            '@context'    => 'https://schema.org/',
+            '@type'       => 'WebPage',
+            'name'        => wp_strip_all_tags($data['title']),
+            'description' => wp_strip_all_tags($data['description']),
+            'url'         => $data['canonical'],
+        ];
+
+        echo '<script type="application/ld+json">' . wp_json_encode($schema) . "</script>\n";
+        $this->primary_schema_output = true;
     }
 
     public function output_breadcrumb_schema() {
