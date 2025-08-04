@@ -1178,6 +1178,22 @@ class Gm2_SEO_Admin {
             return;
         }
 
+        $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+        if ($screen) {
+            $doc_url = plugins_url('docs/index.md', GM2_PLUGIN_DIR . 'gm2-wordpress-suite.php');
+            $content  = '<p>' . esc_html__( 'Posts are queued and processed one at a time. Use "Analyze Selected" to queue items and "Cancel" to stop.', 'gm2-wordpress-suite' ) . '</p>';
+            $content .= '<p>' . esc_html__( 'Click "Apply" or "Apply All" to accept suggestions. Row colors show status: white for new, yellow for analyzed, and green for applied.', 'gm2-wordpress-suite' ) . '</p>';
+            $content .= '<p>' . sprintf(
+                __( 'See the <a href="%s" target="_blank" rel="noopener">documentation</a> for more details.', 'gm2-wordpress-suite' ),
+                esc_url($doc_url)
+            ) . '</p>';
+            $screen->add_help_tab([
+                'id'      => 'gm2-bulk-ai-help',
+                'title'   => __( 'Bulk AI Help', 'gm2-wordpress-suite' ),
+                'content' => $content,
+            ]);
+        }
+
         $user_id       = get_current_user_id();
         $page_size     = max(1, absint(get_user_meta($user_id, 'gm2_bulk_ai_page_size', true) ?: 10));
         $status        = get_user_meta($user_id, 'gm2_bulk_ai_status', true) ?: 'publish';
