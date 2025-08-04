@@ -293,8 +293,12 @@ jQuery(function($){
         });
         if($.isEmptyObject(posts)) return;
         var $msg=$('#gm2-bulk-apply-msg');
-        var savingText = window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.saving : 'Saving...';
-        $msg.text(savingText);
+        var total = Object.keys(posts).length;
+        var processed = 0;
+        applied = 0;
+        initBar(total);
+        var savingText = window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.saving : 'Saving %1$s / %2$s...';
+        $msg.text(savingText.replace('%1$s', processed).replace('%2$s', total));
         $.each(posts,function(id){
             showSpinner($('#gm2-row-'+id).find('.gm2-result'));
         });
@@ -316,10 +320,13 @@ jQuery(function($){
                     setTimeout(function(){
                         row.removeClass('gm2-applied');
                     },3000);
+                    processed++;
+                    applied++;
+                    updateBar(applied);
+                    $msg.text(savingText.replace('%1$s', processed).replace('%2$s', total));
                 });
-                $msg.text(window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.done : 'Done');
-                applied += Object.keys(posts).length;
-                updateBar(applied);
+                var doneText = window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.done : 'Done (%1$s/%2$s)';
+                $msg.text(doneText.replace('%1$s', processed).replace('%2$s', total));
             }else{
                 $.each(posts,function(id){
                     hideSpinner($('#gm2-row-'+id).find('.gm2-result'));
