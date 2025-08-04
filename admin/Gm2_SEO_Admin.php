@@ -100,7 +100,7 @@ class Gm2_SEO_Admin {
         }
     }
 
-    private function get_supported_post_types() {
+    public function get_supported_post_types() {
         $args  = [
             'public'             => true,
             'show_ui'            => true,
@@ -117,7 +117,7 @@ class Gm2_SEO_Admin {
         return $types;
     }
 
-    private function get_supported_taxonomies() {
+    public function get_supported_taxonomies() {
         $taxonomies = ['category'];
         if (taxonomy_exists('product_cat')) {
             $taxonomies[] = 'product_cat';
@@ -421,9 +421,6 @@ class Gm2_SEO_Admin {
             'sanitize_callback' => 'sanitize_text_field',
         ]);
         register_setting('gm2_seo_options', 'gm2_bulk_ai_missing_description', [
-            'sanitize_callback' => 'sanitize_text_field',
-        ]);
-        register_setting('gm2_seo_options', 'gm2_bulk_ai_search_title', [
             'sanitize_callback' => 'sanitize_text_field',
         ]);
         register_setting('gm2_seo_options', 'gm2_context_business_model', [
@@ -1189,8 +1186,6 @@ class Gm2_SEO_Admin {
         $term          = $term_raw === '' ? [] : array_map('trim', explode(',', $term_raw));
         $missing_title = get_option('gm2_bulk_ai_missing_title', '0');
         $missing_desc  = get_option('gm2_bulk_ai_missing_description', '0');
-        $search_title  = get_option('gm2_bulk_ai_search_title', '');
-        $current_page = isset($_GET['paged']) ? max(1, absint($_GET['paged'])) : 1;
 
         if (isset($_POST['gm2_bulk_ai_save']) && check_admin_referer('gm2_bulk_ai_settings')) {
             $page_size    = max(1, absint($_POST['page_size'] ?? 10));
@@ -1201,69 +1196,24 @@ class Gm2_SEO_Admin {
             $term         = array_filter(array_map('trim', $term_input));
             $missing_title = isset($_POST['gm2_missing_title']) ? '1' : '0';
             $missing_desc  = isset($_POST['gm2_missing_description']) ? '1' : '0';
-            $search_title  = sanitize_text_field($_POST['gm2_search_title'] ?? '');
             update_user_meta($user_id, 'gm2_bulk_ai_page_size', $page_size);
             update_user_meta($user_id, 'gm2_bulk_ai_status', $status);
             update_user_meta($user_id, 'gm2_bulk_ai_post_type', $post_type);
             update_user_meta($user_id, 'gm2_bulk_ai_term', implode(',', $term));
             update_option('gm2_bulk_ai_missing_title', $missing_title);
             update_option('gm2_bulk_ai_missing_description', $missing_desc);
-            update_option('gm2_bulk_ai_search_title', $search_title);
         }
 
-        $types = $this->get_supported_post_types();
-        if ($post_type !== 'all' && in_array($post_type, $types, true)) {
-            $types = [$post_type];
-        }
         $args = [
-            'post_type'      => $types,
-            'post_status'    => $status,
-            'posts_per_page' => $page_size,
-            'paged'          => $current_page,
+            'page_size'     => $page_size,
+            'status'        => $status,
+            'post_type'     => $post_type,
+            'terms'         => $term,
+            'missing_title' => $missing_title,
+            'missing_desc'  => $missing_desc,
         ];
-        if ($search_title !== '') {
-            $args['s'] = $search_title;
-        }
-        if ($term) {
-            $taxonomies = $this->get_supported_taxonomies();
-            $tax_query  = ['relation' => 'OR'];
-            foreach ($term as $t) {
-                if (strpos($t, ':') === false) {
-                    continue;
-                }
-                list($tax, $id) = explode(':', $t);
-                if (in_array($tax, $taxonomies, true)) {
-                    $tax_query[] = [
-                        'taxonomy' => $tax,
-                        'field'    => 'term_id',
-                        'terms'    => absint($id),
-                    ];
-                }
-            }
-            if (count($tax_query) > 1) {
-                $args['tax_query'] = $tax_query;
-            }
-        }
-
-        $meta_query = [];
-        if ($missing_title === '1') {
-            $meta_query[] = [
-                'relation' => 'OR',
-                [ 'key' => '_gm2_title', 'compare' => 'NOT EXISTS' ],
-                [ 'key' => '_gm2_title', 'value' => '', 'compare' => '=' ],
-            ];
-        }
-        if ($missing_desc === '1') {
-            $meta_query[] = [
-                'relation' => 'OR',
-                [ 'key' => '_gm2_description', 'compare' => 'NOT EXISTS' ],
-                [ 'key' => '_gm2_description', 'value' => '', 'compare' => '=' ],
-            ];
-        }
-        if ($meta_query) {
-            $args['meta_query'] = array_merge(['relation' => 'AND'], $meta_query);
-        }
-        $query = new \WP_Query($args);
+        $table = new Gm2_Bulk_Ai_List_Table($this, $args);
+        $table->prepare_items();
 
         echo '<div class="wrap" id="gm2-bulk-ai">';
         echo '<h1>' . esc_html__( 'Bulk AI Review', 'gm2-wordpress-suite' ) . '</h1>';
@@ -1300,55 +1250,16 @@ class Gm2_SEO_Admin {
             echo '<option value="' . esc_attr($value) . '" ' . $sel . '>' . esc_html($label) . '</option>';
         }
         echo '</select></label> ';
-        echo '<label>' . esc_html__( 'Search Title', 'gm2-wordpress-suite' ) . ' <input type="text" name="gm2_search_title" value="' . esc_attr($search_title) . '"></label> ';
         echo '<label><input type="checkbox" name="gm2_missing_title" value="1" ' . checked($missing_title, '1', false) . '> ' . esc_html__( 'Only posts missing SEO Title', 'gm2-wordpress-suite' ) . '</label> ';
         echo '<label><input type="checkbox" name="gm2_missing_description" value="1" ' . checked($missing_desc, '1', false) . '> ' . esc_html__( 'Only posts missing Description', 'gm2-wordpress-suite' ) . '</label> ';
         submit_button( esc_html__( 'Save', 'gm2-wordpress-suite' ), 'secondary', 'gm2_bulk_ai_save', false );
         echo '</p></form>';
 
-        echo '<table class="widefat" id="gm2-bulk-list"><thead><tr><th class="check-column"><input type="checkbox" id="gm2-bulk-select-all"></th><th>' . esc_html__( 'Title', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'SEO Title', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'Description', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'Slug', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'AI Suggestions', 'gm2-wordpress-suite' ) . '</th></tr></thead><tbody>';
-        foreach ($query->posts as $post) {
-            $seo_title   = get_post_meta($post->ID, '_gm2_title', true);
-            $description = get_post_meta($post->ID, '_gm2_description', true);
-            $stored      = get_post_meta($post->ID, '_gm2_ai_research', true);
-            $result_html = '';
-            $has_prev    = (bool) (
-                get_post_meta($post->ID, '_gm2_prev_title', true) !== '' ||
-                get_post_meta($post->ID, '_gm2_prev_description', true) !== '' ||
-                get_post_meta($post->ID, '_gm2_prev_slug', true) !== '' ||
-                get_post_meta($post->ID, '_gm2_prev_post_title', true) !== ''
-            );
-            if ($stored) {
-                $data = json_decode($stored, true);
-                if (json_last_error() === JSON_ERROR_NONE && is_array($data)) {
-                    $result_html = $this->render_bulk_ai_result($data, $post->ID, $has_prev);
-                } elseif ($has_prev) {
-                    $result_html = $this->render_bulk_ai_result([], $post->ID, true);
-                }
-            } elseif ($has_prev) {
-                $result_html = $this->render_bulk_ai_result([], $post->ID, true);
-            }
-            echo '<tr id="gm2-row-' . intval($post->ID) . '">';
-            echo '<th scope="row" class="check-column"><input type="checkbox" class="gm2-select" value="' . intval($post->ID) . '"></th>';
-            $edit_link = get_edit_post_link($post->ID);
-            $title     = $edit_link ? '<a href="' . esc_url($edit_link) . '" target="_blank">' . esc_html($post->post_title) . '</a>' : esc_html($post->post_title);
-            echo '<td>' . $title . '</td>';
-            echo '<td>' . esc_html($seo_title) . '</td>';
-            echo '<td>' . esc_html($description) . '</td>';
-            echo '<td>' . esc_html($post->post_name) . '</td>';
-            echo '<td class="gm2-result">' . $result_html . '</td>';
-            echo '</tr>';
-        }
-        echo '</tbody></table>';
-        $links = paginate_links([
-            'base'    => add_query_arg('paged', '%#%', admin_url('admin.php?page=gm2-bulk-ai-review')),
-            'format'  => '',
-            'current' => $current_page,
-            'total'   => max(1, $query->max_num_pages),
-        ]);
-        if ($links) {
-            echo '<div class="tablenav"><div class="tablenav-pages">' . $links . '</div></div>';
-        }
+        echo '<form method="get">';
+        echo '<input type="hidden" name="page" value="gm2-bulk-ai-review" />';
+        $table->search_box( esc_html__( 'Search Title', 'gm2-wordpress-suite' ), 'gm2-bulk-search' );
+        $table->display();
+        echo '</form>';
         echo '<p><button type="button" class="button" id="gm2-bulk-analyze" aria-label="' . esc_attr__( 'Analyze Selected', 'gm2-wordpress-suite' ) . '">' . esc_html__( 'Analyze Selected', 'gm2-wordpress-suite' ) . '</button> ' .
             '<button type="button" class="button" id="gm2-select-none">' . esc_html__( 'Select None', 'gm2-wordpress-suite' ) . '</button> ' .
             '<button type="button" class="button" id="gm2-bulk-cancel">' . esc_html__( 'Cancel', 'gm2-wordpress-suite' ) . '</button> ' .
@@ -1481,7 +1392,7 @@ class Gm2_SEO_Admin {
         $term          = $term_raw === '' ? [] : array_map('trim', explode(',', $term_raw));
         $missing_title = get_option('gm2_bulk_ai_missing_title', '0');
         $missing_desc  = get_option('gm2_bulk_ai_missing_description', '0');
-        $search_title  = get_option('gm2_bulk_ai_search_title', '');
+        $search_title  = isset($_REQUEST['s']) ? sanitize_text_field($_REQUEST['s']) : '';
 
         $types = $this->get_supported_post_types();
         if ($post_type !== 'all' && in_array($post_type, $types, true)) {
