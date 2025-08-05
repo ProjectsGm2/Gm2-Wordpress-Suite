@@ -23,6 +23,7 @@ class Gm2_Abandoned_Carts {
             email varchar(200) DEFAULT NULL,
             ip_address varchar(45) DEFAULT NULL,
             user_agent text DEFAULT NULL,
+            browser varchar(50) DEFAULT NULL,
             location varchar(100) DEFAULT NULL,
             device varchar(20) DEFAULT NULL,
             entry_url text DEFAULT NULL,
@@ -74,6 +75,7 @@ class Gm2_Abandoned_Carts {
         $token      = WC()->session->get_customer_id();
         $ip         = $_SERVER['REMOTE_ADDR'] ?? '';
         $agent      = $_SERVER['HTTP_USER_AGENT'] ?? '';
+        $browser    = self::get_browser($agent);
         $location   = '';
         if (class_exists('WC_Geolocation') && !empty($ip)) {
             $geo = \WC_Geolocation::geolocate_ip($ip, false, false);
@@ -116,6 +118,7 @@ class Gm2_Abandoned_Carts {
                     'created_at'    => current_time('mysql'),
                     'ip_address'    => $ip,
                     'user_agent'    => $agent,
+                    'browser'       => $browser,
                     'location'      => $location,
                     'device'        => $device,
                     'cart_total'    => $total
@@ -137,6 +140,7 @@ class Gm2_Abandoned_Carts {
                 'created_at'   => current_time('mysql'),
                 'ip_address'   => $ip,
                 'user_agent'   => $agent,
+                'browser'      => $browser,
                 'location'     => $location,
                 'device'       => $device,
                 'entry_url'    => $current_url,
@@ -198,7 +202,30 @@ class Gm2_Abandoned_Carts {
         $queue_exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $queue_table));
         if ($carts_exists !== $carts_table || $queue_exists !== $queue_table) {
             $this->install();
+        } else {
+            $has_browser = $wpdb->get_var($wpdb->prepare("SHOW COLUMNS FROM $carts_table LIKE %s", 'browser'));
+            if (!$has_browser) {
+                $wpdb->query("ALTER TABLE $carts_table ADD browser varchar(50) DEFAULT NULL AFTER user_agent");
+            }
         }
+    }
+
+    public static function get_browser($agent) {
+        $browsers = [
+            'Edge' => 'Edge',
+            'OPR' => 'Opera',
+            'Chrome' => 'Chrome',
+            'Safari' => 'Safari',
+            'Firefox' => 'Firefox',
+            'MSIE' => 'IE',
+            'Trident/7.0' => 'IE'
+        ];
+        foreach ($browsers as $key => $name) {
+            if (stripos($agent, $key) !== false) {
+                return $name;
+            }
+        }
+        return 'Unknown';
     }
 
     public static function schedule_event() {

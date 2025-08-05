@@ -47,13 +47,20 @@ class Gm2_Abandoned_Carts_Public {
             wp_send_json_error('no_cart');
         }
 
+        $agent   = $_SERVER['HTTP_USER_AGENT'] ?? '';
+        $browser = Gm2_Abandoned_Carts::get_browser($agent);
+
         global $wpdb;
         $table = $wpdb->prefix . 'wc_ac_carts';
         $row   = $wpdb->get_row($wpdb->prepare("SELECT id FROM $table WHERE cart_token = %s", $token));
         if ($row) {
             $wpdb->update(
                 $table,
-                [ 'email' => $email ],
+                [
+                    'email'      => $email,
+                    'browser'    => $browser,
+                    'user_agent' => $agent,
+                ],
                 [ 'id' => $row->id ]
             );
         } else {
@@ -63,7 +70,6 @@ class Gm2_Abandoned_Carts_Public {
             }
             $contents = maybe_serialize($cart->get_cart());
             $ip       = $_SERVER['REMOTE_ADDR'] ?? '';
-            $agent    = $_SERVER['HTTP_USER_AGENT'] ?? '';
             $location = '';
             if (class_exists('WC_Geolocation') && !empty($ip)) {
                 $geo = \WC_Geolocation::geolocate_ip($ip, false, false);
@@ -102,6 +108,7 @@ class Gm2_Abandoned_Carts_Public {
                 'created_at'    => current_time('mysql'),
                 'ip_address'    => $ip,
                 'user_agent'    => $agent,
+                'browser'       => $browser,
                 'location'      => $location,
                 'device'        => $device,
                 'entry_url'     => $current_url,
