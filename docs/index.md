@@ -19,6 +19,7 @@ Existing prompt logic automatically includes these options via `gm2_get_seo_cont
 - Bulk AI now supports categories and product categories on the **Bulk AI Taxonomies** page.
 - The **Bulk AI Taxonomies** screen defaults to the `manage_categories` capability which can be adjusted via the `gm2_bulk_ai_tax_capability` filter.
 - Missing metadata filters on this screen let you show only terms without an SEO title or description. Preferences are stored as `gm2_bulk_ai_tax_missing_title` and `gm2_bulk_ai_tax_missing_description`.
+- Taxonomy terms can be scheduled for background AI research via WP‑Cron using the **Schedule Batch** and **Cancel Batch** controls.
 
 ## Real-time Google Merchant Centre Data
 

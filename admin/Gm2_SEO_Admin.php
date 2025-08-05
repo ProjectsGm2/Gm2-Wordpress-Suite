@@ -11,6 +11,8 @@ class Gm2_SEO_Admin {
     private static $notices = [];
     const AI_CRON_HOOK = 'gm2_ai_batch_process';
     const AI_QUEUE_OPTION = 'gm2_ai_batch_queue';
+    const AI_TAX_CRON_HOOK = 'gm2_ai_tax_batch_process';
+    const AI_TAX_QUEUE_OPTION = 'gm2_ai_tax_batch_queue';
 
     private function debug_log($message) {
         if (defined('WP_DEBUG') && WP_DEBUG) {
@@ -55,7 +57,10 @@ class Gm2_SEO_Admin {
         add_action('wp_ajax_gm2_bulk_ai_tax_apply_batch', [$this, 'ajax_bulk_ai_tax_apply_batch']);
         add_action('wp_ajax_gm2_ai_batch_schedule', [$this, 'ajax_ai_batch_schedule']);
         add_action('wp_ajax_gm2_ai_batch_cancel', [$this, 'ajax_ai_batch_cancel']);
+        add_action('wp_ajax_gm2_ai_tax_batch_schedule', [$this, 'ajax_ai_tax_batch_schedule']);
+        add_action('wp_ajax_gm2_ai_tax_batch_cancel', [$this, 'ajax_ai_tax_batch_cancel']);
         add_action(self::AI_CRON_HOOK, [$this, 'cron_process_ai_queue']);
+        add_action(self::AI_TAX_CRON_HOOK, [$this, 'cron_process_ai_tax_queue']);
 
         add_action('add_attachment', [$this, 'auto_fill_alt_on_upload']);
         add_action('admin_notices', [$this, 'admin_notices']);
@@ -1421,7 +1426,9 @@ class Gm2_SEO_Admin {
         echo '</tbody></table>';
         echo '<p><button type="button" class="button" id="gm2-bulk-term-analyze">' . esc_html__( 'Analyze Selected', 'gm2-wordpress-suite' ) . '</button> ';
         echo '<button type="button" class="button" id="gm2-bulk-term-cancel">' . esc_html__( 'Cancel', 'gm2-wordpress-suite' ) . '</button> ';
-        echo '<button type="button" class="button" id="gm2-bulk-term-apply-all">' . esc_html__( 'Apply All', 'gm2-wordpress-suite' ) . '</button></p>';
+        echo '<button type="button" class="button" id="gm2-bulk-term-apply-all">' . esc_html__( 'Apply All', 'gm2-wordpress-suite' ) . '</button> ';
+        echo '<button type="button" class="button" id="gm2-bulk-term-schedule">' . esc_html__( 'Schedule Batch', 'gm2-wordpress-suite' ) . '</button> ';
+        echo '<button type="button" class="button" id="gm2-bulk-term-cancel-batch">' . esc_html__( 'Cancel Batch', 'gm2-wordpress-suite' ) . '</button></p>';
         echo '<p><progress id="gm2-bulk-term-progress-bar" value="0" max="100" style="width:100%;display:none" role="progressbar" aria-live="polite"></progress></p>';
         echo '</div>';
     }
@@ -4805,6 +4812,107 @@ class Gm2_SEO_Admin {
         check_ajax_referer('gm2_ai_batch');
         $this->clear_ai_queue();
         wp_send_json_success();
+    }
+
+    public function ajax_ai_tax_batch_schedule() {
+        check_ajax_referer('gm2_ai_batch');
+        $ids = isset($_POST['ids']) ? json_decode(wp_unslash($_POST['ids']), true) : [];
+        if (!is_array($ids)) {
+            wp_send_json_error(__( 'invalid data', 'gm2-wordpress-suite' ));
+        }
+        $this->queue_ai_terms($ids);
+        wp_send_json_success();
+    }
+
+    public function ajax_ai_tax_batch_cancel() {
+        check_ajax_referer('gm2_ai_batch');
+        $this->clear_ai_tax_queue();
+        wp_send_json_success();
+    }
+
+    private function queue_ai_terms(array $keys) {
+        $queue = get_option(self::AI_TAX_QUEUE_OPTION, []);
+        $items = [];
+        foreach ($keys as $key) {
+            if (strpos($key, ':') === false) {
+                continue;
+            }
+            list($tax, $id) = explode(':', $key);
+            $taxonomy = sanitize_key($tax);
+            $term_id = absint($id);
+            if ($taxonomy && $term_id) {
+                $items[] = $taxonomy . ':' . $term_id;
+            }
+        }
+        $queue = array_unique(array_merge($queue, $items));
+        update_option(self::AI_TAX_QUEUE_OPTION, $queue);
+        if (!wp_next_scheduled(self::AI_TAX_CRON_HOOK)) {
+            wp_schedule_event(time(), 'hourly', self::AI_TAX_CRON_HOOK);
+        }
+    }
+
+    private function clear_ai_tax_queue() {
+        delete_option(self::AI_TAX_QUEUE_OPTION);
+        $ts = wp_next_scheduled(self::AI_TAX_CRON_HOOK);
+        if ($ts) {
+            wp_unschedule_event($ts, self::AI_TAX_CRON_HOOK);
+        }
+    }
+
+    public function run_ai_tax_research_cron($term_id, $taxonomy) {
+        if (!defined('DOING_AJAX')) {
+            define('DOING_AJAX', true);
+        }
+        add_filter('wp_die_ajax_handler', [__CLASS__, 'cron_die_handler']);
+        add_filter('wp_die_handler', [__CLASS__, 'cron_die_handler']);
+        $_POST = [
+            'term_id'   => $term_id,
+            'taxonomy'  => $taxonomy,
+            '_ajax_nonce' => wp_create_nonce('gm2_ai_research'),
+        ];
+        $_REQUEST = $_POST;
+        ob_start();
+        $this->ajax_ai_research();
+        $json = ob_get_clean();
+        remove_filter('wp_die_ajax_handler', [__CLASS__, 'cron_die_handler']);
+        remove_filter('wp_die_handler', [__CLASS__, 'cron_die_handler']);
+        $data = json_decode($json, true);
+        if ($data && isset($data['success']) && $data['success']) {
+            return $data['data'];
+        }
+        return new \WP_Error('gm2_ai_error', is_array($data) && isset($data['data']) ? $data['data'] : 'error');
+    }
+
+    public function cron_process_ai_tax_queue() {
+        $queue = get_option(self::AI_TAX_QUEUE_OPTION, []);
+        if (empty($queue)) {
+            $this->clear_ai_tax_queue();
+            return;
+        }
+        $limit = apply_filters('gm2_ai_batch_limit', 5);
+        $processed = 0;
+        $remaining = [];
+        foreach ($queue as $key) {
+            if ($processed >= $limit) {
+                $remaining[] = $key;
+                continue;
+            }
+            if (strpos($key, ':') === false) {
+                continue;
+            }
+            list($tax, $id) = explode(':', $key);
+            $taxonomy = sanitize_key($tax);
+            $term_id = absint($id);
+            if (!$taxonomy || !$term_id || !taxonomy_exists($taxonomy)) {
+                continue;
+            }
+            $this->run_ai_tax_research_cron($term_id, $taxonomy);
+            $processed++;
+        }
+        update_option(self::AI_TAX_QUEUE_OPTION, $remaining);
+        if (empty($remaining)) {
+            $this->clear_ai_tax_queue();
+        }
     }
 
     public function add_settings_help() {
