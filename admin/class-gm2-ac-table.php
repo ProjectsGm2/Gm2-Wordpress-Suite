@@ -28,8 +28,19 @@ class GM2_AC_Table extends \WP_List_Table {
         ];
     }
 
+    private function ensure_value($value) {
+        if ($value === null) {
+            return 'N/A';
+        }
+        if (is_string($value)) {
+            $value = trim($value);
+        }
+        return $value === '' ? 'N/A' : $value;
+    }
+
     public function column_default($item, $column_name) {
-        return $item[$column_name] ?? '';
+        $value = $item[$column_name] ?? '';
+        return $this->ensure_value($value);
     }
 
     public function prepare_items() {
@@ -96,17 +107,17 @@ class GM2_AC_Table extends \WP_List_Table {
             }
 
             $items[] = [
-                'status'      => esc_html($status),
-                'ip_address'  => esc_html($row->ip_address),
-                'email'       => esc_html($row->email),
-                'location'    => esc_html($row->location),
-                'device'      => esc_html($row->device),
-                'browser'     => esc_html($row->browser),
-                'products'    => esc_html(implode(', ', $products)),
-                'cart_value'  => wc_price($cart_value),
-                'entry_url'   => esc_url($row->entry_url),
-                'exit_url'    => esc_url($row->exit_url),
-                'abandoned_at'=> esc_html($abandoned_at),
+                'status'      => esc_html($this->ensure_value($status)),
+                'ip_address'  => esc_html($this->ensure_value($row->ip_address)),
+                'email'       => esc_html($this->ensure_value($row->email)),
+                'location'    => esc_html($this->ensure_value($row->location)),
+                'device'      => esc_html($this->ensure_value($row->device)),
+                'browser'     => esc_html($this->ensure_value($row->browser)),
+                'products'    => esc_html($this->ensure_value(implode(', ', $products))),
+                'cart_value'  => $this->ensure_value(wc_price($cart_value)),
+                'entry_url'   => $this->ensure_value(esc_url($row->entry_url)),
+                'exit_url'    => $this->ensure_value(esc_url($row->exit_url)),
+                'abandoned_at'=> esc_html($this->ensure_value($abandoned_at)),
             ];
         }
 
