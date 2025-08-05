@@ -71,29 +71,33 @@ class GM2_AC_Table extends \WP_List_Table {
         foreach ($rows as $row) {
             $products   = [];
             $cart_value = 0;
-            $contents   = maybe_unserialize($row->cart_contents);
-            if (is_array($contents)) {
-                foreach ($contents as $item) {
-                    $qty   = isset($item['quantity']) ? (int) $item['quantity'] : 1;
-                    $name  = '';
-                    $price = 0;
-                    if (isset($item['data']) && is_object($item['data'])) {
-                        $name  = $item['data']->get_name();
-                        $price = (float) $item['data']->get_price();
-                    } elseif (isset($item['product_id'])) {
-                        $name  = get_the_title($item['product_id']);
-                        $prod  = wc_get_product($item['product_id']);
-                        if ($prod) {
-                            $price = (float) $prod->get_price();
-                        }
+            $contents   = json_decode($row->cart_contents, true);
+            if (!is_array($contents)) {
+                $old = maybe_unserialize($row->cart_contents);
+                if (is_array($old)) {
+                    $contents = [];
+                    foreach ($old as $item) {
+                        $qty     = isset($item['quantity']) ? (int) $item['quantity'] : 1;
+                        $prod_id = isset($item['product_id']) ? (int) $item['product_id'] : 0;
+                        $product = isset($item['data']) && is_object($item['data']) ? $item['data'] : wc_get_product($prod_id);
+                        $name    = $product ? $product->get_name() : 'Product #' . $prod_id;
+                        $price   = $product ? (float) $product->get_price() : 0;
+                        $contents[] = [
+                            'id'    => $prod_id,
+                            'name'  => $name,
+                            'qty'   => $qty,
+                            'price' => $price,
+                        ];
                     }
-                    if ($name === '' && isset($item['product_id'])) {
-                        $name = 'Product #' . $item['product_id'];
-                    }
-                    $products[] = $name . ' x' . $qty;
-                    if ($price > 0) {
-                        $cart_value += $price * $qty;
-                    }
+                    $wpdb->update($table, [ 'cart_contents' => wp_json_encode($contents) ], [ 'id' => $row->id ]);
+                } else {
+                    $contents = [];
+                }
+            }
+            foreach ($contents as $item) {
+                $products[] = $item['name'] . ' x' . $item['qty'];
+                if (!empty($item['price'])) {
+                    $cart_value += (float) $item['price'] * (int) $item['qty'];
                 }
             }
             if ($cart_value <= 0 && $row->cart_total) {

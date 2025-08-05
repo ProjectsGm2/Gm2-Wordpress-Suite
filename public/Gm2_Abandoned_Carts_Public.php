@@ -68,7 +68,21 @@ class Gm2_Abandoned_Carts_Public {
             if (!$cart || $cart->is_empty()) {
                 wp_send_json_error('no_cart');
             }
-            $contents = maybe_serialize($cart->get_cart());
+            $cart_items = [];
+            foreach ($cart->get_cart() as $item) {
+                $prod_id = isset($item['product_id']) ? (int) $item['product_id'] : 0;
+                $qty     = isset($item['quantity']) ? (int) $item['quantity'] : 1;
+                $product = isset($item['data']) && is_object($item['data']) ? $item['data'] : wc_get_product($prod_id);
+                $name    = $product ? $product->get_name() : 'Product #' . $prod_id;
+                $price   = $product ? (float) $product->get_price() : 0;
+                $cart_items[] = [
+                    'id'    => $prod_id,
+                    'name'  => $name,
+                    'qty'   => $qty,
+                    'price' => $price,
+                ];
+            }
+            $contents = wp_json_encode($cart_items);
             $ip       = $_SERVER['REMOTE_ADDR'] ?? '';
             $location = '';
             if (class_exists('WC_Geolocation') && !empty($ip)) {
