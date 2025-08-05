@@ -1404,7 +1404,7 @@ class Gm2_SEO_Admin {
         foreach ($terms as $term) {
             $seo_title   = get_term_meta($term->term_id, '_gm2_title', true);
             $description = get_term_meta($term->term_id, '_gm2_description', true);
-            $tax_desc    = term_description($term->term_id, $term->taxonomy);
+            $tax_desc    = wp_strip_all_tags(term_description($term->term_id, $term->taxonomy));
             $stored      = get_term_meta($term->term_id, '_gm2_ai_research', true);
             $result_html = '';
             if ($stored) {
