@@ -28,7 +28,7 @@ class GM2_AC_Table extends \WP_List_Table {
             'location'    => __('Location', 'gm2-wordpress-suite'),
             'device'      => __('Device', 'gm2-wordpress-suite'),
             'browser'     => __('Browser', 'gm2-wordpress-suite'),
-            'products'    => __('Products in Cart', 'gm2-wordpress-suite'),
+            'products'    => __('SKUs in Cart', 'gm2-wordpress-suite'),
             'cart_value'  => __('Cart Value', 'gm2-wordpress-suite'),
             'entry_url'   => __('Entry URL', 'gm2-wordpress-suite'),
             'exit_url'    => __('Exit URL', 'gm2-wordpress-suite'),
@@ -150,6 +150,7 @@ class GM2_AC_Table extends \WP_List_Table {
                             'name'  => $name,
                             'qty'   => $qty,
                             'price' => $price,
+                            'sku'   => $product ? $product->get_sku() : '',
                         ];
                     }
                     $wpdb->update($table, [ 'cart_contents' => wp_json_encode($contents) ], [ 'id' => $row->id ]);
@@ -158,7 +159,21 @@ class GM2_AC_Table extends \WP_List_Table {
                 }
             }
             foreach ($contents as $item) {
-                $products[] = $item['name'] . ' x' . $item['qty'];
+                $sku = $item['sku'] ?? '';
+                if (!$sku && !empty($item['id'])) {
+                    $product = wc_get_product((int) $item['id']);
+                    if ($product) {
+                        $sku = $product->get_sku();
+                    }
+                }
+                if (!$sku) {
+                    if (!empty($item['id'])) {
+                        $sku = (string) $item['id'];
+                    } elseif (!empty($item['name'])) {
+                        $sku = $item['name'];
+                    }
+                }
+                $products[] = $sku . ' x' . $item['qty'];
                 if (!empty($item['price'])) {
                     $cart_value += (float) $item['price'] * (int) $item['qty'];
                 }

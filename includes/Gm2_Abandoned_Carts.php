@@ -79,6 +79,7 @@ class Gm2_Abandoned_Carts {
                 'name'  => $name,
                 'qty'   => $qty,
                 'price' => $price,
+                'sku'   => $product ? $product->get_sku() : '',
             ];
         }
         $contents   = wp_json_encode($cart_items);
