@@ -270,3 +270,26 @@ class BulkAiExportTest extends WP_UnitTestCase {
         $this->assertStringContainsString('suggested-slug', $csv);
     }
 }
+
+class BulkAiTaxExportTest extends WP_UnitTestCase {
+    public function test_tax_csv_export_contains_terms() {
+        $term = self::factory()->term->create_and_get([
+            'taxonomy' => 'category',
+            'name'     => 'Sample Term',
+        ]);
+        update_term_meta($term->term_id, '_gm2_title', 'Term Title');
+        update_term_meta($term->term_id, '_gm2_description', 'Term Desc');
+
+        $admin = new Gm2_SEO_Admin();
+        $user  = self::factory()->user->create(['role' => 'administrator']);
+        wp_set_current_user($user);
+
+        ob_start();
+        $admin->handle_bulk_ai_tax_export();
+        $csv = ob_get_clean();
+
+        $this->assertStringContainsString('Sample Term', $csv);
+        $this->assertStringContainsString('Term Title', $csv);
+        $this->assertStringContainsString('category', $csv);
+    }
+}

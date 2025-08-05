@@ -114,6 +114,11 @@ override the required capability using the following filter:
 add_filter( 'gm2_bulk_ai_tax_capability', function() { return 'edit_posts'; } );
 ```
 
+Click the **Export CSV** button to download matching terms via
+`admin-post.php?action=gm2_bulk_ai_tax_export`. The resulting
+`gm2-bulk-ai-tax.csv` file includes `term_id`, `name`, `seo_title`,
+`description` and `taxonomy` columns.
+
 ### Scheduling and Cancelling Batches
 
 Selected terms can also be queued for background processing. Use **Schedule Batch**

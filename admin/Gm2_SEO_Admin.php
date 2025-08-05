@@ -37,6 +37,7 @@ class Gm2_SEO_Admin {
         add_action('admin_post_gm2_general_settings', [$this, 'handle_general_settings_form']);
         add_action('admin_post_gm2_keyword_settings', [$this, 'handle_keyword_settings_form']);
         add_action('admin_post_gm2_bulk_ai_export', [$this, 'handle_bulk_ai_export']);
+        add_action('admin_post_gm2_bulk_ai_tax_export', [$this, 'handle_bulk_ai_tax_export']);
         add_action('admin_post_gm2_google_test', [$this, 'handle_google_test_connection']);
         add_action('admin_post_gm2_clear_404_logs', [$this, 'handle_clear_404_logs']);
         add_action('admin_post_gm2_reset_seo', [$this, 'handle_reset_seo']);
@@ -1375,6 +1376,7 @@ class Gm2_SEO_Admin {
 
         echo '<div class="wrap" id="gm2-bulk-ai-tax">';
         echo '<h1>' . esc_html__( 'Bulk AI Taxonomies', 'gm2-wordpress-suite' ) . '</h1>';
+        echo '<p><a href="' . esc_url( admin_url( 'admin-post.php?action=gm2_bulk_ai_tax_export' ) ) . '" class="button">' . esc_html__( 'Export CSV', 'gm2-wordpress-suite' ) . '</a></p>';
         echo '<form method="post" action="' . esc_url( admin_url('admin.php?page=gm2-bulk-ai-taxonomies') ) . '">';
         wp_nonce_field('gm2_bulk_ai_tax_settings');
         echo '<p><label>' . esc_html__( 'Terms per page', 'gm2-wordpress-suite' ) . ' <input type="number" name="page_size" value="' . esc_attr($page_size) . '" min="1"></label> ';
@@ -1501,6 +1503,69 @@ class Gm2_SEO_Admin {
         }
 
         \Gm2\Gm2_CSV_Helper::output($rows, 'gm2-bulk-ai.csv');
+
+        if (defined('GM2_TESTING') && GM2_TESTING) {
+            return;
+        }
+        exit;
+    }
+
+    public function handle_bulk_ai_tax_export() {
+        $cap = apply_filters('gm2_bulk_ai_tax_capability', 'manage_categories');
+        if (!current_user_can($cap)) {
+            wp_die( esc_html__( 'Permission denied', 'gm2-wordpress-suite' ) );
+        }
+
+        $user_id       = get_current_user_id();
+        $taxonomy      = get_user_meta($user_id, 'gm2_bulk_ai_tax_taxonomy', true) ?: 'all';
+        $search        = get_option('gm2_bulk_ai_tax_search', '');
+        $missing_title = get_option('gm2_bulk_ai_tax_missing_title', '0');
+        $missing_desc  = get_option('gm2_bulk_ai_tax_missing_description', '0');
+
+        $tax_list = $this->get_supported_taxonomies();
+        $tax_arg  = ($taxonomy === 'all') ? $tax_list : $taxonomy;
+
+        $args = [
+            'taxonomy'   => $tax_arg,
+            'hide_empty' => false,
+        ];
+        if ($search !== '') {
+            $args['search'] = $search;
+        }
+
+        $meta_query = [];
+        if ($missing_title === '1') {
+            $meta_query[] = [
+                'relation' => 'OR',
+                [ 'key' => '_gm2_title', 'compare' => 'NOT EXISTS' ],
+                [ 'key' => '_gm2_title', 'value' => '', 'compare' => '=' ],
+            ];
+        }
+        if ($missing_desc === '1') {
+            $meta_query[] = [
+                'relation' => 'OR',
+                [ 'key' => '_gm2_description', 'compare' => 'NOT EXISTS' ],
+                [ 'key' => '_gm2_description', 'value' => '', 'compare' => '=' ],
+            ];
+        }
+        if ($meta_query) {
+            $args['meta_query'] = array_merge(['relation' => 'AND'], $meta_query);
+        }
+
+        $query = new \WP_Term_Query($args);
+
+        $rows = [ ['term_id', 'name', 'seo_title', 'description', 'taxonomy'] ];
+        foreach ($query->terms as $term) {
+            $rows[] = [
+                $term->term_id,
+                $term->name,
+                get_term_meta($term->term_id, '_gm2_title', true),
+                get_term_meta($term->term_id, '_gm2_description', true),
+                $term->taxonomy,
+            ];
+        }
+
+        \Gm2\Gm2_CSV_Helper::output($rows, 'gm2-bulk-ai-tax.csv');
 
         if (defined('GM2_TESTING') && GM2_TESTING) {
             return;
