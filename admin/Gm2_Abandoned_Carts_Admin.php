@@ -9,6 +9,7 @@ class Gm2_Abandoned_Carts_Admin {
     public function run() {
         add_action('admin_menu', [ $this, 'add_menu' ]);
         add_action('admin_init', [ $this, 'maybe_export' ]);
+        add_action('admin_post_gm2_ac_reset', [ $this, 'handle_reset' ]);
     }
 
     public function add_menu() {
@@ -25,6 +26,10 @@ class Gm2_Abandoned_Carts_Admin {
     public function display_page() {
         echo '<div class="wrap"><h1>' . esc_html__('Abandoned Carts', 'gm2-wordpress-suite') . '</h1>';
 
+        if (!empty($_GET['logs_reset'])) {
+            echo '<div class="updated notice"><p>' . esc_html__('Logs reset.', 'gm2-wordpress-suite') . '</p></div>';
+        }
+
         $args = [
             'page'   => 'gm2-abandoned-carts',
             'action' => 'export',
@@ -37,6 +42,12 @@ class Gm2_Abandoned_Carts_Admin {
         }
         $export_url = wp_nonce_url(add_query_arg($args, admin_url('admin.php')), 'gm2-ac-export');
         echo '<a href="' . esc_url($export_url) . '" class="button button-secondary">' . esc_html__('Export CSV', 'gm2-wordpress-suite') . '</a>';
+
+        echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" style="display:inline-block;margin-left:10px;">';
+        wp_nonce_field('gm2_ac_reset');
+        echo '<input type="hidden" name="action" value="gm2_ac_reset" />';
+        submit_button( esc_html__( 'Reset Logs', 'gm2-wordpress-suite' ), 'delete', '', false );
+        echo '</form>';
 
         $table = new GM2_AC_Table();
         $table->prepare_items();
@@ -78,6 +89,23 @@ class Gm2_Abandoned_Carts_Admin {
             fputcsv($output, $row);
         }
         fclose($output);
+        exit;
+    }
+
+    public function handle_reset() {
+        if (!current_user_can('manage_options')) {
+            wp_die( esc_html__( 'Permission denied', 'gm2-wordpress-suite' ) );
+        }
+
+        check_admin_referer('gm2_ac_reset');
+
+        global $wpdb;
+        $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}wc_ac_carts");
+
+        wp_redirect(admin_url('admin.php?page=gm2-abandoned-carts&logs_reset=1'));
+        if (defined('GM2_TESTING') && GM2_TESTING) {
+            return;
+        }
         exit;
     }
 }
