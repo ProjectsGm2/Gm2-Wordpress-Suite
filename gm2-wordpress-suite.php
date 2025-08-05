@@ -58,6 +58,7 @@ require_once GM2_PLUGIN_DIR . 'includes/Gm2_Abandoned_Carts_Messaging.php';
 require_once GM2_PLUGIN_DIR . 'admin/Gm2_Abandoned_Carts_Admin.php';
 require_once GM2_PLUGIN_DIR . 'admin/class-gm2-ac-table.php';
 require_once GM2_PLUGIN_DIR . 'admin/class-gm2-bulk-ai-list-table.php';
+require_once GM2_PLUGIN_DIR . 'admin/class-gm2-bulk-ai-tax-list-table.php';
 require_once GM2_PLUGIN_DIR . 'public/Gm2_Abandoned_Carts_Public.php';
 
 function gm2_add_weekly_schedule($schedules) {
