@@ -213,7 +213,7 @@ class Gm2_Bulk_Ai_List_Table extends \WP_List_Table {
         ]);
     }
 
-    protected function single_row($item) {
+    public function single_row($item) {
         echo '<tr id="gm2-row-' . intval($item->ID) . '">';
         $this->single_row_columns($item);
         echo '</tr>';
