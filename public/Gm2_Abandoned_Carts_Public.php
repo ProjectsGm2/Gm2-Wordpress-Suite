@@ -10,6 +10,10 @@ class Gm2_Abandoned_Carts_Public {
         add_action('wp_enqueue_scripts', [ $this, 'enqueue_scripts' ]);
         add_action('wp_ajax_gm2_ac_email_capture', [ $this, 'handle_email_capture' ]);
         add_action('wp_ajax_nopriv_gm2_ac_email_capture', [ $this, 'handle_email_capture' ]);
+        add_action('wp_ajax_gm2_ac_mark_active', [ Gm2_Abandoned_Carts::class, 'gm2_ac_mark_active' ]);
+        add_action('wp_ajax_nopriv_gm2_ac_mark_active', [ Gm2_Abandoned_Carts::class, 'gm2_ac_mark_active' ]);
+        add_action('wp_ajax_gm2_ac_mark_abandoned', [ Gm2_Abandoned_Carts::class, 'gm2_ac_mark_abandoned' ]);
+        add_action('wp_ajax_nopriv_gm2_ac_mark_abandoned', [ Gm2_Abandoned_Carts::class, 'gm2_ac_mark_abandoned' ]);
     }
 
     public function enqueue_scripts() {
@@ -26,6 +30,22 @@ class Gm2_Abandoned_Carts_Public {
             [
                 'ajax_url' => admin_url('admin-ajax.php'),
                 'nonce'    => wp_create_nonce('gm2_ac_email_capture'),
+            ]
+        );
+
+        wp_enqueue_script(
+            'gm2-ac-activity',
+            GM2_PLUGIN_URL . 'public/js/gm2-ac-activity.js',
+            [],
+            GM2_VERSION,
+            true
+        );
+        wp_localize_script(
+            'gm2-ac-activity',
+            'gm2AcActivity',
+            [
+                'ajax_url' => admin_url('admin-ajax.php'),
+                'nonce'    => wp_create_nonce('gm2_ac_activity'),
             ]
         );
     }
