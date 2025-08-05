@@ -31,7 +31,18 @@ class Gm2_Loader {
 
         $enable_seo = get_option('gm2_enable_seo', '1') === '1';
         $enable_qd  = get_option('gm2_enable_quantity_discounts', '1') === '1';
-        $enable_ac  = get_option('gm2_enable_abandoned_carts', '0') === '1';
+        $enable_ac  = get_option('gm2_enable_abandoned_carts', '1') === '1';
+
+        if (!$enable_ac && is_admin()) {
+            add_action('admin_notices', function () {
+                $url = admin_url('admin.php?page=gm2');
+                $msg = sprintf(
+                    __('The Abandoned Carts module is currently disabled. <a href="%s">Enable it in the Gm2 settings.</a>', 'gm2-wordpress-suite'),
+                    esc_url($url)
+                );
+                echo '<div class="notice notice-warning"><p>' . wp_kses_post($msg) . '</p></div>';
+            });
+        }
 
         if ($enable_seo) {
             $seo_admin = new Gm2_SEO_Admin();
