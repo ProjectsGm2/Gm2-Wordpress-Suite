@@ -114,6 +114,8 @@ override the required capability using the following filter:
 add_filter( 'gm2_bulk_ai_tax_capability', function() { return 'edit_posts'; } );
 ```
 
+### Scheduling and Cancelling Batches
+
 Selected terms can also be queued for background processing. Use **Schedule Batch**
 to process the items via WP-Cron or **Cancel Batch** to clear any pending jobs.
 

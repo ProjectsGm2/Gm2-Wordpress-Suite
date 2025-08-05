@@ -44,6 +44,10 @@ add_filter('gm2_gmc_realtime_fields', function ($fields) {
 - Each row in the table includes a "Select All" checkbox to quickly apply that post's suggestions.
 - Rows highlight after applying suggestions so you can see what changed.
 
+### Bulk AI for Taxonomies
+
+Use the **Bulk AI Taxonomies** page under **Gm2 → Bulk AI Taxonomies** to generate AI SEO titles and descriptions for taxonomy terms. Use the **Only terms missing SEO Title** and **Only terms missing Description** filters to show only terms lacking metadata. After selecting terms, click **Schedule Batch** to queue them for background processing via WP‑Cron or **Cancel Batch** to remove pending jobs.
+
 ### Bulk AI Task Summary
 
 - **Edit Post links** – titles link to each edit screen from `display_bulk_ai_page()` in `admin/Gm2_SEO_Admin.php`.
