@@ -120,7 +120,7 @@ function gm2_activate_plugin() {
     add_option('gm2_enable_chatgpt_logging', '0');
     add_option('gm2_sitemap_path', ABSPATH . 'sitemap.xml');
     add_option('gm2_sitemap_max_urls', 1000);
-    add_option('gm2_enable_abandoned_carts', '0');
+    add_option('gm2_enable_abandoned_carts', '1');
     add_option('gm2_ac_mark_abandoned_interval', 5);
     add_option('gm2_setup_complete', '0');
     add_option('gm2_do_activation_redirect', '1');
@@ -474,6 +474,13 @@ function gm2_guideline_rules_migration_notice() {
     }
 }
 add_action('admin_notices', 'gm2_guideline_rules_migration_notice');
+
+function gm2_plugin_action_links($links) {
+    $url = admin_url('admin.php?page=gm2');
+    $links[] = '<a href="' . esc_url($url) . '">' . esc_html__( 'Settings', 'gm2-wordpress-suite' ) . '</a>';
+    return $links;
+}
+add_filter('plugin_action_links_' . plugin_basename(__FILE__), 'gm2_plugin_action_links');
 
 if (defined('WP_CLI') && WP_CLI) {
     require_once GM2_PLUGIN_DIR . 'includes/cli/class-gm2-cli.php';
