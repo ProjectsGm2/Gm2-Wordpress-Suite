@@ -20,6 +20,7 @@ Existing prompt logic automatically includes these options via `gm2_get_seo_cont
 - The **Bulk AI Taxonomies** screen defaults to the `manage_categories` capability which can be adjusted via the `gm2_bulk_ai_tax_capability` filter.
 - Missing metadata filters on this screen let you show only terms without an SEO title or description. Preferences are stored as `gm2_bulk_ai_tax_missing_title` and `gm2_bulk_ai_tax_missing_description`.
 - Taxonomy terms can be scheduled for background AI research via WP‑Cron using the **Schedule Batch** and **Cancel Batch** controls.
+- Terms can be exported as a CSV via `admin-post.php?action=gm2_bulk_ai_tax_export`.
 
 ## Real-time Google Merchant Centre Data
 
@@ -46,7 +47,7 @@ add_filter('gm2_gmc_realtime_fields', function ($fields) {
 
 ### Bulk AI for Taxonomies
 
-Use the **Bulk AI Taxonomies** page under **Gm2 → Bulk AI Taxonomies** to generate AI SEO titles and descriptions for taxonomy terms. Use the **Only terms missing SEO Title** and **Only terms missing Description** filters to show only terms lacking metadata. After selecting terms, click **Schedule Batch** to queue them for background processing via WP‑Cron or **Cancel Batch** to remove pending jobs.
+Use the **Bulk AI Taxonomies** page under **Gm2 → Bulk AI Taxonomies** to generate AI SEO titles and descriptions for taxonomy terms. Use the **Only terms missing SEO Title** and **Only terms missing Description** filters to show only terms lacking metadata. After selecting terms, click **Schedule Batch** to queue them for background processing via WP‑Cron or **Cancel Batch** to remove pending jobs. The **Export CSV** button downloads a `gm2-bulk-ai-tax.csv` file listing `term_id`, `name`, `seo_title`, `description` and `taxonomy`.
 
 ### Bulk AI Task Summary
 
@@ -60,6 +61,7 @@ Use the **Bulk AI Taxonomies** page under **Gm2 → Bulk AI Taxonomies** to gene
 - **Select None control** – `#gm2-select-none` button in `gm2-bulk-ai.js` clears all selections.
 - **Search field** – `gm2_search_title` input filters posts by title.
 - **CSV export** – `handle_bulk_ai_export()` outputs a `gm2-bulk-ai.csv` file.
+- **Taxonomy CSV export** – `handle_bulk_ai_tax_export()` outputs a `gm2-bulk-ai-tax.csv` file.
 - **User settings** – page size and filters stored per user via `update_user_meta()`.
 - **Improved AJAX errors** – `.fail()` blocks in `gm2-bulk-ai.js` display parsed messages.
 - **Scheduled via WP‑Cron** – planned feature to queue analysis jobs.
