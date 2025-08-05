@@ -125,6 +125,8 @@ function gm2_activate_plugin() {
     add_option('gm2_ac_mark_abandoned_interval', 5);
     add_option('gm2_setup_complete', '0');
     add_option('gm2_do_activation_redirect', '1');
+
+    Gm2_Abandoned_Carts::schedule_event();
 }
 register_activation_hook(__FILE__, 'gm2_activate_plugin');
 
@@ -139,7 +141,7 @@ function gm2_deactivate_plugin() {
         wp_unschedule_event($ts, 'gm2_pagespeed_check');
     }
 
-    \Gm2\Gm2_Abandoned_Carts::clear_scheduled_event();
+    Gm2_Abandoned_Carts::clear_scheduled_event();
 }
 register_deactivation_hook(__FILE__, 'gm2_deactivate_plugin');
 
@@ -360,17 +362,17 @@ add_action('gm2_pagespeed_check', 'gm2_run_pagespeed_check');
 
 function gm2_handle_ac_option_change($old, $new) {
     if ($new === '1') {
-        \Gm2\Gm2_Abandoned_Carts::schedule_event();
+        Gm2_Abandoned_Carts::schedule_event();
     } else {
-        \Gm2\Gm2_Abandoned_Carts::clear_scheduled_event();
+        Gm2_Abandoned_Carts::clear_scheduled_event();
     }
 }
 add_action('update_option_gm2_enable_abandoned_carts', 'gm2_handle_ac_option_change', 10, 2);
 
 function gm2_handle_ac_interval_change($old, $new) {
     if (get_option('gm2_enable_abandoned_carts', '0') === '1') {
-        \Gm2\Gm2_Abandoned_Carts::clear_scheduled_event();
-        \Gm2\Gm2_Abandoned_Carts::schedule_event();
+        Gm2_Abandoned_Carts::clear_scheduled_event();
+        Gm2_Abandoned_Carts::schedule_event();
     }
 }
 add_action('update_option_gm2_ac_mark_abandoned_interval', 'gm2_handle_ac_interval_change', 10, 2);

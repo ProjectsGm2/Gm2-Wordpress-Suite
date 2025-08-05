@@ -290,7 +290,63 @@ class Gm2_Abandoned_Carts {
         return 'Unknown';
     }
 
+    /**
+     * Schedule the recurring cron event used to mark carts abandoned.
+     */
+    public static function schedule_event() {
+        if (get_option('gm2_enable_abandoned_carts', '0') !== '1') {
+            return;
+        }
+        $minutes = absint(apply_filters('gm2_ac_mark_abandoned_interval', (int) get_option('gm2_ac_mark_abandoned_interval', 5)));
+        if ($minutes < 1) {
+            $minutes = 1;
+        }
+        if (!wp_next_scheduled('gm2_ac_mark_abandoned_cron')) {
+            wp_schedule_event(time(), 'gm2_ac_' . $minutes . '_mins', 'gm2_ac_mark_abandoned_cron');
+        }
+    }
+
+    /**
+     * Cron callback to mark carts as abandoned after the configured interval.
+     */
+    public static function cron_mark_abandoned() {
+        if (get_option('gm2_enable_abandoned_carts', '0') !== '1') {
+            return;
+        }
+        $minutes = absint(apply_filters('gm2_ac_mark_abandoned_interval', (int) get_option('gm2_ac_mark_abandoned_interval', 5)));
+        if ($minutes < 1) {
+            $minutes = 1;
+        }
+        $threshold = gmdate('Y-m-d H:i:s', time() - $minutes * MINUTE_IN_SECONDS);
+        global $wpdb;
+        $table = $wpdb->prefix . 'wc_ac_carts';
+        $rows = $wpdb->get_results($wpdb->prepare("SELECT id, session_start, browsing_time FROM $table WHERE abandoned_at IS NULL AND session_start IS NOT NULL AND session_start <= %s", $threshold));
+        if ($rows) {
+            foreach ($rows as $row) {
+                $update = [
+                    'abandoned_at' => current_time('mysql'),
+                    'session_start' => null,
+                ];
+                if ($row->session_start) {
+                    $elapsed = time() - strtotime($row->session_start);
+                    if ($elapsed < 0) {
+                        $elapsed = 0;
+                    }
+                    $update['browsing_time'] = (int) $row->browsing_time + $elapsed;
+                }
+                $wpdb->update($table, $update, ['id' => $row->id]);
+            }
+        }
+    }
+
+    /**
+     * Clear the scheduled cron event for marking carts abandoned.
+     */
     public static function clear_scheduled_event() {
-        // Deprecated: cron scheduling removed.
+        if (wp_next_scheduled('gm2_ac_mark_abandoned_cron')) {
+            wp_clear_scheduled_hook('gm2_ac_mark_abandoned_cron');
+        }
     }
 }
+
+add_action('gm2_ac_mark_abandoned_cron', [Gm2_Abandoned_Carts::class, 'cron_mark_abandoned']);
