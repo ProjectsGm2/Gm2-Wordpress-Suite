@@ -160,6 +160,38 @@ class BulkAiFilterTest extends WP_UnitTestCase {
     }
 }
 
+class BulkAiTaxFilterTest extends WP_UnitTestCase {
+    public function test_missing_title_filter_limits_terms() {
+        $has = self::factory()->term->create(['taxonomy' => 'category', 'name' => 'Has']);
+        update_term_meta($has, '_gm2_title', 't');
+        $missing = self::factory()->term->create(['taxonomy' => 'category', 'name' => 'Missing']);
+        update_option('gm2_bulk_ai_tax_missing_title', '1');
+        $admin = new Gm2_SEO_Admin();
+        $user  = self::factory()->user->create(['role' => 'administrator']);
+        wp_set_current_user($user);
+        ob_start();
+        $admin->display_bulk_ai_tax_page();
+        $html = ob_get_clean();
+        $this->assertStringContainsString('Missing', $html);
+        $this->assertStringNotContainsString('Has', $html);
+    }
+
+    public function test_missing_description_filter_limits_terms() {
+        $has = self::factory()->term->create(['taxonomy' => 'category', 'name' => 'HasD']);
+        update_term_meta($has, '_gm2_description', 'd');
+        $missing = self::factory()->term->create(['taxonomy' => 'category', 'name' => 'MissingD']);
+        update_option('gm2_bulk_ai_tax_missing_description', '1');
+        $admin = new Gm2_SEO_Admin();
+        $user  = self::factory()->user->create(['role' => 'administrator']);
+        wp_set_current_user($user);
+        ob_start();
+        $admin->display_bulk_ai_tax_page();
+        $html = ob_get_clean();
+        $this->assertStringContainsString('MissingD', $html);
+        $this->assertStringNotContainsString('HasD', $html);
+    }
+}
+
 class BulkAiPaginationTest extends WP_UnitTestCase {
     public function test_second_page_shows_expected_posts() {
         $user = self::factory()->user->create(['role' => 'administrator']);

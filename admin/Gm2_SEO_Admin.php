@@ -423,6 +423,12 @@ class Gm2_SEO_Admin {
         register_setting('gm2_seo_options', 'gm2_bulk_ai_missing_description', [
             'sanitize_callback' => 'sanitize_text_field',
         ]);
+        register_setting('gm2_seo_options', 'gm2_bulk_ai_tax_missing_title', [
+            'sanitize_callback' => 'sanitize_text_field',
+        ]);
+        register_setting('gm2_seo_options', 'gm2_bulk_ai_tax_missing_description', [
+            'sanitize_callback' => 'sanitize_text_field',
+        ]);
         register_setting('gm2_seo_options', 'gm2_context_business_model', [
             'sanitize_callback' => 'sanitize_textarea_field',
         ]);
@@ -1330,15 +1336,21 @@ class Gm2_SEO_Admin {
             return;
         }
 
-        $user_id  = get_current_user_id();
-        $taxonomy = get_user_meta($user_id, 'gm2_bulk_ai_tax_taxonomy', true) ?: 'all';
-        $search   = get_option('gm2_bulk_ai_tax_search', '');
+        $user_id       = get_current_user_id();
+        $taxonomy      = get_user_meta($user_id, 'gm2_bulk_ai_tax_taxonomy', true) ?: 'all';
+        $search        = get_option('gm2_bulk_ai_tax_search', '');
+        $missing_title = get_option('gm2_bulk_ai_tax_missing_title', '0');
+        $missing_desc  = get_option('gm2_bulk_ai_tax_missing_description', '0');
 
         if (isset($_POST['gm2_bulk_ai_tax_save']) && check_admin_referer('gm2_bulk_ai_tax_settings')) {
-            $taxonomy = sanitize_key($_POST['gm2_taxonomy'] ?? 'all');
-            $search   = sanitize_text_field($_POST['gm2_tax_search'] ?? '');
+            $taxonomy      = sanitize_key($_POST['gm2_taxonomy'] ?? 'all');
+            $search        = sanitize_text_field($_POST['gm2_tax_search'] ?? '');
+            $missing_title = isset($_POST['gm2_bulk_ai_tax_missing_title']) ? '1' : '0';
+            $missing_desc  = isset($_POST['gm2_bulk_ai_tax_missing_description']) ? '1' : '0';
             update_user_meta($user_id, 'gm2_bulk_ai_tax_taxonomy', $taxonomy);
             update_option('gm2_bulk_ai_tax_search', $search);
+            update_option('gm2_bulk_ai_tax_missing_title', $missing_title);
+            update_option('gm2_bulk_ai_tax_missing_description', $missing_desc);
         }
 
         $tax_list = $this->get_supported_taxonomies();
@@ -1349,6 +1361,16 @@ class Gm2_SEO_Admin {
             'number'     => 50,
         ];
         $terms = get_terms($args);
+        if ($missing_title === '1') {
+            $terms = array_filter($terms, function($term) {
+                return get_term_meta($term->term_id, '_gm2_title', true) === '';
+            });
+        }
+        if ($missing_desc === '1') {
+            $terms = array_filter($terms, function($term) {
+                return get_term_meta($term->term_id, '_gm2_description', true) === '';
+            });
+        }
 
         echo '<div class="wrap" id="gm2-bulk-ai-tax">';
         echo '<h1>' . esc_html__( 'Bulk AI Taxonomies', 'gm2-wordpress-suite' ) . '</h1>';
@@ -1368,6 +1390,8 @@ class Gm2_SEO_Admin {
         }
         echo '</select></label> ';
         echo '<label>' . esc_html__( 'Search', 'gm2-wordpress-suite' ) . ' <input type="text" name="gm2_tax_search" value="' . esc_attr($search) . '"></label> ';
+        echo '<label><input type="checkbox" name="gm2_bulk_ai_tax_missing_title" value="1" ' . checked($missing_title, '1', false) . '> ' . esc_html__( 'Only terms missing SEO Title', 'gm2-wordpress-suite' ) . '</label> ';
+        echo '<label><input type="checkbox" name="gm2_bulk_ai_tax_missing_description" value="1" ' . checked($missing_desc, '1', false) . '> ' . esc_html__( 'Only terms missing Description', 'gm2-wordpress-suite' ) . '</label> ';
         submit_button( esc_html__( 'Save', 'gm2-wordpress-suite' ), 'secondary', 'gm2_bulk_ai_tax_save', false );
         echo '</p></form>';
 
