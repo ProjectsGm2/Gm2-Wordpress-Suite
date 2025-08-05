@@ -10,7 +10,6 @@ if (!class_exists('\\WP_List_Table')) {
 }
 
 class GM2_AC_Table extends \WP_List_Table {
-    private $items_per_page = 20;
 
     public function __construct() {
         parent::__construct([
@@ -110,7 +109,7 @@ class GM2_AC_Table extends \WP_List_Table {
 
         global $wpdb;
         $table   = $wpdb->prefix . 'wc_ac_carts';
-        $per_page = $this->items_per_page;
+        $per_page = $this->get_items_per_page("gm2_ac_per_page", 20);
         $paged    = $this->get_pagenum();
         $search   = isset($_REQUEST['s']) ? trim($_REQUEST['s']) : '';
 
