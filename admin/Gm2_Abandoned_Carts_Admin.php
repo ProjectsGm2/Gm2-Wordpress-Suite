@@ -24,6 +24,11 @@ class Gm2_Abandoned_Carts_Admin {
     }
 
     public function display_page() {
+        add_screen_option('per_page', [
+            'label'   => __('Items per page', 'gm2-wordpress-suite'),
+            'default' => 20,
+            'option'  => 'gm2_ac_per_page',
+        ]);
         echo '<div class="wrap"><h1>' . esc_html__('Abandoned Carts', 'gm2-wordpress-suite') . '</h1>';
 
         if (!empty($_GET['logs_reset'])) {
