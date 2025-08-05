@@ -47,6 +47,43 @@ jQuery(function($){
     $('#gm2-bulk-ai-tax').on('click','#gm2-bulk-term-cancel',function(e){
         e.preventDefault();stop=true;$('#gm2-bulk-term-progress-bar').hide();
     });
+    $('#gm2-bulk-ai-tax').on('click','#gm2-bulk-term-desc',function(e){
+        e.preventDefault();
+        stop=false;
+        var ids=[];
+        $('#gm2-bulk-term-list .gm2-select:checked').each(function(){ids.push($(this).val());});
+        if(!ids.length) return;
+        $('#gm2-bulk-term-progress-bar').attr('max',ids.length).val(0).show();
+        function next(){
+            if(stop||!ids.length){$('#gm2-bulk-term-progress-bar').hide();return;}
+            var key=ids.shift();
+            var parts=key.split(':');
+            var tax=parts[0], id=parts[1];
+            var row=$('#gm2-term-'+tax+'-'+id);
+            var cell=row.find('.gm2-tax-desc').empty();
+            $('<span>',{class:'spinner is-active gm2-ai-spinner'}).appendTo(cell);
+            var name=row.find('td').eq(0).text();
+            $.ajax({
+                url: gm2BulkAiTax.ajax_url,
+                method:'POST',
+                data:{action:'gm2_ai_generate_tax_description',term_id:id,taxonomy:tax,name:name,_ajax_nonce:gm2BulkAiTax.desc_nonce},
+                dataType:'json'
+            }).done(function(resp){
+                cell.find('.gm2-ai-spinner').remove();
+                if(resp&&resp.success&&resp.data){
+                    cell.text(resp.data);
+                }else{cell.text(gm2BulkAiTax.i18n.error);}
+            }).fail(function(){
+                cell.find('.gm2-ai-spinner').remove();
+                cell.text(gm2BulkAiTax.i18n.error);
+            }).always(function(){
+                var done=parseInt($('#gm2-bulk-term-progress-bar').val(),10)+1;
+                $('#gm2-bulk-term-progress-bar').val(done);
+                next();
+            });
+        }
+        next();
+    });
     $('#gm2-bulk-term-list').on('click','.gm2-apply-btn',function(e){
         e.preventDefault();
         var key=$(this).data('key');
