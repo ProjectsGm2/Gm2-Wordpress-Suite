@@ -81,4 +81,15 @@ jQuery(function($){
             dataType:'json'
         }).fail(function(){alert(gm2BulkAiTax.i18n.error);});
     });
+    $('#gm2-bulk-ai-tax').on('click','#gm2-bulk-term-schedule',function(e){
+        e.preventDefault();
+        var ids=[];
+        $('#gm2-bulk-term-list .gm2-select:checked').each(function(){ids.push($(this).val());});
+        if(!ids.length) return;
+        $.post(gm2BulkAiTax.ajax_url,{action:'gm2_ai_tax_batch_schedule',ids:JSON.stringify(ids),_ajax_nonce:gm2BulkAiTax.batch_nonce});
+    });
+    $('#gm2-bulk-ai-tax').on('click','#gm2-bulk-term-cancel-batch',function(e){
+        e.preventDefault();
+        $.post(gm2BulkAiTax.ajax_url,{action:'gm2_ai_tax_batch_cancel',_ajax_nonce:gm2BulkAiTax.batch_nonce});
+    });
 });
