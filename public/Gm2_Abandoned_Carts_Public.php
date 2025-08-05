@@ -57,11 +57,55 @@ class Gm2_Abandoned_Carts_Public {
                 [ 'id' => $row->id ]
             );
         } else {
+            $cart = class_exists('WC_Cart') ? WC()->cart : null;
+            if (!$cart || $cart->is_empty()) {
+                wp_send_json_error('no_cart');
+            }
+            $contents = maybe_serialize($cart->get_cart());
+            $ip       = $_SERVER['REMOTE_ADDR'] ?? '';
+            $agent    = $_SERVER['HTTP_USER_AGENT'] ?? '';
+            $location = '';
+            if (class_exists('WC_Geolocation') && !empty($ip)) {
+                $geo = \WC_Geolocation::geolocate_ip($ip, false, false);
+                if (!empty($geo['country'])) {
+                    $location = $geo['country'];
+                    if (!empty($geo['state'])) {
+                        $location .= '-' . $geo['state'];
+                    }
+                }
+            }
+            $device = 'Desktop';
+            if (file_exists(GM2_PLUGIN_DIR . 'includes/MobileDetect.php')) {
+                require_once GM2_PLUGIN_DIR . 'includes/MobileDetect.php';
+                if (class_exists('Detection\\MobileDetect')) {
+                    $detect = new \Detection\MobileDetect();
+                } elseif (class_exists('Mobile_Detect')) {
+                    $detect = new \Mobile_Detect();
+                } else {
+                    $detect = null;
+                }
+                if ($detect) {
+                    $detect->setUserAgent($agent);
+                    if ($detect->isTablet()) {
+                        $device = 'Tablet';
+                    } elseif ($detect->isMobile()) {
+                        $device = 'Mobile';
+                    }
+                }
+            }
+            $current_url = home_url($_SERVER['REQUEST_URI'] ?? '/');
+            $total       = (float) $cart->get_cart_contents_total();
             $wpdb->insert($table, [
                 'cart_token'    => $token,
                 'user_id'       => get_current_user_id(),
-                'cart_contents' => '',
+                'cart_contents' => $contents,
                 'created_at'    => current_time('mysql'),
+                'ip_address'    => $ip,
+                'user_agent'    => $agent,
+                'location'      => $location,
+                'device'        => $device,
+                'entry_url'     => $current_url,
+                'cart_total'    => $total,
                 'email'         => $email,
             ]);
         }
