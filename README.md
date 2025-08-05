@@ -129,18 +129,18 @@ to process the items via WP-Cron or **Cancel Batch** to clear any pending jobs.
 Enable this feature from **Gm2 → Dashboard** to create two database tables used
 for tracking carts and queuing recovery emails. The cart table stores the cart
 contents along with the shopper's email address, IP, detected location and
-device type, the first and last URLs visited, and the cart total. A small
-JavaScript file captures the email as soon as it is entered on the checkout
-page so the address is available even if the customer never completes the
-order.
+device type, the first and last URLs visited, cart total, total browsing time,
+and how many times the shopper returned to the cart. A small JavaScript file
+captures the email as soon as it is entered on the checkout page so the address
+is available even if the customer never completes the order. It also records
+when a cart becomes active or abandoned as the visitor browses the site.
 
-The admin screen under **Gm2 → Abandoned Carts** displays a table of abandoned
-carts showing the IP address, email, location, device, products, cart value,
-entry and exit URLs, and the abandonment time. Recovery emails are added to a
-queue which is processed hourly by WP&nbsp;Cron via the `gm2_ac_process_queue`
-action. Developers can hook `gm2_ac_send_message` to send the actual email
-content. The cart timeout in minutes can be configured on the same settings
-page.
+The admin screen under **Gm2 → Abandoned Carts** displays a table of carts and
+their status—active or abandoned—showing the IP address, email, location, device,
+products, cart value, entry and exit URLs, browsing time, and revisit count.
+Recovery emails are added to a queue which is processed hourly by WP&nbsp;Cron via
+the `gm2_ac_process_queue` action. Developers can hook `gm2_ac_send_message` to
+send the actual email content.
 
 
 
