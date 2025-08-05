@@ -50,11 +50,21 @@ class Gm2_Abandoned_Carts_Admin {
         echo '</form>';
 
         $table = new GM2_AC_Table();
+        $table->process_bulk_action();
         $table->prepare_items();
         echo '<hr />';
         echo '<form method="get">';
         echo '<input type="hidden" name="page" value="' . esc_attr($_GET['page']) . '" />';
         $table->search_box(__('Search', 'gm2-wordpress-suite'), 'gm2-ac');
+        echo '</form>';
+        echo '<form method="post">';
+        echo '<input type="hidden" name="page" value="' . esc_attr($_GET['page']) . '" />';
+        if (!empty($_REQUEST['s'])) {
+            echo '<input type="hidden" name="s" value="' . esc_attr($_REQUEST['s']) . '" />';
+        }
+        if (!empty($_REQUEST['paged'])) {
+            echo '<input type="hidden" name="paged" value="' . absint($_REQUEST['paged']) . '" />';
+        }
         $table->display();
         echo '</form></div>';
     }

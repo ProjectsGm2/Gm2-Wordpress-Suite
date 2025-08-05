@@ -22,6 +22,7 @@ class GM2_AC_Table extends \WP_List_Table {
 
     public function get_columns() {
         return [
+            'cb'           => '<input type="checkbox" />',
             'status'      => __('Status', 'gm2-wordpress-suite'),
             'ip_address'  => __('IP Address', 'gm2-wordpress-suite'),
             'email'       => __('Email', 'gm2-wordpress-suite'),
@@ -36,6 +37,33 @@ class GM2_AC_Table extends \WP_List_Table {
             'revisit_count' => __('Revisits', 'gm2-wordpress-suite'),
             'abandoned_at'=> __('Abandoned At', 'gm2-wordpress-suite'),
         ];
+    }
+
+    public function column_cb($item) {
+        $id = isset($item['id']) ? (int) $item['id'] : 0;
+        return '<input type="checkbox" name="id[]" value="' . esc_attr($id) . '" />';
+    }
+
+    public function get_bulk_actions() {
+        return [
+            'delete' => __('Delete', 'gm2-wordpress-suite'),
+        ];
+    }
+
+    public function process_bulk_action() {
+        if ($this->current_action() !== 'delete') {
+            return;
+        }
+        $ids = isset($_REQUEST['id']) ? (array) $_REQUEST['id'] : [];
+        $ids = array_map('absint', $ids);
+        $ids = array_filter($ids);
+        if (!$ids) {
+            return;
+        }
+        global $wpdb;
+        $table = $wpdb->prefix . 'wc_ac_carts';
+        $placeholders = implode(',', array_fill(0, count($ids), '%d'));
+        $wpdb->query($wpdb->prepare("DELETE FROM $table WHERE id IN ($placeholders)", $ids));
     }
 
     private function ensure_value($value) {
@@ -147,6 +175,7 @@ class GM2_AC_Table extends \WP_List_Table {
             }
 
             $items[] = [
+                'id'          => (int) $row->id,
                 'status'      => esc_html($this->ensure_value($status)),
                 'ip_address'  => esc_html($this->ensure_value($row->ip_address)),
                 'email'       => esc_html($this->ensure_value($row->email)),
