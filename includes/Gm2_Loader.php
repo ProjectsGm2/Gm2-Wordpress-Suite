@@ -78,6 +78,14 @@ class Gm2_Loader {
             $seo_public->run();
         }
 
+        $gmc_rt = new Gm2_GMC_Realtime();
+        $gmc_rt->run();
+
+        if (!is_admin()) {
+            $gmc_rt_public = new Gm2_GMC_Realtime_Public();
+            $gmc_rt_public->run();
+        }
+
         $load_elementor = function () use ($enable_seo, $enable_qd) {
             if ($enable_seo) {
                 new Gm2_Elementor_SEO();

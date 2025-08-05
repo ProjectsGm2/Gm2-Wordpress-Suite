@@ -21,6 +21,7 @@ Key features include:
 * Bulk AI progress messages support localization
 * Row-level "Select all" checkboxes apply suggestions per post
 * Updated rows are briefly highlighted after applying suggestions
+* Real-time Google Merchant Centre data via REST endpoint
 
 == Installation ==
 1. Upload the plugin files to the `/wp-content/plugins/gm2-wordpress-suite` directory.
@@ -131,6 +132,14 @@ The Google Ads request also requires a language constant and a geo target consta
 
 == Analytics ==
 After connecting a Google account, open the **Analytics** tab under SEO (`admin.php?page=gm2-seo&tab=analytics`). Line and bar charts powered by Chart.js display sessions, bounce rate and top search queries. Select an Analytics property and Search Console site on the **Connect Google Account** screen before viewing the charts.
+
+== Google Merchant Centre ==
+The plugin tracks real-time product updates for Google Merchant Centre. Price, availability and inventory changes are cached and exposed through the REST endpoint `/gm2/v1/gmc/realtime`. A front-end script polls this endpoint and dispatches a `gm2GmcRealtimeUpdate` event with the latest values.
+
+Configuration:
+1. Ensure the WordPress REST API is accessible on your site.
+2. Listen for the `gm2GmcRealtimeUpdate` event in custom scripts to react to updates.
+3. Use the `gm2_gmc_realtime_fields` filter to adjust which fields trigger updates.
 
 == Image Optimization ==
 Enter your compression API key and enable the service from the SEO &gt; Performance screen.
