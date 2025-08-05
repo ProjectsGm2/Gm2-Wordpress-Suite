@@ -1400,10 +1400,11 @@ class Gm2_SEO_Admin {
         submit_button( esc_html__( 'Save', 'gm2-wordpress-suite' ), 'secondary', 'gm2_bulk_ai_tax_save', false );
         echo '</p></form>';
 
-        echo '<table class="widefat" id="gm2-bulk-term-list"><thead><tr><th class="check-column"><input type="checkbox" id="gm2-bulk-term-select-all"></th><th>' . esc_html__( 'Name', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'SEO Title', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'Description', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'AI Suggestions', 'gm2-wordpress-suite' ) . '</th></tr></thead><tbody>';
+        echo '<table class="widefat" id="gm2-bulk-term-list"><thead><tr><th class="check-column"><input type="checkbox" id="gm2-bulk-term-select-all"></th><th>' . esc_html__( 'Name', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'SEO Title', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'Description', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'Tax Description', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'AI Suggestions', 'gm2-wordpress-suite' ) . '</th></tr></thead><tbody>';
         foreach ($terms as $term) {
             $seo_title   = get_term_meta($term->term_id, '_gm2_title', true);
             $description = get_term_meta($term->term_id, '_gm2_description', true);
+            $tax_desc    = term_description($term->term_id, $term->taxonomy);
             $stored      = get_term_meta($term->term_id, '_gm2_ai_research', true);
             $result_html = '';
             if ($stored) {
@@ -1420,11 +1421,13 @@ class Gm2_SEO_Admin {
             echo '<td>' . $name . '</td>';
             echo '<td>' . esc_html($seo_title) . '</td>';
             echo '<td>' . esc_html($description) . '</td>';
+            echo '<td class="gm2-tax-desc">' . esc_html($tax_desc) . '</td>';
             echo '<td class="gm2-result">' . $result_html . '</td>';
             echo '</tr>';
         }
         echo '</tbody></table>';
         echo '<p><button type="button" class="button" id="gm2-bulk-term-analyze">' . esc_html__( 'Analyze Selected', 'gm2-wordpress-suite' ) . '</button> ';
+        echo '<button type="button" class="button" id="gm2-bulk-term-desc">' . esc_html__( 'Generate Descriptions', 'gm2-wordpress-suite' ) . '</button> ';
         echo '<button type="button" class="button" id="gm2-bulk-term-cancel">' . esc_html__( 'Cancel', 'gm2-wordpress-suite' ) . '</button> ';
         echo '<button type="button" class="button" id="gm2-bulk-term-apply-all">' . esc_html__( 'Apply All', 'gm2-wordpress-suite' ) . '</button> ';
         echo '<button type="button" class="button" id="gm2-bulk-term-schedule">' . esc_html__( 'Schedule Batch', 'gm2-wordpress-suite' ) . '</button> ';
