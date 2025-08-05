@@ -1359,6 +1359,11 @@ class Gm2_SEO_Admin {
         foreach ($tax_list as $tax) {
             $obj = get_taxonomy($tax);
             $name = $obj ? $obj->labels->singular_name : $tax;
+            if ('category' === $tax) {
+                $name = __('Post Category', 'gm2-wordpress-suite');
+            } elseif ('product_cat' === $tax) {
+                $name = __('Product Category', 'gm2-wordpress-suite');
+            }
             echo '<option value="' . esc_attr($tax) . '"' . selected($taxonomy, $tax, false) . '>' . esc_html($name) . '</option>';
         }
         echo '</select></label> ';
