@@ -32,6 +32,8 @@ class GM2_AC_Table extends \WP_List_Table {
             'cart_value'  => __('Cart Value', 'gm2-wordpress-suite'),
             'entry_url'   => __('Entry URL', 'gm2-wordpress-suite'),
             'exit_url'    => __('Exit URL', 'gm2-wordpress-suite'),
+            'browsing_time' => __('Browsing Time', 'gm2-wordpress-suite'),
+            'revisit_count' => __('Revisits', 'gm2-wordpress-suite'),
             'abandoned_at'=> __('Abandoned At', 'gm2-wordpress-suite'),
         ];
     }
@@ -49,6 +51,27 @@ class GM2_AC_Table extends \WP_List_Table {
     public function column_default($item, $column_name) {
         $value = $item[$column_name] ?? '';
         return $this->ensure_value($value);
+    }
+
+    private function format_duration($seconds) {
+        $seconds = (int) $seconds;
+        if ($seconds <= 0) {
+            return '0s';
+        }
+        $hours = floor($seconds / 3600);
+        $minutes = floor(($seconds % 3600) / 60);
+        $secs = $seconds % 60;
+        $parts = [];
+        if ($hours) {
+            $parts[] = $hours . 'h';
+        }
+        if ($minutes) {
+            $parts[] = $minutes . 'm';
+        }
+        if ($secs || empty($parts)) {
+            $parts[] = $secs . 's';
+        }
+        return implode(' ', $parts);
     }
 
     public function prepare_items() {
@@ -134,6 +157,8 @@ class GM2_AC_Table extends \WP_List_Table {
                 'cart_value'  => $this->ensure_value(wc_price($cart_value)),
                 'entry_url'   => $this->ensure_value(esc_url($row->entry_url)),
                 'exit_url'    => $this->ensure_value(esc_url($row->exit_url)),
+                'browsing_time'=> esc_html($this->ensure_value($this->format_duration($row->browsing_time))),
+                'revisit_count'=> esc_html($this->ensure_value($row->revisit_count)),
                 'abandoned_at'=> esc_html($this->ensure_value($abandoned_at)),
             ];
         }

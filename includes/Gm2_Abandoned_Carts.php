@@ -17,7 +17,10 @@ class Gm2_Abandoned_Carts {
             user_id bigint(20) unsigned DEFAULT 0,
             cart_contents longtext NOT NULL,
             created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            session_start datetime DEFAULT NULL,
             abandoned_at datetime DEFAULT NULL,
+            browsing_time bigint(20) unsigned DEFAULT 0,
+            revisit_count int DEFAULT 0,
             recovered_order_id bigint(20) unsigned DEFAULT NULL,
             email varchar(200) DEFAULT NULL,
             ip_address varchar(45) DEFAULT NULL,
@@ -116,22 +119,26 @@ class Gm2_Abandoned_Carts {
         $total      = (float) $cart->get_cart_contents_total();
         global $wpdb;
         $table = $wpdb->prefix . 'wc_ac_carts';
-        $row = $wpdb->get_row($wpdb->prepare("SELECT id, entry_url FROM $table WHERE cart_token = %s", $token));
+        $row = $wpdb->get_row($wpdb->prepare("SELECT id, entry_url, abandoned_at, revisit_count, session_start FROM $table WHERE cart_token = %s", $token));
         if ($row) {
-            $wpdb->update(
-                $table,
-                [
-                    'cart_contents' => $contents,
-                    'created_at'    => current_time('mysql'),
-                    'ip_address'    => $ip,
-                    'user_agent'    => $agent,
-                    'browser'       => $browser,
-                    'location'      => $location,
-                    'device'        => $device,
-                    'cart_total'    => $total
-                ],
-                ['id' => $row->id]
-            );
+            $update = [
+                'cart_contents' => $contents,
+                'created_at'    => current_time('mysql'),
+                'ip_address'    => $ip,
+                'user_agent'    => $agent,
+                'browser'       => $browser,
+                'location'      => $location,
+                'device'        => $device,
+                'cart_total'    => $total,
+            ];
+            if ($row->abandoned_at) {
+                $update['abandoned_at']  = null;
+                $update['session_start'] = current_time('mysql');
+                $update['revisit_count'] = (int) $row->revisit_count + 1;
+            } elseif (!$row->session_start) {
+                $update['session_start'] = current_time('mysql');
+            }
+            $wpdb->update($table, $update, ['id' => $row->id]);
             if (empty($row->entry_url)) {
                 $wpdb->update(
                     $table,
@@ -141,17 +148,20 @@ class Gm2_Abandoned_Carts {
             }
         } else {
             $wpdb->insert($table, [
-                'cart_token'   => $token,
-                'user_id'      => get_current_user_id(),
-                'cart_contents'=> $contents,
-                'created_at'   => current_time('mysql'),
-                'ip_address'   => $ip,
-                'user_agent'   => $agent,
-                'browser'      => $browser,
-                'location'     => $location,
-                'device'       => $device,
-                'entry_url'    => $current_url,
-                'cart_total'   => $total,
+                'cart_token'    => $token,
+                'user_id'       => get_current_user_id(),
+                'cart_contents' => $contents,
+                'created_at'    => current_time('mysql'),
+                'session_start' => current_time('mysql'),
+                'ip_address'    => $ip,
+                'user_agent'    => $agent,
+                'browser'       => $browser,
+                'location'      => $location,
+                'device'        => $device,
+                'entry_url'     => $current_url,
+                'cart_total'    => $total,
+                'browsing_time' => 0,
+                'revisit_count' => 0,
             ]);
         }
     }
@@ -170,14 +180,18 @@ class Gm2_Abandoned_Carts {
 
         global $wpdb;
         $table = $wpdb->prefix . 'wc_ac_carts';
-        $wpdb->update(
-            $table,
-            [
-                'exit_url'     => $url,
-                'abandoned_at' => null,
-            ],
-            [ 'cart_token' => $token ]
-        );
+        $row = $wpdb->get_row($wpdb->prepare("SELECT id, abandoned_at, revisit_count, session_start FROM $table WHERE cart_token = %s", $token));
+        if ($row) {
+            $update = [ 'exit_url' => $url ];
+            if ($row->abandoned_at) {
+                $update['abandoned_at']  = null;
+                $update['session_start'] = current_time('mysql');
+                $update['revisit_count'] = (int) $row->revisit_count + 1;
+            } elseif (!$row->session_start) {
+                $update['session_start'] = current_time('mysql');
+            }
+            $wpdb->update($table, $update, [ 'id' => $row->id ]);
+        }
 
         wp_send_json_success();
     }
@@ -196,14 +210,22 @@ class Gm2_Abandoned_Carts {
 
         global $wpdb;
         $table = $wpdb->prefix . 'wc_ac_carts';
-        $wpdb->update(
-            $table,
-            [
+        $row = $wpdb->get_row($wpdb->prepare("SELECT id, session_start, browsing_time FROM $table WHERE cart_token = %s", $token));
+        if ($row) {
+            $update = [
                 'exit_url'     => $url,
                 'abandoned_at' => current_time('mysql'),
-            ],
-            [ 'cart_token' => $token ]
-        );
+            ];
+            if ($row->session_start) {
+                $elapsed = time() - strtotime($row->session_start);
+                if ($elapsed < 0) {
+                    $elapsed = 0;
+                }
+                $update['browsing_time'] = (int) $row->browsing_time + $elapsed;
+            }
+            $update['session_start'] = null;
+            $wpdb->update($table, $update, [ 'id' => $row->id ]);
+        }
 
         wp_send_json_success();
     }
@@ -233,6 +255,18 @@ class Gm2_Abandoned_Carts {
             $has_browser = $wpdb->get_var($wpdb->prepare("SHOW COLUMNS FROM $carts_table LIKE %s", 'browser'));
             if (!$has_browser) {
                 $wpdb->query("ALTER TABLE $carts_table ADD browser varchar(50) DEFAULT NULL AFTER user_agent");
+            }
+            $has_session_start = $wpdb->get_var($wpdb->prepare("SHOW COLUMNS FROM $carts_table LIKE %s", 'session_start'));
+            if (!$has_session_start) {
+                $wpdb->query("ALTER TABLE $carts_table ADD session_start datetime DEFAULT NULL AFTER created_at");
+            }
+            $has_browsing_time = $wpdb->get_var($wpdb->prepare("SHOW COLUMNS FROM $carts_table LIKE %s", 'browsing_time'));
+            if (!$has_browsing_time) {
+                $wpdb->query("ALTER TABLE $carts_table ADD browsing_time bigint(20) unsigned DEFAULT 0 AFTER exit_url");
+            }
+            $has_revisit_count = $wpdb->get_var($wpdb->prepare("SHOW COLUMNS FROM $carts_table LIKE %s", 'revisit_count'));
+            if (!$has_revisit_count) {
+                $wpdb->query("ALTER TABLE $carts_table ADD revisit_count int DEFAULT 0 AFTER browsing_time");
             }
         }
     }
