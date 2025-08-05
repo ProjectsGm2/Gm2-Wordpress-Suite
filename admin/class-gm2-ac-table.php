@@ -12,6 +12,14 @@ if (!class_exists('\\WP_List_Table')) {
 class GM2_AC_Table extends \WP_List_Table {
     private $items_per_page = 20;
 
+    public function __construct() {
+        parent::__construct([
+            'singular' => 'gm2-abandoned-cart',
+            'plural'   => 'gm2-abandoned-carts',
+            'ajax'     => false,
+        ]);
+    }
+
     public function get_columns() {
         return [
             'status'      => __('Status', 'gm2-wordpress-suite'),
@@ -44,6 +52,11 @@ class GM2_AC_Table extends \WP_List_Table {
     }
 
     public function prepare_items() {
+        $columns  = $this->get_columns();
+        $hidden   = [];
+        $sortable = [];
+        $this->_column_headers = [ $columns, $hidden, $sortable ];
+
         global $wpdb;
         $table   = $wpdb->prefix . 'wc_ac_carts';
         $per_page = $this->items_per_page;
