@@ -1340,50 +1340,47 @@ class Gm2_SEO_Admin {
             esc_html_e( 'Permission denied', 'gm2-wordpress-suite' );
             return;
         }
-
         $user_id       = get_current_user_id();
+        $page_size     = max(1, absint(get_user_meta($user_id, 'gm2_bulk_ai_tax_page_size', true) ?: 50));
         $taxonomy      = get_user_meta($user_id, 'gm2_bulk_ai_tax_taxonomy', true) ?: 'all';
         $search        = get_option('gm2_bulk_ai_tax_search', '');
         $missing_title = get_option('gm2_bulk_ai_tax_missing_title', '0');
         $missing_desc  = get_option('gm2_bulk_ai_tax_missing_description', '0');
 
         if (isset($_POST['gm2_bulk_ai_tax_save']) && check_admin_referer('gm2_bulk_ai_tax_settings')) {
+            $page_size     = max(1, absint($_POST['page_size'] ?? 50));
             $taxonomy      = sanitize_key($_POST['gm2_taxonomy'] ?? 'all');
             $search        = sanitize_text_field($_POST['gm2_tax_search'] ?? '');
             $missing_title = isset($_POST['gm2_bulk_ai_tax_missing_title']) ? '1' : '0';
             $missing_desc  = isset($_POST['gm2_bulk_ai_tax_missing_description']) ? '1' : '0';
+            update_user_meta($user_id, 'gm2_bulk_ai_tax_page_size', $page_size);
             update_user_meta($user_id, 'gm2_bulk_ai_tax_taxonomy', $taxonomy);
             update_option('gm2_bulk_ai_tax_search', $search);
             update_option('gm2_bulk_ai_tax_missing_title', $missing_title);
             update_option('gm2_bulk_ai_tax_missing_description', $missing_desc);
         }
 
-        $tax_list = $this->get_supported_taxonomies();
+        $paged = isset($_REQUEST['paged']) ? max(1, absint($_REQUEST['paged'])) : 1;
+        $_REQUEST['paged'] = $paged;
+
         $args = [
-            'taxonomy'   => ($taxonomy === 'all') ? $tax_list : $taxonomy,
-            'hide_empty' => false,
-            'search'     => $search,
-            'number'     => 50,
+            'page_size'            => $page_size,
+            'taxonomy'             => $taxonomy,
+            'search'               => $search,
+            'missing_title'        => $missing_title,
+            'missing_description'  => $missing_desc,
         ];
-        $terms = get_terms($args);
-        if ($missing_title === '1') {
-            $terms = array_filter($terms, function($term) {
-                return get_term_meta($term->term_id, '_gm2_title', true) === '';
-            });
-        }
-        if ($missing_desc === '1') {
-            $terms = array_filter($terms, function($term) {
-                return get_term_meta($term->term_id, '_gm2_description', true) === '';
-            });
-        }
+        $table = new Gm2_Bulk_Ai_Tax_List_Table($this, $args);
+        $table->prepare_items();
 
         echo '<div class="wrap" id="gm2-bulk-ai-tax">';
         echo '<h1>' . esc_html__( 'Bulk AI Taxonomies', 'gm2-wordpress-suite' ) . '</h1>';
         echo '<form method="post" action="' . esc_url( admin_url('admin.php?page=gm2-bulk-ai-taxonomies') ) . '">';
         wp_nonce_field('gm2_bulk_ai_tax_settings');
-        echo '<p><label>' . esc_html__( 'Taxonomy', 'gm2-wordpress-suite' ) . ' <select name="gm2_taxonomy">';
+        echo '<p><label>' . esc_html__( 'Terms per page', 'gm2-wordpress-suite' ) . ' <input type="number" name="page_size" value="' . esc_attr($page_size) . '" min="1"></label> ';
+        echo '<label>' . esc_html__( 'Taxonomy', 'gm2-wordpress-suite' ) . ' <select name="gm2_taxonomy">';
         echo '<option value="all"' . selected($taxonomy, 'all', false) . '>' . esc_html__( 'All', 'gm2-wordpress-suite' ) . '</option>';
-        foreach ($tax_list as $tax) {
+        foreach ($this->get_supported_taxonomies() as $tax) {
             $obj = get_taxonomy($tax);
             $name = $obj ? $obj->labels->singular_name : $tax;
             if ('category' === $tax) {
@@ -1400,32 +1397,10 @@ class Gm2_SEO_Admin {
         submit_button( esc_html__( 'Save', 'gm2-wordpress-suite' ), 'secondary', 'gm2_bulk_ai_tax_save', false );
         echo '</p></form>';
 
-        echo '<table class="widefat" id="gm2-bulk-term-list"><thead><tr><th class="check-column"><input type="checkbox" id="gm2-bulk-term-select-all"></th><th>' . esc_html__( 'Name', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'SEO Title', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'Description', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'Tax Description', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'AI Suggestions', 'gm2-wordpress-suite' ) . '</th></tr></thead><tbody>';
-        foreach ($terms as $term) {
-            $seo_title   = get_term_meta($term->term_id, '_gm2_title', true);
-            $description = get_term_meta($term->term_id, '_gm2_description', true);
-            $tax_desc    = wp_strip_all_tags(term_description($term->term_id, $term->taxonomy));
-            $stored      = get_term_meta($term->term_id, '_gm2_ai_research', true);
-            $result_html = '';
-            if ($stored) {
-                $data = json_decode($stored, true);
-                if (json_last_error() === JSON_ERROR_NONE && is_array($data)) {
-                    $result_html = $this->render_bulk_ai_result($data, $term->term_id);
-                }
-            }
-            $key = $term->taxonomy . ':' . $term->term_id;
-            echo '<tr id="gm2-term-' . esc_attr($term->taxonomy) . '-' . intval($term->term_id) . '" data-key="' . esc_attr($key) . '">';
-            $edit_link = get_edit_term_link($term->term_id, $term->taxonomy);
-            $name      = $edit_link ? '<a href="' . esc_url($edit_link) . '" target="_blank">' . esc_html($term->name) . '</a>' : esc_html($term->name);
-            echo '<th scope="row" class="check-column"><input type="checkbox" class="gm2-select" value="' . esc_attr($key) . '"></th>';
-            echo '<td>' . $name . '</td>';
-            echo '<td>' . esc_html($seo_title) . '</td>';
-            echo '<td>' . esc_html($description) . '</td>';
-            echo '<td class="gm2-tax-desc">' . esc_html($tax_desc) . '</td>';
-            echo '<td class="gm2-result">' . $result_html . '</td>';
-            echo '</tr>';
-        }
-        echo '</tbody></table>';
+        echo '<form method="get">';
+        echo '<input type="hidden" name="page" value="gm2-bulk-ai-taxonomies" />';
+        $table->display();
+        echo '</form>';
         echo '<p><button type="button" class="button" id="gm2-bulk-term-analyze">' . esc_html__( 'Analyze Selected', 'gm2-wordpress-suite' ) . '</button> ';
         echo '<button type="button" class="button" id="gm2-bulk-term-desc">' . esc_html__( 'Generate Descriptions', 'gm2-wordpress-suite' ) . '</button> ';
         echo '<button type="button" class="button" id="gm2-bulk-term-cancel">' . esc_html__( 'Cancel', 'gm2-wordpress-suite' ) . '</button> ';
