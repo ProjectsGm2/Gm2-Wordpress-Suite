@@ -6,7 +6,6 @@ if (!defined('ABSPATH')) {
 }
 
 class Gm2_Abandoned_Carts {
-    const CRON_HOOK = 'gm2_ac_mark_abandoned';
     public function install() {
         global $wpdb;
         $charset_collate = $wpdb->get_charset_collate();
@@ -51,13 +50,7 @@ class Gm2_Abandoned_Carts {
         add_action('woocommerce_add_to_cart', [$this, 'capture_cart'], 10, 6);
         add_action('woocommerce_update_cart_action_cart_updated', [$this, 'capture_cart']);
         add_action('woocommerce_cart_loaded_from_session', [$this, 'capture_cart']);
-        add_action('template_redirect', [$this, 'maybe_mark_cart_abandoned']);
         add_action('woocommerce_thankyou', [$this, 'mark_cart_recovered']);
-
-        // Hook cron to mark carts abandoned even when no pages are loaded
-        add_action(self::CRON_HOOK, [$this, 'maybe_mark_cart_abandoned']);
-
-        self::schedule_event();
     }
 
     public function capture_cart() {
@@ -163,36 +156,56 @@ class Gm2_Abandoned_Carts {
         }
     }
 
-    public function maybe_mark_cart_abandoned() {
-        // Update the exit URL for the current visitor
+    public static function gm2_ac_mark_active() {
+        check_ajax_referer('gm2_ac_activity', 'nonce');
+
+        $url   = esc_url_raw($_POST['url'] ?? '');
         $token = '';
         if (class_exists('WC_Session') && WC()->session) {
             $token = WC()->session->get_customer_id();
         }
+        if (empty($token)) {
+            wp_send_json_error('no_cart');
+        }
 
         global $wpdb;
         $table = $wpdb->prefix . 'wc_ac_carts';
-        if (!empty($token)) {
-            $wpdb->update(
-                $table,
-                ['exit_url' => home_url($_SERVER['REQUEST_URI'] ?? '/')],
-                ['cart_token' => $token]
-            );
+        $wpdb->update(
+            $table,
+            [
+                'exit_url'     => $url,
+                'abandoned_at' => null,
+            ],
+            [ 'cart_token' => $token ]
+        );
+
+        wp_send_json_success();
+    }
+
+    public static function gm2_ac_mark_abandoned() {
+        check_ajax_referer('gm2_ac_activity', 'nonce');
+
+        $url   = esc_url_raw($_POST['url'] ?? '');
+        $token = '';
+        if (class_exists('WC_Session') && WC()->session) {
+            $token = WC()->session->get_customer_id();
+        }
+        if (empty($token)) {
+            wp_send_json_error('no_cart');
         }
 
-        // Mark carts without orders after timeout
-        $timeout   = absint(get_option('gm2_ac_timeout', 60));
-        $threshold = date(
-            'Y-m-d H:i:s',
-            strtotime(current_time('mysql')) - $timeout * 60
+        global $wpdb;
+        $table = $wpdb->prefix . 'wc_ac_carts';
+        $wpdb->update(
+            $table,
+            [
+                'exit_url'     => $url,
+                'abandoned_at' => current_time('mysql'),
+            ],
+            [ 'cart_token' => $token ]
         );
-        $wpdb->query(
-            $wpdb->prepare(
-                "UPDATE $table SET abandoned_at = %s WHERE abandoned_at IS NULL AND cart_contents <> '' AND created_at <= %s",
-                current_time('mysql'),
-                $threshold
-            )
-        );
+
+        wp_send_json_success();
     }
 
     public function mark_cart_recovered($order_id) {
@@ -242,28 +255,7 @@ class Gm2_Abandoned_Carts {
         return 'Unknown';
     }
 
-    public static function schedule_event() {
-        $minutes = absint(apply_filters('gm2_ac_mark_abandoned_interval', (int) get_option('gm2_ac_mark_abandoned_interval', 5)));
-        if ($minutes < 1) {
-            $minutes = 1;
-        }
-        $schedule = 'gm2_ac_' . $minutes . '_mins';
-        $existing = wp_next_scheduled(self::CRON_HOOK);
-        if ($existing) {
-            $current = wp_get_schedule(self::CRON_HOOK);
-            if ($current !== $schedule) {
-                self::clear_scheduled_event();
-                wp_schedule_event(time(), $schedule, self::CRON_HOOK);
-            }
-        } else {
-            wp_schedule_event(time(), $schedule, self::CRON_HOOK);
-        }
-    }
-
     public static function clear_scheduled_event() {
-        $ts = wp_next_scheduled(self::CRON_HOOK);
-        if ($ts) {
-            wp_unschedule_event($ts, self::CRON_HOOK);
-        }
+        // Deprecated: cron scheduling removed.
     }
 }
