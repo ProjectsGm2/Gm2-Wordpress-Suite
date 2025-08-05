@@ -19,6 +19,19 @@ Existing prompt logic automatically includes these options via `gm2_get_seo_cont
 - Bulk AI now supports categories and product categories on the **Bulk AI Taxonomies** page.
 - The **Bulk AI Taxonomies** screen defaults to the `manage_categories` capability which can be adjusted via the `gm2_bulk_ai_tax_capability` filter.
 
+## Real-time Google Merchant Centre Data
+
+Price, availability and inventory fields now update in real time. When a WooCommerce product's metadata changes, the values are stored and made available through a REST endpoint at `/gm2/v1/gmc/realtime`. The front-end script `public/js/gm2-gmc-realtime.js` polls this endpoint and dispatches a `gm2GmcRealtimeUpdate` event with the latest data.
+
+Use the `gm2_gmc_realtime_fields` filter to add or remove fields from the real-time list:
+
+```php
+add_filter('gm2_gmc_realtime_fields', function ($fields) {
+    $fields[] = 'sale_price';
+    return $fields;
+});
+```
+
 ## Bulk AI
 
 - Batching or rate-limiting of AI requests.
