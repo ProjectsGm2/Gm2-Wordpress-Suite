@@ -63,8 +63,8 @@ class GM2_AC_Table extends \WP_List_Table {
             $contents   = maybe_unserialize($row->cart_contents);
             if (is_array($contents)) {
                 foreach ($contents as $item) {
-                    $qty  = isset($item['quantity']) ? (int) $item['quantity'] : 1;
-                    $name = '';
+                    $qty   = isset($item['quantity']) ? (int) $item['quantity'] : 1;
+                    $name  = '';
                     $price = 0;
                     if (isset($item['data']) && is_object($item['data'])) {
                         $name  = $item['data']->get_name();
@@ -76,8 +76,11 @@ class GM2_AC_Table extends \WP_List_Table {
                             $price = (float) $prod->get_price();
                         }
                     }
-                    if ($name !== '') {
-                        $products[] = $name . ' x' . $qty;
+                    if ($name === '' && isset($item['product_id'])) {
+                        $name = 'Product #' . $item['product_id'];
+                    }
+                    $products[] = $name . ' x' . $qty;
+                    if ($price > 0) {
                         $cart_value += $price * $qty;
                     }
                 }
