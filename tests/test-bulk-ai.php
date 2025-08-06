@@ -294,6 +294,47 @@ class BulkAiTaxExportTest extends WP_UnitTestCase {
     }
 }
 
+class BulkAiSelectAllTest extends WP_UnitTestCase {
+    public function test_select_all_option_displays_and_checks_all() {
+        $post_id = self::factory()->post->create(['post_title' => 'Analyzed']);
+        update_post_meta($post_id, '_gm2_ai_research', wp_json_encode([
+            'seo_title'  => 'Title',
+            'description'=> 'Desc',
+        ]));
+
+        $admin = new Gm2_SEO_Admin();
+        $user  = self::factory()->user->create(['role' => 'administrator']);
+        wp_set_current_user($user);
+
+        ob_start();
+        $admin->display_bulk_ai_page();
+        $html = ob_get_clean();
+
+        $this->assertStringContainsString('gm2-row-select-all', $html);
+
+        $dom = new DOMDocument();
+        libxml_use_internal_errors(true);
+        $dom->loadHTML($html);
+        libxml_clear_errors();
+        $xpath = new DOMXPath($dom);
+        $select = $xpath->query("//input[contains(@class,'gm2-row-select-all')]")->item(0);
+        $boxes  = $xpath->query("//input[contains(@class,'gm2-apply')]");
+        $this->assertGreaterThan(0, $boxes->length);
+        foreach ($boxes as $box) {
+            $this->assertFalse($box->hasAttribute('checked'));
+        }
+        if ($select) {
+            $select->setAttribute('checked', 'checked');
+            foreach ($boxes as $box) {
+                $box->setAttribute('checked', 'checked');
+            }
+        }
+        foreach ($boxes as $box) {
+            $this->assertSame('checked', $box->getAttribute('checked'));
+        }
+    }
+}
+
 class BulkAiTaxSelectAllTest extends WP_UnitTestCase {
     public function test_select_all_option_displayed() {
         $term_id = self::factory()->term->create(['taxonomy' => 'category', 'name' => 'Analyzed']);
