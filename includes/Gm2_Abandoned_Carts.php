@@ -167,6 +167,16 @@ class Gm2_Abandoned_Carts {
         }
     }
 
+    private static function log_no_cart($action) {
+        $message = sprintf('Gm2 Abandoned Carts: %s called without cart token.', $action);
+        error_log($message);
+        if (is_admin()) {
+            add_action('admin_notices', function () use ($message) {
+                echo '<div class="notice notice-error"><p>' . esc_html($message) . '</p></div>';
+            });
+        }
+    }
+
     public static function gm2_ac_mark_active() {
         check_ajax_referer('gm2_ac_activity', 'nonce');
 
@@ -176,6 +186,7 @@ class Gm2_Abandoned_Carts {
             $token = WC()->session->get_customer_id();
         }
         if (empty($token)) {
+            self::log_no_cart(__FUNCTION__);
             wp_send_json_error('no_cart');
         }
 
@@ -206,6 +217,7 @@ class Gm2_Abandoned_Carts {
             $token = WC()->session->get_customer_id();
         }
         if (empty($token)) {
+            self::log_no_cart(__FUNCTION__);
             wp_send_json_error('no_cart');
         }
 
