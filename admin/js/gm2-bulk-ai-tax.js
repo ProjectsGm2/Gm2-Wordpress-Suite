@@ -4,9 +4,9 @@ jQuery(function($){
         var c=$(this).prop('checked');
         $('#gm2-bulk-term-list .gm2-select').prop('checked',c);
     });
-    $('#gm2-bulk-term-list').on('click','.gm2-row-select-all',function(){
+    $('#gm2-bulk-term-list').on('change','.gm2-row-select-all',function(){
         var checked=$(this).prop('checked');
-        $(this).closest('.gm2-result').find('.gm2-apply').prop('checked',checked);
+        $(this).closest('td').find('.gm2-apply').prop('checked',checked);
     });
     $('#gm2-bulk-ai-tax').on('click','#gm2-bulk-term-analyze',function(e){
         e.preventDefault();
