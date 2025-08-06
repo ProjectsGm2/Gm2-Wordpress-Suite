@@ -1344,6 +1344,7 @@ class Gm2_SEO_Admin {
 
         $buttons = '<button type="button" class="button gm2-bulk-analyze" aria-label="' . esc_attr__( 'Analyze Selected', 'gm2-wordpress-suite' ) . '">' . esc_html__( 'Analyze Selected', 'gm2-wordpress-suite' ) . '</button> '
             . '<button type="button" class="button gm2-bulk-cancel">' . esc_html__( 'Cancel', 'gm2-wordpress-suite' ) . '</button> '
+            . '<button type="button" class="button gm2-bulk-select-analyzed">' . esc_html__( 'Select Analyzed', 'gm2-wordpress-suite' ) . '</button> '
             . '<button type="button" class="button gm2-bulk-apply-all">' . esc_html__( 'Apply All', 'gm2-wordpress-suite' ) . '</button> '
             . '<button type="button" class="button gm2-bulk-reset-all">' . esc_html__( 'Reset All', 'gm2-wordpress-suite' ) . '</button> '
             . '<button type="button" class="button gm2-bulk-reset-selected">' . esc_html__( 'Reset Selected', 'gm2-wordpress-suite' ) . '</button> '
@@ -1485,6 +1486,7 @@ class Gm2_SEO_Admin {
         $buttons = '<button type="button" class="button" id="gm2-bulk-term-analyze">' . esc_html__( 'Analyze Selected', 'gm2-wordpress-suite' ) . '</button> '
             . '<button type="button" class="button" id="gm2-bulk-term-desc">' . esc_html__( 'Generate Descriptions', 'gm2-wordpress-suite' ) . '</button> '
             . '<button type="button" class="button" id="gm2-bulk-term-cancel">' . esc_html__( 'Cancel', 'gm2-wordpress-suite' ) . '</button> '
+            . '<button type="button" class="button" id="gm2-bulk-term-select-analyzed">' . esc_html__( 'Select Analyzed', 'gm2-wordpress-suite' ) . '</button> '
             . '<button type="button" class="button" id="gm2-bulk-term-apply-all">' . esc_html__( 'Apply All', 'gm2-wordpress-suite' ) . '</button> '
             . '<button type="button" class="button" id="gm2-bulk-term-reset-all">' . esc_html__( 'Reset All', 'gm2-wordpress-suite' ) . '</button> '
             . '<button type="button" class="button" id="gm2-bulk-term-reset-selected">' . esc_html__( 'Reset Selected', 'gm2-wordpress-suite' ) . '</button> '
