@@ -65,6 +65,7 @@ class Gm2_SEO_Admin {
         add_action('wp_ajax_gm2_ai_batch_cancel', [$this, 'ajax_ai_batch_cancel']);
         add_action('wp_ajax_gm2_ai_tax_batch_schedule', [$this, 'ajax_ai_tax_batch_schedule']);
         add_action('wp_ajax_gm2_ai_tax_batch_cancel', [$this, 'ajax_ai_tax_batch_cancel']);
+        add_action('wp_ajax_gm2_schema_preview', [$this, 'ajax_schema_preview']);
         add_action(self::AI_CRON_HOOK, [$this, 'cron_process_ai_queue']);
         add_action(self::AI_TAX_CRON_HOOK, [$this, 'cron_process_ai_tax_queue']);
 
@@ -1973,6 +1974,9 @@ class Gm2_SEO_Admin {
         $max_video_preview = isset($_POST['gm2_max_video_preview']) ? sanitize_text_field($_POST['gm2_max_video_preview']) : '';
         $og_image         = isset($_POST['gm2_og_image']) ? absint($_POST['gm2_og_image']) : 0;
         $link_rel_data    = isset($_POST['gm2_link_rel']) ? wp_unslash($_POST['gm2_link_rel']) : '';
+        $schema_type      = isset($_POST['gm2_schema_type']) ? sanitize_text_field($_POST['gm2_schema_type']) : '';
+        $schema_brand     = isset($_POST['gm2_schema_brand']) ? sanitize_text_field($_POST['gm2_schema_brand']) : '';
+        $schema_rating    = isset($_POST['gm2_schema_rating']) ? sanitize_text_field($_POST['gm2_schema_rating']) : '';
         if (!is_array(json_decode($link_rel_data, true)) && $link_rel_data !== '') {
             $link_rel_data = '';
         }
@@ -1992,6 +1996,9 @@ class Gm2_SEO_Admin {
         update_post_meta($post_id, '_gm2_max_video_preview', $max_video_preview);
         update_post_meta($post_id, '_gm2_og_image', $og_image);
         update_post_meta($post_id, '_gm2_link_rel', $link_rel_data);
+        update_post_meta($post_id, '_gm2_schema_type', $schema_type);
+        update_post_meta($post_id, '_gm2_schema_brand', $schema_brand);
+        update_post_meta($post_id, '_gm2_schema_rating', $schema_rating);
     }
 
     public function save_taxonomy_meta($term_id) {
@@ -4549,6 +4556,26 @@ class Gm2_SEO_Admin {
         wp_send_json_success( [ 'reset' => $count ] );
     }
 
+    public function ajax_schema_preview() {
+        check_ajax_referer('gm2_schema_preview', 'nonce');
+
+        $post_id = isset($_POST['post_id']) ? absint($_POST['post_id']) : 0;
+        if (!$post_id) {
+            wp_send_json_error( __( 'invalid post', 'gm2-wordpress-suite' ) );
+        }
+
+        $overrides = [
+            'schema_type'  => isset($_POST['schema_type']) ? sanitize_text_field(wp_unslash($_POST['schema_type'])) : '',
+            'schema_brand' => isset($_POST['schema_brand']) ? sanitize_text_field(wp_unslash($_POST['schema_brand'])) : '',
+            'schema_rating'=> isset($_POST['schema_rating']) ? sanitize_text_field(wp_unslash($_POST['schema_rating'])) : '',
+        ];
+
+        $public = new Gm2_SEO_Public();
+        $schema = $public->generate_schema_data($post_id, $overrides);
+
+        wp_send_json_success($schema);
+    }
+
     public function enqueue_editor_scripts($hook = null) {
 
         /*
@@ -4622,6 +4649,24 @@ class Gm2_SEO_Admin {
             ['jquery', 'wp-data'],
             GM2_VERSION,
             true
+        );
+
+        wp_enqueue_script(
+            'gm2-schema-preview',
+            GM2_PLUGIN_URL . 'admin/js/gm2-schema-preview.js',
+            ['jquery'],
+            GM2_VERSION,
+            true
+        );
+
+        wp_localize_script(
+            'gm2-schema-preview',
+            'gm2SchemaPreview',
+            [
+                'nonce'    => wp_create_nonce('gm2_schema_preview'),
+                'ajax_url' => admin_url('admin-ajax.php'),
+                'post_id'  => isset($_GET['post']) ? absint($_GET['post']) : 0,
+            ]
         );
 
         wp_localize_script(
@@ -4862,6 +4907,9 @@ class Gm2_SEO_Admin {
         $max_snippet         = get_post_meta($post->ID, '_gm2_max_snippet', true);
         $max_image_preview   = get_post_meta($post->ID, '_gm2_max_image_preview', true);
         $max_video_preview   = get_post_meta($post->ID, '_gm2_max_video_preview', true);
+        $schema_type         = get_post_meta($post->ID, '_gm2_schema_type', true);
+        $schema_brand        = get_post_meta($post->ID, '_gm2_schema_brand', true);
+        $schema_rating       = get_post_meta($post->ID, '_gm2_schema_rating', true);
 
         wp_nonce_field('gm2_save_seo_meta', 'gm2_seo_nonce');
 
@@ -4869,6 +4917,7 @@ class Gm2_SEO_Admin {
         echo '<nav class="gm2-nav-tabs" role="tablist">';
         echo '<a href="#" class="gm2-nav-tab active" role="tab" aria-controls="gm2-seo-settings" aria-selected="true" data-tab="gm2-seo-settings">SEO Settings</a>';
         echo '<a href="#" class="gm2-nav-tab" role="tab" aria-controls="gm2-content-analysis" aria-selected="false" data-tab="gm2-content-analysis">Content Analysis</a>';
+        echo '<a href="#" class="gm2-nav-tab" role="tab" aria-controls="gm2-schema" aria-selected="false" data-tab="gm2-schema">Schema</a>';
         echo '<a href="#" class="gm2-nav-tab" role="tab" aria-controls="gm2-ai-seo" aria-selected="false" data-tab="gm2-ai-seo">AI SEO</a>';
         echo '</nav>';
 
@@ -4948,6 +4997,24 @@ class Gm2_SEO_Admin {
         echo '<p>' . esc_html__( 'External Links', 'gm2-wordpress-suite' ) . ': <span id="gm2-content-analysis-external-links">0</span></p>';
         echo '<p>' . esc_html__( 'Suggested Links', 'gm2-wordpress-suite' ) . ':</p><ul id="gm2-content-analysis-links"></ul>';
         echo '</div>';
+        echo '</div>';
+        echo '<div id="gm2-schema" class="gm2-tab-panel" role="tabpanel">';
+        echo '<p><label for="gm2_schema_type">' . esc_html__( 'Primary Schema Type', 'gm2-wordpress-suite' ) . '</label>';
+        echo '<select id="gm2_schema_type" name="gm2_schema_type">';
+        $opts = [
+            ''         => __( 'Default', 'gm2-wordpress-suite' ),
+            'article'  => __( 'Article', 'gm2-wordpress-suite' ),
+            'product'  => __( 'Product', 'gm2-wordpress-suite' ),
+        ];
+        foreach ($opts as $val => $label) {
+            echo '<option value="' . esc_attr($val) . '"' . selected($schema_type, $val, false) . '>' . esc_html($label) . '</option>';
+        }
+        echo '</select></p>';
+        echo '<p><label for="gm2_schema_brand">' . esc_html__( 'Brand Name', 'gm2-wordpress-suite' ) . '</label>';
+        echo '<input type="text" id="gm2_schema_brand" name="gm2_schema_brand" value="' . esc_attr($schema_brand) . '" class="widefat" /></p>';
+        echo '<p><label for="gm2_schema_rating">' . esc_html__( 'Review Rating', 'gm2-wordpress-suite' ) . '</label>';
+        echo '<input type="number" step="0.1" min="0" max="5" id="gm2_schema_rating" name="gm2_schema_rating" value="' . esc_attr($schema_rating) . '" class="small-text" /></p>';
+        echo '<pre id="gm2-schema-preview"></pre>';
         echo '</div>';
         echo '<div id="gm2-ai-seo" class="gm2-tab-panel" role="tabpanel">';
         echo '<p><button type="button" class="button gm2-ai-research">' . esc_html__( 'AI Research', 'gm2-wordpress-suite' ) . '</button></p>';
