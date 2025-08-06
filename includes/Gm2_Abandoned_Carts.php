@@ -83,7 +83,12 @@ class Gm2_Abandoned_Carts {
             ];
         }
         $contents   = wp_json_encode($cart_items);
-        $token      = WC()->session->get_customer_id();
+
+        $wc = WC();
+        if (!is_object($wc->session)) {
+            return;
+        }
+        $token      = $wc->session->get_customer_id();
         $ip         = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])) : '';
         $agent      = isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '';
         $browser    = self::get_browser($agent);
