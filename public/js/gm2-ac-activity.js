@@ -6,7 +6,7 @@
     const url = window.location.href;
 
     function send(action) {
-        const data = new URLSearchParams({ action, nonce, url });
+        const data = new URLSearchParams({ action, nonce, url: window.location.href });
 
         if (action === 'gm2_ac_mark_abandoned') {
             if (navigator.sendBeacon) {
@@ -95,6 +95,10 @@
         setEntryUrl(url);
     }
     send('gm2_ac_mark_active');
+
+    document.body.addEventListener('added_to_cart', () => {
+        send('gm2_ac_mark_active');
+    });
 
     window.addEventListener('pagehide', decrementTabs, { once: true });
 })();
