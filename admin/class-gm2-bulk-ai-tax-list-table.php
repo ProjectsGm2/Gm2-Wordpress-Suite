@@ -16,12 +16,14 @@ class Gm2_Bulk_Ai_Tax_List_Table extends \WP_List_Table {
     private $search;
     private $missing_title;
     private $missing_desc;
+    private $seo_status;
 
     public function __construct($admin, $args) {
         $this->admin         = $admin;
         $this->page_size     = max(1, (int) ($args['page_size'] ?? 10));
         $this->taxonomy      = $args['taxonomy'] ?? 'all';
         $this->search        = $args['search'] ?? '';
+        $this->seo_status    = $args['seo_status'] ?? 'all';
         $this->missing_title = $args['missing_title'] ?? '0';
         $this->missing_desc  = $args['missing_description'] ?? '0';
 
@@ -126,6 +128,18 @@ class Gm2_Bulk_Ai_Tax_List_Table extends \WP_List_Table {
         }
 
         $meta_query = [];
+        if ($this->seo_status === 'complete') {
+            $meta_query[] = [ 'key' => '_gm2_title', 'value' => '', 'compare' => '!=' ];
+            $meta_query[] = [ 'key' => '_gm2_description', 'value' => '', 'compare' => '!=' ];
+        } elseif ($this->seo_status === 'incomplete') {
+            $meta_query[] = [
+                'relation' => 'OR',
+                [ 'key' => '_gm2_title', 'compare' => 'NOT EXISTS' ],
+                [ 'key' => '_gm2_title', 'value' => '', 'compare' => '=' ],
+                [ 'key' => '_gm2_description', 'compare' => 'NOT EXISTS' ],
+                [ 'key' => '_gm2_description', 'value' => '', 'compare' => '=' ],
+            ];
+        }
         if ($this->missing_title === '1') {
             $meta_query[] = [
                 'relation' => 'OR',

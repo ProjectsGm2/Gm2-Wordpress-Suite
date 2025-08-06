@@ -168,6 +168,7 @@ jQuery(function($){
             all:1,
             taxonomy:$('select[name="gm2_taxonomy"]').val(),
             search:$('input[name="gm2_tax_search"]').val()||'',
+            seo_status:$('select[name="gm2_tax_seo_status"]').val(),
             missing_title:$('input[name="gm2_bulk_ai_tax_missing_title"]').is(':checked')?1:0,
             missing_desc:$('input[name="gm2_bulk_ai_tax_missing_description"]').is(':checked')?1:0,
             _ajax_nonce:gm2BulkAiTax.reset_nonce

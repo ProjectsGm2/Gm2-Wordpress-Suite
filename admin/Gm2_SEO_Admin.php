@@ -1367,15 +1367,19 @@ class Gm2_SEO_Admin {
         $search        = get_option('gm2_bulk_ai_tax_search', '');
         $missing_title = get_option('gm2_bulk_ai_tax_missing_title', '0');
         $missing_desc  = get_option('gm2_bulk_ai_tax_missing_description', '0');
+        $seo_status    = get_user_meta($user_id, 'gm2_bulk_ai_tax_seo_status', true) ?: 'all';
 
         if (isset($_POST['gm2_bulk_ai_tax_save']) && check_admin_referer('gm2_bulk_ai_tax_settings')) {
             $page_size     = max(1, absint($_POST['page_size'] ?? 50));
             $taxonomy      = sanitize_key($_POST['gm2_taxonomy'] ?? 'all');
             $search        = sanitize_text_field($_POST['gm2_tax_search'] ?? '');
+            $seo_status    = sanitize_key($_POST['gm2_tax_seo_status'] ?? 'all');
+            $seo_status    = in_array($seo_status, ['all', 'complete', 'incomplete'], true) ? $seo_status : 'all';
             $missing_title = isset($_POST['gm2_bulk_ai_tax_missing_title']) ? '1' : '0';
             $missing_desc  = isset($_POST['gm2_bulk_ai_tax_missing_description']) ? '1' : '0';
             update_user_meta($user_id, 'gm2_bulk_ai_tax_page_size', $page_size);
             update_user_meta($user_id, 'gm2_bulk_ai_tax_taxonomy', $taxonomy);
+            update_user_meta($user_id, 'gm2_bulk_ai_tax_seo_status', $seo_status);
             update_option('gm2_bulk_ai_tax_search', $search);
             update_option('gm2_bulk_ai_tax_missing_title', $missing_title);
             update_option('gm2_bulk_ai_tax_missing_description', $missing_desc);
@@ -1388,6 +1392,7 @@ class Gm2_SEO_Admin {
             'page_size'            => $page_size,
             'taxonomy'             => $taxonomy,
             'search'               => $search,
+            'seo_status'           => $seo_status,
             'missing_title'        => $missing_title,
             'missing_description'  => $missing_desc,
         ];
@@ -1414,6 +1419,11 @@ class Gm2_SEO_Admin {
         }
         echo '</select></label> ';
         echo '<label>' . esc_html__( 'Search', 'gm2-wordpress-suite' ) . ' <input type="text" name="gm2_tax_search" value="' . esc_attr($search) . '"></label> ';
+        echo '<label>' . esc_html__( 'SEO Status', 'gm2-wordpress-suite' ) . ' <select name="gm2_tax_seo_status">';
+        echo '<option value="all"' . selected($seo_status, 'all', false) . '>' . esc_html__( 'All', 'gm2-wordpress-suite' ) . '</option>';
+        echo '<option value="complete"' . selected($seo_status, 'complete', false) . '>' . esc_html__( 'Complete', 'gm2-wordpress-suite' ) . '</option>';
+        echo '<option value="incomplete"' . selected($seo_status, 'incomplete', false) . '>' . esc_html__( 'Incomplete', 'gm2-wordpress-suite' ) . '</option>';
+        echo '</select></label> ';
         echo '<label><input type="checkbox" name="gm2_bulk_ai_tax_missing_title" value="1" ' . checked($missing_title, '1', false) . '> ' . esc_html__( 'Only terms missing SEO Title', 'gm2-wordpress-suite' ) . '</label> ';
         echo '<label><input type="checkbox" name="gm2_bulk_ai_tax_missing_description" value="1" ' . checked($missing_desc, '1', false) . '> ' . esc_html__( 'Only terms missing Description', 'gm2-wordpress-suite' ) . '</label> ';
         submit_button( esc_html__( 'Save', 'gm2-wordpress-suite' ), 'secondary', 'gm2_bulk_ai_tax_save', false );
@@ -1557,6 +1567,7 @@ class Gm2_SEO_Admin {
         $search        = get_option('gm2_bulk_ai_tax_search', '');
         $missing_title = get_option('gm2_bulk_ai_tax_missing_title', '0');
         $missing_desc  = get_option('gm2_bulk_ai_tax_missing_description', '0');
+        $seo_status    = get_user_meta($user_id, 'gm2_bulk_ai_tax_seo_status', true) ?: 'all';
 
         $tax_list = $this->get_supported_taxonomies();
         $tax_arg  = ($taxonomy === 'all') ? $tax_list : $taxonomy;
@@ -1570,6 +1581,18 @@ class Gm2_SEO_Admin {
         }
 
         $meta_query = [];
+        if ($seo_status === 'complete') {
+            $meta_query[] = [ 'key' => '_gm2_title', 'value' => '', 'compare' => '!=' ];
+            $meta_query[] = [ 'key' => '_gm2_description', 'value' => '', 'compare' => '!=' ];
+        } elseif ($seo_status === 'incomplete') {
+            $meta_query[] = [
+                'relation' => 'OR',
+                [ 'key' => '_gm2_title', 'compare' => 'NOT EXISTS' ],
+                [ 'key' => '_gm2_title', 'value' => '', 'compare' => '=' ],
+                [ 'key' => '_gm2_description', 'compare' => 'NOT EXISTS' ],
+                [ 'key' => '_gm2_description', 'value' => '', 'compare' => '=' ],
+            ];
+        }
         if ($missing_title === '1') {
             $meta_query[] = [
                 'relation' => 'OR',
@@ -4572,6 +4595,8 @@ class Gm2_SEO_Admin {
         if ($all) {
             $taxonomy      = sanitize_key($_POST['taxonomy'] ?? 'all');
             $search        = isset($_POST['search']) ? sanitize_text_field($_POST['search']) : '';
+            $seo_status    = sanitize_key($_POST['seo_status'] ?? 'all');
+            $seo_status    = in_array($seo_status, ['all','complete','incomplete'], true) ? $seo_status : 'all';
             $missing_title = isset($_POST['missing_title']) && $_POST['missing_title'] === '1' ? '1' : '0';
             $missing_desc  = isset($_POST['missing_desc']) && $_POST['missing_desc'] === '1' ? '1' : '0';
 
@@ -4586,6 +4611,18 @@ class Gm2_SEO_Admin {
                 $args['search'] = $search;
             }
             $meta_query = [];
+            if ($seo_status === 'complete') {
+                $meta_query[] = [ 'key' => '_gm2_title', 'value' => '', 'compare' => '!=' ];
+                $meta_query[] = [ 'key' => '_gm2_description', 'value' => '', 'compare' => '!=' ];
+            } elseif ($seo_status === 'incomplete') {
+                $meta_query[] = [
+                    'relation' => 'OR',
+                    [ 'key' => '_gm2_title', 'compare' => 'NOT EXISTS' ],
+                    [ 'key' => '_gm2_title', 'value' => '', 'compare' => '=' ],
+                    [ 'key' => '_gm2_description', 'compare' => 'NOT EXISTS' ],
+                    [ 'key' => '_gm2_description', 'value' => '', 'compare' => '=' ],
+                ];
+            }
             if ($missing_title === '1') {
                 $meta_query[] = [
                     'relation' => 'OR',
