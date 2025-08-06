@@ -54,9 +54,9 @@ jQuery(function($){
         var c=$(this).prop('checked');
         $('#gm2-bulk-list .gm2-select').prop('checked',c);
     });
-    $('#gm2-bulk-list').on('click','.gm2-row-select-all',function(){
+    $('#gm2-bulk-list').on('change','.gm2-row-select-all',function(){
         var checked=$(this).prop('checked');
-        $(this).closest('.gm2-result').find('.gm2-apply').prop('checked',checked);
+        $(this).closest('td').find('.gm2-apply').prop('checked',checked);
     });
     $('#gm2-bulk-ai').on('click','.gm2-bulk-analyze',function(e){
         e.preventDefault();
