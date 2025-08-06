@@ -215,6 +215,7 @@ class Gm2_Admin {
                         'nonce'       => wp_create_nonce('gm2_ai_research'),
                         'apply_nonce' => wp_create_nonce('gm2_bulk_ai_apply'),
                         'batch_nonce' => wp_create_nonce('gm2_ai_batch'),
+                        'reset_nonce' => wp_create_nonce('gm2_bulk_ai_reset'),
                         'ajax_url'    => admin_url('admin-ajax.php'),
                         'i18n'        => [
                             'processing'   => __( 'Processing %1$s / %2$s', 'gm2-wordpress-suite' ),
@@ -232,6 +233,8 @@ class Gm2_Admin {
                             'selectAll'    => __( 'Select all', 'gm2-wordpress-suite' ),
                             'cancel'       => __( 'Cancel', 'gm2-wordpress-suite' ),
                             'undo'         => __( 'Undo', 'gm2-wordpress-suite' ),
+                            'resetting'    => __( 'Resetting...', 'gm2-wordpress-suite' ),
+                            'resetDone'    => __( 'Reset %s posts', 'gm2-wordpress-suite' ),
                         ],
                     ]
                 );

@@ -14,6 +14,10 @@ class Gm2_SEO_Admin {
     const AI_TAX_CRON_HOOK = 'gm2_ai_tax_batch_process';
     const AI_TAX_QUEUE_OPTION = 'gm2_ai_tax_batch_queue';
 
+    public function __construct() {
+        add_action('wp_ajax_gm2_bulk_ai_reset', [$this, 'ajax_bulk_ai_reset']);
+    }
+
     private function debug_log($message) {
         if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log($message);
@@ -1294,6 +1298,8 @@ class Gm2_SEO_Admin {
             '<button type="button" class="button" id="gm2-select-none">' . esc_html__( 'Select None', 'gm2-wordpress-suite' ) . '</button> ' .
             '<button type="button" class="button" id="gm2-bulk-cancel">' . esc_html__( 'Cancel', 'gm2-wordpress-suite' ) . '</button> ' .
             '<button type="button" class="button" id="gm2-bulk-apply-all">' . esc_html__( 'Apply All', 'gm2-wordpress-suite' ) . '</button> ' .
+            '<button type="button" class="button" id="gm2-bulk-reset-selected">' . esc_html__( 'Reset Selected', 'gm2-wordpress-suite' ) . '</button> ' .
+            '<button type="button" class="button" id="gm2-bulk-reset-all">' . esc_html__( 'Reset All', 'gm2-wordpress-suite' ) . '</button> ' .
             '<span id="gm2-bulk-apply-msg"></span></p>';
         echo '<p><progress id="gm2-bulk-progress-bar" value="0" max="100" style="width:100%;display:none" role="progressbar" aria-live="polite"></progress></p>';
         echo '<p><button type="button" class="button" id="gm2-bulk-schedule">' . esc_html__( 'Schedule Batch', 'gm2-wordpress-suite' ) . '</button> ' .
@@ -4280,6 +4286,107 @@ class Gm2_SEO_Admin {
         ];
 
         wp_send_json_success($response);
+    }
+
+    public function ajax_bulk_ai_reset() {
+        check_ajax_referer('gm2_bulk_ai_reset');
+
+        if (!current_user_can('edit_posts')) {
+            wp_send_json_error( __( 'permission denied', 'gm2-wordpress-suite' ), 403 );
+        }
+
+        $all   = isset($_POST['all']) && $_POST['all'] === '1';
+        $ids   = [];
+        $count = 0;
+
+        if ($all) {
+            $status       = sanitize_key($_POST['status'] ?? 'publish');
+            $post_type    = sanitize_key($_POST['post_type'] ?? 'all');
+            $terms        = isset($_POST['terms']) ? (array) $_POST['terms'] : [];
+            $terms        = array_map('sanitize_text_field', $terms);
+            $missing_title = isset($_POST['missing_title']) && $_POST['missing_title'] === '1' ? '1' : '0';
+            $missing_desc  = isset($_POST['missing_desc']) && $_POST['missing_desc'] === '1' ? '1' : '0';
+            $search        = isset($_POST['search']) ? sanitize_text_field($_POST['search']) : '';
+
+            $types = $this->get_supported_post_types();
+            if ($post_type !== 'all' && in_array($post_type, $types, true)) {
+                $types = [ $post_type ];
+            }
+
+            $args = [
+                'post_type'      => $types,
+                'post_status'    => $status,
+                'posts_per_page' => -1,
+                'fields'         => 'ids',
+                'no_found_rows'  => true,
+            ];
+            if ($search !== '') {
+                $args['s'] = $search;
+            }
+
+            if ($terms) {
+                $taxonomies = $this->get_supported_taxonomies();
+                $tax_query  = [ 'relation' => 'OR' ];
+                foreach ($terms as $t) {
+                    if (strpos($t, ':') === false) {
+                        continue;
+                    }
+                    list($tax, $id) = explode(':', $t);
+                    if (in_array($tax, $taxonomies, true)) {
+                        $tax_query[] = [
+                            'taxonomy' => $tax,
+                            'field'    => 'term_id',
+                            'terms'    => absint($id),
+                        ];
+                    }
+                }
+                if (count($tax_query) > 1) {
+                    $args['tax_query'] = $tax_query;
+                }
+            }
+
+            $meta_query = [];
+            if ($missing_title === '1') {
+                $meta_query[] = [
+                    'relation' => 'OR',
+                    [ 'key' => '_gm2_title', 'compare' => 'NOT EXISTS' ],
+                    [ 'key' => '_gm2_title', 'value' => '', 'compare' => '=' ],
+                ];
+            }
+            if ($missing_desc === '1') {
+                $meta_query[] = [
+                    'relation' => 'OR',
+                    [ 'key' => '_gm2_description', 'compare' => 'NOT EXISTS' ],
+                    [ 'key' => '_gm2_description', 'value' => '', 'compare' => '=' ],
+                ];
+            }
+            if ($meta_query) {
+                $args['meta_query'] = array_merge([ 'relation' => 'AND' ], $meta_query);
+            }
+
+            $ids = get_posts($args);
+        } else {
+            $ids = isset($_POST['ids']) ? json_decode(wp_unslash($_POST['ids']), true) : [];
+            if (!is_array($ids)) {
+                wp_send_json_error( __( 'invalid data', 'gm2-wordpress-suite' ) );
+            }
+        }
+
+        foreach ($ids as $post_id) {
+            $post_id = absint($post_id);
+            if (!$post_id || !current_user_can('edit_post', $post_id)) {
+                continue;
+            }
+            delete_post_meta($post_id, '_gm2_title');
+            delete_post_meta($post_id, '_gm2_description');
+            delete_post_meta($post_id, '_gm2_prev_title');
+            delete_post_meta($post_id, '_gm2_prev_description');
+            delete_post_meta($post_id, '_gm2_prev_slug');
+            delete_post_meta($post_id, '_gm2_prev_post_title');
+            $count++;
+        }
+
+        wp_send_json_success( [ 'reset' => $count ] );
     }
 
     public function ajax_ai_research_clear() {
