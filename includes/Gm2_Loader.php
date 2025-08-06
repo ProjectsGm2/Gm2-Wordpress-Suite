@@ -56,8 +56,9 @@ class Gm2_Loader {
             $ac = new Gm2_Abandoned_Carts();
             $ac->run();
 
-            $ac_msg = new Gm2_Abandoned_Carts_Messaging();
-            $ac_msg->run();
+            // Temporarily disable Recovery Email Queue.
+            // $ac_msg = new Gm2_Abandoned_Carts_Messaging();
+            // $ac_msg->run();
 
             if (is_admin()) {
                 $ac_admin = new Gm2_Abandoned_Carts_Admin();

@@ -315,7 +315,7 @@ The tracking script listens for `beforeunload`, `visibilitychange` and
 older browsers these events or background requests may be suppressed, which can
 prevent the abandonment notice from reaching WordPress.
 
-Open **Gm2 → Abandoned Carts** to view a table listing each cart's status, IP address, email, location, device, products, value, entry and exit URLs, browsing time and revisits. Recovery messages are queued using WP&nbsp;Cron via the `gm2_ac_process_queue` action. Developers can hook `gm2_ac_send_message` to send the actual emails.
+Open **Gm2 → Abandoned Carts** to view a table listing each cart's status, IP address, email, location, device, products, value, entry and exit URLs, browsing time and revisits. Recovery messages were planned to be queued using WP&nbsp;Cron via the `gm2_ac_process_queue` action, but this feature is currently disabled.
 
 == Redirects ==
 Create 301 or 302 redirects from the **SEO → Redirects** tab. The plugin logs
