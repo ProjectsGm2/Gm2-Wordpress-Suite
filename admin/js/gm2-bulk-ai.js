@@ -386,6 +386,7 @@ jQuery(function($){
             all:1,
             status:$('select[name="status"]').val(),
             post_type:$('select[name="gm2_post_type"]').val(),
+            seo_status:$('select[name="seo_status"]').val(),
             terms:$('select[name="term[]"]').val()||[],
             missing_title:$('input[name="gm2_missing_title"]').is(':checked')?1:0,
             missing_desc:$('input[name="gm2_missing_description"]').is(':checked')?1:0,

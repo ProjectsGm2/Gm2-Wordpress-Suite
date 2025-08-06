@@ -423,6 +423,9 @@ class Gm2_SEO_Admin {
         register_setting('gm2_seo_options', 'gm2_bulk_ai_status', [
             'sanitize_callback' => 'sanitize_key',
         ]);
+        register_setting('gm2_seo_options', 'gm2_bulk_ai_seo_status', [
+            'sanitize_callback' => 'sanitize_key',
+        ]);
         register_setting('gm2_seo_options', 'gm2_bulk_ai_post_type', [
             'sanitize_callback' => 'sanitize_key',
         ]);
@@ -1220,22 +1223,25 @@ class Gm2_SEO_Admin {
         $post_type     = get_user_meta($user_id, 'gm2_bulk_ai_post_type', true) ?: 'all';
         $term_raw      = get_user_meta($user_id, 'gm2_bulk_ai_term', true) ?: '';
         $term          = $term_raw === '' ? [] : array_map('trim', explode(',', $term_raw));
+        $seo_status    = get_user_meta($user_id, 'gm2_bulk_ai_seo_status', true) ?: 'all';
         $missing_title = get_option('gm2_bulk_ai_missing_title', '0');
         $missing_desc  = get_option('gm2_bulk_ai_missing_description', '0');
 
         if (isset($_POST['gm2_bulk_ai_save']) && check_admin_referer('gm2_bulk_ai_settings')) {
-            $page_size    = max(1, absint($_POST['page_size'] ?? 10));
-            $status       = sanitize_key($_POST['status'] ?? 'publish');
-            $post_type    = sanitize_key($_POST['gm2_post_type'] ?? 'all');
-            $term_input   = isset($_POST['term']) ? (array) $_POST['term'] : [];
-            $term_input   = array_map('sanitize_text_field', $term_input);
-            $term         = array_filter(array_map('trim', $term_input));
+            $page_size     = max(1, absint($_POST['page_size'] ?? 10));
+            $status        = sanitize_key($_POST['status'] ?? 'publish');
+            $post_type     = sanitize_key($_POST['gm2_post_type'] ?? 'all');
+            $term_input    = isset($_POST['term']) ? (array) $_POST['term'] : [];
+            $term_input    = array_map('sanitize_text_field', $term_input);
+            $term          = array_filter(array_map('trim', $term_input));
+            $seo_status    = sanitize_key($_POST['seo_status'] ?? 'all');
             $missing_title = isset($_POST['gm2_missing_title']) ? '1' : '0';
             $missing_desc  = isset($_POST['gm2_missing_description']) ? '1' : '0';
             update_user_meta($user_id, 'gm2_bulk_ai_page_size', $page_size);
             update_user_meta($user_id, 'gm2_bulk_ai_status', $status);
             update_user_meta($user_id, 'gm2_bulk_ai_post_type', $post_type);
             update_user_meta($user_id, 'gm2_bulk_ai_term', implode(',', $term));
+            update_user_meta($user_id, 'gm2_bulk_ai_seo_status', $seo_status);
             update_option('gm2_bulk_ai_missing_title', $missing_title);
             update_option('gm2_bulk_ai_missing_description', $missing_desc);
         }
@@ -1245,6 +1251,7 @@ class Gm2_SEO_Admin {
             'status'        => $status,
             'post_type'     => $post_type,
             'terms'         => $term,
+            'seo_status'    => $seo_status,
             'missing_title' => $missing_title,
             'missing_desc'  => $missing_desc,
         ];
@@ -1285,6 +1292,11 @@ class Gm2_SEO_Admin {
             $sel = in_array($value, $selected_terms, true) ? 'selected="selected"' : '';
             echo '<option value="' . esc_attr($value) . '" ' . $sel . '>' . esc_html($label) . '</option>';
         }
+        echo '</select></label> ';
+        echo '<label>' . esc_html__( 'SEO Status', 'gm2-wordpress-suite' ) . ' <select name="seo_status">';
+        echo '<option value="all"' . selected($seo_status, 'all', false) . '>' . esc_html__( 'All', 'gm2-wordpress-suite' ) . '</option>';
+        echo '<option value="complete"' . selected($seo_status, 'complete', false) . '>' . esc_html__( 'Complete', 'gm2-wordpress-suite' ) . '</option>';
+        echo '<option value="incomplete"' . selected($seo_status, 'incomplete', false) . '>' . esc_html__( 'Incomplete', 'gm2-wordpress-suite' ) . '</option>';
         echo '</select></label> ';
         echo '<label><input type="checkbox" name="gm2_missing_title" value="1" ' . checked($missing_title, '1', false) . '> ' . esc_html__( 'Only posts missing SEO Title', 'gm2-wordpress-suite' ) . '</label> ';
         echo '<label><input type="checkbox" name="gm2_missing_description" value="1" ' . checked($missing_desc, '1', false) . '> ' . esc_html__( 'Only posts missing Description', 'gm2-wordpress-suite' ) . '</label> ';
@@ -1435,6 +1447,7 @@ class Gm2_SEO_Admin {
         $post_type     = get_user_meta($user_id, 'gm2_bulk_ai_post_type', true) ?: 'all';
         $term_raw      = get_user_meta($user_id, 'gm2_bulk_ai_term', true) ?: '';
         $term          = $term_raw === '' ? [] : array_map('trim', explode(',', $term_raw));
+        $seo_status    = get_user_meta($user_id, 'gm2_bulk_ai_seo_status', true) ?: 'all';
         $missing_title = get_option('gm2_bulk_ai_missing_title', '0');
         $missing_desc  = get_option('gm2_bulk_ai_missing_description', '0');
         $search_title  = isset($_REQUEST['s']) ? sanitize_text_field($_REQUEST['s']) : '';
@@ -1483,6 +1496,18 @@ class Gm2_SEO_Admin {
         if ($missing_desc === '1') {
             $meta_query[] = [
                 'relation' => 'OR',
+                [ 'key' => '_gm2_description', 'compare' => 'NOT EXISTS' ],
+                [ 'key' => '_gm2_description', 'value' => '', 'compare' => '=' ],
+            ];
+        }
+        if ($seo_status === 'complete') {
+            $meta_query[] = [ 'key' => '_gm2_title', 'value' => '', 'compare' => '!=' ];
+            $meta_query[] = [ 'key' => '_gm2_description', 'value' => '', 'compare' => '!=' ];
+        } elseif ($seo_status === 'incomplete') {
+            $meta_query[] = [
+                'relation' => 'OR',
+                [ 'key' => '_gm2_title', 'compare' => 'NOT EXISTS' ],
+                [ 'key' => '_gm2_title', 'value' => '', 'compare' => '=' ],
                 [ 'key' => '_gm2_description', 'compare' => 'NOT EXISTS' ],
                 [ 'key' => '_gm2_description', 'value' => '', 'compare' => '=' ],
             ];
@@ -4359,10 +4384,11 @@ class Gm2_SEO_Admin {
         $count = 0;
 
         if ($all) {
-            $status       = sanitize_key($_POST['status'] ?? 'publish');
-            $post_type    = sanitize_key($_POST['post_type'] ?? 'all');
-            $terms        = isset($_POST['terms']) ? (array) $_POST['terms'] : [];
-            $terms        = array_map('sanitize_text_field', $terms);
+            $status        = sanitize_key($_POST['status'] ?? 'publish');
+            $post_type     = sanitize_key($_POST['post_type'] ?? 'all');
+            $terms         = isset($_POST['terms']) ? (array) $_POST['terms'] : [];
+            $terms         = array_map('sanitize_text_field', $terms);
+            $seo_status    = sanitize_key($_POST['seo_status'] ?? 'all');
             $missing_title = isset($_POST['missing_title']) && $_POST['missing_title'] === '1' ? '1' : '0';
             $missing_desc  = isset($_POST['missing_desc']) && $_POST['missing_desc'] === '1' ? '1' : '0';
             $search        = isset($_POST['search']) ? sanitize_text_field($_POST['search']) : '';
@@ -4415,6 +4441,18 @@ class Gm2_SEO_Admin {
             if ($missing_desc === '1') {
                 $meta_query[] = [
                     'relation' => 'OR',
+                    [ 'key' => '_gm2_description', 'compare' => 'NOT EXISTS' ],
+                    [ 'key' => '_gm2_description', 'value' => '', 'compare' => '=' ],
+                ];
+            }
+            if ($seo_status === 'complete') {
+                $meta_query[] = [ 'key' => '_gm2_title', 'value' => '', 'compare' => '!=' ];
+                $meta_query[] = [ 'key' => '_gm2_description', 'value' => '', 'compare' => '!=' ];
+            } elseif ($seo_status === 'incomplete') {
+                $meta_query[] = [
+                    'relation' => 'OR',
+                    [ 'key' => '_gm2_title', 'compare' => 'NOT EXISTS' ],
+                    [ 'key' => '_gm2_title', 'value' => '', 'compare' => '=' ],
                     [ 'key' => '_gm2_description', 'compare' => 'NOT EXISTS' ],
                     [ 'key' => '_gm2_description', 'value' => '', 'compare' => '=' ],
                 ];
