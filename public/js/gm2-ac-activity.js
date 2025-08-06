@@ -1,5 +1,6 @@
 (function () {
     const KEY = 'gm2AcTabCount';
+    const ENTRY_KEY = 'gm2_entry_url';
     const ajaxUrl = gm2AcActivity.ajax_url;
     const nonce = gm2AcActivity.nonce;
     const url = window.location.href;
@@ -59,6 +60,23 @@
         }
     }
 
+    function getEntryUrl() {
+        try {
+            return localStorage.getItem(ENTRY_KEY);
+        } catch (e) {
+            const match = document.cookie.match(new RegExp('(?:^|; )' + ENTRY_KEY + '=([^;]*)'));
+            return match ? decodeURIComponent(match[1]) : null;
+        }
+    }
+
+    function setEntryUrl(value) {
+        try {
+            localStorage.setItem(ENTRY_KEY, value);
+        } catch (e) {
+            document.cookie = `${ENTRY_KEY}=${encodeURIComponent(value)}; path=/`;
+        }
+    }
+
     function incrementTabs() {
         const count = Math.max(parseInt(localStorage.getItem(KEY) || '0', 10), 0) + 1;
         localStorage.setItem(KEY, String(count));
@@ -73,6 +91,9 @@
     }
 
     incrementTabs();
+    if (!getEntryUrl()) {
+        setEntryUrl(url);
+    }
     send('gm2_ac_mark_active');
 
     window.addEventListener('pagehide', decrementTabs, { once: true });
