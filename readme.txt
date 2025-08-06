@@ -437,3 +437,11 @@ The PHPUnit tests rely on the WordPress test suite and the `phpunit` executable.
 3. **Run the tests.** Execute `phpunit` or `make test` from the project root. The Makefile will install the test suite automatically if it is missing. Set `WP_TESTS_DIR` if you installed the suite elsewhere.
 
 The tests cover the AJAX endpoints used for content analysis and AI research (`gm2_check_rules`, `gm2_keyword_ideas`, `gm2_research_guidelines` and `gm2_ai_research`).
+
+JavaScript tests reside in `tests/js` and use Jest. Install Node dependencies
+and run them with:
+
+```
+npm install
+npm test
+```
