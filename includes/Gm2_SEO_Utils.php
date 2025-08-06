@@ -175,7 +175,7 @@ namespace {
         $term_ids = get_terms([
             'taxonomy'   => get_taxonomies([], 'names'),
             'hide_empty' => false,
-            'meta_query' => [ [ 'key' => '_gm2_focus_keywords' ] ],
+            'meta_query' => [ [ 'key' => '_gm2_focus_keywords', 'compare' => 'EXISTS' ] ],
             'fields'     => 'ids',
         ]);
         if (!is_wp_error($term_ids)) {
