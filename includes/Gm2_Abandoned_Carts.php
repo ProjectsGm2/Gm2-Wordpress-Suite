@@ -84,8 +84,8 @@ class Gm2_Abandoned_Carts {
         }
         $contents   = wp_json_encode($cart_items);
         $token      = WC()->session->get_customer_id();
-        $ip         = $_SERVER['REMOTE_ADDR'] ?? '';
-        $agent      = $_SERVER['HTTP_USER_AGENT'] ?? '';
+        $ip         = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])) : '';
+        $agent      = isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '';
         $browser    = self::get_browser($agent);
         $location   = '';
         if (class_exists('WC_Geolocation') && !empty($ip)) {
@@ -116,7 +116,8 @@ class Gm2_Abandoned_Carts {
                 }
             }
         }
-        $current_url = home_url($_SERVER['REQUEST_URI'] ?? '/');
+        $request_uri = isset($_SERVER['REQUEST_URI']) ? esc_url_raw(wp_unslash($_SERVER['REQUEST_URI'])) : '/';
+        $current_url = home_url($request_uri);
         $total      = (float) $cart->get_cart_contents_total();
         global $wpdb;
         $table = $wpdb->prefix . 'wc_ac_carts';
