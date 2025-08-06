@@ -9,7 +9,8 @@
 
         if (action === 'gm2_ac_mark_abandoned') {
             if (navigator.sendBeacon) {
-                navigator.sendBeacon(ajaxUrl, data);
+                const payload = new Blob([data.toString()], { type: 'application/x-www-form-urlencoded' });
+                navigator.sendBeacon(ajaxUrl, payload);
             }
 
             fetch(ajaxUrl, {
