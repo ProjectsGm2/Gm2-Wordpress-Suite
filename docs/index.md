@@ -55,10 +55,9 @@ Use the **Bulk AI Taxonomies** page under **Gm2 → Bulk AI Taxonomies** to gene
 - **Usage instructions** – short description printed in the same function before the settings form.
 - **Spinner during analysis** – handled by `showSpinner()` and `hideSpinner()` in `admin/js/gm2-bulk-ai.js`.
 - **Fade-out rows** – `gm2-applied` class removed after a delay in `gm2-bulk-ai.js` with styles in `admin/css/gm2-seo.css`.
-- **Cancel analysis** – `#gm2-bulk-cancel` listener in `gm2-bulk-ai.js` stops the queue.
+- **Cancel analysis** – `.gm2-bulk-cancel` listener in `gm2-bulk-ai.js` stops the queue.
 - **Missing metadata filters** – checkboxes `gm2_missing_title` and `gm2_missing_description` saved in `display_bulk_ai_page()`.
 - **ARIA progress bar** – `<progress>` element with `role="progressbar"` and button `aria-label` attributes in `display_bulk_ai_page()`.
-- **Select None control** – `#gm2-select-none` button in `gm2-bulk-ai.js` clears all selections.
 - **Search field** – `gm2_search_title` input filters posts by title.
 - **CSV export** – `handle_bulk_ai_export()` outputs a `gm2-bulk-ai.csv` file.
 - **Taxonomy CSV export** – `handle_bulk_ai_tax_export()` outputs a `gm2-bulk-ai-tax.csv` file.

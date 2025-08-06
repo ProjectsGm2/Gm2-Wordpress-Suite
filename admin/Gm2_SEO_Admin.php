@@ -1288,15 +1288,24 @@ class Gm2_SEO_Admin {
         echo '<p class="description">' . esc_html__( 'Select posts, click', 'gm2-wordpress-suite' ) . ' <strong>' . esc_html__( 'Analyze Selected', 'gm2-wordpress-suite' ) . '</strong> ' . esc_html__( 'to generate suggestions. Review the suggestions and choose what to apply.', 'gm2-wordpress-suite' ) . '</p>';
         echo '<form method="post" action="' . esc_url( admin_url( 'admin.php?page=gm2-bulk-ai-review' ) ) . '">';
         wp_nonce_field('gm2_bulk_ai_settings');
+
+        // Row 1: page size, post status, SEO status.
         echo '<p><label>' . esc_html__( 'Posts per page', 'gm2-wordpress-suite' ) . ' <input type="number" name="page_size" value="' . esc_attr($page_size) . '" min="1"></label> ';
         echo '<label>' . esc_html__( 'Status', 'gm2-wordpress-suite' ) . ' <select name="status">';
         echo '<option value="publish"' . selected($status, 'publish', false) . '>' . esc_html__( 'Published', 'gm2-wordpress-suite' ) . '</option>';
         echo '<option value="draft"' . selected($status, 'draft', false) . '>' . esc_html__( 'Draft', 'gm2-wordpress-suite' ) . '</option>';
         echo '</select></label> ';
-        echo '<label>' . esc_html__( 'Post Type', 'gm2-wordpress-suite' ) . ' <select name="gm2_post_type">';
+        echo '<label>' . esc_html__( 'SEO Status', 'gm2-wordpress-suite' ) . ' <select name="seo_status">';
+        echo '<option value="all"' . selected($seo_status, 'all', false) . '>' . esc_html__( 'All', 'gm2-wordpress-suite' ) . '</option>';
+        echo '<option value="complete"' . selected($seo_status, 'complete', false) . '>' . esc_html__( 'Complete', 'gm2-wordpress-suite' ) . '</option>';
+        echo '<option value="incomplete"' . selected($seo_status, 'incomplete', false) . '>' . esc_html__( 'Incomplete', 'gm2-wordpress-suite' ) . '</option>';
+        echo '</select></label></p>';
+
+        // Row 2: post type and taxonomy filters.
+        echo '<p><label>' . esc_html__( 'Post Type', 'gm2-wordpress-suite' ) . ' <select name="gm2_post_type">';
         echo '<option value="all"' . selected($post_type, 'all', false) . '>' . esc_html__( 'All', 'gm2-wordpress-suite' ) . '</option>';
         foreach ($this->get_supported_post_types() as $pt) {
-            $obj = get_post_type_object($pt);
+            $obj  = get_post_type_object($pt);
             $name = $obj ? $obj->labels->singular_name : $pt;
             echo '<option value="' . esc_attr($pt) . '"' . selected($post_type, $pt, false) . '>' . esc_html($name) . '</option>';
         }
@@ -1324,31 +1333,34 @@ class Gm2_SEO_Admin {
             }
             echo '</select></label> ';
         }
-        echo '<label>' . esc_html__( 'SEO Status', 'gm2-wordpress-suite' ) . ' <select name="seo_status">';
-        echo '<option value="all"' . selected($seo_status, 'all', false) . '>' . esc_html__( 'All', 'gm2-wordpress-suite' ) . '</option>';
-        echo '<option value="complete"' . selected($seo_status, 'complete', false) . '>' . esc_html__( 'Complete', 'gm2-wordpress-suite' ) . '</option>';
-        echo '<option value="incomplete"' . selected($seo_status, 'incomplete', false) . '>' . esc_html__( 'Incomplete', 'gm2-wordpress-suite' ) . '</option>';
-        echo '</select></label> ';
-        echo '<label><input type="checkbox" name="gm2_missing_title" value="1" ' . checked($missing_title, '1', false) . '> ' . esc_html__( 'Only posts missing SEO Title', 'gm2-wordpress-suite' ) . '</label> ';
+        echo '</p>';
+
+        // Row 3: missing metadata filters and save button.
+        echo '<p><label><input type="checkbox" name="gm2_missing_title" value="1" ' . checked($missing_title, '1', false) . '> ' . esc_html__( 'Only posts missing SEO Title', 'gm2-wordpress-suite' ) . '</label> ';
         echo '<label><input type="checkbox" name="gm2_missing_description" value="1" ' . checked($missing_desc, '1', false) . '> ' . esc_html__( 'Only posts missing Description', 'gm2-wordpress-suite' ) . '</label> ';
+        echo '&nbsp;&nbsp;';
         submit_button( esc_html__( 'Save', 'gm2-wordpress-suite' ), 'secondary', 'gm2_bulk_ai_save', false );
         echo '</p></form>';
+
+        $buttons = '<button type="button" class="button gm2-bulk-analyze" aria-label="' . esc_attr__( 'Analyze Selected', 'gm2-wordpress-suite' ) . '">' . esc_html__( 'Analyze Selected', 'gm2-wordpress-suite' ) . '</button> '
+            . '<button type="button" class="button gm2-bulk-cancel">' . esc_html__( 'Cancel', 'gm2-wordpress-suite' ) . '</button> '
+            . '<button type="button" class="button gm2-bulk-apply-all">' . esc_html__( 'Apply All', 'gm2-wordpress-suite' ) . '</button> '
+            . '<button type="button" class="button gm2-bulk-reset-all">' . esc_html__( 'Reset All', 'gm2-wordpress-suite' ) . '</button> '
+            . '<button type="button" class="button gm2-bulk-reset-selected">' . esc_html__( 'Reset Selected', 'gm2-wordpress-suite' ) . '</button> '
+            . '<button type="button" class="button gm2-bulk-schedule">' . esc_html__( 'Schedule Batch', 'gm2-wordpress-suite' ) . '</button> '
+            . '<button type="button" class="button gm2-bulk-cancel-batch">' . esc_html__( 'Cancel Batch', 'gm2-wordpress-suite' ) . '</button>';
+
+        // Row 4 (top action buttons).
+        echo '<p class="gm2-bulk-actions">' . $buttons . '</p>';
 
         echo '<form method="get">';
         echo '<input type="hidden" name="page" value="gm2-bulk-ai-review" />';
         $table->search_box( esc_html__( 'Search Title', 'gm2-wordpress-suite' ), 'gm2-bulk-search' );
         $table->display();
         echo '</form>';
-        echo '<p><button type="button" class="button" id="gm2-bulk-analyze" aria-label="' . esc_attr__( 'Analyze Selected', 'gm2-wordpress-suite' ) . '">' . esc_html__( 'Analyze Selected', 'gm2-wordpress-suite' ) . '</button> ' .
-            '<button type="button" class="button" id="gm2-select-none">' . esc_html__( 'Select None', 'gm2-wordpress-suite' ) . '</button> ' .
-            '<button type="button" class="button" id="gm2-bulk-cancel">' . esc_html__( 'Cancel', 'gm2-wordpress-suite' ) . '</button> ' .
-            '<button type="button" class="button" id="gm2-bulk-apply-all">' . esc_html__( 'Apply All', 'gm2-wordpress-suite' ) . '</button> ' .
-            '<button type="button" class="button" id="gm2-bulk-reset-selected">' . esc_html__( 'Reset Selected', 'gm2-wordpress-suite' ) . '</button> ' .
-            '<button type="button" class="button" id="gm2-bulk-reset-all">' . esc_html__( 'Reset All', 'gm2-wordpress-suite' ) . '</button> ' .
-            '<span id="gm2-bulk-apply-msg"></span></p>';
+        // Bottom action buttons.
+        echo '<p class="gm2-bulk-actions">' . $buttons . ' <span id="gm2-bulk-apply-msg"></span></p>';
         echo '<p><progress id="gm2-bulk-progress-bar" value="0" max="100" style="width:100%;display:none" role="progressbar" aria-live="polite"></progress></p>';
-        echo '<p><button type="button" class="button" id="gm2-bulk-schedule">' . esc_html__( 'Schedule Batch', 'gm2-wordpress-suite' ) . '</button> ' .
-            '<button type="button" class="button" id="gm2-bulk-cancel-batch">' . esc_html__( 'Cancel Batch', 'gm2-wordpress-suite' ) . '</button></p>';
         echo '</div>';
     }
 

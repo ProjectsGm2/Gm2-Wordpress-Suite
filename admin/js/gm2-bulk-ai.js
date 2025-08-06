@@ -10,7 +10,7 @@ jQuery(function($){
         var $bar = $('#gm2-bulk-progress-bar');
         if(!$bar.length){
             $bar = $('<progress>',{id:'gm2-bulk-progress-bar',value:0,max:max,style:'width:100%;',role:'progressbar','aria-live':'polite'});
-            $('#gm2-bulk-analyze').parent().after($bar);
+            $('.gm2-bulk-analyze').last().parent().after($bar);
         }
         $bar.attr({max:max,role:'progressbar','aria-live':'polite'}).val(0).show();
     }
@@ -54,16 +54,11 @@ jQuery(function($){
         var c=$(this).prop('checked');
         $('#gm2-bulk-list .gm2-select').prop('checked',c);
     });
-    $('#gm2-bulk-ai').on('click','#gm2-select-none',function(e){
-        e.preventDefault();
-        $('#gm2-bulk-select-all').prop('checked',false);
-        $('#gm2-bulk-list .gm2-select').prop('checked',false);
-    });
     $('#gm2-bulk-list').on('click','.gm2-row-select-all',function(){
         var checked=$(this).prop('checked');
         $(this).closest('.gm2-result').find('.gm2-apply').prop('checked',checked);
     });
-    $('#gm2-bulk-ai').on('click','#gm2-bulk-analyze',function(e){
+    $('#gm2-bulk-ai').on('click','.gm2-bulk-analyze',function(e){
         e.preventDefault();
         stopProcessing = false;
         var ids=[];
@@ -157,7 +152,7 @@ jQuery(function($){
         updateProgress();
         processNext();
     });
-    $('#gm2-bulk-ai').on('click','#gm2-bulk-cancel',function(e){
+    $('#gm2-bulk-ai').on('click','.gm2-bulk-cancel',function(e){
         e.preventDefault();
         stopProcessing = true;
         $('#gm2-bulk-progress-bar').hide();
@@ -279,7 +274,7 @@ jQuery(function($){
             });
     });
 
-    $('#gm2-bulk-ai').on('click','#gm2-bulk-apply-all',function(e){
+    $('#gm2-bulk-ai').on('click','.gm2-bulk-apply-all',function(e){
         e.preventDefault();
         var posts={};
         $('#gm2-bulk-list tr').each(function(){
@@ -346,7 +341,7 @@ jQuery(function($){
         });
     });
 
-    $('#gm2-bulk-ai').on('click','#gm2-bulk-reset-selected',function(e){
+    $('#gm2-bulk-ai').on('click','.gm2-bulk-reset-selected',function(e){
         e.preventDefault();
         var ids=[];
         $('#gm2-bulk-list .gm2-select:checked').each(function(){ids.push($(this).val());});
@@ -379,7 +374,7 @@ jQuery(function($){
         });
     });
 
-    $('#gm2-bulk-ai').on('click','#gm2-bulk-reset-all',function(e){
+    $('#gm2-bulk-ai').on('click','.gm2-bulk-reset-all',function(e){
         e.preventDefault();
         var data={
             action:'gm2_bulk_ai_reset',
@@ -408,7 +403,7 @@ jQuery(function($){
         });
     });
 
-    $('#gm2-bulk-ai').on('click','#gm2-bulk-schedule',function(e){
+    $('#gm2-bulk-ai').on('click','.gm2-bulk-schedule',function(e){
         e.preventDefault();
         var ids=[];
         $('#gm2-bulk-list .gm2-select:checked').each(function(){ids.push($(this).val());});
@@ -416,7 +411,7 @@ jQuery(function($){
         $.post(gm2BulkAi.ajax_url,{action:'gm2_ai_batch_schedule',ids:JSON.stringify(ids),_ajax_nonce:gm2BulkAi.batch_nonce});
     });
 
-    $('#gm2-bulk-ai').on('click','#gm2-bulk-cancel-batch',function(e){
+    $('#gm2-bulk-ai').on('click','.gm2-bulk-cancel-batch',function(e){
         e.preventDefault();
         $.post(gm2BulkAi.ajax_url,{action:'gm2_ai_batch_cancel',_ajax_nonce:gm2BulkAi.batch_nonce});
     });
