@@ -12,6 +12,7 @@ if (!class_exists('\\WP_List_Table')) {
 class Gm2_Bulk_Ai_Tax_List_Table extends \WP_List_Table {
     private $admin;
     private $page_size;
+    private $status;
     private $taxonomy;
     private $search;
     private $missing_title;
@@ -21,6 +22,7 @@ class Gm2_Bulk_Ai_Tax_List_Table extends \WP_List_Table {
     public function __construct($admin, $args) {
         $this->admin         = $admin;
         $this->page_size     = max(1, (int) ($args['page_size'] ?? 10));
+        $this->status        = $args['status'] ?? 'publish';
         $this->taxonomy      = $args['taxonomy'] ?? 'all';
         $this->search        = $args['search'] ?? '';
         $this->seo_status    = $args['seo_status'] ?? 'all';
@@ -119,6 +121,7 @@ class Gm2_Bulk_Ai_Tax_List_Table extends \WP_List_Table {
         $args = [
             'taxonomy'   => $tax_arg,
             'hide_empty' => false,
+            'status'     => $this->status,
             'number'     => $this->page_size,
             'offset'     => $this->page_size * ($this->get_pagenum() - 1),
         ];
