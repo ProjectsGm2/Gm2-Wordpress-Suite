@@ -81,8 +81,14 @@ class Gm2_SEO_Public {
         foreach ($redirects as $r) {
             $source = untrailingslashit(parse_url($r['source'], PHP_URL_PATH));
             if ($source === $current) {
-                wp_redirect($r['target'], intval($r['type']));
-                exit;
+                $target = esc_url_raw($r['target']);
+                $is_internal = !parse_url($target, PHP_URL_HOST) || strpos($target, home_url('/')) === 0;
+                if ($is_internal) {
+                    $type = (int) $r['type'];
+                    $type = in_array($type, [301, 302], true) ? $type : 302;
+                    wp_safe_redirect($target, $type);
+                    exit;
+                }
             }
         }
     }
