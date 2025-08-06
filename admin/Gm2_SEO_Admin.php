@@ -16,6 +16,7 @@ class Gm2_SEO_Admin {
 
     public function __construct() {
         add_action('wp_ajax_gm2_bulk_ai_reset', [$this, 'ajax_bulk_ai_reset']);
+        add_action('wp_ajax_gm2_bulk_ai_tax_reset', [$this, 'ajax_bulk_ai_tax_reset']);
     }
 
     private function debug_log($message) {
@@ -1414,7 +1415,10 @@ class Gm2_SEO_Admin {
         echo '<button type="button" class="button" id="gm2-bulk-term-cancel">' . esc_html__( 'Cancel', 'gm2-wordpress-suite' ) . '</button> ';
         echo '<button type="button" class="button" id="gm2-bulk-term-apply-all">' . esc_html__( 'Apply All', 'gm2-wordpress-suite' ) . '</button> ';
         echo '<button type="button" class="button" id="gm2-bulk-term-schedule">' . esc_html__( 'Schedule Batch', 'gm2-wordpress-suite' ) . '</button> ';
-        echo '<button type="button" class="button" id="gm2-bulk-term-cancel-batch">' . esc_html__( 'Cancel Batch', 'gm2-wordpress-suite' ) . '</button></p>';
+        echo '<button type="button" class="button" id="gm2-bulk-term-cancel-batch">' . esc_html__( 'Cancel Batch', 'gm2-wordpress-suite' ) . '</button> ';
+        echo '<button type="button" class="button" id="gm2-bulk-term-reset-selected">' . esc_html__( 'Reset Selected', 'gm2-wordpress-suite' ) . '</button> ';
+        echo '<button type="button" class="button" id="gm2-bulk-term-reset-all">' . esc_html__( 'Reset All', 'gm2-wordpress-suite' ) . '</button></p>';
+        echo '<p id="gm2-bulk-term-msg"></p>';
         echo '<p><progress id="gm2-bulk-term-progress-bar" value="0" max="100" style="width:100%;display:none" role="progressbar" aria-live="polite"></progress></p>';
         echo '</div>';
     }
@@ -4458,6 +4462,83 @@ class Gm2_SEO_Admin {
         }
 
         wp_send_json_success();
+    }
+
+    public function ajax_bulk_ai_tax_reset() {
+        check_ajax_referer('gm2_bulk_ai_tax_reset');
+
+        $cap = apply_filters('gm2_bulk_ai_tax_capability', 'manage_categories');
+        if (!current_user_can($cap)) {
+            wp_send_json_error( __( 'permission denied', 'gm2-wordpress-suite' ), 403 );
+        }
+
+        $all   = isset($_POST['all']) && $_POST['all'] === '1';
+        $ids   = [];
+        $count = 0;
+
+        if ($all) {
+            $taxonomy      = sanitize_key($_POST['taxonomy'] ?? 'all');
+            $search        = isset($_POST['search']) ? sanitize_text_field($_POST['search']) : '';
+            $missing_title = isset($_POST['missing_title']) && $_POST['missing_title'] === '1' ? '1' : '0';
+            $missing_desc  = isset($_POST['missing_desc']) && $_POST['missing_desc'] === '1' ? '1' : '0';
+
+            $tax_arg = ($taxonomy === 'all') ? $this->get_supported_taxonomies() : $taxonomy;
+            $args    = [
+                'taxonomy'   => $tax_arg,
+                'hide_empty' => false,
+                'fields'     => 'ids',
+                'number'     => 0,
+            ];
+            if ($search !== '') {
+                $args['search'] = $search;
+            }
+            $meta_query = [];
+            if ($missing_title === '1') {
+                $meta_query[] = [
+                    'relation' => 'OR',
+                    [ 'key' => '_gm2_title', 'compare' => 'NOT EXISTS' ],
+                    [ 'key' => '_gm2_title', 'value' => '', 'compare' => '=' ],
+                ];
+            }
+            if ($missing_desc === '1') {
+                $meta_query[] = [
+                    'relation' => 'OR',
+                    [ 'key' => '_gm2_description', 'compare' => 'NOT EXISTS' ],
+                    [ 'key' => '_gm2_description', 'value' => '', 'compare' => '=' ],
+                ];
+            }
+            if ($meta_query) {
+                $args['meta_query'] = array_merge([ 'relation' => 'AND' ], $meta_query);
+            }
+
+            $ids = get_terms($args);
+            if (is_wp_error($ids)) {
+                wp_send_json_error($ids->get_error_message());
+            }
+        } else {
+            $ids = isset($_POST['ids']) ? json_decode(wp_unslash($_POST['ids']), true) : [];
+            if (!is_array($ids)) {
+                wp_send_json_error( __( 'invalid data', 'gm2-wordpress-suite' ) );
+            }
+        }
+
+        foreach ($ids as $key) {
+            $term_id = 0;
+            if (is_string($key) && strpos($key, ':') !== false) {
+                list($tax, $id) = explode(':', $key);
+                $term_id = absint($id);
+            } else {
+                $term_id = absint($key);
+            }
+            if (!$term_id || !current_user_can('edit_term', $term_id)) {
+                continue;
+            }
+            delete_term_meta($term_id, '_gm2_title');
+            delete_term_meta($term_id, '_gm2_description');
+            $count++;
+        }
+
+        wp_send_json_success( [ 'reset' => $count ] );
     }
 
     public function enqueue_editor_scripts($hook = null) {

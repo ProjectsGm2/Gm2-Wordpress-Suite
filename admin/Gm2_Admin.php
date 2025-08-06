@@ -254,10 +254,13 @@ class Gm2_Admin {
                         'apply_nonce' => wp_create_nonce('gm2_bulk_ai_apply'),
                         'batch_nonce' => wp_create_nonce('gm2_ai_batch'),
                         'desc_nonce'  => wp_create_nonce('gm2_ai_generate_tax_description'),
+                        'reset_nonce' => wp_create_nonce('gm2_bulk_ai_tax_reset'),
                         'ajax_url'    => admin_url('admin-ajax.php'),
                         'i18n'        => [
-                            'apply'   => __( 'Apply', 'gm2-wordpress-suite' ),
-                            'error'   => __( 'Error', 'gm2-wordpress-suite' ),
+                            'apply'      => __( 'Apply', 'gm2-wordpress-suite' ),
+                            'error'      => __( 'Error', 'gm2-wordpress-suite' ),
+                            'resetting'  => __( 'Resetting...', 'gm2-wordpress-suite' ),
+                            'resetDone'  => __( 'Reset %s terms', 'gm2-wordpress-suite' ),
                         ],
                     ]
                 );
