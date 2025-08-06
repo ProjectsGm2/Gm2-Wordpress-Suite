@@ -346,6 +346,67 @@ jQuery(function($){
         });
     });
 
+    $('#gm2-bulk-ai').on('click','#gm2-bulk-reset-selected',function(e){
+        e.preventDefault();
+        var ids=[];
+        $('#gm2-bulk-list .gm2-select:checked').each(function(){ids.push($(this).val());});
+        if(!ids.length) return;
+        var $msg=$('#gm2-bulk-apply-msg');
+        var resettingText = window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.resetting : 'Resetting...';
+        $msg.text(resettingText);
+        $.ajax({
+            url: gm2BulkAi.ajax_url,
+            method:'POST',
+            data:{action:'gm2_bulk_ai_reset',ids:JSON.stringify(ids),_ajax_nonce:gm2BulkAi.reset_nonce},
+            dataType:'json'
+        }).done(function(resp){
+            if(resp&&resp.success){
+                $.each(ids,function(i,id){
+                    var row=$('#gm2-row-'+id);
+                    row.find('td').eq(2).text('');
+                    row.find('td').eq(3).text('');
+                    row.find('.gm2-result').empty();
+                    row.removeClass('gm2-status-applied gm2-status-analyzed').addClass('gm2-status-new');
+                });
+                var doneText = window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.resetDone : 'Reset %s posts';
+                $msg.text(doneText.replace('%s', resp.data.reset));
+            }else{
+                $msg.text((resp&&resp.data)?resp.data:(window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.error : 'Error'));
+            }
+        }).fail(function(jqXHR,textStatus){
+            var msg=(jqXHR && jqXHR.responseJSON && jqXHR.responseJSON.data)?jqXHR.responseJSON.data:(jqXHR && jqXHR.responseText?jqXHR.responseText:textStatus);
+            $msg.text(msg || (window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.error : 'Error'));
+        });
+    });
+
+    $('#gm2-bulk-ai').on('click','#gm2-bulk-reset-all',function(e){
+        e.preventDefault();
+        var data={
+            action:'gm2_bulk_ai_reset',
+            all:1,
+            status:$('select[name="status"]').val(),
+            post_type:$('select[name="gm2_post_type"]').val(),
+            terms:$('select[name="term[]"]').val()||[],
+            missing_title:$('input[name="gm2_missing_title"]').is(':checked')?1:0,
+            missing_desc:$('input[name="gm2_missing_description"]').is(':checked')?1:0,
+            search:$('input[name="s"]').val()||'',
+            _ajax_nonce:gm2BulkAi.reset_nonce
+        };
+        var $msg=$('#gm2-bulk-apply-msg');
+        var resettingText = window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.resetting : 'Resetting...';
+        $msg.text(resettingText);
+        $.post(gm2BulkAi.ajax_url,data).done(function(resp){
+            if(resp&&resp.success){
+                location.reload();
+            }else{
+                $msg.text((resp&&resp.data)?resp.data:(window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.error : 'Error'));
+            }
+        }).fail(function(jqXHR,textStatus){
+            var msg=(jqXHR && jqXHR.responseJSON && jqXHR.responseJSON.data)?jqXHR.responseJSON.data:(jqXHR && jqXHR.responseText?jqXHR.responseText:textStatus);
+            $msg.text(msg || (window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.error : 'Error'));
+        });
+    });
+
     $('#gm2-bulk-ai').on('click','#gm2-bulk-schedule',function(e){
         e.preventDefault();
         var ids=[];
