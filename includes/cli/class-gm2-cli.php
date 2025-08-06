@@ -48,6 +48,24 @@ class Gm2_CLI extends \WP_CLI_Command {
         }
         \WP_CLI::success( 'AI data cleared.' );
     }
+
+    /**
+     * Manage abandoned carts data.
+     *
+     * ## SUBCOMMANDS
+     *
+     * migrate  Move recovered carts into wc_ac_recovered table
+     */
+    public function ac( $args, $assoc_args ) {
+        $sub = $args[0] ?? '';
+        if ( $sub !== 'migrate' ) {
+            \WP_CLI::error( 'Usage: wp gm2 ac migrate' );
+        }
+
+        $ac = new Gm2_Abandoned_Carts();
+        $count = $ac->migrate_recovered_carts();
+        \WP_CLI::success( sprintf( '%d carts migrated.', $count ) );
+    }
 }
 
 \WP_CLI::add_command( 'gm2', __NAMESPACE__ . '\\Gm2_CLI' );

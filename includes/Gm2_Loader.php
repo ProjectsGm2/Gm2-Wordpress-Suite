@@ -63,6 +63,8 @@ class Gm2_Loader {
             if (is_admin()) {
                 $ac_admin = new Gm2_Abandoned_Carts_Admin();
                 $ac_admin->run();
+                $rc_admin = new Gm2_Recovered_Carts_Admin();
+                $rc_admin->run();
             } else {
                 $ac_public = new Gm2_Abandoned_Carts_Public();
                 $ac_public->run();
