@@ -281,6 +281,7 @@ class Gm2_Admin {
                             'error'      => __( 'Error', 'gm2-wordpress-suite' ),
                             'resetting'  => __( 'Resetting...', 'gm2-wordpress-suite' ),
                             'resetDone'  => __( 'Reset %s terms', 'gm2-wordpress-suite' ),
+                            'selectAll'  => __( 'Select all', 'gm2-wordpress-suite' ),
                         ],
                     ]
                 );
