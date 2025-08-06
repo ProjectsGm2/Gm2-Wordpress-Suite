@@ -11,6 +11,7 @@ class Gm2_Abandoned_Carts {
         $charset_collate = $wpdb->get_charset_collate();
         $carts = $wpdb->prefix . 'wc_ac_carts';
         $queue = $wpdb->prefix . 'wc_ac_email_queue';
+        $recovered = $wpdb->prefix . 'wc_ac_recovered';
 
         $carts_sql = "CREATE TABLE $carts (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -46,9 +47,34 @@ class Gm2_Abandoned_Carts {
             KEY cart_id (cart_id)
         ) $charset_collate;";
 
+        $recovered_sql = "CREATE TABLE $recovered (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            cart_token varchar(100) NOT NULL,
+            user_id bigint(20) unsigned DEFAULT 0,
+            cart_contents longtext NOT NULL,
+            created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            session_start datetime DEFAULT NULL,
+            abandoned_at datetime DEFAULT NULL,
+            browsing_time bigint(20) unsigned DEFAULT 0,
+            revisit_count int DEFAULT 0,
+            recovered_order_id bigint(20) unsigned DEFAULT NULL,
+            email varchar(200) DEFAULT NULL,
+            ip_address varchar(45) DEFAULT NULL,
+            user_agent text DEFAULT NULL,
+            browser varchar(50) DEFAULT NULL,
+            location varchar(100) DEFAULT NULL,
+            device varchar(20) DEFAULT NULL,
+            entry_url text DEFAULT NULL,
+            exit_url text DEFAULT NULL,
+            cart_total decimal(10,2) DEFAULT 0,
+            PRIMARY KEY  (id),
+            KEY cart_token (cart_token)
+        ) $charset_collate;";
+
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
         dbDelta($carts_sql);
         dbDelta($queue_sql);
+        dbDelta($recovered_sql);
     }
 
     public function run() {
@@ -284,20 +310,45 @@ class Gm2_Abandoned_Carts {
         }
         $token = WC()->session->get_customer_id();
         global $wpdb;
-        $table = $wpdb->prefix . 'wc_ac_carts';
-        $row = $wpdb->get_row($wpdb->prepare("SELECT id FROM $table WHERE cart_token = %s", $token));
+        $carts_table = $wpdb->prefix . 'wc_ac_carts';
+        $row = $wpdb->get_row(
+            $wpdb->prepare("SELECT * FROM $carts_table WHERE cart_token = %s", $token),
+            ARRAY_A
+        );
         if ($row) {
-            $wpdb->update($table, [ 'recovered_order_id' => $order_id ], ['id' => $row->id]);
+            $recovered_table = $wpdb->prefix . 'wc_ac_recovered';
+            $row['recovered_order_id'] = $order_id;
+            $wpdb->insert($recovered_table, $row);
+            $wpdb->delete($carts_table, [ 'id' => $row['id'] ]);
         }
+    }
+
+    public function migrate_recovered_carts() {
+        global $wpdb;
+        $carts_table = $wpdb->prefix . 'wc_ac_carts';
+        $recovered_table = $wpdb->prefix . 'wc_ac_recovered';
+        $rows = $wpdb->get_results("SELECT * FROM $carts_table WHERE recovered_order_id IS NOT NULL");
+        $count = 0;
+        if ($rows) {
+            foreach ($rows as $row) {
+                $data = (array) $row;
+                $wpdb->insert($recovered_table, $data);
+                $wpdb->delete($carts_table, [ 'id' => $row->id ]);
+                $count++;
+            }
+        }
+        return $count;
     }
 
     private function maybe_install() {
         global $wpdb;
         $carts_table = $wpdb->prefix . 'wc_ac_carts';
         $queue_table = $wpdb->prefix . 'wc_ac_email_queue';
+        $recovered_table = $wpdb->prefix . 'wc_ac_recovered';
         $carts_exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $carts_table));
         $queue_exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $queue_table));
-        if ($carts_exists !== $carts_table || $queue_exists !== $queue_table) {
+        $recovered_exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $recovered_table));
+        if ($carts_exists !== $carts_table || $queue_exists !== $queue_table || $recovered_exists !== $recovered_table) {
             $this->install();
         } else {
             $has_browser = $wpdb->get_var($wpdb->prepare("SHOW COLUMNS FROM $carts_table LIKE %s", 'browser'));

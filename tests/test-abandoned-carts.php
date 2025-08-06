@@ -69,6 +69,17 @@ class AbandonedCartsTest extends WP_UnitTestCase {
         $this->assertNotEmpty($row['session_start']);
         $this->assertSame(1, $row['revisit_count']);
     }
+
+    public function test_mark_cart_recovered_moves_row() {
+        $ac = new \Gm2\Gm2_Abandoned_Carts();
+        $ac->mark_cart_recovered(123);
+        $cart_table = $GLOBALS['wpdb']->prefix . 'wc_ac_carts';
+        $rec_table = $GLOBALS['wpdb']->prefix . 'wc_ac_recovered';
+        $this->assertCount(0, $GLOBALS['wpdb']->data[$cart_table]);
+        $this->assertCount(1, $GLOBALS['wpdb']->data[$rec_table]);
+        $row = $GLOBALS['wpdb']->data[$rec_table][0];
+        $this->assertSame(123, $row['recovered_order_id']);
+    }
 }
 
 class AbandonedCartFakeDB {
@@ -78,8 +89,8 @@ class AbandonedCartFakeDB {
     private $last_table;
 
     public function __construct($token) {
-        $table = $this->prefix . 'wc_ac_carts';
-        $this->data[$table] = [
+        $carts = $this->prefix . 'wc_ac_carts';
+        $this->data[$carts] = [
             [
                 'id' => 1,
                 'cart_token' => $token,
@@ -87,8 +98,11 @@ class AbandonedCartFakeDB {
                 'session_start' => null,
                 'revisit_count' => 0,
                 'browsing_time' => 0,
+                'recovered_order_id' => null,
             ],
         ];
+        $recovered = $this->prefix . 'wc_ac_recovered';
+        $this->data[$recovered] = [];
     }
 
     public function prepare($query, $token) {
@@ -99,13 +113,32 @@ class AbandonedCartFakeDB {
         return $query;
     }
 
-    public function get_row($query) {
+    public function get_row($query, $output = OBJECT) {
         foreach ($this->data[$this->last_table] as $row) {
             if ($row['cart_token'] === $this->last_token) {
-                return (object) $row;
+                return $output === ARRAY_A ? $row : (object) $row;
             }
         }
         return null;
+    }
+
+    public function insert($table, $data) {
+        $this->data[$table][] = $data;
+    }
+
+    public function delete($table, $where) {
+        foreach ($this->data[$table] as $i => $row) {
+            $match = true;
+            foreach ($where as $k => $v) {
+                if ($row[$k] !== $v) {
+                    $match = false;
+                    break;
+                }
+            }
+            if ($match) {
+                array_splice($this->data[$table], $i, 1);
+            }
+        }
     }
 
     public function update($table, $data, $where) {
