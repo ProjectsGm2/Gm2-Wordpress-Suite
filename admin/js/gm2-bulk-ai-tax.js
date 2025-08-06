@@ -129,4 +129,60 @@ jQuery(function($){
         e.preventDefault();
         $.post(gm2BulkAiTax.ajax_url,{action:'gm2_ai_tax_batch_cancel',_ajax_nonce:gm2BulkAiTax.batch_nonce});
     });
+
+    $('#gm2-bulk-ai-tax').on('click','#gm2-bulk-term-reset-selected',function(e){
+        e.preventDefault();
+        var ids=[];
+        $('#gm2-bulk-term-list .gm2-select:checked').each(function(){ids.push($(this).val());});
+        if(!ids.length) return;
+        var $msg=$('#gm2-bulk-term-msg');
+        $msg.text(gm2BulkAiTax.i18n.resetting);
+        $.ajax({
+            url: gm2BulkAiTax.ajax_url,
+            method:'POST',
+            data:{action:'gm2_bulk_ai_tax_reset',ids:JSON.stringify(ids),_ajax_nonce:gm2BulkAiTax.reset_nonce},
+            dataType:'json'
+        }).done(function(resp){
+            if(resp&&resp.success){
+                $.each(ids,function(i,key){
+                    var parts=key.split(':');
+                    var row=$('#gm2-term-'+parts[0]+'-'+parts[1]);
+                    row.find('.column-seo_title').text('');
+                    row.find('.column-description').text('');
+                    row.find('.gm2-result').empty();
+                });
+                $msg.text(gm2BulkAiTax.i18n.resetDone.replace('%s',resp.data.reset));
+            }else{
+                $msg.text((resp&&resp.data)?resp.data:gm2BulkAiTax.i18n.error);
+            }
+        }).fail(function(jqXHR,textStatus){
+            var msg=(jqXHR&&jqXHR.responseJSON&&jqXHR.responseJSON.data)?jqXHR.responseJSON.data:(jqXHR&&jqXHR.responseText?jqXHR.responseText:textStatus);
+            $msg.text(msg||gm2BulkAiTax.i18n.error);
+        });
+    });
+
+    $('#gm2-bulk-ai-tax').on('click','#gm2-bulk-term-reset-all',function(e){
+        e.preventDefault();
+        var data={
+            action:'gm2_bulk_ai_tax_reset',
+            all:1,
+            taxonomy:$('select[name="gm2_taxonomy"]').val(),
+            search:$('input[name="gm2_tax_search"]').val()||'',
+            missing_title:$('input[name="gm2_bulk_ai_tax_missing_title"]').is(':checked')?1:0,
+            missing_desc:$('input[name="gm2_bulk_ai_tax_missing_description"]').is(':checked')?1:0,
+            _ajax_nonce:gm2BulkAiTax.reset_nonce
+        };
+        var $msg=$('#gm2-bulk-term-msg');
+        $msg.text(gm2BulkAiTax.i18n.resetting);
+        $.post(gm2BulkAiTax.ajax_url,data).done(function(resp){
+            if(resp&&resp.success){
+                location.reload();
+            }else{
+                $msg.text((resp&&resp.data)?resp.data:gm2BulkAiTax.i18n.error);
+            }
+        }).fail(function(jqXHR,textStatus){
+            var msg=(jqXHR&&jqXHR.responseJSON&&jqXHR.responseJSON.data)?jqXHR.responseJSON.data:(jqXHR&&jqXHR.responseText?jqXHR.responseText:textStatus);
+            $msg.text(msg||gm2BulkAiTax.i18n.error);
+        });
+    });
 });
