@@ -9,8 +9,23 @@
 
         if (action === 'gm2_ac_mark_abandoned') {
             if (navigator.sendBeacon) {
-                const payload = new Blob([data.toString()], { type: 'application/x-www-form-urlencoded' });
-                navigator.sendBeacon(ajaxUrl, payload);
+                try {
+                    const sent = navigator.sendBeacon(ajaxUrl, data);
+
+                    if (!sent) {
+                        const payload = new Blob([data.toString()], { type: 'application/x-www-form-urlencoded' });
+                        navigator.sendBeacon(ajaxUrl, payload);
+                    }
+                } catch (err) {
+                    console.debug('sendBeacon URLSearchParams failed', err);
+
+                    try {
+                        const payload = new Blob([data.toString()], { type: 'application/x-www-form-urlencoded' });
+                        navigator.sendBeacon(ajaxUrl, payload);
+                    } catch (error) {
+                        console.error('sendBeacon failed', error);
+                    }
+                }
             }
 
             fetch(ajaxUrl, {
