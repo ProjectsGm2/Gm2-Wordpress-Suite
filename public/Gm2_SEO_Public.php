@@ -458,6 +458,66 @@ class Gm2_SEO_Public {
         return $schemas;
     }
 
+    public function generate_term_schema_data($term_id, $taxonomy, $overrides = []) {
+        $schemas = [];
+        $term = get_term($term_id, $taxonomy);
+        if (!$term || is_wp_error($term)) {
+            return $schemas;
+        }
+
+        $schema_type = $overrides['schema_type'] ?? get_term_meta($term_id, '_gm2_schema_type', true);
+        $brand       = $overrides['schema_brand'] ?? get_term_meta($term_id, '_gm2_schema_brand', true);
+        $rating      = $overrides['schema_rating'] ?? get_term_meta($term_id, '_gm2_schema_rating', true);
+
+        if ($schema_type === 'product') {
+            $data = [
+                '@context' => 'https://schema.org/',
+                '@type'    => 'Product',
+                'name'     => $term->name,
+                'description' => wp_strip_all_tags($term->description),
+            ];
+            if ($brand) {
+                $data['brand'] = [
+                    '@type' => 'Brand',
+                    'name'  => $brand,
+                ];
+            }
+            $schemas[] = $data;
+        } elseif ($schema_type === 'article') {
+            $schemas[] = [
+                '@context' => 'https://schema.org/',
+                '@type'    => 'Article',
+                'headline' => $term->name,
+            ];
+        }
+
+        if ($brand) {
+            $schemas[] = [
+                '@context' => 'https://schema.org/',
+                '@type'    => 'Brand',
+                'name'     => $brand,
+            ];
+        }
+
+        if ($rating) {
+            $schemas[] = [
+                '@context'      => 'https://schema.org/',
+                '@type'         => 'Review',
+                'itemReviewed'  => [
+                    '@type' => 'Product',
+                    'name'  => $term->name,
+                ],
+                'reviewRating'  => [
+                    '@type'       => 'Rating',
+                    'ratingValue' => $rating,
+                    'bestRating'  => '5',
+                ],
+            ];
+        }
+
+        return $schemas;
+    }
+
     public function output_product_schema() {
         if (get_option('gm2_schema_product', '1') !== '1') {
             return;
@@ -596,6 +656,16 @@ class Gm2_SEO_Public {
         if (get_option('gm2_schema_breadcrumbs', '1') !== '1') {
             return;
         }
+        if (is_category() || is_tag() || is_tax()) {
+            $term = get_queried_object();
+            if ($term && isset($term->term_id)) {
+                $schemas = $this->generate_term_schema_data($term->term_id, $term->taxonomy);
+                foreach ($schemas as $schema) {
+                    echo '<script type="application/ld+json">' . wp_json_encode($schema) . "</script>\n";
+                }
+            }
+        }
+
         $breadcrumbs = $this->get_breadcrumb_items();
         $items       = [];
         $position    = 1;
@@ -686,6 +756,14 @@ class Gm2_SEO_Public {
             return;
         }
 
+        $term = get_queried_object();
+        if ($term && isset($term->term_id)) {
+            $schemas = $this->generate_term_schema_data($term->term_id, $term->taxonomy);
+            foreach ($schemas as $schema) {
+                echo '<script type="application/ld+json">' . wp_json_encode($schema) . "</script>\n";
+            }
+        }
+
         $items    = [];
         $position = 1;
         foreach ($wp_query->posts as $post) {
@@ -742,6 +820,15 @@ class Gm2_SEO_Public {
             '@type'           => 'BreadcrumbList',
             'itemListElement' => $items,
         ];
+        if (is_category() || is_tag() || is_tax()) {
+            $term = get_queried_object();
+            if ($term && isset($term->term_id)) {
+                $schemas = $this->generate_term_schema_data($term->term_id, $term->taxonomy);
+                foreach ($schemas as $schema) {
+                    $html .= '<script type="application/ld+json">' . wp_json_encode($schema) . '</script>';
+                }
+            }
+        }
         $html .= '<script type="application/ld+json">' . wp_json_encode($data) . '</script>';
 
         return $html;
