@@ -158,21 +158,24 @@ class Gm2_Bulk_Ai_List_Table extends \WP_List_Table {
 
         if ($this->terms) {
             $taxonomies = $this->admin->get_supported_taxonomies();
-            $tax_query  = [ 'relation' => 'OR' ];
-            foreach ($this->terms as $t) {
-                if (strpos($t, ':') === false) {
+            $tax_query  = [];
+            foreach ($this->terms as $tax => $ids) {
+                if (!in_array($tax, $taxonomies, true)) {
                     continue;
                 }
-                list($tax, $id) = explode(':', $t);
-                if (in_array($tax, $taxonomies, true)) {
+                $ids = array_filter(array_map('absint', (array) $ids));
+                if ($ids) {
                     $tax_query[] = [
                         'taxonomy' => $tax,
                         'field'    => 'term_id',
-                        'terms'    => absint($id),
+                        'terms'    => $ids,
                     ];
                 }
             }
-            if (count($tax_query) > 1) {
+            if ($tax_query) {
+                if (count($tax_query) > 1) {
+                    $tax_query = array_merge(['relation' => 'AND'], $tax_query);
+                }
                 $args['tax_query'] = $tax_query;
             }
         }
