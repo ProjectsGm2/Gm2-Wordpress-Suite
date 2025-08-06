@@ -4,6 +4,8 @@ jQuery(function($){
             action: 'gm2_schema_preview',
             nonce: gm2SchemaPreview.nonce,
             post_id: gm2SchemaPreview.post_id,
+            term_id: gm2SchemaPreview.term_id,
+            taxonomy: gm2SchemaPreview.taxonomy,
             schema_type: $('#gm2_schema_type').val(),
             schema_brand: $('#gm2_schema_brand').val(),
             schema_rating: $('#gm2_schema_rating').val()
