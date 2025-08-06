@@ -53,18 +53,26 @@ class Gm2_Sitemap {
 
         $urls = [];
         foreach ($this->get_post_types() as $type) {
-            $posts = get_posts([
-                'post_type'   => $type,
-                'post_status' => 'publish',
-                'numberposts' => -1,
-            ]);
-            foreach ($posts as $post) {
-                $urls[] = [
-                    'loc'        => get_permalink($post),
-                    'lastmod'    => get_the_modified_date('c', $post),
-                    'changefreq' => $frequency,
-                ];
-            }
+            $per_page = apply_filters('gm2_sitemap_posts_per_page', 100);
+            $paged    = 1;
+            do {
+                $query = new \WP_Query([
+                    'post_type'      => $type,
+                    'post_status'    => 'publish',
+                    'posts_per_page' => $per_page,
+                    'paged'          => $paged,
+                    'fields'         => 'ids',
+                ]);
+                foreach ($query->posts as $post_id) {
+                    $urls[] = [
+                        'loc'        => get_permalink($post_id),
+                        'lastmod'    => get_post_modified_time('c', true, $post_id),
+                        'changefreq' => $frequency,
+                    ];
+                }
+                $paged++;
+            } while ($paged <= $query->max_num_pages);
+            wp_reset_postdata();
         }
 
         foreach ($this->get_taxonomies() as $tax) {

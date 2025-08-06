@@ -12,6 +12,7 @@ class SitemapTest extends WP_UnitTestCase {
             unlink($part);
         }
         delete_option('gm2_sitemap_path');
+        delete_option('gm2_sitemap_max_urls');
         parent::tearDown();
     }
     public function test_generate_sitemap_creates_file() {
@@ -98,6 +99,22 @@ class SitemapTest extends WP_UnitTestCase {
         $sitemap->generate();
         $this->assertFileExists($custom);
         $this->assertFileExists(ABSPATH . 'custom-sitemap-1.xml');
+    }
+
+    public function test_sitemap_handles_large_post_counts() {
+        $filter = function() { return 50; };
+        add_filter('gm2_sitemap_posts_per_page', $filter);
+        $ids = self::factory()->post->create_many(125);
+        update_option('gm2_sitemap_max_urls', 100);
+        $sitemap = new Gm2_Sitemap();
+        $sitemap->generate();
+        remove_filter('gm2_sitemap_posts_per_page', $filter);
+
+        $this->assertFileExists(ABSPATH . 'sitemap-1.xml');
+        $this->assertFileExists(ABSPATH . 'sitemap-2.xml');
+        $content = file_get_contents(ABSPATH . 'sitemap-1.xml') . file_get_contents(ABSPATH . 'sitemap-2.xml');
+        $this->assertStringContainsString(get_permalink($ids[0]), $content);
+        $this->assertStringContainsString(get_permalink($ids[124]), $content);
     }
 }
 
