@@ -146,7 +146,12 @@ class Gm2_Abandoned_Carts {
         $total      = (float) $cart->get_cart_contents_total();
         global $wpdb;
         $table = $wpdb->prefix . 'wc_ac_carts';
-        $row = $wpdb->get_row($wpdb->prepare("SELECT id, entry_url, abandoned_at, revisit_count, session_start FROM $table WHERE cart_token = %s", $token));
+        $row = $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT id, entry_url, exit_url, abandoned_at, revisit_count, session_start FROM $table WHERE cart_token = %s",
+                $token
+            )
+        );
         if ($row) {
             $update = [
                 'cart_contents' => $contents,
@@ -166,12 +171,15 @@ class Gm2_Abandoned_Carts {
                 $update['session_start'] = current_time('mysql');
             }
             $wpdb->update($table, $update, ['id' => $row->id]);
+            $url_update = [];
             if (empty($row->entry_url)) {
-                $wpdb->update(
-                    $table,
-                    ['entry_url' => $current_url],
-                    ['id' => $row->id]
-                );
+                $url_update['entry_url'] = $current_url;
+            }
+            if (empty($row->exit_url)) {
+                $url_update['exit_url'] = $current_url;
+            }
+            if (!empty($url_update)) {
+                $wpdb->update($table, $url_update, ['id' => $row->id]);
             }
         } else {
             $wpdb->insert($table, [
@@ -186,6 +194,7 @@ class Gm2_Abandoned_Carts {
                 'location'      => $location,
                 'device'        => $device,
                 'entry_url'     => $current_url,
+                'exit_url'      => $current_url,
                 'cart_total'    => $total,
                 'browsing_time' => 0,
                 'revisit_count' => 0,
