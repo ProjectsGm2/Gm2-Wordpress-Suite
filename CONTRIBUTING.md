@@ -38,6 +38,14 @@ WP_TESTS_DIR=/path/to/wordpress-tests-lib phpunit
 
 This command executes the PHPUnit tests located in the `tests/` directory.
 
+JavaScript unit tests live in `tests/js` and use Jest. Install the Node
+dependencies once and execute the suite with:
+
+```bash
+npm install
+npm test
+```
+
 ### Database credentials
 
 Before running the test suite via `make test`, export your database connection
