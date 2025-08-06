@@ -18,13 +18,29 @@
                 credentials: 'same-origin',
                 body: data,
                 keepalive: true,
-            });
+            })
+                .then((response) => {
+                    if (!response.ok) {
+                        console.error('gm2_ac_mark_abandoned request failed', response.status, response.statusText);
+                    }
+                })
+                .catch((error) => {
+                    console.error('gm2_ac_mark_abandoned request error', error);
+                });
         } else {
             fetch(ajaxUrl, {
                 method: 'POST',
                 credentials: 'same-origin',
                 body: data,
-            });
+            })
+                .then((response) => {
+                    if (!response.ok) {
+                        console.error(`${action} request failed`, response.status, response.statusText);
+                    }
+                })
+                .catch((error) => {
+                    console.error(`${action} request error`, error);
+                });
         }
     }
 
