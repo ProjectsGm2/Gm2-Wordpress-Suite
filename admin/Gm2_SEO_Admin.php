@@ -1850,6 +1850,10 @@ class Gm2_SEO_Admin {
         echo '<input type="text" id="gm2_seo_title" name="gm2_seo_title" value="' . esc_attr($title) . '" placeholder="' . esc_attr__( 'Best Product Ever | My Brand', 'gm2-wordpress-suite' ) . '" class="widefat" /> <span class="dashicons dashicons-info" title="' . esc_attr__( 'Include main keyword and brand', 'gm2-wordpress-suite' ) . '"></span></p>';
         echo '<p><label for="gm2_seo_description">' . esc_html__( 'SEO Description', 'gm2-wordpress-suite' ) . '</label>';
         echo '<textarea id="gm2_seo_description" name="gm2_seo_description" class="widefat" rows="3" placeholder="' . esc_attr__( 'One sentence summary shown in search results', 'gm2-wordpress-suite' ) . '">' . esc_textarea($description) . '</textarea> <span class="dashicons dashicons-info" title="' . esc_attr__( 'Keep under 160 characters', 'gm2-wordpress-suite' ) . '"></span></p>';
+
+        $permalink = get_permalink($post);
+        $rich_url  = 'https://search.google.com/test/rich-results?url=' . rawurlencode($permalink);
+        echo '<p><a id="gm2-rich-results-preview" class="button button-secondary" href="' . esc_url($rich_url) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Rich Results Preview', 'gm2-wordpress-suite' ) . '</a></p>';
         echo '<p><label for="gm2_focus_keywords">' . esc_html__( 'Focus Keywords (comma separated)', 'gm2-wordpress-suite' ) . '</label>';
         echo '<input type="text" id="gm2_focus_keywords" name="gm2_focus_keywords" value="' . esc_attr($focus_keywords) . '" placeholder="' . esc_attr__( 'keyword1, keyword2', 'gm2-wordpress-suite' ) . '" class="widefat" /> <span class="dashicons dashicons-info" title="' . esc_attr__( 'Separate with commas', 'gm2-wordpress-suite' ) . '"></span></p>';
         echo '<p><label for="gm2_long_tail_keywords">' . esc_html__( 'Long Tail Keywords (comma separated)', 'gm2-wordpress-suite' ) . '</label>';
@@ -4607,6 +4611,14 @@ class Gm2_SEO_Admin {
             GM2_VERSION,
             true
         );
+
+        wp_enqueue_script(
+            'gm2-rich-preview',
+            GM2_PLUGIN_URL . 'admin/js/gm2-rich-preview.js',
+            ['jquery', 'wp-data'],
+            GM2_VERSION,
+            true
+        );
         wp_localize_script(
             'gm2-ai-seo',
             'gm2AiSeo',
@@ -4852,6 +4864,11 @@ class Gm2_SEO_Admin {
         echo '<input type="text" id="gm2_seo_title" name="gm2_seo_title" value="' . esc_attr($title) . '" placeholder="' . esc_attr__( 'Best Product Ever | My Brand', 'gm2-wordpress-suite' ) . '" class="widefat" /> <span class="dashicons dashicons-info" title="' . esc_attr__( 'Include main keyword and brand', 'gm2-wordpress-suite' ) . '"></span></p>';
         echo '<p><label for="gm2_seo_description">SEO Description</label>';
         echo '<textarea id="gm2_seo_description" name="gm2_seo_description" class="widefat" rows="3" placeholder="' . esc_attr__( 'One sentence summary shown in search results', 'gm2-wordpress-suite' ) . '">' . esc_textarea($description) . '</textarea> <span class="dashicons dashicons-info" title="' . esc_attr__( 'Keep under 160 characters', 'gm2-wordpress-suite' ) . '"></span></p>';
+
+        $permalink = get_permalink($post);
+        $rich_url  = 'https://search.google.com/test/rich-results?url=' . rawurlencode($permalink);
+        echo '<p><a id="gm2-rich-results-preview" class="button button-secondary" href="' . esc_url($rich_url) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Rich Results Preview', 'gm2-wordpress-suite' ) . '</a></p>';
+
         echo '<p><label for="gm2_focus_keywords">' . esc_html__( 'Focus Keywords (comma separated)', 'gm2-wordpress-suite' ) . '</label>';
         echo '<input type="text" id="gm2_focus_keywords" name="gm2_focus_keywords" value="' . esc_attr($focus_keywords) . '" placeholder="' . esc_attr__( 'keyword1, keyword2', 'gm2-wordpress-suite' ) . '" class="widefat" /> <span class="dashicons dashicons-info" title="' . esc_attr__( 'Separate with commas', 'gm2-wordpress-suite' ) . '"></span></p>';
         echo '<p><label for="gm2_long_tail_keywords">' . esc_html__( 'Long Tail Keywords (comma separated)', 'gm2-wordpress-suite' ) . '</label>';
