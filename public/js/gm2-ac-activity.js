@@ -8,30 +8,16 @@
         const data = new URLSearchParams({ action, nonce, url });
 
         if (action === 'gm2_ac_mark_abandoned') {
-            let queued = false;
-
             if (navigator.sendBeacon) {
-                queued = navigator.sendBeacon(ajaxUrl, data);
+                navigator.sendBeacon(ajaxUrl, data);
             }
 
-            if (!queued) {
-                fetch(ajaxUrl, {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    body: data,
-                    keepalive: true,
-                });
-            } else {
-                // Fallback in case the beacon is dropped
-                setTimeout(function () {
-                    fetch(ajaxUrl, {
-                        method: 'POST',
-                        credentials: 'same-origin',
-                        body: data,
-                        keepalive: true,
-                    });
-                }, 100);
-            }
+            fetch(ajaxUrl, {
+                method: 'POST',
+                credentials: 'same-origin',
+                body: data,
+                keepalive: true,
+            });
         } else {
             fetch(ajaxUrl, {
                 method: 'POST',
