@@ -17,6 +17,7 @@ class Gm2_Bulk_Ai_List_Table extends \WP_List_Table {
     private $terms;
     private $missing_title;
     private $missing_desc;
+    private $seo_status;
 
     public function __construct($admin, $args) {
         $this->admin         = $admin;
@@ -24,6 +25,7 @@ class Gm2_Bulk_Ai_List_Table extends \WP_List_Table {
         $this->status        = $args['status'] ?? 'publish';
         $this->post_type     = $args['post_type'] ?? 'all';
         $this->terms         = $args['terms'] ?? [];
+        $this->seo_status    = $args['seo_status'] ?? 'all';
         $this->missing_title = $args['missing_title'] ?? '0';
         $this->missing_desc  = $args['missing_desc'] ?? '0';
 
@@ -186,6 +188,18 @@ class Gm2_Bulk_Ai_List_Table extends \WP_List_Table {
         if ($this->missing_desc === '1') {
             $meta_query[] = [
                 'relation' => 'OR',
+                [ 'key' => '_gm2_description', 'compare' => 'NOT EXISTS' ],
+                [ 'key' => '_gm2_description', 'value' => '', 'compare' => '=' ],
+            ];
+        }
+        if ($this->seo_status === 'complete') {
+            $meta_query[] = [ 'key' => '_gm2_title', 'value' => '', 'compare' => '!=' ];
+            $meta_query[] = [ 'key' => '_gm2_description', 'value' => '', 'compare' => '!=' ];
+        } elseif ($this->seo_status === 'incomplete') {
+            $meta_query[] = [
+                'relation' => 'OR',
+                [ 'key' => '_gm2_title', 'compare' => 'NOT EXISTS' ],
+                [ 'key' => '_gm2_title', 'value' => '', 'compare' => '=' ],
                 [ 'key' => '_gm2_description', 'compare' => 'NOT EXISTS' ],
                 [ 'key' => '_gm2_description', 'value' => '', 'compare' => '=' ],
             ];
