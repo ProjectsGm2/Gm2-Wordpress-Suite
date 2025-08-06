@@ -58,21 +58,36 @@ class Gm2_Abandoned_Carts_Public {
             wp_send_json_error('empty_email');
         }
 
-        $token = '';
+        $token            = '';
+        $session_entry_url = '';
         if (class_exists('WC_Session') && WC()->session) {
-            $token = WC()->session->get_customer_id();
+            $token            = WC()->session->get_customer_id();
+            $session_entry_url = WC()->session->get('gm2_entry_url');
         }
 
         if (empty($token)) {
             wp_send_json_error('no_cart');
         }
 
+        $stored_entry = '';
+        if (isset($_COOKIE['gm2_entry_url'])) {
+            $stored_entry = esc_url_raw(wp_unslash($_COOKIE['gm2_entry_url']));
+            setcookie('gm2_entry_url', '', time() - HOUR_IN_SECONDS, COOKIEPATH, COOKIE_DOMAIN);
+            unset($_COOKIE['gm2_entry_url']);
+        } elseif (!empty($session_entry_url)) {
+            $stored_entry = esc_url_raw($session_entry_url);
+            WC()->session->set('gm2_entry_url', null);
+        }
+
+        $request_uri = isset($_SERVER['REQUEST_URI']) ? esc_url_raw(wp_unslash($_SERVER['REQUEST_URI'])) : '/';
+        $current_url = $stored_entry ?: home_url($request_uri);
+
         $agent   = $_SERVER['HTTP_USER_AGENT'] ?? '';
         $browser = Gm2_Abandoned_Carts::get_browser($agent);
 
         global $wpdb;
         $table = $wpdb->prefix . 'wc_ac_carts';
-        $row   = $wpdb->get_row($wpdb->prepare("SELECT id FROM $table WHERE cart_token = %s", $token));
+        $row   = $wpdb->get_row($wpdb->prepare("SELECT id, entry_url FROM $table WHERE cart_token = %s", $token));
         if ($row) {
             $wpdb->update(
                 $table,
@@ -83,6 +98,13 @@ class Gm2_Abandoned_Carts_Public {
                 ],
                 [ 'id' => $row->id ]
             );
+            if (empty($row->entry_url) && !empty($stored_entry)) {
+                $wpdb->update(
+                    $table,
+                    [ 'entry_url' => $stored_entry ],
+                    [ 'id' => $row->id ]
+                );
+            }
         } else {
             $cart = class_exists('WC_Cart') ? WC()->cart : null;
             if (!$cart || $cart->is_empty()) {
@@ -133,8 +155,7 @@ class Gm2_Abandoned_Carts_Public {
                     }
                 }
             }
-            $current_url = home_url($_SERVER['REQUEST_URI'] ?? '/');
-            $total       = (float) $cart->get_cart_contents_total();
+            $total = (float) $cart->get_cart_contents_total();
             $wpdb->insert($table, [
                 'cart_token'    => $token,
                 'user_id'       => get_current_user_id(),

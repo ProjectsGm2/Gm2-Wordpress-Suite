@@ -127,6 +127,22 @@ class Gm2_Abandoned_Carts {
         }
         $request_uri = isset($_SERVER['REQUEST_URI']) ? esc_url_raw(wp_unslash($_SERVER['REQUEST_URI'])) : '/';
         $current_url = home_url($request_uri);
+
+        $stored_entry = '';
+        if (isset($_COOKIE['gm2_entry_url'])) {
+            $stored_entry = esc_url_raw(wp_unslash($_COOKIE['gm2_entry_url']));
+            setcookie('gm2_entry_url', '', time() - HOUR_IN_SECONDS, COOKIEPATH, COOKIE_DOMAIN);
+            unset($_COOKIE['gm2_entry_url']);
+        } else {
+            $session_entry = $wc->session->get('gm2_entry_url');
+            if (!empty($session_entry)) {
+                $stored_entry = esc_url_raw($session_entry);
+                $wc->session->set('gm2_entry_url', null);
+            }
+        }
+        if (!empty($stored_entry)) {
+            $current_url = $stored_entry;
+        }
         $total      = (float) $cart->get_cart_contents_total();
         global $wpdb;
         $table = $wpdb->prefix . 'wc_ac_carts';
