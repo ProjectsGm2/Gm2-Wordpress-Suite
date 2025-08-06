@@ -2,6 +2,16 @@
 
 This repository contains the development version of the Gm2 WordPress Suite plugin. For plugin installation steps and feature documentation see [readme.txt](readme.txt).
 
+## Building the Plugin
+
+Generate a production-ready ZIP package with all dependencies using:
+
+```bash
+bash bin/build-plugin.sh
+```
+
+This script creates a `gm2-wordpress-suite.zip` file that includes the plugin and its bundled dependencies.
+
 ## Running Tests
 
 The PHPUnit tests rely on the official WordPress test suite. Before running the tests you must install the suite using the helper script provided in `bin`.
