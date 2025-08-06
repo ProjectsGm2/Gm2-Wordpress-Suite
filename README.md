@@ -108,6 +108,23 @@ Clear cached AI data and ChatGPT logs:
 wp gm2 ai clear
 ```
 
+## Google Merchant Centre Real-Time Updates
+
+The plugin tracks real-time product updates for Google Merchant Centre. Price,
+availability and inventory changes are cached and exposed via the REST
+endpoint `/gm2/v1/gmc/realtime`. The front-end script polls this endpoint and
+dispatches a `gm2GmcRealtimeUpdate` event with the latest data.
+
+Developers can customize which fields are monitored by filtering the
+`gm2_gmc_realtime_fields` list:
+
+```php
+add_filter( 'gm2_gmc_realtime_fields', function( $fields ) {
+    $fields[] = 'sale_price';
+    return $fields;
+} );
+```
+
 ## Bulk AI for Taxonomies
 
 The **Bulk AI Taxonomies** page under **Gm2 → Bulk AI Taxonomies** lists terms
