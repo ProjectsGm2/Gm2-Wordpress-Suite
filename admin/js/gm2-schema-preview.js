@@ -1,4 +1,6 @@
 jQuery(function($){
+    var cardTmpl = wp.template('gm2-schema-card');
+
     function fetchSchema(){
         var data = {
             action: 'gm2_schema_preview',
@@ -12,10 +14,14 @@ jQuery(function($){
         };
         $.post(gm2SchemaPreview.ajax_url, data, function(resp){
             if(resp && resp.success){
-                $('#gm2-schema-preview').text(JSON.stringify(resp.data, null, 2));
+                var schemaObj = $.isArray(resp.data) ? resp.data[0] : resp.data;
+                $('#gm2-schema-preview').html(cardTmpl(schemaObj));
+            } else {
+                $('#gm2-schema-preview').empty();
             }
         });
     }
+
     $('#gm2_schema_type, #gm2_schema_brand, #gm2_schema_rating').on('change input', fetchSchema);
     fetchSchema();
 });

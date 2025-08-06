@@ -1859,13 +1859,6 @@ class Gm2_SEO_Admin {
         echo '<p><label for="gm2_seo_description">' . esc_html__( 'SEO Description', 'gm2-wordpress-suite' ) . '</label>';
         echo '<textarea id="gm2_seo_description" name="gm2_seo_description" class="widefat" rows="3" placeholder="' . esc_attr__( 'One sentence summary shown in search results', 'gm2-wordpress-suite' ) . '">' . esc_textarea($description) . '</textarea> <span class="dashicons dashicons-info" title="' . esc_attr__( 'Keep under 160 characters', 'gm2-wordpress-suite' ) . '"></span></p>';
 
-        if (is_object($term)) {
-            $link = get_term_link($term);
-            if (!is_wp_error($link)) {
-                $rich_url = 'https://search.google.com/test/rich-results?url=' . rawurlencode($link);
-                echo '<p><a id="gm2-rich-results-preview" class="button button-secondary" href="' . esc_url($rich_url) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Rich Results Preview', 'gm2-wordpress-suite' ) . '</a></p>';
-            }
-        }
         echo '<p><label for="gm2_focus_keywords">' . esc_html__( 'Focus Keywords (comma separated)', 'gm2-wordpress-suite' ) . '</label>';
         echo '<input type="text" id="gm2_focus_keywords" name="gm2_focus_keywords" value="' . esc_attr($focus_keywords) . '" placeholder="' . esc_attr__( 'keyword1, keyword2', 'gm2-wordpress-suite' ) . '" class="widefat" /> <span class="dashicons dashicons-info" title="' . esc_attr__( 'Separate with commas', 'gm2-wordpress-suite' ) . '"></span></p>';
         echo '<p><label for="gm2_long_tail_keywords">' . esc_html__( 'Long Tail Keywords (comma separated)', 'gm2-wordpress-suite' ) . '</label>';
@@ -1941,7 +1934,23 @@ class Gm2_SEO_Admin {
         echo '<input type="text" id="gm2_schema_brand" name="gm2_schema_brand" value="' . esc_attr($schema_brand) . '" class="widefat" /></p>';
         echo '<p><label for="gm2_schema_rating">' . esc_html__( 'Review Rating', 'gm2-wordpress-suite' ) . '</label>';
         echo '<input type="number" step="0.1" min="0" max="5" id="gm2_schema_rating" name="gm2_schema_rating" value="' . esc_attr($schema_rating) . '" class="small-text" /></p>';
-        echo '<pre id="gm2-schema-preview"></pre>';
+        if (is_object($term)) {
+            $link = get_term_link($term);
+            if (!is_wp_error($link)) {
+                $rich_url = 'https://search.google.com/test/rich-results?url=' . rawurlencode($link);
+            }
+        }
+        echo '<div id="gm2-schema-preview"></div>';
+        if (!empty($rich_url)) {
+            echo '<p><a id="gm2-rich-results-preview" class="button button-secondary" href="' . esc_url($rich_url) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Test in Google', 'gm2-wordpress-suite' ) . '</a></p>';
+        }
+        echo '<script type="text/html" id="tmpl-gm2-schema-card">';
+        echo '<div class="gm2-schema-card">';
+        echo '<# var title = data.name || data.headline; if ( title ) { #><div class="gm2-schema-card__title">{{ title }}</div><# } #>';
+        echo '<# if ( data.description ) { #><div class="gm2-schema-card__desc">{{ data.description }}</div><# } #>';
+        echo '<# if ( data.offers && data.offers.price ) { #><div class="gm2-schema-card__price">{{ data.offers.price }}</div><# } #>';
+        echo '</div>';
+        echo '</script>';
         echo '</div>';
         echo '<div id="gm2-ai-seo" class="gm2-tab-panel" role="tabpanel">';
         echo '<p><button type="button" class="button gm2-ai-research">' . esc_html__( 'AI Research', 'gm2-wordpress-suite' ) . '</button></p>';
@@ -4691,7 +4700,7 @@ class Gm2_SEO_Admin {
         wp_enqueue_script(
             'gm2-schema-preview',
             GM2_PLUGIN_URL . 'admin/js/gm2-schema-preview.js',
-            ['jquery'],
+            ['jquery', 'wp-util'],
             GM2_VERSION,
             true
         );
@@ -4966,10 +4975,6 @@ class Gm2_SEO_Admin {
         echo '<p><label for="gm2_seo_description">SEO Description</label>';
         echo '<textarea id="gm2_seo_description" name="gm2_seo_description" class="widefat" rows="3" placeholder="' . esc_attr__( 'One sentence summary shown in search results', 'gm2-wordpress-suite' ) . '">' . esc_textarea($description) . '</textarea> <span class="dashicons dashicons-info" title="' . esc_attr__( 'Keep under 160 characters', 'gm2-wordpress-suite' ) . '"></span></p>';
 
-        $permalink = get_permalink($post);
-        $rich_url  = 'https://search.google.com/test/rich-results?url=' . rawurlencode($permalink);
-        echo '<p><a id="gm2-rich-results-preview" class="button button-secondary" href="' . esc_url($rich_url) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Rich Results Preview', 'gm2-wordpress-suite' ) . '</a></p>';
-
         echo '<p><label for="gm2_focus_keywords">' . esc_html__( 'Focus Keywords (comma separated)', 'gm2-wordpress-suite' ) . '</label>';
         echo '<input type="text" id="gm2_focus_keywords" name="gm2_focus_keywords" value="' . esc_attr($focus_keywords) . '" placeholder="' . esc_attr__( 'keyword1, keyword2', 'gm2-wordpress-suite' ) . '" class="widefat" /> <span class="dashicons dashicons-info" title="' . esc_attr__( 'Separate with commas', 'gm2-wordpress-suite' ) . '"></span></p>';
         echo '<p><label for="gm2_long_tail_keywords">' . esc_html__( 'Long Tail Keywords (comma separated)', 'gm2-wordpress-suite' ) . '</label>';
@@ -5053,7 +5058,17 @@ class Gm2_SEO_Admin {
         echo '<input type="text" id="gm2_schema_brand" name="gm2_schema_brand" value="' . esc_attr($schema_brand) . '" class="widefat" /></p>';
         echo '<p><label for="gm2_schema_rating">' . esc_html__( 'Review Rating', 'gm2-wordpress-suite' ) . '</label>';
         echo '<input type="number" step="0.1" min="0" max="5" id="gm2_schema_rating" name="gm2_schema_rating" value="' . esc_attr($schema_rating) . '" class="small-text" /></p>';
-        echo '<pre id="gm2-schema-preview"></pre>';
+        $permalink = get_permalink($post);
+        $rich_url  = 'https://search.google.com/test/rich-results?url=' . rawurlencode($permalink);
+        echo '<div id="gm2-schema-preview"></div>';
+        echo '<p><a id="gm2-rich-results-preview" class="button button-secondary" href="' . esc_url($rich_url) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Test in Google', 'gm2-wordpress-suite' ) . '</a></p>';
+        echo '<script type="text/html" id="tmpl-gm2-schema-card">';
+        echo '<div class="gm2-schema-card">';
+        echo '<# var title = data.name || data.headline; if ( title ) { #><div class="gm2-schema-card__title">{{ title }}</div><# } #>';
+        echo '<# if ( data.description ) { #><div class="gm2-schema-card__desc">{{ data.description }}</div><# } #>';
+        echo '<# if ( data.offers && data.offers.price ) { #><div class="gm2-schema-card__price">{{ data.offers.price }}</div><# } #>';
+        echo '</div>';
+        echo '</script>';
         echo '</div>';
         echo '<div id="gm2-ai-seo" class="gm2-tab-panel" role="tabpanel">';
         echo '<p><button type="button" class="button gm2-ai-research">' . esc_html__( 'AI Research', 'gm2-wordpress-suite' ) . '</button></p>';
