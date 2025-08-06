@@ -237,8 +237,19 @@ class Gm2_Bulk_Ai_List_Table extends \WP_List_Table {
         $this->display_tablenav('top');
         $classes = implode(' ', $this->get_table_classes());
         echo '<table id="gm2-bulk-list" class="wp-list-table ' . esc_attr($classes) . '">';
+
+        echo '<thead>';
         $this->print_column_headers();
+        echo '</thead>';
+
+        echo '<tbody id="the-list">';
         $this->display_rows_or_placeholder();
+        echo '</tbody>';
+
+        echo '<tfoot>';
+        $this->print_column_headers(false);
+        echo '</tfoot>';
+
         echo '</table>';
         $this->display_tablenav('bottom');
     }
