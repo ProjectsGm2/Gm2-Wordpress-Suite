@@ -105,6 +105,12 @@ jQuery(function($){
             cell.text(gm2BulkAiTax.i18n.error);
         });
     });
+    $('#gm2-bulk-ai-tax').on('click','#gm2-bulk-term-select-analyzed',function(e){
+        e.preventDefault();
+        $('#gm2-bulk-term-list .gm2-row-select-all').each(function(){
+            $(this).prop('checked',true).trigger('change');
+        });
+    });
     $('#gm2-bulk-ai-tax').on('click','#gm2-bulk-term-apply-all',function(e){
         e.preventDefault();
         var items={};

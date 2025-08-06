@@ -39,6 +39,7 @@ add_filter('gm2_gmc_realtime_fields', function ($fields) {
 
 - Batching or rate-limiting of AI requests.
 - The new "Apply All" button for applying suggestions in bulk.
+- A "Select Analyzed" button to quickly mark analyzed suggestions before applying them in bulk.
 - The global progress indicator tracking analysis and apply actions.
 - Reuse of cached AI results with options to refresh or clear them.
 - Progress messages now use translation functions for localization.
