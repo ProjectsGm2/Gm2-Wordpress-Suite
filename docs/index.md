@@ -64,7 +64,6 @@ Use the **Bulk AI Taxonomies** page under **Gm2 → Bulk AI Taxonomies** to gene
 - **Taxonomy CSV export** – `handle_bulk_ai_tax_export()` outputs a `gm2-bulk-ai-tax.csv` file.
 - **User settings** – page size and filters stored per user via `update_user_meta()`.
 - **Improved AJAX errors** – `.fail()` blocks in `gm2-bulk-ai.js` display parsed messages.
-- **Scheduled via WP‑Cron** – planned feature to queue analysis jobs.
 - **Undo option** – `.gm2-undo-btn` triggers `ajax_bulk_ai_undo()` in `Gm2_SEO_Admin.php`.
 - **Color-coded statuses** – row classes `gm2-status-new`, `gm2-status-analyzed` and `gm2-status-applied` styled in `admin/css/gm2-seo.css`.
 
@@ -111,28 +110,9 @@ Focus keywords used across posts and terms are now tracked. AI Research includes
 the list of existing keywords in its prompt and filters them from suggestions.
 The "Check Rules" action fails when a focus keyword is already in use.
 
-## Planned Features
-
-- Accessible tabs with ARIA roles and keyboard controls.
-- Spinner feedback during AI SEO research.
-- SEO input placeholders with help tooltips.
-- Live search snippet preview in the SEO meta box.
-- "Test Connection" button on the Google Connect screen.
-- Clear 404 Logs button on the **Redirects** tab.
-- Link counts for all public post types to track internal and external links.
-- Sitemap Path field placeholder with tooltip guidance.
-- Real-time character counts displayed in the SEO meta box.
-
 ## Development Task List
 
 The following tasks track upcoming enhancements for the Gm2 WordPress Suite. Each item briefly explains the goal of the improvement so contributors know what to tackle next.
 
-1. **Accessible admin tabs** – replace current tab markup with ARIA roles and keyboard navigation patterns.
-2. **Spinner feedback during AI SEO research** – show a loader while requests run so users know work is in progress.
-3. **SEO field placeholders** – add example text and tooltips that clarify what to enter in each input.
-4. **Live snippet preview** – display a real-time view of how titles and descriptions will appear in search results.
-5. **Google Connect test button** – verify Analytics and Ads credentials right from the connect page.
-6. **404 log clearing** – provide a button on the Redirects tab to reset the list of missing URLs.
-7. **Post link counts** – track internal and external link totals across all public post types.
-8. **Sitemap path guidance** – show the default sitemap path in a placeholder with a short explanation.
-9. **Character count display** – update the SEO meta box to show running character totals for each field.
+1. **Bulk AI scheduling via WP‑Cron** – queue analysis jobs in the background so large batches can run automatically.
+
