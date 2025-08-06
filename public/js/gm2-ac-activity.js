@@ -37,6 +37,7 @@
     send('gm2_ac_mark_active');
 
     window.addEventListener('beforeunload', decrementTabs);
+    window.addEventListener('pagehide', decrementTabs);
     document.addEventListener('visibilitychange', function () {
         if (document.visibilityState === 'hidden') {
             decrementTabs();

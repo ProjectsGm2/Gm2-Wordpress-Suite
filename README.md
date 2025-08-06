@@ -135,6 +135,11 @@ captures the email as soon as it is entered on the checkout page so the address
 is available even if the customer never completes the order. It also records
 when a cart becomes active or abandoned as the visitor browses the site.
 
+The script listens for `beforeunload`, `visibilitychange` and `pagehide` events
+to mark a cart abandoned when the last browser tab closes. Some older browsers
+may ignore these events or block background requests, which can prevent the
+notification from reaching WordPress.
+
 The admin screen under **Gm2 → Abandoned Carts** displays a table of carts and
 their status—active or abandoned—showing the IP address, email, location, device,
 products, cart value, entry and exit URLs, browsing time, and revisit count.

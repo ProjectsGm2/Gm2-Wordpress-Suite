@@ -310,6 +310,11 @@ After activating WooCommerce, open **Gm2 → Quantity Discounts** and click **Ad
 == Abandoned Carts ==
 Enable this module from **Gm2 → Dashboard** to create tables that record the cart contents, email address, IP, location, device type, entry and exit URLs, cart value, total browsing time and how many times a shopper revisits their cart. A small JavaScript snippet captures the email field on the checkout page so you can reach customers who abandon their cart before placing an order. It also marks carts as active while the shopper browses and flags them as abandoned when they leave.
 
+The tracking script listens for `beforeunload`, `visibilitychange` and
+`pagehide` events to mark a cart abandoned when the last browser tab closes. On
+older browsers these events or background requests may be suppressed, which can
+prevent the abandonment notice from reaching WordPress.
+
 Open **Gm2 → Abandoned Carts** to view a table listing each cart's status, IP address, email, location, device, products, value, entry and exit URLs, browsing time and revisits. Recovery messages are queued using WP&nbsp;Cron via the `gm2_ac_process_queue` action. Developers can hook `gm2_ac_send_message` to send the actual emails.
 
 == Redirects ==
