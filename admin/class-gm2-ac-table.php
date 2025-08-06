@@ -131,6 +131,11 @@ class GM2_AC_Table extends \WP_List_Table {
         $rows     = $wpdb->get_results($wpdb->prepare($data_sql, ...$params2));
 
         $items = [];
+        $minutes = absint(apply_filters('gm2_ac_mark_abandoned_interval', (int) get_option('gm2_ac_mark_abandoned_interval', 5)));
+        if ($minutes < 1) {
+            $minutes = 1;
+        }
+        $threshold = time() - $minutes * MINUTE_IN_SECONDS;
         foreach ($rows as $row) {
             $products   = [];
             $cart_value = 0;
@@ -182,7 +187,12 @@ class GM2_AC_Table extends \WP_List_Table {
                 $cart_value = (float) $row->cart_total;
             }
 
-            $status = $row->abandoned_at ? __('Abandoned', 'gm2-wordpress-suite') : __('Active', 'gm2-wordpress-suite');
+            $status = __('Active', 'gm2-wordpress-suite');
+            if ($row->abandoned_at) {
+                $status = __('Abandoned', 'gm2-wordpress-suite');
+            } elseif ($row->session_start && strtotime($row->session_start) <= $threshold) {
+                $status = __('Pending Abandonment', 'gm2-wordpress-suite');
+            }
             $abandoned_at = '';
             if ($row->abandoned_at) {
                 $abandoned_at = mysql2date(get_option('date_format').' '.get_option('time_format'), $row->abandoned_at);
