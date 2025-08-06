@@ -9,9 +9,10 @@ class Gm2_Abandoned_Carts {
     public function install() {
         global $wpdb;
         $charset_collate = $wpdb->get_charset_collate();
-        $carts  = $wpdb->prefix . 'wc_ac_carts';
-        $queue  = $wpdb->prefix . 'wc_ac_email_queue';
-        $sql = "CREATE TABLE $carts (
+        $carts = $wpdb->prefix . 'wc_ac_carts';
+        $queue = $wpdb->prefix . 'wc_ac_email_queue';
+
+        $carts_sql = "CREATE TABLE $carts (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
             cart_token varchar(100) NOT NULL,
             user_id bigint(20) unsigned DEFAULT 0,
@@ -34,7 +35,8 @@ class Gm2_Abandoned_Carts {
             PRIMARY KEY  (id),
             KEY cart_token (cart_token)
         ) $charset_collate;";
-        $sql .= "CREATE TABLE $queue (
+
+        $queue_sql = "CREATE TABLE $queue (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
             cart_id bigint(20) unsigned NOT NULL,
             send_at datetime NOT NULL,
@@ -43,8 +45,10 @@ class Gm2_Abandoned_Carts {
             PRIMARY KEY  (id),
             KEY cart_id (cart_id)
         ) $charset_collate;";
+
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-        dbDelta($sql);
+        dbDelta($carts_sql);
+        dbDelta($queue_sql);
     }
 
     public function run() {
