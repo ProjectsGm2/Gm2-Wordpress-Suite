@@ -80,7 +80,7 @@ class BulkAiFilterTest extends WP_UnitTestCase {
         $out_post = self::factory()->post->create(['post_title' => 'Out', 'post_category' => [$cat2]]);
         $user = self::factory()->user->create(['role' => 'administrator']);
         update_user_meta($user, 'gm2_bulk_ai_post_type', 'post');
-        update_user_meta($user, 'gm2_bulk_ai_term', 'category:' . $cat1);
+        update_user_meta($user, 'gm2_bulk_ai_term', ['category' => [$cat1]]);
         $admin = new Gm2_SEO_Admin();
         wp_set_current_user($user);
         ob_start();
@@ -98,7 +98,7 @@ class BulkAiFilterTest extends WP_UnitTestCase {
 
         $user = self::factory()->user->create(['role' => 'administrator']);
         update_user_meta($user, 'gm2_bulk_ai_post_type', 'post');
-        update_user_meta($user, 'gm2_bulk_ai_term', 'category:' . $cat1 . ',category:' . $cat2);
+        update_user_meta($user, 'gm2_bulk_ai_term', ['category' => [$cat1, $cat2]]);
         $admin = new Gm2_SEO_Admin();
         wp_set_current_user($user);
         ob_start();
@@ -119,7 +119,7 @@ class BulkAiFilterTest extends WP_UnitTestCase {
 
         $user = self::factory()->user->create(['role' => 'administrator']);
         update_user_meta($user, 'gm2_bulk_ai_post_type', 'product');
-        update_user_meta($user, 'gm2_bulk_ai_term', 'product_cat:' . $cat);
+        update_user_meta($user, 'gm2_bulk_ai_term', ['product_cat' => [$cat]]);
         $admin = new Gm2_SEO_Admin();
         wp_set_current_user($user);
         ob_start();
