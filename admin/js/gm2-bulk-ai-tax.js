@@ -4,6 +4,10 @@ jQuery(function($){
         var c=$(this).prop('checked');
         $('#gm2-bulk-term-list .gm2-select').prop('checked',c);
     });
+    $('#gm2-bulk-term-list').on('click','.gm2-row-select-all',function(){
+        var checked=$(this).prop('checked');
+        $(this).closest('.gm2-result').find('.gm2-apply').prop('checked',checked);
+    });
     $('#gm2-bulk-ai-tax').on('click','#gm2-bulk-term-analyze',function(e){
         e.preventDefault();
         stop=false;
@@ -27,7 +31,7 @@ jQuery(function($){
             }).done(function(resp){
                 cell.find('.gm2-ai-spinner').remove();
                 if(resp&&resp.success&&resp.data){
-                    var html='';
+                    var html='<p><label><input type="checkbox" class="gm2-row-select-all"> '+gm2BulkAiTax.i18n.selectAll+'</label></p>';
                     if(resp.data.seo_title){html+='<p><label><input type="checkbox" class="gm2-apply" data-field="seo_title" data-value="'+resp.data.seo_title.replace(/"/g,'&quot;')+'"> '+resp.data.seo_title+'</label></p>';}
                     if(resp.data.description){html+='<p><label><input type="checkbox" class="gm2-apply" data-field="seo_description" data-value="'+resp.data.description.replace(/"/g,'&quot;')+'"> '+resp.data.description+'</label></p>';}
                     html+='<p><button class="button gm2-apply-btn" data-key="'+key+'">'+gm2BulkAiTax.i18n.apply+'</button></p>';

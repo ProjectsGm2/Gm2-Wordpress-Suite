@@ -102,6 +102,7 @@ class Gm2_Bulk_Ai_Tax_List_Table extends \WP_List_Table {
 
         if ($suggestions !== '') {
             $key  = $item->taxonomy . ':' . $item->term_id;
+            $html .= '<p><label><input type="checkbox" class="gm2-row-select-all"> ' . esc_html__( 'Select all', 'gm2-wordpress-suite' ) . '</label></p>';
             $html .= $suggestions;
             $html .= '<p><button class="button gm2-apply-btn" data-key="' . esc_attr($key) . '" aria-label="' . esc_attr__( 'Apply', 'gm2-wordpress-suite' ) . '">' . esc_html__( 'Apply', 'gm2-wordpress-suite' ) . '</button></p>';
         }

@@ -293,3 +293,24 @@ class BulkAiTaxExportTest extends WP_UnitTestCase {
         $this->assertStringContainsString('category', $csv);
     }
 }
+
+class BulkAiTaxSelectAllTest extends WP_UnitTestCase {
+    public function test_select_all_option_displayed() {
+        $term_id = self::factory()->term->create(['taxonomy' => 'category', 'name' => 'Analyzed']);
+        update_term_meta($term_id, '_gm2_ai_research', wp_json_encode([
+            'seo_title'  => 'Title',
+            'description'=> 'Desc',
+        ]));
+
+        $admin = new Gm2_SEO_Admin();
+        $user  = self::factory()->user->create(['role' => 'administrator']);
+        wp_set_current_user($user);
+
+        ob_start();
+        $admin->display_bulk_ai_tax_page();
+        $html = ob_get_clean();
+
+        $this->assertStringContainsString('gm2-row-select-all', $html);
+        $this->assertStringContainsString('Select all', $html);
+    }
+}
