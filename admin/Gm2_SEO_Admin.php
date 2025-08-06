@@ -1406,6 +1406,7 @@ class Gm2_SEO_Admin {
         }
         $user_id       = get_current_user_id();
         $page_size     = max(1, absint(get_user_meta($user_id, 'gm2_bulk_ai_tax_page_size', true) ?: 50));
+        $status        = get_user_meta($user_id, 'gm2_bulk_ai_tax_status', true) ?: 'publish';
         $taxonomy      = get_user_meta($user_id, 'gm2_bulk_ai_tax_taxonomy', true) ?: 'all';
         $search        = get_option('gm2_bulk_ai_tax_search', '');
         $missing_title = get_option('gm2_bulk_ai_tax_missing_title', '0');
@@ -1414,6 +1415,7 @@ class Gm2_SEO_Admin {
 
         if (isset($_POST['gm2_bulk_ai_tax_save']) && check_admin_referer('gm2_bulk_ai_tax_settings')) {
             $page_size     = max(1, absint($_POST['page_size'] ?? 50));
+            $status        = sanitize_key($_POST['gm2_tax_status'] ?? 'publish');
             $taxonomy      = sanitize_key($_POST['gm2_taxonomy'] ?? 'all');
             $search        = sanitize_text_field($_POST['gm2_tax_search'] ?? '');
             $seo_status    = sanitize_key($_POST['gm2_tax_seo_status'] ?? 'all');
@@ -1421,6 +1423,7 @@ class Gm2_SEO_Admin {
             $missing_title = isset($_POST['gm2_bulk_ai_tax_missing_title']) ? '1' : '0';
             $missing_desc  = isset($_POST['gm2_bulk_ai_tax_missing_description']) ? '1' : '0';
             update_user_meta($user_id, 'gm2_bulk_ai_tax_page_size', $page_size);
+            update_user_meta($user_id, 'gm2_bulk_ai_tax_status', $status);
             update_user_meta($user_id, 'gm2_bulk_ai_tax_taxonomy', $taxonomy);
             update_user_meta($user_id, 'gm2_bulk_ai_tax_seo_status', $seo_status);
             update_option('gm2_bulk_ai_tax_search', $search);
@@ -1433,6 +1436,7 @@ class Gm2_SEO_Admin {
 
         $args = [
             'page_size'            => $page_size,
+            'status'               => $status,
             'taxonomy'             => $taxonomy,
             'search'               => $search,
             'seo_status'           => $seo_status,
@@ -1447,8 +1451,19 @@ class Gm2_SEO_Admin {
         echo '<p><a href="' . esc_url( admin_url( 'admin-post.php?action=gm2_bulk_ai_tax_export' ) ) . '" class="button">' . esc_html__( 'Export CSV', 'gm2-wordpress-suite' ) . '</a></p>';
         echo '<form method="post" action="' . esc_url( admin_url('admin.php?page=gm2-bulk-ai-taxonomies') ) . '">';
         wp_nonce_field('gm2_bulk_ai_tax_settings');
+        // Row 1: page size, status, SEO status.
         echo '<p><label>' . esc_html__( 'Terms per page', 'gm2-wordpress-suite' ) . ' <input type="number" name="page_size" value="' . esc_attr($page_size) . '" min="1"></label> ';
-        echo '<label>' . esc_html__( 'Taxonomy', 'gm2-wordpress-suite' ) . ' <select name="gm2_taxonomy">';
+        echo '<label>' . esc_html__( 'Status', 'gm2-wordpress-suite' ) . ' <select name="gm2_tax_status">';
+        echo '<option value="publish"' . selected($status, 'publish', false) . '>' . esc_html__( 'Published', 'gm2-wordpress-suite' ) . '</option>';
+        echo '<option value="draft"' . selected($status, 'draft', false) . '>' . esc_html__( 'Draft', 'gm2-wordpress-suite' ) . '</option>';
+        echo '</select></label> ';
+        echo '<label>' . esc_html__( 'SEO Status', 'gm2-wordpress-suite' ) . ' <select name="gm2_tax_seo_status">';
+        echo '<option value="all"' . selected($seo_status, 'all', false) . '>' . esc_html__( 'All', 'gm2-wordpress-suite' ) . '</option>';
+        echo '<option value="complete"' . selected($seo_status, 'complete', false) . '>' . esc_html__( 'Complete', 'gm2-wordpress-suite' ) . '</option>';
+        echo '<option value="incomplete"' . selected($seo_status, 'incomplete', false) . '>' . esc_html__( 'Incomplete', 'gm2-wordpress-suite' ) . '</option>';
+        echo '</select></label></p>';
+        // Row 2: taxonomy, search, missing metadata filters.
+        echo '<p><label>' . esc_html__( 'Taxonomy', 'gm2-wordpress-suite' ) . ' <select name="gm2_taxonomy">';
         echo '<option value="all"' . selected($taxonomy, 'all', false) . '>' . esc_html__( 'All', 'gm2-wordpress-suite' ) . '</option>';
         foreach ($this->get_supported_taxonomies() as $tax) {
             $obj = get_taxonomy($tax);
@@ -1462,28 +1477,30 @@ class Gm2_SEO_Admin {
         }
         echo '</select></label> ';
         echo '<label>' . esc_html__( 'Search', 'gm2-wordpress-suite' ) . ' <input type="text" name="gm2_tax_search" value="' . esc_attr($search) . '"></label> ';
-        echo '<label>' . esc_html__( 'SEO Status', 'gm2-wordpress-suite' ) . ' <select name="gm2_tax_seo_status">';
-        echo '<option value="all"' . selected($seo_status, 'all', false) . '>' . esc_html__( 'All', 'gm2-wordpress-suite' ) . '</option>';
-        echo '<option value="complete"' . selected($seo_status, 'complete', false) . '>' . esc_html__( 'Complete', 'gm2-wordpress-suite' ) . '</option>';
-        echo '<option value="incomplete"' . selected($seo_status, 'incomplete', false) . '>' . esc_html__( 'Incomplete', 'gm2-wordpress-suite' ) . '</option>';
-        echo '</select></label> ';
         echo '<label><input type="checkbox" name="gm2_bulk_ai_tax_missing_title" value="1" ' . checked($missing_title, '1', false) . '> ' . esc_html__( 'Only terms missing SEO Title', 'gm2-wordpress-suite' ) . '</label> ';
         echo '<label><input type="checkbox" name="gm2_bulk_ai_tax_missing_description" value="1" ' . checked($missing_desc, '1', false) . '> ' . esc_html__( 'Only terms missing Description', 'gm2-wordpress-suite' ) . '</label> ';
         submit_button( esc_html__( 'Save', 'gm2-wordpress-suite' ), 'secondary', 'gm2_bulk_ai_tax_save', false );
         echo '</p></form>';
 
+        $buttons = '<button type="button" class="button" id="gm2-bulk-term-analyze">' . esc_html__( 'Analyze Selected', 'gm2-wordpress-suite' ) . '</button> '
+            . '<button type="button" class="button" id="gm2-bulk-term-desc">' . esc_html__( 'Generate Descriptions', 'gm2-wordpress-suite' ) . '</button> '
+            . '<button type="button" class="button" id="gm2-bulk-term-cancel">' . esc_html__( 'Cancel', 'gm2-wordpress-suite' ) . '</button> '
+            . '<button type="button" class="button" id="gm2-bulk-term-apply-all">' . esc_html__( 'Apply All', 'gm2-wordpress-suite' ) . '</button> '
+            . '<button type="button" class="button" id="gm2-bulk-term-reset-all">' . esc_html__( 'Reset All', 'gm2-wordpress-suite' ) . '</button> '
+            . '<button type="button" class="button" id="gm2-bulk-term-reset-selected">' . esc_html__( 'Reset Selected', 'gm2-wordpress-suite' ) . '</button> '
+            . '<button type="button" class="button" id="gm2-bulk-term-schedule">' . esc_html__( 'Schedule Batch', 'gm2-wordpress-suite' ) . '</button> '
+            . '<button type="button" class="button" id="gm2-bulk-term-cancel-batch">' . esc_html__( 'Cancel Batch', 'gm2-wordpress-suite' ) . '</button>';
+
+        // Top action buttons.
+        echo '<p class="gm2-bulk-actions">' . $buttons . '</p>';
+
         echo '<form method="get">';
         echo '<input type="hidden" name="page" value="gm2-bulk-ai-taxonomies" />';
         $table->display();
         echo '</form>';
-        echo '<p><button type="button" class="button" id="gm2-bulk-term-analyze">' . esc_html__( 'Analyze Selected', 'gm2-wordpress-suite' ) . '</button> ';
-        echo '<button type="button" class="button" id="gm2-bulk-term-desc">' . esc_html__( 'Generate Descriptions', 'gm2-wordpress-suite' ) . '</button> ';
-        echo '<button type="button" class="button" id="gm2-bulk-term-cancel">' . esc_html__( 'Cancel', 'gm2-wordpress-suite' ) . '</button> ';
-        echo '<button type="button" class="button" id="gm2-bulk-term-apply-all">' . esc_html__( 'Apply All', 'gm2-wordpress-suite' ) . '</button> ';
-        echo '<button type="button" class="button" id="gm2-bulk-term-schedule">' . esc_html__( 'Schedule Batch', 'gm2-wordpress-suite' ) . '</button> ';
-        echo '<button type="button" class="button" id="gm2-bulk-term-cancel-batch">' . esc_html__( 'Cancel Batch', 'gm2-wordpress-suite' ) . '</button> ';
-        echo '<button type="button" class="button" id="gm2-bulk-term-reset-selected">' . esc_html__( 'Reset Selected', 'gm2-wordpress-suite' ) . '</button> ';
-        echo '<button type="button" class="button" id="gm2-bulk-term-reset-all">' . esc_html__( 'Reset All', 'gm2-wordpress-suite' ) . '</button></p>';
+
+        // Bottom action buttons.
+        echo '<p class="gm2-bulk-actions">' . $buttons . '</p>';
         echo '<p id="gm2-bulk-term-msg"></p>';
         echo '<p><progress id="gm2-bulk-term-progress-bar" value="0" max="100" style="width:100%;display:none" role="progressbar" aria-live="polite"></progress></p>';
         echo '</div>';
@@ -1624,6 +1641,7 @@ class Gm2_SEO_Admin {
 
         $user_id       = get_current_user_id();
         $taxonomy      = get_user_meta($user_id, 'gm2_bulk_ai_tax_taxonomy', true) ?: 'all';
+        $status        = get_user_meta($user_id, 'gm2_bulk_ai_tax_status', true) ?: 'publish';
         $search        = get_option('gm2_bulk_ai_tax_search', '');
         $missing_title = get_option('gm2_bulk_ai_tax_missing_title', '0');
         $missing_desc  = get_option('gm2_bulk_ai_tax_missing_description', '0');
@@ -1635,6 +1653,7 @@ class Gm2_SEO_Admin {
         $args = [
             'taxonomy'   => $tax_arg,
             'hide_empty' => false,
+            'status'     => $status,
         ];
         if ($search !== '') {
             $args['search'] = $search;
@@ -4654,6 +4673,7 @@ class Gm2_SEO_Admin {
 
         if ($all) {
             $taxonomy      = sanitize_key($_POST['taxonomy'] ?? 'all');
+            $status        = sanitize_key($_POST['status'] ?? 'publish');
             $search        = isset($_POST['search']) ? sanitize_text_field($_POST['search']) : '';
             $seo_status    = sanitize_key($_POST['seo_status'] ?? 'all');
             $seo_status    = in_array($seo_status, ['all','complete','incomplete'], true) ? $seo_status : 'all';
@@ -4664,6 +4684,7 @@ class Gm2_SEO_Admin {
             $args    = [
                 'taxonomy'   => $tax_arg,
                 'hide_empty' => false,
+                'status'     => $status,
                 'fields'     => 'ids',
                 'number'     => 0,
             ];
