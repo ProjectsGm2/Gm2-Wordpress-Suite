@@ -54,7 +54,8 @@ require_once GM2_PLUGIN_DIR . 'includes/Gm2_PageSpeed.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_SEO_Utils.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_CSV_Helper.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Abandoned_Carts.php';
-require_once GM2_PLUGIN_DIR . 'includes/Gm2_Abandoned_Carts_Messaging.php';
+// Temporarily disable Recovery Email Queue.
+// require_once GM2_PLUGIN_DIR . 'includes/Gm2_Abandoned_Carts_Messaging.php';
 require_once GM2_PLUGIN_DIR . 'admin/Gm2_Abandoned_Carts_Admin.php';
 require_once GM2_PLUGIN_DIR . 'admin/class-gm2-ac-table.php';
 require_once GM2_PLUGIN_DIR . 'admin/class-gm2-bulk-ai-list-table.php';
