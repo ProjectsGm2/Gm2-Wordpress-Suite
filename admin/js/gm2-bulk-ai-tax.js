@@ -99,25 +99,29 @@ jQuery(function($){
     });
     $('#gm2-bulk-term-list').on('click','.gm2-apply-btn',function(e){
         e.preventDefault();
-        var key=$(this).data('key');
+        var $btn=$(this);
+        var key=$btn.data('key');
         var parts=key.split(':');
+        var row=$btn.closest('tr');
         var data={action:'gm2_bulk_ai_tax_apply',term_id:parts[1],taxonomy:parts[0],_ajax_nonce:gm2BulkAiTax.apply_nonce};
-        $(this).closest('.gm2-result').find('.gm2-apply:checked').each(function(){
-            data[$(this).data('field')]=$(this).data('value');
+        var fields={};
+        $btn.closest('.gm2-result').find('.gm2-apply:checked').each(function(){
+            fields[$(this).data('field')]=$(this).data('value');
         });
-        var cell=$(this).closest('.gm2-result');
-        $('<span>',{class:'spinner is-active gm2-ai-spinner'}).appendTo(cell);
+        $.extend(data,fields);
+        $btn.prop('disabled',true).html('<span class="spinner is-active gm2-ai-spinner"></span>');
         $.post(gm2BulkAiTax.ajax_url,data).done(function(resp){
-            cell.find('.gm2-ai-spinner').remove();
             if(resp && resp.success){
-                cell.html('&#10003;');
+                if(fields.seo_title){row.find('.column-seo_title').text(fields.seo_title);}
+                if(fields.seo_description){row.find('.column-description').text(fields.seo_description);}
+                row.removeClass('gm2-status-new gm2-status-analyzed').addClass('gm2-status-applied gm2-applied');
+                setTimeout(function(){row.removeClass('gm2-applied');},3000);
+                $btn.replaceWith('<span class="gm2-result-icon">&#10003;</span>');
             }else{
-                cell.text((resp && resp.data) ? resp.data : gm2BulkAiTax.i18n.error);
+                $btn.replaceWith('<span class="gm2-result-icon">&#10007;</span>');
             }
-        }).fail(function(jqXHR,textStatus){
-            cell.find('.gm2-ai-spinner').remove();
-            var msg=(jqXHR && jqXHR.responseJSON && jqXHR.responseJSON.data)?jqXHR.responseJSON.data:(jqXHR && jqXHR.responseText?jqXHR.responseText:textStatus);
-            cell.text(msg || gm2BulkAiTax.i18n.error);
+        }).fail(function(){
+            $btn.replaceWith('<span class="gm2-result-icon">&#10007;</span>');
         });
     });
     $('#gm2-bulk-ai-tax').on('click','#gm2-bulk-term-select-analyzed',function(e){
