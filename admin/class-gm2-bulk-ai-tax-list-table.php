@@ -143,6 +143,8 @@ class Gm2_Bulk_Ai_Tax_List_Table extends \WP_List_Table {
                 [ 'key' => '_gm2_description', 'compare' => 'NOT EXISTS' ],
                 [ 'key' => '_gm2_description', 'value' => '', 'compare' => '=' ],
             ];
+        } elseif ($this->seo_status === 'has_ai') {
+            $meta_query[] = [ 'key' => '_gm2_ai_research', 'value' => '', 'compare' => '!=' ];
         }
         if ($this->missing_title === '1') {
             $meta_query[] = [

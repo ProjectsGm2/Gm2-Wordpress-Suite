@@ -206,6 +206,8 @@ class Gm2_Bulk_Ai_List_Table extends \WP_List_Table {
                 [ 'key' => '_gm2_description', 'compare' => 'NOT EXISTS' ],
                 [ 'key' => '_gm2_description', 'value' => '', 'compare' => '=' ],
             ];
+        } elseif ($this->seo_status === 'has_ai') {
+            $meta_query[] = [ 'key' => '_gm2_ai_research', 'value' => '', 'compare' => '!=' ];
         }
         if ($meta_query) {
             $args['meta_query'] = array_merge([ 'relation' => 'AND' ], $meta_query);

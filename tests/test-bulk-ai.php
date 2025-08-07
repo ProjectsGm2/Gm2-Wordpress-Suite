@@ -158,6 +158,21 @@ class BulkAiFilterTest extends WP_UnitTestCase {
         $this->assertStringContainsString('MissingD', $html);
         $this->assertStringNotContainsString('HasD', $html);
     }
+
+    public function test_ai_suggestions_filter_limits_results() {
+        $with = self::factory()->post->create(['post_title' => 'HasAI']);
+        update_post_meta($with, '_gm2_ai_research', 'data');
+        $without = self::factory()->post->create(['post_title' => 'NoAI']);
+        $admin = new Gm2_SEO_Admin();
+        $user  = self::factory()->user->create(['role' => 'administrator']);
+        update_user_meta($user, 'gm2_bulk_ai_seo_status', 'has_ai');
+        wp_set_current_user($user);
+        ob_start();
+        $admin->display_bulk_ai_page();
+        $html = ob_get_clean();
+        $this->assertStringContainsString('HasAI', $html);
+        $this->assertStringNotContainsString('NoAI', $html);
+    }
 }
 
 class BulkAiTaxFilterTest extends WP_UnitTestCase {
@@ -189,6 +204,21 @@ class BulkAiTaxFilterTest extends WP_UnitTestCase {
         $html = ob_get_clean();
         $this->assertStringContainsString('MissingD', $html);
         $this->assertStringNotContainsString('HasD', $html);
+    }
+
+    public function test_ai_suggestions_filter_limits_terms() {
+        $has = self::factory()->term->create(['taxonomy' => 'category', 'name' => 'HasAI']);
+        update_term_meta($has, '_gm2_ai_research', 'data');
+        $missing = self::factory()->term->create(['taxonomy' => 'category', 'name' => 'NoAI']);
+        $admin = new Gm2_SEO_Admin();
+        $user  = self::factory()->user->create(['role' => 'administrator']);
+        update_user_meta($user, 'gm2_bulk_ai_tax_seo_status', 'has_ai');
+        wp_set_current_user($user);
+        ob_start();
+        $admin->display_bulk_ai_tax_page();
+        $html = ob_get_clean();
+        $this->assertStringContainsString('HasAI', $html);
+        $this->assertStringNotContainsString('NoAI', $html);
     }
 }
 
