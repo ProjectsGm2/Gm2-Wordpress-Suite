@@ -721,6 +721,14 @@ class Gm2_SEO_Admin {
             $rt = get_option('gm2_schema_template_review', wp_json_encode(Gm2_SEO_Public::default_review_template(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
             echo '<h2>' . esc_html__( 'JSON-LD Templates', 'gm2-wordpress-suite' ) . '</h2>';
+            $ph = Gm2_SEO_Public::get_placeholders();
+            if ($ph) {
+                echo '<p>' . esc_html__( 'Available placeholders:', 'gm2-wordpress-suite' ) . '</p><ul>';
+                foreach ($ph as $token => $desc) {
+                    echo '<li><code>' . esc_html($token) . '</code> ' . esc_html($desc) . '</li>';
+                }
+                echo '</ul>';
+            }
             echo '<table class="form-table"><tbody>';
             echo '<tr><th scope="row">' . esc_html__( 'Product Template', 'gm2-wordpress-suite' ) . '</th><td><textarea name="gm2_schema_template_product" rows="6" class="large-text code">' . esc_textarea($pt) . '</textarea></td></tr>';
             echo '<tr><th scope="row">' . esc_html__( 'Brand Template', 'gm2-wordpress-suite' ) . '</th><td><textarea name="gm2_schema_template_brand" rows="6" class="large-text code">' . esc_textarea($bt) . '</textarea></td></tr>';

@@ -125,6 +125,25 @@ add_filter( 'gm2_gmc_realtime_fields', function( $fields ) {
 } );
 ```
 
+## JSON-LD Template Placeholders
+
+JSON-LD templates support the following placeholder tokens. These are replaced
+with dynamic values when schemas are generated:
+
+- `{{title}}` – Post or term title
+- `{{permalink}}` – Permalink URL
+- `{{description}}` – SEO description or excerpt
+- `{{image}}` – Featured image URL
+- `{{price}}` – Product price
+- `{{price_currency}}` – Currency code
+- `{{availability}}` – Stock availability URL
+- `{{sku}}` – Product SKU
+- `{{brand}}` – Brand name
+- `{{rating}}` – Review rating value
+
+Use these placeholders within the JSON-LD template editor on the SEO settings
+page to insert dynamic content.
+
 ## Bulk AI for Taxonomies
 
 The **Bulk AI Taxonomies** page under **Gm2 → Bulk AI Taxonomies** lists terms
