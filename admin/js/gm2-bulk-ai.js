@@ -271,26 +271,39 @@ jQuery(function($){
         var id=$(this).data('id');
         var row=$('#gm2-row-'+id);
         var $res=row.find('.gm2-result').empty();
+        var $btn=$(this);
+        var $btnSpinner=$('<span>',{class:'spinner is-active gm2-btn-spinner'});
+        $btn.prop('disabled',true).after($btnSpinner);
         showSpinner($res);
-        $.ajax({
+        var request=$.ajax({
             url: gm2BulkAi.ajax_url,
             method:'POST',
             data:{action:'gm2_ai_research_clear',post_id:id,_ajax_nonce:gm2BulkAi.nonce},
             dataType:'json'
-        }).done(function(resp){
-            hideSpinner($res);
+        });
+        request.done(function(resp){
             if(resp&&resp.success){
                 $res.empty();
+                $res.append(' <span class="gm2-result-icon">✅</span>');
                 row.removeClass('gm2-applied gm2-status-analyzed gm2-status-applied')
                    .addClass('gm2-status-new');
             }else{
-                var msg=(resp&&resp.data)?(resp.data.message||resp.data):'Error';
+                var msg=(resp&&resp.data)?(resp.data.message||resp.data):(window.gm2BulkAi&&gm2BulkAi.i18n?gm2BulkAi.i18n.error:'Error');
                 $res.text(msg);
+                $res.find('.gm2-result-icon').remove();
+                $res.append(' <span class="gm2-result-icon">❌</span>');
             }
-        }).fail(function(jqXHR,textStatus){
-            hideSpinner($res);
+        });
+        request.fail(function(jqXHR,textStatus){
             var msg=(jqXHR&&jqXHR.responseJSON&&jqXHR.responseJSON.data)?jqXHR.responseJSON.data:(jqXHR&&jqXHR.responseText?jqXHR.responseText:textStatus);
-            $res.text(msg||'Error');
+            $res.text(msg||(window.gm2BulkAi&&gm2BulkAi.i18n?gm2BulkAi.i18n.error:'Error'));
+            $res.find('.gm2-result-icon').remove();
+            $res.append(' <span class="gm2-result-icon">❌</span>');
+        });
+        request.always(function(){
+            hideSpinner($res);
+            $btnSpinner.remove();
+            $btn.prop('disabled',false);
         });
     });
 
