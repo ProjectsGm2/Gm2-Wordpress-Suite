@@ -22,9 +22,9 @@ jQuery(function($){
         var ids=[];
         $('#gm2-bulk-term-list .gm2-select:checked').each(function(){ids.push($(this).val());});
         if(!ids.length) return;
-        $('#gm2-bulk-term-progress-bar').attr('max',ids.length).val(0).show();
+        $('.gm2-bulk-term-progress-bar').attr('max',ids.length).val(0).show();
         function next(){
-            if(stop||!ids.length){$('#gm2-bulk-term-progress-bar').hide();return;}
+            if(stop||!ids.length){$('.gm2-bulk-term-progress-bar').hide();return;}
             var key=ids.shift();
             var parts=key.split(':');
             var tax=parts[0], id=parts[1];
@@ -49,15 +49,15 @@ jQuery(function($){
                 cell.find('.gm2-ai-spinner').remove();
                 cell.text(gm2BulkAiTax.i18n.error);
             }).always(function(){
-                var done = parseInt($('#gm2-bulk-term-progress-bar').val(),10)+1;
-                $('#gm2-bulk-term-progress-bar').val(done);
+                var done = parseInt($('.gm2-bulk-term-progress-bar').first().val(),10)+1;
+                $('.gm2-bulk-term-progress-bar').val(done);
                 next();
             });
         }
         next();
     });
     $('#gm2-bulk-ai-tax').on('click','#gm2-bulk-term-cancel',function(e){
-        e.preventDefault();stop=true;$('#gm2-bulk-term-progress-bar').hide();
+        e.preventDefault();stop=true;$('.gm2-bulk-term-progress-bar').hide();
     });
     $('#gm2-bulk-ai-tax').on('click','#gm2-bulk-term-desc',function(e){
         e.preventDefault();
@@ -65,9 +65,9 @@ jQuery(function($){
         var ids=[];
         $('#gm2-bulk-term-list .gm2-select:checked').each(function(){ids.push($(this).val());});
         if(!ids.length) return;
-        $('#gm2-bulk-term-progress-bar').attr('max',ids.length).val(0).show();
+        $('.gm2-bulk-term-progress-bar').attr('max',ids.length).val(0).show();
         function next(){
-            if(stop||!ids.length){$('#gm2-bulk-term-progress-bar').hide();return;}
+            if(stop||!ids.length){$('.gm2-bulk-term-progress-bar').hide();return;}
             var key=ids.shift();
             var parts=key.split(':');
             var tax=parts[0], id=parts[1];
@@ -89,8 +89,8 @@ jQuery(function($){
                 cell.find('.gm2-ai-spinner').remove();
                 cell.text(gm2BulkAiTax.i18n.error);
             }).always(function(){
-                var done=parseInt($('#gm2-bulk-term-progress-bar').val(),10)+1;
-                $('#gm2-bulk-term-progress-bar').val(done);
+                var done=parseInt($('.gm2-bulk-term-progress-bar').first().val(),10)+1;
+                $('.gm2-bulk-term-progress-bar').val(done);
                 next();
             });
         }
