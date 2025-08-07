@@ -169,17 +169,22 @@ jQuery(function($){
         var $res=row.find('.gm2-result');
         showSpinner($res);
         $.post(gm2BulkAi.ajax_url,data)
-            .done(function(){
+            .done(function(resp){
                 hideSpinner($res);
-                row.find('.gm2-result .gm2-undo-btn').remove();
-                row.find('.gm2-result').append(' <button class="button gm2-undo-btn" data-id="'+id+'">'+(gm2BulkAi.i18n?gm2BulkAi.i18n.undo:'Undo')+'</button> <span> ✓</span>');
-                row.removeClass('gm2-status-new gm2-status-analyzed')
-                    .addClass('gm2-status-applied gm2-applied');
-                setTimeout(function(){
-                    row.removeClass('gm2-applied');
-                },3000);
-                applied++;
-                updateBar(applied);
+                if(resp && resp.success){
+                    row.find('.gm2-result .gm2-undo-btn').remove();
+                    row.find('.gm2-result').append(' <button class="button gm2-undo-btn" data-id="'+id+'">'+(gm2BulkAi.i18n?gm2BulkAi.i18n.undo:'Undo')+'</button> <span> ✓</span>');
+                    row.removeClass('gm2-status-new gm2-status-analyzed')
+                        .addClass('gm2-status-applied gm2-applied');
+                    setTimeout(function(){
+                        row.removeClass('gm2-applied');
+                    },3000);
+                    applied++;
+                    updateBar(applied);
+                }else{
+                    var msg=(resp && resp.data)?(resp.data.message||resp.data):(window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.error : 'Error');
+                    $res.text(msg);
+                }
             })
             .fail(function(jqXHR, textStatus){
                 hideSpinner($res);
