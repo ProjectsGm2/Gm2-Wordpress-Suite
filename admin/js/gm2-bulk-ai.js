@@ -430,8 +430,16 @@ jQuery(function($){
         $('#gm2-bulk-list .gm2-select:checked').each(function(){ids.push($(this).val());});
         if(!ids.length) return;
         var $msg=$('#gm2-bulk-apply-msg');
-        var resettingText = window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.resetting : 'Resetting...';
-        $msg.text(resettingText);
+        var total = ids.length, cleared = 0;
+        initBar(total);
+        var clearingText = (window.gm2BulkAi && gm2BulkAi.i18n && (gm2BulkAi.i18n.clearingProgress || gm2BulkAi.i18n.clearing))
+            ? (gm2BulkAi.i18n.clearingProgress || gm2BulkAi.i18n.clearing)
+            : 'Clearing %1$s / %2$s...';
+        function updateProgress(){
+            $msg.text(clearingText.replace('%1$s', cleared).replace('%2$s', total));
+            updateBar(cleared);
+        }
+        updateProgress();
         $.ajax({
             url: gm2BulkAi.ajax_url,
             method:'POST',
@@ -439,17 +447,23 @@ jQuery(function($){
             dataType:'json'
         }).done(function(resp){
             if(resp&&resp.success){
-                $.each(ids,function(i,id){
+                var rows=(resp.data && resp.data.ids)?resp.data.ids:ids;
+                $.each(rows,function(i,id){
                     var row=$('#gm2-row-'+id);
                     row.find('.gm2-result').empty();
                     row.removeClass('gm2-status-applied gm2-status-analyzed').addClass('gm2-status-new');
+                    cleared++;
+                    updateProgress();
                 });
+                $('.gm2-bulk-progress-bar').hide();
                 var doneText = window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.clearDone : 'Cleared AI suggestions for %s posts';
-                $msg.text(doneText.replace('%s', resp.data.cleared));
+                $msg.text(doneText.replace('%s', resp.data && resp.data.cleared ? resp.data.cleared : cleared));
             }else{
+                $('.gm2-bulk-progress-bar').hide();
                 $msg.text((resp&&resp.data)?resp.data:(window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.error : 'Error'));
             }
         }).fail(function(jqXHR,textStatus){
+            $('.gm2-bulk-progress-bar').hide();
             var msg=(jqXHR && jqXHR.responseJSON && jqXHR.responseJSON.data)?jqXHR.responseJSON.data:(jqXHR && jqXHR.responseText?jqXHR.responseText:textStatus);
             $msg.text(msg || (window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.error : 'Error'));
         });
