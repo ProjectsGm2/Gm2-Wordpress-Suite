@@ -21,6 +21,99 @@ class Gm2_SEO_Public {
      */
     private $primary_schema_output = false;
 
+    public static function default_product_template() {
+        return [
+            '@context' => 'https://schema.org/',
+            '@type'    => 'Product',
+            'name'     => '',
+            'image'    => '',
+            'description' => '',
+            'sku'      => '',
+            'offers'   => [
+                '@type'         => 'Offer',
+                'priceCurrency' => '',
+                'price'         => '',
+                'availability'  => '',
+                'url'           => '',
+            ],
+            'brand' => [
+                '@type' => 'Brand',
+                'name'  => '',
+            ],
+        ];
+    }
+
+    public static function default_article_template() {
+        return [
+            '@context' => 'https://schema.org/',
+            '@type'    => 'Article',
+            'headline' => '',
+            'author'   => [
+                '@type' => 'Person',
+                'name'  => '',
+            ],
+            'datePublished' => '',
+            'image'    => '',
+        ];
+    }
+
+    public static function default_brand_template() {
+        return [
+            '@context' => 'https://schema.org/',
+            '@type'    => 'Brand',
+            'name'     => '',
+            'description' => '',
+        ];
+    }
+
+    public static function default_breadcrumb_template() {
+        return [
+            '@context'        => 'https://schema.org',
+            '@type'           => 'BreadcrumbList',
+            'itemListElement' => [
+                [
+                    '@type'    => 'ListItem',
+                    'position' => 1,
+                    'name'     => '',
+                    'item'     => '',
+                ],
+            ],
+        ];
+    }
+
+    public static function default_review_template() {
+        return [
+            '@context'     => 'https://schema.org/',
+            '@type'        => 'Review',
+            'itemReviewed' => [
+                '@type' => 'Product',
+                'name'  => '',
+            ],
+            'reviewRating' => [
+                '@type'       => 'Rating',
+                'ratingValue' => '',
+                'bestRating'  => '5',
+            ],
+        ];
+    }
+
+    public static function default_taxonomy_template() {
+        return [
+            '@context'        => 'https://schema.org/',
+            '@type'           => 'ItemList',
+            'name'            => '',
+            'numberOfItems'   => 0,
+            'itemListElement' => [
+                [
+                    '@type'    => 'ListItem',
+                    'position' => 1,
+                    'url'      => '',
+                    'name'     => '',
+                ],
+            ],
+        ];
+    }
+
     public function run() {
         add_action('init', [$this, 'add_sitemap_rewrite']);
         add_filter('query_vars', [$this, 'add_query_vars']);
@@ -541,27 +634,29 @@ class Gm2_SEO_Public {
             return;
         }
 
-        $data = [
-            '@context' => 'https://schema.org/',
-            '@type'    => 'Product',
-            'name'     => get_the_title(),
-            'image'    => wp_get_attachment_url($product->get_image_id()),
-            'description' => wp_strip_all_tags($product->get_description()),
-            'sku'      => $product->get_sku(),
-            'offers'   => [
-                '@type'         => 'Offer',
-                'priceCurrency' => get_woocommerce_currency(),
-                'price'         => $product->get_price(),
-                'availability'  => $product->is_in_stock() ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-                'url'           => get_permalink(),
-            ],
-        ];
+        $template = get_option('gm2_schema_template_product', wp_json_encode(self::default_product_template()));
+        $data     = json_decode($template, true);
+        if (!is_array($data)) {
+            $data = self::default_product_template();
+        }
+
+        $data['name']        = get_the_title();
+        $data['image']       = wp_get_attachment_url($product->get_image_id());
+        $data['description'] = wp_strip_all_tags($product->get_description());
+        $data['sku']         = $product->get_sku();
+        $data['offers']      = $data['offers'] ?? [];
+        $data['offers']['@type'] = $data['offers']['@type'] ?? 'Offer';
+        $data['offers']['priceCurrency'] = get_woocommerce_currency();
+        $data['offers']['price']         = $product->get_price();
+        $data['offers']['availability']  = $product->is_in_stock() ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock';
+        $data['offers']['url']           = get_permalink();
+
         $brand_meta = get_post_meta(get_the_ID(), '_gm2_schema_brand', true);
         if ($brand_meta) {
-            $data['brand'] = [
-                '@type' => 'Brand',
-                'name'  => $brand_meta,
-            ];
+            $data['brand']            = $data['brand'] ?? ['@type' => 'Brand'];
+            $data['brand']['name']    = $brand_meta;
+        } else {
+            unset($data['brand']);
         }
 
         echo '<script type="application/ld+json">' . wp_json_encode($data) . "</script>\n";
@@ -583,19 +678,21 @@ class Gm2_SEO_Public {
 
         $image = get_the_post_thumbnail_url(get_the_ID(), 'full');
 
-        $data = [
-            '@context' => 'https://schema.org/',
-            '@type'    => 'Article',
-            'headline' => get_the_title(),
-            'author'   => [
-                '@type' => 'Person',
-                'name'  => get_the_author(),
-            ],
-            'datePublished' => get_the_date('c'),
-        ];
+        $template = get_option('gm2_schema_template_article', wp_json_encode(self::default_article_template()));
+        $data     = json_decode($template, true);
+        if (!is_array($data)) {
+            $data = self::default_article_template();
+        }
+
+        $data['headline'] = get_the_title();
+        $data['author']   = $data['author'] ?? ['@type' => 'Person'];
+        $data['author']['name'] = get_the_author();
+        $data['datePublished']  = get_the_date('c');
 
         if ($image) {
             $data['image'] = $image;
+        } else {
+            unset($data['image']);
         }
 
         echo '<script type="application/ld+json">' . wp_json_encode($data) . "</script>\n";
@@ -607,13 +704,16 @@ class Gm2_SEO_Public {
             return;
         }
 
+        $template = get_option('gm2_schema_template_brand', wp_json_encode(self::default_brand_template()));
+        $data     = json_decode($template, true);
+        if (!is_array($data)) {
+            $data = self::default_brand_template();
+        }
+
         $brand = is_singular() ? get_post_meta(get_the_ID(), '_gm2_schema_brand', true) : '';
         if ($brand) {
-            $data = [
-                '@context' => 'https://schema.org/',
-                '@type'    => 'Brand',
-                'name'     => $brand,
-            ];
+            $data['name'] = $brand;
+            unset($data['description']);
             echo '<script type="application/ld+json">' . wp_json_encode($data) . "</script>\n";
             return;
         }
@@ -627,12 +727,8 @@ class Gm2_SEO_Public {
             return;
         }
 
-        $data = [
-            '@context' => 'https://schema.org/',
-            '@type'    => 'Brand',
-            'name'     => $term->name,
-            'description' => wp_strip_all_tags(term_description($term->term_id, $term->taxonomy)),
-        ];
+        $data['name']        = $term->name;
+        $data['description'] = wp_strip_all_tags(term_description($term->term_id, $term->taxonomy));
 
         echo '<script type="application/ld+json">' . wp_json_encode($data) . "</script>\n";
     }
@@ -684,11 +780,13 @@ class Gm2_SEO_Public {
             ];
         }
 
-        $data = [
-            '@context'        => 'https://schema.org',
-            '@type'           => 'BreadcrumbList',
-            'itemListElement' => $items,
-        ];
+        $template = get_option('gm2_schema_template_breadcrumb', wp_json_encode(self::default_breadcrumb_template()));
+        $data     = json_decode($template, true);
+        if (!is_array($data)) {
+            $data = self::default_breadcrumb_template();
+        }
+
+        $data['itemListElement'] = $items;
 
         echo '<script type="application/ld+json">' . wp_json_encode($data) . "</script>\n";
     }
@@ -698,21 +796,18 @@ class Gm2_SEO_Public {
             return;
         }
 
+        $template = get_option('gm2_schema_template_review', wp_json_encode(self::default_review_template()));
+        $data     = json_decode($template, true);
+        if (!is_array($data)) {
+            $data = self::default_review_template();
+        }
+
         $rating = get_post_meta(get_the_ID(), '_gm2_schema_rating', true);
         if ($rating) {
-            $data = [
-                '@context'      => 'https://schema.org/',
-                '@type'         => 'Review',
-                'itemReviewed'  => [
-                    '@type' => 'Product',
-                    'name'  => get_the_title(),
-                ],
-                'reviewRating'  => [
-                    '@type'       => 'Rating',
-                    'ratingValue' => $rating,
-                    'bestRating'  => '5',
-                ],
-            ];
+            $data['itemReviewed']           = $data['itemReviewed'] ?? ['@type' => 'Product'];
+            $data['itemReviewed']['name']   = get_the_title();
+            $data['reviewRating']           = $data['reviewRating'] ?? ['@type' => 'Rating', 'bestRating' => '5'];
+            $data['reviewRating']['ratingValue'] = $rating;
             echo '<script type="application/ld+json">' . wp_json_encode($data) . "</script>\n";
             return;
         }
@@ -731,19 +826,10 @@ class Gm2_SEO_Public {
             return;
         }
 
-        $data = [
-            '@context'      => 'https://schema.org/',
-            '@type'         => 'Review',
-            'itemReviewed'  => [
-                '@type' => 'Product',
-                'name'  => get_the_title(),
-            ],
-            'reviewRating'  => [
-                '@type'       => 'Rating',
-                'ratingValue' => $rating,
-                'bestRating'  => '5',
-            ],
-        ];
+        $data['itemReviewed']         = $data['itemReviewed'] ?? ['@type' => 'Product'];
+        $data['itemReviewed']['name'] = get_the_title();
+        $data['reviewRating']         = $data['reviewRating'] ?? ['@type' => 'Rating', 'bestRating' => '5'];
+        $data['reviewRating']['ratingValue'] = $rating;
 
         echo '<script type="application/ld+json">' . wp_json_encode($data) . "</script>\n";
     }
@@ -781,13 +867,15 @@ class Gm2_SEO_Public {
             ];
         }
 
-        $data = [
-            '@context'        => 'https://schema.org/',
-            '@type'           => 'ItemList',
-            'name'            => single_term_title('', false),
-            'numberOfItems'   => count($items),
-            'itemListElement' => $items,
-        ];
+        $template = get_option('gm2_schema_template_taxonomy', wp_json_encode(self::default_taxonomy_template()));
+        $data     = json_decode($template, true);
+        if (!is_array($data)) {
+            $data = self::default_taxonomy_template();
+        }
+
+        $data['name']          = single_term_title('', false);
+        $data['numberOfItems'] = count($items);
+        $data['itemListElement'] = $items;
 
         echo '<script type="application/ld+json">' . wp_json_encode($data) . "</script>\n";
     }
