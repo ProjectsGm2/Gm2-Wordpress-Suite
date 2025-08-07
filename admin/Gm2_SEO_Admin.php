@@ -37,6 +37,8 @@ class Gm2_SEO_Admin {
         add_action('admin_post_gm2_sitemap_settings', [$this, 'handle_sitemap_form']);
         add_action('admin_post_gm2_meta_tags_settings', [$this, 'handle_meta_tags_form']);
         add_action('admin_post_gm2_schema_settings', [$this, 'handle_schema_form']);
+        add_action('admin_post_gm2_save_custom_schema', [$this, 'handle_custom_schema_save']);
+        add_action('admin_post_gm2_delete_custom_schema', [$this, 'handle_custom_schema_delete']);
         add_action('admin_post_gm2_performance_settings', [$this, 'handle_performance_form']);
         add_action('admin_post_gm2_redirects', [$this, 'handle_redirects_form']);
         add_action('admin_post_gm2_content_rules', [$this, 'handle_content_rules_form']);
@@ -730,6 +732,7 @@ class Gm2_SEO_Admin {
 
             submit_button( esc_html__( 'Save Settings', 'gm2-wordpress-suite' ) );
             echo '</form>';
+            $this->render_custom_schema_admin();
         } elseif ($active === 'redirects') {
             $redirects = get_option('gm2_redirects', []);
             if (!empty($_GET['logs_cleared'])) {
@@ -2348,6 +2351,104 @@ class Gm2_SEO_Admin {
 
         wp_redirect(admin_url('admin.php?page=gm2-seo&tab=schema&updated=1'));
         exit;
+    }
+
+    public function handle_custom_schema_save() {
+        if (!current_user_can('manage_options')) {
+            wp_die(esc_html__('Permission denied', 'gm2-wordpress-suite'));
+        }
+        if (!isset($_POST['gm2_custom_schema_nonce']) || !wp_verify_nonce($_POST['gm2_custom_schema_nonce'], 'gm2_save_custom_schema')) {
+            wp_die(esc_html__('Invalid nonce', 'gm2-wordpress-suite'));
+        }
+
+        $label = isset($_POST['label']) ? sanitize_text_field($_POST['label']) : '';
+        $desc  = isset($_POST['description']) ? sanitize_text_field($_POST['description']) : '';
+        $json  = isset($_POST['json']) ? wp_unslash($_POST['json']) : '';
+        json_decode($json);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            wp_redirect(admin_url('admin.php?page=gm2-seo&tab=schema&error=invalid_json'));
+            exit;
+        }
+
+        $templates = get_option('gm2_custom_schema', []);
+        if (!is_array($templates)) {
+            $templates = [];
+        }
+        $id = !empty($_POST['id']) ? sanitize_text_field($_POST['id']) : uniqid('tpl_');
+        $templates[$id] = [
+            'label'       => $label,
+            'description' => $desc,
+            'json'        => $json,
+        ];
+        update_option('gm2_custom_schema', $templates);
+        wp_redirect(admin_url('admin.php?page=gm2-seo&tab=schema&updated=1'));
+        exit;
+    }
+
+    public function handle_custom_schema_delete() {
+        if (!current_user_can('manage_options')) {
+            wp_die(esc_html__('Permission denied', 'gm2-wordpress-suite'));
+        }
+        $id = isset($_GET['id']) ? sanitize_text_field($_GET['id']) : '';
+        if (!$id || !isset($_GET['_wpnonce']) || !wp_verify_nonce($_GET['_wpnonce'], 'gm2_delete_custom_schema_' . $id)) {
+            wp_die(esc_html__('Invalid nonce', 'gm2-wordpress-suite'));
+        }
+        $templates = get_option('gm2_custom_schema', []);
+        if (isset($templates[$id])) {
+            unset($templates[$id]);
+            update_option('gm2_custom_schema', $templates);
+        }
+        wp_redirect(admin_url('admin.php?page=gm2-seo&tab=schema&deleted=1'));
+        exit;
+    }
+
+    private function render_custom_schema_admin() {
+        $templates = get_option('gm2_custom_schema', []);
+        if (!is_array($templates)) {
+            $templates = [];
+        }
+        $action = isset($_GET['action']) ? sanitize_key($_GET['action']) : '';
+        if ($action === 'add_custom_schema' || ($action === 'edit_custom_schema' && isset($_GET['id']))) {
+            $editing = $action === 'edit_custom_schema';
+            $id = $editing ? sanitize_text_field($_GET['id']) : '';
+            $current = $editing && isset($templates[$id]) ? $templates[$id] : ['label' => '', 'description' => '', 'json' => ''];
+            echo '<h2>' . ($editing ? esc_html__('Edit Custom Schema', 'gm2-wordpress-suite') : esc_html__('Add Custom Schema', 'gm2-wordpress-suite')) . '</h2>';
+            echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
+            echo '<input type="hidden" name="action" value="gm2_save_custom_schema" />';
+            wp_nonce_field('gm2_save_custom_schema', 'gm2_custom_schema_nonce');
+            if ($editing) {
+                echo '<input type="hidden" name="id" value="' . esc_attr($id) . '" />';
+            }
+            echo '<p><label for="gm2_custom_schema_label">' . esc_html__('Label', 'gm2-wordpress-suite') . '</label>';
+            echo '<input type="text" id="gm2_custom_schema_label" name="label" value="' . esc_attr($current['label']) . '" class="regular-text" /></p>';
+            echo '<p><label for="gm2_custom_schema_description">' . esc_html__('Description', 'gm2-wordpress-suite') . '</label>';
+            echo '<textarea id="gm2_custom_schema_description" name="description" rows="2" class="large-text">' . esc_textarea($current['description']) . '</textarea></p>';
+            echo '<p><label for="gm2_custom_schema_json">' . esc_html__('JSON-LD', 'gm2-wordpress-suite') . '</label>';
+            echo '<textarea id="gm2_custom_schema_json" name="json" rows="8" class="large-text code">' . esc_textarea($current['json']) . '</textarea></p>';
+            echo '<div id="gm2-custom-schema-preview"></div>';
+            submit_button($editing ? esc_html__('Update', 'gm2-wordpress-suite') : esc_html__('Add'));
+            echo '</form>';
+            echo '<p><a href="' . esc_url(admin_url('admin.php?page=gm2-seo&tab=schema')) . '">&larr; ' . esc_html__('Back', 'gm2-wordpress-suite') . '</a></p>';
+            echo '<script type="text/html" id="tmpl-gm2-schema-card">';
+            echo '<div class="gm2-schema-card"><# var title = data.name || data.headline; if ( title ) { #><div class="gm2-schema-card__title">{{ title }}</div><# } #><# if ( data.description ) { #><div class="gm2-schema-card__desc">{{ data.description }}</div><# } #><# if ( data.offers && data.offers.price ) { #><div class="gm2-schema-card__price">{{ data.offers.price }}</div><# } #></div>';
+            echo '</script>';
+            return;
+        }
+        echo '<h2>' . esc_html__('Custom Schema Templates', 'gm2-wordpress-suite') . '</h2>';
+        echo '<p><a class="button" href="' . esc_url(admin_url('admin.php?page=gm2-seo&tab=schema&action=add_custom_schema')) . '">' . esc_html__('Add New', 'gm2-wordpress-suite') . '</a></p>';
+        if (empty($templates)) {
+            echo '<p>' . esc_html__('No custom templates found.', 'gm2-wordpress-suite') . '</p>';
+            return;
+        }
+        echo '<table class="widefat fixed striped"><thead><tr><th>' . esc_html__('Label', 'gm2-wordpress-suite') . '</th><th>' . esc_html__('Description', 'gm2-wordpress-suite') . '</th><th>' . esc_html__('Actions', 'gm2-wordpress-suite') . '</th></tr></thead><tbody>';
+        foreach ($templates as $tid => $tpl) {
+            $label = isset($tpl['label']) ? $tpl['label'] : '';
+            $desc  = isset($tpl['description']) ? $tpl['description'] : '';
+            $edit  = admin_url('admin.php?page=gm2-seo&tab=schema&action=edit_custom_schema&id=' . urlencode($tid));
+            $del   = wp_nonce_url(admin_url('admin-post.php?action=gm2_delete_custom_schema&id=' . urlencode($tid)), 'gm2_delete_custom_schema_' . $tid);
+            echo '<tr><td>' . esc_html($label) . '</td><td>' . esc_html($desc) . '</td><td><a href="' . esc_url($edit) . '">' . esc_html__('Edit', 'gm2-wordpress-suite') . '</a> | <a href="' . esc_url($del) . '" onclick="return confirm(\'' . esc_js(__('Delete this template?', 'gm2-wordpress-suite')) . '\');">' . esc_html__('Delete', 'gm2-wordpress-suite') . '</a></td></tr>';
+        }
+        echo '</tbody></table>';
     }
 
     public function handle_performance_form() {

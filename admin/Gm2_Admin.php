@@ -146,6 +146,15 @@ class Gm2_Admin {
                 true
             );
             wp_enqueue_script(
+                'gm2-schema-preview',
+                GM2_PLUGIN_URL . 'admin/js/gm2-schema-preview.js',
+                ['jquery', 'wp-util'],
+                file_exists(GM2_PLUGIN_DIR . 'admin/js/gm2-schema-preview.js')
+                    ? filemtime(GM2_PLUGIN_DIR . 'admin/js/gm2-schema-preview.js')
+                    : GM2_VERSION,
+                true
+            );
+            wp_enqueue_script(
                 'chart-js',
                 'https://cdn.jsdelivr.net/npm/chart.js',
                 [],
