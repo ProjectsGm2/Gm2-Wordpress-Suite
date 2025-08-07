@@ -4,7 +4,16 @@ jQuery(function($){
     var stopProcessing = false;
 
     // Mark all rows as new on initial load
-    $('#gm2-bulk-list tr[id^="gm2-row-"]').addClass('gm2-status-new');
+    var $rows = $('#gm2-bulk-list tr[id^="gm2-row-"]').addClass('gm2-status-new');
+
+    // If AI suggestions already exist, mark the row as analyzed
+    $rows.each(function(){
+        var $row = $(this);
+        var $res = $row.find('.gm2-result');
+        if($res.find('.gm2-apply').length || $.trim($res.text()).length){
+            $row.removeClass('gm2-status-new').addClass('gm2-status-analyzed');
+        }
+    });
 
     function initBar(max){
         var $bars = $('.gm2-bulk-progress-bar');
