@@ -114,6 +114,73 @@ class Gm2_SEO_Public {
         ];
     }
 
+    private function replace_placeholders($data, $context) {
+        if (is_array($data)) {
+            foreach ($data as $k => $v) {
+                $data[$k] = $this->replace_placeholders($v, $context);
+            }
+            return $data;
+        }
+        if (is_string($data)) {
+            return strtr($data, $context);
+        }
+        return $data;
+    }
+
+    private function get_post_context($post_id) {
+        $context = [
+            '{{title}}'       => get_the_title($post_id),
+            '{{url}}'         => get_permalink($post_id),
+            '{{description}}' => wp_strip_all_tags(get_post_meta($post_id, '_gm2_description', true) ?: get_the_excerpt($post_id)),
+        ];
+        $image = get_the_post_thumbnail_url($post_id, 'full');
+        if ($image) {
+            $context['{{image}}'] = $image;
+        }
+        $brand = get_post_meta($post_id, '_gm2_schema_brand', true);
+        if ($brand) {
+            $context['{{brand}}'] = $brand;
+        }
+        $rating = get_post_meta($post_id, '_gm2_schema_rating', true);
+        if ($rating) {
+            $context['{{rating}}'] = $rating;
+        }
+        if (class_exists('WooCommerce')) {
+            $product = wc_get_product($post_id);
+            if ($product) {
+                $context['{{price}}']         = $product->get_price();
+                $context['{{price_currency}}'] = get_woocommerce_currency();
+                $context['{{availability}}']  = $product->is_in_stock() ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock';
+                $context['{{sku}}']           = $product->get_sku();
+            }
+        }
+        return $context;
+    }
+
+    private function get_term_context($term) {
+        if (is_numeric($term)) {
+            $term = get_term($term);
+        }
+        if (!$term || is_wp_error($term)) {
+            return [];
+        }
+        $context = [
+            '{{title}}'       => $term->name,
+            '{{name}}'        => $term->name,
+            '{{url}}'         => get_term_link($term),
+            '{{description}}' => wp_strip_all_tags($term->description),
+        ];
+        $brand = get_term_meta($term->term_id, '_gm2_schema_brand', true);
+        if ($brand) {
+            $context['{{brand}}'] = $brand;
+        }
+        $rating = get_term_meta($term->term_id, '_gm2_schema_rating', true);
+        if ($rating) {
+            $context['{{rating}}'] = $rating;
+        }
+        return $context;
+    }
+
     public function run() {
         add_action('init', [$this, 'add_sitemap_rewrite']);
         add_filter('query_vars', [$this, 'add_query_vars']);
@@ -124,6 +191,7 @@ class Gm2_SEO_Public {
         add_action('wp_head', [$this, 'output_meta_tags']);
         add_action('wp_head', [$this, 'output_search_console_meta']);
         add_action('wp_head', [$this, 'output_ga_tracking_code']);
+        add_action('wp_head', [$this, 'output_custom_schema'], 20);
         add_action('wp_head', [$this, 'output_product_schema'], 20);
         add_action('wp_head', [$this, 'output_brand_schema'], 20);
         add_action('wp_head', [$this, 'output_breadcrumb_schema'], 20);
@@ -465,8 +533,15 @@ class Gm2_SEO_Public {
         $schema_type = $overrides['schema_type'] ?? get_post_meta($post_id, '_gm2_schema_type', true);
         $brand       = $overrides['schema_brand'] ?? get_post_meta($post_id, '_gm2_schema_brand', true);
         $rating      = $overrides['schema_rating'] ?? get_post_meta($post_id, '_gm2_schema_rating', true);
+        $context     = $this->get_post_context($post_id);
+        $custom_tpls = get_option('gm2_custom_schema', []);
 
-        if ($schema_type === 'product' || (!$schema_type && class_exists('WooCommerce') && get_post_type($post_id) === 'product')) {
+        if ($schema_type && !in_array($schema_type, ['product', 'article'], true) && isset($custom_tpls[$schema_type]['json'])) {
+            $data = json_decode($custom_tpls[$schema_type]['json'], true);
+            if (is_array($data)) {
+                $schemas[] = $this->replace_placeholders($data, $context);
+            }
+        } elseif ($schema_type === 'product' || (!$schema_type && class_exists('WooCommerce') && get_post_type($post_id) === 'product')) {
             $product = class_exists('WooCommerce') ? wc_get_product($post_id) : null;
             if ($product) {
                 $data = [
@@ -490,7 +565,7 @@ class Gm2_SEO_Public {
                         'name'  => $brand,
                     ];
                 }
-                $schemas[] = $data;
+                $schemas[] = $this->replace_placeholders($data, $context);
             }
         } elseif ($schema_type === 'article' || (!$schema_type && in_array($post->post_type, ['post', 'page'], true))) {
             $image = get_the_post_thumbnail_url($post_id, 'full');
@@ -507,19 +582,19 @@ class Gm2_SEO_Public {
             if ($image) {
                 $data['image'] = $image;
             }
-            $schemas[] = $data;
+            $schemas[] = $this->replace_placeholders($data, $context);
         }
 
         if ($brand) {
-            $schemas[] = [
+            $schemas[] = $this->replace_placeholders([
                 '@context' => 'https://schema.org/',
                 '@type'    => 'Brand',
                 'name'     => $brand,
-            ];
+            ], $context);
         }
 
         if ($rating) {
-            $schemas[] = [
+            $schemas[] = $this->replace_placeholders([
                 '@context'      => 'https://schema.org/',
                 '@type'         => 'Review',
                 'itemReviewed'  => [
@@ -531,13 +606,13 @@ class Gm2_SEO_Public {
                     'ratingValue' => $rating,
                     'bestRating'  => '5',
                 ],
-            ];
+            ], $context);
         } elseif (class_exists('WooCommerce') && get_post_type($post_id) === 'product') {
             $product = wc_get_product($post_id);
             if ($product) {
                 $pr = $product->get_average_rating();
                 if ($pr) {
-                    $schemas[] = [
+                    $schemas[] = $this->replace_placeholders([
                         '@context'      => 'https://schema.org/',
                         '@type'         => 'Review',
                         'itemReviewed'  => [
@@ -549,7 +624,7 @@ class Gm2_SEO_Public {
                             'ratingValue' => $pr,
                             'bestRating'  => '5',
                         ],
-                    ];
+                    ], $context);
                 }
             }
         }
@@ -567,8 +642,15 @@ class Gm2_SEO_Public {
         $schema_type = $overrides['schema_type'] ?? get_term_meta($term_id, '_gm2_schema_type', true);
         $brand       = $overrides['schema_brand'] ?? get_term_meta($term_id, '_gm2_schema_brand', true);
         $rating      = $overrides['schema_rating'] ?? get_term_meta($term_id, '_gm2_schema_rating', true);
+        $context     = $this->get_term_context($term);
+        $custom_tpls = get_option('gm2_custom_schema', []);
 
-        if ($schema_type === 'product') {
+        if ($schema_type && !in_array($schema_type, ['product', 'article'], true) && isset($custom_tpls[$schema_type]['json'])) {
+            $data = json_decode($custom_tpls[$schema_type]['json'], true);
+            if (is_array($data)) {
+                $schemas[] = $this->replace_placeholders($data, $context);
+            }
+        } elseif ($schema_type === 'product') {
             $data = [
                 '@context' => 'https://schema.org/',
                 '@type'    => 'Product',
@@ -581,25 +663,25 @@ class Gm2_SEO_Public {
                     'name'  => $brand,
                 ];
             }
-            $schemas[] = $data;
+            $schemas[] = $this->replace_placeholders($data, $context);
         } elseif ($schema_type === 'article') {
-            $schemas[] = [
+            $schemas[] = $this->replace_placeholders([
                 '@context' => 'https://schema.org/',
                 '@type'    => 'Article',
                 'headline' => $term->name,
-            ];
+            ], $context);
         }
 
         if ($brand) {
-            $schemas[] = [
+            $schemas[] = $this->replace_placeholders([
                 '@context' => 'https://schema.org/',
                 '@type'    => 'Brand',
                 'name'     => $brand,
-            ];
+            ], $context);
         }
 
         if ($rating) {
-            $schemas[] = [
+            $schemas[] = $this->replace_placeholders([
                 '@context'      => 'https://schema.org/',
                 '@type'         => 'Review',
                 'itemReviewed'  => [
@@ -611,10 +693,33 @@ class Gm2_SEO_Public {
                     'ratingValue' => $rating,
                     'bestRating'  => '5',
                 ],
-            ];
+            ], $context);
         }
 
         return $schemas;
+    }
+
+    public function output_custom_schema() {
+        if (!is_singular()) {
+            return;
+        }
+        $post_id    = get_the_ID();
+        $schema_type = get_post_meta($post_id, '_gm2_schema_type', true);
+        if (!$schema_type || in_array($schema_type, ['product', 'article'], true)) {
+            return;
+        }
+        $templates = get_option('gm2_custom_schema', []);
+        if (!is_array($templates) || !isset($templates[$schema_type]['json'])) {
+            return;
+        }
+        $data = json_decode($templates[$schema_type]['json'], true);
+        if (!is_array($data)) {
+            return;
+        }
+        $context = $this->get_post_context($post_id);
+        $data    = $this->replace_placeholders($data, $context);
+        echo '<script type="application/ld+json">' . wp_json_encode($data) . "</script>\n";
+        $this->primary_schema_output = true;
     }
 
     public function output_product_schema() {
@@ -659,6 +764,7 @@ class Gm2_SEO_Public {
             unset($data['brand']);
         }
 
+        $data = $this->replace_placeholders($data, $this->get_post_context(get_the_ID()));
         echo '<script type="application/ld+json">' . wp_json_encode($data) . "</script>\n";
         $this->primary_schema_output = true;
     }
@@ -695,6 +801,7 @@ class Gm2_SEO_Public {
             unset($data['image']);
         }
 
+        $data = $this->replace_placeholders($data, $this->get_post_context(get_the_ID()));
         echo '<script type="application/ld+json">' . wp_json_encode($data) . "</script>\n";
         $this->primary_schema_output = true;
     }
@@ -714,6 +821,7 @@ class Gm2_SEO_Public {
         if ($brand) {
             $data['name'] = $brand;
             unset($data['description']);
+            $data = $this->replace_placeholders($data, $this->get_post_context(get_the_ID()));
             echo '<script type="application/ld+json">' . wp_json_encode($data) . "</script>\n";
             return;
         }
@@ -730,6 +838,7 @@ class Gm2_SEO_Public {
         $data['name']        = $term->name;
         $data['description'] = wp_strip_all_tags(term_description($term->term_id, $term->taxonomy));
 
+        $data = $this->replace_placeholders($data, $this->get_term_context($term));
         echo '<script type="application/ld+json">' . wp_json_encode($data) . "</script>\n";
     }
 
@@ -750,6 +859,7 @@ class Gm2_SEO_Public {
             'url'         => $data['canonical'],
         ];
 
+        $schema = $this->replace_placeholders($schema, $this->get_post_context(get_the_ID()));
         echo '<script type="application/ld+json">' . wp_json_encode($schema) . "</script>\n";
         $this->primary_schema_output = true;
     }
@@ -788,6 +898,8 @@ class Gm2_SEO_Public {
 
         $data['itemListElement'] = $items;
 
+        $context = is_singular() ? $this->get_post_context(get_the_ID()) : (isset($term) ? $this->get_term_context($term) : []);
+        $data    = $this->replace_placeholders($data, $context);
         echo '<script type="application/ld+json">' . wp_json_encode($data) . "</script>\n";
     }
 
@@ -808,6 +920,7 @@ class Gm2_SEO_Public {
             $data['itemReviewed']['name']   = get_the_title();
             $data['reviewRating']           = $data['reviewRating'] ?? ['@type' => 'Rating', 'bestRating' => '5'];
             $data['reviewRating']['ratingValue'] = $rating;
+            $data = $this->replace_placeholders($data, $this->get_post_context(get_the_ID()));
             echo '<script type="application/ld+json">' . wp_json_encode($data) . "</script>\n";
             return;
         }
@@ -831,6 +944,7 @@ class Gm2_SEO_Public {
         $data['reviewRating']         = $data['reviewRating'] ?? ['@type' => 'Rating', 'bestRating' => '5'];
         $data['reviewRating']['ratingValue'] = $rating;
 
+        $data = $this->replace_placeholders($data, $this->get_post_context(get_the_ID()));
         echo '<script type="application/ld+json">' . wp_json_encode($data) . "</script>\n";
     }
 
@@ -877,6 +991,7 @@ class Gm2_SEO_Public {
         $data['numberOfItems'] = count($items);
         $data['itemListElement'] = $items;
 
+        $data = $this->replace_placeholders($data, $this->get_term_context($term));
         echo '<script type="application/ld+json">' . wp_json_encode($data) . "</script>\n";
     }
 
