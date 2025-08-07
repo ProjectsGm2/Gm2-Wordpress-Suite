@@ -1259,6 +1259,7 @@ class Gm2_SEO_Admin {
                 }
             }
             $seo_status    = sanitize_key($_POST['seo_status'] ?? 'all');
+            $seo_status    = in_array($seo_status, ['all', 'complete', 'incomplete', 'has_ai'], true) ? $seo_status : 'all';
             $missing_title = isset($_POST['gm2_missing_title']) ? '1' : '0';
             $missing_desc  = isset($_POST['gm2_missing_description']) ? '1' : '0';
             update_user_meta($user_id, 'gm2_bulk_ai_page_size', $page_size);
@@ -1299,6 +1300,7 @@ class Gm2_SEO_Admin {
         echo '<option value="all"' . selected($seo_status, 'all', false) . '>' . esc_html__( 'All', 'gm2-wordpress-suite' ) . '</option>';
         echo '<option value="complete"' . selected($seo_status, 'complete', false) . '>' . esc_html__( 'Complete', 'gm2-wordpress-suite' ) . '</option>';
         echo '<option value="incomplete"' . selected($seo_status, 'incomplete', false) . '>' . esc_html__( 'Incomplete', 'gm2-wordpress-suite' ) . '</option>';
+        echo '<option value="has_ai"' . selected($seo_status, 'has_ai', false) . '>' . esc_html__( 'AI Suggestions', 'gm2-wordpress-suite' ) . '</option>';
         echo '</select></label></p>';
 
         // Row 2: post type and taxonomy filters.
@@ -1420,7 +1422,7 @@ class Gm2_SEO_Admin {
             $taxonomy      = sanitize_key($_POST['gm2_taxonomy'] ?? 'all');
             $search        = sanitize_text_field($_POST['gm2_tax_search'] ?? '');
             $seo_status    = sanitize_key($_POST['gm2_tax_seo_status'] ?? 'all');
-            $seo_status    = in_array($seo_status, ['all', 'complete', 'incomplete'], true) ? $seo_status : 'all';
+            $seo_status    = in_array($seo_status, ['all', 'complete', 'incomplete', 'has_ai'], true) ? $seo_status : 'all';
             $missing_title = isset($_POST['gm2_bulk_ai_tax_missing_title']) ? '1' : '0';
             $missing_desc  = isset($_POST['gm2_bulk_ai_tax_missing_description']) ? '1' : '0';
             update_user_meta($user_id, 'gm2_bulk_ai_tax_page_size', $page_size);
@@ -1462,6 +1464,7 @@ class Gm2_SEO_Admin {
         echo '<option value="all"' . selected($seo_status, 'all', false) . '>' . esc_html__( 'All', 'gm2-wordpress-suite' ) . '</option>';
         echo '<option value="complete"' . selected($seo_status, 'complete', false) . '>' . esc_html__( 'Complete', 'gm2-wordpress-suite' ) . '</option>';
         echo '<option value="incomplete"' . selected($seo_status, 'incomplete', false) . '>' . esc_html__( 'Incomplete', 'gm2-wordpress-suite' ) . '</option>';
+        echo '<option value="has_ai"' . selected($seo_status, 'has_ai', false) . '>' . esc_html__( 'AI Suggestions', 'gm2-wordpress-suite' ) . '</option>';
         echo '</select></label></p>';
         // Row 2: taxonomy, search, missing metadata filters.
         echo '<p><label>' . esc_html__( 'Taxonomy', 'gm2-wordpress-suite' ) . ' <select name="gm2_taxonomy">';
@@ -1600,6 +1603,8 @@ class Gm2_SEO_Admin {
                 [ 'key' => '_gm2_description', 'compare' => 'NOT EXISTS' ],
                 [ 'key' => '_gm2_description', 'value' => '', 'compare' => '=' ],
             ];
+        } elseif ($seo_status === 'has_ai') {
+            $meta_query[] = [ 'key' => '_gm2_ai_research', 'value' => '', 'compare' => '!=' ];
         }
         if ($meta_query) {
             $args['meta_query'] = array_merge(['relation' => 'AND'], $meta_query);
@@ -1673,6 +1678,8 @@ class Gm2_SEO_Admin {
                 [ 'key' => '_gm2_description', 'compare' => 'NOT EXISTS' ],
                 [ 'key' => '_gm2_description', 'value' => '', 'compare' => '=' ],
             ];
+        } elseif ($seo_status === 'has_ai') {
+            $meta_query[] = [ 'key' => '_gm2_ai_research', 'value' => '', 'compare' => '!=' ];
         }
         if ($missing_title === '1') {
             $meta_query[] = [
@@ -4493,6 +4500,7 @@ class Gm2_SEO_Admin {
             $terms         = isset($_POST['terms']) ? (array) $_POST['terms'] : [];
             $terms         = array_map('sanitize_text_field', $terms);
             $seo_status    = sanitize_key($_POST['seo_status'] ?? 'all');
+            $seo_status    = in_array($seo_status, ['all', 'complete', 'incomplete', 'has_ai'], true) ? $seo_status : 'all';
             $missing_title = isset($_POST['missing_title']) && $_POST['missing_title'] === '1' ? '1' : '0';
             $missing_desc  = isset($_POST['missing_desc']) && $_POST['missing_desc'] === '1' ? '1' : '0';
             $search        = isset($_POST['search']) ? sanitize_text_field($_POST['search']) : '';
@@ -4560,6 +4568,8 @@ class Gm2_SEO_Admin {
                     [ 'key' => '_gm2_description', 'compare' => 'NOT EXISTS' ],
                     [ 'key' => '_gm2_description', 'value' => '', 'compare' => '=' ],
                 ];
+            } elseif ($seo_status === 'has_ai') {
+                $meta_query[] = [ 'key' => '_gm2_ai_research', 'value' => '', 'compare' => '!=' ];
             }
             if ($meta_query) {
                 $args['meta_query'] = array_merge([ 'relation' => 'AND' ], $meta_query);
@@ -4678,7 +4688,7 @@ class Gm2_SEO_Admin {
             $status        = sanitize_key($_POST['status'] ?? 'publish');
             $search        = isset($_POST['search']) ? sanitize_text_field($_POST['search']) : '';
             $seo_status    = sanitize_key($_POST['seo_status'] ?? 'all');
-            $seo_status    = in_array($seo_status, ['all','complete','incomplete'], true) ? $seo_status : 'all';
+            $seo_status    = in_array($seo_status, ['all','complete','incomplete','has_ai'], true) ? $seo_status : 'all';
             $missing_title = isset($_POST['missing_title']) && $_POST['missing_title'] === '1' ? '1' : '0';
             $missing_desc  = isset($_POST['missing_desc']) && $_POST['missing_desc'] === '1' ? '1' : '0';
 
@@ -4705,6 +4715,8 @@ class Gm2_SEO_Admin {
                     [ 'key' => '_gm2_description', 'compare' => 'NOT EXISTS' ],
                     [ 'key' => '_gm2_description', 'value' => '', 'compare' => '=' ],
                 ];
+            } elseif ($seo_status === 'has_ai') {
+                $meta_query[] = [ 'key' => '_gm2_ai_research', 'value' => '', 'compare' => '!=' ];
             }
             if ($missing_title === '1') {
                 $meta_query[] = [
