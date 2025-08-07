@@ -7,16 +7,19 @@ jQuery(function($){
     $('#gm2-bulk-list tr[id^="gm2-row-"]').addClass('gm2-status-new');
 
     function initBar(max){
-        var $bar = $('#gm2-bulk-progress-bar');
-        if(!$bar.length){
-            $bar = $('<progress>',{id:'gm2-bulk-progress-bar',value:0,max:max,style:'width:100%;',role:'progressbar','aria-live':'polite'});
-            $('.gm2-bulk-analyze').last().parent().after($bar);
+        var $bars = $('.gm2-bulk-progress-bar');
+        if(!$bars.length){
+            $bars = $('<progress>',{id:'gm2-bulk-progress-bar',class:'gm2-bulk-progress-bar',value:0,max:max,style:'width:100%;',role:'progressbar','aria-live':'polite'});
+            $('.gm2-bulk-analyze').last().parent().after($bars);
         }
-        $bar.attr({max:max,role:'progressbar','aria-live':'polite'}).val(0).show();
+        $bars.each(function(){
+            $(this).attr({max:max,role:'progressbar','aria-live':'polite'}).val(0).show();
+        });
+        $('.gm2-bulk-progress').text('');
     }
 
     function updateBar(val){
-        $('#gm2-bulk-progress-bar').val(val);
+        $('.gm2-bulk-progress-bar').val(val);
     }
 
     function showSpinner($cell){
@@ -69,28 +72,31 @@ jQuery(function($){
         applied = 0;
         initBar(totalPosts);
 
-        var $progress = $('#gm2-bulk-progress');
-        if(!$progress.length){
-            $progress = $('<p>',{id:'gm2-bulk-progress'});
-            $('#gm2-bulk-progress-bar').after($progress);
+        var $progresses = $('.gm2-bulk-progress');
+        if(!$progresses.length){
+            $('.gm2-bulk-progress-bar').each(function(){
+                var $p = $('<p>',{class:'gm2-bulk-progress'});
+                $(this).after($p);
+            });
+            $progresses = $('.gm2-bulk-progress');
         }
-        $progress.text('');
+        $progresses.text('');
         var total = ids.length, processed = 0, fatal = false;
 
         function updateProgress(msg){
             if(msg){
-                $progress.text(msg);
+                $progresses.text(msg);
             }else{
                 var procText = window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.processing : 'Processing %1$s / %2$s';
-                $progress.text(procText.replace('%1$s', processed).replace('%2$s', total));
+                $progresses.text(procText.replace('%1$s', processed).replace('%2$s', total));
             }
             updateBar(processed);
         }
 
         function processNext(){
             if(fatal || stopProcessing){
-                $('#gm2-bulk-progress-bar').hide();
-                $progress.text('');
+                $('.gm2-bulk-progress-bar').hide();
+                $progresses.text('');
                 return;
             }
             if(!ids.length){
@@ -155,8 +161,8 @@ jQuery(function($){
     $('#gm2-bulk-ai').on('click','.gm2-bulk-cancel',function(e){
         e.preventDefault();
         stopProcessing = true;
-        $('#gm2-bulk-progress-bar').hide();
-        $('#gm2-bulk-progress').text('');
+        $('.gm2-bulk-progress-bar').hide();
+        $('.gm2-bulk-progress').text('');
     });
     $('#gm2-bulk-list').on('click','.gm2-apply-btn',function(e){
         e.preventDefault();
