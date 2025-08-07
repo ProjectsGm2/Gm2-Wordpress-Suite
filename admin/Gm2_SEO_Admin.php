@@ -1535,6 +1535,9 @@ class Gm2_SEO_Admin {
         // Top action buttons.
         echo '<p class="gm2-bulk-actions">' . $buttons . '</p>';
 
+        // Progress bar above the table.
+        echo '<p><progress class="gm2-bulk-term-progress-bar" value="0" max="100" style="width:100%;display:none" role="progressbar" aria-live="polite"></progress></p>';
+
         echo '<form method="get">';
         echo '<input type="hidden" name="page" value="gm2-bulk-ai-taxonomies" />';
         $table->display();
@@ -1543,7 +1546,7 @@ class Gm2_SEO_Admin {
         // Bottom action buttons.
         echo '<p class="gm2-bulk-actions">' . $buttons . '</p>';
         echo '<p id="gm2-bulk-term-msg"></p>';
-        echo '<p><progress id="gm2-bulk-term-progress-bar" value="0" max="100" style="width:100%;display:none" role="progressbar" aria-live="polite"></progress></p>';
+        echo '<p><progress class="gm2-bulk-term-progress-bar" value="0" max="100" style="width:100%;display:none" role="progressbar" aria-live="polite"></progress></p>';
         echo '</div>';
     }
 
