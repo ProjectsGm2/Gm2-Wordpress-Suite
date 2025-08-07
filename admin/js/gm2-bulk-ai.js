@@ -452,11 +452,57 @@ jQuery(function($){
         var ids=[];
         $('#gm2-bulk-list .gm2-select:checked').each(function(){ids.push($(this).val());});
         if(!ids.length) return;
-        $.post(gm2BulkAi.ajax_url,{action:'gm2_ai_batch_schedule',ids:JSON.stringify(ids),_ajax_nonce:gm2BulkAi.batch_nonce});
+        var $btn=$(this);
+        var $msg=$('#gm2-bulk-apply-msg');
+        $btn.prop('disabled',true);
+        var schedulingText=window.gm2BulkAi&&gm2BulkAi.i18n?gm2BulkAi.i18n.scheduling:'Scheduling...';
+        $msg.text(schedulingText);
+        var $spinner=$('<span>',{class:'spinner is-active gm2-ai-spinner'}).insertAfter($btn);
+        $.post(gm2BulkAi.ajax_url,{action:'gm2_ai_batch_schedule',ids:JSON.stringify(ids),_ajax_nonce:gm2BulkAi.batch_nonce})
+        .done(function(resp){
+            $spinner.remove();
+            $btn.prop('disabled',false);
+            if(resp&&resp.success){
+                var scheduledText=window.gm2BulkAi&&gm2BulkAi.i18n?gm2BulkAi.i18n.scheduled:'Batch scheduled';
+                $msg.text(scheduledText);
+            }else{
+                var err=(resp&&resp.data)?resp.data:(window.gm2BulkAi&&gm2BulkAi.i18n?gm2BulkAi.i18n.error:'Error');
+                $msg.text(err);
+            }
+        })
+        .fail(function(jqXHR,textStatus){
+            $spinner.remove();
+            $btn.prop('disabled',false);
+            var msg=(jqXHR&&jqXHR.responseJSON&&jqXHR.responseJSON.data)?jqXHR.responseJSON.data:(jqXHR&&jqXHR.responseText?jqXHR.responseText:textStatus);
+            $msg.text(msg||(window.gm2BulkAi&&gm2BulkAi.i18n?gm2BulkAi.i18n.error:'Error'));
+        });
     });
 
     $('#gm2-bulk-ai').on('click','.gm2-bulk-cancel-batch',function(e){
         e.preventDefault();
-        $.post(gm2BulkAi.ajax_url,{action:'gm2_ai_batch_cancel',_ajax_nonce:gm2BulkAi.batch_nonce});
+        var $btn=$(this);
+        var $msg=$('#gm2-bulk-apply-msg');
+        $btn.prop('disabled',true);
+        var cancellingText=window.gm2BulkAi&&gm2BulkAi.i18n?gm2BulkAi.i18n.cancelling:'Cancelling...';
+        $msg.text(cancellingText);
+        var $spinner=$('<span>',{class:'spinner is-active gm2-ai-spinner'}).insertAfter($btn);
+        $.post(gm2BulkAi.ajax_url,{action:'gm2_ai_batch_cancel',_ajax_nonce:gm2BulkAi.batch_nonce})
+        .done(function(resp){
+            $spinner.remove();
+            $btn.prop('disabled',false);
+            if(resp&&resp.success){
+                var cancelledText=window.gm2BulkAi&&gm2BulkAi.i18n?gm2BulkAi.i18n.cancelled:'Batch cancelled';
+                $msg.text(cancelledText);
+            }else{
+                var err=(resp&&resp.data)?resp.data:(window.gm2BulkAi&&gm2BulkAi.i18n?gm2BulkAi.i18n.error:'Error');
+                $msg.text(err);
+            }
+        })
+        .fail(function(jqXHR,textStatus){
+            $spinner.remove();
+            $btn.prop('disabled',false);
+            var msg=(jqXHR&&jqXHR.responseJSON&&jqXHR.responseJSON.data)?jqXHR.responseJSON.data:(jqXHR&&jqXHR.responseText?jqXHR.responseText:textStatus);
+            $msg.text(msg||(window.gm2BulkAi&&gm2BulkAi.i18n?gm2BulkAi.i18n.error:'Error'));
+        });
     });
 });
