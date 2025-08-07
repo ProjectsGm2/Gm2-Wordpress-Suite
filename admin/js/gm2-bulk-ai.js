@@ -297,8 +297,8 @@ jQuery(function($){
     $('#gm2-bulk-ai').on('click','.gm2-bulk-select-analyzed',function(e){
         e.preventDefault();
         $('#gm2-bulk-list tr.gm2-status-analyzed').each(function(){
-            var $cb = $(this).find('.gm2-row-select-all');
-            $cb.prop('checked',true).trigger('change');
+            $(this).find('.gm2-select').prop('checked',true);
+            $(this).find('.gm2-row-select-all').prop('checked',true).trigger('change');
         });
     });
 
