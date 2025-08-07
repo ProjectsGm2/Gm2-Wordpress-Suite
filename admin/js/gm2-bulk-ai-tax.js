@@ -240,29 +240,40 @@ jQuery(function($){
         $('#gm2-bulk-term-list .gm2-select:checked').each(function(){ids.push($(this).val());});
         if(!ids.length) return;
         var $msg=$('#gm2-bulk-term-msg');
+        var total=ids.length, processed=0;
+        $('.gm2-bulk-term-progress-bar').attr('max',total).val(0).show();
         $msg.text(gm2BulkAiTax.i18n.resetting);
+        function updateProgress(){
+            $('.gm2-bulk-term-progress-bar').val(processed);
+        }
+        updateProgress();
         $.ajax({
             url: gm2BulkAiTax.ajax_url,
             method:'POST',
             data:{action:'gm2_bulk_ai_tax_reset',ids:JSON.stringify(ids),_ajax_nonce:gm2BulkAiTax.reset_nonce},
             dataType:'json'
         }).done(function(resp){
-                if(resp&&resp.success){
-                    $.each(ids,function(i,key){
-                        var parts=key.split(':');
-                        var row=$('#gm2-term-'+parts[0]+'-'+parts[1]);
-                        row.find('.column-seo_title').text('');
-                        row.find('.column-description').text('');
-                        row.find('.gm2-result').empty();
-                        row.removeClass('gm2-status-analyzed').addClass('gm2-status-new');
-                    });
-                    $msg.text(gm2BulkAiTax.i18n.resetDone.replace('%s',resp.data.reset));
-                }else{
-                    $msg.text((resp&&resp.data)?resp.data:gm2BulkAiTax.i18n.error);
-                }
+            if(resp&&resp.success){
+                $.each(ids,function(i,key){
+                    var parts=key.split(':');
+                    var row=$('#gm2-term-'+parts[0]+'-'+parts[1]);
+                    row.find('.column-seo_title').text('');
+                    row.find('.column-description').text('');
+                    row.find('.gm2-result').empty();
+                    row.find('.gm2-select').prop('checked',false);
+                    row.removeClass('gm2-status-analyzed').addClass('gm2-status-new');
+                    processed++;
+                    updateProgress();
+                });
+                $msg.text(gm2BulkAiTax.i18n.resetDone.replace('%s',resp.data.reset));
+            }else{
+                $msg.text((resp&&resp.data)?resp.data:gm2BulkAiTax.i18n.error);
+            }
         }).fail(function(jqXHR,textStatus){
             var msg=(jqXHR&&jqXHR.responseJSON&&jqXHR.responseJSON.data)?jqXHR.responseJSON.data:(jqXHR&&jqXHR.responseText?jqXHR.responseText:textStatus);
             $msg.text(msg||gm2BulkAiTax.i18n.error);
+        }).always(function(){
+            $('.gm2-bulk-term-progress-bar').hide();
         });
     });
 
@@ -272,27 +283,37 @@ jQuery(function($){
         $('#gm2-bulk-term-list .gm2-select:checked').each(function(){ids.push($(this).val());});
         if(!ids.length) return;
         var $msg=$('#gm2-bulk-term-msg');
+        var total=ids.length, cleared=0;
+        $('.gm2-bulk-term-progress-bar').attr('max',total).val(0).show();
         $msg.text(gm2BulkAiTax.i18n.resetting);
+        function updateProgress(){
+            $('.gm2-bulk-term-progress-bar').val(cleared);
+        }
+        updateProgress();
         $.ajax({
             url: gm2BulkAiTax.ajax_url,
             method:'POST',
             data:{action:'gm2_bulk_ai_tax_clear',ids:JSON.stringify(ids),_ajax_nonce:gm2BulkAiTax.clear_nonce},
             dataType:'json'
         }).done(function(resp){
-                if(resp&&resp.success){
-                    $.each(ids,function(i,key){
-                        var parts=key.split(':');
-                        var row=$('#gm2-term-'+parts[0]+'-'+parts[1]);
-                        row.find('.gm2-result').empty();
-                        row.removeClass('gm2-status-analyzed').addClass('gm2-status-new');
-                    });
-                    $msg.text(gm2BulkAiTax.i18n.clearDone.replace('%s',resp.data.cleared));
-                }else{
-                    $msg.text((resp&&resp.data)?resp.data:gm2BulkAiTax.i18n.error);
-                }
+            if(resp&&resp.success){
+                $.each(ids,function(i,key){
+                    var parts=key.split(':');
+                    var row=$('#gm2-term-'+parts[0]+'-'+parts[1]);
+                    row.find('.gm2-result').empty();
+                    row.removeClass('gm2-status-analyzed').addClass('gm2-status-new');
+                    cleared++;
+                    updateProgress();
+                });
+                $msg.text(gm2BulkAiTax.i18n.clearDone.replace('%s',resp.data.cleared));
+            }else{
+                $msg.text((resp&&resp.data)?resp.data:gm2BulkAiTax.i18n.error);
+            }
         }).fail(function(jqXHR,textStatus){
             var msg=(jqXHR&&jqXHR.responseJSON&&jqXHR.responseJSON.data)?jqXHR.responseJSON.data:(jqXHR&&jqXHR.responseText?jqXHR.responseText:textStatus);
             $msg.text(msg||gm2BulkAiTax.i18n.error);
+        }).always(function(){
+            $('.gm2-bulk-term-progress-bar').hide();
         });
     });
 

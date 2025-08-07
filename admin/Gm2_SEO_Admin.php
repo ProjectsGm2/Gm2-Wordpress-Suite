@@ -4953,6 +4953,7 @@ class Gm2_SEO_Admin {
             }
             delete_term_meta($term_id, '_gm2_title');
             delete_term_meta($term_id, '_gm2_description');
+            delete_term_meta($term_id, '_gm2_ai_research');
             $count++;
         }
 
