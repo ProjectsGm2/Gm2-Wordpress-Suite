@@ -234,6 +234,7 @@ class Gm2_Admin {
                         'apply_nonce' => wp_create_nonce('gm2_bulk_ai_apply'),
                         'batch_nonce' => wp_create_nonce('gm2_ai_batch'),
                         'reset_nonce' => wp_create_nonce('gm2_bulk_ai_reset'),
+                        'clear_nonce' => wp_create_nonce('gm2_bulk_ai_clear'),
                         'ajax_url'    => admin_url('admin-ajax.php'),
                         'i18n'        => [
                             'processing'   => __( 'Processing %1$s / %2$s', 'gm2-wordpress-suite' ),
@@ -253,6 +254,7 @@ class Gm2_Admin {
                             'undo'         => __( 'Undo', 'gm2-wordpress-suite' ),
                             'resetting'    => __( 'Resetting...', 'gm2-wordpress-suite' ),
                             'resetDone'    => __( 'Reset %s posts', 'gm2-wordpress-suite' ),
+                            'clearDone'    => __( 'Cleared AI suggestions for %s posts', 'gm2-wordpress-suite' ),
                         ],
                     ]
                 );
@@ -275,12 +277,14 @@ class Gm2_Admin {
                         'batch_nonce' => wp_create_nonce('gm2_ai_batch'),
                         'desc_nonce'  => wp_create_nonce('gm2_ai_generate_tax_description'),
                         'reset_nonce' => wp_create_nonce('gm2_bulk_ai_tax_reset'),
+                        'clear_nonce' => wp_create_nonce('gm2_bulk_ai_tax_clear'),
                         'ajax_url'    => admin_url('admin-ajax.php'),
                         'i18n'        => [
                             'apply'      => __( 'Apply', 'gm2-wordpress-suite' ),
                             'error'      => __( 'Error', 'gm2-wordpress-suite' ),
                             'resetting'  => __( 'Resetting...', 'gm2-wordpress-suite' ),
                             'resetDone'  => __( 'Reset %s terms', 'gm2-wordpress-suite' ),
+                            'clearDone'  => __( 'Cleared AI suggestions for %s terms', 'gm2-wordpress-suite' ),
                             'selectAll'  => __( 'Select all', 'gm2-wordpress-suite' ),
                         ],
                     ]
