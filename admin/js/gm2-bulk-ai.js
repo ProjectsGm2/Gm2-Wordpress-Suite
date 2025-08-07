@@ -383,8 +383,16 @@ jQuery(function($){
         $('#gm2-bulk-list .gm2-select:checked').each(function(){ids.push($(this).val());});
         if(!ids.length) return;
         var $msg=$('#gm2-bulk-apply-msg');
-        var resettingText = window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.resetting : 'Resetting...';
-        $msg.text(resettingText);
+        var total = ids.length, processed = 0;
+        initBar(total);
+        var resettingText = (window.gm2BulkAi && gm2BulkAi.i18n && (gm2BulkAi.i18n.resettingProgress || gm2BulkAi.i18n.resetting))
+            ? (gm2BulkAi.i18n.resettingProgress || gm2BulkAi.i18n.resetting)
+            : 'Resetting %1$s / %2$s...';
+        function updateProgress(){
+            $msg.text(resettingText.replace('%1$s', processed).replace('%2$s', total));
+            updateBar(processed);
+        }
+        updateProgress();
         $.ajax({
             url: gm2BulkAi.ajax_url,
             method:'POST',
@@ -394,13 +402,19 @@ jQuery(function($){
             if(resp&&resp.success){
                 $.each(ids,function(i,id){
                     var row=$('#gm2-row-'+id);
+                    row.find('td').eq(1).text('');
                     row.find('td').eq(2).text('');
                     row.find('td').eq(3).text('');
+                    row.find('.gm2-select').prop('checked',false);
                     row.find('.gm2-result').empty();
                     row.removeClass('gm2-status-applied gm2-status-analyzed').addClass('gm2-status-new');
+                    processed++;
+                    updateProgress();
                 });
+                var resetCount = resp.data && resp.data.reset ? resp.data.reset : processed;
                 var doneText = window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.resetDone : 'Reset %s posts';
-                $msg.text(doneText.replace('%s', resp.data.reset));
+                $msg.text(doneText.replace('%s', resetCount));
+                updateBar(resetCount);
             }else{
                 $msg.text((resp&&resp.data)?resp.data:(window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.error : 'Error'));
             }
