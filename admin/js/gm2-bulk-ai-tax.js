@@ -113,12 +113,18 @@ jQuery(function($){
     });
     $('#gm2-bulk-ai-tax').on('click','#gm2-bulk-term-apply-all',function(e){
         e.preventDefault();
-        var items={};
+        var items={}, cells={};
         $('#gm2-bulk-term-list tr').each(function(){
             var k=$(this).data('key');if(!k) return;
             var fields={};
             $(this).find('.gm2-apply:checked').each(function(){fields[$(this).data('field')]=$(this).data('value');});
-            if(Object.keys(fields).length){items[k]=fields;}
+            if(Object.keys(fields).length){
+                items[k]=fields;
+                var cell=$(this).find('.gm2-result');
+                cell.find('.gm2-ai-spinner').remove();
+                $('<span>',{class:'spinner is-active gm2-ai-spinner'}).appendTo(cell);
+                cells[k]=cell;
+            }
         });
         if($.isEmptyObject(items)) return;
         $.ajax({
@@ -126,7 +132,22 @@ jQuery(function($){
             method:'POST',
             data:{action:'gm2_bulk_ai_tax_apply_batch',terms:JSON.stringify(items),_ajax_nonce:gm2BulkAiTax.apply_nonce},
             dataType:'json'
-        }).fail(function(){alert(gm2BulkAiTax.i18n.error);});
+        }).done(function(resp){
+            if(typeof resp==='string'){try{resp=JSON.parse(resp);}catch(e){resp={};}}
+            if(!resp||!resp.success){
+                alert((resp&&resp.data)?resp.data:gm2BulkAiTax.i18n.error);
+                $.each(cells,function(k,cell){cell.find('.gm2-ai-spinner').remove();});
+                return;
+            }
+            $.each(cells,function(k,cell){
+                cell.find('.gm2-ai-spinner').remove();
+                cell.html('&#10003;');
+            });
+        }).fail(function(jqXHR,textStatus){
+            var msg=(jqXHR&&jqXHR.responseJSON&&jqXHR.responseJSON.data)?jqXHR.responseJSON.data:(jqXHR&&jqXHR.responseText?jqXHR.responseText:textStatus);
+            alert(msg||gm2BulkAiTax.i18n.error);
+            $.each(cells,function(k,cell){cell.find('.gm2-ai-spinner').remove();});
+        });
     });
     $('#gm2-bulk-ai-tax').on('click','#gm2-bulk-term-schedule',function(e){
         e.preventDefault();
