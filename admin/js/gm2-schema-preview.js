@@ -2,6 +2,9 @@ jQuery(function($){
     var cardTmpl = wp.template('gm2-schema-card');
 
     function fetchSchema(){
+        if (typeof gm2SchemaPreview === 'undefined') {
+            return;
+        }
         var data = {
             action: 'gm2_schema_preview',
             nonce: gm2SchemaPreview.nonce,
@@ -22,6 +25,23 @@ jQuery(function($){
         });
     }
 
-    $('#gm2_schema_type, #gm2_schema_brand, #gm2_schema_rating').on('change input', fetchSchema);
-    fetchSchema();
+    if (typeof gm2SchemaPreview !== 'undefined') {
+        $('#gm2_schema_type, #gm2_schema_brand, #gm2_schema_rating').on('change input', fetchSchema);
+        fetchSchema();
+    }
+
+    var $custom = $('#gm2_custom_schema_json');
+    if ($custom.length) {
+        function renderCustom(){
+            var val = $custom.val();
+            try {
+                var obj = JSON.parse(val);
+                $('#gm2-custom-schema-preview').html(cardTmpl(obj));
+            } catch(e) {
+                $('#gm2-custom-schema-preview').empty();
+            }
+        }
+        $custom.on('input', renderCustom);
+        renderCustom();
+    }
 });
