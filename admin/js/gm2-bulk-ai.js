@@ -382,6 +382,37 @@ jQuery(function($){
         });
     });
 
+    $('#gm2-bulk-ai').on('click','.gm2-bulk-reset-ai',function(e){
+        e.preventDefault();
+        var ids=[];
+        $('#gm2-bulk-list .gm2-select:checked').each(function(){ids.push($(this).val());});
+        if(!ids.length) return;
+        var $msg=$('#gm2-bulk-apply-msg');
+        var resettingText = window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.resetting : 'Resetting...';
+        $msg.text(resettingText);
+        $.ajax({
+            url: gm2BulkAi.ajax_url,
+            method:'POST',
+            data:{action:'gm2_bulk_ai_clear',ids:JSON.stringify(ids),_ajax_nonce:gm2BulkAi.clear_nonce},
+            dataType:'json'
+        }).done(function(resp){
+            if(resp&&resp.success){
+                $.each(ids,function(i,id){
+                    var row=$('#gm2-row-'+id);
+                    row.find('.gm2-result').empty();
+                    row.removeClass('gm2-status-applied gm2-status-analyzed').addClass('gm2-status-new');
+                });
+                var doneText = window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.clearDone : 'Cleared AI suggestions for %s posts';
+                $msg.text(doneText.replace('%s', resp.data.cleared));
+            }else{
+                $msg.text((resp&&resp.data)?resp.data:(window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.error : 'Error'));
+            }
+        }).fail(function(jqXHR,textStatus){
+            var msg=(jqXHR && jqXHR.responseJSON && jqXHR.responseJSON.data)?jqXHR.responseJSON.data:(jqXHR && jqXHR.responseText?jqXHR.responseText:textStatus);
+            $msg.text(msg || (window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.error : 'Error'));
+        });
+    });
+
     $('#gm2-bulk-ai').on('click','.gm2-bulk-reset-all',function(e){
         e.preventDefault();
         var data={

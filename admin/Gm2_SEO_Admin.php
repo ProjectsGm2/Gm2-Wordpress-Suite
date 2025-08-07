@@ -17,6 +17,8 @@ class Gm2_SEO_Admin {
     public function __construct() {
         add_action('wp_ajax_gm2_bulk_ai_reset', [$this, 'ajax_bulk_ai_reset']);
         add_action('wp_ajax_gm2_bulk_ai_tax_reset', [$this, 'ajax_bulk_ai_tax_reset']);
+        add_action('wp_ajax_gm2_bulk_ai_clear', [$this, 'ajax_bulk_ai_clear']);
+        add_action('wp_ajax_gm2_bulk_ai_tax_clear', [$this, 'ajax_bulk_ai_tax_clear']);
     }
 
     private function debug_log($message) {
@@ -1350,6 +1352,7 @@ class Gm2_SEO_Admin {
             . '<button type="button" class="button gm2-bulk-apply-all">' . esc_html__( 'Apply All', 'gm2-wordpress-suite' ) . '</button> '
             . '<button type="button" class="button gm2-bulk-reset-all">' . esc_html__( 'Reset All', 'gm2-wordpress-suite' ) . '</button> '
             . '<button type="button" class="button gm2-bulk-reset-selected">' . esc_html__( 'Reset Selected', 'gm2-wordpress-suite' ) . '</button> '
+            . '<button type="button" class="button gm2-bulk-reset-ai">' . esc_html__( 'Reset AI Suggestion', 'gm2-wordpress-suite' ) . '</button> '
             . '<button type="button" class="button gm2-bulk-schedule">' . esc_html__( 'Schedule Batch', 'gm2-wordpress-suite' ) . '</button> '
             . '<button type="button" class="button gm2-bulk-cancel-batch">' . esc_html__( 'Cancel Batch', 'gm2-wordpress-suite' ) . '</button>';
 
@@ -1493,6 +1496,7 @@ class Gm2_SEO_Admin {
             . '<button type="button" class="button" id="gm2-bulk-term-apply-all">' . esc_html__( 'Apply All', 'gm2-wordpress-suite' ) . '</button> '
             . '<button type="button" class="button" id="gm2-bulk-term-reset-all">' . esc_html__( 'Reset All', 'gm2-wordpress-suite' ) . '</button> '
             . '<button type="button" class="button" id="gm2-bulk-term-reset-selected">' . esc_html__( 'Reset Selected', 'gm2-wordpress-suite' ) . '</button> '
+            . '<button type="button" class="button" id="gm2-bulk-term-reset-ai">' . esc_html__( 'Reset AI Suggestion', 'gm2-wordpress-suite' ) . '</button> '
             . '<button type="button" class="button" id="gm2-bulk-term-schedule">' . esc_html__( 'Schedule Batch', 'gm2-wordpress-suite' ) . '</button> '
             . '<button type="button" class="button" id="gm2-bulk-term-cancel-batch">' . esc_html__( 'Cancel Batch', 'gm2-wordpress-suite' ) . '</button>';
 
@@ -4600,6 +4604,31 @@ class Gm2_SEO_Admin {
         wp_send_json_success( [ 'reset' => $count ] );
     }
 
+    public function ajax_bulk_ai_clear() {
+        check_ajax_referer('gm2_bulk_ai_clear');
+
+        if (!current_user_can('edit_posts')) {
+            wp_send_json_error( __( 'permission denied', 'gm2-wordpress-suite' ), 403 );
+        }
+
+        $ids = isset($_POST['ids']) ? json_decode(wp_unslash($_POST['ids']), true) : [];
+        if (!is_array($ids)) {
+            wp_send_json_error( __( 'invalid data', 'gm2-wordpress-suite' ) );
+        }
+
+        $count = 0;
+        foreach ($ids as $post_id) {
+            $post_id = absint($post_id);
+            if (!$post_id || !current_user_can('edit_post', $post_id)) {
+                continue;
+            }
+            delete_post_meta($post_id, '_gm2_ai_research');
+            $count++;
+        }
+
+        wp_send_json_success( [ 'cleared' => $count ] );
+    }
+
     public function ajax_ai_research_clear() {
         check_ajax_referer('gm2_ai_research');
 
@@ -4764,6 +4793,37 @@ class Gm2_SEO_Admin {
         }
 
         wp_send_json_success( [ 'reset' => $count ] );
+    }
+
+    public function ajax_bulk_ai_tax_clear() {
+        check_ajax_referer('gm2_bulk_ai_tax_clear');
+
+        $cap = apply_filters('gm2_bulk_ai_tax_capability', 'manage_categories');
+        if (!current_user_can($cap)) {
+            wp_send_json_error( __( 'permission denied', 'gm2-wordpress-suite' ), 403 );
+        }
+
+        $ids = isset($_POST['ids']) ? json_decode(wp_unslash($_POST['ids']), true) : [];
+        if (!is_array($ids)) {
+            wp_send_json_error( __( 'invalid data', 'gm2-wordpress-suite' ) );
+        }
+
+        $count = 0;
+        foreach ($ids as $key) {
+            if (is_string($key) && strpos($key, ':') !== false) {
+                list($tax, $id) = explode(':', $key);
+                $term_id = absint($id);
+            } else {
+                $term_id = absint($key);
+            }
+            if (!$term_id || !current_user_can('edit_term', $term_id)) {
+                continue;
+            }
+            delete_term_meta($term_id, '_gm2_ai_research');
+            $count++;
+        }
+
+        wp_send_json_success( [ 'cleared' => $count ] );
     }
 
     public function ajax_schema_preview() {
