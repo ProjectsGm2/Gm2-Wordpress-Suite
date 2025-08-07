@@ -1,5 +1,13 @@
 jQuery(function($){
     var stop=false;
+    var $rows=$('#gm2-bulk-term-list tr').addClass('gm2-status-new');
+    $rows.each(function(){
+        var $row=$(this);
+        var $res=$row.find('.gm2-result');
+        if($res.find('.gm2-apply').length||$.trim($res.text()).length){
+            $row.removeClass('gm2-status-new').addClass('gm2-status-analyzed');
+        }
+    });
     $('#gm2-bulk-term-select-all').on('click',function(){
         var c=$(this).prop('checked');
         $('#gm2-bulk-term-list .gm2-select').prop('checked',c);
@@ -113,8 +121,9 @@ jQuery(function($){
     });
     $('#gm2-bulk-ai-tax').on('click','#gm2-bulk-term-select-analyzed',function(e){
         e.preventDefault();
-        $('#gm2-bulk-term-list .gm2-row-select-all').each(function(){
-            $(this).prop('checked',true).trigger('change');
+        $('#gm2-bulk-term-list tr.gm2-status-analyzed').each(function(){
+            $(this).find('.gm2-select').prop('checked',true);
+            $(this).find('.gm2-row-select-all').prop('checked',true).trigger('change');
         });
     });
     $('#gm2-bulk-ai-tax').on('click','#gm2-bulk-term-apply-all',function(e){

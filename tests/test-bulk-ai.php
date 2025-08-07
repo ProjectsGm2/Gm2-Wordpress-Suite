@@ -1,5 +1,7 @@
 <?php
 use Gm2\Gm2_SEO_Admin;
+use Gm2\Gm2_Bulk_Ai_List_Table;
+use Gm2\Gm2_Bulk_Ai_Tax_List_Table;
 
 class BulkAiPageTest extends WP_UnitTestCase {
     public function test_page_requires_edit_posts_cap() {
@@ -383,5 +385,39 @@ class BulkAiTaxSelectAllTest extends WP_UnitTestCase {
 
         $this->assertStringContainsString('gm2-row-select-all', $html);
         $this->assertStringContainsString('Select all', $html);
+    }
+}
+
+class BulkAiColumnAiTest extends WP_UnitTestCase {
+    public function test_column_ai_wraps_output() {
+        $post_id = self::factory()->post->create();
+        update_post_meta($post_id, '_gm2_ai_research', wp_json_encode([
+            'seo_title' => 'Title',
+        ]));
+        $admin = new Gm2_SEO_Admin();
+        $table = new Gm2_Bulk_Ai_List_Table($admin, []);
+        $method = new ReflectionMethod($table, 'column_ai');
+        $method->setAccessible(true);
+        $html = $method->invoke($table, get_post($post_id));
+        $this->assertStringContainsString('<div class="gm2-result">', $html);
+        $this->assertStringContainsString('Title', $html);
+        $this->assertStringContainsString('</div>', $html);
+    }
+}
+
+class BulkAiTaxColumnAiTest extends WP_UnitTestCase {
+    public function test_tax_column_ai_wraps_output() {
+        $term = self::factory()->term->create_and_get(['taxonomy' => 'category', 'name' => 'Term']);
+        update_term_meta($term->term_id, '_gm2_ai_research', wp_json_encode([
+            'seo_title' => 'Term Title',
+        ]));
+        $admin = new Gm2_SEO_Admin();
+        $table = new Gm2_Bulk_Ai_Tax_List_Table($admin, []);
+        $method = new ReflectionMethod($table, 'column_ai');
+        $method->setAccessible(true);
+        $html = $method->invoke($table, $term);
+        $this->assertStringContainsString('<div class="gm2-result">', $html);
+        $this->assertStringContainsString('Term Title', $html);
+        $this->assertStringContainsString('</div>', $html);
     }
 }
