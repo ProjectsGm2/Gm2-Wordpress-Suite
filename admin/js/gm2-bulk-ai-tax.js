@@ -160,11 +160,57 @@ jQuery(function($){
         var ids=[];
         $('#gm2-bulk-term-list .gm2-select:checked').each(function(){ids.push($(this).val());});
         if(!ids.length) return;
-        $.post(gm2BulkAiTax.ajax_url,{action:'gm2_ai_tax_batch_schedule',ids:JSON.stringify(ids),_ajax_nonce:gm2BulkAiTax.batch_nonce});
+        var $btn=$(this);
+        var $msg=$('#gm2-bulk-term-msg');
+        $btn.prop('disabled',true);
+        var schedulingText=gm2BulkAiTax.i18n?gm2BulkAiTax.i18n.scheduling:'Scheduling...';
+        $msg.text(schedulingText);
+        var $spinner=$('<span>',{class:'spinner is-active gm2-ai-spinner'}).insertAfter($btn);
+        $.post(gm2BulkAiTax.ajax_url,{action:'gm2_ai_tax_batch_schedule',ids:JSON.stringify(ids),_ajax_nonce:gm2BulkAiTax.batch_nonce})
+        .done(function(resp){
+            $spinner.remove();
+            $btn.prop('disabled',false);
+            if(resp&&resp.success){
+                var scheduledText=gm2BulkAiTax.i18n?gm2BulkAiTax.i18n.scheduled:'Batch scheduled';
+                $msg.text(scheduledText);
+            }else{
+                var err=(resp&&resp.data)?resp.data:(gm2BulkAiTax.i18n?gm2BulkAiTax.i18n.error:'Error');
+                $msg.text(err);
+            }
+        })
+        .fail(function(jqXHR,textStatus){
+            $spinner.remove();
+            $btn.prop('disabled',false);
+            var msg=(jqXHR&&jqXHR.responseJSON&&jqXHR.responseJSON.data)?jqXHR.responseJSON.data:(jqXHR&&jqXHR.responseText?jqXHR.responseText:textStatus);
+            $msg.text(msg||(gm2BulkAiTax.i18n?gm2BulkAiTax.i18n.error:'Error'));
+        });
     });
     $('#gm2-bulk-ai-tax').on('click','#gm2-bulk-term-cancel-batch',function(e){
         e.preventDefault();
-        $.post(gm2BulkAiTax.ajax_url,{action:'gm2_ai_tax_batch_cancel',_ajax_nonce:gm2BulkAiTax.batch_nonce});
+        var $btn=$(this);
+        var $msg=$('#gm2-bulk-term-msg');
+        $btn.prop('disabled',true);
+        var cancellingText=gm2BulkAiTax.i18n?gm2BulkAiTax.i18n.cancelling:'Cancelling...';
+        $msg.text(cancellingText);
+        var $spinner=$('<span>',{class:'spinner is-active gm2-ai-spinner'}).insertAfter($btn);
+        $.post(gm2BulkAiTax.ajax_url,{action:'gm2_ai_tax_batch_cancel',_ajax_nonce:gm2BulkAiTax.batch_nonce})
+        .done(function(resp){
+            $spinner.remove();
+            $btn.prop('disabled',false);
+            if(resp&&resp.success){
+                var cancelledText=gm2BulkAiTax.i18n?gm2BulkAiTax.i18n.cancelled:'Batch cancelled';
+                $msg.text(cancelledText);
+            }else{
+                var err=(resp&&resp.data)?resp.data:(gm2BulkAiTax.i18n?gm2BulkAiTax.i18n.error:'Error');
+                $msg.text(err);
+            }
+        })
+        .fail(function(jqXHR,textStatus){
+            $spinner.remove();
+            $btn.prop('disabled',false);
+            var msg=(jqXHR&&jqXHR.responseJSON&&jqXHR.responseJSON.data)?jqXHR.responseJSON.data:(jqXHR&&jqXHR.responseText?jqXHR.responseText:textStatus);
+            $msg.text(msg||(gm2BulkAiTax.i18n?gm2BulkAiTax.i18n.error:'Error'));
+        });
     });
 
     $('#gm2-bulk-ai-tax').on('click','#gm2-bulk-term-reset-selected',function(e){
