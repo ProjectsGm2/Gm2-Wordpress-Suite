@@ -98,11 +98,17 @@ jQuery(function($){
         });
         var cell=$(this).closest('.gm2-result');
         $('<span>',{class:'spinner is-active gm2-ai-spinner'}).appendTo(cell);
-        $.post(gm2BulkAiTax.ajax_url,data).done(function(){
+        $.post(gm2BulkAiTax.ajax_url,data).done(function(resp){
             cell.find('.gm2-ai-spinner').remove();
-        }).fail(function(){
+            if(resp && resp.success){
+                cell.html('&#10003;');
+            }else{
+                cell.text((resp && resp.data) ? resp.data : gm2BulkAiTax.i18n.error);
+            }
+        }).fail(function(jqXHR,textStatus){
             cell.find('.gm2-ai-spinner').remove();
-            cell.text(gm2BulkAiTax.i18n.error);
+            var msg=(jqXHR && jqXHR.responseJSON && jqXHR.responseJSON.data)?jqXHR.responseJSON.data:(jqXHR && jqXHR.responseText?jqXHR.responseText:textStatus);
+            cell.text(msg || gm2BulkAiTax.i18n.error);
         });
     });
     $('#gm2-bulk-ai-tax').on('click','#gm2-bulk-term-select-analyzed',function(e){
