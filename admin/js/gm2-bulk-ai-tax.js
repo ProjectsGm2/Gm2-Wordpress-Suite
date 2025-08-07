@@ -45,6 +45,7 @@ jQuery(function($){
                     html+='<p><button class="button gm2-apply-btn" data-key="'+key+'">'+gm2BulkAiTax.i18n.apply+'</button></p>';
                     cell.html(html);
                 }else{cell.text(gm2BulkAiTax.i18n.error);}
+                row.removeClass('gm2-status-new').addClass('gm2-status-analyzed');
             }).fail(function(){
                 cell.find('.gm2-ai-spinner').remove();
                 cell.text(gm2BulkAiTax.i18n.error);
@@ -235,18 +236,19 @@ jQuery(function($){
             data:{action:'gm2_bulk_ai_tax_reset',ids:JSON.stringify(ids),_ajax_nonce:gm2BulkAiTax.reset_nonce},
             dataType:'json'
         }).done(function(resp){
-            if(resp&&resp.success){
-                $.each(ids,function(i,key){
-                    var parts=key.split(':');
-                    var row=$('#gm2-term-'+parts[0]+'-'+parts[1]);
-                    row.find('.column-seo_title').text('');
-                    row.find('.column-description').text('');
-                    row.find('.gm2-result').empty();
-                });
-                $msg.text(gm2BulkAiTax.i18n.resetDone.replace('%s',resp.data.reset));
-            }else{
-                $msg.text((resp&&resp.data)?resp.data:gm2BulkAiTax.i18n.error);
-            }
+                if(resp&&resp.success){
+                    $.each(ids,function(i,key){
+                        var parts=key.split(':');
+                        var row=$('#gm2-term-'+parts[0]+'-'+parts[1]);
+                        row.find('.column-seo_title').text('');
+                        row.find('.column-description').text('');
+                        row.find('.gm2-result').empty();
+                        row.removeClass('gm2-status-analyzed').addClass('gm2-status-new');
+                    });
+                    $msg.text(gm2BulkAiTax.i18n.resetDone.replace('%s',resp.data.reset));
+                }else{
+                    $msg.text((resp&&resp.data)?resp.data:gm2BulkAiTax.i18n.error);
+                }
         }).fail(function(jqXHR,textStatus){
             var msg=(jqXHR&&jqXHR.responseJSON&&jqXHR.responseJSON.data)?jqXHR.responseJSON.data:(jqXHR&&jqXHR.responseText?jqXHR.responseText:textStatus);
             $msg.text(msg||gm2BulkAiTax.i18n.error);
@@ -266,16 +268,17 @@ jQuery(function($){
             data:{action:'gm2_bulk_ai_tax_clear',ids:JSON.stringify(ids),_ajax_nonce:gm2BulkAiTax.clear_nonce},
             dataType:'json'
         }).done(function(resp){
-            if(resp&&resp.success){
-                $.each(ids,function(i,key){
-                    var parts=key.split(':');
-                    var row=$('#gm2-term-'+parts[0]+'-'+parts[1]);
-                    row.find('.gm2-result').empty();
-                });
-                $msg.text(gm2BulkAiTax.i18n.clearDone.replace('%s',resp.data.cleared));
-            }else{
-                $msg.text((resp&&resp.data)?resp.data:gm2BulkAiTax.i18n.error);
-            }
+                if(resp&&resp.success){
+                    $.each(ids,function(i,key){
+                        var parts=key.split(':');
+                        var row=$('#gm2-term-'+parts[0]+'-'+parts[1]);
+                        row.find('.gm2-result').empty();
+                        row.removeClass('gm2-status-analyzed').addClass('gm2-status-new');
+                    });
+                    $msg.text(gm2BulkAiTax.i18n.clearDone.replace('%s',resp.data.cleared));
+                }else{
+                    $msg.text((resp&&resp.data)?resp.data:gm2BulkAiTax.i18n.error);
+                }
         }).fail(function(jqXHR,textStatus){
             var msg=(jqXHR&&jqXHR.responseJSON&&jqXHR.responseJSON.data)?jqXHR.responseJSON.data:(jqXHR&&jqXHR.responseText?jqXHR.responseText:textStatus);
             $msg.text(msg||gm2BulkAiTax.i18n.error);
