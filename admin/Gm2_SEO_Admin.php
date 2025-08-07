@@ -710,6 +710,24 @@ class Gm2_SEO_Admin {
             echo '<tr><th scope="row">' . esc_html__( 'Show Breadcrumbs in Footer', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="gm2_show_footer_breadcrumbs" value="1" ' . checked($footer_bc, '1', false) . '></td></tr>';
             echo '<tr><th scope="row">' . esc_html__( 'Review Schema', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="gm2_schema_review" value="1" ' . checked($review, '1', false) . '></td></tr>';
             echo '</tbody></table>';
+
+            $pt = get_option('gm2_schema_template_product', wp_json_encode(Gm2_SEO_Public::default_product_template(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+            $bt = get_option('gm2_schema_template_brand', wp_json_encode(Gm2_SEO_Public::default_brand_template(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+            $bct = get_option('gm2_schema_template_breadcrumb', wp_json_encode(Gm2_SEO_Public::default_breadcrumb_template(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+            $tt = get_option('gm2_schema_template_taxonomy', wp_json_encode(Gm2_SEO_Public::default_taxonomy_template(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+            $at = get_option('gm2_schema_template_article', wp_json_encode(Gm2_SEO_Public::default_article_template(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+            $rt = get_option('gm2_schema_template_review', wp_json_encode(Gm2_SEO_Public::default_review_template(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+            echo '<h2>' . esc_html__( 'JSON-LD Templates', 'gm2-wordpress-suite' ) . '</h2>';
+            echo '<table class="form-table"><tbody>';
+            echo '<tr><th scope="row">' . esc_html__( 'Product Template', 'gm2-wordpress-suite' ) . '</th><td><textarea name="gm2_schema_template_product" rows="6" class="large-text code">' . esc_textarea($pt) . '</textarea></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Brand Template', 'gm2-wordpress-suite' ) . '</th><td><textarea name="gm2_schema_template_brand" rows="6" class="large-text code">' . esc_textarea($bt) . '</textarea></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Breadcrumb Template', 'gm2-wordpress-suite' ) . '</th><td><textarea name="gm2_schema_template_breadcrumb" rows="6" class="large-text code">' . esc_textarea($bct) . '</textarea></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Taxonomy ItemList Template', 'gm2-wordpress-suite' ) . '</th><td><textarea name="gm2_schema_template_taxonomy" rows="6" class="large-text code">' . esc_textarea($tt) . '</textarea></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Article Template', 'gm2-wordpress-suite' ) . '</th><td><textarea name="gm2_schema_template_article" rows="6" class="large-text code">' . esc_textarea($at) . '</textarea></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Review Template', 'gm2-wordpress-suite' ) . '</th><td><textarea name="gm2_schema_template_review" rows="6" class="large-text code">' . esc_textarea($rt) . '</textarea></td></tr>';
+            echo '</tbody></table>';
+
             submit_button( esc_html__( 'Save Settings', 'gm2-wordpress-suite' ) );
             echo '</form>';
         } elseif ($active === 'redirects') {
@@ -2319,6 +2337,14 @@ class Gm2_SEO_Admin {
 
         $review     = isset($_POST['gm2_schema_review']) ? '1' : '0';
         update_option('gm2_schema_review', $review);
+
+        $templates = ['product', 'brand', 'breadcrumb', 'taxonomy', 'article', 'review'];
+        foreach ($templates as $tpl) {
+            $field = 'gm2_schema_template_' . $tpl;
+            if (isset($_POST[$field])) {
+                update_option($field, wp_unslash($_POST[$field]));
+            }
+        }
 
         wp_redirect(admin_url('admin.php?page=gm2-seo&tab=schema&updated=1'));
         exit;
