@@ -4547,8 +4547,10 @@ class Gm2_SEO_Admin {
 
         $posts = isset($_POST['posts']) ? json_decode(wp_unslash($_POST['posts']), true) : null;
         if (!is_array($posts)) {
-            wp_send_json_error( __( 'invalid data', 'gm2-wordpress-suite' ) );
+            wp_send_json_error(__('invalid data', 'gm2-wordpress-suite'));
         }
+
+        $updated = [];
 
         foreach ($posts as $post_id => $fields) {
             $post_id = absint($post_id);
@@ -4576,9 +4578,16 @@ class Gm2_SEO_Admin {
                 update_post_meta($post_id, '_gm2_prev_description', get_post_meta($post_id, '_gm2_description', true));
                 update_post_meta($post_id, '_gm2_description', sanitize_textarea_field($fields['seo_description']));
             }
+
+            $updated[$post_id] = [
+                'title'       => get_post_field('post_title', $post_id),
+                'seo_title'   => get_post_meta($post_id, '_gm2_title', true),
+                'description' => get_post_meta($post_id, '_gm2_description', true),
+                'slug'        => get_post_field('post_name', $post_id),
+            ];
         }
 
-        wp_send_json_success();
+        wp_send_json_success(['updated' => $updated]);
     }
 
     public function ajax_bulk_ai_undo() {

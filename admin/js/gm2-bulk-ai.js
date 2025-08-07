@@ -304,69 +304,77 @@ jQuery(function($){
 
     $('#gm2-bulk-ai').on('click','.gm2-bulk-apply-all',function(e){
         e.preventDefault();
-        var posts={};
+        var queue=[];
         $('#gm2-bulk-list tr').each(function(){
             var id=$(this).attr('id');
             if(!id) return;id=id.replace('gm2-row-','');
             var fields={};
             $(this).find('.gm2-apply:checked').each(function(){
-                fields[$(this).data('field')]= $(this).data('value');
+                fields[$(this).data('field')]=$(this).data('value');
             });
-            if(Object.keys(fields).length){posts[id]=fields;}
+            if(Object.keys(fields).length){queue.push({id:id,fields:fields});}
         });
-        if($.isEmptyObject(posts)) return;
+        if(!queue.length) return;
         var $msg=$('#gm2-bulk-apply-msg');
-        var total = Object.keys(posts).length;
-        var processed = 0;
-        applied = 0;
+        var total=queue.length;
+        var processed=0;
+        applied=0;
         initBar(total);
-        var savingText = window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.saving : 'Saving %1$s / %2$s...';
-        $msg.text(savingText.replace('%1$s', processed).replace('%2$s', total));
-        $.each(posts,function(id){
-            showSpinner($('#gm2-row-'+id).find('.gm2-result'));
-        });
-        $.ajax({
-            url: gm2BulkAi.ajax_url,
-            method:'POST',
-            data:{action:'gm2_bulk_ai_apply_batch',posts:JSON.stringify(posts),_ajax_nonce:gm2BulkAi.apply_nonce},
-            dataType:'json'
-        }).done(function(resp){
-            if(resp&&resp.success){
-                $.each(posts,function(id){
-                    var row = $('#gm2-row-'+id);
-                    var cell = row.find('.gm2-result');
-                    hideSpinner(cell);
-                    cell.find('.gm2-undo-btn').remove();
-                    cell.append(' <button class="button gm2-undo-btn" data-id="'+id+'">'+(gm2BulkAi.i18n?gm2BulkAi.i18n.undo:'Undo')+'</button> <span> ✓</span>');
-                    row.removeClass('gm2-status-new gm2-status-analyzed')
-                        .addClass('gm2-status-applied gm2-applied');
-                    setTimeout(function(){
-                        row.removeClass('gm2-applied');
-                    },3000);
-                    processed++;
-                    applied++;
-                    updateBar(applied);
-                    $msg.text(savingText.replace('%1$s', processed).replace('%2$s', total));
-                });
-                var doneText = window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.done : 'Done (%1$s/%2$s)';
+        var savingText=window.gm2BulkAi&&gm2BulkAi.i18n?gm2BulkAi.i18n.saving:'Saving %1$s / %2$s...';
+
+        function updateProgress(){
+            $msg.text(savingText.replace('%1$s', processed).replace('%2$s', total));
+            updateBar(processed);
+        }
+
+        function processNext(){
+            if(!queue.length){
+                var doneText=window.gm2BulkAi&&gm2BulkAi.i18n?gm2BulkAi.i18n.done:'Done (%1$s/%2$s)';
                 $msg.text(doneText.replace('%1$s', processed).replace('%2$s', total));
-            }else{
-                $.each(posts,function(id){
-                    hideSpinner($('#gm2-row-'+id).find('.gm2-result'));
-                });
-                $msg.text((resp&&resp.data)?resp.data:(window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.error : 'Error'));
+                return;
             }
-        }).fail(function(jqXHR,textStatus){
-            var msg=(jqXHR && jqXHR.responseJSON && jqXHR.responseJSON.data)
-                ? jqXHR.responseJSON.data
-                : (jqXHR && jqXHR.responseText ? jqXHR.responseText : textStatus);
-            $.each(posts,function(id){
-                var cell = $('#gm2-row-'+id).find('.gm2-result');
-                hideSpinner(cell);
-                cell.text(msg || (window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.error : 'Error'));
+            var item=queue.shift();
+            var row=$('#gm2-row-'+item.id);
+            var $cell=row.find('.gm2-result');
+            showSpinner($cell);
+            $.ajax({
+                url:gm2BulkAi.ajax_url,
+                method:'POST',
+                data:{action:'gm2_bulk_ai_apply_batch',posts:JSON.stringify({[item.id]:item.fields}),_ajax_nonce:gm2BulkAi.apply_nonce},
+                dataType:'json'
+            }).done(function(resp){
+                hideSpinner($cell);
+                if(resp&&resp.success&&resp.data&&resp.data.updated&&resp.data.updated[item.id]){
+                    var data=resp.data.updated[item.id];
+                    row.find('td').eq(0).text(data.title);
+                    row.find('td').eq(1).text(data.seo_title);
+                    row.find('td').eq(2).text(data.description);
+                    row.find('td').eq(3).text(data.slug);
+                    $cell.find('.gm2-undo-btn').remove();
+                    $cell.append(' <button class="button gm2-undo-btn" data-id="'+item.id+'">'+(gm2BulkAi.i18n?gm2BulkAi.i18n.undo:'Undo')+'</button> <span> ✓</span>');
+                    row.removeClass('gm2-status-new gm2-status-analyzed').addClass('gm2-status-applied gm2-applied');
+                    setTimeout(function(){row.removeClass('gm2-applied');},3000);
+                }else{
+                    var msg=(resp&&resp.data)?(resp.data.message||resp.data):(window.gm2BulkAi&&gm2BulkAi.i18n?gm2BulkAi.i18n.error:'Error');
+                    $cell.text(msg);
+                }
+                processed++;
+                applied=processed;
+                updateProgress();
+                processNext();
+            }).fail(function(jqXHR,textStatus){
+                hideSpinner($cell);
+                var msg=(jqXHR&&jqXHR.responseJSON&&jqXHR.responseJSON.data)?jqXHR.responseJSON.data:(jqXHR&&jqXHR.responseText?jqXHR.responseText:textStatus);
+                $cell.text(msg||(window.gm2BulkAi&&gm2BulkAi.i18n?gm2BulkAi.i18n.error:'Error'));
+                processed++;
+                applied=processed;
+                updateProgress();
+                processNext();
             });
-            $msg.text(msg || (window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.error : 'Error'));
-        });
+        }
+
+        updateProgress();
+        processNext();
     });
 
     $('#gm2-bulk-ai').on('click','.gm2-bulk-reset-selected',function(e){
