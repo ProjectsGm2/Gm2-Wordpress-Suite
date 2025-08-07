@@ -2090,6 +2090,13 @@ class Gm2_SEO_Admin {
             'article'  => __( 'Article', 'gm2-wordpress-suite' ),
             'product'  => __( 'Product', 'gm2-wordpress-suite' ),
         ];
+        $custom = get_option('gm2_custom_schema', []);
+        if (is_array($custom)) {
+            foreach ($custom as $id => $tpl) {
+                $label = is_array($tpl) && isset($tpl['label']) ? $tpl['label'] : $id;
+                $opts[$id] = $label;
+            }
+        }
         foreach ($opts as $val => $label) {
             echo '<option value="' . esc_attr($val) . '"' . selected($schema_type, $val, false) . '>' . esc_html($label) . '</option>';
         }
@@ -5410,6 +5417,13 @@ class Gm2_SEO_Admin {
             'article'  => __( 'Article', 'gm2-wordpress-suite' ),
             'product'  => __( 'Product', 'gm2-wordpress-suite' ),
         ];
+        $custom = get_option('gm2_custom_schema', []);
+        if (is_array($custom)) {
+            foreach ($custom as $id => $tpl) {
+                $label = is_array($tpl) && isset($tpl['label']) ? $tpl['label'] : $id;
+                $opts[$id] = $label;
+            }
+        }
         foreach ($opts as $val => $label) {
             echo '<option value="' . esc_attr($val) . '"' . selected($schema_type, $val, false) . '>' . esc_html($label) . '</option>';
         }
