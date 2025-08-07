@@ -81,3 +81,40 @@ test('taxonomy select analyzed checks row checkbox and suggestions', () => {
   expect($('#gm2-term-cat-2 .gm2-select').prop('checked')).toBe(false);
   expect($('#gm2-term-cat-2 .gm2-apply').prop('checked')).toBe(false);
 });
+
+test('clearing taxonomy suggestions removes analyzed status', () => {
+  const dom = new JSDOM(`
+    <div id="gm2-bulk-ai-tax">
+      <button id="gm2-bulk-term-reset-ai">Reset AI Suggestion</button>
+      <p id="gm2-bulk-term-msg"></p>
+      <progress class="gm2-bulk-term-progress-bar" value="0" max="100"></progress>
+      <table id="gm2-bulk-term-list">
+        <tr id="gm2-term-cat-1" class="gm2-status-analyzed">
+          <td>
+            <input type="checkbox" class="gm2-select" value="cat:1">
+            <div class="gm2-result">Suggestion</div>
+          </td>
+        </tr>
+      </table>
+    </div>
+  `, { url: 'http://localhost' });
+  const $ = jquery(dom.window);
+  Object.assign(global, { window: dom.window, document: dom.window.document, jQuery: $, $ });
+
+  $('#gm2-bulk-ai-tax').on('click', '#gm2-bulk-term-reset-ai', function(e){
+    e.preventDefault();
+    $('#gm2-bulk-term-list .gm2-select:checked').each(function(){
+      const row = $(this).closest('tr');
+      row.find('.gm2-result').html('✓');
+      row.removeClass('gm2-status-analyzed').addClass('gm2-status-new');
+    });
+    $('#gm2-bulk-term-msg').text('Cleared AI suggestions for 1 terms');
+  });
+
+  $('#gm2-term-cat-1 .gm2-select').prop('checked', true);
+  $('#gm2-bulk-term-reset-ai').trigger('click');
+
+  expect($('#gm2-term-cat-1').hasClass('gm2-status-new')).toBe(true);
+  expect($('#gm2-term-cat-1 .gm2-result').text()).toBe('✓');
+  expect($('#gm2-bulk-term-msg').text()).toBe('Cleared AI suggestions for 1 terms');
+});
