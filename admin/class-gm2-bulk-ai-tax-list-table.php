@@ -78,18 +78,26 @@ class Gm2_Bulk_Ai_Tax_List_Table extends \WP_List_Table {
     }
 
     protected function column_ai($item) {
-        $stored = get_term_meta($item->term_id, '_gm2_ai_research', true);
+        $stored   = get_term_meta($item->term_id, '_gm2_ai_research', true);
+        $has_prev = (
+            get_term_meta($item->term_id, '_gm2_prev_title', true) !== '' ||
+            get_term_meta($item->term_id, '_gm2_prev_description', true) !== ''
+        );
         $result_html = '';
         if ($stored) {
             $data = json_decode($stored, true);
             if (json_last_error() === JSON_ERROR_NONE && is_array($data)) {
-                $result_html = $this->render_result($data, $item);
+                $result_html = $this->render_result($data, $item, $has_prev);
+            } elseif ($has_prev) {
+                $result_html = $this->render_result([], $item, true);
             }
+        } elseif ($has_prev) {
+            $result_html = $this->render_result([], $item, true);
         }
         return '<div class="gm2-result">' . $result_html . '</div>';
     }
 
-    private function render_result($data, $item) {
+    private function render_result($data, $item, $has_prev = false) {
         $html        = '';
         $suggestions = '';
 
@@ -100,11 +108,19 @@ class Gm2_Bulk_Ai_Tax_List_Table extends \WP_List_Table {
             $suggestions .= '<p><label><input type="checkbox" class="gm2-apply" data-field="seo_description" data-value="' . esc_attr($data['description']) . '"> ' . esc_html($data['description']) . '</label></p>';
         }
 
-        if ($suggestions !== '') {
-            $key  = $item->taxonomy . ':' . $item->term_id;
-            $html .= '<p><label><input type="checkbox" class="gm2-row-select-all"> ' . esc_html__( 'Select all', 'gm2-wordpress-suite' ) . '</label></p>';
-            $html .= $suggestions;
-            $html .= '<p><button class="button gm2-apply-btn" data-key="' . esc_attr($key) . '" aria-label="' . esc_attr__( 'Apply', 'gm2-wordpress-suite' ) . '">' . esc_html__( 'Apply', 'gm2-wordpress-suite' ) . '</button></p>';
+        if ($suggestions !== '' || $has_prev) {
+            $key = $item->taxonomy . ':' . $item->term_id;
+            if ($suggestions !== '') {
+                $html .= '<p><label><input type="checkbox" class="gm2-row-select-all"> ' . esc_html__( 'Select all', 'gm2-wordpress-suite' ) . '</label></p>';
+                $html .= $suggestions;
+            }
+            $html .= '<p><button class="button gm2-apply-btn" data-key="' . esc_attr($key) . '" aria-label="' . esc_attr__( 'Apply', 'gm2-wordpress-suite' ) . '">' . esc_html__( 'Apply', 'gm2-wordpress-suite' ) . '</button> ';
+            $html .= '<button class="button gm2-refresh-btn" data-key="' . esc_attr($key) . '" aria-label="' . esc_attr__( 'Refresh', 'gm2-wordpress-suite' ) . '">' . esc_html__( 'Refresh', 'gm2-wordpress-suite' ) . '</button> ';
+            $html .= '<button class="button gm2-clear-btn" data-key="' . esc_attr($key) . '" aria-label="' . esc_attr__( 'Clear', 'gm2-wordpress-suite' ) . '">' . esc_html__( 'Clear', 'gm2-wordpress-suite' ) . '</button>';
+            if ($has_prev) {
+                $html .= ' <button class="button gm2-undo-btn" data-key="' . esc_attr($key) . '" aria-label="' . esc_attr__( 'Undo', 'gm2-wordpress-suite' ) . '">' . esc_html__( 'Undo', 'gm2-wordpress-suite' ) . '</button>';
+            }
+            $html .= '</p>';
         }
 
         return $html;

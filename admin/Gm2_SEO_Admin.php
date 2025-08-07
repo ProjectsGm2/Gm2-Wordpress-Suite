@@ -65,6 +65,7 @@ class Gm2_SEO_Admin {
         add_action('wp_ajax_gm2_bulk_ai_undo', [$this, 'ajax_bulk_ai_undo']);
         add_action('wp_ajax_gm2_bulk_ai_tax_apply', [$this, 'ajax_bulk_ai_tax_apply']);
         add_action('wp_ajax_gm2_bulk_ai_tax_apply_batch', [$this, 'ajax_bulk_ai_tax_apply_batch']);
+        add_action('wp_ajax_gm2_bulk_ai_tax_undo', [$this, 'ajax_bulk_ai_tax_undo']);
         add_action('wp_ajax_gm2_ai_batch_schedule', [$this, 'ajax_ai_batch_schedule']);
         add_action('wp_ajax_gm2_ai_batch_cancel', [$this, 'ajax_ai_batch_cancel']);
         add_action('wp_ajax_gm2_ai_tax_batch_schedule', [$this, 'ajax_ai_tax_batch_schedule']);
@@ -4411,6 +4412,10 @@ class Gm2_SEO_Admin {
             );
         } elseif ($term_id) {
             update_term_meta($term_id, '_gm2_ai_research', wp_json_encode($data2));
+            $data2['undo'] = (
+                get_term_meta($term_id, '_gm2_prev_title', true) !== '' ||
+                get_term_meta($term_id, '_gm2_prev_description', true) !== ''
+            );
         }
 
         wp_send_json_success($data2);
@@ -4827,13 +4832,49 @@ class Gm2_SEO_Admin {
         }
 
         if (isset($_POST['seo_title'])) {
+            update_term_meta($term_id, '_gm2_prev_title', get_term_meta($term_id, '_gm2_title', true));
             update_term_meta($term_id, '_gm2_title', sanitize_text_field(wp_unslash($_POST['seo_title'])));
         }
         if (isset($_POST['seo_description'])) {
+            update_term_meta($term_id, '_gm2_prev_description', get_term_meta($term_id, '_gm2_description', true));
             update_term_meta($term_id, '_gm2_description', sanitize_textarea_field(wp_unslash($_POST['seo_description'])));
         }
 
-        wp_send_json_success();
+        $response = [
+            'seo_title'       => get_term_meta($term_id, '_gm2_title', true),
+            'seo_description' => get_term_meta($term_id, '_gm2_description', true),
+        ];
+
+        wp_send_json_success($response);
+    }
+
+    public function ajax_bulk_ai_tax_undo() {
+        check_ajax_referer('gm2_bulk_ai_apply');
+
+        $term_id  = isset($_POST['term_id']) ? absint($_POST['term_id']) : 0;
+        $taxonomy = isset($_POST['taxonomy']) ? sanitize_key($_POST['taxonomy']) : '';
+        if (!$term_id || !$taxonomy || !current_user_can('edit_term', $term_id)) {
+            wp_send_json_error( __( 'permission denied', 'gm2-wordpress-suite' ), 403 );
+        }
+
+        $prev = get_term_meta($term_id, '_gm2_prev_title', true);
+        if ($prev !== '') {
+            update_term_meta($term_id, '_gm2_title', $prev);
+            delete_term_meta($term_id, '_gm2_prev_title');
+        }
+
+        $prev = get_term_meta($term_id, '_gm2_prev_description', true);
+        if ($prev !== '') {
+            update_term_meta($term_id, '_gm2_description', $prev);
+            delete_term_meta($term_id, '_gm2_prev_description');
+        }
+
+        $response = [
+            'seo_title'       => get_term_meta($term_id, '_gm2_title', true),
+            'seo_description' => get_term_meta($term_id, '_gm2_description', true),
+        ];
+
+        wp_send_json_success($response);
     }
 
     public function ajax_bulk_ai_tax_apply_batch() {

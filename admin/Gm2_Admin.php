@@ -290,6 +290,9 @@ class Gm2_Admin {
                         'ajax_url'    => admin_url('admin-ajax.php'),
                         'i18n'        => [
                             'apply'      => __( 'Apply', 'gm2-wordpress-suite' ),
+                            'refresh'    => __( 'Refresh', 'gm2-wordpress-suite' ),
+                            'clear'      => __( 'Clear', 'gm2-wordpress-suite' ),
+                            'undo'       => __( 'Undo', 'gm2-wordpress-suite' ),
                             'error'      => __( 'Error', 'gm2-wordpress-suite' ),
                             'resetting'  => __( 'Resetting...', 'gm2-wordpress-suite' ),
                             'resetDone'  => __( 'Reset %s terms', 'gm2-wordpress-suite' ),

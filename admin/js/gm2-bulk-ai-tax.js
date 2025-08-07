@@ -8,6 +8,32 @@ jQuery(function($){
             $row.removeClass('gm2-status-new').addClass('gm2-status-analyzed');
         }
     });
+
+    function showSpinner($cell){
+        if(!$cell.find('.gm2-ai-spinner').length){
+            $('<span>',{class:'spinner is-active gm2-ai-spinner'}).appendTo($cell);
+        }else{
+            $cell.find('.gm2-ai-spinner').addClass('is-active');
+        }
+    }
+
+    function hideSpinner($cell){
+        $cell.find('.gm2-ai-spinner').remove();
+    }
+
+    function buildHtml(data,key,undo){
+        var selectLabel=gm2BulkAiTax.i18n?gm2BulkAiTax.i18n.selectAll:'Select all';
+        var html='<p><label><input type="checkbox" class="gm2-row-select-all"> '+selectLabel+'</label></p>';
+        if(data.seo_title){html+='<p><label><input type="checkbox" class="gm2-apply" data-field="seo_title" data-value="'+data.seo_title.replace(/"/g,'&quot;')+'"> '+data.seo_title+'</label></p>';}
+        if(data.description){html+='<p><label><input type="checkbox" class="gm2-apply" data-field="seo_description" data-value="'+data.description.replace(/"/g,'&quot;')+'"> '+data.description+'</label></p>';}
+        var applyText=gm2BulkAiTax.i18n?gm2BulkAiTax.i18n.apply:'Apply';
+        var refreshText=gm2BulkAiTax.i18n?gm2BulkAiTax.i18n.refresh:'Refresh';
+        var clearText=gm2BulkAiTax.i18n?gm2BulkAiTax.i18n.clear:'Clear';
+        var undoText=gm2BulkAiTax.i18n?gm2BulkAiTax.i18n.undo:'Undo';
+        html+='<p><button class="button gm2-apply-btn" data-key="'+key+'" aria-label="'+applyText+'">'+applyText+'</button> <button class="button gm2-refresh-btn" data-key="'+key+'" aria-label="'+refreshText+'">'+refreshText+'</button> <button class="button gm2-clear-btn" data-key="'+key+'" aria-label="'+clearText+'">'+clearText+'</button>'+(undo?' <button class="button gm2-undo-btn" data-key="'+key+'" aria-label="'+undoText+'">'+undoText+'</button>':'')+'</p>';
+        return html;
+    }
+
     $('#gm2-bulk-term-select-all').on('click',function(){
         var c=$(this).prop('checked');
         $('#gm2-bulk-term-list .gm2-select').prop('checked',c);
@@ -30,27 +56,33 @@ jQuery(function($){
             var tax=parts[0], id=parts[1];
             var row=$('#gm2-term-'+tax+'-'+id);
             var cell=row.find('.gm2-result').empty();
-            $('<span>',{class:'spinner is-active gm2-ai-spinner'}).appendTo(cell);
+            showSpinner(cell);
             $.ajax({
                 url: gm2BulkAiTax.ajax_url,
                 method:'POST',
                 data:{action:'gm2_ai_research',term_id:id,taxonomy:tax,_ajax_nonce:gm2BulkAiTax.nonce},
                 dataType:'json'
             }).done(function(resp){
-                cell.find('.gm2-ai-spinner').remove();
+                hideSpinner(cell);
                 if(resp&&resp.success&&resp.data){
-                    var html='<p><label><input type="checkbox" class="gm2-row-select-all"> '+gm2BulkAiTax.i18n.selectAll+'</label></p>';
-                    if(resp.data.seo_title){html+='<p><label><input type="checkbox" class="gm2-apply" data-field="seo_title" data-value="'+resp.data.seo_title.replace(/"/g,'&quot;')+'"> '+resp.data.seo_title+'</label></p>';}
-                    if(resp.data.description){html+='<p><label><input type="checkbox" class="gm2-apply" data-field="seo_description" data-value="'+resp.data.description.replace(/"/g,'&quot;')+'"> '+resp.data.description+'</label></p>';}
-                    html+='<p><button class="button gm2-apply-btn" data-key="'+key+'">'+gm2BulkAiTax.i18n.apply+'</button></p>';
-                    cell.html(html);
-                }else{cell.text(gm2BulkAiTax.i18n.error);}
-                row.removeClass('gm2-status-new').addClass('gm2-status-analyzed');
-            }).fail(function(){
-                cell.find('.gm2-ai-spinner').remove();
-                cell.text(gm2BulkAiTax.i18n.error);
+                    cell.html(buildHtml(resp.data,key,resp.data.undo));
+                    row.removeClass('gm2-status-new gm2-status-applied gm2-applied').addClass('gm2-status-analyzed');
+                    cell.find('.gm2-result-icon').remove();
+                    cell.append(' <span class="gm2-result-icon">✅</span>');
+                }else{
+                    var msg=(resp&&resp.data)?(resp.data.message||resp.data):(gm2BulkAiTax.i18n?gm2BulkAiTax.i18n.error:'Error');
+                    cell.text(msg);
+                    cell.find('.gm2-result-icon').remove();
+                    cell.append(' <span class="gm2-result-icon">❌</span>');
+                }
+            }).fail(function(jqXHR,textStatus){
+                hideSpinner(cell);
+                var msg=(jqXHR&&jqXHR.responseJSON&&jqXHR.responseJSON.data)?jqXHR.responseJSON.data:(jqXHR&&jqXHR.responseText?jqXHR.responseText:textStatus);
+                cell.text(msg||(gm2BulkAiTax.i18n?gm2BulkAiTax.i18n.error:'Error'));
+                cell.find('.gm2-result-icon').remove();
+                cell.append(' <span class="gm2-result-icon">❌</span>');
             }).always(function(){
-                var done = parseInt($('.gm2-bulk-term-progress-bar').first().val(),10)+1;
+                var done=parseInt($('.gm2-bulk-term-progress-bar').first().val(),10)+1;
                 $('.gm2-bulk-term-progress-bar').val(done);
                 next();
             });
@@ -102,26 +134,171 @@ jQuery(function($){
         var $btn=$(this);
         var key=$btn.data('key');
         var parts=key.split(':');
-        var row=$btn.closest('tr');
+        var row=$('#gm2-term-'+parts[0]+'-'+parts[1]);
         var data={action:'gm2_bulk_ai_tax_apply',term_id:parts[1],taxonomy:parts[0],_ajax_nonce:gm2BulkAiTax.apply_nonce};
-        var fields={};
         $btn.closest('.gm2-result').find('.gm2-apply:checked').each(function(){
-            fields[$(this).data('field')]=$(this).data('value');
+            data[$(this).data('field')]=$(this).data('value');
         });
-        $.extend(data,fields);
-        $btn.prop('disabled',true).html('<span class="spinner is-active gm2-ai-spinner"></span>');
-        $.post(gm2BulkAiTax.ajax_url,data).done(function(resp){
-            if(resp && resp.success){
-                if(fields.seo_title){row.find('.column-seo_title').text(fields.seo_title);}
-                if(fields.seo_description){row.find('.column-description').text(fields.seo_description);}
+        var $res=row.find('.gm2-result');
+        var $btnSpinner=$('<span>',{class:'spinner is-active gm2-btn-spinner'});
+        $btn.prop('disabled',true).after($btnSpinner);
+        showSpinner($res);
+        var request=$.post(gm2BulkAiTax.ajax_url,data);
+        request.done(function(resp){
+            if(resp&&resp.success){
+                row.find('.column-seo_title').text(resp.data.seo_title);
+                row.find('.column-description').text(resp.data.seo_description);
+                row.find('.gm2-result .gm2-undo-btn').remove();
+                $res.find('.gm2-result-icon').remove();
+                row.find('.gm2-result').append(' <button class="button gm2-undo-btn" data-key="'+key+'" aria-label="'+(gm2BulkAiTax.i18n?gm2BulkAiTax.i18n.undo:'Undo')+'">'+(gm2BulkAiTax.i18n?gm2BulkAiTax.i18n.undo:'Undo')+'</button> <span class="gm2-result-icon">✅</span>');
                 row.removeClass('gm2-status-new gm2-status-analyzed').addClass('gm2-status-applied gm2-applied');
                 setTimeout(function(){row.removeClass('gm2-applied');},3000);
-                $btn.replaceWith('<span class="gm2-result-icon">&#10003;</span>');
             }else{
-                $btn.replaceWith('<span class="gm2-result-icon">&#10007;</span>');
+                var msg=(resp&&resp.data)?(resp.data.message||resp.data):(gm2BulkAiTax.i18n?gm2BulkAiTax.i18n.error:'Error');
+                $res.text(msg);
+                $res.find('.gm2-result-icon').remove();
+                $res.append(' <span class="gm2-result-icon">❌</span>');
             }
-        }).fail(function(){
-            $btn.replaceWith('<span class="gm2-result-icon">&#10007;</span>');
+        });
+        request.fail(function(jqXHR,textStatus){
+            var msg=(jqXHR&&jqXHR.responseJSON&&jqXHR.responseJSON.data)?jqXHR.responseJSON.data:(jqXHR&&jqXHR.responseText?jqXHR.responseText:textStatus);
+            $res.text(msg || (gm2BulkAiTax.i18n?gm2BulkAiTax.i18n.error:'Error'));
+            $res.find('.gm2-result-icon').remove();
+            $res.append(' <span class="gm2-result-icon">❌</span>');
+        });
+        request.always(function(){
+            hideSpinner($res);
+            $btnSpinner.remove();
+            $btn.prop('disabled',false);
+        });
+    });
+
+    $('#gm2-bulk-term-list').on('click','.gm2-refresh-btn',function(e){
+        e.preventDefault();
+        var key=$(this).data('key');
+        var parts=key.split(':');
+        var tax=parts[0], id=parts[1];
+        var row=$('#gm2-term-'+tax+'-'+id);
+        var $res=row.find('.gm2-result').empty();
+        var $btn=$(this);
+        var $btnSpinner=$('<span>',{class:'spinner is-active gm2-btn-spinner'});
+        $btn.prop('disabled',true).after($btnSpinner);
+        showSpinner($res);
+        var request=$.ajax({
+            url: gm2BulkAiTax.ajax_url,
+            method:'POST',
+            data:{action:'gm2_ai_research',term_id:id,taxonomy:tax,refresh:1,_ajax_nonce:gm2BulkAiTax.nonce},
+            dataType:'json'
+        });
+        request.done(function(resp){
+            if(resp&&resp.success&&resp.data){
+                $res.html(buildHtml(resp.data,key,resp.data.undo));
+                row.removeClass('gm2-status-new gm2-status-applied gm2-applied').addClass('gm2-status-analyzed');
+                $res.find('.gm2-result-icon').remove();
+                $res.append(' <span class="gm2-result-icon">✅</span>');
+            }else{
+                var msg=(resp&&resp.data)?(resp.data.message||resp.data):(gm2BulkAiTax.i18n?gm2BulkAiTax.i18n.error:'Error');
+                $res.text(msg);
+                $res.find('.gm2-result-icon').remove();
+                $res.append(' <span class="gm2-result-icon">❌</span>');
+            }
+        });
+        request.fail(function(jqXHR,textStatus){
+            var msg=(jqXHR&&jqXHR.responseJSON&&jqXHR.responseJSON.data)?jqXHR.responseJSON.data:(jqXHR&&jqXHR.responseText?jqXHR.responseText:textStatus);
+            $res.text(msg || (gm2BulkAiTax.i18n?gm2BulkAiTax.i18n.error:'Error'));
+            $res.find('.gm2-result-icon').remove();
+            $res.append(' <span class="gm2-result-icon">❌</span>');
+        });
+        request.always(function(){
+            hideSpinner($res);
+            $btnSpinner.remove();
+            $btn.prop('disabled',false);
+        });
+    });
+
+    $('#gm2-bulk-term-list').on('click','.gm2-clear-btn',function(e){
+        e.preventDefault();
+        var key=$(this).data('key');
+        var parts=key.split(':');
+        var tax=parts[0], id=parts[1];
+        var row=$('#gm2-term-'+tax+'-'+id);
+        var $res=row.find('.gm2-result').empty();
+        var $btn=$(this);
+        var $btnSpinner=$('<span>',{class:'spinner is-active gm2-btn-spinner'});
+        $btn.prop('disabled',true).after($btnSpinner);
+        showSpinner($res);
+        var request=$.ajax({
+            url: gm2BulkAiTax.ajax_url,
+            method:'POST',
+            data:{action:'gm2_ai_research_clear',term_id:id,taxonomy:tax,_ajax_nonce:gm2BulkAiTax.nonce},
+            dataType:'json'
+        });
+        request.done(function(resp){
+            if(resp&&resp.success){
+                $res.empty();
+                $res.append(' <span class="gm2-result-icon">✅</span>');
+                row.removeClass('gm2-status-applied gm2-status-analyzed gm2-applied').addClass('gm2-status-new');
+            }else{
+                var msg=(resp&&resp.data)?(resp.data.message||resp.data):(gm2BulkAiTax.i18n?gm2BulkAiTax.i18n.error:'Error');
+                $res.text(msg);
+                $res.find('.gm2-result-icon').remove();
+                $res.append(' <span class="gm2-result-icon">❌</span>');
+            }
+        });
+        request.fail(function(jqXHR,textStatus){
+            var msg=(jqXHR&&jqXHR.responseJSON&&jqXHR.responseJSON.data)?jqXHR.responseJSON.data:(jqXHR&&jqXHR.responseText?jqXHR.responseText:textStatus);
+            $res.text(msg || (gm2BulkAiTax.i18n?gm2BulkAiTax.i18n.error:'Error'));
+            $res.find('.gm2-result-icon').remove();
+            $res.append(' <span class="gm2-result-icon">❌</span>');
+        });
+        request.always(function(){
+            hideSpinner($res);
+            $btnSpinner.remove();
+            $btn.prop('disabled',false);
+        });
+    });
+
+    $('#gm2-bulk-term-list').on('click','.gm2-undo-btn',function(e){
+        e.preventDefault();
+        var key=$(this).data('key');
+        var parts=key.split(':');
+        var tax=parts[0], id=parts[1];
+        var row=$('#gm2-term-'+tax+'-'+id);
+        var $res=row.find('.gm2-result');
+        var $btn=$(this);
+        var $btnSpinner=$('<span>',{class:'spinner is-active gm2-btn-spinner'});
+        $btn.prop('disabled',true).after($btnSpinner);
+        showSpinner($res);
+        var request=$.ajax({
+            url: gm2BulkAiTax.ajax_url,
+            method:'POST',
+            data:{action:'gm2_bulk_ai_tax_undo',term_id:id,taxonomy:tax,_ajax_nonce:gm2BulkAiTax.apply_nonce},
+            dataType:'json'
+        });
+        request.done(function(resp){
+            if(resp&&resp.success){
+                row.find('.column-seo_title').text(resp.data.seo_title);
+                row.find('.column-description').text(resp.data.seo_description);
+                $res.empty();
+                $res.append(' <span class="gm2-result-icon">✅</span>');
+                row.removeClass('gm2-status-applied gm2-status-analyzed gm2-applied').addClass('gm2-status-new');
+            }else{
+                var msg=(resp&&resp.data)?(resp.data.message||resp.data):(gm2BulkAiTax.i18n?gm2BulkAiTax.i18n.error:'Error');
+                $res.text(msg);
+                $res.find('.gm2-result-icon').remove();
+                $res.append(' <span class="gm2-result-icon">❌</span>');
+            }
+        });
+        request.fail(function(jqXHR,textStatus){
+            var msg=(jqXHR&&jqXHR.responseJSON&&jqXHR.responseJSON.data)?jqXHR.responseJSON.data:(jqXHR&&jqXHR.responseText?jqXHR.responseText:textStatus);
+            $res.text(msg || (gm2BulkAiTax.i18n?gm2BulkAiTax.i18n.error:'Error'));
+            $res.find('.gm2-result-icon').remove();
+            $res.append(' <span class="gm2-result-icon">❌</span>');
+        });
+        request.always(function(){
+            hideSpinner($res);
+            $btnSpinner.remove();
+            $btn.prop('disabled',false);
         });
     });
     $('#gm2-bulk-ai-tax').on('click','#gm2-bulk-term-select-analyzed',function(e){
