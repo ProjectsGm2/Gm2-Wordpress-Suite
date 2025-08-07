@@ -312,28 +312,44 @@ jQuery(function($){
         var id=$(this).data('id');
         var row=$('#gm2-row-'+id);
         var $res=row.find('.gm2-result');
+        var $btn=$(this);
+        var $btnSpinner=$('<span>',{class:'spinner is-active gm2-btn-spinner'});
+        $btn.prop('disabled',true).after($btnSpinner);
         showSpinner($res);
-        $.post(gm2BulkAi.ajax_url,{action:'gm2_bulk_ai_undo',post_id:id,_ajax_nonce:gm2BulkAi.apply_nonce})
-            .done(function(resp){
-                hideSpinner($res);
-                if(resp&&resp.success){
-                    row.find('td').eq(0).text(resp.data.title);
-                    row.find('td').eq(1).text(resp.data.seo_title);
-                    row.find('td').eq(2).text(resp.data.description);
-                    row.find('td').eq(3).text(resp.data.slug);
-                    $res.empty();
-                    row.removeClass('gm2-status-applied gm2-status-analyzed gm2-applied')
-                       .addClass('gm2-status-new');
-                }else{
-                    var msg=(resp&&resp.data)?(resp.data.message||resp.data):'Error';
-                    $res.text(msg);
-                }
-            })
-            .fail(function(jqXHR,textStatus){
-                hideSpinner($res);
-                var msg=(jqXHR&&jqXHR.responseJSON&&jqXHR.responseJSON.data)?jqXHR.responseJSON.data:(jqXHR&&jqXHR.responseText?jqXHR.responseText:textStatus);
-                $res.text(msg||'Error');
-            });
+        var request=$.ajax({
+            url:gm2BulkAi.ajax_url,
+            method:'POST',
+            data:{action:'gm2_bulk_ai_undo',post_id:id,_ajax_nonce:gm2BulkAi.apply_nonce},
+            dataType:'json'
+        });
+        request.done(function(resp){
+            if(resp&&resp.success){
+                row.find('td').eq(0).text(resp.data.title);
+                row.find('td').eq(1).text(resp.data.seo_title);
+                row.find('td').eq(2).text(resp.data.description);
+                row.find('td').eq(3).text(resp.data.slug);
+                $res.empty();
+                $res.append(' <span class="gm2-result-icon">✅</span>');
+                row.removeClass('gm2-status-applied gm2-status-analyzed gm2-applied')
+                   .addClass('gm2-status-new');
+            }else{
+                var msg=(resp&&resp.data)?(resp.data.message||resp.data):(window.gm2BulkAi&&gm2BulkAi.i18n?gm2BulkAi.i18n.error:'Error');
+                $res.text(msg);
+                $res.find('.gm2-result-icon').remove();
+                $res.append(' <span class="gm2-result-icon">❌</span>');
+            }
+        });
+        request.fail(function(jqXHR,textStatus){
+            var msg=(jqXHR&&jqXHR.responseJSON&&jqXHR.responseJSON.data)?jqXHR.responseJSON.data:(jqXHR&&jqXHR.responseText?jqXHR.responseText:textStatus);
+            $res.text(msg || (window.gm2BulkAi&&gm2BulkAi.i18n?gm2BulkAi.i18n.error:'Error'));
+            $res.find('.gm2-result-icon').remove();
+            $res.append(' <span class="gm2-result-icon">❌</span>');
+        });
+        request.always(function(){
+            hideSpinner($res);
+            $btnSpinner.remove();
+            $btn.prop('disabled',false);
+        });
     });
 
     $('#gm2-bulk-ai').on('click','.gm2-bulk-select-analyzed',function(e){
