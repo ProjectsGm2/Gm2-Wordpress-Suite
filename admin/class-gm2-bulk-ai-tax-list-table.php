@@ -86,7 +86,7 @@ class Gm2_Bulk_Ai_Tax_List_Table extends \WP_List_Table {
                 $result_html = $this->render_result($data, $item);
             }
         }
-        return $result_html;
+        return '<div class="gm2-result">' . $result_html . '</div>';
     }
 
     private function render_result($data, $item) {

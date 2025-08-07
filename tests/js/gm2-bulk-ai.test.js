@@ -2,17 +2,19 @@ const jquery = require('jquery');
 const { JSDOM } = require('jsdom');
 
 test('row select all toggles suggestion checkboxes', () => {
-  const dom = new JSDOM(`
-    <table id="gm2-bulk-list">
-      <tr id="gm2-row-1">
-        <td>
-          <p><label><input type="checkbox" class="gm2-row-select-all"> Select all</label></p>
-          <p><label><input type="checkbox" class="gm2-apply"> First</label></p>
-          <p><label><input type="checkbox" class="gm2-apply"> Second</label></p>
-        </td>
-      </tr>
-    </table>
-  `, { url: 'http://localhost' });
+    const dom = new JSDOM(`
+      <table id="gm2-bulk-list">
+        <tr id="gm2-row-1">
+          <td>
+            <div class="gm2-result">
+              <p><label><input type="checkbox" class="gm2-row-select-all"> Select all</label></p>
+              <p><label><input type="checkbox" class="gm2-apply"> First</label></p>
+              <p><label><input type="checkbox" class="gm2-apply"> Second</label></p>
+            </div>
+          </td>
+        </tr>
+      </table>
+    `, { url: 'http://localhost' });
   const $ = jquery(dom.window);
   Object.assign(global, { window: dom.window, document: dom.window.document, jQuery: $, $ });
 
@@ -32,18 +34,20 @@ test('row select all toggles suggestion checkboxes', () => {
 });
 
 test('rows with suggestions get analyzed status on load', () => {
-  const dom = new JSDOM(`
-    <table id="gm2-bulk-list">
-      <tr id="gm2-row-1">
-        <td class="gm2-result">
-          <p><label><input type="checkbox" class="gm2-apply"> Suggestion</label></p>
-        </td>
-      </tr>
-      <tr id="gm2-row-2">
-        <td class="gm2-result"></td>
-      </tr>
-    </table>
-  `, { url: 'http://localhost' });
+    const dom = new JSDOM(`
+      <table id="gm2-bulk-list">
+        <tr id="gm2-row-1">
+          <td>
+            <div class="gm2-result">
+              <p><label><input type="checkbox" class="gm2-apply"> Suggestion</label></p>
+            </div>
+          </td>
+        </tr>
+        <tr id="gm2-row-2">
+          <td><div class="gm2-result"></div></td>
+        </tr>
+      </table>
+    `, { url: 'http://localhost' });
   const $ = jquery(dom.window);
   Object.assign(global, { window: dom.window, document: dom.window.document, jQuery: $, $ });
 
@@ -61,27 +65,31 @@ test('rows with suggestions get analyzed status on load', () => {
 });
 
 test('select analyzed checks row checkbox and suggestions', () => {
-  const dom = new JSDOM(`
-    <div id="gm2-bulk-ai">
-      <button class="gm2-bulk-select-analyzed">Select analyzed</button>
-      <table id="gm2-bulk-list">
-        <tr id="gm2-row-1" class="gm2-status-analyzed">
-          <td>
-            <input type="checkbox" class="gm2-select">
-            <p><label><input type="checkbox" class="gm2-row-select-all"> Select all</label></p>
-            <p><label><input type="checkbox" class="gm2-apply"> Suggestion</label></p>
-          </td>
-        </tr>
-        <tr id="gm2-row-2" class="gm2-status-new">
-          <td>
-            <input type="checkbox" class="gm2-select">
-            <p><label><input type="checkbox" class="gm2-row-select-all"> Select all</label></p>
-            <p><label><input type="checkbox" class="gm2-apply"> Suggestion</label></p>
-          </td>
-        </tr>
-      </table>
-    </div>
-  `, { url: 'http://localhost' });
+    const dom = new JSDOM(`
+      <div id="gm2-bulk-ai">
+        <button class="gm2-bulk-select-analyzed">Select analyzed</button>
+        <table id="gm2-bulk-list">
+          <tr id="gm2-row-1" class="gm2-status-analyzed">
+            <td>
+              <input type="checkbox" class="gm2-select">
+              <div class="gm2-result">
+                <p><label><input type="checkbox" class="gm2-row-select-all"> Select all</label></p>
+                <p><label><input type="checkbox" class="gm2-apply"> Suggestion</label></p>
+              </div>
+            </td>
+          </tr>
+          <tr id="gm2-row-2" class="gm2-status-new">
+            <td>
+              <input type="checkbox" class="gm2-select">
+              <div class="gm2-result">
+                <p><label><input type="checkbox" class="gm2-row-select-all"> Select all</label></p>
+                <p><label><input type="checkbox" class="gm2-apply"> Suggestion</label></p>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </div>
+    `, { url: 'http://localhost' });
   const $ = jquery(dom.window);
   Object.assign(global, { window: dom.window, document: dom.window.document, jQuery: $, $ });
 
