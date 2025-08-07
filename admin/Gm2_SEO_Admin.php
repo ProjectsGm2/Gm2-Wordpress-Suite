@@ -1379,6 +1379,8 @@ class Gm2_SEO_Admin {
 
         // Row 4 (top action buttons).
         echo '<p class="gm2-bulk-actions">' . $buttons . '</p>';
+        echo '<p><progress id="gm2-bulk-progress-bar-top" class="gm2-bulk-progress-bar" value="0" max="100" style="width:100%;display:none" role="progressbar" aria-live="polite"></progress></p>';
+        echo '<p id="gm2-bulk-progress-top" class="gm2-bulk-progress"></p>';
 
         echo '<form method="get">';
         echo '<input type="hidden" name="page" value="gm2-bulk-ai-review" />';
@@ -1387,7 +1389,8 @@ class Gm2_SEO_Admin {
         echo '</form>';
         // Bottom action buttons.
         echo '<p class="gm2-bulk-actions">' . $buttons . ' <span id="gm2-bulk-apply-msg"></span></p>';
-        echo '<p><progress id="gm2-bulk-progress-bar" value="0" max="100" style="width:100%;display:none" role="progressbar" aria-live="polite"></progress></p>';
+        echo '<p><progress id="gm2-bulk-progress-bar" class="gm2-bulk-progress-bar" value="0" max="100" style="width:100%;display:none" role="progressbar" aria-live="polite"></progress></p>';
+        echo '<p id="gm2-bulk-progress" class="gm2-bulk-progress"></p>';
         echo '</div>';
     }
 
