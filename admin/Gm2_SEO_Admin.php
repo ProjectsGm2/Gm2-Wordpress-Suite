@@ -4539,7 +4539,14 @@ class Gm2_SEO_Admin {
             update_post_meta($post_id, '_gm2_description', sanitize_textarea_field(wp_unslash($_POST['seo_description'])));
         }
 
-        wp_send_json_success();
+        $response = [
+            'title'       => get_post_field('post_title', $post_id),
+            'seo_title'   => get_post_meta($post_id, '_gm2_title', true),
+            'description' => get_post_meta($post_id, '_gm2_description', true),
+            'slug'        => get_post_field('post_name', $post_id),
+        ];
+
+        wp_send_json_success($response);
     }
 
     public function ajax_bulk_ai_apply_batch() {
