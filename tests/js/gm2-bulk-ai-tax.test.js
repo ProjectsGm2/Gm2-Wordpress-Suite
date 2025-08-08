@@ -144,11 +144,11 @@ test('taxonomy select filtered toggles between select and unselect all', () => {
 
   $('#gm2-bulk-term-list').on('change','.gm2-select',function(){
     if(!selectedKeys.length) return;
-    const key=$(this).val();
+    const key=String($(this).val());
     if($(this).is(':checked')){
       if($.inArray(key, selectedKeys) === -1){ selectedKeys.push(key); }
     } else {
-      selectedKeys=$.grep(selectedKeys,function(v){ return v!=key; });
+      selectedKeys=$.grep(selectedKeys,function(v){ return v!==key; });
     }
     window.sessionStorage.setItem(storageKeys, JSON.stringify(selectedKeys));
   });
@@ -187,11 +187,18 @@ test('taxonomy select filtered toggles between select and unselect all', () => {
     $.post(gm2BulkAiTax.ajax_url,data).done(function(resp){
       $btn.prop('disabled',false);
       if(resp&&resp.success){
-        selectedKeys=resp.data.ids||[];
-        $('#gm2-bulk-term-list .gm2-select').prop('checked',true);
-        $btn.data('selected',true).text(gm2BulkAiTax.i18n.unselectAllTerms);
-        window.sessionStorage.setItem(storageKeys, JSON.stringify(selectedKeys));
-        window.sessionStorage.setItem(storageFlag, '1');
+        selectedKeys=(resp.data.ids||[]).map(String);
+        $('#gm2-bulk-term-list .gm2-select').each(function(){
+          $(this).prop('checked',$.inArray($(this).val(),selectedKeys)!==-1);
+        });
+        if(selectedKeys.length){
+          $btn.data('selected',true).text(gm2BulkAiTax.i18n.unselectAllTerms);
+          window.sessionStorage.setItem(storageKeys, JSON.stringify(selectedKeys));
+          window.sessionStorage.setItem(storageFlag, '1');
+        } else {
+          $btn.data('selected',false).text(gm2BulkAiTax.i18n.selectAllTerms);
+          clearStored();
+        }
       }
     }).fail(function(){ $btn.prop('disabled',false); });
   });
@@ -210,10 +217,13 @@ test('taxonomy select filtered toggles between select and unselect all', () => {
   expect($btn.text()).toBe('Select All');
 });
 
-test('taxonomy selection persists after reload', () => {
+test('taxonomy selections persist across pagination and bulk actions', () => {
   const dom = new JSDOM(`
     <div id="gm2-bulk-ai-tax">
       <button id="gm2-bulk-term-select-filtered">Select All</button>
+      <button id="gm2-bulk-term-reset-selected">Reset Selected</button>
+      <p id="gm2-bulk-term-msg"></p>
+      <progress class="gm2-bulk-term-progress-bar" value="0" max="100"></progress>
       <table id="gm2-bulk-term-list">
         <tr id="gm2-term-cat-1"><td><input type="checkbox" class="gm2-select" value="cat:1"></td></tr>
         <tr id="gm2-term-cat-2"><td><input type="checkbox" class="gm2-select" value="cat:2"></td></tr>
@@ -225,7 +235,8 @@ test('taxonomy selection persists after reload', () => {
   global.gm2BulkAiTax = {
     ajax_url: '/ajax',
     fetch_nonce: 'nonce',
-    i18n: { selectAllTerms: 'Select All', unselectAllTerms: 'Un-Select All' }
+    reset_nonce: 'nonce',
+    i18n: { selectAllTerms: 'Select All', unselectAllTerms: 'Un-Select All', resetting:'Resetting', resetDone:'Reset %s' }
   };
 
   const storageKeys='gm2BulkAiTaxSelectedKeys';
@@ -235,11 +246,11 @@ test('taxonomy selection persists after reload', () => {
 
   $('#gm2-bulk-term-list').on('change','.gm2-select',function(){
     if(!selectedKeys.length) return;
-    const key=$(this).val();
+    const key=String($(this).val());
     if($(this).is(':checked')){
       if($.inArray(key,selectedKeys)===-1){selectedKeys.push(key);}
     }else{
-      selectedKeys=$.grep(selectedKeys,function(v){return v!=key;});
+      selectedKeys=$.grep(selectedKeys,function(v){return v!==key;});
     }
     window.sessionStorage.setItem(storageKeys, JSON.stringify(selectedKeys));
   });
@@ -250,7 +261,7 @@ test('taxonomy selection persists after reload', () => {
   }
 
   $.post = jest.fn(() => ({
-    done(cb){ cb({ success:true, data:{ ids:['cat:1','cat:2'] } }); return this; },
+    done(cb){ cb({ success:true, data:{ ids:['cat:1','cat:2','cat:3'] } }); return this; },
     fail(){ return this; }
   }));
 
@@ -278,38 +289,87 @@ test('taxonomy selection persists after reload', () => {
     $.post(gm2BulkAiTax.ajax_url,data).done(function(resp){
       $btn.prop('disabled',false);
       if(resp&&resp.success){
-        selectedKeys=resp.data.ids||[];
-        $('#gm2-bulk-term-list .gm2-select').prop('checked',true);
-        $btn.data('selected',true).text(gm2BulkAiTax.i18n.unselectAllTerms);
-        window.sessionStorage.setItem(storageKeys, JSON.stringify(selectedKeys));
-        window.sessionStorage.setItem(storageFlag, '1');
+        selectedKeys=(resp.data.ids||[]).map(String);
+        $('#gm2-bulk-term-list .gm2-select').each(function(){
+          $(this).prop('checked',$.inArray($(this).val(),selectedKeys)!==-1);
+        });
+        if(selectedKeys.length){
+          $btn.data('selected',true).text(gm2BulkAiTax.i18n.unselectAllTerms);
+          window.sessionStorage.setItem(storageKeys, JSON.stringify(selectedKeys));
+          window.sessionStorage.setItem(storageFlag, '1');
+        }else{
+          $btn.data('selected',false).text(gm2BulkAiTax.i18n.selectAllTerms);
+          clearStored();
+        }
       }
     }).fail(function(){ $btn.prop('disabled',false); });
   });
 
-  $('#gm2-bulk-term-select-filtered').trigger('click');
-
-  dom.window.document.body.innerHTML = `
-    <div id="gm2-bulk-ai-tax">
-      <button id="gm2-bulk-term-select-filtered">Select All</button>
-      <table id="gm2-bulk-term-list">
-        <tr id="gm2-term-cat-1"><td><input type="checkbox" class="gm2-select" value="cat:1"></td></tr>
-        <tr id="gm2-term-cat-2"><td><input type="checkbox" class="gm2-select" value="cat:2"></td></tr>
-      </table>
-    </div>
-  `;
-  selectedKeys=[];
-
-  const stored=window.sessionStorage.getItem(storageFlag);
-  if(stored==='1'){
-    selectedKeys=JSON.parse(window.sessionStorage.getItem(storageKeys) || '[]');
-    $('#gm2-bulk-term-list .gm2-select').prop('checked',true);
-    $('#gm2-bulk-term-select-filtered').data('selected',true).text(gm2BulkAiTax.i18n.unselectAllTerms);
+  function getSelectedKeys(){
+    if(selectedKeys.length){ return selectedKeys.slice(); }
+    const ids=[]; $('#gm2-bulk-term-list .gm2-select:checked').each(function(){ ids.push(String($(this).val())); });
+    return ids;
   }
 
-  expect(selectedKeys).toEqual(['cat:1','cat:2']);
-  expect($('#gm2-bulk-term-list .gm2-select:checked').length).toBe(2);
-  expect($('#gm2-bulk-term-select-filtered').text()).toBe('Un-Select All');
+  $.ajax = jest.fn(() => ({
+    done(cb){ cb({ success:true, data:{ reset:selectedKeys.length } }); return this; },
+    fail(){ return this; },
+    always(cb){ cb(); return this; }
+  }));
+
+  $('#gm2-bulk-ai-tax').on('click','#gm2-bulk-term-reset-selected',function(e){
+    e.preventDefault();
+    var ids=getSelectedKeys();
+    if(!ids.length) return;
+    var $msg=$('#gm2-bulk-term-msg');
+    var total=ids.length, processed=0;
+    $('.gm2-bulk-term-progress-bar').attr('max',total).val(0).show();
+    $msg.text(gm2BulkAiTax.i18n.resetting);
+    function updateProgress(){
+      $('.gm2-bulk-term-progress-bar').val(processed);
+    }
+    updateProgress();
+    $.ajax({
+      url: gm2BulkAiTax.ajax_url,
+      method:'POST',
+      data:{action:'gm2_bulk_ai_tax_reset',ids:JSON.stringify(ids),_ajax_nonce:gm2BulkAiTax.reset_nonce},
+      dataType:'json'
+    }).done(function(resp){
+      $msg.text(gm2BulkAiTax.i18n.resetDone.replace('%s', resp.data.reset));
+    }).always(function(){
+      $('.gm2-bulk-term-progress-bar').hide();
+    });
+  });
+
+  // Select all
+  $('#gm2-bulk-term-select-filtered').trigger('click');
+
+  // Simulate pagination: new page rows
+  $('#gm2-bulk-term-list').html(`
+    <tr id="gm2-term-cat-2"><td><input type="checkbox" class="gm2-select" value="cat:2"></td></tr>
+    <tr id="gm2-term-cat-3"><td><input type="checkbox" class="gm2-select" value="cat:3"></td></tr>
+    <tr id="gm2-term-cat-4"><td><input type="checkbox" class="gm2-select" value="cat:4"></td></tr>
+  `);
+
+  // Reapply selections on new page
+  selectedKeys=(JSON.parse(window.sessionStorage.getItem(storageKeys)||'[]')||[]).map(String);
+  if(selectedKeys.length){
+    $('#gm2-bulk-term-list .gm2-select').each(function(){
+      $(this).prop('checked',$.inArray($(this).val(),selectedKeys)!==-1);
+    });
+    $('#gm2-bulk-term-select-filtered').data('selected',true).text(gm2BulkAiTax.i18n.unselectAllTerms);
+  }else{
+    $('#gm2-bulk-term-select-filtered').data('selected',false).text(gm2BulkAiTax.i18n.selectAllTerms);
+  }
+
+  expect($('#gm2-term-cat-2 .gm2-select').prop('checked')).toBe(true);
+  expect($('#gm2-term-cat-3 .gm2-select').prop('checked')).toBe(true);
+  expect($('#gm2-term-cat-4 .gm2-select').prop('checked')).toBe(false);
+
+  $('#gm2-bulk-term-reset-selected').trigger('click');
+  expect($.ajax).toHaveBeenCalledWith(expect.objectContaining({
+    data: expect.objectContaining({ ids: JSON.stringify(['cat:1','cat:2','cat:3']) })
+  }));
 });
 
 test('taxonomy reset selected uses stored keys', () => {
@@ -331,7 +391,7 @@ test('taxonomy reset selected uses stored keys', () => {
   let selectedKeys=['cat:1','tag:3'];
   function getSelectedKeys(){
     if(selectedKeys.length){ return selectedKeys.slice(); }
-    const ids=[]; $('#gm2-bulk-term-list .gm2-select:checked').each(function(){ ids.push($(this).val()); });
+    const ids=[]; $('#gm2-bulk-term-list .gm2-select:checked').each(function(){ ids.push(String($(this).val())); });
     return ids;
   }
 
