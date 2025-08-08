@@ -10,10 +10,14 @@ jQuery(function($){
     var storedSelected=sessionStorage.getItem(storageFlag);
     if(storedSelected==='1'){
         try{
-            selectedKeys=JSON.parse(sessionStorage.getItem(storageKeys)||'[]');
+            selectedKeys=(JSON.parse(sessionStorage.getItem(storageKeys)||'[]')||[]).map(String);
             if(selectedKeys.length){
-                $('#gm2-bulk-term-list .gm2-select').prop('checked',true);
+                $('#gm2-bulk-term-list .gm2-select').each(function(){
+                    $(this).prop('checked',$.inArray($(this).val(),selectedKeys)!==-1);
+                });
                 $('#gm2-bulk-term-select-filtered').data('selected',true).text(gm2BulkAiTax.i18n.unselectAllTerms||'Un-Select All');
+            }else{
+                $('#gm2-bulk-term-select-filtered').data('selected',false).text(gm2BulkAiTax.i18n.selectAllTerms||'Select All');
             }
         }catch(e){selectedKeys=[];}
     }
@@ -61,11 +65,11 @@ jQuery(function($){
     });
     $('#gm2-bulk-term-list').on('change','.gm2-select',function(){
         if(!selectedKeys.length) return;
-        var key=$(this).val();
+        var key=String($(this).val());
         if($(this).is(':checked')){
             if($.inArray(key,selectedKeys)===-1){selectedKeys.push(key);}
         }else{
-            selectedKeys=$.grep(selectedKeys,function(v){return v!=key;});
+            selectedKeys=$.grep(selectedKeys,function(v){return v!==key;});
         }
         sessionStorage.setItem(storageKeys,JSON.stringify(selectedKeys));
     });
@@ -75,7 +79,7 @@ jQuery(function($){
             return selectedKeys.slice();
         }
         var ids=[];
-        $('#gm2-bulk-term-list .gm2-select:checked').each(function(){ids.push($(this).val());});
+        $('#gm2-bulk-term-list .gm2-select:checked').each(function(){ids.push(String($(this).val()));});
         return ids;
     }
 
@@ -103,11 +107,18 @@ jQuery(function($){
         $.post(gm2BulkAiTax.ajax_url,data).done(function(resp){
             $btn.prop('disabled',false);
             if(resp&&resp.success){
-                selectedKeys=resp.data.ids||[];
-                $('#gm2-bulk-term-list .gm2-select').prop('checked',true);
-                $btn.data('selected',true).text(gm2BulkAiTax.i18n.unselectAllTerms||'Un-Select All');
-                sessionStorage.setItem(storageKeys,JSON.stringify(selectedKeys));
-                sessionStorage.setItem(storageFlag,'1');
+                selectedKeys=(resp.data.ids||[]).map(String);
+                $('#gm2-bulk-term-list .gm2-select').each(function(){
+                    $(this).prop('checked',$.inArray($(this).val(),selectedKeys)!==-1);
+                });
+                if(selectedKeys.length){
+                    $btn.data('selected',true).text(gm2BulkAiTax.i18n.unselectAllTerms||'Un-Select All');
+                    sessionStorage.setItem(storageKeys,JSON.stringify(selectedKeys));
+                    sessionStorage.setItem(storageFlag,'1');
+                }else{
+                    $btn.data('selected',false).text(gm2BulkAiTax.i18n.selectAllTerms||'Select All');
+                    clearStoredSelection();
+                }
             }
         }).fail(function(){
             $btn.prop('disabled',false);
