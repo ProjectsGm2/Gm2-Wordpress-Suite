@@ -584,8 +584,11 @@ jQuery(function($){
                     updateProgress();
                 });
                 var resetCount = resp.data && resp.data.reset ? resp.data.reset : processed;
-                var doneText = window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.resetDone : 'Reset %s posts';
-                $msg.text(doneText.replace('%s', resetCount));
+                var clearedCount = resp.data && resp.data.cleared ? resp.data.cleared : 0;
+                var doneText = (window.gm2BulkAi && gm2BulkAi.i18n && gm2BulkAi.i18n.resetClearedDone)
+                    ? gm2BulkAi.i18n.resetClearedDone
+                    : 'Reset %1$s posts; cleared AI suggestions for %2$s posts';
+                $msg.text(doneText.replace('%1$s', resetCount).replace('%2$s', clearedCount));
                 updateBar(resetCount);
             }else{
                 $msg.text((resp&&resp.data)?resp.data:(window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.error : 'Error'));
