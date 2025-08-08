@@ -5,6 +5,6 @@
     "jsdom": "^24.0.0"
   },
   "scripts": {
-    "test:js": "node tests/js/gm2-bulk-review.test.js"
+    "test:js": "node tests/js/gm2-bulk-review.test.js && node tests/js/gm2-bulk-taxonomies.test.js"
   }
 }
