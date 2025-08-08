@@ -2,6 +2,7 @@ jQuery(function($){
     var totalPosts = 0;
     var applied = 0;
     var stopProcessing = false;
+    var selectedIds = [];
 
     // Mark all rows as new on initial load
     var $rows = $('#gm2-bulk-list tr[id^="gm2-row-"]').addClass('gm2-status-new');
@@ -62,6 +63,15 @@ jQuery(function($){
         return html;
     }
 
+    function getSelectedIds(){
+        if(selectedIds.length){
+            return selectedIds.slice();
+        }
+        var ids=[];
+        $('#gm2-bulk-list .gm2-select:checked').each(function(){ids.push($(this).val());});
+        return ids;
+    }
+
     $('#gm2-bulk-ai').on('click','#gm2-bulk-select-all',function(){
         var c=$(this).prop('checked');
         $('#gm2-bulk-list .gm2-select').prop('checked',c);
@@ -70,11 +80,53 @@ jQuery(function($){
         var checked=$(this).prop('checked');
         $(this).closest('td').find('.gm2-apply').prop('checked',checked);
     });
+
+    $('#gm2-bulk-list').on('change','.gm2-select',function(){
+        if(!selectedIds.length) return;
+        var id=$(this).val();
+        if($(this).is(':checked')){
+            if($.inArray(id, selectedIds) === -1){selectedIds.push(id);}
+        }else{
+            selectedIds=$.grep(selectedIds,function(v){return v!=id;});
+        }
+    });
+
+    $('#gm2-bulk-ai').on('click','.gm2-bulk-select-filtered',function(e){
+        e.preventDefault();
+        var $btn=$(this);
+        if($btn.data('selected')){
+            selectedIds=[];
+            $('#gm2-bulk-list .gm2-select').prop('checked',false);
+            $btn.data('selected',false).text(gm2BulkAi.i18n.selectAllPosts||'Select All');
+            return;
+        }
+        var data={
+            action:'gm2_bulk_ai_fetch_ids',
+            status:$('select[name="status"]').val(),
+            post_type:$('select[name="gm2_post_type"]').val(),
+            seo_status:$('select[name="seo_status"]').val(),
+            terms:$('select[name="term[]"]').val()||[],
+            missing_title:$('input[name="gm2_missing_title"]').is(':checked')?1:0,
+            missing_desc:$('input[name="gm2_missing_description"]').is(':checked')?1:0,
+            search:$('input[name="s"]').val()||'',
+            _ajax_nonce:gm2BulkAi.fetch_nonce
+        };
+        $btn.prop('disabled',true);
+        $.post(gm2BulkAi.ajax_url,data).done(function(resp){
+            $btn.prop('disabled',false);
+            if(resp&&resp.success){
+                selectedIds=resp.data.ids||[];
+                $('#gm2-bulk-list .gm2-select').prop('checked',true);
+                $btn.data('selected',true).text(gm2BulkAi.i18n.unselectAllPosts||'Un-Select All');
+            }
+        }).fail(function(){
+            $btn.prop('disabled',false);
+        });
+    });
     $('#gm2-bulk-ai').on('click','.gm2-bulk-analyze',function(e){
         e.preventDefault();
         stopProcessing = false;
-        var ids=[];
-        $('#gm2-bulk-list .gm2-select:checked').each(function(){ids.push($(this).val());});
+        var ids=getSelectedIds();
         if(!ids.length) return;
 
         totalPosts = ids.length;
@@ -363,9 +415,11 @@ jQuery(function($){
     $('#gm2-bulk-ai').on('click','.gm2-bulk-apply-all',function(e){
         e.preventDefault();
         var queue=[];
+        var sel=selectedIds.slice();
         $('#gm2-bulk-list tr').each(function(){
             var id=$(this).attr('id');
             if(!id) return;id=id.replace('gm2-row-','');
+            if(sel.length && $.inArray(id, sel) === -1){return;}
             var fields={};
             $(this).find('.gm2-apply:checked').each(function(){
                 fields[$(this).data('field')]=$(this).data('value');
@@ -437,8 +491,7 @@ jQuery(function($){
 
     $('#gm2-bulk-ai').on('click','.gm2-bulk-reset-selected',function(e){
         e.preventDefault();
-        var ids=[];
-        $('#gm2-bulk-list .gm2-select:checked').each(function(){ids.push($(this).val());});
+        var ids=getSelectedIds();
         if(!ids.length) return;
         var $msg=$('#gm2-bulk-apply-msg');
         var total = ids.length, processed = 0;
@@ -484,8 +537,7 @@ jQuery(function($){
 
     $('#gm2-bulk-ai').on('click','.gm2-bulk-reset-ai',function(e){
         e.preventDefault();
-        var ids=[];
-        $('#gm2-bulk-list .gm2-select:checked').each(function(){ids.push($(this).val());});
+        var ids=getSelectedIds();
         if(!ids.length) return;
         var $msg=$('#gm2-bulk-apply-msg');
         var total = ids.length, cleared = 0;
@@ -558,8 +610,7 @@ jQuery(function($){
 
     $('#gm2-bulk-ai').on('click','.gm2-bulk-schedule',function(e){
         e.preventDefault();
-        var ids=[];
-        $('#gm2-bulk-list .gm2-select:checked').each(function(){ids.push($(this).val());});
+        var ids=getSelectedIds();
         if(!ids.length) return;
         var $btn=$(this);
         var $msg=$('#gm2-bulk-apply-msg');
