@@ -4833,8 +4833,9 @@ class Gm2_SEO_Admin {
         }
 
         $all   = isset($_POST['all']) && $_POST['all'] === '1';
-        $ids   = [];
-        $count = 0;
+        $ids      = [];
+        $count    = 0;
+        $cleared  = 0;
 
         if ($all) {
             $status        = sanitize_key($_POST['status'] ?? 'publish');
@@ -4936,10 +4937,13 @@ class Gm2_SEO_Admin {
             delete_post_meta($post_id, '_gm2_prev_description');
             delete_post_meta($post_id, '_gm2_prev_slug');
             delete_post_meta($post_id, '_gm2_prev_post_title');
+            if (delete_post_meta($post_id, '_gm2_ai_research')) {
+                $cleared++;
+            }
             $count++;
         }
 
-        wp_send_json_success( [ 'reset' => $count ] );
+        wp_send_json_success( [ 'reset' => $count, 'cleared' => $cleared ] );
     }
 
     public function ajax_bulk_ai_clear() {

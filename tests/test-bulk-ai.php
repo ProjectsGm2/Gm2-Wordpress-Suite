@@ -60,6 +60,31 @@ class BulkAiApplyAjaxTest extends WP_Ajax_UnitTestCase {
     }
 }
 
+class BulkAiResetAjaxTest extends WP_Ajax_UnitTestCase {
+    public function test_reset_all_clears_ai_research_with_filters() {
+        $post1 = self::factory()->post->create(['post_status' => 'publish']);
+        $post2 = self::factory()->post->create(['post_status' => 'draft']);
+        update_post_meta($post1, '_gm2_ai_research', 'data1');
+        update_post_meta($post2, '_gm2_ai_research', 'data2');
+        $this->_setRole('administrator');
+
+        $_POST['all'] = '1';
+        $_POST['status'] = 'publish';
+        $_POST['post_type'] = 'all';
+        $_POST['seo_status'] = 'has_ai';
+        $_POST['_ajax_nonce'] = wp_create_nonce('gm2_bulk_ai_reset');
+        $_REQUEST['_ajax_nonce'] = $_POST['_ajax_nonce'];
+
+        try { $this->_handleAjax('gm2_bulk_ai_reset'); } catch (WPAjaxDieContinueException $e) {}
+        $resp = json_decode($this->_last_response, true);
+        $this->assertTrue($resp['success']);
+        $this->assertSame(1, $resp['data']['reset']);
+        $this->assertSame(1, $resp['data']['cleared']);
+        $this->assertEmpty(get_post_meta($post1, '_gm2_ai_research', true));
+        $this->assertSame('data2', get_post_meta($post2, '_gm2_ai_research', true));
+    }
+}
+
 class BulkAiFilterTest extends WP_UnitTestCase {
     public function test_post_type_filter_limits_results() {
         $post1 = self::factory()->post->create(['post_title' => 'Post One']);
