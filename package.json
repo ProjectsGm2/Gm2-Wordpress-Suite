@@ -1,0 +1,10 @@
+{
+  "name": "gm2-wordpress-suite",
+  "version": "1.0.0",
+  "devDependencies": {
+    "jsdom": "^24.0.0"
+  },
+  "scripts": {
+    "test:js": "node tests/js/gm2-bulk-review.test.js"
+  }
+}
