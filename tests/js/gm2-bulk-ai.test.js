@@ -132,6 +132,15 @@ test('select filtered toggles between select and unselect all', () => {
     i18n: { selectAllPosts: 'Select All', unselectAllPosts: 'Un-Select All' }
   };
   let selectedIds = [];
+  const storedSel = window.sessionStorage.getItem('gm2BulkAiSelected');
+  const storedIds = window.sessionStorage.getItem('gm2BulkAiSelectedIds');
+  if(storedSel){
+    try{ selectedIds = storedIds ? JSON.parse(storedIds) : []; }catch(e){ selectedIds=[]; }
+    $('#gm2-bulk-list .gm2-select').each(function(){
+      if($.inArray($(this).val(), selectedIds)!==-1){ $(this).prop('checked',true); }
+    });
+    $('.gm2-bulk-select-filtered').data('selected',true).text(gm2BulkAi.i18n.unselectAllPosts);
+  }
   function getSelectedIds(){
     if(selectedIds.length){ return selectedIds.slice(); }
     const ids=[]; $('#gm2-bulk-list .gm2-select:checked').each(function(){ ids.push($(this).val()); });
@@ -145,6 +154,12 @@ test('select filtered toggles between select and unselect all', () => {
     } else {
       selectedIds=$.grep(selectedIds,function(v){ return v!=id; });
     }
+    if(selectedIds.length){
+      window.sessionStorage.setItem('gm2BulkAiSelectedIds', JSON.stringify(selectedIds));
+    }else{
+      window.sessionStorage.removeItem('gm2BulkAiSelectedIds');
+      window.sessionStorage.removeItem('gm2BulkAiSelected');
+    }
   });
   $.post = jest.fn(() => ({
     done(cb){ cb({ success:true, data:{ ids:['1','2','3'] } }); return this; },
@@ -157,6 +172,8 @@ test('select filtered toggles between select and unselect all', () => {
       selectedIds=[];
       $('#gm2-bulk-list .gm2-select').prop('checked',false);
       $btn.data('selected',false).text(gm2BulkAi.i18n.selectAllPosts);
+      window.sessionStorage.removeItem('gm2BulkAiSelectedIds');
+      window.sessionStorage.removeItem('gm2BulkAiSelected');
       return;
     }
     const data={ action:'gm2_bulk_ai_fetch_ids', status:'publish', post_type:'all', seo_status:'all', terms:[], missing_title:0, missing_desc:0, search:'', _ajax_nonce:gm2BulkAi.fetch_nonce };
@@ -167,6 +184,8 @@ test('select filtered toggles between select and unselect all', () => {
         selectedIds=resp.data.ids||[];
         $('#gm2-bulk-list .gm2-select').prop('checked',true);
         $btn.data('selected',true).text(gm2BulkAi.i18n.unselectAllPosts);
+        window.sessionStorage.setItem('gm2BulkAiSelectedIds', JSON.stringify(selectedIds));
+        window.sessionStorage.setItem('gm2BulkAiSelected','1');
       }
     }).fail(function(){ $btn.prop('disabled',false); });
   });
@@ -175,12 +194,73 @@ test('select filtered toggles between select and unselect all', () => {
   expect(selectedIds).toEqual(['1','2','3']);
   expect($('#gm2-bulk-list .gm2-select:checked').length).toBe(2);
   expect($btn.text()).toBe('Un-Select All');
+  expect(window.sessionStorage.getItem('gm2BulkAiSelected')).toBe('1');
   $('#gm2-row-1 .gm2-select').prop('checked',false).trigger('change');
   expect(selectedIds).toEqual(['2','3']);
+  expect(window.sessionStorage.getItem('gm2BulkAiSelectedIds')).toBe(JSON.stringify(['2','3']));
   $btn.trigger('click');
   expect(selectedIds).toEqual([]);
   expect($('#gm2-bulk-list .gm2-select:checked').length).toBe(0);
   expect($btn.text()).toBe('Select All');
+  expect(window.sessionStorage.getItem('gm2BulkAiSelected')).toBe(null);
+});
+
+test('select filtered persists after reload', () => {
+    const dom = new JSDOM(`
+      <div id="gm2-bulk-ai">
+        <button class="gm2-bulk-select-filtered">Select All</button>
+        <table id="gm2-bulk-list">
+          <tr id="gm2-row-1"><td><input type="checkbox" class="gm2-select" value="1"></td></tr>
+          <tr id="gm2-row-2"><td><input type="checkbox" class="gm2-select" value="2"></td></tr>
+        </table>
+      </div>
+    `, { url: 'http://localhost' });
+  const $ = jquery(dom.window);
+  Object.assign(global, { window: dom.window, document: dom.window.document, jQuery: $, $ });
+  global.gm2BulkAi = { ajax_url:'/ajax', fetch_nonce:'nonce', i18n:{ selectAllPosts:'Select All', unselectAllPosts:'Un-Select All' } };
+  let selectedIds = [];
+  $.post = jest.fn(() => ({
+    done(cb){ cb({ success:true, data:{ ids:['1','2','3'] } }); return this; },
+    fail(){ return this; }
+  }));
+  $('#gm2-bulk-ai').on('click','.gm2-bulk-select-filtered',function(e){
+    e.preventDefault();
+    var $btn=$(this);
+    selectedIds=['1','2','3'];
+    $('#gm2-bulk-list .gm2-select').prop('checked',true);
+    $btn.data('selected',true).text(gm2BulkAi.i18n.unselectAllPosts);
+    window.sessionStorage.setItem('gm2BulkAiSelectedIds', JSON.stringify(selectedIds));
+    window.sessionStorage.setItem('gm2BulkAiSelected','1');
+  });
+  $('.gm2-bulk-select-filtered').trigger('click');
+  const storedIds = window.sessionStorage.getItem('gm2BulkAiSelectedIds');
+  const storedSel = window.sessionStorage.getItem('gm2BulkAiSelected');
+  // simulate new page with same posts
+  const dom2 = new JSDOM(`
+      <div id="gm2-bulk-ai">
+        <button class="gm2-bulk-select-filtered">Select All</button>
+        <table id="gm2-bulk-list">
+          <tr id="gm2-row-1"><td><input type="checkbox" class="gm2-select" value="1"></td></tr>
+          <tr id="gm2-row-2"><td><input type="checkbox" class="gm2-select" value="2"></td></tr>
+        </table>
+      </div>
+  `, { url: 'http://localhost' });
+  const $2 = jquery(dom2.window);
+  Object.assign(global, { window: dom2.window, document: dom2.window.document, jQuery: $2, $: $2 });
+  global.gm2BulkAi = { ajax_url:'/ajax', fetch_nonce:'nonce', i18n:{ selectAllPosts:'Select All', unselectAllPosts:'Un-Select All' } };
+  window.sessionStorage.setItem('gm2BulkAiSelectedIds', storedIds);
+  window.sessionStorage.setItem('gm2BulkAiSelected', storedSel);
+  selectedIds = [];
+  const ss = window.sessionStorage.getItem('gm2BulkAiSelected');
+  const sids = window.sessionStorage.getItem('gm2BulkAiSelectedIds');
+  if(ss){
+    try{ selectedIds = sids ? JSON.parse(sids) : []; }catch(e){ selectedIds=[]; }
+    $('#gm2-bulk-list .gm2-select').each(function(){ if($.inArray($(this).val(), selectedIds)!==-1){ $(this).prop('checked',true); }});
+    $('.gm2-bulk-select-filtered').data('selected',true).text(gm2BulkAi.i18n.unselectAllPosts);
+  }
+  expect($('.gm2-bulk-select-filtered').text()).toBe('Un-Select All');
+  expect($('#gm2-bulk-list .gm2-select:checked').length).toBe(2);
+  expect(selectedIds).toEqual(['1','2','3']);
 });
 
 test('getSelectedIds returns stored ids when DOM is empty', () => {
