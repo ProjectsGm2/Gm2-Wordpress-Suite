@@ -306,6 +306,8 @@ class Gm2_Admin {
                             'selectAll'  => __( 'Select all', 'gm2-wordpress-suite' ),
                             'selectAllTerms'    => __( 'Select All', 'gm2-wordpress-suite' ),
                             'unselectAllTerms'  => __( 'Un-Select All', 'gm2-wordpress-suite' ),
+                            'selectAnalyzedTerms'   => __( 'Select Analyzed', 'gm2-wordpress-suite' ),
+                            'unselectAnalyzedTerms' => __( 'Unselect Analyzed', 'gm2-wordpress-suite' ),
                         ],
                     ]
                 );
