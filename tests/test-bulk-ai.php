@@ -85,6 +85,42 @@ class BulkAiResetAjaxTest extends WP_Ajax_UnitTestCase {
     }
 }
 
+class BulkAiTaxResetAjaxTest extends WP_Ajax_UnitTestCase {
+    public function test_reset_all_clears_seo_and_ai_meta_with_filters() {
+        $term1 = self::factory()->term->create(['taxonomy' => 'category']);
+        $term2 = self::factory()->term->create(['taxonomy' => 'category']);
+        update_term_meta($term1, '_gm2_title', 'Title1');
+        update_term_meta($term1, '_gm2_description', 'Desc1');
+        update_term_meta($term1, '_gm2_prev_title', 'PrevT1');
+        update_term_meta($term1, '_gm2_prev_description', 'PrevD1');
+        update_term_meta($term1, '_gm2_ai_research', 'AI1');
+
+        update_term_meta($term2, '_gm2_title', 'Title2');
+        update_term_meta($term2, '_gm2_description', 'Desc2');
+
+        $this->_setRole('administrator');
+
+        $_POST['all'] = '1';
+        $_POST['taxonomy'] = 'all';
+        $_POST['status'] = 'publish';
+        $_POST['seo_status'] = 'has_ai';
+        $_POST['_ajax_nonce'] = wp_create_nonce('gm2_bulk_ai_tax_reset');
+        $_REQUEST['_ajax_nonce'] = $_POST['_ajax_nonce'];
+
+        try { $this->_handleAjax('gm2_bulk_ai_tax_reset'); } catch (WPAjaxDieContinueException $e) {}
+        $resp = json_decode($this->_last_response, true);
+        $this->assertTrue($resp['success']);
+        $this->assertSame(1, $resp['data']['reset']);
+        $this->assertEmpty(get_term_meta($term1, '_gm2_title', true));
+        $this->assertEmpty(get_term_meta($term1, '_gm2_description', true));
+        $this->assertEmpty(get_term_meta($term1, '_gm2_prev_title', true));
+        $this->assertEmpty(get_term_meta($term1, '_gm2_prev_description', true));
+        $this->assertEmpty(get_term_meta($term1, '_gm2_ai_research', true));
+        $this->assertSame('Title2', get_term_meta($term2, '_gm2_title', true));
+        $this->assertSame('Desc2', get_term_meta($term2, '_gm2_description', true));
+    }
+}
+
 class BulkAiFilterTest extends WP_UnitTestCase {
     public function test_post_type_filter_limits_results() {
         $post1 = self::factory()->post->create(['post_title' => 'Post One']);
