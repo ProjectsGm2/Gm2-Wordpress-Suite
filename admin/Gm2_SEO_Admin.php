@@ -19,6 +19,7 @@ class Gm2_SEO_Admin {
         add_action('wp_ajax_gm2_bulk_ai_tax_reset', [$this, 'ajax_bulk_ai_tax_reset']);
         add_action('wp_ajax_gm2_bulk_ai_clear', [$this, 'ajax_bulk_ai_clear']);
         add_action('wp_ajax_gm2_bulk_ai_tax_clear', [$this, 'ajax_bulk_ai_tax_clear']);
+        add_action('wp_ajax_gm2_bulk_ai_fetch_ids', [$this, 'ajax_bulk_ai_fetch_ids']);
     }
 
     private function debug_log($message) {
@@ -1378,6 +1379,7 @@ class Gm2_SEO_Admin {
 
         $buttons = '<button type="button" class="button gm2-bulk-analyze" aria-label="' . esc_attr__( 'Analyze Selected', 'gm2-wordpress-suite' ) . '">' . esc_html__( 'Analyze Selected', 'gm2-wordpress-suite' ) . '</button> '
             . '<button type="button" class="button gm2-bulk-cancel">' . esc_html__( 'Cancel', 'gm2-wordpress-suite' ) . '</button> '
+            . '<button type="button" class="button gm2-bulk-select-filtered">' . esc_html__( 'Select All', 'gm2-wordpress-suite' ) . '</button> '
             . '<button type="button" class="button gm2-bulk-select-analyzed">' . esc_html__( 'Select Analyzed', 'gm2-wordpress-suite' ) . '</button> '
             . '<button type="button" class="button gm2-bulk-apply-all">' . esc_html__( 'Apply All', 'gm2-wordpress-suite' ) . '</button> '
             . '<button type="button" class="button gm2-bulk-reset-all">' . esc_html__( 'Reset All', 'gm2-wordpress-suite' ) . '</button> '
@@ -4654,6 +4656,99 @@ class Gm2_SEO_Admin {
         ];
 
         wp_send_json_success($response);
+    }
+
+    public function ajax_bulk_ai_fetch_ids() {
+        check_ajax_referer('gm2_bulk_ai_fetch_ids');
+
+        if (!current_user_can('edit_posts')) {
+            wp_send_json_error( __( 'permission denied', 'gm2-wordpress-suite' ), 403 );
+        }
+
+        $status        = sanitize_key($_POST['status'] ?? 'publish');
+        $post_type     = sanitize_key($_POST['post_type'] ?? 'all');
+        $terms         = isset($_POST['terms']) ? (array) $_POST['terms'] : [];
+        $terms         = array_map('sanitize_text_field', $terms);
+        $seo_status    = sanitize_key($_POST['seo_status'] ?? 'all');
+        $seo_status    = in_array($seo_status, ['all', 'complete', 'incomplete', 'has_ai'], true) ? $seo_status : 'all';
+        $missing_title = isset($_POST['missing_title']) && $_POST['missing_title'] === '1' ? '1' : '0';
+        $missing_desc  = isset($_POST['missing_desc']) && $_POST['missing_desc'] === '1' ? '1' : '0';
+        $search        = isset($_POST['search']) ? sanitize_text_field($_POST['search']) : '';
+
+        $types = $this->get_supported_post_types();
+        if ($post_type !== 'all' && in_array($post_type, $types, true)) {
+            $types = [ $post_type ];
+        }
+
+        $args = [
+            'post_type'      => $types,
+            'post_status'    => $status,
+            'posts_per_page' => -1,
+            'fields'         => 'ids',
+            'no_found_rows'  => true,
+        ];
+
+        if ($search !== '') {
+            $args['s'] = $search;
+        }
+
+        if ($terms) {
+            $taxonomies = $this->get_supported_taxonomies();
+            $tax_query  = [ 'relation' => 'OR' ];
+            foreach ($terms as $t) {
+                if (strpos($t, ':') === false) {
+                    continue;
+                }
+                list($tax, $id) = explode(':', $t);
+                if (in_array($tax, $taxonomies, true)) {
+                    $tax_query[] = [
+                        'taxonomy' => $tax,
+                        'field'    => 'term_id',
+                        'terms'    => absint($id),
+                    ];
+                }
+            }
+            if (count($tax_query) > 1) {
+                $args['tax_query'] = $tax_query;
+            }
+        }
+
+        $meta_query = [];
+        if ($missing_title === '1') {
+            $meta_query[] = [
+                'relation' => 'OR',
+                [ 'key' => '_gm2_title', 'compare' => 'NOT EXISTS' ],
+                [ 'key' => '_gm2_title', 'value' => '', 'compare' => '=' ],
+            ];
+        }
+        if ($missing_desc === '1') {
+            $meta_query[] = [
+                'relation' => 'OR',
+                [ 'key' => '_gm2_description', 'compare' => 'NOT EXISTS' ],
+                [ 'key' => '_gm2_description', 'value' => '', 'compare' => '=' ],
+            ];
+        }
+        if ($seo_status === 'complete') {
+            $meta_query[] = [ 'key' => '_gm2_title', 'value' => '', 'compare' => '!=' ];
+            $meta_query[] = [ 'key' => '_gm2_description', 'value' => '', 'compare' => '!=' ];
+        } elseif ($seo_status === 'incomplete') {
+            $meta_query[] = [
+                'relation' => 'OR',
+                [ 'key' => '_gm2_title', 'compare' => 'NOT EXISTS' ],
+                [ 'key' => '_gm2_title', 'value' => '', 'compare' => '=' ],
+                [ 'key' => '_gm2_description', 'compare' => 'NOT EXISTS' ],
+                [ 'key' => '_gm2_description', 'value' => '', 'compare' => '=' ],
+            ];
+        } elseif ($seo_status === 'has_ai') {
+            $meta_query[] = [ 'key' => '_gm2_ai_research', 'value' => '', 'compare' => '!=' ];
+        }
+        if ($meta_query) {
+            $args['meta_query'] = array_merge([ 'relation' => 'AND' ], $meta_query);
+        }
+
+        $ids = get_posts($args);
+
+        wp_send_json_success( [ 'ids' => array_map('absint', $ids) ] );
     }
 
     public function ajax_bulk_ai_reset() {
