@@ -72,6 +72,21 @@ jQuery(function($){
         return ids;
     }
 
+    function getFilterTerms(){
+        var terms=[];
+        $('select[name^="gm2_term"]').each(function(){
+            var name=$(this).attr('name');
+            var match=name.match(/gm2_term\[(.+)\]\[]/);
+            if(match){
+                var tax=match[1];
+                var vals=$(this).val()||[];
+                $.each(vals,function(i,val){
+                    if(val){terms.push(tax+':'+val);} });
+            }
+        });
+        return terms;
+    }
+
     $('#gm2-bulk-ai').on('click','#gm2-bulk-select-all',function(){
         var c=$(this).prop('checked');
         $('#gm2-bulk-list .gm2-select').prop('checked',c);
@@ -105,7 +120,7 @@ jQuery(function($){
             status:$('select[name="status"]').val(),
             post_type:$('select[name="gm2_post_type"]').val(),
             seo_status:$('select[name="seo_status"]').val(),
-            terms:$('select[name="term[]"]').val()||[],
+            terms:getFilterTerms(),
             missing_title:$('input[name="gm2_missing_title"]').is(':checked')?1:0,
             missing_desc:$('input[name="gm2_missing_description"]').is(':checked')?1:0,
             search:$('input[name="s"]').val()||'',
@@ -587,7 +602,7 @@ jQuery(function($){
             status:$('select[name="status"]').val(),
             post_type:$('select[name="gm2_post_type"]').val(),
             seo_status:$('select[name="seo_status"]').val(),
-            terms:$('select[name="term[]"]').val()||[],
+            terms:getFilterTerms(),
             missing_title:$('input[name="gm2_missing_title"]').is(':checked')?1:0,
             missing_desc:$('input[name="gm2_missing_description"]').is(':checked')?1:0,
             search:$('input[name="s"]').val()||'',
