@@ -310,3 +310,89 @@ test('getSelectedIds returns stored ids when DOM is empty', () => {
     ids.push('30');
     expect(selectedIds).toEqual(['10','20']);
 });
+
+test('reset selected proceeds only when confirmed', () => {
+    const dom = new JSDOM(`
+      <div id="gm2-bulk-ai">
+        <button class="gm2-bulk-reset-selected">Reset Selected</button>
+        <div id="gm2-bulk-apply-msg"></div>
+        <table id="gm2-bulk-list">
+          <tr id="gm2-row-1"><td><input type="checkbox" class="gm2-select" value="1" checked></td></tr>
+        </table>
+      </div>
+    `, { url: 'http://localhost' });
+  const $ = jquery(dom.window);
+  Object.assign(global, { window: dom.window, document: dom.window.document, jQuery: $, $ });
+  global.gm2BulkAi = { ajax_url:'/ajax', reset_nonce:'nonce', i18n:{ confirmResetSelected:'Confirm?' } };
+  function getSelectedIds(){ const ids=[]; $('#gm2-bulk-list .gm2-select:checked').each(function(){ ids.push($(this).val()); }); return ids; }
+  $.ajax = jest.fn(() => ({ done(){return this;}, fail(){return this;} }));
+  $('#gm2-bulk-ai').on('click','.gm2-bulk-reset-selected',function(e){
+    e.preventDefault();
+    if(!window.confirm(gm2BulkAi.i18n.confirmResetSelected || 'Are you sure you want to reset the selected posts and clear AI suggestions?')) return;
+    var ids=getSelectedIds();
+    if(!ids.length) return;
+    $.ajax({ url: gm2BulkAi.ajax_url, method:'POST', data:{action:'gm2_bulk_ai_reset',ids:JSON.stringify(ids),_ajax_nonce:gm2BulkAi.reset_nonce}, dataType:'json' });
+  });
+  window.confirm = jest.fn(() => false);
+  $('.gm2-bulk-reset-selected').trigger('click');
+  expect($.ajax).not.toHaveBeenCalled();
+  window.confirm.mockReturnValue(true);
+  $('.gm2-bulk-reset-selected').trigger('click');
+  expect($.ajax).toHaveBeenCalledTimes(1);
+});
+
+test('reset AI suggestions proceeds only when confirmed', () => {
+    const dom = new JSDOM(`
+      <div id="gm2-bulk-ai">
+        <button class="gm2-bulk-reset-ai">Clear AI</button>
+        <div id="gm2-bulk-apply-msg"></div>
+        <table id="gm2-bulk-list">
+          <tr id="gm2-row-1"><td><input type="checkbox" class="gm2-select" value="1" checked></td></tr>
+        </table>
+      </div>
+    `, { url: 'http://localhost' });
+  const $ = jquery(dom.window);
+  Object.assign(global, { window: dom.window, document: dom.window.document, jQuery: $, $ });
+  global.gm2BulkAi = { ajax_url:'/ajax', clear_nonce:'nonce', i18n:{ confirmClearAi:'Confirm?' } };
+  function getSelectedIds(){ const ids=[]; $('#gm2-bulk-list .gm2-select:checked').each(function(){ ids.push($(this).val()); }); return ids; }
+  $.ajax = jest.fn(() => ({ done(){return this;}, fail(){return this;} }));
+  $('#gm2-bulk-ai').on('click','.gm2-bulk-reset-ai',function(e){
+    e.preventDefault();
+    if(!window.confirm(gm2BulkAi.i18n.confirmClearAi || 'Are you sure you want to clear AI suggestions for the selected posts?')) return;
+    var ids=getSelectedIds();
+    if(!ids.length) return;
+    $.ajax({ url: gm2BulkAi.ajax_url, method:'POST', data:{action:'gm2_bulk_ai_clear',ids:JSON.stringify(ids),_ajax_nonce:gm2BulkAi.clear_nonce}, dataType:'json' });
+  });
+  window.confirm = jest.fn(() => false);
+  $('.gm2-bulk-reset-ai').trigger('click');
+  expect($.ajax).not.toHaveBeenCalled();
+  window.confirm.mockReturnValue(true);
+  $('.gm2-bulk-reset-ai').trigger('click');
+  expect($.ajax).toHaveBeenCalledTimes(1);
+});
+
+test('reset all proceeds only when confirmed', () => {
+    const dom = new JSDOM(`
+      <div id="gm2-bulk-ai">
+        <button class="gm2-bulk-reset-all">Reset All</button>
+        <div id="gm2-bulk-apply-msg"></div>
+      </div>
+    `, { url: 'http://localhost' });
+  const $ = jquery(dom.window);
+  Object.assign(global, { window: dom.window, document: dom.window.document, jQuery: $, $ });
+  global.gm2BulkAi = { ajax_url:'/ajax', reset_nonce:'nonce', i18n:{ confirmResetAll:'Confirm?' } };
+  function getFilterTerms(){ return []; }
+  $.post = jest.fn(() => ({ done(){return this;}, fail(){return this;} }));
+  $('#gm2-bulk-ai').on('click','.gm2-bulk-reset-all',function(e){
+    e.preventDefault();
+    if(!window.confirm(gm2BulkAi.i18n.confirmResetAll || 'Are you sure you want to reset all posts and clear AI suggestions?')) return;
+    var data={action:'gm2_bulk_ai_reset',all:1,status:$('select[name="status"]').val(),post_type:$('select[name="gm2_post_type"]').val(),seo_status:$('select[name="seo_status"]').val(),terms:getFilterTerms(),missing_title:$('input[name="gm2_missing_title"]').is(':checked')?1:0,missing_desc:$('input[name="gm2_missing_description"]').is(':checked')?1:0,search:$('input[name="s"]').val()||'',_ajax_nonce:gm2BulkAi.reset_nonce};
+    $.post(gm2BulkAi.ajax_url,data);
+  });
+  window.confirm = jest.fn(() => false);
+  $('.gm2-bulk-reset-all').trigger('click');
+  expect($.post).not.toHaveBeenCalled();
+  window.confirm.mockReturnValue(true);
+  $('.gm2-bulk-reset-all').trigger('click');
+  expect($.post).toHaveBeenCalledTimes(1);
+});

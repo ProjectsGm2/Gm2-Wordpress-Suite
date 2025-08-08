@@ -552,6 +552,7 @@ jQuery(function($){
 
     $('#gm2-bulk-ai').on('click','.gm2-bulk-reset-selected',function(e){
         e.preventDefault();
+        if(!window.confirm((window.gm2BulkAi && gm2BulkAi.i18n && gm2BulkAi.i18n.confirmResetSelected) || 'Are you sure you want to reset the selected posts and clear AI suggestions?')) return;
         var ids=getSelectedIds();
         if(!ids.length) return;
         var $msg=$('#gm2-bulk-apply-msg');
@@ -601,6 +602,7 @@ jQuery(function($){
 
     $('#gm2-bulk-ai').on('click','.gm2-bulk-reset-ai',function(e){
         e.preventDefault();
+        if(!window.confirm((window.gm2BulkAi && gm2BulkAi.i18n && gm2BulkAi.i18n.confirmClearAi) || 'Are you sure you want to clear AI suggestions for the selected posts?')) return;
         var ids=getSelectedIds();
         if(!ids.length) return;
         var $msg=$('#gm2-bulk-apply-msg');
@@ -645,6 +647,7 @@ jQuery(function($){
 
     $('#gm2-bulk-ai').on('click','.gm2-bulk-reset-all',function(e){
         e.preventDefault();
+        if(!window.confirm((window.gm2BulkAi && gm2BulkAi.i18n && gm2BulkAi.i18n.confirmResetAll) || 'Are you sure you want to reset all posts and clear AI suggestions?')) return;
         var data={
             action:'gm2_bulk_ai_reset',
             all:1,
