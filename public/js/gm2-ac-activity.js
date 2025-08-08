@@ -77,15 +77,41 @@
         }
     }
 
+    let memoryTabCount = 0;
+
     function incrementTabs() {
-        const count = Math.max(parseInt(localStorage.getItem(KEY) || '0', 10), 0) + 1;
-        localStorage.setItem(KEY, String(count));
+        let count;
+        try {
+            count = Math.max(parseInt(localStorage.getItem(KEY) || '0', 10), 0) + 1;
+            localStorage.setItem(KEY, String(count));
+        } catch (e) {
+            try {
+                const match = document.cookie.match(new RegExp('(?:^|; )' + KEY + '=([^;]*)'));
+                count = Math.max(parseInt(match ? decodeURIComponent(match[1]) : '0', 10), 0) + 1;
+                document.cookie = `${KEY}=${count}; path=/`;
+            } catch (err) {
+                count = ++memoryTabCount;
+            }
+        }
     }
 
     function decrementTabs() {
-        const count = Math.max(parseInt(localStorage.getItem(KEY) || '0', 10) - 1, 0);
-        localStorage.setItem(KEY, String(count));
-        if (count === 0) {
+        let count;
+        try {
+            count = Math.max(parseInt(localStorage.getItem(KEY) || '0', 10) - 1, 0);
+            localStorage.setItem(KEY, String(count));
+        } catch (e) {
+            try {
+                const match = document.cookie.match(new RegExp('(?:^|; )' + KEY + '=([^;]*)'));
+                count = Math.max(parseInt(match ? decodeURIComponent(match[1]) : '0', 10) - 1, 0);
+                document.cookie = `${KEY}=${count}; path=/`;
+            } catch (err) {
+                count = Math.max(memoryTabCount - 1, 0);
+                memoryTabCount = count;
+            }
+        }
+
+        if (typeof count === 'undefined' || count === 0) {
             send('gm2_ac_mark_abandoned');
         }
     }
