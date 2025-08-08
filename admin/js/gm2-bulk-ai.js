@@ -4,6 +4,18 @@ jQuery(function($){
     var stopProcessing = false;
     var selectedIds = [];
 
+    // Restore selection state if stored in sessionStorage
+    var storedSel = sessionStorage.getItem('gm2BulkAiSelected');
+    var storedIds = sessionStorage.getItem('gm2BulkAiSelectedIds');
+    if(storedSel){
+        try{ selectedIds = storedIds ? JSON.parse(storedIds) : []; }catch(e){ selectedIds = []; }
+        $('#gm2-bulk-list .gm2-select').each(function(){
+            var id = $(this).val();
+            if($.inArray(id, selectedIds) !== -1){ $(this).prop('checked', true); }
+        });
+        $('.gm2-bulk-select-filtered').data('selected', true).text(gm2BulkAi.i18n.unselectAllPosts||'Un-Select All');
+    }
+
     // Mark all rows as new on initial load
     var $rows = $('#gm2-bulk-list tr[id^="gm2-row-"]').addClass('gm2-status-new');
 
@@ -104,6 +116,12 @@ jQuery(function($){
         }else{
             selectedIds=$.grep(selectedIds,function(v){return v!=id;});
         }
+        if(selectedIds.length){
+            sessionStorage.setItem('gm2BulkAiSelectedIds', JSON.stringify(selectedIds));
+        }else{
+            sessionStorage.removeItem('gm2BulkAiSelectedIds');
+            sessionStorage.removeItem('gm2BulkAiSelected');
+        }
     });
 
     $('#gm2-bulk-ai').on('click','.gm2-bulk-select-filtered',function(e){
@@ -113,6 +131,8 @@ jQuery(function($){
             selectedIds=[];
             $('#gm2-bulk-list .gm2-select').prop('checked',false);
             $btn.data('selected',false).text(gm2BulkAi.i18n.selectAllPosts||'Select All');
+            sessionStorage.removeItem('gm2BulkAiSelectedIds');
+            sessionStorage.removeItem('gm2BulkAiSelected');
             return;
         }
         var data={
@@ -133,10 +153,18 @@ jQuery(function($){
                 selectedIds=resp.data.ids||[];
                 $('#gm2-bulk-list .gm2-select').prop('checked',true);
                 $btn.data('selected',true).text(gm2BulkAi.i18n.unselectAllPosts||'Un-Select All');
+                sessionStorage.setItem('gm2BulkAiSelectedIds', JSON.stringify(selectedIds));
+                sessionStorage.setItem('gm2BulkAiSelected', '1');
             }
         }).fail(function(){
             $btn.prop('disabled',false);
         });
+    });
+
+    // Clear stored selections when filter forms submit
+    $('#gm2-bulk-ai').on('submit','form',function(){
+        sessionStorage.removeItem('gm2BulkAiSelectedIds');
+        sessionStorage.removeItem('gm2BulkAiSelected');
     });
     $('#gm2-bulk-ai').on('click','.gm2-bulk-analyze',function(e){
         e.preventDefault();
