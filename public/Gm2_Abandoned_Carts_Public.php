@@ -81,8 +81,6 @@ class Gm2_Abandoned_Carts_Public {
         $stored_entry = '';
         if (isset($_COOKIE['gm2_entry_url'])) {
             $stored_entry = esc_url_raw(wp_unslash($_COOKIE['gm2_entry_url']));
-            setcookie('gm2_entry_url', '', time() - HOUR_IN_SECONDS, COOKIEPATH, COOKIE_DOMAIN);
-            unset($_COOKIE['gm2_entry_url']);
         } elseif (!empty($session_entry_url)) {
             $stored_entry = esc_url_raw($session_entry_url);
             WC()->session->set('gm2_entry_url', null);
