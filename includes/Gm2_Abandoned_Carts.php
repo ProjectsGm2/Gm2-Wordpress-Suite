@@ -237,6 +237,10 @@ class Gm2_Abandoned_Carts {
         $token = '';
         if (class_exists('WC_Session') && WC()->session) {
             $token = WC()->session->get_customer_id();
+            // store the most recent URL in the session instead of updating the database
+            if (method_exists(WC()->session, 'set')) {
+                WC()->session->set('gm2_ac_last_url', $url);
+            }
         }
         if (empty($token)) {
             self::log_no_cart(__FUNCTION__);
@@ -247,7 +251,7 @@ class Gm2_Abandoned_Carts {
         $table = $wpdb->prefix . 'wc_ac_carts';
         $row = $wpdb->get_row($wpdb->prepare("SELECT id, abandoned_at, revisit_count, session_start FROM $table WHERE cart_token = %s", $token));
         if ($row) {
-            $update = [ 'exit_url' => $url ];
+            $update = [];
             if ($row->abandoned_at) {
                 $update['abandoned_at']  = null;
                 $update['session_start'] = current_time('mysql');
@@ -255,7 +259,9 @@ class Gm2_Abandoned_Carts {
             } elseif (!$row->session_start) {
                 $update['session_start'] = current_time('mysql');
             }
-            $wpdb->update($table, $update, [ 'id' => $row->id ]);
+            if (!empty($update)) {
+                $wpdb->update($table, $update, [ 'id' => $row->id ]);
+            }
         }
 
         wp_send_json_success();
@@ -264,10 +270,17 @@ class Gm2_Abandoned_Carts {
     public static function gm2_ac_mark_abandoned() {
         check_ajax_referer('gm2_ac_activity', 'nonce');
 
-        $url   = esc_url_raw($_POST['url'] ?? '');
         $token = '';
+        $url   = '';
         if (class_exists('WC_Session') && WC()->session) {
             $token = WC()->session->get_customer_id();
+            if (method_exists(WC()->session, 'get')) {
+                $url = WC()->session->get('gm2_ac_last_url');
+                WC()->session->set('gm2_ac_last_url', null);
+            }
+        }
+        if (empty($url)) {
+            $url = esc_url_raw($_POST['url'] ?? '');
         }
         if (empty($token)) {
             self::log_no_cart(__FUNCTION__);

@@ -10,8 +10,17 @@ namespace {
 if (!class_exists('WC_Session')) {
     class WC_Session {
         private $cid;
+        private $data = [];
         public function __construct($id) { $this->cid = $id; }
         public function get_customer_id() { return $this->cid; }
+        public function get($key) { return $this->data[$key] ?? null; }
+        public function set($key, $value) {
+            if ($value === null) {
+                unset($this->data[$key]);
+            } else {
+                $this->data[$key] = $value;
+            }
+        }
     }
 }
 if (!function_exists('WC')) {
@@ -22,6 +31,10 @@ if (!function_exists('WC')) {
         }
         return $wc_session_obj;
     }
+}
+
+if (!class_exists('WP_UnitTestCase')) {
+    abstract class WP_UnitTestCase extends \PHPUnit\Framework\TestCase {}
 }
 
 class AbandonedCartsTest extends WP_UnitTestCase {
@@ -42,7 +55,7 @@ class AbandonedCartsTest extends WP_UnitTestCase {
     }
 
     public function test_active_abandoned_revisit_flow() {
-        $_POST = [ 'nonce' => 'n', 'url' => 'https://example.com' ];
+        $_POST = [ 'nonce' => 'n', 'url' => 'https://example.com/page1' ];
         $_REQUEST = $_POST;
         \Gm2\Gm2_Abandoned_Carts::gm2_ac_mark_active();
 
@@ -51,16 +64,21 @@ class AbandonedCartsTest extends WP_UnitTestCase {
         $this->assertNotEmpty($row['session_start']);
         $this->assertNull($row['abandoned_at']);
         $this->assertSame(0, $row['revisit_count']);
+        // exit_url should remain unchanged on active ping
+        $this->assertSame('https://initial.com', $row['exit_url']);
 
-        $_POST = [ 'nonce' => 'n', 'url' => 'https://example.com' ];
+        // Abandon the cart and ensure exit_url reflects the last visited page
+        $_POST = [ 'nonce' => 'n', 'url' => 'https://wrong.com' ];
         $_REQUEST = $_POST;
         \Gm2\Gm2_Abandoned_Carts::gm2_ac_mark_abandoned();
 
         $row = $GLOBALS['wpdb']->data[$table][0];
         $this->assertNotNull($row['abandoned_at']);
         $this->assertNull($row['session_start']);
+        $this->assertSame('https://example.com/page1', $row['exit_url']);
 
-        $_POST = [ 'nonce' => 'n', 'url' => 'https://example.com' ];
+        // Reactivate the cart; exit_url should not change until abandonment
+        $_POST = [ 'nonce' => 'n', 'url' => 'https://example.com/page2' ];
         $_REQUEST = $_POST;
         \Gm2\Gm2_Abandoned_Carts::gm2_ac_mark_active();
 
@@ -68,6 +86,7 @@ class AbandonedCartsTest extends WP_UnitTestCase {
         $this->assertNull($row['abandoned_at']);
         $this->assertNotEmpty($row['session_start']);
         $this->assertSame(1, $row['revisit_count']);
+        $this->assertSame('https://example.com/page1', $row['exit_url']);
     }
 
     public function test_mark_cart_recovered_moves_row() {
@@ -99,6 +118,7 @@ class AbandonedCartFakeDB {
                 'revisit_count' => 0,
                 'browsing_time' => 0,
                 'recovered_order_id' => null,
+                'exit_url' => 'https://initial.com',
             ],
         ];
         $recovered = $this->prefix . 'wc_ac_recovered';
