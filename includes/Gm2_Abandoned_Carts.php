@@ -119,19 +119,11 @@ class Gm2_Abandoned_Carts {
             return;
         }
         $token      = $wc->session->get_customer_id();
-        $ip         = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])) : '';
         $agent      = isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '';
         $browser    = self::get_browser($agent);
-        $location   = '';
-        if (class_exists('WC_Geolocation') && !empty($ip)) {
-            $geo = \WC_Geolocation::geolocate_ip($ip, false, false);
-            if (!empty($geo['country'])) {
-                $location = $geo['country'];
-                if (!empty($geo['state'])) {
-                    $location .= '-' . $geo['state'];
-                }
-            }
-        }
+        $ip_info    = self::get_ip_and_location();
+        $ip         = $ip_info['ip'];
+        $location   = $ip_info['location'];
         $device = 'Desktop';
         if (file_exists(GM2_PLUGIN_DIR . 'includes/MobileDetect.php')) {
             require_once GM2_PLUGIN_DIR . 'includes/MobileDetect.php';
@@ -368,6 +360,29 @@ class Gm2_Abandoned_Carts {
                 $wpdb->query("ALTER TABLE $carts_table ADD revisit_count int DEFAULT 0 AFTER browsing_time");
             }
         }
+    }
+
+    public static function get_ip_and_location() {
+        $ip = '';
+        if (function_exists('wc_get_user_ip')) {
+            $ip = wc_get_user_ip();
+        } elseif (class_exists('WC_Geolocation')) {
+            $ip = \WC_Geolocation::get_ip_address();
+        } else {
+            $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+        }
+        $ip = sanitize_text_field(wp_unslash($ip));
+        $location = '';
+        if (class_exists('WC_Geolocation') && !empty($ip)) {
+            $geo = \WC_Geolocation::geolocate_ip($ip, false, false);
+            if (!empty($geo['country'])) {
+                $location = $geo['country'];
+                if (!empty($geo['state'])) {
+                    $location .= '-' . $geo['state'];
+                }
+            }
+        }
+        return [ 'ip' => $ip, 'location' => $location ];
     }
 
     public static function get_browser($agent) {
