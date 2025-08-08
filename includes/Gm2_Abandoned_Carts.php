@@ -271,16 +271,16 @@ class Gm2_Abandoned_Carts {
         check_ajax_referer('gm2_ac_activity', 'nonce');
 
         $token = '';
-        $url   = '';
+        $url   = esc_url_raw($_POST['url'] ?? '');
         if (class_exists('WC_Session') && WC()->session) {
             $token = WC()->session->get_customer_id();
             if (method_exists(WC()->session, 'get')) {
-                $url = WC()->session->get('gm2_ac_last_url');
+                $session_url = WC()->session->get('gm2_ac_last_url');
                 WC()->session->set('gm2_ac_last_url', null);
+                if (empty($url)) {
+                    $url = $session_url;
+                }
             }
-        }
-        if (empty($url)) {
-            $url = esc_url_raw($_POST['url'] ?? '');
         }
         if (empty($token)) {
             self::log_no_cart(__FUNCTION__);
