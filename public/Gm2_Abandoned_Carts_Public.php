@@ -125,17 +125,9 @@ class Gm2_Abandoned_Carts_Public {
                 ];
             }
             $contents = wp_json_encode($cart_items);
-            $ip       = $_SERVER['REMOTE_ADDR'] ?? '';
-            $location = '';
-            if (class_exists('WC_Geolocation') && !empty($ip)) {
-                $geo = \WC_Geolocation::geolocate_ip($ip, false, false);
-                if (!empty($geo['country'])) {
-                    $location = $geo['country'];
-                    if (!empty($geo['state'])) {
-                        $location .= '-' . $geo['state'];
-                    }
-                }
-            }
+            $ip_info  = Gm2_Abandoned_Carts::get_ip_and_location();
+            $ip       = $ip_info['ip'];
+            $location = $ip_info['location'];
             $device = 'Desktop';
             if (file_exists(GM2_PLUGIN_DIR . 'includes/MobileDetect.php')) {
                 require_once GM2_PLUGIN_DIR . 'includes/MobileDetect.php';
