@@ -313,6 +313,10 @@ class Gm2_Abandoned_Carts {
         if (!$order_id) {
             return;
         }
+        $order = wc_get_order($order_id);
+        if (!$order) {
+            return;
+        }
         $token = WC()->session->get_customer_id();
         global $wpdb;
         $carts_table = $wpdb->prefix . 'wc_ac_carts';
@@ -321,6 +325,17 @@ class Gm2_Abandoned_Carts {
             ARRAY_A
         );
         if ($row) {
+            if (empty($row['email'])) {
+                $row['email'] = $order->get_billing_email();
+            }
+            if (empty($row['location'])) {
+                $country = $order->get_billing_country();
+                $state   = $order->get_billing_state();
+                $row['location'] = $country;
+                if (!empty($state)) {
+                    $row['location'] .= '-' . $state;
+                }
+            }
             $recovered_table = $wpdb->prefix . 'wc_ac_recovered';
             $row['recovered_order_id'] = $order_id;
             $wpdb->insert($recovered_table, $row);

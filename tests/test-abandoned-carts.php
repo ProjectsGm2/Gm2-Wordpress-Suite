@@ -33,6 +33,18 @@ if (!function_exists('WC')) {
     }
 }
 
+if (!function_exists('wc_get_order')) {
+    function wc_get_order($order_id) {
+        return new FakeOrder();
+    }
+}
+
+class FakeOrder {
+    public function get_billing_email() { return 'user@example.com'; }
+    public function get_billing_country() { return 'US'; }
+    public function get_billing_state() { return 'CA'; }
+}
+
 if (!class_exists('WP_UnitTestCase')) {
     abstract class WP_UnitTestCase extends \PHPUnit\Framework\TestCase {}
 }
@@ -114,6 +126,18 @@ class AbandonedCartsTest extends WP_UnitTestCase {
         $row = $GLOBALS['wpdb']->data[$rec_table][0];
         $this->assertSame(123, $row['recovered_order_id']);
     }
+
+    public function test_mark_cart_recovered_preserves_contact_info() {
+        $cart_table = $GLOBALS['wpdb']->prefix . 'wc_ac_carts';
+        $GLOBALS['wpdb']->data[$cart_table][0]['email'] = '';
+        $GLOBALS['wpdb']->data[$cart_table][0]['location'] = '';
+        $ac = new \Gm2\Gm2_Abandoned_Carts();
+        $ac->mark_cart_recovered(321);
+        $rec_table = $GLOBALS['wpdb']->prefix . 'wc_ac_recovered';
+        $row = $GLOBALS['wpdb']->data[$rec_table][0];
+        $this->assertSame('user@example.com', $row['email']);
+        $this->assertSame('US-CA', $row['location']);
+    }
 }
 
 class AbandonedCartFakeDB {
@@ -134,6 +158,8 @@ class AbandonedCartFakeDB {
                 'browsing_time' => 0,
                 'recovered_order_id' => null,
                 'exit_url' => 'https://initial.com',
+                'email' => '',
+                'location' => '',
             ],
         ];
         $recovered = $this->prefix . 'wc_ac_recovered';
