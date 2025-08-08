@@ -290,6 +290,7 @@ class Gm2_Admin {
                         'desc_nonce'  => wp_create_nonce('gm2_ai_generate_tax_description'),
                         'reset_nonce' => wp_create_nonce('gm2_bulk_ai_tax_reset'),
                         'clear_nonce' => wp_create_nonce('gm2_bulk_ai_tax_clear'),
+                        'fetch_nonce' => wp_create_nonce('gm2_bulk_ai_tax_fetch_ids'),
                         'ajax_url'    => admin_url('admin-ajax.php'),
                         'i18n'        => [
                             'apply'      => __( 'Apply', 'gm2-wordpress-suite' ),
@@ -301,6 +302,8 @@ class Gm2_Admin {
                             'resetDone'  => __( 'Reset %s terms', 'gm2-wordpress-suite' ),
                             'clearDone'  => __( 'Cleared AI suggestions for %s terms', 'gm2-wordpress-suite' ),
                             'selectAll'  => __( 'Select all', 'gm2-wordpress-suite' ),
+                            'selectAllTerms'    => __( 'Select All', 'gm2-wordpress-suite' ),
+                            'unselectAllTerms'  => __( 'Un-Select All', 'gm2-wordpress-suite' ),
                         ],
                     ]
                 );

@@ -20,6 +20,7 @@ class Gm2_SEO_Admin {
         add_action('wp_ajax_gm2_bulk_ai_clear', [$this, 'ajax_bulk_ai_clear']);
         add_action('wp_ajax_gm2_bulk_ai_tax_clear', [$this, 'ajax_bulk_ai_tax_clear']);
         add_action('wp_ajax_gm2_bulk_ai_fetch_ids', [$this, 'ajax_bulk_ai_fetch_ids']);
+        add_action('wp_ajax_gm2_bulk_ai_tax_fetch_ids', [$this, 'ajax_bulk_ai_tax_fetch_ids']);
     }
 
     private function debug_log($message) {
@@ -1527,6 +1528,7 @@ class Gm2_SEO_Admin {
         $buttons = '<button type="button" class="button" id="gm2-bulk-term-analyze">' . esc_html__( 'Analyze Selected', 'gm2-wordpress-suite' ) . '</button> '
             . '<button type="button" class="button" id="gm2-bulk-term-desc">' . esc_html__( 'Generate Descriptions', 'gm2-wordpress-suite' ) . '</button> '
             . '<button type="button" class="button" id="gm2-bulk-term-cancel">' . esc_html__( 'Cancel', 'gm2-wordpress-suite' ) . '</button> '
+            . '<button type="button" class="button gm2-bulk-term-select-filtered" id="gm2-bulk-term-select-filtered">' . esc_html__( 'Select All', 'gm2-wordpress-suite' ) . '</button> '
             . '<button type="button" class="button" id="gm2-bulk-term-select-analyzed">' . esc_html__( 'Select Analyzed', 'gm2-wordpress-suite' ) . '</button> '
             . '<button type="button" class="button" id="gm2-bulk-term-apply-all">' . esc_html__( 'Apply All', 'gm2-wordpress-suite' ) . '</button> '
             . '<button type="button" class="button" id="gm2-bulk-term-reset-all">' . esc_html__( 'Reset All', 'gm2-wordpress-suite' ) . '</button> '
@@ -4749,6 +4751,78 @@ class Gm2_SEO_Admin {
         $ids = get_posts($args);
 
         wp_send_json_success( [ 'ids' => array_map('absint', $ids) ] );
+    }
+
+    public function ajax_bulk_ai_tax_fetch_ids() {
+        check_ajax_referer('gm2_bulk_ai_tax_fetch_ids');
+
+        $cap = apply_filters('gm2_bulk_ai_tax_capability', 'manage_categories');
+        if (!current_user_can($cap)) {
+            wp_send_json_error( __( 'permission denied', 'gm2-wordpress-suite' ), 403 );
+        }
+
+        $taxonomy      = sanitize_key($_POST['taxonomy'] ?? 'all');
+        $status        = sanitize_key($_POST['status'] ?? 'publish');
+        $search        = isset($_POST['search']) ? sanitize_text_field($_POST['search']) : '';
+        $seo_status    = sanitize_key($_POST['seo_status'] ?? 'all');
+        $seo_status    = in_array($seo_status, ['all', 'complete', 'incomplete', 'has_ai'], true) ? $seo_status : 'all';
+        $missing_title = isset($_POST['missing_title']) && $_POST['missing_title'] === '1' ? '1' : '0';
+        $missing_desc  = isset($_POST['missing_desc']) && $_POST['missing_desc'] === '1' ? '1' : '0';
+
+        $tax_list = $this->get_supported_taxonomies();
+        $tax_arg  = ($taxonomy === 'all') ? $tax_list : $taxonomy;
+
+        $args = [
+            'taxonomy'   => $tax_arg,
+            'hide_empty' => false,
+            'status'     => $status,
+        ];
+        if ($search !== '') {
+            $args['search'] = $search;
+        }
+
+        $meta_query = [];
+        if ($seo_status === 'complete') {
+            $meta_query[] = [ 'key' => '_gm2_title', 'value' => '', 'compare' => '!=' ];
+            $meta_query[] = [ 'key' => '_gm2_description', 'value' => '', 'compare' => '!=' ];
+        } elseif ($seo_status === 'incomplete') {
+            $meta_query[] = [
+                'relation' => 'OR',
+                [ 'key' => '_gm2_title', 'compare' => 'NOT EXISTS' ],
+                [ 'key' => '_gm2_title', 'value' => '', 'compare' => '=' ],
+                [ 'key' => '_gm2_description', 'compare' => 'NOT EXISTS' ],
+                [ 'key' => '_gm2_description', 'value' => '', 'compare' => '=' ],
+            ];
+        } elseif ($seo_status === 'has_ai') {
+            $meta_query[] = [ 'key' => '_gm2_ai_research', 'value' => '', 'compare' => '!=' ];
+        }
+        if ($missing_title === '1') {
+            $meta_query[] = [
+                'relation' => 'OR',
+                [ 'key' => '_gm2_title', 'compare' => 'NOT EXISTS' ],
+                [ 'key' => '_gm2_title', 'value' => '', 'compare' => '=' ],
+            ];
+        }
+        if ($missing_desc === '1') {
+            $meta_query[] = [
+                'relation' => 'OR',
+                [ 'key' => '_gm2_description', 'compare' => 'NOT EXISTS' ],
+                [ 'key' => '_gm2_description', 'value' => '', 'compare' => '=' ],
+            ];
+        }
+        if ($meta_query) {
+            $args['meta_query'] = array_merge(['relation' => 'AND'], $meta_query);
+        }
+
+        $query = new \WP_Term_Query($args);
+        $ids   = [];
+        if (!empty($query->terms)) {
+            foreach ($query->terms as $term) {
+                $ids[] = $term->taxonomy . ':' . $term->term_id;
+            }
+        }
+
+        wp_send_json_success( [ 'ids' => $ids ] );
     }
 
     public function ajax_bulk_ai_reset() {
