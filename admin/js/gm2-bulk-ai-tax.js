@@ -520,6 +520,8 @@ jQuery(function($){
         e.preventDefault();
         var ids=getSelectedKeys();
         if(!ids.length) return;
+        var confirmMsg=(gm2BulkAiTax.i18n&&gm2BulkAiTax.i18n.confirmResetSelectedTerms)?gm2BulkAiTax.i18n.confirmResetSelectedTerms:'Are you sure you want to reset the selected taxonomy terms and remove AI suggestions?';
+        if(!window.confirm(confirmMsg)) return;
         var $msg=$('#gm2-bulk-term-msg');
         var total=ids.length, processed=0;
         $('.gm2-bulk-term-progress-bar').attr('max',total).val(0).show();
@@ -562,6 +564,8 @@ jQuery(function($){
         e.preventDefault();
         var ids=getSelectedKeys();
         if(!ids.length) return;
+        var confirmMsg=(gm2BulkAiTax.i18n&&gm2BulkAiTax.i18n.confirmClearAiTerms)?gm2BulkAiTax.i18n.confirmClearAiTerms:'Are you sure you want to clear AI suggestions for the selected taxonomy terms?';
+        if(!window.confirm(confirmMsg)) return;
         var $btn=$(this);
         var $msg=$('#gm2-bulk-term-msg');
         var total=ids.length, cleared=0;
@@ -605,6 +609,8 @@ jQuery(function($){
 
     $('#gm2-bulk-ai-tax').on('click','#gm2-bulk-term-reset-all',function(e){
         e.preventDefault();
+        var confirmMsg=(gm2BulkAiTax.i18n&&gm2BulkAiTax.i18n.confirmResetAllTerms)?gm2BulkAiTax.i18n.confirmResetAllTerms:'Are you sure you want to reset all taxonomy terms and remove AI suggestions?';
+        if(!window.confirm(confirmMsg)) return;
         var data={
             action:'gm2_bulk_ai_tax_reset',
             all:1,

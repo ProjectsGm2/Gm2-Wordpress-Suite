@@ -104,12 +104,11 @@ test('taxonomy select analyzed toggles analyzed term selections', () => {
   expect($btn.text()).toBe('Select Analyzed');
 });
 
-test('clearing taxonomy suggestions removes analyzed status', () => {
+test('clearing taxonomy suggestions requires confirmation', () => {
   const dom = new JSDOM(`
     <div id="gm2-bulk-ai-tax">
       <button id="gm2-bulk-term-reset-ai">Reset AI Suggestion</button>
       <p id="gm2-bulk-term-msg"></p>
-      <progress class="gm2-bulk-term-progress-bar" value="0" max="100"></progress>
       <table id="gm2-bulk-term-list">
         <tr id="gm2-term-cat-1" class="gm2-status-analyzed">
           <td>
@@ -122,23 +121,106 @@ test('clearing taxonomy suggestions removes analyzed status', () => {
   `, { url: 'http://localhost' });
   const $ = jquery(dom.window);
   Object.assign(global, { window: dom.window, document: dom.window.document, jQuery: $, $ });
+  global.gm2BulkAiTax = { i18n:{ confirmClearAiTerms:'Are you sure?' } };
+
+  function getSelectedKeys(){
+    const ids=[];
+    $('#gm2-bulk-term-list .gm2-select:checked').each(function(){ ids.push(String($(this).val())); });
+    return ids;
+  }
 
   $('#gm2-bulk-ai-tax').on('click', '#gm2-bulk-term-reset-ai', function(e){
     e.preventDefault();
+    const ids=getSelectedKeys();
+    if(!ids.length) return;
+    if(!window.confirm(gm2BulkAiTax.i18n.confirmClearAiTerms)) return;
     $('#gm2-bulk-term-list .gm2-select:checked').each(function(){
-      const row = $(this).closest('tr');
+      const row=$(this).closest('tr');
       row.find('.gm2-result').html('✓');
       row.removeClass('gm2-status-analyzed').addClass('gm2-status-new');
     });
-    $('#gm2-bulk-term-msg').text('Cleared AI suggestions for 1 terms');
+    $('#gm2-bulk-term-msg').text('Cleared AI suggestions for '+ids.length+' terms');
   });
 
+  window.confirm=jest.fn().mockReturnValueOnce(false).mockReturnValueOnce(true);
   $('#gm2-term-cat-1 .gm2-select').prop('checked', true);
   $('#gm2-bulk-term-reset-ai').trigger('click');
+  expect($('#gm2-term-cat-1').hasClass('gm2-status-analyzed')).toBe(true);
+  expect($('#gm2-bulk-term-msg').text()).toBe('');
 
+  $('#gm2-bulk-term-reset-ai').trigger('click');
   expect($('#gm2-term-cat-1').hasClass('gm2-status-new')).toBe(true);
   expect($('#gm2-term-cat-1 .gm2-result').text()).toBe('✓');
   expect($('#gm2-bulk-term-msg').text()).toBe('Cleared AI suggestions for 1 terms');
+});
+
+test('reset selected terms requires confirmation', () => {
+  const dom = new JSDOM(`
+    <div id="gm2-bulk-ai-tax">
+      <button id="gm2-bulk-term-reset-selected">Reset Selected</button>
+      <table id="gm2-bulk-term-list">
+        <tr><td><input type="checkbox" class="gm2-select" value="cat:1" checked></td></tr>
+      </table>
+    </div>
+  `, { url: 'http://localhost' });
+  const $ = jquery(dom.window);
+  Object.assign(global, { window: dom.window, document: dom.window.document, jQuery: $, $ });
+  global.gm2BulkAiTax = { ajax_url:'/ajax', reset_nonce:'nonce', i18n:{ confirmResetSelectedTerms:'Are you sure?' } };
+
+  function getSelectedKeys(){
+    const ids=[]; $('#gm2-bulk-term-list .gm2-select:checked').each(function(){ ids.push(String($(this).val())); }); return ids;
+  }
+
+  $.ajax = jest.fn(() => ({done(){return this;}, fail(){return this;}, always(){return this;}}));
+
+  $('#gm2-bulk-ai-tax').on('click','#gm2-bulk-term-reset-selected',function(e){
+    e.preventDefault();
+    const ids=getSelectedKeys();
+    if(!ids.length) return;
+    if(!window.confirm(gm2BulkAiTax.i18n.confirmResetSelectedTerms)) return;
+    $.ajax({url:gm2BulkAiTax.ajax_url,method:'POST',data:{action:'gm2_bulk_ai_tax_reset',ids:JSON.stringify(ids),_ajax_nonce:gm2BulkAiTax.reset_nonce},dataType:'json'});
+  });
+
+  window.confirm=jest.fn().mockReturnValueOnce(false).mockReturnValueOnce(true);
+  const $btn=$('#gm2-bulk-term-reset-selected');
+  $btn.trigger('click');
+  expect($.ajax).not.toHaveBeenCalled();
+  $btn.trigger('click');
+  expect($.ajax).toHaveBeenCalledTimes(1);
+});
+
+test('reset all terms requires confirmation', () => {
+  const dom = new JSDOM(`
+    <div id="gm2-bulk-ai-tax">
+      <button id="gm2-bulk-term-reset-all">Reset All</button>
+      <select name="gm2_taxonomy"><option value="cat" selected></option></select>
+      <select name="gm2_tax_status"><option value="publish" selected></option></select>
+      <input type="text" name="gm2_tax_search" value="">
+      <select name="gm2_tax_seo_status"><option value="all" selected></option></select>
+      <input type="checkbox" name="gm2_bulk_ai_tax_missing_title">
+      <input type="checkbox" name="gm2_bulk_ai_tax_missing_description">
+      <p id="gm2-bulk-term-msg"></p>
+    </div>
+  `, { url: 'http://localhost' });
+  const $ = jquery(dom.window);
+  Object.assign(global, { window: dom.window, document: dom.window.document, jQuery: $, $ });
+  global.gm2BulkAiTax = { ajax_url:'/ajax', reset_nonce:'nonce', i18n:{ confirmResetAllTerms:'Are you sure?' } };
+
+  $.post = jest.fn(() => ({done(){return this;}, fail(){return this;}}));
+
+  $('#gm2-bulk-ai-tax').on('click','#gm2-bulk-term-reset-all',function(e){
+    e.preventDefault();
+    if(!window.confirm(gm2BulkAiTax.i18n.confirmResetAllTerms)) return;
+    var data={action:'gm2_bulk_ai_tax_reset',all:1,taxonomy:$('select[name="gm2_taxonomy"]').val(),status:$('select[name="gm2_tax_status"]').val(),search:$('input[name="gm2_tax_search"]').val()||'',seo_status:$('select[name="gm2_tax_seo_status"]').val(),missing_title:$('input[name="gm2_bulk_ai_tax_missing_title"]').is(':checked')?1:0,missing_desc:$('input[name="gm2_bulk_ai_tax_missing_description"]').is(':checked')?1:0,_ajax_nonce:gm2BulkAiTax.reset_nonce};
+    $.post(gm2BulkAiTax.ajax_url,data);
+  });
+
+  window.confirm=jest.fn().mockReturnValueOnce(false).mockReturnValueOnce(true);
+  const $btn=$('#gm2-bulk-term-reset-all');
+  $btn.trigger('click');
+  expect($.post).not.toHaveBeenCalled();
+  $btn.trigger('click');
+  expect($.post).toHaveBeenCalledTimes(1);
 });
 
 test('taxonomy select filtered toggles between select and unselect all', () => {

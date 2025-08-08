@@ -311,6 +311,9 @@ class Gm2_Admin {
                             'unselectAllTerms'  => __( 'Un-Select All', 'gm2-wordpress-suite' ),
                             'selectAnalyzedTerms'   => __( 'Select Analyzed', 'gm2-wordpress-suite' ),
                             'unselectAnalyzedTerms' => __( 'Unselect Analyzed', 'gm2-wordpress-suite' ),
+                            'confirmResetAllTerms' => __( 'Are you sure you want to reset all taxonomy terms and remove AI suggestions?', 'gm2-wordpress-suite' ),
+                            'confirmResetSelectedTerms' => __( 'Are you sure you want to reset the selected taxonomy terms and remove AI suggestions?', 'gm2-wordpress-suite' ),
+                            'confirmClearAiTerms' => __( 'Are you sure you want to clear AI suggestions for the selected taxonomy terms?', 'gm2-wordpress-suite' ),
                         ],
                     ]
                 );
