@@ -1381,7 +1381,7 @@ class Gm2_SEO_Admin {
         $buttons = '<button type="button" class="button gm2-bulk-analyze" aria-label="' . esc_attr__( 'Analyze Selected', 'gm2-wordpress-suite' ) . '">' . esc_html__( 'Analyze Selected', 'gm2-wordpress-suite' ) . '</button> '
             . '<button type="button" class="button gm2-bulk-cancel">' . esc_html__( 'Cancel', 'gm2-wordpress-suite' ) . '</button> '
             . '<button type="button" class="button gm2-bulk-select-filtered">' . esc_html__( 'Select All', 'gm2-wordpress-suite' ) . '</button> '
-            . '<button type="button" class="button gm2-bulk-select-analyzed">' . esc_html__( 'Select Analyzed', 'gm2-wordpress-suite' ) . '</button> '
+            . '<button type="button" class="button gm2-bulk-select-analyzed" data-select="' . esc_attr__( 'Select Analyzed', 'gm2-wordpress-suite' ) . '" data-unselect="' . esc_attr__( 'Unselect Analyzed', 'gm2-wordpress-suite' ) . '">' . esc_html__( 'Select Analyzed', 'gm2-wordpress-suite' ) . '</button> '
             . '<button type="button" class="button gm2-bulk-apply-all">' . esc_html__( 'Apply All', 'gm2-wordpress-suite' ) . '</button> '
             . '<button type="button" class="button gm2-bulk-reset-all">' . esc_html__( 'Reset All', 'gm2-wordpress-suite' ) . '</button> '
             . '<button type="button" class="button gm2-bulk-reset-selected">' . esc_html__( 'Reset Selected', 'gm2-wordpress-suite' ) . '</button> '

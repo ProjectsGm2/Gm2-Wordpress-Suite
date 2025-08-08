@@ -267,6 +267,8 @@ class Gm2_Admin {
                             'clearDone'    => __( 'Cleared AI suggestions for %s posts', 'gm2-wordpress-suite' ),
                             'selectAllPosts' => __( 'Select All', 'gm2-wordpress-suite' ),
                             'unselectAllPosts' => __( 'Un-Select All', 'gm2-wordpress-suite' ),
+                            'selectAnalyzed'   => __( 'Select Analyzed', 'gm2-wordpress-suite' ),
+                            'unselectAnalyzed' => __( 'Unselect Analyzed', 'gm2-wordpress-suite' ),
                         ],
                     ]
                 );

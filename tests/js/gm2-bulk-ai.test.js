@@ -64,10 +64,10 @@ test('rows with suggestions get analyzed status on load', () => {
   expect($('#gm2-row-2').hasClass('gm2-status-new')).toBe(true);
 });
 
-test('select analyzed checks row checkbox and suggestions', () => {
+test('select analyzed toggles analyzed rows and button label', () => {
     const dom = new JSDOM(`
       <div id="gm2-bulk-ai">
-        <button class="gm2-bulk-select-analyzed">Select analyzed</button>
+        <button class="gm2-bulk-select-analyzed" data-select="Select Analyzed" data-unselect="Unselect Analyzed">Select Analyzed</button>
         <table id="gm2-bulk-list">
           <tr id="gm2-row-1" class="gm2-status-analyzed">
             <td>
@@ -100,18 +100,36 @@ test('select analyzed checks row checkbox and suggestions', () => {
 
   $('#gm2-bulk-ai').on('click', '.gm2-bulk-select-analyzed', function(e){
     e.preventDefault();
-    $('#gm2-bulk-list tr.gm2-status-analyzed').each(function(){
-      $(this).find('.gm2-select').prop('checked', true);
-      $(this).find('.gm2-row-select-all').prop('checked', true).trigger('change');
-    });
+    const $btn=$(this);
+    const selectText=$btn.data('select')||'Select Analyzed';
+    const unselectText=$btn.data('unselect')||'Unselect Analyzed';
+    if($btn.data('selected')){
+      $('#gm2-bulk-list tr.gm2-status-analyzed').each(function(){
+        $(this).find('.gm2-select').prop('checked', false);
+        $(this).find('.gm2-row-select-all').prop('checked', false).trigger('change');
+      });
+      $btn.data('selected',false).text(selectText);
+    } else {
+      $('#gm2-bulk-list tr.gm2-status-analyzed').each(function(){
+        $(this).find('.gm2-select').prop('checked', true);
+        $(this).find('.gm2-row-select-all').prop('checked', true).trigger('change');
+      });
+      $btn.data('selected',true).text(unselectText);
+    }
   });
 
-  $('.gm2-bulk-select-analyzed').trigger('click');
-
+  const $btn=$('.gm2-bulk-select-analyzed');
+  $btn.trigger('click');
+  expect($btn.text()).toBe('Unselect Analyzed');
   expect($('#gm2-row-1 .gm2-select').prop('checked')).toBe(true);
   expect($('#gm2-row-1 .gm2-apply').prop('checked')).toBe(true);
   expect($('#gm2-row-2 .gm2-select').prop('checked')).toBe(false);
   expect($('#gm2-row-2 .gm2-apply').prop('checked')).toBe(false);
+
+  $btn.trigger('click');
+  expect($btn.text()).toBe('Select Analyzed');
+  expect($('#gm2-row-1 .gm2-select').prop('checked')).toBe(false);
+  expect($('#gm2-row-1 .gm2-apply').prop('checked')).toBe(false);
 });
 
 test('select filtered toggles between select and unselect all', () => {
