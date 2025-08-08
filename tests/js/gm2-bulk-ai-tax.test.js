@@ -137,12 +137,10 @@ test('taxonomy select filtered toggles between select and unselect all', () => {
     i18n: { selectAllTerms: 'Select All', unselectAllTerms: 'Un-Select All' }
   };
 
+  const storageKeys='gm2BulkAiTaxSelectedKeys';
+  const storageFlag='gm2BulkAiTaxSelected';
+  window.sessionStorage.clear();
   let selectedKeys = [];
-  function getSelectedKeys(){
-    if(selectedKeys.length){ return selectedKeys.slice(); }
-    const ids=[]; $('#gm2-bulk-term-list .gm2-select:checked').each(function(){ ids.push($(this).val()); });
-    return ids;
-  }
 
   $('#gm2-bulk-term-list').on('change','.gm2-select',function(){
     if(!selectedKeys.length) return;
@@ -152,12 +150,18 @@ test('taxonomy select filtered toggles between select and unselect all', () => {
     } else {
       selectedKeys=$.grep(selectedKeys,function(v){ return v!=key; });
     }
+    window.sessionStorage.setItem(storageKeys, JSON.stringify(selectedKeys));
   });
 
   $.post = jest.fn(() => ({
     done(cb){ cb({ success:true, data:{ ids:['cat:1','cat:2','tag:3'] } }); return this; },
     fail(){ return this; }
   }));
+
+  function clearStored(){
+    window.sessionStorage.removeItem(storageKeys);
+    window.sessionStorage.removeItem(storageFlag);
+  }
 
   $('#gm2-bulk-ai-tax').on('click','#gm2-bulk-term-select-filtered',function(e){
     e.preventDefault();
@@ -166,6 +170,7 @@ test('taxonomy select filtered toggles between select and unselect all', () => {
       selectedKeys=[];
       $('#gm2-bulk-term-list .gm2-select').prop('checked',false);
       $btn.data('selected',false).text(gm2BulkAiTax.i18n.selectAllTerms);
+      clearStored();
       return;
     }
     const data={
@@ -185,6 +190,8 @@ test('taxonomy select filtered toggles between select and unselect all', () => {
         selectedKeys=resp.data.ids||[];
         $('#gm2-bulk-term-list .gm2-select').prop('checked',true);
         $btn.data('selected',true).text(gm2BulkAiTax.i18n.unselectAllTerms);
+        window.sessionStorage.setItem(storageKeys, JSON.stringify(selectedKeys));
+        window.sessionStorage.setItem(storageFlag, '1');
       }
     }).fail(function(){ $btn.prop('disabled',false); });
   });
@@ -198,8 +205,111 @@ test('taxonomy select filtered toggles between select and unselect all', () => {
   expect(selectedKeys).toEqual(['cat:2','tag:3']);
   $btn.trigger('click');
   expect(selectedKeys).toEqual([]);
+  expect(window.sessionStorage.getItem(storageFlag)).toBeNull();
   expect($('#gm2-bulk-term-list .gm2-select:checked').length).toBe(0);
   expect($btn.text()).toBe('Select All');
+});
+
+test('taxonomy selection persists after reload', () => {
+  const dom = new JSDOM(`
+    <div id="gm2-bulk-ai-tax">
+      <button id="gm2-bulk-term-select-filtered">Select All</button>
+      <table id="gm2-bulk-term-list">
+        <tr id="gm2-term-cat-1"><td><input type="checkbox" class="gm2-select" value="cat:1"></td></tr>
+        <tr id="gm2-term-cat-2"><td><input type="checkbox" class="gm2-select" value="cat:2"></td></tr>
+      </table>
+    </div>
+  `, { url: 'http://localhost' });
+  const $ = jquery(dom.window);
+  Object.assign(global, { window: dom.window, document: dom.window.document, jQuery: $, $ });
+  global.gm2BulkAiTax = {
+    ajax_url: '/ajax',
+    fetch_nonce: 'nonce',
+    i18n: { selectAllTerms: 'Select All', unselectAllTerms: 'Un-Select All' }
+  };
+
+  const storageKeys='gm2BulkAiTaxSelectedKeys';
+  const storageFlag='gm2BulkAiTaxSelected';
+  window.sessionStorage.clear();
+  let selectedKeys=[];
+
+  $('#gm2-bulk-term-list').on('change','.gm2-select',function(){
+    if(!selectedKeys.length) return;
+    const key=$(this).val();
+    if($(this).is(':checked')){
+      if($.inArray(key,selectedKeys)===-1){selectedKeys.push(key);}
+    }else{
+      selectedKeys=$.grep(selectedKeys,function(v){return v!=key;});
+    }
+    window.sessionStorage.setItem(storageKeys, JSON.stringify(selectedKeys));
+  });
+
+  function clearStored(){
+    window.sessionStorage.removeItem(storageKeys);
+    window.sessionStorage.removeItem(storageFlag);
+  }
+
+  $.post = jest.fn(() => ({
+    done(cb){ cb({ success:true, data:{ ids:['cat:1','cat:2'] } }); return this; },
+    fail(){ return this; }
+  }));
+
+  $('#gm2-bulk-ai-tax').on('click','#gm2-bulk-term-select-filtered',function(e){
+    e.preventDefault();
+    const $btn=$(this);
+    if($btn.data('selected')){
+      selectedKeys=[];
+      $('#gm2-bulk-term-list .gm2-select').prop('checked',false);
+      $btn.data('selected',false).text(gm2BulkAiTax.i18n.selectAllTerms);
+      clearStored();
+      return;
+    }
+    const data={
+      action:'gm2_bulk_ai_tax_fetch_ids',
+      taxonomy:'all',
+      status:'publish',
+      search:'',
+      seo_status:'all',
+      missing_title:0,
+      missing_desc:0,
+      _ajax_nonce:gm2BulkAiTax.fetch_nonce
+    };
+    $btn.prop('disabled',true);
+    $.post(gm2BulkAiTax.ajax_url,data).done(function(resp){
+      $btn.prop('disabled',false);
+      if(resp&&resp.success){
+        selectedKeys=resp.data.ids||[];
+        $('#gm2-bulk-term-list .gm2-select').prop('checked',true);
+        $btn.data('selected',true).text(gm2BulkAiTax.i18n.unselectAllTerms);
+        window.sessionStorage.setItem(storageKeys, JSON.stringify(selectedKeys));
+        window.sessionStorage.setItem(storageFlag, '1');
+      }
+    }).fail(function(){ $btn.prop('disabled',false); });
+  });
+
+  $('#gm2-bulk-term-select-filtered').trigger('click');
+
+  dom.window.document.body.innerHTML = `
+    <div id="gm2-bulk-ai-tax">
+      <button id="gm2-bulk-term-select-filtered">Select All</button>
+      <table id="gm2-bulk-term-list">
+        <tr id="gm2-term-cat-1"><td><input type="checkbox" class="gm2-select" value="cat:1"></td></tr>
+        <tr id="gm2-term-cat-2"><td><input type="checkbox" class="gm2-select" value="cat:2"></td></tr>
+      </table>
+    </div>
+  `;
+  selectedKeys=[];
+
+  const stored=window.sessionStorage.getItem(storageFlag);
+  if(stored==='1'){
+    selectedKeys=JSON.parse(window.sessionStorage.getItem(storageKeys) || '[]');
+    $('#gm2-bulk-term-list .gm2-select').prop('checked',true);
+    $('#gm2-bulk-term-select-filtered').data('selected',true).text(gm2BulkAiTax.i18n.unselectAllTerms);
+  }
+
+  expect(selectedKeys).toEqual(['cat:1','cat:2']);
+  expect($('#gm2-bulk-term-list .gm2-select:checked').length).toBe(2);
+  expect($('#gm2-bulk-term-select-filtered').text()).toBe('Un-Select All');
 });
 
 test('taxonomy reset selected uses stored keys', () => {
