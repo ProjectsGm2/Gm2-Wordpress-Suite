@@ -32,10 +32,10 @@ test('taxonomy rows with suggestions get analyzed status on load', () => {
   expect($('#gm2-term-2').hasClass('gm2-status-new')).toBe(true);
 });
 
-test('taxonomy select analyzed checks row checkbox and suggestions', () => {
+test('taxonomy select analyzed toggles analyzed term selections', () => {
   const dom = new JSDOM(`
     <div id="gm2-bulk-ai-tax">
-      <button id="gm2-bulk-term-select-analyzed">Select analyzed</button>
+      <button id="gm2-bulk-term-select-analyzed" data-select-label="Select Analyzed" data-unselect-label="Unselect Analyzed">Select Analyzed</button>
       <table id="gm2-bulk-term-list">
         <tr id="gm2-term-cat-1" class="gm2-status-analyzed">
           <td>
@@ -60,26 +60,48 @@ test('taxonomy select analyzed checks row checkbox and suggestions', () => {
   `, { url: 'http://localhost' });
   const $ = jquery(dom.window);
   Object.assign(global, { window: dom.window, document: dom.window.document, jQuery: $, $ });
+  global.gm2BulkAiTax = { i18n:{ selectAnalyzedTerms:'Select Analyzed', unselectAnalyzedTerms:'Unselect Analyzed' } };
 
   $('#gm2-bulk-term-list').on('change', '.gm2-row-select-all', function(){
-    const checked = $(this).prop('checked');
+    const checked=$(this).prop('checked');
     $(this).closest('td').find('.gm2-apply').prop('checked', checked);
   });
 
-  $('#gm2-bulk-ai-tax').on('click', '#gm2-bulk-term-select-analyzed', function(e){
+  $('#gm2-bulk-ai-tax').on('click','#gm2-bulk-term-select-analyzed',function(e){
     e.preventDefault();
-    $('#gm2-bulk-term-list tr.gm2-status-analyzed').each(function(){
-      $(this).find('.gm2-select').prop('checked', true);
-      $(this).find('.gm2-row-select-all').prop('checked', true).trigger('change');
-    });
+    const $btn=$(this);
+    const $rows=$('#gm2-bulk-term-list tr.gm2-status-analyzed');
+    if($btn.data('selected')){
+      $rows.each(function(){
+        $(this).find('.gm2-select').prop('checked',false);
+        $(this).find('.gm2-row-select-all').prop('checked',false).trigger('change');
+      });
+      const selectLabel=$btn.data('select-label')||gm2BulkAiTax.i18n.selectAnalyzedTerms;
+      $btn.data('selected',false).text(selectLabel);
+    }else{
+      $rows.each(function(){
+        $(this).find('.gm2-select').prop('checked',true);
+        $(this).find('.gm2-row-select-all').prop('checked',true).trigger('change');
+      });
+      const unselectLabel=$btn.data('unselect-label')||gm2BulkAiTax.i18n.unselectAnalyzedTerms;
+      $btn.data('selected',true).text(unselectLabel);
+    }
   });
 
-  $('#gm2-bulk-term-select-analyzed').trigger('click');
-
+  const $btn=$('#gm2-bulk-term-select-analyzed');
+  $btn.trigger('click');
   expect($('#gm2-term-cat-1 .gm2-select').prop('checked')).toBe(true);
   expect($('#gm2-term-cat-1 .gm2-apply').prop('checked')).toBe(true);
   expect($('#gm2-term-cat-2 .gm2-select').prop('checked')).toBe(false);
   expect($('#gm2-term-cat-2 .gm2-apply').prop('checked')).toBe(false);
+  expect($btn.text()).toBe('Unselect Analyzed');
+
+  $btn.trigger('click');
+  expect($('#gm2-term-cat-1 .gm2-select').prop('checked')).toBe(false);
+  expect($('#gm2-term-cat-1 .gm2-apply').prop('checked')).toBe(false);
+  expect($('#gm2-term-cat-2 .gm2-select').prop('checked')).toBe(false);
+  expect($('#gm2-term-cat-2 .gm2-apply').prop('checked')).toBe(false);
+  expect($btn.text()).toBe('Select Analyzed');
 });
 
 test('clearing taxonomy suggestions removes analyzed status', () => {

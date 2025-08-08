@@ -388,10 +388,23 @@ jQuery(function($){
     });
     $('#gm2-bulk-ai-tax').on('click','#gm2-bulk-term-select-analyzed',function(e){
         e.preventDefault();
-        $('#gm2-bulk-term-list tr.gm2-status-analyzed').each(function(){
-            $(this).find('.gm2-select').prop('checked',true);
-            $(this).find('.gm2-row-select-all').prop('checked',true).trigger('change');
-        });
+        var $btn=$(this);
+        var $rows=$('#gm2-bulk-term-list tr.gm2-status-analyzed');
+        if($btn.data('selected')){
+            $rows.each(function(){
+                $(this).find('.gm2-select').prop('checked',false);
+                $(this).find('.gm2-row-select-all').prop('checked',false).trigger('change');
+            });
+            var selectLabel=$btn.data('select-label') || (gm2BulkAiTax.i18n?gm2BulkAiTax.i18n.selectAnalyzedTerms:'Select Analyzed');
+            $btn.data('selected',false).text(selectLabel);
+        }else{
+            $rows.each(function(){
+                $(this).find('.gm2-select').prop('checked',true);
+                $(this).find('.gm2-row-select-all').prop('checked',true).trigger('change');
+            });
+            var unselectLabel=$btn.data('unselect-label') || (gm2BulkAiTax.i18n?gm2BulkAiTax.i18n.unselectAnalyzedTerms:'Unselect Analyzed');
+            $btn.data('selected',true).text(unselectLabel);
+        }
     });
     $('#gm2-bulk-ai-tax').on('click','#gm2-bulk-term-apply-all',function(e){
         e.preventDefault();
