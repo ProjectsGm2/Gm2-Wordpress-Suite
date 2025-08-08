@@ -455,10 +455,22 @@ jQuery(function($){
 
     $('#gm2-bulk-ai').on('click','.gm2-bulk-select-analyzed',function(e){
         e.preventDefault();
-        $('#gm2-bulk-list tr.gm2-status-analyzed').each(function(){
-            $(this).find('.gm2-select').prop('checked',true);
-            $(this).find('.gm2-row-select-all').prop('checked',true).trigger('change');
-        });
+        var $btn=$(this);
+        var selectText=$btn.data('select')||(gm2BulkAi.i18n&&gm2BulkAi.i18n.selectAnalyzed)||'Select Analyzed';
+        var unselectText=$btn.data('unselect')||(gm2BulkAi.i18n&&gm2BulkAi.i18n.unselectAnalyzed)||'Unselect Analyzed';
+        if($btn.data('selected')){
+            $('#gm2-bulk-list tr.gm2-status-analyzed').each(function(){
+                $(this).find('.gm2-select').prop('checked',false);
+                $(this).find('.gm2-row-select-all').prop('checked',false).trigger('change');
+            });
+            $btn.data('selected',false).text(selectText);
+        }else{
+            $('#gm2-bulk-list tr.gm2-status-analyzed').each(function(){
+                $(this).find('.gm2-select').prop('checked',true);
+                $(this).find('.gm2-row-select-all').prop('checked',true).trigger('change');
+            });
+            $btn.data('selected',true).text(unselectText);
+        }
     });
 
     $('#gm2-bulk-ai').on('click','.gm2-bulk-apply-all',function(e){
