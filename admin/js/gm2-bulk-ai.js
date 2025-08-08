@@ -8,12 +8,18 @@ jQuery(function($){
     var storedSel = sessionStorage.getItem('gm2BulkAiSelected');
     var storedIds = sessionStorage.getItem('gm2BulkAiSelectedIds');
     if(storedSel){
-        try{ selectedIds = storedIds ? JSON.parse(storedIds) : []; }catch(e){ selectedIds = []; }
-        $('#gm2-bulk-list .gm2-select').each(function(){
-            var id = $(this).val();
-            if($.inArray(id, selectedIds) !== -1){ $(this).prop('checked', true); }
-        });
-        $('.gm2-bulk-select-filtered').data('selected', true).text(gm2BulkAi.i18n.unselectAllPosts||'Un-Select All');
+        try{ selectedIds = storedIds ? JSON.parse(storedIds).map(String) : []; }catch(e){ selectedIds = []; }
+        if(selectedIds.length){
+            $('#gm2-bulk-list .gm2-select').each(function(){
+                var id = $(this).val();
+                if($.inArray(id, selectedIds) !== -1){ $(this).prop('checked', true); }
+            });
+            $('.gm2-bulk-select-filtered').data('selected', true).text(gm2BulkAi.i18n.unselectAllPosts||'Un-Select All');
+        }else{
+            $('.gm2-bulk-select-filtered').data('selected', false).text(gm2BulkAi.i18n.selectAllPosts||'Select All');
+            sessionStorage.removeItem('gm2BulkAiSelected');
+            sessionStorage.removeItem('gm2BulkAiSelectedIds');
+        }
     }
 
     // Mark all rows as new on initial load
@@ -150,7 +156,7 @@ jQuery(function($){
         $.post(gm2BulkAi.ajax_url,data).done(function(resp){
             $btn.prop('disabled',false);
             if(resp&&resp.success){
-                selectedIds=resp.data.ids||[];
+                selectedIds=(resp.data.ids||[]).map(String);
                 $('#gm2-bulk-list .gm2-select').prop('checked',true);
                 $btn.data('selected',true).text(gm2BulkAi.i18n.unselectAllPosts||'Un-Select All');
                 sessionStorage.setItem('gm2BulkAiSelectedIds', JSON.stringify(selectedIds));

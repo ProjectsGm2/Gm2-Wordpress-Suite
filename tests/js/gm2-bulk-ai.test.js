@@ -181,7 +181,7 @@ test('select filtered toggles between select and unselect all', () => {
     $.post(gm2BulkAi.ajax_url,data).done(function(resp){
       $btn.prop('disabled',false);
       if(resp&&resp.success){
-        selectedIds=resp.data.ids||[];
+        selectedIds=(resp.data.ids||[]).map(String);
         $('#gm2-bulk-list .gm2-select').prop('checked',true);
         $btn.data('selected',true).text(gm2BulkAi.i18n.unselectAllPosts);
         window.sessionStorage.setItem('gm2BulkAiSelectedIds', JSON.stringify(selectedIds));
@@ -254,13 +254,27 @@ test('select filtered persists after reload', () => {
   const ss = window.sessionStorage.getItem('gm2BulkAiSelected');
   const sids = window.sessionStorage.getItem('gm2BulkAiSelectedIds');
   if(ss){
-    try{ selectedIds = sids ? JSON.parse(sids) : []; }catch(e){ selectedIds=[]; }
-    $('#gm2-bulk-list .gm2-select').each(function(){ if($.inArray($(this).val(), selectedIds)!==-1){ $(this).prop('checked',true); }});
-    $('.gm2-bulk-select-filtered').data('selected',true).text(gm2BulkAi.i18n.unselectAllPosts);
+    try{ selectedIds = sids ? JSON.parse(sids).map(String) : []; }catch(e){ selectedIds=[]; }
+    if(selectedIds.length){
+      $('#gm2-bulk-list .gm2-select').each(function(){
+        var id=$(this).val();
+        if($.inArray(id, selectedIds)!==-1){ $(this).prop('checked',true); }
+      });
+      $('.gm2-bulk-select-filtered').data('selected',true).text(gm2BulkAi.i18n.unselectAllPosts);
+    }else{
+      $('.gm2-bulk-select-filtered').data('selected',false).text(gm2BulkAi.i18n.selectAllPosts);
+      window.sessionStorage.removeItem('gm2BulkAiSelected');
+      window.sessionStorage.removeItem('gm2BulkAiSelectedIds');
+    }
+  }
+  function getSelectedIds(){
+    if(selectedIds.length){ return selectedIds.slice(); }
+    const ids=[]; $('#gm2-bulk-list .gm2-select:checked').each(function(){ ids.push($(this).val()); });
+    return ids;
   }
   expect($('.gm2-bulk-select-filtered').text()).toBe('Un-Select All');
   expect($('#gm2-bulk-list .gm2-select:checked').length).toBe(2);
-  expect(selectedIds).toEqual(['1','2','3']);
+  expect(getSelectedIds()).toEqual(['1','2','3']);
 });
 
 test('getSelectedIds returns stored ids when DOM is empty', () => {
