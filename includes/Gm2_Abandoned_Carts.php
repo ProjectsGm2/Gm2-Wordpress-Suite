@@ -152,8 +152,6 @@ class Gm2_Abandoned_Carts {
         $stored_entry = '';
         if (isset($_COOKIE['gm2_entry_url'])) {
             $stored_entry = esc_url_raw(wp_unslash($_COOKIE['gm2_entry_url']));
-            setcookie('gm2_entry_url', '', time() - HOUR_IN_SECONDS, COOKIEPATH, COOKIE_DOMAIN);
-            unset($_COOKIE['gm2_entry_url']);
         } else {
             $session_entry = $wc->session->get('gm2_entry_url');
             if (!empty($session_entry)) {
@@ -243,9 +241,17 @@ class Gm2_Abandoned_Carts {
         $token = '';
         if (class_exists('WC_Session') && WC()->session) {
             $token = WC()->session->get_customer_id();
-            // store the most recent URL in the session instead of updating the database
             if (method_exists(WC()->session, 'set')) {
+                // store the most recent URL in the session instead of updating the database
                 WC()->session->set('gm2_ac_last_url', $url);
+                $session_entry = method_exists(WC()->session, 'get') ? WC()->session->get('gm2_entry_url') : '';
+                if (empty($session_entry) && !empty($url)) {
+                    WC()->session->set('gm2_entry_url', $url);
+                    if (isset($_COOKIE['gm2_entry_url'])) {
+                        setcookie('gm2_entry_url', '', time() - HOUR_IN_SECONDS, COOKIEPATH, COOKIE_DOMAIN);
+                        unset($_COOKIE['gm2_entry_url']);
+                    }
+                }
             }
         }
         if (empty($token)) {

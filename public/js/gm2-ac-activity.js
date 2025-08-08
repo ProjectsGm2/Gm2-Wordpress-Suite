@@ -73,8 +73,9 @@
         try {
             localStorage.setItem(ENTRY_KEY, value);
         } catch (e) {
-            document.cookie = `${ENTRY_KEY}=${encodeURIComponent(value)}; path=/`;
+            // localStorage might be unavailable; ignore errors.
         }
+        document.cookie = `${ENTRY_KEY}=${encodeURIComponent(value)}; path=/`;
     }
 
     let memoryTabCount = 0;
