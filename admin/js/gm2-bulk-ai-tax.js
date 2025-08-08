@@ -1,6 +1,22 @@
 jQuery(function($){
     var stop=false;
     var selectedKeys=[];
+    var storageKeys='gm2BulkAiTaxSelectedKeys';
+    var storageFlag='gm2BulkAiTaxSelected';
+    function clearStoredSelection(){
+        sessionStorage.removeItem(storageKeys);
+        sessionStorage.removeItem(storageFlag);
+    }
+    var storedSelected=sessionStorage.getItem(storageFlag);
+    if(storedSelected==='1'){
+        try{
+            selectedKeys=JSON.parse(sessionStorage.getItem(storageKeys)||'[]');
+            if(selectedKeys.length){
+                $('#gm2-bulk-term-list .gm2-select').prop('checked',true);
+                $('#gm2-bulk-term-select-filtered').data('selected',true).text(gm2BulkAiTax.i18n.unselectAllTerms||'Un-Select All');
+            }
+        }catch(e){selectedKeys=[];}
+    }
     var $rows=$('#gm2-bulk-term-list tr').addClass('gm2-status-new');
     $rows.each(function(){
         var $row=$(this);
@@ -51,6 +67,7 @@ jQuery(function($){
         }else{
             selectedKeys=$.grep(selectedKeys,function(v){return v!=key;});
         }
+        sessionStorage.setItem(storageKeys,JSON.stringify(selectedKeys));
     });
 
     function getSelectedKeys(){
@@ -69,6 +86,7 @@ jQuery(function($){
             selectedKeys=[];
             $('#gm2-bulk-term-list .gm2-select').prop('checked',false);
             $btn.data('selected',false).text(gm2BulkAiTax.i18n.selectAllTerms||'Select All');
+            clearStoredSelection();
             return;
         }
         var data={
@@ -88,10 +106,16 @@ jQuery(function($){
                 selectedKeys=resp.data.ids||[];
                 $('#gm2-bulk-term-list .gm2-select').prop('checked',true);
                 $btn.data('selected',true).text(gm2BulkAiTax.i18n.unselectAllTerms||'Un-Select All');
+                sessionStorage.setItem(storageKeys,JSON.stringify(selectedKeys));
+                sessionStorage.setItem(storageFlag,'1');
             }
         }).fail(function(){
             $btn.prop('disabled',false);
         });
+    });
+
+    $('#gm2-bulk-ai-tax').on('submit','form',function(){
+        clearStoredSelection();
     });
 
     $('#gm2-bulk-ai-tax').on('click','#gm2-bulk-term-analyze',function(e){
