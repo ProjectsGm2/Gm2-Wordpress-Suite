@@ -7,6 +7,9 @@ if (!defined('ABSPATH')) {
 
 class Gm2_Abandoned_Carts_Public {
     public function run() {
+        if (function_exists('current_user_can') && current_user_can('manage_options')) {
+            return;
+        }
         add_action('wp_enqueue_scripts', [ $this, 'enqueue_scripts' ]);
         add_action('wp_ajax_gm2_ac_email_capture', [ $this, 'handle_email_capture' ]);
         add_action('wp_ajax_nopriv_gm2_ac_email_capture', [ $this, 'handle_email_capture' ]);
@@ -17,6 +20,9 @@ class Gm2_Abandoned_Carts_Public {
     }
 
     public function enqueue_scripts() {
+        if (function_exists('current_user_can') && current_user_can('manage_options')) {
+            return;
+        }
         wp_enqueue_script(
             'gm2-ac-email-capture',
             GM2_PLUGIN_URL . 'public/js/gm2-ac-email-capture.js',
@@ -51,6 +57,9 @@ class Gm2_Abandoned_Carts_Public {
     }
 
     public function handle_email_capture() {
+        if (function_exists('current_user_can') && current_user_can('manage_options')) {
+            wp_send_json_success();
+        }
         check_ajax_referer('gm2_ac_email_capture', 'nonce');
 
         $email = sanitize_email($_POST['email'] ?? '');

@@ -4,9 +4,34 @@ namespace Gm2 {
     function wp_send_json_success($data = null) { return ['success'=>true,'data'=>$data]; }
     function wp_send_json_error($data = null) { return ['success'=>false,'data'=>$data]; }
     function current_time($type) { return gmdate('Y-m-d H:i:s'); }
+    function current_user_can($cap = '') { return $GLOBALS['gm2_is_admin'] ?? false; }
+    function esc_url_raw($url) { return $url; }
+    function sanitize_text_field($str) { return $str; }
+    function wp_unslash($value) { return $value; }
+    function sanitize_email($email) { return $email; }
+    function home_url($path = '') { return 'https://example.com' . $path; }
+    function admin_url($path = '') { return 'https://example.com' . $path; }
+    function wp_create_nonce($action = '') { return 'nonce'; }
+    function wp_json_encode($data) { return json_encode($data); }
+    function get_current_user_id() { return 1; }
+    function is_admin() { return false; }
+    function add_action($hook, $callback, $priority = 10, $accepted_args = 1) {}
+    function wp_schedule_event() {}
+    function wp_next_scheduled() { return false; }
+    function wp_clear_scheduled_hook() {}
+    function apply_filters($tag, $value) { return $value; }
+    function get_option($option, $default = false) { return $default; }
 }
 
 namespace {
+define('ABSPATH', __DIR__ . '/../');
+define('GM2_PLUGIN_DIR', dirname(__DIR__) . '/');
+define('GM2_PLUGIN_URL', '');
+define('GM2_VERSION', '1.0');
+define('HOUR_IN_SECONDS', 3600);
+define('COOKIEPATH', '/');
+define('COOKIE_DOMAIN', '');
+require_once dirname(__DIR__) . '/includes/Gm2_Abandoned_Carts.php';
 if (!class_exists('WC_Session')) {
     class WC_Session {
         private $cid;
@@ -43,6 +68,26 @@ class FakeOrder {
     public function get_billing_email() { return 'user@example.com'; }
     public function get_billing_country() { return 'US'; }
     public function get_billing_state() { return 'CA'; }
+}
+
+class FakeProduct {
+    public function get_name() { return 'Test Product'; }
+    public function get_price() { return 10; }
+    public function get_sku() { return 'SKU'; }
+}
+
+class FakeCart {
+    public function is_empty() { return false; }
+    public function get_cart() {
+        return [
+            [
+                'product_id' => 1,
+                'quantity'   => 1,
+                'data'       => new FakeProduct(),
+            ],
+        ];
+    }
+    public function get_cart_contents_total() { return 10; }
 }
 
 if (!class_exists('WP_UnitTestCase')) {
@@ -137,6 +182,26 @@ class AbandonedCartsTest extends WP_UnitTestCase {
         $row = $GLOBALS['wpdb']->data[$rec_table][0];
         $this->assertSame('user@example.com', $row['email']);
         $this->assertSame('US-CA', $row['location']);
+    }
+
+    public function test_admin_cart_not_recorded() {
+        $GLOBALS['gm2_is_admin'] = true;
+        $table = $GLOBALS['wpdb']->prefix . 'wc_ac_carts';
+
+        $before = $GLOBALS['wpdb']->data[$table][0];
+        $_POST = [ 'nonce' => 'n', 'url' => 'https://example.com/page1' ];
+        $_REQUEST = $_POST;
+        \Gm2\Gm2_Abandoned_Carts::gm2_ac_mark_active();
+        \Gm2\Gm2_Abandoned_Carts::gm2_ac_mark_abandoned();
+        $this->assertSame($before, $GLOBALS['wpdb']->data[$table][0]);
+
+        $GLOBALS['wpdb']->data[$table] = [];
+        global $wc_session_obj;
+        $wc_session_obj->cart = new FakeCart();
+        $ac = new \Gm2\Gm2_Abandoned_Carts();
+        $ac->capture_cart();
+        $this->assertCount(0, $GLOBALS['wpdb']->data[$table]);
+        unset($GLOBALS['gm2_is_admin']);
     }
 }
 
