@@ -1,5 +1,6 @@
 jQuery(function($){
     var stop=false;
+    var selectedKeys=[];
     var $rows=$('#gm2-bulk-term-list tr').addClass('gm2-status-new');
     $rows.each(function(){
         var $row=$(this);
@@ -42,11 +43,61 @@ jQuery(function($){
         var checked=$(this).prop('checked');
         $(this).closest('td').find('.gm2-apply').prop('checked',checked);
     });
+    $('#gm2-bulk-term-list').on('change','.gm2-select',function(){
+        if(!selectedKeys.length) return;
+        var key=$(this).val();
+        if($(this).is(':checked')){
+            if($.inArray(key,selectedKeys)===-1){selectedKeys.push(key);}
+        }else{
+            selectedKeys=$.grep(selectedKeys,function(v){return v!=key;});
+        }
+    });
+
+    function getSelectedKeys(){
+        if(selectedKeys.length){
+            return selectedKeys.slice();
+        }
+        var ids=[];
+        $('#gm2-bulk-term-list .gm2-select:checked').each(function(){ids.push($(this).val());});
+        return ids;
+    }
+
+    $('#gm2-bulk-ai-tax').on('click','#gm2-bulk-term-select-filtered',function(e){
+        e.preventDefault();
+        var $btn=$(this);
+        if($btn.data('selected')){
+            selectedKeys=[];
+            $('#gm2-bulk-term-list .gm2-select').prop('checked',false);
+            $btn.data('selected',false).text(gm2BulkAiTax.i18n.selectAllTerms||'Select All');
+            return;
+        }
+        var data={
+            action:'gm2_bulk_ai_tax_fetch_ids',
+            taxonomy:$('select[name="gm2_taxonomy"]').val(),
+            status:$('select[name="gm2_tax_status"]').val(),
+            search:$('input[name="gm2_tax_search"]').val()||'',
+            seo_status:$('select[name="gm2_tax_seo_status"]').val(),
+            missing_title:$('input[name="gm2_bulk_ai_tax_missing_title"]').is(':checked')?1:0,
+            missing_desc:$('input[name="gm2_bulk_ai_tax_missing_description"]').is(':checked')?1:0,
+            _ajax_nonce:gm2BulkAiTax.fetch_nonce
+        };
+        $btn.prop('disabled',true);
+        $.post(gm2BulkAiTax.ajax_url,data).done(function(resp){
+            $btn.prop('disabled',false);
+            if(resp&&resp.success){
+                selectedKeys=resp.data.ids||[];
+                $('#gm2-bulk-term-list .gm2-select').prop('checked',true);
+                $btn.data('selected',true).text(gm2BulkAiTax.i18n.unselectAllTerms||'Un-Select All');
+            }
+        }).fail(function(){
+            $btn.prop('disabled',false);
+        });
+    });
+
     $('#gm2-bulk-ai-tax').on('click','#gm2-bulk-term-analyze',function(e){
         e.preventDefault();
         stop=false;
-        var ids=[];
-        $('#gm2-bulk-term-list .gm2-select:checked').each(function(){ids.push($(this).val());});
+        var ids=getSelectedKeys();
         if(!ids.length) return;
         $('.gm2-bulk-term-progress-bar').attr('max',ids.length).val(0).show();
         function next(){
@@ -95,8 +146,7 @@ jQuery(function($){
     $('#gm2-bulk-ai-tax').on('click','#gm2-bulk-term-desc',function(e){
         e.preventDefault();
         stop=false;
-        var ids=[];
-        $('#gm2-bulk-term-list .gm2-select:checked').each(function(){ids.push($(this).val());});
+        var ids=getSelectedKeys();
         if(!ids.length) return;
         $('.gm2-bulk-term-progress-bar').attr('max',ids.length).val(0).show();
         function next(){
@@ -311,7 +361,11 @@ jQuery(function($){
     $('#gm2-bulk-ai-tax').on('click','#gm2-bulk-term-apply-all',function(e){
         e.preventDefault();
         var items=[];
-        $('#gm2-bulk-term-list tr').each(function(){
+        var $rows=$('#gm2-bulk-term-list tr');
+        if(selectedKeys.length){
+            $rows=$rows.filter(function(){return $.inArray($(this).data('key'),selectedKeys)!==-1;});
+        }
+        $rows.each(function(){
             var key=$(this).data('key');
             if(!key) return;
             var fields={};
@@ -359,8 +413,7 @@ jQuery(function($){
     });
     $('#gm2-bulk-ai-tax').on('click','#gm2-bulk-term-schedule',function(e){
         e.preventDefault();
-        var ids=[];
-        $('#gm2-bulk-term-list .gm2-select:checked').each(function(){ids.push($(this).val());});
+        var ids=getSelectedKeys();
         if(!ids.length) return;
         var $btn=$(this);
         var $msg=$('#gm2-bulk-term-msg');
@@ -417,8 +470,7 @@ jQuery(function($){
 
     $('#gm2-bulk-ai-tax').on('click','#gm2-bulk-term-reset-selected',function(e){
         e.preventDefault();
-        var ids=[];
-        $('#gm2-bulk-term-list .gm2-select:checked').each(function(){ids.push($(this).val());});
+        var ids=getSelectedKeys();
         if(!ids.length) return;
         var $msg=$('#gm2-bulk-term-msg');
         var total=ids.length, processed=0;
@@ -460,8 +512,7 @@ jQuery(function($){
 
     $('#gm2-bulk-ai-tax').on('click','#gm2-bulk-term-reset-ai',function(e){
         e.preventDefault();
-        var ids=[];
-        $('#gm2-bulk-term-list .gm2-select:checked').each(function(){ids.push($(this).val());});
+        var ids=getSelectedKeys();
         if(!ids.length) return;
         var $btn=$(this);
         var $msg=$('#gm2-bulk-term-msg');
