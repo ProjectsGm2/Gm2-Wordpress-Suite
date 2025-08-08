@@ -68,7 +68,7 @@ class AbandonedCartsTest extends WP_UnitTestCase {
         $this->assertSame('https://initial.com', $row['exit_url']);
 
         // Abandon the cart and ensure exit_url reflects the last visited page
-        $_POST = [ 'nonce' => 'n', 'url' => 'https://wrong.com' ];
+        $_POST = [ 'nonce' => 'n', 'url' => 'https://example.com/page1' ];
         $_REQUEST = $_POST;
         \Gm2\Gm2_Abandoned_Carts::gm2_ac_mark_abandoned();
 
@@ -87,6 +87,21 @@ class AbandonedCartsTest extends WP_UnitTestCase {
         $this->assertNotEmpty($row['session_start']);
         $this->assertSame(1, $row['revisit_count']);
         $this->assertSame('https://example.com/page1', $row['exit_url']);
+    }
+
+    public function test_external_link_sets_exit_url() {
+        $_POST = [ 'nonce' => 'n', 'url' => 'https://example.com/page1' ];
+        $_REQUEST = $_POST;
+        \Gm2\Gm2_Abandoned_Carts::gm2_ac_mark_active();
+
+        $table = $GLOBALS['wpdb']->prefix . 'wc_ac_carts';
+
+        $_POST = [ 'nonce' => 'n', 'url' => 'https://external.com/off' ];
+        $_REQUEST = $_POST;
+        \Gm2\Gm2_Abandoned_Carts::gm2_ac_mark_abandoned();
+
+        $row = $GLOBALS['wpdb']->data[$table][0];
+        $this->assertSame('https://external.com/off', $row['exit_url']);
     }
 
     public function test_mark_cart_recovered_moves_row() {

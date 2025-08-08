@@ -5,8 +5,8 @@
     const nonce = gm2AcActivity.nonce;
     const url = window.location.href;
 
-    function send(action) {
-        const data = new URLSearchParams({ action, nonce, url: window.location.href });
+    function send(action, targetUrl) {
+        const data = new URLSearchParams({ action, nonce, url: targetUrl || window.location.href });
 
         if (action === 'gm2_ac_mark_abandoned') {
             if (navigator.sendBeacon) {
@@ -124,6 +124,17 @@
 
     document.body.addEventListener('added_to_cart', () => {
         send('gm2_ac_mark_active');
+    });
+
+    document.addEventListener('click', (e) => {
+        const anchor = e.target.closest('a');
+        if (!anchor) {
+            return;
+        }
+        const href = anchor.href;
+        if (href && anchor.origin !== window.location.origin) {
+            send('gm2_ac_mark_abandoned', href);
+        }
     });
 
     window.addEventListener('pagehide', decrementTabs, { once: true });
