@@ -167,7 +167,7 @@ class Gm2_Abandoned_Carts {
         $table = $wpdb->prefix . 'wc_ac_carts';
         $row = $wpdb->get_row(
             $wpdb->prepare(
-                "SELECT id, entry_url, exit_url, abandoned_at, revisit_count, session_start FROM $table WHERE cart_token = %s",
+                "SELECT id, entry_url, exit_url, abandoned_at, revisit_count, session_start, location FROM $table WHERE cart_token = %s",
                 $token
             )
         );
@@ -178,10 +178,12 @@ class Gm2_Abandoned_Carts {
                 'ip_address'    => $ip,
                 'user_agent'    => $agent,
                 'browser'       => $browser,
-                'location'      => $location,
                 'device'        => $device,
                 'cart_total'    => $total,
             ];
+            if (empty($row->location) && !empty($location)) {
+                $update['location'] = $location;
+            }
             if ($row->abandoned_at) {
                 $update['abandoned_at']  = null;
                 $update['session_start'] = current_time('mysql');
@@ -189,7 +191,9 @@ class Gm2_Abandoned_Carts {
             } elseif (!$row->session_start) {
                 $update['session_start'] = current_time('mysql');
             }
-            $wpdb->update($table, $update, ['id' => $row->id]);
+            if (!empty($update)) {
+                $wpdb->update($table, $update, ['id' => $row->id]);
+            }
             $url_update = [];
             if (empty($row->entry_url)) {
                 $url_update['entry_url'] = $current_url;
@@ -265,7 +269,7 @@ class Gm2_Abandoned_Carts {
 
         global $wpdb;
         $table = $wpdb->prefix . 'wc_ac_carts';
-        $row   = $wpdb->get_row($wpdb->prepare("SELECT id, abandoned_at, revisit_count, session_start, exit_url FROM $table WHERE cart_token = %s", $token));
+        $row   = $wpdb->get_row($wpdb->prepare("SELECT id, abandoned_at, revisit_count, session_start, exit_url, ip_address, location FROM $table WHERE cart_token = %s", $token));
         if ($row) {
             $update = [];
             if ($row->abandoned_at) {
@@ -274,6 +278,15 @@ class Gm2_Abandoned_Carts {
                 $update['revisit_count'] = (int) $row->revisit_count + 1;
             } elseif (!$row->session_start) {
                 $update['session_start'] = current_time('mysql');
+            }
+            if (empty($row->ip_address) || empty($row->location)) {
+                $ip_info = self::get_ip_and_location();
+                if (empty($row->ip_address) && !empty($ip_info['ip'])) {
+                    $update['ip_address'] = $ip_info['ip'];
+                }
+                if (empty($row->location) && !empty($ip_info['location'])) {
+                    $update['location'] = $ip_info['location'];
+                }
             }
             if (!empty($update)) {
                 $wpdb->update($table, $update, ['id' => $row->id]);
@@ -429,6 +442,28 @@ class Gm2_Abandoned_Carts {
                 $location = $geo['country'];
                 if (!empty($geo['state'])) {
                     $location .= '-' . $geo['state'];
+                }
+            }
+        }
+        if (empty($location)) {
+            if (!empty($_SERVER['HTTP_CF_IPCOUNTRY'])) {
+                $location = sanitize_text_field(wp_unslash($_SERVER['HTTP_CF_IPCOUNTRY']));
+            } elseif (!empty($ip)) {
+                $response = wp_remote_get('https://ipapi.co/' . rawurlencode($ip) . '/json/', ['timeout' => 2]);
+                if (!is_wp_error($response)) {
+                    $body = wp_remote_retrieve_body($response);
+                    $data = json_decode($body, true);
+                    if (!empty($data['country'])) {
+                        $location = sanitize_text_field($data['country']);
+                        $state = $data['region_code'] ?? '';
+                        if (empty($state) && !empty($data['region'])) {
+                            $state = $data['region'];
+                        }
+                        $state = sanitize_text_field($state);
+                        if (!empty($state)) {
+                            $location .= '-' . $state;
+                        }
+                    }
                 }
             }
         }
