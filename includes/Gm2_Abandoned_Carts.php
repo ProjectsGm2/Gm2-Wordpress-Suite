@@ -237,12 +237,16 @@ class Gm2_Abandoned_Carts {
         }
         check_ajax_referer('gm2_ac_activity', 'nonce');
 
-        $url   = esc_url_raw($_POST['url'] ?? '');
-        $token = '';
+        $url       = esc_url_raw($_POST['url'] ?? '');
+        $token     = '';
+        $prev_url  = '';
         if (class_exists('WC_Session') && WC()->session) {
             $token = WC()->session->get_customer_id();
+            if (method_exists(WC()->session, 'get')) {
+                $prev_url = WC()->session->get('gm2_ac_last_url');
+            }
             if (method_exists(WC()->session, 'set')) {
-                // store the most recent URL in the session instead of updating the database
+                // store the most recent URL in the session for later retrieval
                 WC()->session->set('gm2_ac_last_url', $url);
                 $session_entry = method_exists(WC()->session, 'get') ? WC()->session->get('gm2_entry_url') : '';
                 if (empty($session_entry) && !empty($url)) {
@@ -261,7 +265,7 @@ class Gm2_Abandoned_Carts {
 
         global $wpdb;
         $table = $wpdb->prefix . 'wc_ac_carts';
-        $row = $wpdb->get_row($wpdb->prepare("SELECT id, abandoned_at, revisit_count, session_start FROM $table WHERE cart_token = %s", $token));
+        $row   = $wpdb->get_row($wpdb->prepare("SELECT id, abandoned_at, revisit_count, session_start, exit_url FROM $table WHERE cart_token = %s", $token));
         if ($row) {
             $update = [];
             if ($row->abandoned_at) {
@@ -272,7 +276,10 @@ class Gm2_Abandoned_Carts {
                 $update['session_start'] = current_time('mysql');
             }
             if (!empty($update)) {
-                $wpdb->update($table, $update, [ 'id' => $row->id ]);
+                $wpdb->update($table, $update, ['id' => $row->id]);
+            }
+            if (!empty($url) && $url !== $prev_url && $url !== $row->exit_url) {
+                $wpdb->update($table, ['exit_url' => $url], ['id' => $row->id]);
             }
         }
 
