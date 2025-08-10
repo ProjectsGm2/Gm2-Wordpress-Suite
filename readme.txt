@@ -14,7 +14,7 @@ Key features include:
 * SEO tools with breadcrumbs, caching and structured data
 * ChatGPT-powered content generation and keyword research
 * WooCommerce quantity discounts with a dedicated Elementor widget (requires WooCommerce)
-* Abandoned cart tracking with email capture, browsing-time and revisit metrics, and recovery emails
+* Abandoned cart tracking grouped by IP with email capture, browsing-time and revisit metrics, an activity log, and recovery emails
 * Tariff management and redirects
 * Expanded SEO Context feeds AI prompts with business details
 * Focus keywords are tracked to prevent duplicates in AI suggestions
@@ -308,14 +308,11 @@ This feature requires WooCommerce to be active.
 After activating WooCommerce, open **Gm2 → Quantity Discounts** and click **Add Discount Group** to define bulk pricing rules. Choose the products or categories to apply, enter the minimum quantity and specify either a percentage or fixed discount. When customers meet the threshold the discount is applied automatically in the cart. Install Elementor to add the **Gm2 Qnty Discounts** widget on product pages, giving shoppers buttons for preset quantities that match your rules. If Elementor Pro is active the widget lives in the **WooCommerce** section; otherwise it appears in **General**. The selected rule and discounted price are saved in order item meta and appear in emails and on the admin order screen.
 
 == Abandoned Carts ==
-Enable this module from **Gm2 → Dashboard** to create tables that record the cart contents, email address, IP, location, device type, entry and exit URLs, cart value, total browsing time and how many times a shopper revisits their cart. A small JavaScript snippet captures the email field on the checkout page so you can reach customers who abandon their cart before placing an order. It also marks carts as active while the shopper browses and flags them as abandoned when they leave.
+Enable this module from **Gm2 → Dashboard**. The first time it runs the plugin creates four tables—`wp_wc_ac_carts`, `wp_wc_ac_email_queue`, `wp_wc_ac_recovered` and `wp_wc_ac_cart_activity`—to store cart sessions, queued messages, recovered orders and item‑level activity. A JavaScript snippet captures the shopper’s email on the checkout page, tracks browsing, and flags carts as abandoned when the last tab closes.
 
-The tracking script listens for `beforeunload`, `visibilitychange` and
-`pagehide` events to mark a cart abandoned when the last browser tab closes. On
-older browsers these events or background requests may be suppressed, which can
-prevent the abandonment notice from reaching WordPress.
+The **Gm2 → Abandoned Carts** screen groups entries by IP address so multiple visits from the same shopper appear as a single row showing the latest cart value along with total browsing time and revisits. Click a row’s **Cart Activity Log** link to view the add/remove/quantity events recorded for that IP.
 
-Open **Gm2 → Abandoned Carts** to view a table listing each cart's status, IP address, email, location, device, products, value, entry and exit URLs, browsing time and revisits. Recovery messages were planned to be queued using WP&nbsp;Cron via the `gm2_ac_process_queue` action, but this feature is currently disabled.
+Developers can customize the inactivity window with the `gm2_ac_mark_abandoned_interval` filter and send recovery emails by hooking into `gm2_ac_send_message` when the hourly `gm2_ac_process_queue` task runs.
 
 == Redirects ==
 Create 301 or 302 redirects from the **SEO → Redirects** tab. The plugin logs
