@@ -203,6 +203,29 @@ class AbandonedCartsTest extends WP_UnitTestCase {
         $this->assertCount(0, $GLOBALS['wpdb']->data[$table]);
         unset($GLOBALS['gm2_is_admin']);
     }
+
+    public function test_mark_active_refreshes_session_start_for_pending_cart() {
+        $table = $GLOBALS['wpdb']->prefix . 'wc_ac_carts';
+        $old_time = gmdate('Y-m-d H:i:s', time() - 10 * 60);
+        $GLOBALS['wpdb']->data[$table][0]['session_start'] = $old_time;
+        $GLOBALS['wpdb']->data[$table][0]['abandoned_at'] = null;
+
+        $threshold = time() - 5 * 60;
+        $status_before = strtotime($old_time) <= $threshold ? 'Pending Abandonment' : 'Active';
+        $this->assertSame('Pending Abandonment', $status_before);
+
+        $_POST = [ 'nonce' => 'n', 'url' => 'https://example.com/page1' ];
+        $_REQUEST = $_POST;
+        \Gm2\Gm2_Abandoned_Carts::gm2_ac_mark_active();
+
+        $row = $GLOBALS['wpdb']->data[$table][0];
+        $this->assertGreaterThan(strtotime($old_time), strtotime($row['session_start']));
+        $this->assertNull($row['abandoned_at']);
+
+        $threshold_after = time() - 5 * 60;
+        $status_after = strtotime($row['session_start']) <= $threshold_after ? 'Pending Abandonment' : 'Active';
+        $this->assertSame('Active', $status_after);
+    }
 }
 
 class AbandonedCartFakeDB {
