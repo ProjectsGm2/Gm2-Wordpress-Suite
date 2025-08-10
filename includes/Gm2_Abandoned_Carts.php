@@ -268,16 +268,27 @@ class Gm2_Abandoned_Carts {
         }
 
         global $wpdb;
-        $table = $wpdb->prefix . 'wc_ac_carts';
-        $row   = $wpdb->get_row($wpdb->prepare("SELECT id, abandoned_at, revisit_count, session_start, exit_url, ip_address, location FROM $table WHERE cart_token = %s", $token));
+        $table   = $wpdb->prefix . 'wc_ac_carts';
+        $row     = $wpdb->get_row($wpdb->prepare("SELECT id, abandoned_at, revisit_count, session_start, exit_url, ip_address, location FROM $table WHERE cart_token = %s", $token));
+        $minutes = absint(apply_filters('gm2_ac_mark_abandoned_interval', (int) get_option('gm2_ac_mark_abandoned_interval', 5)));
+        if ($minutes < 1) {
+            $minutes = 1;
+        }
         if ($row) {
             $update = [];
             if ($row->abandoned_at) {
                 $update['abandoned_at']  = null;
                 $update['session_start'] = current_time('mysql');
                 $update['revisit_count'] = (int) $row->revisit_count + 1;
-            } elseif (!$row->session_start) {
-                $update['session_start'] = current_time('mysql');
+            } else {
+                $session_time = $row->session_start ? strtotime($row->session_start) : 0;
+                $threshold    = time() - $minutes * MINUTE_IN_SECONDS;
+                if (!$row->session_start || $session_time <= $threshold) {
+                    $update['session_start'] = current_time('mysql');
+                    if ($row->session_start) {
+                        $update['revisit_count'] = (int) $row->revisit_count + 1;
+                    }
+                }
             }
             if (empty($row->ip_address) || empty($row->location)) {
                 $ip_info = self::get_ip_and_location();
