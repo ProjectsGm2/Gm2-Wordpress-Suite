@@ -12,6 +12,7 @@ class Gm2_Abandoned_Carts {
         $carts = $wpdb->prefix . 'wc_ac_carts';
         $queue = $wpdb->prefix . 'wc_ac_email_queue';
         $recovered = $wpdb->prefix . 'wc_ac_recovered';
+        $activity = $wpdb->prefix . 'wc_ac_cart_activity';
 
         $carts_sql = "CREATE TABLE $carts (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -71,10 +72,23 @@ class Gm2_Abandoned_Carts {
             KEY cart_token (cart_token)
         ) $charset_collate;";
 
+        $activity_sql = "CREATE TABLE $activity (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            cart_id bigint(20) unsigned NOT NULL,
+            action varchar(20) NOT NULL,
+            product_id bigint(20) unsigned NOT NULL,
+            sku varchar(100) DEFAULT NULL,
+            quantity int NOT NULL DEFAULT 0,
+            changed_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY  (id),
+            KEY cart_id (cart_id)
+        ) $charset_collate;";
+
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
         dbDelta($carts_sql);
         dbDelta($queue_sql);
         dbDelta($recovered_sql);
+        dbDelta($activity_sql);
     }
 
     public function run() {
@@ -101,18 +115,24 @@ class Gm2_Abandoned_Carts {
             return;
         }
         $cart_items = [];
+        $cart_map   = [];
         foreach ($cart->get_cart() as $item) {
             $prod_id = isset($item['product_id']) ? (int) $item['product_id'] : 0;
             $qty     = isset($item['quantity']) ? (int) $item['quantity'] : 1;
             $product = isset($item['data']) && is_object($item['data']) ? $item['data'] : wc_get_product($prod_id);
             $name    = $product ? $product->get_name() : 'Product #' . $prod_id;
             $price   = $product ? (float) $product->get_price() : 0;
+            $sku     = $product ? $product->get_sku() : '';
             $cart_items[] = [
                 'id'    => $prod_id,
                 'name'  => $name,
                 'qty'   => $qty,
                 'price' => $price,
-                'sku'   => $product ? $product->get_sku() : '',
+                'sku'   => $sku,
+            ];
+            $cart_map[$prod_id] = [
+                'qty' => $qty,
+                'sku' => $sku,
             ];
         }
         $contents   = wp_json_encode($cart_items);
@@ -167,10 +187,68 @@ class Gm2_Abandoned_Carts {
         $table = $wpdb->prefix . 'wc_ac_carts';
         $row = $wpdb->get_row(
             $wpdb->prepare(
-                "SELECT id, entry_url, exit_url, abandoned_at, revisit_count, session_start, location FROM $table WHERE cart_token = %s",
+                "SELECT id, entry_url, exit_url, abandoned_at, revisit_count, session_start, location, cart_contents FROM $table WHERE cart_token = %s",
                 $token
             )
         );
+
+        // Determine previous cart state
+        $prev_map = [];
+        if (method_exists($wc->session, 'get')) {
+            $session_prev = $wc->session->get('gm2_ac_cart_snapshot');
+            if (is_array($session_prev)) {
+                $prev_map = $session_prev;
+            }
+        }
+        if (empty($prev_map) && $row && !empty($row->cart_contents)) {
+            $decoded = json_decode($row->cart_contents, true);
+            if (is_array($decoded)) {
+                foreach ($decoded as $item) {
+                    $pid = isset($item['id']) ? (int) $item['id'] : 0;
+                    if ($pid) {
+                        $prev_map[$pid] = [
+                            'qty' => isset($item['qty']) ? (int) $item['qty'] : 0,
+                            'sku' => $item['sku'] ?? '',
+                        ];
+                    }
+                }
+            }
+        }
+
+        // Detect changes between previous and current cart
+        $changes = [];
+        foreach ($cart_map as $pid => $data) {
+            if (!isset($prev_map[$pid])) {
+                $changes[] = [
+                    'action'     => 'add',
+                    'product_id' => $pid,
+                    'sku'        => $data['sku'],
+                    'quantity'   => $data['qty'],
+                ];
+            } elseif ((int) $data['qty'] !== (int) $prev_map[$pid]['qty']) {
+                $changes[] = [
+                    'action'     => 'quantity',
+                    'product_id' => $pid,
+                    'sku'        => $data['sku'],
+                    'quantity'   => $data['qty'],
+                ];
+            }
+        }
+        foreach ($prev_map as $pid => $data) {
+            if (!isset($cart_map[$pid])) {
+                $changes[] = [
+                    'action'     => 'remove',
+                    'product_id' => $pid,
+                    'sku'        => $data['sku'],
+                    'quantity'   => 0,
+                ];
+            }
+        }
+
+        if (method_exists($wc->session, 'set')) {
+            $wc->session->set('gm2_ac_cart_snapshot', $cart_map);
+        }
+
         if ($row) {
             $update = [
                 'cart_contents' => $contents,
@@ -204,6 +282,7 @@ class Gm2_Abandoned_Carts {
             if (!empty($url_update)) {
                 $wpdb->update($table, $url_update, ['id' => $row->id]);
             }
+            $cart_id = $row->id;
         } else {
             $wpdb->insert($table, [
                 'cart_token'    => $token,
@@ -222,6 +301,22 @@ class Gm2_Abandoned_Carts {
                 'browsing_time' => 0,
                 'revisit_count' => 0,
             ]);
+            $cart_id = $wpdb->insert_id;
+        }
+
+        // Log cart activity
+        if (!empty($changes) && !empty($cart_id)) {
+            $activity_table = $wpdb->prefix . 'wc_ac_cart_activity';
+            foreach ($changes as $change) {
+                $wpdb->insert($activity_table, [
+                    'cart_id'    => $cart_id,
+                    'action'     => $change['action'],
+                    'product_id' => $change['product_id'],
+                    'sku'        => $change['sku'],
+                    'quantity'   => $change['quantity'],
+                    'changed_at' => current_time('mysql'),
+                ]);
+            }
         }
     }
 
