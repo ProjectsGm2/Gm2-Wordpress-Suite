@@ -10,6 +10,7 @@ class Gm2_Abandoned_Carts_Admin {
         add_action('admin_menu', [ $this, 'add_menu' ]);
         add_action('admin_init', [ $this, 'maybe_export' ]);
         add_action('admin_post_gm2_ac_reset', [ $this, 'handle_reset' ]);
+        add_action('admin_enqueue_scripts', [ $this, 'enqueue_scripts' ]);
     }
 
     public function add_menu() {
@@ -20,6 +21,35 @@ class Gm2_Abandoned_Carts_Admin {
             'manage_options',
             'gm2-abandoned-carts',
             [ $this, 'display_page' ]
+        );
+    }
+
+    public function enqueue_scripts($hook) {
+        if ($hook !== 'gm2_page_gm2-abandoned-carts') {
+            return;
+        }
+        wp_enqueue_script(
+            'gm2-ac-activity-log',
+            GM2_PLUGIN_URL . 'admin/js/gm2-ac-activity-log.js',
+            [ 'jquery' ],
+            file_exists(GM2_PLUGIN_DIR . 'admin/js/gm2-ac-activity-log.js') ? filemtime(GM2_PLUGIN_DIR . 'admin/js/gm2-ac-activity-log.js') : GM2_VERSION,
+            true
+        );
+        wp_localize_script(
+            'gm2-ac-activity-log',
+            'gm2AcActivityLog',
+            [
+                'ajax_url' => admin_url('admin-ajax.php'),
+                'nonce'    => wp_create_nonce('gm2_ac_get_activity'),
+                'empty'    => __( 'No activity found.', 'gm2-wordpress-suite' ),
+                'error'    => __( 'Unable to load activity.', 'gm2-wordpress-suite' ),
+            ]
+        );
+        wp_enqueue_style(
+            'gm2-ac-activity-log',
+            GM2_PLUGIN_URL . 'admin/css/gm2-ac-activity-log.css',
+            [],
+            file_exists(GM2_PLUGIN_DIR . 'admin/css/gm2-ac-activity-log.css') ? filemtime(GM2_PLUGIN_DIR . 'admin/css/gm2-ac-activity-log.css') : GM2_VERSION
         );
     }
 

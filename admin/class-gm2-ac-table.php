@@ -40,6 +40,7 @@ class GM2_AC_Table extends \WP_List_Table {
             'browsing_time' => __('Total Browsing Time', 'gm2-wordpress-suite'),
             'revisit_count' => __('Total Revisits', 'gm2-wordpress-suite'),
             'abandoned_at'=> __('Last Abandoned At', 'gm2-wordpress-suite'),
+            'activity'    => __('Cart Activity Log', 'gm2-wordpress-suite'),
         ];
     }
 
@@ -83,6 +84,11 @@ class GM2_AC_Table extends \WP_List_Table {
     public function column_default($item, $column_name) {
         $value = $item[$column_name] ?? '';
         return $this->ensure_value($value);
+    }
+
+    public function column_activity($item) {
+        $ip = isset($item['ip_address']) ? esc_attr($item['ip_address']) : '';
+        return '<a href="#" class="gm2-ac-activity-log-button" data-ip="' . $ip . '">' . esc_html__( 'Cart Activity Log', 'gm2-wordpress-suite' ) . '</a>';
     }
 
     private function format_duration($seconds) {
