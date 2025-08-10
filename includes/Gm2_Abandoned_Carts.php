@@ -98,6 +98,9 @@ class Gm2_Abandoned_Carts {
         add_action('woocommerce_update_cart_action_cart_updated', [$this, 'capture_cart']);
         add_action('woocommerce_cart_loaded_from_session', [$this, 'capture_cart']);
         add_action('woocommerce_thankyou', [$this, 'mark_cart_recovered']);
+        if (is_admin()) {
+            add_action('wp_ajax_gm2_ac_get_activity', [ __CLASS__, 'gm2_ac_get_activity' ]);
+        }
     }
 
     public function capture_cart() {
@@ -448,6 +451,39 @@ class Gm2_Abandoned_Carts {
         }
 
         wp_send_json_success();
+    }
+
+    public static function gm2_ac_get_activity() {
+        check_ajax_referer('gm2_ac_get_activity', 'nonce');
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('no_permission');
+        }
+        $ip      = isset($_POST['ip']) ? sanitize_text_field(wp_unslash($_POST['ip'])) : '';
+        $cart_id = isset($_POST['cart_id']) ? absint($_POST['cart_id']) : 0;
+        global $wpdb;
+        $activity_table = $wpdb->prefix . 'wc_ac_cart_activity';
+        $carts_table    = $wpdb->prefix . 'wc_ac_carts';
+        if ($cart_id) {
+            $sql  = "SELECT action, sku, quantity, changed_at FROM $activity_table WHERE cart_id = %d ORDER BY changed_at DESC";
+            $rows = $wpdb->get_results($wpdb->prepare($sql, $cart_id));
+        } elseif ($ip !== '') {
+            $sql = "SELECT a.action, a.sku, a.quantity, a.changed_at FROM $activity_table a INNER JOIN $carts_table c ON a.cart_id = c.id WHERE c.ip_address = %s ORDER BY a.changed_at DESC";
+            $rows = $wpdb->get_results($wpdb->prepare($sql, $ip));
+        } else {
+            $rows = [];
+        }
+        $data = [];
+        if ($rows) {
+            foreach ($rows as $row) {
+                $data[] = [
+                    'action'     => $row->action,
+                    'sku'        => $row->sku,
+                    'quantity'   => (int) $row->quantity,
+                    'changed_at' => mysql2date(get_option('date_format') . ' ' . get_option('time_format'), $row->changed_at),
+                ];
+            }
+        }
+        wp_send_json_success($data);
     }
 
     public function mark_cart_recovered($order_id) {

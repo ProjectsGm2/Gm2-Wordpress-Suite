@@ -1,0 +1,11 @@
+.gm2-ac-activity-row td{
+    background:#f9f9f9;
+}
+.gm2-ac-activity-log{
+    margin:0;
+    padding:10px 20px;
+}
+.gm2-ac-activity-log li{
+    list-style:disc;
+    margin-left:20px;
+}
