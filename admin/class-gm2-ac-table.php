@@ -34,12 +34,12 @@ class GM2_AC_Table extends \WP_List_Table {
             'device'      => __('Device', 'gm2-wordpress-suite'),
             'browser'     => __('Browser', 'gm2-wordpress-suite'),
             'products'    => __('SKUs in Cart', 'gm2-wordpress-suite'),
-            'cart_value'  => __('Cart Value', 'gm2-wordpress-suite'),
-            'entry_url'   => __('Entry URL', 'gm2-wordpress-suite'),
-            'exit_url'    => __('Exit URL', 'gm2-wordpress-suite'),
-            'browsing_time' => __('Browsing Time', 'gm2-wordpress-suite'),
-            'revisit_count' => __('Revisits', 'gm2-wordpress-suite'),
-            'abandoned_at'=> __('Abandoned At', 'gm2-wordpress-suite'),
+            'cart_value'  => __('Latest Cart Value', 'gm2-wordpress-suite'),
+            'entry_url'   => __('Last Entry URL', 'gm2-wordpress-suite'),
+            'exit_url'    => __('Last Exit URL', 'gm2-wordpress-suite'),
+            'browsing_time' => __('Total Browsing Time', 'gm2-wordpress-suite'),
+            'revisit_count' => __('Total Revisits', 'gm2-wordpress-suite'),
+            'abandoned_at'=> __('Last Abandoned At', 'gm2-wordpress-suite'),
         ];
     }
 
@@ -130,11 +130,11 @@ class GM2_AC_Table extends \WP_List_Table {
             $params[] = $like;
         }
 
-        $total_sql  = "SELECT COUNT(*) FROM $table $where";
+        $total_sql  = "SELECT COUNT(DISTINCT ip_address) FROM $table $where";
         $total_items = $wpdb->get_var($wpdb->prepare($total_sql, ...$params));
 
         $offset   = ($paged - 1) * $per_page;
-        $data_sql = "SELECT * FROM $table $where ORDER BY created_at DESC LIMIT %d OFFSET %d";
+        $data_sql = "SELECT t.*, agg.total_revisit_count, agg.total_browsing_time FROM $table t INNER JOIN (SELECT ip_address, MAX(created_at) AS max_created_at, SUM(revisit_count) AS total_revisit_count, SUM(browsing_time) AS total_browsing_time FROM $table $where GROUP BY ip_address) agg ON t.ip_address = agg.ip_address AND t.created_at = agg.max_created_at ORDER BY t.created_at DESC LIMIT %d OFFSET %d";
         $params2  = array_merge($params, [ $per_page, $offset ]);
         $rows     = $wpdb->get_results($wpdb->prepare($data_sql, ...$params2));
 
@@ -222,8 +222,8 @@ class GM2_AC_Table extends \WP_List_Table {
                 'cart_value'  => $this->ensure_value(wc_price($cart_value)),
                 'entry_url'   => $this->ensure_value(esc_url($row->entry_url)),
                 'exit_url'    => $this->ensure_value(esc_url($row->exit_url)),
-                'browsing_time'=> esc_html($this->ensure_value($this->format_duration($row->browsing_time))),
-                'revisit_count'=> esc_html($this->ensure_value($row->revisit_count)),
+                'browsing_time'=> esc_html($this->ensure_value($this->format_duration($row->total_browsing_time))),
+                'revisit_count'=> esc_html($this->ensure_value($row->total_revisit_count)),
                 'abandoned_at'=> esc_html($this->ensure_value($abandoned_at)),
             ];
         }
