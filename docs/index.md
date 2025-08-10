@@ -79,6 +79,14 @@ Each log row now includes small expand/collapse controls. Click the **Prompt sen
 
 If you need to clear the log and start over, click the **Reset Logs** button below the table.
 
+## Abandoned Carts
+
+Enable the module from **Gm2 → Dashboard** to begin tracking cart sessions. Activation creates four tables—`wp_wc_ac_carts`, `wp_wc_ac_email_queue`, `wp_wc_ac_recovered` and `wp_wc_ac_cart_activity`—that store carts, queued messages, recovered orders and item‑level activity.
+
+The **Gm2 → Abandoned Carts** screen groups records by IP address so multiple visits from the same shopper appear as a single row with combined browsing time and revisit counts. Click a row’s **Cart Activity Log** link to view the add/remove/quantity events pulled from the activity table.
+
+Developers can adjust the inactivity window using the `gm2_ac_mark_abandoned_interval` filter and send custom recovery emails by hooking into `gm2_ac_send_message` when the hourly `gm2_ac_process_queue` task runs.
+
 ## Exporting SEO Settings
 
 Use the **Export Settings** button on the SEO dashboard to download a `gm2-seo-settings.json` file containing all options that start with `gm2_`. The matching **Import Settings** form accepts the same JSON format and updates each option. The file is a simple key/value object:
