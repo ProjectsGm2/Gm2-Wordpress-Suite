@@ -93,6 +93,7 @@ class Gm2_Abandoned_Carts {
 
     public function run() {
         $this->maybe_install();
+        add_action('template_redirect', [$this, 'maybe_set_entry_url']);
 
         add_action('woocommerce_add_to_cart', [$this, 'capture_cart'], 10, 6);
         add_action('woocommerce_update_cart_action_cart_updated', [$this, 'capture_cart']);
@@ -100,6 +101,45 @@ class Gm2_Abandoned_Carts {
         add_action('woocommerce_thankyou', [$this, 'mark_cart_recovered']);
         if (is_admin()) {
             add_action('wp_ajax_gm2_ac_get_activity', [ __CLASS__, 'gm2_ac_get_activity' ]);
+        }
+    }
+
+    public function maybe_set_entry_url() {
+        $skip_admin = apply_filters('gm2_ac_skip_admin', true);
+        if (
+            $skip_admin &&
+            function_exists('current_user_can') &&
+            current_user_can('manage_options')
+        ) {
+            return;
+        }
+        if (!class_exists('WC') || !WC()->session) {
+            return;
+        }
+        $session_entry = WC()->session->get('gm2_entry_url');
+        if (!empty($session_entry)) {
+            return;
+        }
+        $host        = isset($_SERVER['HTTP_HOST']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_HOST'])) : '';
+        $request_uri = isset($_SERVER['REQUEST_URI']) ? wp_unslash($_SERVER['REQUEST_URI']) : '/';
+        $scheme      = is_ssl() ? 'https://' : 'http://';
+        $current_url = esc_url_raw($scheme . $host . $request_uri);
+
+        WC()->session->set('gm2_entry_url', $current_url);
+        if (isset($_COOKIE['gm2_entry_url'])) {
+            setcookie('gm2_entry_url', '', time() - HOUR_IN_SECONDS, COOKIEPATH, COOKIE_DOMAIN);
+            unset($_COOKIE['gm2_entry_url']);
+        }
+
+        $token = WC()->session->get_customer_id();
+        if (empty($token)) {
+            return;
+        }
+        global $wpdb;
+        $table = $wpdb->prefix . 'wc_ac_carts';
+        $row   = $wpdb->get_row($wpdb->prepare("SELECT id, entry_url FROM $table WHERE cart_token = %s", $token));
+        if ($row && empty($row->entry_url)) {
+            $wpdb->update($table, [ 'entry_url' => $current_url ], [ 'id' => $row->id ]);
         }
     }
 
@@ -178,15 +218,13 @@ class Gm2_Abandoned_Carts {
         $request_uri = isset($_SERVER['REQUEST_URI']) ? esc_url_raw(wp_unslash($_SERVER['REQUEST_URI'])) : '/';
         $current_url = home_url($request_uri);
 
-        $stored_entry = '';
-        if (isset($_COOKIE['gm2_entry_url'])) {
+        $stored_entry  = '';
+        $session_entry = $wc->session->get('gm2_entry_url');
+        if (!empty($session_entry)) {
+            $stored_entry = esc_url_raw($session_entry);
+            $wc->session->set('gm2_entry_url', null);
+        } elseif (isset($_COOKIE['gm2_entry_url'])) {
             $stored_entry = esc_url_raw(wp_unslash($_COOKIE['gm2_entry_url']));
-        } else {
-            $session_entry = $wc->session->get('gm2_entry_url');
-            if (!empty($session_entry)) {
-                $stored_entry = esc_url_raw($session_entry);
-                $wc->session->set('gm2_entry_url', null);
-            }
         }
         if (!empty($stored_entry)) {
             $current_url = $stored_entry;
