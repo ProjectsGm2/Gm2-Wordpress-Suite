@@ -144,6 +144,12 @@ with dynamic values when schemas are generated:
 Use these placeholders within the JSON-LD template editor on the SEO settings
 page to insert dynamic content.
 
+## Bulk AI Review
+
+The **Bulk AI Review** page lists posts with AI-generated SEO Title, Description,
+Focus Keywords and Long Tail Keywords suggestions. Use the **Export CSV** button
+to download a `gm2-bulk-ai.csv` file containing these columns.
+
 ## Bulk AI for Taxonomies
 
 The **Bulk AI Taxonomies** page under **Gm2 → Bulk AI Taxonomies** lists terms

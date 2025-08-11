@@ -1656,7 +1656,7 @@ class Gm2_SEO_Admin {
 
         $query = new \WP_Query($args);
 
-        $rows   = [ ['ID', 'Title', 'SEO Title', 'Description', 'Slug', 'Page Name'] ];
+        $rows   = [ ['ID', 'Title', 'SEO Title', 'Description', 'Focus Keywords', 'Long Tail Keywords'] ];
         foreach ($query->posts as $post) {
             $data = [];
             $stored = get_post_meta($post->ID, '_gm2_ai_research', true);
@@ -1666,13 +1666,15 @@ class Gm2_SEO_Admin {
                     $data = $tmp;
                 }
             }
+            $fk = isset($data['focus_keywords']) ? (is_array($data['focus_keywords']) ? implode(', ', $data['focus_keywords']) : $data['focus_keywords']) : '';
+            $lt = isset($data['long_tail_keywords']) ? (is_array($data['long_tail_keywords']) ? implode(', ', $data['long_tail_keywords']) : $data['long_tail_keywords']) : '';
             $rows[] = [
                 $post->ID,
                 $post->post_title,
                 $data['seo_title'] ?? '',
                 $data['description'] ?? '',
-                $data['slug'] ?? '',
-                $data['page_name'] ?? '',
+                $fk,
+                $lt,
             ];
         }
 
@@ -4550,12 +4552,21 @@ class Gm2_SEO_Admin {
             update_post_meta($post_id, '_gm2_prev_description', get_post_meta($post_id, '_gm2_description', true));
             update_post_meta($post_id, '_gm2_description', sanitize_textarea_field(wp_unslash($_POST['seo_description'])));
         }
+        if (isset($_POST['focus_keywords'])) {
+            update_post_meta($post_id, '_gm2_prev_focus_keywords', get_post_meta($post_id, '_gm2_focus_keywords', true));
+            update_post_meta($post_id, '_gm2_focus_keywords', sanitize_text_field(wp_unslash($_POST['focus_keywords'])));
+        }
+        if (isset($_POST['long_tail_keywords'])) {
+            update_post_meta($post_id, '_gm2_prev_long_tail_keywords', get_post_meta($post_id, '_gm2_long_tail_keywords', true));
+            update_post_meta($post_id, '_gm2_long_tail_keywords', sanitize_text_field(wp_unslash($_POST['long_tail_keywords'])));
+        }
 
         $response = [
-            'title'       => get_post_field('post_title', $post_id),
-            'seo_title'   => get_post_meta($post_id, '_gm2_title', true),
-            'description' => get_post_meta($post_id, '_gm2_description', true),
-            'slug'        => get_post_field('post_name', $post_id),
+            'title'            => get_post_field('post_title', $post_id),
+            'seo_title'        => get_post_meta($post_id, '_gm2_title', true),
+            'description'      => get_post_meta($post_id, '_gm2_description', true),
+            'focus_keywords'   => get_post_meta($post_id, '_gm2_focus_keywords', true),
+            'long_tail_keywords' => get_post_meta($post_id, '_gm2_long_tail_keywords', true),
         ];
 
         wp_send_json_success($response);
@@ -4597,12 +4608,21 @@ class Gm2_SEO_Admin {
                 update_post_meta($post_id, '_gm2_prev_description', get_post_meta($post_id, '_gm2_description', true));
                 update_post_meta($post_id, '_gm2_description', sanitize_textarea_field($fields['seo_description']));
             }
+            if (isset($fields['focus_keywords'])) {
+                update_post_meta($post_id, '_gm2_prev_focus_keywords', get_post_meta($post_id, '_gm2_focus_keywords', true));
+                update_post_meta($post_id, '_gm2_focus_keywords', sanitize_text_field($fields['focus_keywords']));
+            }
+            if (isset($fields['long_tail_keywords'])) {
+                update_post_meta($post_id, '_gm2_prev_long_tail_keywords', get_post_meta($post_id, '_gm2_long_tail_keywords', true));
+                update_post_meta($post_id, '_gm2_long_tail_keywords', sanitize_text_field($fields['long_tail_keywords']));
+            }
 
             $updated[$post_id] = [
-                'title'       => get_post_field('post_title', $post_id),
-                'seo_title'   => get_post_meta($post_id, '_gm2_title', true),
-                'description' => get_post_meta($post_id, '_gm2_description', true),
-                'slug'        => get_post_field('post_name', $post_id),
+                'title'            => get_post_field('post_title', $post_id),
+                'seo_title'        => get_post_meta($post_id, '_gm2_title', true),
+                'description'      => get_post_meta($post_id, '_gm2_description', true),
+                'focus_keywords'   => get_post_meta($post_id, '_gm2_focus_keywords', true),
+                'long_tail_keywords' => get_post_meta($post_id, '_gm2_long_tail_keywords', true),
             ];
         }
 
@@ -4650,11 +4670,24 @@ class Gm2_SEO_Admin {
             delete_post_meta($post_id, '_gm2_prev_description');
         }
 
+        $focus_prev = get_post_meta($post_id, '_gm2_prev_focus_keywords', true);
+        if ($focus_prev !== '') {
+            update_post_meta($post_id, '_gm2_focus_keywords', $focus_prev);
+            delete_post_meta($post_id, '_gm2_prev_focus_keywords');
+        }
+
+        $long_prev = get_post_meta($post_id, '_gm2_prev_long_tail_keywords', true);
+        if ($long_prev !== '') {
+            update_post_meta($post_id, '_gm2_long_tail_keywords', $long_prev);
+            delete_post_meta($post_id, '_gm2_prev_long_tail_keywords');
+        }
+
         $response = [
-            'title'       => get_the_title($post_id),
-            'seo_title'   => get_post_meta($post_id, '_gm2_title', true),
-            'description' => get_post_meta($post_id, '_gm2_description', true),
-            'slug'        => get_post_field('post_name', $post_id),
+            'title'            => get_the_title($post_id),
+            'seo_title'        => get_post_meta($post_id, '_gm2_title', true),
+            'description'      => get_post_meta($post_id, '_gm2_description', true),
+            'focus_keywords'   => get_post_meta($post_id, '_gm2_focus_keywords', true),
+            'long_tail_keywords' => get_post_meta($post_id, '_gm2_long_tail_keywords', true),
         ];
 
         wp_send_json_success($response);
@@ -4937,6 +4970,10 @@ class Gm2_SEO_Admin {
             delete_post_meta($post_id, '_gm2_prev_description');
             delete_post_meta($post_id, '_gm2_prev_slug');
             delete_post_meta($post_id, '_gm2_prev_post_title');
+            delete_post_meta($post_id, '_gm2_focus_keywords');
+            delete_post_meta($post_id, '_gm2_long_tail_keywords');
+            delete_post_meta($post_id, '_gm2_prev_focus_keywords');
+            delete_post_meta($post_id, '_gm2_prev_long_tail_keywords');
             if (delete_post_meta($post_id, '_gm2_ai_research')) {
                 $cleared++;
             }
@@ -4965,6 +5002,8 @@ class Gm2_SEO_Admin {
                 continue;
             }
             delete_post_meta($post_id, '_gm2_ai_research');
+            delete_post_meta($post_id, '_gm2_prev_focus_keywords');
+            delete_post_meta($post_id, '_gm2_prev_long_tail_keywords');
             $count++;
         }
 
@@ -4983,12 +5022,16 @@ class Gm2_SEO_Admin {
                 wp_send_json_error( __( 'permission denied', 'gm2-wordpress-suite' ), 403 );
             }
             delete_post_meta($post_id, '_gm2_ai_research');
+            delete_post_meta($post_id, '_gm2_prev_focus_keywords');
+            delete_post_meta($post_id, '_gm2_prev_long_tail_keywords');
             wp_send_json_success();
         } elseif ($term_id && $taxonomy) {
             if (!current_user_can('edit_term', $term_id)) {
                 wp_send_json_error( __( 'permission denied', 'gm2-wordpress-suite' ), 403 );
             }
             delete_term_meta($term_id, '_gm2_ai_research');
+            delete_term_meta($term_id, '_gm2_prev_focus_keywords');
+            delete_term_meta($term_id, '_gm2_prev_long_tail_keywords');
             wp_send_json_success();
         }
 
