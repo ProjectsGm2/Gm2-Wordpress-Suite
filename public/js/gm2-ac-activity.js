@@ -3,6 +3,7 @@
     const ENTRY_KEY = 'gm2_entry_url';
     const ajaxUrl = gm2AcActivity.ajax_url;
     const nonce = gm2AcActivity.nonce;
+    const inactivityMs = parseInt(gm2AcActivity.inactivity_ms, 10) || 5 * 60 * 1000;
     const url = window.location.href;
 
     function send(action, targetUrl) {
@@ -123,11 +124,25 @@
     }
     send('gm2_ac_mark_active');
 
+    let inactivityTimer;
+    function resetInactivityTimer() {
+        clearTimeout(inactivityTimer);
+        inactivityTimer = setTimeout(() => {
+            send('gm2_ac_mark_abandoned');
+        }, inactivityMs);
+        if (inactivityTimer && typeof inactivityTimer.unref === 'function') {
+            inactivityTimer.unref();
+        }
+    }
+    resetInactivityTimer();
+
     document.body.addEventListener('added_to_cart', () => {
         send('gm2_ac_mark_active');
+        resetInactivityTimer();
     });
 
     document.addEventListener('click', (e) => {
+        resetInactivityTimer();
         const anchor = e.target.closest('a');
         if (!anchor) {
             return;
@@ -136,6 +151,10 @@
         if (href && anchor.origin !== window.location.origin) {
             send('gm2_ac_mark_abandoned', href);
         }
+    });
+
+    ['mousemove', 'keydown', 'scroll', 'touchstart'].forEach((ev) => {
+        document.addEventListener(ev, resetInactivityTimer, { passive: true });
     });
 
     document.addEventListener('visibilitychange', () => {
