@@ -436,6 +436,56 @@ class Gm2_Abandoned_Carts {
             wp_send_json_error('no_cart');
         }
 
+        // Build a snapshot of the current cart and visitor details.
+        $cart_items = [];
+        $total      = 0;
+        $wc         = function_exists('WC') ? WC() : null;
+        $cart       = ($wc && isset($wc->cart)) ? $wc->cart : null;
+        if ($cart && !$cart->is_empty()) {
+            foreach ($cart->get_cart() as $item) {
+                $prod_id = isset($item['product_id']) ? (int) $item['product_id'] : 0;
+                $qty     = isset($item['quantity']) ? (int) $item['quantity'] : 1;
+                $product = isset($item['data']) && is_object($item['data']) ? $item['data'] : (function_exists('wc_get_product') ? wc_get_product($prod_id) : null);
+                $name    = $product ? $product->get_name() : 'Product #' . $prod_id;
+                $price   = $product ? (float) $product->get_price() : 0;
+                $sku     = $product ? $product->get_sku() : '';
+                $cart_items[] = [
+                    'id'    => $prod_id,
+                    'name'  => $name,
+                    'qty'   => $qty,
+                    'price' => $price,
+                    'sku'   => $sku,
+                ];
+            }
+            $total = (float) $cart->get_cart_contents_total();
+        }
+        $contents = wp_json_encode($cart_items);
+
+        $agent    = isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '';
+        $browser  = self::get_browser($agent);
+        $ip_info  = self::get_ip_and_location();
+        $ip       = $ip_info['ip'];
+        $location = $ip_info['location'];
+        $device   = 'Desktop';
+        if (file_exists(GM2_PLUGIN_DIR . 'includes/MobileDetect.php')) {
+            require_once GM2_PLUGIN_DIR . 'includes/MobileDetect.php';
+            if (class_exists('Detection\\MobileDetect')) {
+                $detect = new \Detection\MobileDetect();
+            } elseif (class_exists('Mobile_Detect')) {
+                $detect = new \Mobile_Detect();
+            } else {
+                $detect = null;
+            }
+            if ($detect) {
+                $detect->setUserAgent($agent);
+                if ($detect->isTablet()) {
+                    $device = 'Tablet';
+                } elseif ($detect->isMobile()) {
+                    $device = 'Mobile';
+                }
+            }
+        }
+
         global $wpdb;
         $table   = $wpdb->prefix . 'wc_ac_carts';
         $row     = $wpdb->get_row($wpdb->prepare("SELECT id, abandoned_at, revisit_count, session_start, ip_address, location FROM $table WHERE cart_token = %s", $token));
@@ -444,7 +494,19 @@ class Gm2_Abandoned_Carts {
             $minutes = 1;
         }
         if ($row) {
-            $update = [];
+            $update = [
+                'cart_contents' => $contents,
+                'cart_total'    => $total,
+                'user_agent'    => $agent,
+                'browser'       => $browser,
+                'device'        => $device,
+            ];
+            if (!empty($ip)) {
+                $update['ip_address'] = $ip;
+            }
+            if (!empty($location)) {
+                $update['location'] = $location;
+            }
             if ($row->abandoned_at) {
                 $update['abandoned_at']  = null;
                 $update['session_start'] = current_time('mysql');
@@ -459,18 +521,27 @@ class Gm2_Abandoned_Carts {
                     }
                 }
             }
-            if (empty($row->ip_address) || empty($row->location)) {
-                $ip_info = self::get_ip_and_location();
-                if (empty($row->ip_address) && !empty($ip_info['ip'])) {
-                    $update['ip_address'] = $ip_info['ip'];
-                }
-                if (empty($row->location) && !empty($ip_info['location'])) {
-                    $update['location'] = $ip_info['location'];
-                }
-            }
             if (!empty($update)) {
                 $wpdb->update($table, $update, ['id' => $row->id]);
             }
+        } else {
+            $wpdb->insert($table, [
+                'cart_token'    => $token,
+                'user_id'       => get_current_user_id(),
+                'cart_contents' => $contents,
+                'created_at'    => current_time('mysql'),
+                'session_start' => current_time('mysql'),
+                'ip_address'    => $ip,
+                'user_agent'    => $agent,
+                'browser'       => $browser,
+                'location'      => $location,
+                'device'        => $device,
+                'entry_url'     => $url,
+                'exit_url'      => $url,
+                'cart_total'    => $total,
+                'browsing_time' => 0,
+                'revisit_count' => 0,
+            ]);
         }
 
         wp_send_json_success();
