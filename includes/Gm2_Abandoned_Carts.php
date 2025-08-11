@@ -610,31 +610,61 @@ class Gm2_Abandoned_Carts {
 
     private function maybe_install() {
         global $wpdb;
-        $carts_table = $wpdb->prefix . 'wc_ac_carts';
-        $queue_table = $wpdb->prefix . 'wc_ac_email_queue';
+        $carts_table     = $wpdb->prefix . 'wc_ac_carts';
+        $queue_table     = $wpdb->prefix . 'wc_ac_email_queue';
         $recovered_table = $wpdb->prefix . 'wc_ac_recovered';
-        $carts_exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $carts_table));
-        $queue_exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $queue_table));
+        $activity_table  = $wpdb->prefix . 'wc_ac_cart_activity';
+        $carts_exists    = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $carts_table));
+        $queue_exists    = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $queue_table));
         $recovered_exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $recovered_table));
-        if ($carts_exists !== $carts_table || $queue_exists !== $queue_table || $recovered_exists !== $recovered_table) {
-            $this->install();
-        } else {
-            $has_browser = $wpdb->get_var($wpdb->prepare("SHOW COLUMNS FROM $carts_table LIKE %s", 'browser'));
-            if (!$has_browser) {
-                $wpdb->query("ALTER TABLE $carts_table ADD browser varchar(50) DEFAULT NULL AFTER user_agent");
+        $activity_exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $activity_table));
+        if (
+            $carts_exists !== $carts_table ||
+            $queue_exists !== $queue_table ||
+            $recovered_exists !== $recovered_table ||
+            $activity_exists !== $activity_table
+        ) {
+            if (
+                $carts_exists === $carts_table &&
+                $queue_exists === $queue_table &&
+                $recovered_exists === $recovered_table &&
+                $activity_exists !== $activity_table
+            ) {
+                $charset_collate = $wpdb->get_charset_collate();
+                $activity_sql = "CREATE TABLE $activity_table (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            cart_id bigint(20) unsigned NOT NULL,
+            action varchar(20) NOT NULL,
+            product_id bigint(20) unsigned NOT NULL,
+            sku varchar(100) DEFAULT NULL,
+            quantity int NOT NULL DEFAULT 0,
+            changed_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY  (id),
+            KEY cart_id (cart_id)
+        ) $charset_collate;";
+                require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+                dbDelta($activity_sql);
+            } else {
+                $this->install();
             }
-            $has_session_start = $wpdb->get_var($wpdb->prepare("SHOW COLUMNS FROM $carts_table LIKE %s", 'session_start'));
-            if (!$has_session_start) {
-                $wpdb->query("ALTER TABLE $carts_table ADD session_start datetime DEFAULT NULL AFTER created_at");
-            }
-            $has_browsing_time = $wpdb->get_var($wpdb->prepare("SHOW COLUMNS FROM $carts_table LIKE %s", 'browsing_time'));
-            if (!$has_browsing_time) {
-                $wpdb->query("ALTER TABLE $carts_table ADD browsing_time bigint(20) unsigned DEFAULT 0 AFTER exit_url");
-            }
-            $has_revisit_count = $wpdb->get_var($wpdb->prepare("SHOW COLUMNS FROM $carts_table LIKE %s", 'revisit_count'));
-            if (!$has_revisit_count) {
-                $wpdb->query("ALTER TABLE $carts_table ADD revisit_count int DEFAULT 0 AFTER browsing_time");
-            }
+            return;
+        }
+
+        $has_browser = $wpdb->get_var($wpdb->prepare("SHOW COLUMNS FROM $carts_table LIKE %s", 'browser'));
+        if (!$has_browser) {
+            $wpdb->query("ALTER TABLE $carts_table ADD browser varchar(50) DEFAULT NULL AFTER user_agent");
+        }
+        $has_session_start = $wpdb->get_var($wpdb->prepare("SHOW COLUMNS FROM $carts_table LIKE %s", 'session_start'));
+        if (!$has_session_start) {
+            $wpdb->query("ALTER TABLE $carts_table ADD session_start datetime DEFAULT NULL AFTER created_at");
+        }
+        $has_browsing_time = $wpdb->get_var($wpdb->prepare("SHOW COLUMNS FROM $carts_table LIKE %s", 'browsing_time'));
+        if (!$has_browsing_time) {
+            $wpdb->query("ALTER TABLE $carts_table ADD browsing_time bigint(20) unsigned DEFAULT 0 AFTER exit_url");
+        }
+        $has_revisit_count = $wpdb->get_var($wpdb->prepare("SHOW COLUMNS FROM $carts_table LIKE %s", 'revisit_count'));
+        if (!$has_revisit_count) {
+            $wpdb->query("ALTER TABLE $carts_table ADD revisit_count int DEFAULT 0 AFTER browsing_time");
         }
     }
 
