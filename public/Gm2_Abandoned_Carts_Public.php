@@ -66,12 +66,14 @@ class Gm2_Abandoned_Carts_Public {
             GM2_VERSION,
             true
         );
+        $inactivity_ms = absint(apply_filters('gm2_ac_inactivity_ms', 5 * MINUTE_IN_SECONDS * 1000));
         wp_localize_script(
             'gm2-ac-activity',
             'gm2AcActivity',
             [
-                'ajax_url' => admin_url('admin-ajax.php'),
-                'nonce'    => wp_create_nonce('gm2_ac_activity'),
+                'ajax_url'      => admin_url('admin-ajax.php'),
+                'nonce'         => wp_create_nonce('gm2_ac_activity'),
+                'inactivity_ms' => $inactivity_ms,
             ]
         );
     }

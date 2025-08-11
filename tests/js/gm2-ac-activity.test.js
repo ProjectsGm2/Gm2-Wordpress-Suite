@@ -1,6 +1,7 @@
 const { JSDOM } = require('jsdom');
 
 test('records exit URL when localStorage is disabled', () => {
+  jest.useFakeTimers();
   const dom = new JSDOM(`<!DOCTYPE html><body></body>`, { url: 'https://example.com/page' });
   const { window } = dom;
 
@@ -32,9 +33,12 @@ test('records exit URL when localStorage is disabled', () => {
   expect(abandonCalls.length).toBe(1);
   const params = new URLSearchParams(abandonCalls[0][1].body);
   expect(params.get('url')).toBe('https://example.com/page');
+  jest.clearAllTimers();
+  jest.useRealTimers();
 });
 
 test('captures external link destination before navigation', () => {
+  jest.useFakeTimers();
   const dom = new JSDOM(`<!DOCTYPE html><body><a id="out" href="https://external.com/path">go</a></body>`, { url: 'https://example.com/page' });
   const { window } = dom;
 
@@ -50,7 +54,8 @@ test('captures external link destination before navigation', () => {
   require('../../public/js/gm2-ac-activity.js');
 
   const link = window.document.getElementById('out');
-  link.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+  link.addEventListener('click', (e) => e.preventDefault());
+  link.dispatchEvent(new window.MouseEvent('click', { bubbles: true, cancelable: true }));
 
   const abandonCalls = fetchMock.mock.calls.filter((c) => {
     const params = new URLSearchParams(c[1].body);
@@ -60,9 +65,12 @@ test('captures external link destination before navigation', () => {
   expect(abandonCalls.length).toBe(1);
   const params = new URLSearchParams(abandonCalls[0][1].body);
   expect(params.get('url')).toBe('https://external.com/path');
+  jest.clearAllTimers();
+  jest.useRealTimers();
 });
 
 test('marks abandoned on visibilitychange hidden', () => {
+  jest.useFakeTimers();
   const dom = new JSDOM(`<!DOCTYPE html><body></body>`, { url: 'https://example.com/page' });
   const { window } = dom;
 
@@ -88,9 +96,12 @@ test('marks abandoned on visibilitychange hidden', () => {
   expect(abandonCalls.length).toBe(1);
   const params = new URLSearchParams(abandonCalls[0][1].body);
   expect(params.get('url')).toBe('https://example.com/page');
+  jest.clearAllTimers();
+  jest.useRealTimers();
 });
 
 test('marks abandoned on beforeunload', () => {
+  jest.useFakeTimers();
   const dom = new JSDOM(`<!DOCTYPE html><body></body>`, { url: 'https://example.com/page' });
   const { window } = dom;
 
@@ -115,6 +126,70 @@ test('marks abandoned on beforeunload', () => {
   expect(abandonCalls.length).toBe(1);
   const params = new URLSearchParams(abandonCalls[0][1].body);
   expect(params.get('url')).toBe('https://example.com/page');
+  jest.clearAllTimers();
+  jest.useRealTimers();
+});
+
+test('marks abandoned after inactivity threshold', () => {
+  jest.useFakeTimers();
+  const dom = new JSDOM(`<!DOCTYPE html><body></body>`, { url: 'https://example.com/page' });
+  const { window } = dom;
+
+  const fetchMock = jest.fn().mockResolvedValue({ ok: true });
+  window.fetch = fetchMock;
+  global.fetch = fetchMock;
+  window.navigator.sendBeacon = jest.fn().mockReturnValue(true);
+
+  Object.assign(global, { window, document: window.document, navigator: window.navigator });
+  global.gm2AcActivity = { ajax_url: '/ajax', nonce: 'nonce', inactivity_ms: 50 };
+
+  jest.resetModules();
+  require('../../public/js/gm2-ac-activity.js');
+
+  jest.advanceTimersByTime(60);
+
+  const abandonCalls = fetchMock.mock.calls.filter((c) => {
+    const params = new URLSearchParams(c[1].body);
+    return params.get('action') === 'gm2_ac_mark_abandoned';
+  });
+
+  expect(abandonCalls.length).toBe(1);
+  jest.clearAllTimers();
+  jest.useRealTimers();
+});
+
+test('resets inactivity timer on interaction', () => {
+  jest.useFakeTimers();
+  const dom = new JSDOM(`<!DOCTYPE html><body></body>`, { url: 'https://example.com/page' });
+  const { window } = dom;
+
+  const fetchMock = jest.fn().mockResolvedValue({ ok: true });
+  window.fetch = fetchMock;
+  global.fetch = fetchMock;
+  window.navigator.sendBeacon = jest.fn().mockReturnValue(true);
+
+  Object.assign(global, { window, document: window.document, navigator: window.navigator });
+  global.gm2AcActivity = { ajax_url: '/ajax', nonce: 'nonce', inactivity_ms: 50 };
+
+  jest.resetModules();
+  require('../../public/js/gm2-ac-activity.js');
+
+  window.document.dispatchEvent(new window.Event('mousemove'));
+  jest.advanceTimersByTime(40);
+  let abandonCalls = fetchMock.mock.calls.filter((c) => {
+    const params = new URLSearchParams(c[1].body);
+    return params.get('action') === 'gm2_ac_mark_abandoned';
+  });
+  expect(abandonCalls.length).toBe(0);
+
+  jest.advanceTimersByTime(20);
+  abandonCalls = fetchMock.mock.calls.filter((c) => {
+    const params = new URLSearchParams(c[1].body);
+    return params.get('action') === 'gm2_ac_mark_abandoned';
+  });
+  expect(abandonCalls.length).toBe(1);
+  jest.clearAllTimers();
+  jest.useRealTimers();
 });
 
 function setupJQuery(postImpl) {
