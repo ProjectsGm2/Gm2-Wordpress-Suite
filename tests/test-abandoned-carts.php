@@ -21,6 +21,7 @@ namespace Gm2 {
     function wp_clear_scheduled_hook() {}
     function apply_filters($tag, $value) { return $value; }
     function get_option($option, $default = false) { return $default; }
+    function is_ssl() { return false; }
 }
 
 namespace {
@@ -173,6 +174,102 @@ class AbandonedCartsTest extends WP_UnitTestCase {
         WC()->session->set('gm2_ac_last_seen_url', 'https://example.com/final');
         $ac->update_exit_url_from_session();
         $this->assertSame($before, $GLOBALS['wpdb']->data[$table][0]);
+    }
+
+    public function test_entry_url_captured_without_js() {
+        $ac = new \Gm2\Gm2_Abandoned_Carts();
+        $_SERVER['HTTP_HOST'] = 'example.com';
+        $_SERVER['REQUEST_URI'] = '/landing';
+        $ac->maybe_set_entry_url();
+        $table = $GLOBALS['wpdb']->prefix . 'wc_ac_carts';
+        $row = $GLOBALS['wpdb']->data[$table][0];
+        $this->assertSame('http://example.com/landing', $row['entry_url']);
+        $this->assertSame('http://example.com/landing', WC()->session->get('gm2_entry_url'));
+    }
+
+    public function test_repeated_page_requests_update_exit_url() {
+        $ac = new \Gm2\Gm2_Abandoned_Carts();
+        $table = $GLOBALS['wpdb']->prefix . 'wc_ac_carts';
+
+        $_SERVER['HTTP_HOST'] = 'example.com';
+        $_SERVER['REQUEST_URI'] = '/page1';
+        $ac->store_last_seen_url();
+        $ac->update_exit_url_from_session();
+        $row = $GLOBALS['wpdb']->data[$table][0];
+        $this->assertSame('http://example.com/page1', $row['exit_url']);
+
+        $_SERVER['REQUEST_URI'] = '/page2';
+        $ac->store_last_seen_url();
+        // exit_url should remain previous until shutdown
+        $row = $GLOBALS['wpdb']->data[$table][0];
+        $this->assertSame('http://example.com/page1', $row['exit_url']);
+        $ac->update_exit_url_from_session();
+        $row = $GLOBALS['wpdb']->data[$table][0];
+        $this->assertSame('http://example.com/page2', $row['exit_url']);
+    }
+
+    public function test_external_link_click_finalizes_exit_url() {
+        $ac = new \Gm2\Gm2_Abandoned_Carts();
+        $table = $GLOBALS['wpdb']->prefix . 'wc_ac_carts';
+
+        $_SERVER['HTTP_HOST'] = 'example.com';
+        $_SERVER['REQUEST_URI'] = '/page1';
+        $ac->store_last_seen_url();
+        $ac->update_exit_url_from_session();
+
+        $_SERVER['REQUEST_URI'] = '/page2';
+        $ac->store_last_seen_url();
+        $ac->update_exit_url_from_session();
+
+        $_POST = ['nonce' => 'n', 'url' => 'https://external.com/off'];
+        $_REQUEST = $_POST;
+        \Gm2\Gm2_Abandoned_Carts::gm2_ac_mark_abandoned();
+        $row = $GLOBALS['wpdb']->data[$table][0];
+        $this->assertSame('https://external.com/off', $row['exit_url']);
+    }
+
+    public function test_pagehide_finalizes_exit_url() {
+        $ac = new \Gm2\Gm2_Abandoned_Carts();
+        $table = $GLOBALS['wpdb']->prefix . 'wc_ac_carts';
+
+        $_SERVER['HTTP_HOST'] = 'example.com';
+        $_SERVER['REQUEST_URI'] = '/page1';
+        $ac->store_last_seen_url();
+        $ac->update_exit_url_from_session();
+
+        $_SERVER['REQUEST_URI'] = '/page2';
+        $ac->store_last_seen_url();
+        $ac->update_exit_url_from_session();
+
+        $_SERVER['REQUEST_URI'] = '/final';
+        $ac->store_last_seen_url();
+        $row = $GLOBALS['wpdb']->data[$table][0];
+        $this->assertSame('http://example.com/page2', $row['exit_url']);
+        $ac->update_exit_url_from_session();
+        $row = $GLOBALS['wpdb']->data[$table][0];
+        $this->assertSame('http://example.com/final', $row['exit_url']);
+    }
+
+    public function test_multi_tab_last_close_updates_exit_url() {
+        $ac = new \Gm2\Gm2_Abandoned_Carts();
+        $table = $GLOBALS['wpdb']->prefix . 'wc_ac_carts';
+
+        $_SERVER['HTTP_HOST'] = 'example.com';
+        $_SERVER['REQUEST_URI'] = '/tab1';
+        $ac->store_last_seen_url();
+
+        $_SERVER['REQUEST_URI'] = '/tab2';
+        $ac->store_last_seen_url();
+
+        // Close first tab
+        $ac->update_exit_url_from_session();
+        $row = $GLOBALS['wpdb']->data[$table][0];
+        $this->assertSame('http://example.com/tab2', $row['exit_url']);
+
+        // Close second (last) tab
+        $ac->update_exit_url_from_session();
+        $row = $GLOBALS['wpdb']->data[$table][0];
+        $this->assertSame('http://example.com/tab2', $row['exit_url']);
     }
 
     public function test_mark_cart_recovered_moves_row() {
