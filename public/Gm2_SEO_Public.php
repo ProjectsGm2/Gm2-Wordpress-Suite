@@ -591,7 +591,15 @@ class Gm2_SEO_Public {
                 }
                 $schemas[] = $this->replace_placeholders($data, $context);
             }
-        } elseif ($schema_type === 'article' || (!$schema_type && in_array($post->post_type, ['post', 'page'], true))) {
+        } elseif (!$schema_type && $post->post_type === 'page') {
+            $data = [
+                '@context' => 'https://schema.org/',
+                '@type'    => 'WebPage',
+                'name'     => get_the_title($post_id),
+                'url'      => get_permalink($post_id),
+            ];
+            $schemas[] = $this->replace_placeholders($data, $context);
+        } elseif ($schema_type === 'article' || (!$schema_type && $post->post_type === 'post')) {
             $image = get_the_post_thumbnail_url($post_id, 'full');
             $data  = [
                 '@context' => 'https://schema.org/',
@@ -808,11 +816,11 @@ class Gm2_SEO_Public {
             return;
         }
 
-        $schema_type = get_post_meta(get_the_ID(), '_gm2_schema_type', true);
-        if ($schema_type && $schema_type !== 'article') {
+        if (!is_singular('post')) {
             return;
         }
-        if (!$schema_type && !is_singular('post') && !is_page()) {
+        $schema_type = get_post_meta(get_the_ID(), '_gm2_schema_type', true);
+        if ($schema_type && $schema_type !== 'article') {
             return;
         }
 
