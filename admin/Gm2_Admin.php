@@ -10,6 +10,7 @@ class Gm2_Admin {
     private $diagnostics;
     private $site_health;
     private $quantity_discounts;
+    private $cart_settings;
     private $oauth_enabled;
     private $chatgpt_enabled;
 
@@ -25,6 +26,8 @@ class Gm2_Admin {
             $this->quantity_discounts = new Gm2_Quantity_Discounts_Admin();
             $this->quantity_discounts->register_hooks();
         }
+        $this->cart_settings = new Gm2_Cart_Settings_Admin();
+        $this->cart_settings->register_hooks();
         add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_scripts']);
         add_action('wp_ajax_gm2_add_tariff', [$this, 'ajax_add_tariff']);
         add_action('wp_ajax_nopriv_gm2_add_tariff', [$this, 'ajax_add_tariff']);
