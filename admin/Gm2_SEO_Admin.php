@@ -1991,6 +1991,10 @@ class Gm2_SEO_Admin {
             $schema_rating  = get_term_meta($term->term_id, '_gm2_schema_rating', true);
         }
 
+        if ($schema_type === '' && in_array($taxonomy, ['brand', 'product_brand'], true)) {
+            $schema_type = 'brand';
+        }
+
         wp_nonce_field('gm2_save_seo_meta', 'gm2_seo_nonce');
 
         $rules_option = get_option('gm2_content_rules', []);
@@ -2107,6 +2111,8 @@ class Gm2_SEO_Admin {
             ''         => __( 'Default', 'gm2-wordpress-suite' ),
             'article'  => __( 'Article', 'gm2-wordpress-suite' ),
             'product'  => __( 'Product', 'gm2-wordpress-suite' ),
+            'webpage'  => __( 'Web Page', 'gm2-wordpress-suite' ),
+            'brand'    => __( 'Brand', 'gm2-wordpress-suite' ),
         ];
         $custom = get_option('gm2_custom_schema', []);
         if (is_array($custom)) {
@@ -2200,11 +2206,18 @@ class Gm2_SEO_Admin {
         $schema_brand     = isset($_POST['gm2_schema_brand']) ? sanitize_text_field($_POST['gm2_schema_brand']) : '';
         $schema_rating    = isset($_POST['gm2_schema_rating']) ? sanitize_text_field($_POST['gm2_schema_rating']) : '';
         $link_rel_data    = isset($_POST['gm2_link_rel']) ? wp_unslash($_POST['gm2_link_rel']) : '';
-        $schema_type      = isset($_POST['gm2_schema_type']) ? sanitize_text_field($_POST['gm2_schema_type']) : '';
-        $schema_brand     = isset($_POST['gm2_schema_brand']) ? sanitize_text_field($_POST['gm2_schema_brand']) : '';
-        $schema_rating    = isset($_POST['gm2_schema_rating']) ? sanitize_text_field($_POST['gm2_schema_rating']) : '';
         if (!is_array(json_decode($link_rel_data, true)) && $link_rel_data !== '') {
             $link_rel_data = '';
+        }
+        if ($schema_type === '') {
+            $post_obj = get_post($post_id);
+            if ($post_obj && $post_obj->post_type === 'product') {
+                $schema_type = 'product';
+            } elseif ($post_obj && $post_obj->post_type === 'post') {
+                $schema_type = 'article';
+            } elseif ($post_obj && $post_obj->post_type === 'page') {
+                $schema_type = 'webpage';
+            }
         }
         update_post_meta($post_id, '_gm2_title', $title);
         update_post_meta($post_id, '_gm2_description', $description);
@@ -2249,6 +2262,21 @@ class Gm2_SEO_Admin {
         $max_image_preview = isset($_POST['gm2_max_image_preview']) ? sanitize_text_field($_POST['gm2_max_image_preview']) : '';
         $max_video_preview = isset($_POST['gm2_max_video_preview']) ? sanitize_text_field($_POST['gm2_max_video_preview']) : '';
         $og_image         = isset($_POST['gm2_og_image']) ? absint($_POST['gm2_og_image']) : 0;
+        $schema_type      = isset($_POST['gm2_schema_type']) ? sanitize_text_field($_POST['gm2_schema_type']) : '';
+        $schema_brand     = isset($_POST['gm2_schema_brand']) ? sanitize_text_field($_POST['gm2_schema_brand']) : '';
+        $schema_rating    = isset($_POST['gm2_schema_rating']) ? sanitize_text_field($_POST['gm2_schema_rating']) : '';
+        if ($schema_type === '') {
+            $taxonomy = isset($_POST['taxonomy']) ? sanitize_key($_POST['taxonomy']) : '';
+            if ($taxonomy === '') {
+                $term = get_term($term_id);
+                if ($term && !is_wp_error($term)) {
+                    $taxonomy = $term->taxonomy;
+                }
+            }
+            if (in_array($taxonomy, ['brand', 'product_brand'], true)) {
+                $schema_type = 'brand';
+            }
+        }
 
         $min_len = (int) get_option('gm2_tax_min_length', 0);
         if ($min_len > 0 && isset($_POST['description'])) {
@@ -5655,6 +5683,16 @@ class Gm2_SEO_Admin {
         $schema_brand        = get_post_meta($post->ID, '_gm2_schema_brand', true);
         $schema_rating       = get_post_meta($post->ID, '_gm2_schema_rating', true);
 
+        if ($schema_type === '') {
+            if ($post->post_type === 'product') {
+                $schema_type = 'product';
+            } elseif ($post->post_type === 'post') {
+                $schema_type = 'article';
+            } elseif ($post->post_type === 'page') {
+                $schema_type = 'webpage';
+            }
+        }
+
         wp_nonce_field('gm2_save_seo_meta', 'gm2_seo_nonce');
 
         echo '<div class="gm2-seo-tabs">';
@@ -5745,6 +5783,7 @@ class Gm2_SEO_Admin {
             ''         => __( 'Default', 'gm2-wordpress-suite' ),
             'article'  => __( 'Article', 'gm2-wordpress-suite' ),
             'product'  => __( 'Product', 'gm2-wordpress-suite' ),
+            'webpage'  => __( 'Web Page', 'gm2-wordpress-suite' ),
         ];
         $custom = get_option('gm2_custom_schema', []);
         if (is_array($custom)) {
