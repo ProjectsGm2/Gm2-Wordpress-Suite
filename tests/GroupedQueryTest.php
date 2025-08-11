@@ -35,9 +35,9 @@ class GroupedDB {
     public $data = [];
     public function __construct() {
         $this->data[$this->prefix.'wc_ac_carts'] = [
-            ['id'=>1,'ip_address'=>'1.1.1.1','cart_contents'=>'[]','created_at'=>'2024-01-01 00:00:00','revisit_count'=>1,'browsing_time'=>30,'email'=>'','location'=>'','device'=>'','browser'=>'','entry_url'=>'','exit_url'=>'','cart_total'=>0,'abandoned_at'=>null],
-            ['id'=>2,'ip_address'=>'1.1.1.1','cart_contents'=>'[]','created_at'=>'2024-01-02 00:00:00','revisit_count'=>2,'browsing_time'=>40,'email'=>'','location'=>'','device'=>'','browser'=>'','entry_url'=>'','exit_url'=>'','cart_total'=>0,'abandoned_at'=>null],
-            ['id'=>3,'ip_address'=>'2.2.2.2','cart_contents'=>'[]','created_at'=>'2024-01-03 00:00:00','revisit_count'=>1,'browsing_time'=>20,'email'=>'','location'=>'','device'=>'','browser'=>'','entry_url'=>'','exit_url'=>'','cart_total'=>0,'abandoned_at'=>null],
+            ['id'=>1,'ip_address'=>'1.1.1.1','cart_contents'=>'[]','created_at'=>'2024-01-01 00:00:00','revisit_count'=>1,'browsing_time'=>30,'email'=>'','phone'=>'','location'=>'','device'=>'','browser'=>'','entry_url'=>'','exit_url'=>'','cart_total'=>0,'abandoned_at'=>null],
+            ['id'=>2,'ip_address'=>'1.1.1.1','cart_contents'=>'[]','created_at'=>'2024-01-02 00:00:00','revisit_count'=>2,'browsing_time'=>40,'email'=>'','phone'=>'','location'=>'','device'=>'','browser'=>'','entry_url'=>'','exit_url'=>'','cart_total'=>0,'abandoned_at'=>null],
+            ['id'=>3,'ip_address'=>'2.2.2.2','cart_contents'=>'[]','created_at'=>'2024-01-03 00:00:00','revisit_count'=>1,'browsing_time'=>20,'email'=>'','phone'=>'','location'=>'','device'=>'','browser'=>'','entry_url'=>'','exit_url'=>'','cart_total'=>0,'abandoned_at'=>null],
         ];
     }
     public function prepare($query, ...$args) { return $query; }

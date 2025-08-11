@@ -281,6 +281,7 @@ class AbandonedCartFakeDB {
                 'recovered_order_id' => null,
                 'exit_url' => 'https://initial.com',
                 'email' => '',
+                'phone' => '',
                 'location' => '',
             ],
         ];
