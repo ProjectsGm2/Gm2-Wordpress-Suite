@@ -64,8 +64,8 @@ class Gm2_Abandoned_Carts_Public {
 
         $email = sanitize_email($_POST['email'] ?? '');
         $phone = sanitize_text_field($_POST['phone'] ?? '');
-        if (empty($email)) {
-            wp_send_json_error('empty_email');
+        if (empty($email) && empty($phone)) {
+            wp_send_json_error('empty_contact');
         }
 
         $token            = '';
