@@ -138,5 +138,12 @@
         }
     });
 
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') {
+            decrementTabs();
+        }
+    });
+
+    window.addEventListener('beforeunload', decrementTabs);
     window.addEventListener('pagehide', decrementTabs, { once: true });
 })();
