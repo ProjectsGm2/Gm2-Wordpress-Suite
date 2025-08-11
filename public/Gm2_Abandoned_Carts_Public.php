@@ -11,8 +11,8 @@ class Gm2_Abandoned_Carts_Public {
             return;
         }
         add_action('wp_enqueue_scripts', [ $this, 'enqueue_scripts' ]);
-        add_action('wp_ajax_gm2_ac_email_capture', [ $this, 'handle_email_capture' ]);
-        add_action('wp_ajax_nopriv_gm2_ac_email_capture', [ $this, 'handle_email_capture' ]);
+        add_action('wp_ajax_gm2_ac_contact_capture', [ $this, 'handle_contact_capture' ]);
+        add_action('wp_ajax_nopriv_gm2_ac_contact_capture', [ $this, 'handle_contact_capture' ]);
         add_action('wp_ajax_gm2_ac_mark_active', [ Gm2_Abandoned_Carts::class, 'gm2_ac_mark_active' ]);
         add_action('wp_ajax_nopriv_gm2_ac_mark_active', [ Gm2_Abandoned_Carts::class, 'gm2_ac_mark_active' ]);
         add_action('wp_ajax_gm2_ac_mark_abandoned', [ Gm2_Abandoned_Carts::class, 'gm2_ac_mark_abandoned' ]);
@@ -35,7 +35,7 @@ class Gm2_Abandoned_Carts_Public {
             'gm2AcEmailCapture',
             [
                 'ajax_url' => admin_url('admin-ajax.php'),
-                'nonce'    => wp_create_nonce('gm2_ac_email_capture'),
+                'nonce'    => wp_create_nonce('gm2_ac_contact_capture'),
             ]
         );
 
@@ -56,13 +56,14 @@ class Gm2_Abandoned_Carts_Public {
         );
     }
 
-    public function handle_email_capture() {
+    public function handle_contact_capture() {
         if (function_exists('current_user_can') && current_user_can('manage_options')) {
             wp_send_json_success();
         }
-        check_ajax_referer('gm2_ac_email_capture', 'nonce');
+        check_ajax_referer('gm2_ac_contact_capture', 'nonce');
 
         $email = sanitize_email($_POST['email'] ?? '');
+        $phone = sanitize_text_field($_POST['phone'] ?? '');
         if (empty($email)) {
             wp_send_json_error('empty_email');
         }
@@ -100,6 +101,7 @@ class Gm2_Abandoned_Carts_Public {
                 $table,
                 [
                     'email'      => $email,
+                    'phone'      => $phone,
                     'browser'    => $browser,
                     'user_agent' => $agent,
                 ],
@@ -168,6 +170,7 @@ class Gm2_Abandoned_Carts_Public {
                 'entry_url'     => $current_url,
                 'cart_total'    => $total,
                 'email'         => $email,
+                'phone'         => $phone,
             ]);
         }
 

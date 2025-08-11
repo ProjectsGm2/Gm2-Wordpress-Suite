@@ -1,22 +1,25 @@
 jQuery(function($){
     var $email = $('#billing_email');
-    if(!$email.length){
+    var $phone = $('#billing_phone');
+    if(!$email.length && !$phone.length){
         return;
     }
     var timer;
-    var postEmail = function(){
-        var val = $email.val();
-        if(!val){
+    var postContact = function(){
+        var emailVal = $email.val();
+        var phoneVal = $phone.val();
+        if(!emailVal && !phoneVal){
             return;
         }
         $.post(gm2AcEmailCapture.ajax_url, {
-            action: 'gm2_ac_email_capture',
+            action: 'gm2_ac_contact_capture',
             nonce: gm2AcEmailCapture.nonce,
-            email: val
+            email: emailVal,
+            phone: phoneVal
         });
     };
-    $email.on('change input', function(){
+    $email.add($phone).on('change input', function(){
         clearTimeout(timer);
-        timer = setTimeout(postEmail, 500);
+        timer = setTimeout(postContact, 500);
     });
 });
