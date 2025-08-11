@@ -10,40 +10,41 @@
         const data = new URLSearchParams({ action, nonce, url: targetUrl || window.location.href });
 
         if (action === 'gm2_ac_mark_abandoned') {
+            let beaconSent = false;
             if (navigator.sendBeacon) {
                 try {
-                    const sent = navigator.sendBeacon(ajaxUrl, data);
-
-                    if (!sent) {
+                    beaconSent = navigator.sendBeacon(ajaxUrl, data);
+                    if (!beaconSent) {
                         const payload = new Blob([data.toString()], { type: 'application/x-www-form-urlencoded' });
-                        navigator.sendBeacon(ajaxUrl, payload);
+                        beaconSent = navigator.sendBeacon(ajaxUrl, payload);
                     }
                 } catch (err) {
                     console.debug('sendBeacon URLSearchParams failed', err);
-
                     try {
                         const payload = new Blob([data.toString()], { type: 'application/x-www-form-urlencoded' });
-                        navigator.sendBeacon(ajaxUrl, payload);
+                        beaconSent = navigator.sendBeacon(ajaxUrl, payload);
                     } catch (error) {
                         console.error('sendBeacon failed', error);
                     }
                 }
             }
 
-            fetch(ajaxUrl, {
-                method: 'POST',
-                credentials: 'same-origin',
-                body: data,
-                keepalive: true,
-            })
-                .then((response) => {
-                    if (!response.ok) {
-                        console.error('gm2_ac_mark_abandoned request failed', response.status, response.statusText);
-                    }
+            if (!beaconSent) {
+                fetch(ajaxUrl, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    body: data,
+                    keepalive: true,
                 })
-                .catch((error) => {
-                    console.error('gm2_ac_mark_abandoned request error', error);
-                });
+                    .then((response) => {
+                        if (!response.ok) {
+                            console.error('gm2_ac_mark_abandoned request failed', response.status, response.statusText);
+                        }
+                    })
+                    .catch((error) => {
+                        console.error('gm2_ac_mark_abandoned request error', error);
+                    });
+            }
         } else {
             fetch(ajaxUrl, {
                 method: 'POST',

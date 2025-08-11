@@ -25,13 +25,13 @@ test('records exit URL when localStorage is disabled', () => {
 
   window.dispatchEvent(new window.Event('pagehide'));
 
-  const abandonCalls = fetchMock.mock.calls.filter((c) => {
-    const params = new URLSearchParams(c[1].body);
+  const abandonCalls = window.navigator.sendBeacon.mock.calls.filter((c) => {
+    const params = new URLSearchParams(c[1].toString());
     return params.get('action') === 'gm2_ac_mark_abandoned';
   });
 
   expect(abandonCalls.length).toBe(1);
-  const params = new URLSearchParams(abandonCalls[0][1].body);
+  const params = new URLSearchParams(abandonCalls[0][1].toString());
   expect(params.get('url')).toBe('https://example.com/page');
   jest.clearAllTimers();
   jest.useRealTimers();
@@ -57,13 +57,13 @@ test('captures external link destination before navigation', () => {
   link.addEventListener('click', (e) => e.preventDefault());
   link.dispatchEvent(new window.MouseEvent('click', { bubbles: true, cancelable: true }));
 
-  const abandonCalls = fetchMock.mock.calls.filter((c) => {
-    const params = new URLSearchParams(c[1].body);
+  const abandonCalls = window.navigator.sendBeacon.mock.calls.filter((c) => {
+    const params = new URLSearchParams(c[1].toString());
     return params.get('action') === 'gm2_ac_mark_abandoned';
   });
 
   expect(abandonCalls.length).toBe(1);
-  const params = new URLSearchParams(abandonCalls[0][1].body);
+  const params = new URLSearchParams(abandonCalls[0][1].toString());
   expect(params.get('url')).toBe('https://external.com/path');
   jest.clearAllTimers();
   jest.useRealTimers();
@@ -88,13 +88,13 @@ test('marks abandoned on visibilitychange hidden', () => {
   Object.defineProperty(window.document, 'visibilityState', { configurable: true, value: 'hidden' });
   window.document.dispatchEvent(new window.Event('visibilitychange'));
 
-  const abandonCalls = fetchMock.mock.calls.filter((c) => {
-    const params = new URLSearchParams(c[1].body);
+  const abandonCalls = window.navigator.sendBeacon.mock.calls.filter((c) => {
+    const params = new URLSearchParams(c[1].toString());
     return params.get('action') === 'gm2_ac_mark_abandoned';
   });
 
   expect(abandonCalls.length).toBe(1);
-  const params = new URLSearchParams(abandonCalls[0][1].body);
+  const params = new URLSearchParams(abandonCalls[0][1].toString());
   expect(params.get('url')).toBe('https://example.com/page');
   jest.clearAllTimers();
   jest.useRealTimers();
@@ -118,13 +118,13 @@ test('marks abandoned on beforeunload', () => {
 
   window.dispatchEvent(new window.Event('beforeunload'));
 
-  const abandonCalls = fetchMock.mock.calls.filter((c) => {
-    const params = new URLSearchParams(c[1].body);
+  const abandonCalls = window.navigator.sendBeacon.mock.calls.filter((c) => {
+    const params = new URLSearchParams(c[1].toString());
     return params.get('action') === 'gm2_ac_mark_abandoned';
   });
 
   expect(abandonCalls.length).toBe(1);
-  const params = new URLSearchParams(abandonCalls[0][1].body);
+  const params = new URLSearchParams(abandonCalls[0][1].toString());
   expect(params.get('url')).toBe('https://example.com/page');
   jest.clearAllTimers();
   jest.useRealTimers();
@@ -148,8 +148,8 @@ test('marks abandoned after inactivity threshold', () => {
 
   jest.advanceTimersByTime(60);
 
-  const abandonCalls = fetchMock.mock.calls.filter((c) => {
-    const params = new URLSearchParams(c[1].body);
+  const abandonCalls = window.navigator.sendBeacon.mock.calls.filter((c) => {
+    const params = new URLSearchParams(c[1].toString());
     return params.get('action') === 'gm2_ac_mark_abandoned';
   });
 
@@ -176,15 +176,15 @@ test('resets inactivity timer on interaction', () => {
 
   window.document.dispatchEvent(new window.Event('mousemove'));
   jest.advanceTimersByTime(40);
-  let abandonCalls = fetchMock.mock.calls.filter((c) => {
-    const params = new URLSearchParams(c[1].body);
+  let abandonCalls = window.navigator.sendBeacon.mock.calls.filter((c) => {
+    const params = new URLSearchParams(c[1].toString());
     return params.get('action') === 'gm2_ac_mark_abandoned';
   });
   expect(abandonCalls.length).toBe(0);
 
   jest.advanceTimersByTime(20);
-  abandonCalls = fetchMock.mock.calls.filter((c) => {
-    const params = new URLSearchParams(c[1].body);
+  abandonCalls = window.navigator.sendBeacon.mock.calls.filter((c) => {
+    const params = new URLSearchParams(c[1].toString());
     return params.get('action') === 'gm2_ac_mark_abandoned';
   });
   expect(abandonCalls.length).toBe(1);
