@@ -11,6 +11,7 @@ class Gm2_Abandoned_Carts_Admin {
         add_action('admin_init', [ $this, 'maybe_export' ]);
         add_action('admin_post_gm2_ac_reset', [ $this, 'handle_reset' ]);
         add_action('admin_enqueue_scripts', [ $this, 'enqueue_scripts' ]);
+        add_action('wp_ajax_gm2_ac_get_carts', [ $this, 'ajax_get_carts' ]);
     }
 
     public function add_menu() {
@@ -50,6 +51,26 @@ class Gm2_Abandoned_Carts_Admin {
             GM2_PLUGIN_URL . 'admin/css/gm2-ac-activity-log.css',
             [],
             file_exists(GM2_PLUGIN_DIR . 'admin/css/gm2-ac-activity-log.css') ? filemtime(GM2_PLUGIN_DIR . 'admin/css/gm2-ac-activity-log.css') : GM2_VERSION
+        );
+
+        wp_enqueue_script(
+            'gm2-ac-live-updates',
+            GM2_PLUGIN_URL . 'admin/js/gm2-ac-live-updates.js',
+            [ 'jquery' ],
+            file_exists(GM2_PLUGIN_DIR . 'admin/js/gm2-ac-live-updates.js') ? filemtime(GM2_PLUGIN_DIR . 'admin/js/gm2-ac-live-updates.js') : GM2_VERSION,
+            true
+        );
+        $paged = isset($_REQUEST['paged']) ? absint($_REQUEST['paged']) : 1;
+        $search = isset($_REQUEST['s']) ? sanitize_text_field(wp_unslash($_REQUEST['s'])) : '';
+        wp_localize_script(
+            'gm2-ac-live-updates',
+            'gm2AcLive',
+            [
+                'ajax_url' => admin_url('admin-ajax.php'),
+                'nonce'    => wp_create_nonce('gm2_ac_get_carts'),
+                'paged'    => $paged,
+                's'        => $search,
+            ]
         );
     }
 
@@ -141,6 +162,27 @@ class Gm2_Abandoned_Carts_Admin {
         }
         fclose($output);
         exit;
+    }
+
+    public function ajax_get_carts() {
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error();
+        }
+        check_ajax_referer('gm2_ac_get_carts', 'nonce');
+
+        $table = new GM2_AC_Table();
+        if (!empty($_POST['paged'])) {
+            $_REQUEST['paged'] = absint($_POST['paged']);
+        }
+        if (!empty($_POST['s'])) {
+            $_REQUEST['s'] = sanitize_text_field(wp_unslash($_POST['s']));
+        }
+        $table->prepare_items();
+        ob_start();
+        $table->display_rows_or_placeholder();
+        $rows = ob_get_clean();
+
+        wp_send_json_success([ 'rows' => $rows ]);
     }
 
     public function handle_reset() {
