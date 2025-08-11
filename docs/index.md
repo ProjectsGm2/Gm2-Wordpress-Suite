@@ -49,7 +49,7 @@ add_filter('gm2_gmc_realtime_fields', function ($fields) {
 
 ### Bulk AI for Taxonomies
 
-Use the **Bulk AI Taxonomies** page under **Gm2 → Bulk AI Taxonomies** to generate AI SEO titles and descriptions for taxonomy terms. Use the **Only terms missing SEO Title** and **Only terms missing Description** filters to show only terms lacking metadata. After selecting terms, click **Schedule Batch** to queue them for background processing via WP‑Cron or **Cancel Batch** to remove pending jobs. The **Export CSV** button downloads a `gm2-bulk-ai-tax.csv` file listing `term_id`, `name`, `seo_title`, `description` and `taxonomy`.
+Use the **Bulk AI Taxonomies** page under **Gm2 → Bulk AI Taxonomies** to generate AI SEO titles, descriptions and keyword suggestions for taxonomy terms. The review table now includes **Focus Keywords** and **Long Tail Keywords** columns alongside SEO Title and Description. Use the **Only terms missing SEO Title** and **Only terms missing Description** filters to show only terms lacking metadata. After selecting terms, click **Schedule Batch** to queue them for background processing via WP‑Cron or **Cancel Batch** to remove pending jobs. The **Export CSV** button downloads a `gm2-bulk-ai-tax.csv` file listing `term_id`, `name`, `seo_title`, `description`, `focus_keywords`, `long_tail_keywords` and `taxonomy`.
 
 ### Bulk AI Task Summary
 

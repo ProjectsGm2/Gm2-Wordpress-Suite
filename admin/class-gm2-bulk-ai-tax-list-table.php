@@ -43,6 +43,8 @@ class Gm2_Bulk_Ai_Tax_List_Table extends \WP_List_Table {
             'name'            => esc_html__( 'Name', 'gm2-wordpress-suite' ),
             'seo_title'       => esc_html__( 'SEO Title', 'gm2-wordpress-suite' ),
             'description'     => esc_html__( 'Description', 'gm2-wordpress-suite' ),
+            'focus_keywords'  => esc_html__( 'Focus Keywords', 'gm2-wordpress-suite' ),
+            'long_tail_keywords' => esc_html__( 'Long Tail Keywords', 'gm2-wordpress-suite' ),
             'tax_description' => esc_html__( 'Tax Description', 'gm2-wordpress-suite' ),
             'ai'              => esc_html__( 'AI Suggestions', 'gm2-wordpress-suite' ),
         ];
@@ -73,6 +75,14 @@ class Gm2_Bulk_Ai_Tax_List_Table extends \WP_List_Table {
         return esc_html( get_term_meta($item->term_id, '_gm2_description', true) );
     }
 
+    protected function column_focus_keywords($item) {
+        return esc_html( get_term_meta($item->term_id, '_gm2_focus_keywords', true) );
+    }
+
+    protected function column_long_tail_keywords($item) {
+        return esc_html( get_term_meta($item->term_id, '_gm2_long_tail_keywords', true) );
+    }
+
     protected function column_tax_description($item) {
         return esc_html( wp_strip_all_tags( term_description($item->term_id, $item->taxonomy) ) );
     }
@@ -81,7 +91,9 @@ class Gm2_Bulk_Ai_Tax_List_Table extends \WP_List_Table {
         $stored   = get_term_meta($item->term_id, '_gm2_ai_research', true);
         $has_prev = (
             get_term_meta($item->term_id, '_gm2_prev_title', true) !== '' ||
-            get_term_meta($item->term_id, '_gm2_prev_description', true) !== ''
+            get_term_meta($item->term_id, '_gm2_prev_description', true) !== '' ||
+            get_term_meta($item->term_id, '_gm2_prev_focus_keywords', true) !== '' ||
+            get_term_meta($item->term_id, '_gm2_prev_long_tail_keywords', true) !== ''
         );
         $result_html = '';
         if ($stored) {
@@ -106,6 +118,14 @@ class Gm2_Bulk_Ai_Tax_List_Table extends \WP_List_Table {
         }
         if (!empty($data['description'])) {
             $suggestions .= '<p><label><input type="checkbox" class="gm2-apply" data-field="seo_description" data-value="' . esc_attr($data['description']) . '"> ' . esc_html($data['description']) . '</label></p>';
+        }
+        if (!empty($data['focus_keywords'])) {
+            $fk = is_array($data['focus_keywords']) ? implode(', ', $data['focus_keywords']) : $data['focus_keywords'];
+            $suggestions .= '<p><label><input type="checkbox" class="gm2-apply" data-field="focus_keywords" data-value="' . esc_attr($fk) . '"> ' . esc_html__( 'Focus Keywords', 'gm2-wordpress-suite' ) . ': ' . esc_html($fk) . '</label></p>';
+        }
+        if (!empty($data['long_tail_keywords'])) {
+            $lt = is_array($data['long_tail_keywords']) ? implode(', ', $data['long_tail_keywords']) : $data['long_tail_keywords'];
+            $suggestions .= '<p><label><input type="checkbox" class="gm2-apply" data-field="long_tail_keywords" data-value="' . esc_attr($lt) . '"> ' . esc_html__( 'Long Tail Keywords', 'gm2-wordpress-suite' ) . ': ' . esc_html($lt) . '</label></p>';
         }
 
         if ($suggestions !== '' || $has_prev) {

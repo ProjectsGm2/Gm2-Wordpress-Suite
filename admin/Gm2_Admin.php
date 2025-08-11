@@ -307,6 +307,8 @@ class Gm2_Admin {
                             'refresh'    => __( 'Refresh', 'gm2-wordpress-suite' ),
                             'clear'      => __( 'Clear', 'gm2-wordpress-suite' ),
                             'undo'       => __( 'Undo', 'gm2-wordpress-suite' ),
+                            'focusKeywords' => __( 'Focus Keywords', 'gm2-wordpress-suite' ),
+                            'longTailKeywords' => __( 'Long Tail Keywords', 'gm2-wordpress-suite' ),
                             'error'      => __( 'Error', 'gm2-wordpress-suite' ),
                             'resetting'  => __( 'Resetting...', 'gm2-wordpress-suite' ),
                             'resetDone'  => __( 'Reset %s terms', 'gm2-wordpress-suite' ),
