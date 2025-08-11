@@ -102,6 +102,8 @@ class Gm2_Abandoned_Carts {
         add_action('woocommerce_update_cart_action_cart_updated', [$this, 'capture_cart']);
         add_action('woocommerce_cart_loaded_from_session', [$this, 'capture_cart']);
         add_action('woocommerce_thankyou', [$this, 'mark_cart_recovered']);
+        add_action('woocommerce_checkout_order_processed', [$this, 'mark_cart_recovered'], 10, 1);
+        add_action('woocommerce_order_status_changed', [$this, 'mark_cart_recovered'], 10, 1);
         if (is_admin()) {
             add_action('wp_ajax_gm2_ac_get_activity', [ __CLASS__, 'gm2_ac_get_activity' ]);
         }
