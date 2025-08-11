@@ -84,7 +84,11 @@ If you need to clear the log and start over, click the **Reset Logs** button bel
 
 Enable the module from **Gm2 → Dashboard** to begin tracking cart sessions. Activation creates four tables—`wp_wc_ac_carts`, `wp_wc_ac_email_queue`, `wp_wc_ac_recovered` and `wp_wc_ac_cart_activity`—that store carts, queued messages, recovered orders and item‑level activity.
 
+Select an Elementor popup under **Gm2 → Cart Settings** to ask shoppers for an email address or phone number before they leave. The plugin records contact details from that popup and from the checkout billing fields so each cart is linked to an email and/or phone when available.
+
 The **Gm2 → Abandoned Carts** screen groups records by IP address so multiple visits from the same shopper appear as a single row with combined browsing time and revisit counts. Click a row’s **Cart Activity Log** link to view the add/remove/quantity events pulled from the activity table.
+
+Captured email and phone values appear in their own columns on this page, making it easy to follow up with shoppers who abandon their carts.
 
 Developers can adjust the inactivity window using the `gm2_ac_mark_abandoned_interval` filter and send custom recovery emails by hooking into `gm2_ac_send_message` when the hourly `gm2_ac_process_queue` task runs.
 
