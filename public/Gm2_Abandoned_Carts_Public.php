@@ -39,6 +39,26 @@ class Gm2_Abandoned_Carts_Public {
             ]
         );
 
+        $popup_id = (int) get_option('gm2_cart_popup_id', 0);
+        if ($popup_id > 0) {
+            wp_enqueue_script(
+                'gm2-ac-popup',
+                GM2_PLUGIN_URL . 'public/js/gm2-ac-popup.js',
+                [ 'jquery' ],
+                GM2_VERSION,
+                true
+            );
+            wp_localize_script(
+                'gm2-ac-popup',
+                'gm2AcPopup',
+                [
+                    'ajax_url' => admin_url('admin-ajax.php'),
+                    'nonce'    => wp_create_nonce('gm2_ac_contact_capture'),
+                    'popup_id' => $popup_id,
+                ]
+            );
+        }
+
         wp_enqueue_script(
             'gm2-ac-activity',
             GM2_PLUGIN_URL . 'public/js/gm2-ac-activity.js',
