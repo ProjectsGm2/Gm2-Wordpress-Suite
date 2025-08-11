@@ -30,6 +30,7 @@ class GM2_AC_Table extends \WP_List_Table {
             'status'      => __('Status', 'gm2-wordpress-suite'),
             'ip_address'  => __('IP Address', 'gm2-wordpress-suite'),
             'email'       => __('Email', 'gm2-wordpress-suite'),
+            'phone'       => __('Phone', 'gm2-wordpress-suite'),
             'location'    => __('Location', 'gm2-wordpress-suite'),
             'device'      => __('Device', 'gm2-wordpress-suite'),
             'browser'     => __('Browser', 'gm2-wordpress-suite'),
@@ -140,7 +141,7 @@ class GM2_AC_Table extends \WP_List_Table {
         $total_items = $wpdb->get_var($wpdb->prepare($total_sql, ...$params));
 
         $offset   = ($paged - 1) * $per_page;
-        $data_sql = "SELECT t.*, agg.total_revisit_count, agg.total_browsing_time FROM $table t INNER JOIN (SELECT ip_address, MAX(created_at) AS max_created_at, SUM(revisit_count) AS total_revisit_count, SUM(browsing_time) AS total_browsing_time FROM $table $where GROUP BY ip_address) agg ON t.ip_address = agg.ip_address AND t.created_at = agg.max_created_at ORDER BY t.created_at DESC LIMIT %d OFFSET %d";
+        $data_sql = "SELECT t.id, t.ip_address, t.email, t.phone, t.location, t.device, t.browser, t.cart_contents, t.cart_total, t.entry_url, t.exit_url, t.abandoned_at, t.session_start, t.recovered_order_id, agg.total_revisit_count, agg.total_browsing_time FROM $table t INNER JOIN (SELECT ip_address, MAX(created_at) AS max_created_at, SUM(revisit_count) AS total_revisit_count, SUM(browsing_time) AS total_browsing_time FROM $table $where GROUP BY ip_address) agg ON t.ip_address = agg.ip_address AND t.created_at = agg.max_created_at ORDER BY t.created_at DESC LIMIT %d OFFSET %d";
         $params2  = array_merge($params, [ $per_page, $offset ]);
         $rows     = $wpdb->get_results($wpdb->prepare($data_sql, ...$params2));
 
@@ -221,6 +222,7 @@ class GM2_AC_Table extends \WP_List_Table {
                 'status'      => esc_html($this->ensure_value($status)),
                 'ip_address'  => esc_html($this->ensure_value($row->ip_address)),
                 'email'       => esc_html($this->ensure_value($row->email)),
+                'phone'       => esc_html($this->ensure_value($row->phone)),
                 'location'    => esc_html($this->ensure_value($row->location)),
                 'device'      => esc_html($this->ensure_value($row->device)),
                 'browser'     => esc_html($this->ensure_value($row->browser)),
