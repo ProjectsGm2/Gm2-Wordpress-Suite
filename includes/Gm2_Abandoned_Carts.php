@@ -94,6 +94,8 @@ class Gm2_Abandoned_Carts {
     public function run() {
         $this->maybe_install();
         add_action('template_redirect', [$this, 'maybe_set_entry_url']);
+        add_action('template_redirect', [$this, 'store_last_seen_url'], 20);
+        add_action('shutdown', [$this, 'update_exit_url_from_session']);
 
         add_action('woocommerce_add_to_cart', [$this, 'capture_cart'], 10, 6);
         add_action('woocommerce_update_cart_action_cart_updated', [$this, 'capture_cart']);
@@ -101,6 +103,46 @@ class Gm2_Abandoned_Carts {
         add_action('woocommerce_thankyou', [$this, 'mark_cart_recovered']);
         if (is_admin()) {
             add_action('wp_ajax_gm2_ac_get_activity', [ __CLASS__, 'gm2_ac_get_activity' ]);
+        }
+    }
+
+    public function store_last_seen_url() {
+        $skip_admin = apply_filters('gm2_ac_skip_admin', true);
+        if (
+            $skip_admin &&
+            function_exists('current_user_can') &&
+            current_user_can('manage_options')
+        ) {
+            return;
+        }
+        if (!class_exists('WC') || !WC()->session) {
+            return;
+        }
+        $host        = isset($_SERVER['HTTP_HOST']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_HOST'])) : '';
+        $request_uri = isset($_SERVER['REQUEST_URI']) ? wp_unslash($_SERVER['REQUEST_URI']) : '/';
+        $scheme      = is_ssl() ? 'https://' : 'http://';
+        $current_url = esc_url_raw($scheme . $host . $request_uri);
+
+        WC()->session->set('gm2_ac_last_seen_url', $current_url);
+    }
+
+    public function update_exit_url_from_session() {
+        if (!class_exists('WC') || !WC()->session) {
+            return;
+        }
+        $token = WC()->session->get_customer_id();
+        if (empty($token)) {
+            return;
+        }
+        $url = WC()->session->get('gm2_ac_last_seen_url');
+        if (empty($url)) {
+            return;
+        }
+        global $wpdb;
+        $table = $wpdb->prefix . 'wc_ac_carts';
+        $row   = $wpdb->get_row($wpdb->prepare("SELECT id, exit_url FROM $table WHERE cart_token = %s", $token));
+        if ($row && $row->exit_url !== $url) {
+            $wpdb->update($table, [ 'exit_url' => $url ], [ 'id' => $row->id ]);
         }
     }
 
@@ -395,11 +437,11 @@ class Gm2_Abandoned_Carts {
         if (class_exists('WC_Session') && WC()->session) {
             $token = WC()->session->get_customer_id();
             if (method_exists(WC()->session, 'get')) {
-                $prev_url = WC()->session->get('gm2_ac_last_url');
+                $prev_url = WC()->session->get('gm2_ac_last_seen_url');
             }
             if (method_exists(WC()->session, 'set')) {
                 // store the most recent URL in the session for later retrieval
-                WC()->session->set('gm2_ac_last_url', $url);
+                WC()->session->set('gm2_ac_last_seen_url', $url);
                 $session_entry = method_exists(WC()->session, 'get') ? WC()->session->get('gm2_entry_url') : '';
                 if (empty($session_entry) && !empty($url)) {
                     WC()->session->set('gm2_entry_url', $url);
@@ -475,8 +517,8 @@ class Gm2_Abandoned_Carts {
         if (class_exists('WC_Session') && WC()->session) {
             $token = WC()->session->get_customer_id();
             if (method_exists(WC()->session, 'get')) {
-                $session_url = WC()->session->get('gm2_ac_last_url');
-                WC()->session->set('gm2_ac_last_url', null);
+                $session_url = WC()->session->get('gm2_ac_last_seen_url');
+                WC()->session->set('gm2_ac_last_seen_url', null);
                 if (empty($url)) {
                     $url = $session_url;
                 }
@@ -489,12 +531,14 @@ class Gm2_Abandoned_Carts {
 
         global $wpdb;
         $table = $wpdb->prefix . 'wc_ac_carts';
-        $row = $wpdb->get_row($wpdb->prepare("SELECT id, session_start, browsing_time FROM $table WHERE cart_token = %s", $token));
+        $row = $wpdb->get_row($wpdb->prepare("SELECT id, session_start, browsing_time, exit_url FROM $table WHERE cart_token = %s", $token));
         if ($row) {
             $update = [
-                'exit_url'     => $url,
                 'abandoned_at' => current_time('mysql'),
             ];
+            if ($row->exit_url !== $url) {
+                $update['exit_url'] = $url;
+            }
             if ($row->session_start) {
                 $elapsed = time() - strtotime($row->session_start);
                 if ($elapsed < 0) {

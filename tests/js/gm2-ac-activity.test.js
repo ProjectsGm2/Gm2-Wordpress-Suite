@@ -62,6 +62,61 @@ test('captures external link destination before navigation', () => {
   expect(params.get('url')).toBe('https://external.com/path');
 });
 
+test('marks abandoned on visibilitychange hidden', () => {
+  const dom = new JSDOM(`<!DOCTYPE html><body></body>`, { url: 'https://example.com/page' });
+  const { window } = dom;
+
+  const fetchMock = jest.fn().mockResolvedValue({ ok: true });
+  window.fetch = fetchMock;
+  global.fetch = fetchMock;
+  window.navigator.sendBeacon = jest.fn().mockReturnValue(true);
+
+  Object.assign(global, { window, document: window.document, navigator: window.navigator });
+  global.gm2AcActivity = { ajax_url: '/ajax', nonce: 'nonce' };
+
+  jest.resetModules();
+  require('../../public/js/gm2-ac-activity.js');
+
+  Object.defineProperty(window.document, 'visibilityState', { configurable: true, value: 'hidden' });
+  window.document.dispatchEvent(new window.Event('visibilitychange'));
+
+  const abandonCalls = fetchMock.mock.calls.filter((c) => {
+    const params = new URLSearchParams(c[1].body);
+    return params.get('action') === 'gm2_ac_mark_abandoned';
+  });
+
+  expect(abandonCalls.length).toBe(1);
+  const params = new URLSearchParams(abandonCalls[0][1].body);
+  expect(params.get('url')).toBe('https://example.com/page');
+});
+
+test('marks abandoned on beforeunload', () => {
+  const dom = new JSDOM(`<!DOCTYPE html><body></body>`, { url: 'https://example.com/page' });
+  const { window } = dom;
+
+  const fetchMock = jest.fn().mockResolvedValue({ ok: true });
+  window.fetch = fetchMock;
+  global.fetch = fetchMock;
+  window.navigator.sendBeacon = jest.fn().mockReturnValue(true);
+
+  Object.assign(global, { window, document: window.document, navigator: window.navigator });
+  global.gm2AcActivity = { ajax_url: '/ajax', nonce: 'nonce' };
+
+  jest.resetModules();
+  require('../../public/js/gm2-ac-activity.js');
+
+  window.dispatchEvent(new window.Event('beforeunload'));
+
+  const abandonCalls = fetchMock.mock.calls.filter((c) => {
+    const params = new URLSearchParams(c[1].body);
+    return params.get('action') === 'gm2_ac_mark_abandoned';
+  });
+
+  expect(abandonCalls.length).toBe(1);
+  const params = new URLSearchParams(abandonCalls[0][1].body);
+  expect(params.get('url')).toBe('https://example.com/page');
+});
+
 function setupJQuery(postImpl) {
   function createWrapper(elem) {
     return {
