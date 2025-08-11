@@ -2207,7 +2207,7 @@ class Gm2_SEO_Admin {
         if ($schema_brand === '') {
             $terms = wp_get_post_terms($post_id, ['brand', 'product_brand'], ['fields' => 'names']);
             if (!is_wp_error($terms) && !empty($terms)) {
-                $schema_brand = $terms[0];
+                $schema_brand = sanitize_text_field($terms[0]);
             }
         }
         $schema_rating    = isset($_POST['gm2_schema_rating']) ? sanitize_text_field($_POST['gm2_schema_rating']) : '';
@@ -2284,7 +2284,7 @@ class Gm2_SEO_Admin {
                 $term = get_term($term_id, $taxonomy);
             }
             if ($term && !is_wp_error($term)) {
-                $schema_brand = $term->name;
+                $schema_brand = sanitize_text_field($term->name);
             }
         }
         if ($schema_type === '') {
