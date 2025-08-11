@@ -87,6 +87,8 @@ The **Gm2 → Abandoned Carts** screen groups records by IP address so multiple 
 
 Developers can adjust the inactivity window using the `gm2_ac_mark_abandoned_interval` filter and send custom recovery emails by hooking into `gm2_ac_send_message` when the hourly `gm2_ac_process_queue` task runs.
 
+Use the `gm2_ac_skip_admin` filter to include administrator sessions while testing abandoned cart features. It defaults to `true` so admin carts are ignored unless the filter returns `false`.
+
 ## Exporting SEO Settings
 
 Use the **Export Settings** button on the SEO dashboard to download a `gm2-seo-settings.json` file containing all options that start with `gm2_`. The matching **Import Settings** form accepts the same JSON format and updates each option. The file is a simple key/value object:

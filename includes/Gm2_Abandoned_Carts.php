@@ -104,7 +104,13 @@ class Gm2_Abandoned_Carts {
     }
 
     public function capture_cart() {
-        if (function_exists('current_user_can') && current_user_can('manage_options')) {
+        // Developers can return false to include admin sessions for testing.
+        $skip_admin = apply_filters('gm2_ac_skip_admin', true);
+        if (
+            $skip_admin &&
+            function_exists('current_user_can') &&
+            current_user_can('manage_options')
+        ) {
             return;
         }
         if (!class_exists('WC_Cart')) {
@@ -334,7 +340,13 @@ class Gm2_Abandoned_Carts {
     }
 
     public static function gm2_ac_mark_active() {
-        if (function_exists('current_user_can') && current_user_can('manage_options')) {
+        // Developers can return false to include admin sessions for testing.
+        $skip_admin = apply_filters('gm2_ac_skip_admin', true);
+        if (
+            $skip_admin &&
+            function_exists('current_user_can') &&
+            current_user_can('manage_options')
+        ) {
             wp_send_json_success();
         }
         check_ajax_referer('gm2_ac_activity', 'nonce');
@@ -409,7 +421,13 @@ class Gm2_Abandoned_Carts {
     }
 
     public static function gm2_ac_mark_abandoned() {
-        if (function_exists('current_user_can') && current_user_can('manage_options')) {
+        // Developers can return false to include admin sessions for testing.
+        $skip_admin = apply_filters('gm2_ac_skip_admin', true);
+        if (
+            $skip_admin &&
+            function_exists('current_user_can') &&
+            current_user_can('manage_options')
+        ) {
             wp_send_json_success();
         }
         check_ajax_referer('gm2_ac_activity', 'nonce');
