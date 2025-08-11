@@ -668,6 +668,16 @@ class Gm2_Abandoned_Carts {
         if (!$has_revisit_count) {
             $wpdb->query("ALTER TABLE $carts_table ADD revisit_count int DEFAULT 0 AFTER browsing_time");
         }
+
+        $has_phone = $wpdb->get_var($wpdb->prepare("SHOW COLUMNS FROM $carts_table LIKE %s", 'phone'));
+        if (!$has_phone) {
+            $wpdb->query("ALTER TABLE $carts_table ADD phone varchar(50) DEFAULT NULL AFTER email");
+        }
+
+        $rec_has_phone = $wpdb->get_var($wpdb->prepare("SHOW COLUMNS FROM $recovered_table LIKE %s", 'phone'));
+        if (!$rec_has_phone) {
+            $wpdb->query("ALTER TABLE $recovered_table ADD phone varchar(50) DEFAULT NULL AFTER email");
+        }
     }
 
     public static function get_ip_and_location() {
