@@ -86,7 +86,12 @@ class Gm2_Abandoned_Carts_Admin {
         if ($minutes < 1) {
             $minutes = 1;
         }
-        echo '<p>' . esc_html(sprintf(__('Carts inactive for more than %d minutes appear as "Pending Abandonment" until WP Cron finalizes their status.', 'gm2-wordpress-suite'), $minutes)) . '</p>';
+
+        if (wp_next_scheduled('gm2_ac_mark_abandoned_cron')) {
+            echo '<p>' . esc_html(sprintf(__('Carts inactive for more than %d minutes appear as "Pending Abandonment" until WP Cron finalizes their status.', 'gm2-wordpress-suite'), $minutes)) . '</p>';
+        } else {
+            echo '<p>' . esc_html__('Carts are marked as abandoned in real time.', 'gm2-wordpress-suite') . '</p>';
+        }
 
         if (!empty($_GET['logs_reset'])) {
             echo '<div class="updated notice"><p>' . esc_html__('Logs reset.', 'gm2-wordpress-suite') . '</p></div>';
