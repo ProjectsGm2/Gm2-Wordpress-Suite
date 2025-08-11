@@ -67,12 +67,14 @@ jQuery(function($){
         var html='<p><label><input type="checkbox" class="gm2-row-select-all"> '+selectLabel+'</label></p>';
         if(data.seo_title){html+='<p><label><input type="checkbox" class="gm2-apply" data-field="seo_title" data-value="'+data.seo_title.replace(/"/g,'&quot;')+'"> '+data.seo_title+'</label></p>';}
         if(data.description){html+='<p><label><input type="checkbox" class="gm2-apply" data-field="seo_description" data-value="'+data.description.replace(/"/g,'&quot;')+'"> '+data.description+'</label></p>';}
-        if(data.slug){
-            var slugLabel = window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.slug : 'Slug';
-            html+='<p><label><input type="checkbox" class="gm2-apply" data-field="slug" data-value="'+data.slug+'"> '+slugLabel+': '+data.slug+'</label></p>';}
-        if(data.page_name){
-            var titleLabel = window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.title : 'Title';
-            html+='<p><label><input type="checkbox" class="gm2-apply" data-field="title" data-value="'+data.page_name.replace(/"/g,'&quot;')+'"> '+titleLabel+': '+data.page_name+'</label></p>';}
+        if(data.focus_keywords){
+            var fk = Array.isArray(data.focus_keywords)?data.focus_keywords.join(', '):data.focus_keywords;
+            var fkLabel = window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.focusKeywords : 'Focus Keywords';
+            html+='<p><label><input type="checkbox" class="gm2-apply" data-field="focus_keywords" data-value="'+fk.replace(/"/g,'&quot;')+'"> '+fkLabel+': '+fk+'</label></p>';}
+        if(data.long_tail_keywords){
+            var lt = Array.isArray(data.long_tail_keywords)?data.long_tail_keywords.join(', '):data.long_tail_keywords;
+            var ltLabel = window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.longTailKeywords : 'Long Tail Keywords';
+            html+='<p><label><input type="checkbox" class="gm2-apply" data-field="long_tail_keywords" data-value="'+lt.replace(/"/g,'&quot;')+'"> '+ltLabel+': '+lt+'</label></p>';}
         var applyText = window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.apply : 'Apply';
         var refreshText = window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.refresh : 'Refresh';
         var clearText = window.gm2BulkAi && gm2BulkAi.i18n ? gm2BulkAi.i18n.clear : 'Clear';
@@ -293,7 +295,8 @@ jQuery(function($){
                     row.find('td').eq(0).text(resp.data.title);
                     row.find('td').eq(1).text(resp.data.seo_title);
                     row.find('td').eq(2).text(resp.data.description);
-                    row.find('td').eq(3).text(resp.data.slug);
+                    row.find('td').eq(3).text(resp.data.focus_keywords);
+                    row.find('td').eq(4).text(resp.data.long_tail_keywords);
                     row.find('.gm2-result .gm2-undo-btn').remove();
                     $res.find('.gm2-result-icon').remove();
                     row.find('.gm2-result').append(' <button class="button gm2-undo-btn" data-id="'+id+'">'+(gm2BulkAi.i18n?gm2BulkAi.i18n.undo:'Undo')+'</button> <span class="gm2-result-icon">✅</span>');
@@ -428,7 +431,8 @@ jQuery(function($){
                 row.find('td').eq(0).text(resp.data.title);
                 row.find('td').eq(1).text(resp.data.seo_title);
                 row.find('td').eq(2).text(resp.data.description);
-                row.find('td').eq(3).text(resp.data.slug);
+                row.find('td').eq(3).text(resp.data.focus_keywords);
+                row.find('td').eq(4).text(resp.data.long_tail_keywords);
                 $res.empty();
                 $res.append(' <span class="gm2-result-icon">✅</span>');
                 row.removeClass('gm2-status-applied gm2-status-analyzed gm2-applied')
@@ -522,7 +526,8 @@ jQuery(function($){
                     row.find('td').eq(0).text(data.title);
                     row.find('td').eq(1).text(data.seo_title);
                     row.find('td').eq(2).text(data.description);
-                    row.find('td').eq(3).text(data.slug);
+                    row.find('td').eq(3).text(data.focus_keywords);
+                    row.find('td').eq(4).text(data.long_tail_keywords);
                     $cell.find('.gm2-undo-btn').remove();
                     $cell.append(' <button class="button gm2-undo-btn" data-id="'+item.id+'">'+(gm2BulkAi.i18n?gm2BulkAi.i18n.undo:'Undo')+'</button> <span> ✓</span>');
                     row.removeClass('gm2-status-new gm2-status-analyzed').addClass('gm2-status-applied gm2-applied');
@@ -578,6 +583,7 @@ jQuery(function($){
                     row.find('td').eq(1).text('');
                     row.find('td').eq(2).text('');
                     row.find('td').eq(3).text('');
+                    row.find('td').eq(4).text('');
                     row.find('.gm2-select').prop('checked',false);
                     row.find('.gm2-result').empty();
                     row.removeClass('gm2-status-applied gm2-status-analyzed').addClass('gm2-status-new');

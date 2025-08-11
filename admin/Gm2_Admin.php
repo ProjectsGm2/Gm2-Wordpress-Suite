@@ -256,6 +256,8 @@ class Gm2_Admin {
                             'done'         => __( 'Done (%1$s/%2$s)', 'gm2-wordpress-suite' ),
                             'slug'         => __( 'Slug', 'gm2-wordpress-suite' ),
                             'title'        => __( 'Title', 'gm2-wordpress-suite' ),
+                            'focusKeywords' => __( 'Focus Keywords', 'gm2-wordpress-suite' ),
+                            'longTailKeywords' => __( 'Long Tail Keywords', 'gm2-wordpress-suite' ),
                             'apply'        => __( 'Apply', 'gm2-wordpress-suite' ),
                             'refresh'      => __( 'Refresh', 'gm2-wordpress-suite' ),
                             'clear'        => __( 'Clear', 'gm2-wordpress-suite' ),

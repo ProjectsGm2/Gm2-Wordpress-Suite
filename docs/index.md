@@ -45,6 +45,7 @@ add_filter('gm2_gmc_realtime_fields', function ($fields) {
 - Progress messages now use translation functions for localization.
 - Each row in the table includes a "Select All" checkbox to quickly apply that post's suggestions.
 - Rows highlight after applying suggestions so you can see what changed.
+- The review table now displays Focus Keywords and Long Tail Keywords columns alongside Title, SEO Title and Description.
 
 ### Bulk AI for Taxonomies
 
@@ -60,7 +61,7 @@ Use the **Bulk AI Taxonomies** page under **Gm2 → Bulk AI Taxonomies** to gene
 - **Missing metadata filters** – checkboxes `gm2_missing_title` and `gm2_missing_description` saved in `display_bulk_ai_page()`.
 - **ARIA progress bar** – `<progress>` element with `role="progressbar"` and button `aria-label` attributes in `display_bulk_ai_page()`.
 - **Search field** – `gm2_search_title` input filters posts by title.
-- **CSV export** – `handle_bulk_ai_export()` outputs a `gm2-bulk-ai.csv` file.
+- **CSV export** – `handle_bulk_ai_export()` outputs a `gm2-bulk-ai.csv` file containing `ID`, `Title`, `SEO Title`, `Description`, `Focus Keywords` and `Long Tail Keywords` columns.
 - **Taxonomy CSV export** – `handle_bulk_ai_tax_export()` outputs a `gm2-bulk-ai-tax.csv` file.
 - **User settings** – page size and filters stored per user via `update_user_meta()`.
 - **Improved AJAX errors** – `.fail()` blocks in `gm2-bulk-ai.js` display parsed messages.

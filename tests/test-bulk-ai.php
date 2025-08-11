@@ -35,17 +35,18 @@ class BulkAiApplyAjaxTest extends WP_Ajax_UnitTestCase {
         $_POST['post_id'] = $post_id;
         $_POST['seo_title'] = 'New';
         $_POST['seo_description'] = 'Desc';
-        $_POST['slug'] = 'new-slug';
-        $_POST['title'] = 'New Title';
+        $_POST['focus_keywords'] = 'alpha, beta';
+        $_POST['long_tail_keywords'] = 'gamma, delta';
         $_POST['_ajax_nonce'] = wp_create_nonce('gm2_bulk_ai_apply');
         $_REQUEST['_ajax_nonce'] = $_POST['_ajax_nonce'];
         try { $this->_handleAjax('gm2_bulk_ai_apply'); } catch (WPAjaxDieContinueException $e) {}
         $resp = json_decode($this->_last_response, true);
         $this->assertTrue($resp['success']);
         $post = get_post($post_id);
-        $this->assertSame('new-slug', $post->post_name);
         $this->assertSame('New', get_post_meta($post_id, '_gm2_title', true));
         $this->assertSame('Desc', get_post_meta($post_id, '_gm2_description', true));
+        $this->assertSame('alpha, beta', get_post_meta($post_id, '_gm2_focus_keywords', true));
+        $this->assertSame('gamma, delta', get_post_meta($post_id, '_gm2_long_tail_keywords', true));
     }
 
     public function test_apply_requires_cap() {
@@ -325,7 +326,7 @@ class BulkAiApplyBatchAjaxTest extends WP_Ajax_UnitTestCase {
         $this->_setRole('administrator');
         $payload = [
             $posts[0] => [ 'seo_title' => 'One', 'seo_description' => 'Desc1' ],
-            $posts[1] => [ 'slug' => 'two', 'title' => 'Two' ],
+            $posts[1] => [ 'focus_keywords' => 'alpha', 'long_tail_keywords' => 'beta' ],
         ];
         $_POST['posts'] = wp_json_encode($payload);
         $_POST['_ajax_nonce'] = wp_create_nonce('gm2_bulk_ai_apply');
@@ -335,9 +336,8 @@ class BulkAiApplyBatchAjaxTest extends WP_Ajax_UnitTestCase {
         $this->assertTrue($resp['success']);
         $this->assertSame('One', get_post_meta($posts[0], '_gm2_title', true));
         $this->assertSame('Desc1', get_post_meta($posts[0], '_gm2_description', true));
-        $post2 = get_post($posts[1]);
-        $this->assertSame('two', $post2->post_name);
-        $this->assertSame('Two', $post2->post_title);
+        $this->assertSame('alpha', get_post_meta($posts[1], '_gm2_focus_keywords', true));
+        $this->assertSame('beta', get_post_meta($posts[1], '_gm2_long_tail_keywords', true));
     }
 }
 
@@ -347,8 +347,8 @@ class BulkAiExportTest extends WP_UnitTestCase {
         update_post_meta($post_id, '_gm2_ai_research', wp_json_encode([
             'seo_title'  => 'Suggested Title',
             'description'=> 'Suggested Desc',
-            'slug'       => 'suggested-slug',
-            'page_name'  => 'Suggested Name',
+            'focus_keywords' => 'alpha',
+            'long_tail_keywords' => ['beta'],
         ]));
 
         $admin = new Gm2_SEO_Admin();
@@ -360,7 +360,7 @@ class BulkAiExportTest extends WP_UnitTestCase {
         $csv = ob_get_clean();
 
         $this->assertStringContainsString('Suggested Title', $csv);
-        $this->assertStringContainsString('suggested-slug', $csv);
+        $this->assertStringContainsString('alpha', $csv);
     }
 }
 
