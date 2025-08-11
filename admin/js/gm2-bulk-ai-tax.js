@@ -47,6 +47,16 @@ jQuery(function($){
         var html='<p><label><input type="checkbox" class="gm2-row-select-all"> '+selectLabel+'</label></p>';
         if(data.seo_title){html+='<p><label><input type="checkbox" class="gm2-apply" data-field="seo_title" data-value="'+data.seo_title.replace(/"/g,'&quot;')+'"> '+data.seo_title+'</label></p>';}
         if(data.description){html+='<p><label><input type="checkbox" class="gm2-apply" data-field="seo_description" data-value="'+data.description.replace(/"/g,'&quot;')+'"> '+data.description+'</label></p>';}
+        if(data.focus_keywords){
+            var fk=Array.isArray(data.focus_keywords)?data.focus_keywords.join(', '):data.focus_keywords;
+            var fkLabel=gm2BulkAiTax.i18n?gm2BulkAiTax.i18n.focusKeywords:'Focus Keywords';
+            html+='<p><label><input type="checkbox" class="gm2-apply" data-field="focus_keywords" data-value="'+fk.replace(/"/g,'&quot;')+'"> '+fkLabel+': '+fk+'</label></p>';
+        }
+        if(data.long_tail_keywords){
+            var lt=Array.isArray(data.long_tail_keywords)?data.long_tail_keywords.join(', '):data.long_tail_keywords;
+            var ltLabel=gm2BulkAiTax.i18n?gm2BulkAiTax.i18n.longTailKeywords:'Long Tail Keywords';
+            html+='<p><label><input type="checkbox" class="gm2-apply" data-field="long_tail_keywords" data-value="'+lt.replace(/"/g,'&quot;')+'"> '+ltLabel+': '+lt+'</label></p>';
+        }
         var applyText=gm2BulkAiTax.i18n?gm2BulkAiTax.i18n.apply:'Apply';
         var refreshText=gm2BulkAiTax.i18n?gm2BulkAiTax.i18n.refresh:'Refresh';
         var clearText=gm2BulkAiTax.i18n?gm2BulkAiTax.i18n.clear:'Clear';
@@ -233,6 +243,8 @@ jQuery(function($){
             if(resp&&resp.success){
                 row.find('.column-seo_title').text(resp.data.seo_title);
                 row.find('.column-description').text(resp.data.seo_description);
+                row.find('.column-focus_keywords').text(resp.data.focus_keywords||'');
+                row.find('.column-long_tail_keywords').text(resp.data.long_tail_keywords||'');
                 row.find('.gm2-result .gm2-undo-btn').remove();
                 $res.find('.gm2-result-icon').remove();
                 row.find('.gm2-result').append(' <button class="button gm2-undo-btn" data-key="'+key+'" aria-label="'+(gm2BulkAiTax.i18n?gm2BulkAiTax.i18n.undo:'Undo')+'">'+(gm2BulkAiTax.i18n?gm2BulkAiTax.i18n.undo:'Undo')+'</button> <span class="gm2-result-icon">✅</span>');
@@ -364,6 +376,8 @@ jQuery(function($){
             if(resp&&resp.success){
                 row.find('.column-seo_title').text(resp.data.seo_title);
                 row.find('.column-description').text(resp.data.seo_description);
+                row.find('.column-focus_keywords').text(resp.data.focus_keywords||'');
+                row.find('.column-long_tail_keywords').text(resp.data.long_tail_keywords||'');
                 $res.empty();
                 $res.append(' <span class="gm2-result-icon">✅</span>');
                 row.removeClass('gm2-status-applied gm2-status-analyzed gm2-applied').addClass('gm2-status-new');
@@ -443,6 +457,8 @@ jQuery(function($){
                     cell.html('&#10003;');
                     if(item.fields.seo_title){row.find('.column-seo_title').text(item.fields.seo_title);}
                     if(item.fields.seo_description){row.find('.column-description').text(item.fields.seo_description);}
+                    if(item.fields.focus_keywords){row.find('.column-focus_keywords').text(item.fields.focus_keywords);}
+                    if(item.fields.long_tail_keywords){row.find('.column-long_tail_keywords').text(item.fields.long_tail_keywords);}
                     row.removeClass('gm2-status-new').addClass('gm2-status-analyzed');
                 }else{
                     cell.text((resp&&resp.data)?resp.data:gm2BulkAiTax.i18n.error);
@@ -542,6 +558,8 @@ jQuery(function($){
                     var row=$('#gm2-term-'+parts[0]+'-'+parts[1]);
                     row.find('.column-seo_title').text('');
                     row.find('.column-description').text('');
+                    row.find('.column-focus_keywords').text('');
+                    row.find('.column-long_tail_keywords').text('');
                     row.find('.gm2-result').empty();
                     row.find('.gm2-select').prop('checked',false);
                     row.removeClass('gm2-status-analyzed').addClass('gm2-status-new');

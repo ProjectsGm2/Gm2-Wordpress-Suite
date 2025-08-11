@@ -86,6 +86,32 @@ class BulkAiResetAjaxTest extends WP_Ajax_UnitTestCase {
     }
 }
 
+class BulkAiTaxApplyAjaxTest extends WP_Ajax_UnitTestCase {
+    public function test_apply_updates_term_meta() {
+        $term_id = self::factory()->term->create(['taxonomy' => 'category']);
+        $this->_setRole('administrator');
+        $_POST['term_id'] = $term_id;
+        $_POST['taxonomy'] = 'category';
+        $_POST['seo_title'] = 'New';
+        $_POST['seo_description'] = 'Desc';
+        $_POST['focus_keywords'] = 'alpha';
+        $_POST['long_tail_keywords'] = 'beta';
+        $_POST['_ajax_nonce'] = wp_create_nonce('gm2_bulk_ai_apply');
+        $_REQUEST['_ajax_nonce'] = $_POST['_ajax_nonce'];
+        try { $this->_handleAjax('gm2_bulk_ai_tax_apply'); } catch (WPAjaxDieContinueException $e) {}
+        $resp = json_decode($this->_last_response, true);
+        $this->assertTrue($resp['success']);
+        $this->assertSame('New', get_term_meta($term_id, '_gm2_title', true));
+        $this->assertSame('Desc', get_term_meta($term_id, '_gm2_description', true));
+        $this->assertSame('alpha', get_term_meta($term_id, '_gm2_focus_keywords', true));
+        $this->assertSame('beta', get_term_meta($term_id, '_gm2_long_tail_keywords', true));
+        $this->assertSame('New', $resp['data']['seo_title']);
+        $this->assertSame('Desc', $resp['data']['seo_description']);
+        $this->assertSame('alpha', $resp['data']['focus_keywords']);
+        $this->assertSame('beta', $resp['data']['long_tail_keywords']);
+    }
+}
+
 class BulkAiTaxResetAjaxTest extends WP_Ajax_UnitTestCase {
     public function test_reset_all_clears_seo_and_ai_meta_with_filters() {
         $term1 = self::factory()->term->create(['taxonomy' => 'category']);
@@ -95,9 +121,15 @@ class BulkAiTaxResetAjaxTest extends WP_Ajax_UnitTestCase {
         update_term_meta($term1, '_gm2_prev_title', 'PrevT1');
         update_term_meta($term1, '_gm2_prev_description', 'PrevD1');
         update_term_meta($term1, '_gm2_ai_research', 'AI1');
+        update_term_meta($term1, '_gm2_focus_keywords', 'fk1');
+        update_term_meta($term1, '_gm2_long_tail_keywords', 'lt1');
+        update_term_meta($term1, '_gm2_prev_focus_keywords', 'pfk1');
+        update_term_meta($term1, '_gm2_prev_long_tail_keywords', 'plt1');
 
         update_term_meta($term2, '_gm2_title', 'Title2');
         update_term_meta($term2, '_gm2_description', 'Desc2');
+        update_term_meta($term2, '_gm2_focus_keywords', 'keepfk');
+        update_term_meta($term2, '_gm2_long_tail_keywords', 'keeplt');
 
         $this->_setRole('administrator');
 
@@ -117,8 +149,14 @@ class BulkAiTaxResetAjaxTest extends WP_Ajax_UnitTestCase {
         $this->assertEmpty(get_term_meta($term1, '_gm2_prev_title', true));
         $this->assertEmpty(get_term_meta($term1, '_gm2_prev_description', true));
         $this->assertEmpty(get_term_meta($term1, '_gm2_ai_research', true));
+        $this->assertEmpty(get_term_meta($term1, '_gm2_focus_keywords', true));
+        $this->assertEmpty(get_term_meta($term1, '_gm2_long_tail_keywords', true));
+        $this->assertEmpty(get_term_meta($term1, '_gm2_prev_focus_keywords', true));
+        $this->assertEmpty(get_term_meta($term1, '_gm2_prev_long_tail_keywords', true));
         $this->assertSame('Title2', get_term_meta($term2, '_gm2_title', true));
         $this->assertSame('Desc2', get_term_meta($term2, '_gm2_description', true));
+        $this->assertSame('keepfk', get_term_meta($term2, '_gm2_focus_keywords', true));
+        $this->assertSame('keeplt', get_term_meta($term2, '_gm2_long_tail_keywords', true));
     }
 }
 
