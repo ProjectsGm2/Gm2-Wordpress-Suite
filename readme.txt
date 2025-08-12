@@ -14,6 +14,7 @@ Key features include:
 * SEO tools with breadcrumbs, caching and structured data
 * ChatGPT-powered content generation and keyword research
 * WooCommerce quantity discounts with a dedicated Elementor widget (requires WooCommerce)
+* Registration and login Elementor widget with optional Google login (requires WooCommerce and Site Kit)
 * Abandoned cart tracking grouped by IP with email/phone capture, a Cart Settings page for selecting an Elementor popup, browsing-time and revisit metrics, an activity log, and recovery emails
 * Tariff management and redirects
 * Expanded SEO Context feeds AI prompts with business details
@@ -43,7 +44,7 @@ Key features include:
    **SEO → Connect Google Account** page after connecting, or enter them
    manually on the SEO settings screen if needed.
 8. Install and activate WooCommerce (required for Quantity Discounts and Abandoned Carts).
-9. Install and activate Elementor to use the Gm2 Qnty Discounts widget on product pages. With Elementor Pro the widget appears in the **WooCommerce** section when editing Single Product templates. Otherwise look under **General**.
+9. Install and activate Elementor to use the Gm2 Qnty Discounts widget on product pages and the Registration/Login widget. With Elementor Pro the discount widget appears in the **WooCommerce** section when editing Single Product templates. Otherwise look under **General**.
 10. Open **Gm2 → Quantity Discounts** and create discount groups to define pricing rules.
 11. Configure cart recovery options under **Gm2 → Abandoned Carts**.
 12. Choose an Elementor popup on **Gm2 → Cart Settings** to collect a shopper's email or phone before leaving. Captured contact details appear on the **Gm2 → Abandoned Carts** page.
