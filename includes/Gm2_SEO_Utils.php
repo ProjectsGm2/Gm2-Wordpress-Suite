@@ -200,7 +200,8 @@ namespace {
     }
 
     function gm2_infer_brand_name(int $post_id): string {
-        $terms = wp_get_post_terms($post_id, ['brand', 'product_brand'], ['fields' => 'names']);
+        $taxonomies = apply_filters('gm2_brand_taxonomies', ['brand', 'product_brand']);
+        $terms      = wp_get_post_terms($post_id, $taxonomies, ['fields' => 'names']);
         if (!is_wp_error($terms) && !empty($terms)) {
             return sanitize_text_field($terms[0]);
         }
