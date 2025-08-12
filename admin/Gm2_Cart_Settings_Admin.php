@@ -26,9 +26,12 @@ class Gm2_Cart_Settings_Admin {
         }
 
         $notice = '';
+        $enable_phone_login = get_option('gm2_enable_phone_login', '0');
         if (isset($_POST['gm2_cart_settings_nonce']) && wp_verify_nonce($_POST['gm2_cart_settings_nonce'], 'gm2_cart_settings_save')) {
             $popup_id = isset($_POST['gm2_cart_popup_id']) ? absint($_POST['gm2_cart_popup_id']) : 0;
             update_option('gm2_cart_popup_id', $popup_id);
+            $enable_phone_login = isset($_POST['gm2_enable_phone_login']) ? '1' : '0';
+            update_option('gm2_enable_phone_login', $enable_phone_login);
             $notice = '<div class="updated notice"><p>' . esc_html__( 'Settings saved.', 'gm2-wordpress-suite' ) . '</p></div>';
         }
 
@@ -66,6 +69,9 @@ class Gm2_Cart_Settings_Admin {
             echo '<option value="' . esc_attr($id) . '"' . $sel . '>' . esc_html($title) . '</option>';
         }
         echo '</select>';
+        echo '</td></tr>';
+        echo '<tr><th scope="row"><label for="gm2_enable_phone_login">' . esc_html__( 'Enable phone number', 'gm2-wordpress-suite' ) . '</label></th><td>';
+        echo '<input type="checkbox" name="gm2_enable_phone_login" id="gm2_enable_phone_login" value="1"' . checked($enable_phone_login, '1', false) . ' />';
         echo '</td></tr>';
         echo '</tbody></table>';
         submit_button();
