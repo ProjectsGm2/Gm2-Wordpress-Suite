@@ -23,7 +23,7 @@ class GeneratedFieldsTest extends WP_UnitTestCase {
         $admin = new Gm2_SEO_Admin();
         $_POST['gm2_seo_nonce'] = wp_create_nonce('gm2_save_seo_meta');
         $_POST['gm2_seo_description'] = '';
-        $admin->save_post_meta($post_id);
+        $admin->save_post_meta($post_id, get_post($post_id));
 
         remove_filter('pre_http_request', $filter, 10);
 
