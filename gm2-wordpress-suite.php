@@ -120,6 +120,7 @@ function gm2_activate_plugin() {
     add_option('gm2_enable_quantity_discounts', '1');
     add_option('gm2_enable_google_oauth', '1');
     add_option('gm2_enable_chatgpt', '1');
+    add_option('gm2_enable_analytics', '1');
     add_option('gm2_enable_chatgpt_logging', '0');
     add_option('gm2_sitemap_path', ABSPATH . 'sitemap.xml');
     add_option('gm2_sitemap_max_urls', 1000);
