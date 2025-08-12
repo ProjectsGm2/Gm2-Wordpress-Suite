@@ -1,0 +1,2175 @@
+# Copyright (C) 2025 gm2-wordpress-suite
+# This file is distributed under the same license as the gm2-wordpress-suite package.
+msgid ""
+msgstr ""
+"Project-Id-Version: gm2-wordpress-suite\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2025-08-12 17:57+0000\n"
+"Project-Id-Version: undefined\n"
+"X-Poedit-Basepath: ..\n"
+"X-Poedit-KeywordsList: __;_e;_ex:1,2c;_n:1,2;_n_noop:1,2;_nx:1,2,4c;_nx_noop:1,2,3c;_x:1,2c;esc_attr__;esc_attr_e;esc_attr_x:1,2c;esc_html__;esc_html_e;esc_html_x:1,2c\n"
+"X-Poedit-SearchPath-0: .\n"
+"X-Poedit-SearchPathExcluded-0: *.js\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: ../admin/class-gm2-ac-table.php:30, ../admin/Gm2_Admin.php:525, ../admin/Gm2_Admin.php:553, ../admin/Gm2_Admin.php:559, ../admin/Gm2_SEO_Admin.php:1333, ../admin/Gm2_SEO_Admin.php:1502
+msgid "Status"
+msgstr ""
+
+#: ../admin/class-gm2-ac-table.php:31
+msgid "IP Address"
+msgstr ""
+
+#: ../admin/class-gm2-ac-table.php:32
+msgid "Email"
+msgstr ""
+
+#: ../admin/class-gm2-ac-table.php:33
+msgid "Phone"
+msgstr ""
+
+#: ../admin/class-gm2-ac-table.php:34
+msgid "Location"
+msgstr ""
+
+#: ../admin/class-gm2-ac-table.php:35
+msgid "Device"
+msgstr ""
+
+#: ../admin/class-gm2-ac-table.php:36
+msgid "Browser"
+msgstr ""
+
+#: ../admin/class-gm2-ac-table.php:37
+msgid "SKUs in Cart"
+msgstr ""
+
+#: ../admin/class-gm2-ac-table.php:38
+msgid "Latest Cart Value"
+msgstr ""
+
+#: ../admin/class-gm2-ac-table.php:39
+msgid "Last Entry URL"
+msgstr ""
+
+#: ../admin/class-gm2-ac-table.php:40
+msgid "Last Exit URL"
+msgstr ""
+
+#: ../admin/class-gm2-ac-table.php:41
+msgid "Total Browsing Time"
+msgstr ""
+
+#: ../admin/class-gm2-ac-table.php:42
+msgid "Total Revisits"
+msgstr ""
+
+#: ../admin/class-gm2-ac-table.php:43
+msgid "Last Abandoned At"
+msgstr ""
+
+#: ../admin/class-gm2-ac-table.php:44, ../admin/class-gm2-ac-table.php:92
+msgid "Cart Activity Log"
+msgstr ""
+
+#: ../admin/class-gm2-ac-table.php:55, ../admin/Gm2_Admin.php:568, ../admin/Gm2_SEO_Admin.php:791, ../admin/Gm2_SEO_Admin.php:2522
+msgid "Delete"
+msgstr ""
+
+#: ../admin/class-gm2-ac-table.php:208, ../includes/widgets/class-gm2-qd-widget.php:111, ../includes/widgets/class-gm2-qd-widget.php:219, ../includes/widgets/class-gm2-qd-widget.php:478
+msgid "Active"
+msgstr ""
+
+#: ../admin/class-gm2-ac-table.php:212
+msgid "Pending Abandonment"
+msgstr ""
+
+#: ../admin/class-gm2-ac-table.php:210
+msgid "Abandoned"
+msgstr ""
+
+#: ../admin/class-gm2-ac-table.php:206
+msgid "Recovered (#%d)"
+msgstr ""
+
+#: ../admin/class-gm2-bulk-ai-list-table.php:43, ../admin/Gm2_Admin.php:261, ../admin/Gm2_SEO_Admin.php:1427
+msgid "Title"
+msgstr ""
+
+#: ../admin/class-gm2-bulk-ai-list-table.php:44, ../admin/class-gm2-bulk-ai-tax-list-table.php:44, ../admin/Gm2_SEO_Admin.php:1148, ../admin/Gm2_SEO_Admin.php:969, ../admin/Gm2_SEO_Admin.php:2047, ../admin/Gm2_SEO_Admin.php:5498, ../admin/Gm2_SEO_Admin.php:5647, ../includes/Gm2_Elementor_SEO.php:38
+msgid "SEO Title"
+msgstr ""
+
+#: ../admin/class-gm2-bulk-ai-list-table.php:45, ../admin/class-gm2-bulk-ai-tax-list-table.php:45, ../admin/Gm2_SEO_Admin.php:2497, ../admin/Gm2_SEO_Admin.php:2516
+msgid "Description"
+msgstr ""
+
+#: ../admin/class-gm2-bulk-ai-list-table.php:46, ../admin/class-gm2-bulk-ai-list-table.php:120, ../admin/class-gm2-bulk-ai-tax-list-table.php:46, ../admin/class-gm2-bulk-ai-tax-list-table.php:124, ../admin/Gm2_Admin.php:310, ../admin/Gm2_Admin.php:262, ../admin/Gm2_SEO_Admin.php:1150, ../admin/Gm2_SEO_Admin.php:971, ../admin/Gm2_SEO_Admin.php:5500, ../admin/Gm2_SEO_Admin.php:5649, ../includes/Gm2_Elementor_SEO.php:54
+msgid "Focus Keywords"
+msgstr ""
+
+#: ../admin/class-gm2-bulk-ai-list-table.php:47, ../admin/class-gm2-bulk-ai-list-table.php:124, ../admin/class-gm2-bulk-ai-tax-list-table.php:47, ../admin/class-gm2-bulk-ai-tax-list-table.php:128, ../admin/Gm2_Admin.php:311, ../admin/Gm2_Admin.php:263, ../admin/Gm2_SEO_Admin.php:1151, ../admin/Gm2_SEO_Admin.php:972, ../admin/Gm2_SEO_Admin.php:5493, ../admin/Gm2_SEO_Admin.php:5642
+msgid "Long Tail Keywords"
+msgstr ""
+
+#: ../admin/class-gm2-bulk-ai-list-table.php:48, ../admin/class-gm2-bulk-ai-tax-list-table.php:49, ../admin/Gm2_SEO_Admin.php:1341, ../admin/Gm2_SEO_Admin.php:1510
+msgid "AI Suggestions"
+msgstr ""
+
+#: ../admin/class-gm2-bulk-ai-list-table.php:129, ../admin/class-gm2-bulk-ai-tax-list-table.php:134, ../admin/Gm2_Admin.php:316, ../admin/Gm2_Admin.php:267, ../admin/Gm2_SEO_Admin.php:1432, ../admin/Gm2_SEO_Admin.php:5491, ../admin/Gm2_SEO_Admin.php:5640
+msgid "Select all"
+msgstr ""
+
+#: ../admin/class-gm2-bulk-ai-list-table.php:132, ../admin/class-gm2-bulk-ai-list-table.php:132, ../admin/class-gm2-bulk-ai-tax-list-table.php:137, ../admin/class-gm2-bulk-ai-tax-list-table.php:137, ../admin/Gm2_Admin.php:306, ../admin/Gm2_Admin.php:264, ../admin/Gm2_SEO_Admin.php:1435, ../admin/Gm2_SEO_Admin.php:1435
+msgid "Apply"
+msgstr ""
+
+#: ../admin/class-gm2-bulk-ai-list-table.php:133, ../admin/class-gm2-bulk-ai-list-table.php:133, ../admin/class-gm2-bulk-ai-tax-list-table.php:138, ../admin/class-gm2-bulk-ai-tax-list-table.php:138, ../admin/Gm2_Admin.php:307, ../admin/Gm2_Admin.php:265, ../admin/Gm2_SEO_Admin.php:1436, ../admin/Gm2_SEO_Admin.php:1436
+msgid "Refresh"
+msgstr ""
+
+#: ../admin/class-gm2-bulk-ai-list-table.php:134, ../admin/class-gm2-bulk-ai-list-table.php:134, ../admin/class-gm2-bulk-ai-tax-list-table.php:139, ../admin/class-gm2-bulk-ai-tax-list-table.php:139, ../admin/Gm2_Admin.php:308, ../admin/Gm2_Admin.php:266, ../admin/Gm2_SEO_Admin.php:1437, ../admin/Gm2_SEO_Admin.php:1437
+msgid "Clear"
+msgstr ""
+
+#: ../admin/class-gm2-bulk-ai-list-table.php:136, ../admin/class-gm2-bulk-ai-list-table.php:136, ../admin/class-gm2-bulk-ai-tax-list-table.php:141, ../admin/class-gm2-bulk-ai-tax-list-table.php:141, ../admin/Gm2_Admin.php:309, ../admin/Gm2_Admin.php:269, ../admin/Gm2_SEO_Admin.php:1439, ../admin/Gm2_SEO_Admin.php:1439
+msgid "Undo"
+msgstr ""
+
+#: ../admin/class-gm2-bulk-ai-list-table.php:268
+msgid "No posts found."
+msgstr ""
+
+#: ../admin/class-gm2-bulk-ai-tax-list-table.php:43, ../admin/Gm2_Admin.php:523, ../admin/Gm2_Admin.php:551, ../admin/Gm2_Admin.php:559
+msgid "Name"
+msgstr ""
+
+#: ../admin/class-gm2-bulk-ai-tax-list-table.php:48
+msgid "Tax Description"
+msgstr ""
+
+#: ../admin/class-gm2-bulk-ai-tax-list-table.php:255
+msgid "No terms found."
+msgstr ""
+
+#: ../admin/Gm2_Abandoned_Carts_Admin.php:20, ../admin/Gm2_Abandoned_Carts_Admin.php:21, ../admin/Gm2_Abandoned_Carts_Admin.php:83, ../admin/Gm2_Admin.php:480
+msgid "Abandoned Carts"
+msgstr ""
+
+#: ../admin/Gm2_Abandoned_Carts_Admin.php:45
+msgid "No activity found."
+msgstr ""
+
+#: ../admin/Gm2_Abandoned_Carts_Admin.php:46
+msgid "Unable to load activity."
+msgstr ""
+
+#: ../admin/Gm2_Abandoned_Carts_Admin.php:79, ../admin/Gm2_Recovered_Carts_Admin.php:28
+msgid "Items per page"
+msgstr ""
+
+#: ../admin/Gm2_Abandoned_Carts_Admin.php:93
+msgid "Carts are marked as abandoned in real time."
+msgstr ""
+
+#: ../admin/Gm2_Abandoned_Carts_Admin.php:91
+msgid "Carts inactive for more than %d minutes appear as \"Pending Abandonment\" until WP Cron finalizes their status."
+msgstr ""
+
+#: ../admin/Gm2_Abandoned_Carts_Admin.php:97, ../admin/Gm2_Admin.php:649, ../admin/Gm2_Recovered_Carts_Admin.php:35
+msgid "Logs reset."
+msgstr ""
+
+#: ../admin/Gm2_Abandoned_Carts_Admin.php:111, ../admin/Gm2_Recovered_Carts_Admin.php:49, ../admin/Gm2_SEO_Admin.php:1326, ../admin/Gm2_SEO_Admin.php:1497
+msgid "Export CSV"
+msgstr ""
+
+#: ../admin/Gm2_Abandoned_Carts_Admin.php:116, ../admin/Gm2_Admin.php:717, ../admin/Gm2_Recovered_Carts_Admin.php:54
+msgid "Reset Logs"
+msgstr ""
+
+#: ../admin/Gm2_Abandoned_Carts_Admin.php:125, ../admin/Gm2_Recovered_Carts_Admin.php:63, ../admin/Gm2_SEO_Admin.php:1526
+msgid "Search"
+msgstr ""
+
+#: ../admin/Gm2_Abandoned_Carts_Admin.php:145, ../admin/Gm2_Recovered_Carts_Admin.php:83
+msgid "You do not have permission to export this data."
+msgstr ""
+
+#: ../admin/Gm2_Abandoned_Carts_Admin.php:195, ../admin/Gm2_Admin.php:333, ../admin/Gm2_Admin.php:579, ../admin/Gm2_Admin.php:636, ../admin/Gm2_Admin.php:754, ../admin/Gm2_Admin.php:781, ../admin/Gm2_Cart_Settings_Admin.php:25, ../admin/Gm2_Quantity_Discounts_Admin.php:114, ../admin/Gm2_Quantity_Discounts_Admin.php:148, ../admin/Gm2_Quantity_Discounts_Admin.php:183, ../admin/Gm2_Recovered_Carts_Admin.php:112, ../admin/Gm2_SEO_Admin.php:281, ../admin/Gm2_SEO_Admin.php:1238, ../admin/Gm2_SEO_Admin.php:1450, ../admin/Gm2_SEO_Admin.php:1564, ../admin/Gm2_SEO_Admin.php:1696, ../admin/Gm2_SEO_Admin.php:2327, ../admin/Gm2_SEO_Admin.php:2367, ../admin/Gm2_SEO_Admin.php:2389, ../admin/Gm2_SEO_Admin.php:2431, ../admin/Gm2_SEO_Admin.php:2463, ../admin/Gm2_SEO_Admin.php:2529, ../admin/Gm2_SEO_Admin.php:2580, ../admin/Gm2_SEO_Admin.php:2609, ../admin/Gm2_SEO_Admin.php:2644, ../admin/Gm2_SEO_Admin.php:2659, ../admin/Gm2_SEO_Admin.php:2680, ../admin/Gm2_SEO_Admin.php:2711, ../admin/Gm2_SEO_Admin.php:2740, ../admin/Gm2_SEO_Admin.php:2777, ../admin/Gm2_SEO_Admin.php:2809, ../admin/Gm2_SEO_Admin.php:2834, ../admin/Gm2_SEO_Wizard.php:47
+msgid "Permission denied"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:92
+msgid "Loading..."
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:93, ../admin/Gm2_Admin.php:192, ../admin/Gm2_Admin.php:312, ../admin/Gm2_Admin.php:257
+msgid "Error"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:119, ../admin/Gm2_Elementor.php:32, ../admin/Gm2_SEO_Admin.php:2092, ../admin/Gm2_SEO_Admin.php:5411, ../admin/Gm2_SEO_Admin.php:5580, ../admin/Gm2_SEO_Admin.php:5752
+msgid "Select Image"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:120, ../admin/Gm2_Elementor.php:33, ../admin/Gm2_SEO_Admin.php:5412, ../admin/Gm2_SEO_Admin.php:5581
+msgid "Use image"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:207
+msgid "Keyword metrics unavailable; showing AI-generated ideas only."
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:218, ../admin/Gm2_Admin.php:228, ../admin/Gm2_SEO_Admin.php:5488, ../admin/Gm2_SEO_Admin.php:5637, ../admin/Gm2_SEO_Admin.php:5673
+msgid "Researching..."
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:313, ../admin/Gm2_Admin.php:270
+msgid "Resetting..."
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:314
+msgid "Reset %s terms"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:315
+msgid "Cleared AI suggestions for %s terms"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:317, ../admin/Gm2_Admin.php:276, ../admin/Gm2_SEO_Admin.php:1387, ../admin/Gm2_SEO_Admin.php:1535
+msgid "Select All"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:318, ../admin/Gm2_Admin.php:277
+msgid "Un-Select All"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:319, ../admin/Gm2_Admin.php:278, ../admin/Gm2_SEO_Admin.php:1388, ../admin/Gm2_SEO_Admin.php:1388, ../admin/Gm2_SEO_Admin.php:1536, ../admin/Gm2_SEO_Admin.php:1536
+msgid "Select Analyzed"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:320, ../admin/Gm2_Admin.php:279, ../admin/Gm2_SEO_Admin.php:1388, ../admin/Gm2_SEO_Admin.php:1536
+msgid "Unselect Analyzed"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:321
+msgid "Are you sure you want to reset all taxonomy terms and remove AI suggestions?"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:322
+msgid "Are you sure you want to reset the selected taxonomy terms and remove AI suggestions?"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:323
+msgid "Are you sure you want to clear AI suggestions for the selected taxonomy terms?"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:253
+msgid "Processing %1$s / %2$s"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:254, ../admin/Gm2_SEO_Admin.php:1339, ../admin/Gm2_SEO_Admin.php:1508
+msgid "Complete"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:255
+msgid "Stopped:"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:256
+msgid "Invalid JSON response"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:258
+msgid "Saving %1$s / %2$s..."
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:259
+msgid "Done (%1$s/%2$s)"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:260, ../admin/Gm2_SEO_Admin.php:1424, ../admin/Gm2_SEO_Admin.php:5503, ../admin/Gm2_SEO_Admin.php:5652
+msgid "Slug"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:268, ../admin/Gm2_SEO_Admin.php:275, ../admin/Gm2_SEO_Admin.php:1386, ../admin/Gm2_SEO_Admin.php:1534
+msgid "Cancel"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:271
+msgid "Reset %s posts"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:272
+msgid "Cleared AI suggestions for %s posts"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:273
+msgid "Are you sure you want to reset all posts and clear AI suggestions?"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:274
+msgid "Are you sure you want to reset the selected posts and clear AI suggestions?"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:275
+msgid "Are you sure you want to clear AI suggestions for the selected posts?"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:340
+msgid "Tariff name is required"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:346
+msgid "Tariff percentage must be a number"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:352
+msgid "Tariff percentage must be between 0 and 100"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:381, ../admin/Gm2_Admin.php:382
+msgid "Gm2"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:392, ../admin/Gm2_Admin.php:393, ../admin/Gm2_Admin.php:475
+msgid "Tariff"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:404, ../admin/Gm2_Admin.php:405, ../admin/Gm2_Admin.php:518
+msgid "Edit Tariff"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:415, ../admin/Gm2_Admin.php:416, ../admin/Gm2_Admin.php:478, ../admin/Gm2_Admin.php:604, ../admin/Gm2_SEO_Admin.php:1892
+msgid "Google OAuth Setup"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:426, ../admin/Gm2_Admin.php:427, ../admin/Gm2_Admin.php:479, ../admin/Gm2_Admin.php:653
+msgid "ChatGPT"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:460, ../admin/Gm2_Admin.php:594, ../admin/Gm2_Admin.php:647, ../admin/Gm2_Cart_Settings_Admin.php:35, ../admin/Gm2_SEO_Admin.php:827, ../admin/Gm2_SEO_Admin.php:708, ../admin/Gm2_SEO_Admin.php:680, ../admin/Gm2_SEO_Admin.php:662
+msgid "Settings saved."
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:471
+msgid "Gm2 Suite"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:475, ../admin/Gm2_Admin.php:476, ../admin/Gm2_Admin.php:477, ../admin/Gm2_Admin.php:478, ../admin/Gm2_Admin.php:479, ../admin/Gm2_Admin.php:480, ../admin/Gm2_Admin.php:525, ../admin/Gm2_Admin.php:553
+msgid "Enabled"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:476, ../admin/Gm2_SEO_Admin.php:332, ../admin/Gm2_SEO_Admin.php:333
+msgid "SEO"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:477, ../admin/Gm2_Quantity_Discounts_Admin.php:20, ../admin/Gm2_Quantity_Discounts_Admin.php:21, ../admin/Gm2_Quantity_Discounts_Admin.php:105
+msgid "Quantity Discounts"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:500
+msgid "Tariff saved."
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:524, ../admin/Gm2_Admin.php:552, ../admin/Gm2_Admin.php:559
+msgid "Percentage"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:527
+msgid "Save Tariff"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:538
+msgid "Tariff deleted."
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:544
+msgid "Tariffs"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:547, ../admin/Gm2_Admin.php:555
+msgid "Add Tariff"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:558
+msgid "Existing Tariffs"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:559, ../admin/Gm2_SEO_Admin.php:783, ../admin/Gm2_SEO_Admin.php:2516
+msgid "Actions"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:572
+msgid "No tariffs found."
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:568
+msgid "View"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:568, ../admin/Gm2_SEO_Admin.php:2522
+msgid "Edit"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:568, ../admin/Gm2_SEO_Admin.php:791
+msgid "Are you sure?"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:606
+msgid "Follow these steps to create OAuth credentials on the Google Cloud console:"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:608
+msgid "Open the Google Cloud console and create a new project."
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:609
+msgid "Enable the Google Ads API and other required APIs."
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:610
+msgid "Create OAuth client ID credentials for a Web application."
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:611
+msgid "Set the authorized redirect URI to %s."
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:612
+msgid "Copy the client ID and client secret into the fields below."
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:613
+msgid "Find your Project ID on the Google Cloud dashboard. In IAM & Admin → Service Accounts create a new service account, add a key, and download the JSON file."
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:614
+msgid "Enter the Project ID and the path to the downloaded JSON key in the fields below."
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:620, ../admin/Gm2_SEO_Wizard.php:121
+msgid "Client ID"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:622, ../admin/Gm2_SEO_Wizard.php:123
+msgid "Client Secret"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:624
+msgid "Project ID"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:626
+msgid "Service Account JSON Path"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:659
+msgid "API Key"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:661, ../admin/Gm2_Admin.php:679
+msgid "Show"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:662
+msgid "Model"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:669
+msgid "Temperature"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:671
+msgid "Max Tokens"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:673
+msgid "API Endpoint"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:675
+msgid "Enable Logging"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:680
+msgid "Hide"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:684
+msgid "Test Prompt"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:687
+msgid "Send"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:691
+msgid "ChatGPT Logs"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:697
+msgid "Prompt"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:697
+msgid "Response"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:701
+msgid "Prompt sent"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:705
+msgid "Response received"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:694
+msgid "No logs found."
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:801
+msgid "ChatGPT is disabled"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:805
+msgid "ChatGPT API key not set"
+msgstr ""
+
+#: ../admin/Gm2_Admin.php:837
+msgid "Configure ChatGPT under %s."
+msgstr ""
+
+#: ../admin/Gm2_Cart_Settings_Admin.php:15, ../admin/Gm2_Cart_Settings_Admin.php:16, ../admin/Gm2_Cart_Settings_Admin.php:57
+msgid "Cart Settings"
+msgstr ""
+
+#: ../admin/Gm2_Cart_Settings_Admin.php:62
+msgid "Cart Popup"
+msgstr ""
+
+#: ../admin/Gm2_Cart_Settings_Admin.php:64
+msgid "None"
+msgstr ""
+
+#: ../admin/Gm2_Cart_Settings_Admin.php:73
+msgid "Enable phone number"
+msgstr ""
+
+#: ../admin/Gm2_Diagnostics.php:76
+msgid "Gm2 Diagnostics detected issues:"
+msgstr ""
+
+#: ../admin/Gm2_Diagnostics.php:78
+msgid "Conflicting SEO plugins:"
+msgstr ""
+
+#: ../admin/Gm2_Diagnostics.php:78
+msgid "Disable them or turn off the SEO module."
+msgstr ""
+
+#: ../admin/Gm2_Diagnostics.php:81
+msgid "Missing plugin files:"
+msgstr ""
+
+#: ../admin/Gm2_Diagnostics.php:81
+msgid "Restore these files or reinstall the plugin."
+msgstr ""
+
+#: ../admin/Gm2_Diagnostics.php:84
+msgid "Theme hooks removed:"
+msgstr ""
+
+#: ../admin/Gm2_Diagnostics.php:84
+msgid "Add the hooks back to your theme templates."
+msgstr ""
+
+#: ../admin/Gm2_Diagnostics.php:86, ../admin/Gm2_Site_Health.php:60
+msgid "Please resolve these issues to ensure all SEO features work as expected."
+msgstr ""
+
+#: ../admin/Gm2_Link_Counts.php:32, ../admin/Gm2_SEO_Admin.php:5794
+msgid "Internal Links"
+msgstr ""
+
+#: ../admin/Gm2_Link_Counts.php:33, ../admin/Gm2_SEO_Admin.php:5795
+msgid "External Links"
+msgstr ""
+
+#: ../admin/Gm2_Link_Counts.php:86
+msgid "Link Overview"
+msgstr ""
+
+#: ../admin/Gm2_Link_Counts.php:98
+msgid "Internal Links:"
+msgstr ""
+
+#: ../admin/Gm2_Link_Counts.php:99
+msgid "External Links:"
+msgstr ""
+
+#: ../admin/Gm2_Quantity_Discounts_Admin.php:107
+msgid "Add Group"
+msgstr ""
+
+#: ../admin/Gm2_Quantity_Discounts_Admin.php:108
+msgid "Save Changes"
+msgstr ""
+
+#: ../admin/Gm2_Recovered_Carts_Admin.php:18, ../admin/Gm2_Recovered_Carts_Admin.php:19, ../admin/Gm2_Recovered_Carts_Admin.php:32
+msgid "Recovered Carts"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:238, ../admin/Gm2_SEO_Admin.php:575
+msgid "Clean Slugs"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:270
+msgid "Clean slugs for %d selected post?"
+msgid_plural "Clean slugs for %d selected posts?"
+msgstr[0] ""
+msgstr[1] ""
+
+#: ../admin/Gm2_SEO_Admin.php:274
+msgid "Confirm"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:315
+msgid "%d slug cleaned."
+msgid_plural "%d slugs cleaned."
+msgstr[0] ""
+msgstr[1] ""
+
+#: ../admin/Gm2_SEO_Admin.php:345, ../admin/Gm2_SEO_Admin.php:346, ../admin/Gm2_SEO_Admin.php:1890
+msgid "Connect Google Account"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:355, ../admin/Gm2_SEO_Admin.php:356, ../admin/Gm2_SEO_Admin.php:1227
+msgid "Robots.txt"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:364, ../admin/Gm2_SEO_Admin.php:365, ../admin/Gm2_SEO_Admin.php:1325
+msgid "Bulk AI Review"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:374, ../admin/Gm2_SEO_Admin.php:375, ../admin/Gm2_SEO_Admin.php:1496
+msgid "Bulk AI Taxonomies"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:578
+msgid "Remove stopwords"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:586
+msgid "Slug Stopwords"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:590
+msgid "Space or comma separated list."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:600
+msgid "Write a short SEO description for the term \"{name}\"."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:602
+msgid "Available tags: {name}, {taxonomy}"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:611, ../admin/Gm2_SEO_Admin.php:1154, ../admin/Gm2_SEO_Admin.php:975
+msgid "General"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:612
+msgid "Meta Tags"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:613
+msgid "Sitemap"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:614
+msgid "Redirects"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:615
+msgid "Structured Data"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:616, ../admin/Gm2_Site_Health.php:52, ../admin/Gm2_Site_Health.php:65
+msgid "Performance"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:617
+msgid "Keyword Research"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:618
+msgid "Analytics"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:619
+msgid "Content Rules"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:620
+msgid "SEO Guidelines"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:621
+msgid "Taxonomies"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:622
+msgid "Context"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:631, ../admin/Gm2_SEO_Admin.php:2040
+msgid "SEO Settings"
+msgstr ""
+
+#. translators: 1: opening link tag, 2: closing link tag
+#: ../admin/Gm2_SEO_Admin.php:638
+msgid "If AI Research fails, please enable WordPress debugging as explained in the %1$sWP Debugging%2$s section of the readme. Check %3$s for errors."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:654
+msgid "Settings reset to defaults."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1142
+msgid "Guideline Rules"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1149, ../admin/Gm2_SEO_Admin.php:970, ../admin/Gm2_SEO_Admin.php:2049, ../admin/Gm2_SEO_Admin.php:5499, ../admin/Gm2_SEO_Admin.php:5648, ../includes/Gm2_Elementor_SEO.php:46
+msgid "SEO Description"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1152, ../admin/Gm2_SEO_Admin.php:973, ../admin/Gm2_SEO_Admin.php:2076, ../admin/Gm2_SEO_Admin.php:5501, ../admin/Gm2_SEO_Admin.php:5650, ../admin/Gm2_SEO_Admin.php:5738, ../includes/Gm2_Elementor_SEO.php:80
+msgid "Canonical URL"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1153, ../admin/Gm2_SEO_Admin.php:974
+msgid "Content"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1166, ../admin/Gm2_SEO_Admin.php:1186
+msgid "AI Research Guideline Rules"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1174, ../admin/Gm2_SEO_Admin.php:995, ../admin/Gm2_SEO_Admin.php:1521
+msgid "Product Category"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1172, ../admin/Gm2_SEO_Admin.php:993, ../admin/Gm2_SEO_Admin.php:1519
+msgid "Post Category"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1190
+msgid "Save Guideline Rules"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1033
+msgid "Business Model"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1035
+msgid "How does the company make money (product sales, services, subscriptions, ads, affiliate, hybrid)?"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1038
+msgid "Industry Category"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1040
+msgid "Which industry best describes your business? If e-commerce, list key product categories and flagship items. For services, describe core offerings. For SaaS, summarize primary modules. Include your Google taxonomy label if known."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1043
+msgid "Target Audience"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1045
+msgid "Who are your core customer segments and where are they located?"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1048
+msgid "Unique Selling Points"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1050
+msgid "What differentiates your brand from competitors in terms of price, quality, experience, or mission?"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1053
+msgid "Revenue Streams"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1055
+msgid "List your main sources of revenue such as products, services, subscriptions, advertising, or affiliate programs."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1058
+msgid "Primary Goal"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1060
+msgid "What is the website's main objective?"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1063
+msgid "Brand Voice"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1065
+msgid "Describe the desired style or tone (professional, casual, luxury, authoritative, playful, eco-friendly, etc.)."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1068
+msgid "Competitors"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1070
+msgid "List main online competitors and what makes your offer stronger or unique."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1073
+msgid "Core Offerings"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1075
+msgid "What are the key products or services you provide?"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1078
+msgid "Geographic Focus"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1080
+msgid "Which regions or locations do you primarily target?"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1083
+msgid "Keyword Data"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1085
+msgid "Do you have existing keyword research or rankings to share?"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1088
+msgid "Competitor Landscape"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1090
+msgid "How would you describe the competitive landscape in your niche?"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1093
+msgid "Success Metrics"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1095
+msgid "Which KPIs will track SEO success (sales, leads, traffic, rankings)?"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1098
+msgid "Buyer Personas"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1100
+msgid "Describe your ideal buyers and their pain points."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1103
+msgid "Project Description"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1105
+msgid "Short summary of your project or website. Used when other fields are empty."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1108
+msgid "Custom Prompts"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1110
+msgid "Default instructions appended to AI requests."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1128
+msgid "Business Context Prompt"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1133
+msgid "ChatGPT is disabled."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1131
+msgid "Generate AI Prompt"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1135
+msgid "Creates a single prompt summarizing your answers above. ChatGPT must be enabled and configured."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1138
+msgid "Save Context"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1022
+msgid "Minimum Description Length"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1024, ../admin/Gm2_SEO_Admin.php:873, ../admin/Gm2_SEO_Admin.php:848, ../admin/Gm2_SEO_Admin.php:748, ../admin/Gm2_SEO_Admin.php:696, ../admin/Gm2_SEO_Admin.php:672
+msgid "Save Settings"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:962
+msgid "Rules saved."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:987, ../admin/Gm2_SEO_Admin.php:1007
+msgid "AI Research Content Rules"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1012
+msgid "Minimum Internal Links"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1013
+msgid "Minimum External Links"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1015
+msgid "Save Rules"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:957
+msgid "Connect your Google account to view analytics."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:936
+msgid "Analytics Overview"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:942, ../admin/Gm2_SEO_Admin.php:909
+msgid "No analytics data found."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:945
+msgid "Top Queries"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:954
+msgid "No search console data found."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:947
+msgid "Query"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:947
+msgid "Clicks"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:947
+msgid "Impressions"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:866
+msgid "Language Constant"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:867
+msgid "Geo Target Constant"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:868
+msgid "Login Customer ID"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:869
+msgid "Search Console Query Limit"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:870
+msgid "Analytics Days"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:872
+msgid "Defaults: English / United States."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:877
+msgid "Seed Keyword"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:879
+msgid "Generate Ideas"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:881
+msgid "Google Ads credentials are not configured."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:912
+msgid "Connect your Google account to fetch query and analytics data."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:901
+msgid "No queries found."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:833
+msgid "Auto-fill missing alt text"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:833
+msgid "Use product title"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:834
+msgid "Clean Image Filenames"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:834
+msgid "Sanitize on upload"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:835
+msgid "Enable Image Compression"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:836
+msgid "Compression API Key"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:837
+msgid "Compression API URL"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:838
+msgid "Minify HTML"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:839
+msgid "Minify CSS"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:840
+msgid "Minify JS"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:841
+msgid "PageSpeed API Key"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:849
+msgid "Test Page Speed"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:754, ../admin/Gm2_SEO_Admin.php:2651
+msgid "404 logs cleared."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:762
+msgid "Redirect deleted."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:769
+msgid "Redirect saved."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:775
+msgid "Source URL"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:776
+msgid "Target URL"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:777, ../admin/Gm2_SEO_Admin.php:783
+msgid "Type"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:779
+msgid "Add Redirect"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:782
+msgid "Existing Redirects"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:783
+msgid "Source"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:783
+msgid "Target"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:795
+msgid "No redirects found."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:801
+msgid "404 Logs"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:802
+msgid "URL"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:813
+msgid "Clear 404 Logs"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:714
+msgid "Product Schema"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:715
+msgid "Brand Schema"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:716
+msgid "Breadcrumb Schema"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:717
+msgid "Taxonomy ItemList Schema"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:718
+msgid "Article Schema"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:719
+msgid "Show Breadcrumbs in Footer"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:720
+msgid "Review Schema"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:730
+msgid "JSON-LD Templates"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:733
+msgid "Available placeholders:"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:740
+msgid "Product Template"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:741
+msgid "Brand Template"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:742
+msgid "Breadcrumb Template"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:743
+msgid "Taxonomy ItemList Template"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:744
+msgid "Article Template"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:745
+msgid "Review Template"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:686
+msgid "Enable Sitemap"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:687
+msgid "Update Frequency"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:688
+msgid "Daily"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:688
+msgid "Weekly"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:688
+msgid "Monthly"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:693, ../admin/Gm2_SEO_Wizard.php:141
+msgid "Sitemap Path"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:693
+msgid "Path must be writable by WordPress"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:694
+msgid "Max URLs per File"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:697
+msgid "Regenerate Sitemap"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:668
+msgid "Noindex product variants"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:669
+msgid "Noindex out-of-stock products"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:670
+msgid "Variation canonical points to parent"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1205
+msgid "Export Settings"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1212
+msgid "Import Settings"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1219
+msgid "Reset to Defaults"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1231, ../admin/Gm2_SEO_Admin.php:1382, ../admin/Gm2_SEO_Admin.php:1529
+msgid "Save"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1245
+msgid "Posts are queued and processed one at a time. Use \"Analyze Selected\" to queue items and \"Cancel\" to stop."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1246
+msgid "Click \"Apply\" or \"Apply All\" to accept suggestions. Row colors show status: white for new, yellow for analyzed, and green for applied."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1248
+msgid "See the <a href=\"%s\" target=\"_blank\" rel=\"noopener\">documentation</a> for more details."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1253
+msgid "Bulk AI Help"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1327
+msgid "Select posts, click"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1327, ../admin/Gm2_SEO_Admin.php:1385, ../admin/Gm2_SEO_Admin.php:1385, ../admin/Gm2_SEO_Admin.php:1532
+msgid "Analyze Selected"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1327
+msgid "to generate suggestions. Review the suggestions and choose what to apply."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1332
+msgid "Posts per page"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1334, ../admin/Gm2_SEO_Admin.php:1503
+msgid "Published"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1335, ../admin/Gm2_SEO_Admin.php:1504
+msgid "Draft"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1337, ../admin/Gm2_SEO_Admin.php:1506
+msgid "SEO Status"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1338, ../admin/Gm2_SEO_Admin.php:1346, ../admin/Gm2_SEO_Admin.php:1365, ../admin/Gm2_SEO_Admin.php:1507, ../admin/Gm2_SEO_Admin.php:1514
+msgid "All"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1340, ../admin/Gm2_SEO_Admin.php:1509
+msgid "Incomplete"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1345
+msgid "Post Type"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1358
+msgid "Product Categories"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1356
+msgid "Post Categories"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1379
+msgid "Only posts missing SEO Title"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1380
+msgid "Only posts missing Description"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1389, ../admin/Gm2_SEO_Admin.php:1537
+msgid "Apply All"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1390, ../admin/Gm2_SEO_Admin.php:1538
+msgid "Reset All"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1391, ../admin/Gm2_SEO_Admin.php:1539
+msgid "Reset Selected"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1392, ../admin/Gm2_SEO_Admin.php:1540
+msgid "Reset AI Suggestion"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1393, ../admin/Gm2_SEO_Admin.php:1541
+msgid "Schedule Batch"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1394, ../admin/Gm2_SEO_Admin.php:1542
+msgid "Cancel Batch"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1403
+msgid "Search Title"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1501
+msgid "Terms per page"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1513
+msgid "Taxonomy"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1527
+msgid "Only terms missing SEO Title"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1528
+msgid "Only terms missing Description"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1533
+msgid "Generate Descriptions"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1780
+msgid "Enable the Analytics Admin, Google Analytics (v3) for UA properties, Search Console, and Google Ads APIs for your OAuth client."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1781
+msgid "Verify the connected Google account has access to the target properties and Ads accounts. The OAuth client may be created under a different Google account."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1782
+msgid "Reconnect after updating permissions."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1787
+msgid "Google account disconnected."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1794
+msgid "Analytics property saved."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1802
+msgid "Ads account saved."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1819, ../admin/Gm2_SEO_Admin.php:1898
+msgid "Google account connected."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1839, ../admin/Gm2_SEO_Admin.php:1873
+msgid "Sign in at Google Ads and open Tools & Settings → Setup → API Center (manager account required). Copy your Developer token and enter it in the Google Ads Developer Token field on the SEO settings page."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1882
+msgid "No Analytics properties found."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1885
+msgid "No Ads accounts found."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1903
+msgid "Select Analytics Property"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1911
+msgid "Save Property"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1918
+msgid "Select Ads Account"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1924
+msgid "Ads customer IDs are fetched automatically from your connected Google account."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1925
+msgid "Save Ads Account"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1932
+msgid "Test Connection"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1937
+msgid "Disconnect Google"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:1896
+msgid "Connect Google"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2014, ../admin/Gm2_SEO_Admin.php:3567, ../admin/Gm2_SEO_Admin.php:3559, ../admin/Gm2_SEO_Admin.php:5772
+msgid "Title length between 30 and 60 characters"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2015, ../admin/Gm2_SEO_Admin.php:3568, ../admin/Gm2_SEO_Admin.php:3560, ../admin/Gm2_SEO_Admin.php:5773
+msgid "Description length between 50 and 160 characters"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2016, ../admin/Gm2_SEO_Admin.php:3561
+msgid "Description has at least 150 words"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2024
+msgid "Description has %d words; recommended minimum is 150."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2041
+msgid "Content Analysis"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2042
+msgid "Schema"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2043
+msgid "AI SEO"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2048, ../admin/Gm2_SEO_Admin.php:5728
+msgid "Best Product Ever | My Brand"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2048, ../admin/Gm2_SEO_Admin.php:5728
+msgid "Include main keyword and brand"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2050, ../admin/Gm2_SEO_Admin.php:5730
+msgid "One sentence summary shown in search results"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2050, ../admin/Gm2_SEO_Admin.php:5730
+msgid "Keep under 160 characters"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2052, ../admin/Gm2_SEO_Admin.php:5732
+msgid "Focus Keywords (comma separated)"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2053, ../admin/Gm2_SEO_Admin.php:5733
+msgid "keyword1, keyword2"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2053, ../admin/Gm2_SEO_Admin.php:5733
+msgid "Separate with commas"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2054, ../admin/Gm2_SEO_Admin.php:5734
+msgid "Long Tail Keywords (comma separated)"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2055, ../admin/Gm2_SEO_Admin.php:5735
+msgid "longer keyword phrase"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2055, ../admin/Gm2_SEO_Admin.php:5735
+msgid "Lower volume phrases"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2060, ../admin/Gm2_SEO_Admin.php:2067
+msgid "Search Intent"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2062, ../admin/Gm2_SEO_Admin.php:2069
+msgid "Focus Keyword Limit"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2064, ../admin/Gm2_SEO_Admin.php:2071
+msgid "Number of Words"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2066, ../admin/Gm2_SEO_Admin.php:2073
+msgid "Improve Readability"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2074, ../admin/Gm2_SEO_Admin.php:5736, ../includes/Gm2_Elementor_SEO.php:62
+msgid "noindex"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2075, ../admin/Gm2_SEO_Admin.php:5737, ../includes/Gm2_Elementor_SEO.php:71
+msgid "nofollow"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2077, ../admin/Gm2_SEO_Admin.php:5739
+msgid "Point to the preferred URL"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2079, ../admin/Gm2_SEO_Admin.php:5741
+msgid "Max Snippet"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2081, ../admin/Gm2_SEO_Admin.php:5743
+msgid "Max Image Preview"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2083, ../admin/Gm2_SEO_Admin.php:5745
+msgid "Max Video Preview"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2090, ../admin/Gm2_SEO_Admin.php:5750, ../includes/Gm2_Elementor_SEO.php:88
+msgid "OG Image"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2112, ../admin/Gm2_SEO_Admin.php:5800
+msgid "Primary Schema Type"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2115, ../admin/Gm2_SEO_Admin.php:5803
+msgid "Default"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2116, ../admin/Gm2_SEO_Admin.php:5804
+msgid "Article"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2117, ../admin/Gm2_SEO_Admin.php:5805
+msgid "Product"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2118, ../admin/Gm2_SEO_Admin.php:5806
+msgid "Web Page"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2119
+msgid "Brand"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2132, ../admin/Gm2_SEO_Admin.php:5819
+msgid "Brand Name"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2134, ../admin/Gm2_SEO_Admin.php:5821
+msgid "Review Rating"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2144, ../admin/Gm2_SEO_Admin.php:5826
+msgid "Test in Google"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2155, ../admin/Gm2_SEO_Admin.php:5836
+msgid "AI Research"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2157, ../admin/Gm2_SEO_Admin.php:5838
+msgid "Implement Selected"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2193, ../admin/Gm2_SEO_Admin.php:2915
+msgid "Empty response from ChatGPT"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2194
+msgid "ChatGPT description error: %s"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2302
+msgid "Description has %d words; minimum is %d."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2331, ../admin/Gm2_SEO_Admin.php:2371, ../admin/Gm2_SEO_Admin.php:2393, ../admin/Gm2_SEO_Admin.php:2434, ../admin/Gm2_SEO_Admin.php:2467, ../admin/Gm2_SEO_Admin.php:2533, ../admin/Gm2_SEO_Admin.php:2584, ../admin/Gm2_SEO_Admin.php:2613, ../admin/Gm2_SEO_Admin.php:2744, ../admin/Gm2_SEO_Admin.php:2781, ../admin/Gm2_SEO_Admin.php:2813, ../admin/Gm2_SEO_Admin.php:2838
+msgid "Invalid nonce"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2346
+msgid "Sitemap directory is not writable."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2357
+msgid "Sitemap generated"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2488
+msgid "Edit Custom Schema"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2488
+msgid "Add Custom Schema"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2495, ../admin/Gm2_SEO_Admin.php:2516
+msgid "Label"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2499
+msgid "JSON-LD"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2502
+msgid "Update"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2504
+msgid "Back"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2510
+msgid "Custom Schema Templates"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2511
+msgid "Add New"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2513
+msgid "No custom templates found."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2522
+msgid "Delete this template?"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2717
+msgid "No file uploaded"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2724
+msgid "Invalid JSON file"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2844
+msgid "Google account not connected."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2864
+msgid "Connection successful."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:2916
+msgid "ChatGPT alt text error: %s"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:3064
+msgid "Multiple <h1> tags found"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:3069
+msgid "Image missing alt attribute"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:3073
+msgid "Image alt text missing focus keyword"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:3503, ../admin/Gm2_SEO_Admin.php:3845, ../admin/Gm2_SEO_Admin.php:3987, ../admin/Gm2_SEO_Admin.php:4215, ../admin/Gm2_SEO_Admin.php:4220, ../admin/Gm2_SEO_Admin.php:4375, ../admin/Gm2_SEO_Admin.php:4380, ../admin/Gm2_SEO_Admin.php:4562
+msgid "AI request failed"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:3517
+msgid "No keyword ideas found."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:3525, ../admin/Gm2_SEO_Admin.php:3741, ../admin/Gm2_SEO_Admin.php:3782, ../admin/Gm2_SEO_Admin.php:3923, ../admin/Gm2_SEO_Admin.php:4077, ../admin/Gm2_SEO_Admin.php:4072, ../admin/Gm2_SEO_Admin.php:4493, ../admin/Gm2_SEO_Admin.php:4488, ../admin/Gm2_SEO_Admin.php:4577, ../admin/Gm2_SEO_Admin.php:4682, ../admin/Gm2_SEO_Admin.php:4745, ../admin/Gm2_SEO_Admin.php:4839, ../admin/Gm2_SEO_Admin.php:4910, ../admin/Gm2_SEO_Admin.php:5035, ../admin/Gm2_SEO_Admin.php:5075, ../admin/Gm2_SEO_Admin.php:5067, ../admin/Gm2_SEO_Admin.php:5092, ../admin/Gm2_SEO_Admin.php:5128, ../admin/Gm2_SEO_Admin.php:5212, ../admin/Gm2_SEO_Admin.php:5314
+msgid "permission denied"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:3569, ../admin/Gm2_SEO_Admin.php:5774
+msgid "At least one focus keyword"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:3570, ../admin/Gm2_SEO_Admin.php:5775
+msgid "Content has at least 300 words"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:3571
+msgid "Focus keyword appears in first paragraph"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:3572
+msgid "Only one H1 tag present"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:3573, ../admin/Gm2_SEO_Admin.php:5776
+msgid "Image alt text contains focus keyword"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:3574
+msgid "At least one internal link"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:3575
+msgid "At least one external link"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:3576
+msgid "Focus keyword included in meta description"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:3577
+msgid "Focus keyword is unique"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:3578, ../admin/Gm2_SEO_Admin.php:3562
+msgid "SEO title is unique"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:3579, ../admin/Gm2_SEO_Admin.php:3563
+msgid "Meta description is unique"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:3750
+msgid "empty query"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:3769
+msgid "Keyword ideas request failed"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:3789, ../admin/Gm2_SEO_Admin.php:3930
+msgid "missing parameters"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:3800, ../admin/Gm2_SEO_Admin.php:3941
+msgid "invalid target"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:3852, ../admin/Gm2_SEO_Admin.php:3994, ../admin/Gm2_SEO_Admin.php:4227, ../admin/Gm2_SEO_Admin.php:4409, ../admin/Gm2_SEO_Admin.php:4414
+msgid "Invalid AI response"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:3908, ../admin/Gm2_SEO_Admin.php:4050
+msgid "Unrecognized categories"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:4130, ../admin/Gm2_SEO_Admin.php:5083
+msgid "invalid parameters"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:4117
+msgid "invalid term"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:4105
+msgid "invalid post"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:4263
+msgid "AI response contained no seed keywords—using generated suggestions."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:4308, ../admin/Gm2_SEO_Admin.php:4296
+msgid "Google Ads keyword research unavailable—using AI suggestions only."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:4301
+msgid "Google Ads API did not return keyword metrics."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:4483
+msgid "invalid taxonomy"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:4625, ../admin/Gm2_SEO_Admin.php:5003, ../admin/Gm2_SEO_Admin.php:5040, ../admin/Gm2_SEO_Admin.php:5168, ../admin/Gm2_SEO_Admin.php:5279, ../admin/Gm2_SEO_Admin.php:5319, ../admin/Gm2_SEO_Admin.php:5949, ../admin/Gm2_SEO_Admin.php:5965
+msgid "invalid data"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:5347
+msgid "invalid object"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:5489, ../admin/Gm2_SEO_Admin.php:5638
+msgid "Use existing SEO values for AI research?"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:5490, ../admin/Gm2_SEO_Admin.php:5639
+msgid "Describe the page or its target audience:"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:5492, ../admin/Gm2_SEO_Admin.php:5641
+msgid "Unable to parse AI response—please try again"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:5494, ../admin/Gm2_SEO_Admin.php:5643
+msgid "Content Suggestions"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:5495, ../admin/Gm2_SEO_Admin.php:5644
+msgid "HTML Issues"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:5496, ../admin/Gm2_SEO_Admin.php:5645
+msgid "Apply fix"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:5502, ../admin/Gm2_SEO_Admin.php:5651
+msgid "Page Name"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:5757
+msgid "Use the link dialog to mark external links as"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:5757
+msgid "or"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:5789
+msgid "Word Count"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:5790
+msgid "Top Keyword"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:5791
+msgid "Keyword Density"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:5792
+msgid "Focus Keyword Density"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:5793
+msgid "Readability"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:5796
+msgid "Suggested Links"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:5856
+msgid "PHP DOM/LibXML extension not installed—HTML analysis and AI features are unavailable."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:5862
+msgid "PHP OpenSSL extension not installed—Google OAuth features are unavailable."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:6074
+msgid "WP Debugging"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:6076
+msgid "See the <a href=\"%s#wp-debugging\" target=\"_blank\">WP Debugging</a> section of the readme for instructions. Errors will appear in <code>wp-content/debug.log</code>."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:6085
+msgid "SEO Context"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Admin.php:6086
+msgid "Use the Context tab to describe your business model, industry, audience, unique selling points and more. Saved answers are automatically included in ChatGPT prompts for AI SEO. ChatGPT must be enabled and configured."
+msgstr ""
+
+#: ../admin/Gm2_SEO_Wizard.php:17, ../admin/Gm2_SEO_Wizard.php:18, ../admin/Gm2_SEO_Wizard.php:79
+msgid "Gm2 Setup Wizard"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Wizard.php:104
+msgid "ChatGPT API Key"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Wizard.php:107, ../admin/Gm2_SEO_Wizard.php:128, ../admin/Gm2_SEO_Wizard.php:146
+msgid "Continue"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Wizard.php:125
+msgid "Developer Token"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Wizard.php:143
+msgid "Max URLs"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Wizard.php:160
+msgid "Enable SEO"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Wizard.php:161, ../admin/Gm2_SEO_Wizard.php:163, ../admin/Gm2_SEO_Wizard.php:165, ../includes/widgets/class-gm2-qd-widget.php:40
+msgid "Yes"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Wizard.php:162
+msgid "Enable ChatGPT"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Wizard.php:164
+msgid "Enable Google OAuth"
+msgstr ""
+
+#: ../admin/Gm2_SEO_Wizard.php:167
+msgid "Finish Setup"
+msgstr ""
+
+#: ../admin/Gm2_Site_Health.php:15, ../admin/Gm2_Site_Health.php:50, ../admin/Gm2_Site_Health.php:63
+msgid "Gm2 Suite Diagnostics"
+msgstr ""
+
+#: ../admin/Gm2_Site_Health.php:31
+msgid "Conflicting SEO plugins: %s."
+msgstr ""
+
+#: ../admin/Gm2_Site_Health.php:37
+msgid "Missing plugin files: %s."
+msgstr ""
+
+#: ../admin/Gm2_Site_Health.php:43
+msgid "Theme hooks removed: %s."
+msgstr ""
+
+#: ../admin/Gm2_Site_Health.php:53
+msgid "No issues detected with Gm2 SEO output."
+msgstr ""
+
+#: ../gm2-wordpress-suite.php:70
+msgid "Once Weekly"
+msgstr ""
+
+#: ../gm2-wordpress-suite.php:84
+msgid "Every %d minute"
+msgid_plural "Every %d minutes"
+msgstr[0] ""
+msgstr[1] ""
+
+#: ../gm2-wordpress-suite.php:427
+msgid "Content rules have been migrated. Please review them on the SEO settings page."
+msgstr ""
+
+#: ../gm2-wordpress-suite.php:477
+msgid "Guideline rules have been migrated. Please review them on the SEO settings page."
+msgstr ""
+
+#: ../gm2-wordpress-suite.php:486
+msgid "Settings"
+msgstr ""
+
+#: ../includes/Gm2_CSV_Helper.php:25
+msgid "Unable to open output stream"
+msgstr ""
+
+#: ../includes/Gm2_Elementor_SEO.php:31
+msgid "GM2 SEO"
+msgstr ""
+
+#: ../includes/Gm2_Google_OAuth.php:448
+msgid "A Google Ads developer token is required to list accounts."
+msgstr ""
+
+#: ../includes/Gm2_Loader.php:40
+msgid "The Abandoned Carts module is currently disabled. <a href=\"%s\">Enable it in the Gm2 settings.</a>"
+msgstr ""
+
+#: ../includes/Gm2_Sitemap.php:131
+msgid "Unable to initialize filesystem"
+msgstr ""
+
+#: ../includes/Gm2_Sitemap.php:158
+msgid "Could not write sitemap to %s"
+msgstr ""
+
+#: ../includes/widgets/class-gm2-qd-widget.php:14
+msgid "Gm2 Qnty Discounts"
+msgstr ""
+
+#: ../includes/widgets/class-gm2-qd-widget.php:29
+msgid "Options Container"
+msgstr ""
+
+#: ../includes/widgets/class-gm2-qd-widget.php:36
+msgid "Wrap Options"
+msgstr ""
+
+#: ../includes/widgets/class-gm2-qd-widget.php:39
+msgid "No"
+msgstr ""
+
+#: ../includes/widgets/class-gm2-qd-widget.php:53
+msgid "Options Style"
+msgstr ""
+
+#: ../includes/widgets/class-gm2-qd-widget.php:67
+msgid "Border Radius"
+msgstr ""
+
+#: ../includes/widgets/class-gm2-qd-widget.php:77, ../includes/widgets/class-gm2-qd-widget.php:163, ../includes/widgets/class-gm2-qd-widget.php:202, ../includes/widgets/class-gm2-qd-widget.php:241, ../includes/widgets/class-gm2-qd-widget.php:395, ../includes/widgets/class-gm2-qd-widget.php:461, ../includes/widgets/class-gm2-qd-widget.php:527
+msgid "Padding"
+msgstr ""
+
+#: ../includes/widgets/class-gm2-qd-widget.php:87, ../includes/widgets/class-gm2-qd-widget.php:141, ../includes/widgets/class-gm2-qd-widget.php:346
+msgid "Normal"
+msgstr ""
+
+#: ../includes/widgets/class-gm2-qd-widget.php:99, ../includes/widgets/class-gm2-qd-widget.php:180, ../includes/widgets/class-gm2-qd-widget.php:412
+msgid "Hover"
+msgstr ""
+
+#: ../includes/widgets/class-gm2-qd-widget.php:127
+msgid "Quantity Label"
+msgstr ""
+
+#: ../includes/widgets/class-gm2-qd-widget.php:146, ../includes/widgets/class-gm2-qd-widget.php:185, ../includes/widgets/class-gm2-qd-widget.php:224, ../includes/widgets/class-gm2-qd-widget.php:378, ../includes/widgets/class-gm2-qd-widget.php:444, ../includes/widgets/class-gm2-qd-widget.php:510
+msgid "Color"
+msgstr ""
+
+#: ../includes/widgets/class-gm2-qd-widget.php:262
+msgid "Price"
+msgstr ""
+
+#: ../includes/widgets/class-gm2-qd-widget.php:269
+msgid "Currency Icon"
+msgstr ""
+
+#: ../includes/widgets/class-gm2-qd-widget.php:280
+msgid "Icon Margin"
+msgstr ""
+
+#: ../includes/widgets/class-gm2-qd-widget.php:298
+msgid "Horizontal Align"
+msgstr ""
+
+#: ../includes/widgets/class-gm2-qd-widget.php:302
+msgid "Start"
+msgstr ""
+
+#: ../includes/widgets/class-gm2-qd-widget.php:306
+msgid "Center"
+msgstr ""
+
+#: ../includes/widgets/class-gm2-qd-widget.php:310
+msgid "End"
+msgstr ""
+
+#: ../includes/widgets/class-gm2-qd-widget.php:322
+msgid "Vertical Align"
+msgstr ""
+
+#: ../includes/widgets/class-gm2-qd-widget.php:326
+msgid "Top"
+msgstr ""
+
+#: ../includes/widgets/class-gm2-qd-widget.php:330
+msgid "Middle"
+msgstr ""
+
+#: ../includes/widgets/class-gm2-qd-widget.php:334
+msgid "Bottom"
+msgstr ""
+
+#: ../includes/widgets/class-gm2-qd-widget.php:351
+msgid "Icon Size (Normal)"
+msgstr ""
+
+#: ../includes/widgets/class-gm2-qd-widget.php:368, ../includes/widgets/class-gm2-qd-widget.php:434, ../includes/widgets/class-gm2-qd-widget.php:500
+msgid "Icon Color"
+msgstr ""
+
+#: ../includes/widgets/class-gm2-qd-widget.php:417
+msgid "Icon Size (Hover)"
+msgstr ""
+
+#: ../includes/widgets/class-gm2-qd-widget.php:483
+msgid "Icon Size (Active)"
+msgstr ""
+
+#: ../includes/widgets/class-gm2-qd-widget.php:609
+msgid "Qty: %d"
+msgstr ""
+
+#: ../public/Gm2_Quantity_Discounts_Public.php:23
+msgid "%d+ units: %s%% off"
+msgstr ""
+
+#: ../public/Gm2_Quantity_Discounts_Public.php:29
+msgid "%d+ units: %s discount"
+msgstr ""
+
+#: ../public/Gm2_Quantity_Discounts_Public.php:211
+msgid "Quantity Discount Rule: %s"
+msgstr ""
+
+#: ../public/Gm2_Quantity_Discounts_Public.php:218
+msgid "Purchased Quantity: %s"
+msgstr ""
+
+#: ../public/Gm2_Quantity_Discounts_Public.php:221
+msgid "Discounted Price: %s"
+msgstr ""
+
+#: ../public/Gm2_SEO_Public.php:125
+msgid "Post or term title"
+msgstr ""
+
+#: ../public/Gm2_SEO_Public.php:126
+msgid "Permalink URL"
+msgstr ""
+
+#: ../public/Gm2_SEO_Public.php:127
+msgid "Alias of {{permalink}}"
+msgstr ""
+
+#: ../public/Gm2_SEO_Public.php:128
+msgid "SEO description or excerpt"
+msgstr ""
+
+#: ../public/Gm2_SEO_Public.php:129
+msgid "Featured image URL"
+msgstr ""
+
+#: ../public/Gm2_SEO_Public.php:130
+msgid "Product price"
+msgstr ""
+
+#: ../public/Gm2_SEO_Public.php:131
+msgid "Currency code"
+msgstr ""
+
+#: ../public/Gm2_SEO_Public.php:132
+msgid "Stock availability URL"
+msgstr ""
+
+#: ../public/Gm2_SEO_Public.php:133
+msgid "Product SKU"
+msgstr ""
+
+#: ../public/Gm2_SEO_Public.php:134
+msgid "Brand name"
+msgstr ""
+
+#: ../public/Gm2_SEO_Public.php:135
+msgid "Review rating value"
+msgstr ""

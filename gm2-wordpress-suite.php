@@ -124,6 +124,7 @@ function gm2_activate_plugin() {
     add_option('gm2_sitemap_path', ABSPATH . 'sitemap.xml');
     add_option('gm2_sitemap_max_urls', 1000);
     add_option('gm2_enable_abandoned_carts', '1');
+    add_option('gm2_enable_phone_login', '0');
     add_option('gm2_ac_mark_abandoned_interval', 5);
     add_option('gm2_setup_complete', '0');
     add_option('gm2_do_activation_redirect', '1');
