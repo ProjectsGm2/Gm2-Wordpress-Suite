@@ -149,14 +149,6 @@ class Gm2_SEO_Public {
         return $data;
     }
 
-    private function infer_brand_name($post_id) {
-        $terms = wp_get_post_terms($post_id, ['brand', 'product_brand'], ['fields' => 'names']);
-        if (!is_wp_error($terms) && !empty($terms)) {
-            return $terms[0];
-        }
-        return '';
-    }
-
     private function get_post_context($post_id) {
         $context = [
             '{{title}}'       => get_the_title($post_id),
@@ -170,7 +162,7 @@ class Gm2_SEO_Public {
         }
         $brand = get_post_meta($post_id, '_gm2_schema_brand', true);
         if (!$brand) {
-            $brand = $this->infer_brand_name($post_id);
+            $brand = gm2_infer_brand_name($post_id);
         }
         if ($brand) {
             $context['{{brand}}'] = $brand;
@@ -568,7 +560,7 @@ class Gm2_SEO_Public {
         $schema_type = $overrides['schema_type'] ?? get_post_meta($post_id, '_gm2_schema_type', true);
         $brand       = $overrides['schema_brand'] ?? get_post_meta($post_id, '_gm2_schema_brand', true);
         if (!$brand) {
-            $brand = $this->infer_brand_name($post_id);
+            $brand = gm2_infer_brand_name($post_id);
         }
         $rating      = $overrides['schema_rating'] ?? get_post_meta($post_id, '_gm2_schema_rating', true);
         $context     = $this->get_post_context($post_id);
@@ -881,7 +873,7 @@ class Gm2_SEO_Public {
 
         $brand = is_singular() ? get_post_meta(get_the_ID(), '_gm2_schema_brand', true) : '';
         if (is_singular() && !$brand) {
-            $brand = $this->infer_brand_name(get_the_ID());
+            $brand = gm2_infer_brand_name(get_the_ID());
         }
         if ($brand) {
             $data['name'] = $brand;

@@ -199,6 +199,14 @@ namespace {
         return array_values(array_unique($list));
     }
 
+    function gm2_infer_brand_name(int $post_id): string {
+        $terms = wp_get_post_terms($post_id, ['brand', 'product_brand'], ['fields' => 'names']);
+        if (!is_wp_error($terms) && !empty($terms)) {
+            return sanitize_text_field($terms[0]);
+        }
+        return '';
+    }
+
     function gm2_ai_clear() {
         $post_ids = get_posts([
             'post_type'      => get_post_types(['public' => true], 'names'),
