@@ -35,7 +35,7 @@ class Gm2_SEO_Admin {
     public function run() {
         add_action('admin_menu', [$this, 'add_settings_pages']);
         add_action('add_meta_boxes', [$this, 'register_meta_boxes']);
-        add_action('save_post', [$this, 'save_post_meta']);
+        add_action('save_post', [$this, 'save_post_meta'], 100);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_editor_scripts']);
         add_action('enqueue_block_editor_assets', [$this, 'enqueue_editor_scripts']);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_taxonomy_scripts']);
