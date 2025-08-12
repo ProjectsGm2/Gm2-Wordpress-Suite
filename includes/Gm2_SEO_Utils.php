@@ -200,9 +200,21 @@ namespace {
     }
 
     function gm2_infer_brand_name(int $post_id): string {
-        $terms = wp_get_post_terms($post_id, ['brand', 'product_brand'], ['fields' => 'names']);
+        $taxonomies = apply_filters('gm2_brand_taxonomies', ['brand', 'product_brand', 'pa_brand']);
+        $terms      = wp_get_post_terms($post_id, $taxonomies, ['fields' => 'names']);
         if (!is_wp_error($terms) && !empty($terms)) {
             return sanitize_text_field($terms[0]);
+        }
+
+        $post_taxes = get_post_taxonomies($post_id);
+        foreach ($post_taxes as $tax) {
+            if (stripos($tax, 'brand') === false || in_array($tax, $taxonomies, true)) {
+                continue;
+            }
+            $terms = wp_get_post_terms($post_id, $tax, ['fields' => 'names']);
+            if (!is_wp_error($terms) && !empty($terms)) {
+                return sanitize_text_field($terms[0]);
+            }
         }
         return '';
     }
