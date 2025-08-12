@@ -171,6 +171,29 @@ class AbandonedCartsTest extends WP_UnitTestCase {
         $this->assertSame('https://external.com/off', $row['exit_url']);
     }
 
+    public function test_exit_url_populated_only_on_abandonment_for_new_cart() {
+        $table = $GLOBALS['wpdb']->prefix . 'wc_ac_carts';
+        // Start with an empty cart table to simulate a brand new cart.
+        $GLOBALS['wpdb']->data[$table] = [];
+
+        $_POST = [ 'nonce' => 'n', 'url' => 'https://example.com/start' ];
+        $_REQUEST = $_POST;
+        \Gm2\Gm2_Abandoned_Carts::gm2_ac_mark_active();
+
+        $this->assertCount(1, $GLOBALS['wpdb']->data[$table]);
+        $row = $GLOBALS['wpdb']->data[$table][0];
+        // exit_url should be empty until the cart is abandoned
+        $this->assertSame('', $row['exit_url']);
+
+        // Abandon the cart and ensure exit_url is now recorded
+        $_POST = [ 'nonce' => 'n', 'url' => 'https://example.com/start' ];
+        $_REQUEST = $_POST;
+        \Gm2\Gm2_Abandoned_Carts::gm2_ac_mark_abandoned();
+
+        $row = $GLOBALS['wpdb']->data[$table][0];
+        $this->assertSame('https://example.com/start', $row['exit_url']);
+    }
+
     public function test_shutdown_caches_last_url() {
         $table = $GLOBALS['wpdb']->prefix . 'wc_ac_carts';
         $ac    = new \Gm2\Gm2_Abandoned_Carts();
