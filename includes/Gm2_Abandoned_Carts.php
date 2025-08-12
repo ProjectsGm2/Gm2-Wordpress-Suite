@@ -537,7 +537,8 @@ class Gm2_Abandoned_Carts {
                 'location'      => $location,
                 'device'        => $device,
                 'entry_url'     => $url,
-                'exit_url'      => $url,
+                // exit_url will be populated when the cart is actually abandoned.
+                'exit_url'      => '',
                 'cart_total'    => $total,
                 'browsing_time' => 0,
                 'revisit_count' => 0,
