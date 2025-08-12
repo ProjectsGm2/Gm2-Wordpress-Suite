@@ -54,6 +54,7 @@ require_once GM2_PLUGIN_DIR . 'includes/Gm2_PageSpeed.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_SEO_Utils.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_CSV_Helper.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Abandoned_Carts.php';
+require_once GM2_PLUGIN_DIR . 'includes/Gm2_Analytics.php';
 // Temporarily disable Recovery Email Queue.
 // require_once GM2_PLUGIN_DIR . 'includes/Gm2_Abandoned_Carts_Messaging.php';
 require_once GM2_PLUGIN_DIR . 'admin/Gm2_Abandoned_Carts_Admin.php';
@@ -129,6 +130,26 @@ function gm2_activate_plugin() {
     add_option('gm2_ac_mark_abandoned_interval', 5);
     add_option('gm2_setup_complete', '0');
     add_option('gm2_do_activation_redirect', '1');
+
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'gm2_analytics_log';
+    $charset_collate = $wpdb->get_charset_collate();
+    require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+    $sql = "CREATE TABLE $table_name (
+        id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+        session_id varchar(64) NOT NULL,
+        user_id varchar(64) NOT NULL,
+        url text NOT NULL,
+        referrer text DEFAULT NULL,
+        `timestamp` datetime NOT NULL,
+        user_agent text NOT NULL,
+        device varchar(20) NOT NULL,
+        ip varchar(100) NOT NULL,
+        PRIMARY KEY  (id),
+        KEY session_id (session_id),
+        KEY user_id (user_id)
+    ) $charset_collate;";
+    dbDelta($sql);
 
     Gm2_Abandoned_Carts::schedule_event();
 }
