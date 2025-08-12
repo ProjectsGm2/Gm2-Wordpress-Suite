@@ -687,7 +687,7 @@ class LongTailKeywordsTest extends WP_UnitTestCase {
         $admin = new Gm2\Gm2_SEO_Admin();
         $_POST['gm2_seo_nonce'] = wp_create_nonce('gm2_save_seo_meta');
         $_POST['gm2_long_tail_keywords'] = 'alpha, beta ';
-        $admin->save_post_meta($post_id);
+        $admin->save_post_meta($post_id, get_post($post_id));
         $this->assertSame('alpha, beta', get_post_meta($post_id, '_gm2_long_tail_keywords', true));
     }
 }

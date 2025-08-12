@@ -35,7 +35,7 @@ class Gm2_SEO_Admin {
     public function run() {
         add_action('admin_menu', [$this, 'add_settings_pages']);
         add_action('add_meta_boxes', [$this, 'register_meta_boxes']);
-        add_action('save_post', [$this, 'save_post_meta'], 100);
+        add_action('wp_after_insert_post', [$this, 'save_post_meta'], 100, 2);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_editor_scripts']);
         add_action('enqueue_block_editor_assets', [$this, 'enqueue_editor_scripts']);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_taxonomy_scripts']);
@@ -2161,7 +2161,7 @@ class Gm2_SEO_Admin {
         echo $wrapper_end;
     }
 
-    public function save_post_meta($post_id) {
+    public function save_post_meta($post_id, $post = null) {
         if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
             return;
         }
@@ -2171,10 +2171,12 @@ class Gm2_SEO_Admin {
         if (!current_user_can('edit_post', $post_id)) {
             return;
         }
+        if (!$post) {
+            $post = get_post($post_id);
+        }
         $title       = isset($_POST['gm2_seo_title']) ? sanitize_text_field($_POST['gm2_seo_title']) : '';
         $description = isset($_POST['gm2_seo_description']) ? sanitize_textarea_field($_POST['gm2_seo_description']) : '';
         if ($description === '' && trim(get_option('gm2_chatgpt_api_key', '')) !== '') {
-            $post = get_post($post_id);
             if ($post) {
                 $sanitized_content = wp_strip_all_tags($post->post_content);
                 $snippet_content   = $this->safe_truncate($sanitized_content, 400);
@@ -2216,13 +2218,12 @@ class Gm2_SEO_Admin {
         if (!is_array(json_decode($link_rel_data, true)) && $link_rel_data !== '') {
             $link_rel_data = '';
         }
-        if ($schema_type === '') {
-            $post_obj = get_post($post_id);
-            if ($post_obj && $post_obj->post_type === 'product') {
+        if ($schema_type === '' && $post) {
+            if ($post->post_type === 'product') {
                 $schema_type = 'product';
-            } elseif ($post_obj && $post_obj->post_type === 'post') {
+            } elseif ($post->post_type === 'post') {
                 $schema_type = 'article';
-            } elseif ($post_obj && $post_obj->post_type === 'page') {
+            } elseif ($post->post_type === 'page') {
                 $schema_type = 'webpage';
             }
         }
