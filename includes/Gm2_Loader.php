@@ -32,6 +32,7 @@ class Gm2_Loader {
         $enable_seo = get_option('gm2_enable_seo', '1') === '1';
         $enable_qd  = get_option('gm2_enable_quantity_discounts', '1') === '1';
         $enable_ac  = get_option('gm2_enable_abandoned_carts', '1') === '1';
+        $enable_phone_login = get_option('gm2_enable_phone_login', '0') === '1';
 
         if (!$enable_ac && is_admin()) {
             add_action('admin_notices', function () {
@@ -51,6 +52,11 @@ class Gm2_Loader {
 
         $public = new Gm2_Public();
         $public->run();
+
+        if ($enable_phone_login) {
+            $phone_auth = new Gm2_Phone_Auth();
+            $phone_auth->run();
+        }
 
         if ($enable_ac) {
             $ac = new Gm2_Abandoned_Carts();
