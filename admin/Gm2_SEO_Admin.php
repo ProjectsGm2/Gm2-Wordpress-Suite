@@ -145,12 +145,14 @@ class Gm2_SEO_Admin {
         if (taxonomy_exists('product_cat')) {
             $taxonomies[] = 'product_cat';
         }
-        if (taxonomy_exists('brand')) {
-            $taxonomies[] = 'brand';
+
+        $brand_taxonomies = apply_filters('gm2_brand_taxonomies', ['brand', 'product_brand']);
+        foreach ($brand_taxonomies as $tax) {
+            if (taxonomy_exists($tax)) {
+                $taxonomies[] = $tax;
+            }
         }
-        if (taxonomy_exists('product_brand')) {
-            $taxonomies[] = 'product_brand';
-        }
+
         return $taxonomies;
     }
 
