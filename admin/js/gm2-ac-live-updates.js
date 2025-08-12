@@ -11,5 +11,6 @@ jQuery(function($){
             }
         });
     }
+    fetchCarts();
     setInterval(fetchCarts, 30000);
 });
