@@ -28,6 +28,10 @@ class Gm2_SEO_Admin {
             error_log($message);
         }
     }
+
+    private function infer_brand_name(int $post_id): string {
+        return gm2_infer_brand_name($post_id);
+    }
     public function run() {
         add_action('admin_menu', [$this, 'add_settings_pages']);
         add_action('add_meta_boxes', [$this, 'register_meta_boxes']);
@@ -2205,10 +2209,7 @@ class Gm2_SEO_Admin {
         $schema_type      = isset($_POST['gm2_schema_type']) ? sanitize_text_field($_POST['gm2_schema_type']) : '';
         $schema_brand     = isset($_POST['gm2_schema_brand']) ? sanitize_text_field($_POST['gm2_schema_brand']) : '';
         if ($schema_brand === '') {
-            $terms = wp_get_post_terms($post_id, ['brand', 'product_brand'], ['fields' => 'names']);
-            if (!is_wp_error($terms) && !empty($terms)) {
-                $schema_brand = sanitize_text_field($terms[0]);
-            }
+            $schema_brand = $this->infer_brand_name($post_id);
         }
         $schema_rating    = isset($_POST['gm2_schema_rating']) ? sanitize_text_field($_POST['gm2_schema_rating']) : '';
         $link_rel_data    = isset($_POST['gm2_link_rel']) ? wp_unslash($_POST['gm2_link_rel']) : '';
@@ -5697,10 +5698,7 @@ class Gm2_SEO_Admin {
         $schema_type         = get_post_meta($post->ID, '_gm2_schema_type', true);
         $schema_brand        = get_post_meta($post->ID, '_gm2_schema_brand', true);
         if ($schema_brand === '') {
-            $terms = wp_get_post_terms($post->ID, ['brand', 'product_brand'], ['fields' => 'names']);
-            if (!is_wp_error($terms) && !empty($terms)) {
-                $schema_brand = $terms[0];
-            }
+            $schema_brand = $this->infer_brand_name($post->ID);
         }
         $schema_rating       = get_post_meta($post->ID, '_gm2_schema_rating', true);
 
