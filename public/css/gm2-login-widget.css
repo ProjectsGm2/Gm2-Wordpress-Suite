@@ -1,0 +1,4 @@
+.gm2-login-widget .gm2-register-form{display:none}
+.gm2-login-widget .gm2-login-form.active,
+.gm2-login-widget .gm2-register-form.active{display:block}
+.gm2-login-widget .gm2-google-btn{display:inline-block;}

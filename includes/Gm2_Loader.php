@@ -102,6 +102,10 @@ class Gm2_Loader {
             if ($enable_qd) {
                 new Gm2_Elementor_Quantity_Discounts();
             }
+            if (class_exists('WooCommerce')) {
+                $login = new Gm2_Elementor_Registration_Login();
+                $login->run();
+            }
         };
 
         if (did_action('elementor/loaded')) {

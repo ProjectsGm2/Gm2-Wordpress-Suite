@@ -30,6 +30,20 @@ class Gm2_Public {
             true
         );
 
+        wp_register_style(
+            'gm2-login-widget',
+            GM2_PLUGIN_URL . 'public/css/gm2-login-widget.css',
+            [],
+            GM2_VERSION
+        );
+        wp_register_script(
+            'gm2-login-widget',
+            GM2_PLUGIN_URL . 'public/js/gm2-login-widget.js',
+            [ 'jquery' ],
+            GM2_VERSION,
+            true
+        );
+
         $in_edit_mode = false;
         if (class_exists('\\Elementor\\Plugin') && \Elementor\Plugin::$instance->editor) {
             $in_edit_mode = \Elementor\Plugin::$instance->editor->is_edit_mode();
