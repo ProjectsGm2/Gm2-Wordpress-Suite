@@ -5,6 +5,7 @@
     const nonce = gm2AcActivity.nonce;
     const inactivityMs = parseInt(gm2AcActivity.inactivity_ms, 10) || 5 * 60 * 1000;
     const url = window.location.href;
+    let pendingTargetUrl;
 
     function send(action, targetUrl) {
         const data = new URLSearchParams({ action, nonce, url: targetUrl || window.location.href });
@@ -114,9 +115,7 @@
             }
         }
 
-        if (typeof count === 'undefined' || count === 0) {
-            send('gm2_ac_mark_abandoned');
-        }
+        return typeof count === 'undefined' || count === 0;
     }
 
     incrementTabs();
@@ -126,8 +125,11 @@
     send('gm2_ac_mark_active');
 
     let inactivityTimer;
-    function resetInactivityTimer() {
+    function resetInactivityTimer(shouldSend = true) {
         clearTimeout(inactivityTimer);
+        if (shouldSend) {
+            send('gm2_ac_mark_active');
+        }
         inactivityTimer = setTimeout(() => {
             send('gm2_ac_mark_abandoned');
         }, inactivityMs);
@@ -138,7 +140,6 @@
     resetInactivityTimer();
 
     document.body.addEventListener('added_to_cart', () => {
-        send('gm2_ac_mark_active');
         resetInactivityTimer();
     });
 
@@ -150,7 +151,7 @@
         }
         const href = anchor.href;
         if (href && anchor.origin !== window.location.origin) {
-            send('gm2_ac_mark_abandoned', href);
+            pendingTargetUrl = href;
         }
     });
 
@@ -159,11 +160,19 @@
     });
 
     document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'hidden') {
-            decrementTabs();
+        if (document.visibilityState === 'visible') {
+            send('gm2_ac_mark_active');
+            resetInactivityTimer(false);
         }
     });
-
-    window.addEventListener('beforeunload', decrementTabs);
-    window.addEventListener('pagehide', decrementTabs, { once: true });
+    window.addEventListener('beforeunload', () => {
+        if (decrementTabs()) {
+            send('gm2_ac_mark_abandoned', pendingTargetUrl);
+        }
+    });
+    window.addEventListener('pagehide', () => {
+        if (decrementTabs()) {
+            send('gm2_ac_mark_abandoned', pendingTargetUrl);
+        }
+    }, { once: true });
 })();

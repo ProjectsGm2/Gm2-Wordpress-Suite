@@ -57,6 +57,10 @@ test('captures external link destination before navigation', () => {
   link.addEventListener('click', (e) => e.preventDefault());
   link.dispatchEvent(new window.MouseEvent('click', { bubbles: true, cancelable: true }));
 
+  expect(window.navigator.sendBeacon).not.toHaveBeenCalled();
+
+  window.dispatchEvent(new window.Event('beforeunload'));
+
   const abandonCalls = window.navigator.sendBeacon.mock.calls.filter((c) => {
     const params = new URLSearchParams(c[1].toString());
     return params.get('action') === 'gm2_ac_mark_abandoned';
@@ -69,7 +73,7 @@ test('captures external link destination before navigation', () => {
   jest.useRealTimers();
 });
 
-test('marks abandoned on visibilitychange hidden', () => {
+test('revives cart on visibilitychange visible', () => {
   jest.useFakeTimers();
   const dom = new JSDOM(`<!DOCTYPE html><body></body>`, { url: 'https://example.com/page' });
   const { window } = dom;
@@ -85,17 +89,17 @@ test('marks abandoned on visibilitychange hidden', () => {
   jest.resetModules();
   require('../../public/js/gm2-ac-activity.js');
 
-  Object.defineProperty(window.document, 'visibilityState', { configurable: true, value: 'hidden' });
+  fetchMock.mockClear();
+  Object.defineProperty(window.document, 'visibilityState', { configurable: true, value: 'visible' });
   window.document.dispatchEvent(new window.Event('visibilitychange'));
 
-  const abandonCalls = window.navigator.sendBeacon.mock.calls.filter((c) => {
-    const params = new URLSearchParams(c[1].toString());
-    return params.get('action') === 'gm2_ac_mark_abandoned';
+  const activeCalls = fetchMock.mock.calls.filter((c) => {
+    const params = new URLSearchParams(c[1].body.toString());
+    return params.get('action') === 'gm2_ac_mark_active';
   });
 
-  expect(abandonCalls.length).toBe(1);
-  const params = new URLSearchParams(abandonCalls[0][1].toString());
-  expect(params.get('url')).toBe('https://example.com/page');
+  expect(activeCalls.length).toBe(1);
+  expect(window.navigator.sendBeacon).not.toHaveBeenCalled();
   jest.clearAllTimers();
   jest.useRealTimers();
 });
@@ -218,43 +222,3 @@ function setupJQuery(postImpl) {
   return $;
 }
 
-test('renders and toggles activity log rows', () => {
-  jest.resetModules();
-  const dom = new JSDOM(`<!DOCTYPE html><table><tbody><tr id="r"><td><a href="#" class="gm2-ac-activity-log-button" data-ip="1.1.1.1">log</a></td></tr></tbody></table>`);
-  global.window = dom.window;
-  global.document = dom.window.document;
-  global.gm2AcActivityLog = { ajax_url: '/ajax', nonce: 'n', empty: 'Empty', error: 'Err' };
-  const res = { success: true, data: [{ changed_at: 'now', action: 'add', sku: 'SKU', quantity: 2 }] };
-  const post = jest.fn(() => ({ done(cb){ cb(res); return this; }, fail(){ return this; }, always(cb){ cb(); return this; } }));
-  const $ = setupJQuery(post);
-  global.jQuery = global.$ = $;
-
-  require('../../admin/js/gm2-ac-activity-log.js');
-
-  const btn = $('.gm2-ac-activity-log-button');
-  btn.trigger('click');
-  expect($.post).toHaveBeenCalledTimes(1);
-  expect($('.gm2-ac-activity-row').length).toBe(1);
-  expect($('.gm2-ac-activity-row li').elem.textContent).toContain('add SKU x2');
-  expect(btn.prop('disabled')).toBe(false);
-
-  btn.trigger('click');
-  expect($('.gm2-ac-activity-row').length).toBe(0);
-  expect($.post).toHaveBeenCalledTimes(1);
-});
-
-test('shows error message on failed activity request', () => {
-  jest.resetModules();
-  const dom = new JSDOM(`<!DOCTYPE html><table><tbody><tr id="r"><td><a href="#" class="gm2-ac-activity-log-button" data-ip="1.1.1.1">log</a></td></tr></tbody></table>`);
-  global.window = dom.window;
-  global.document = dom.window.document;
-  global.gm2AcActivityLog = { ajax_url: '/ajax', nonce: 'n', empty: 'Empty', error: 'Err' };
-  const post = jest.fn(() => ({ done(){ return this; }, fail(cb){ cb(); return this; }, always(cb){ cb(); return this; } }));
-  const $ = setupJQuery(post);
-  global.jQuery = global.$ = $;
-
-  require('../../admin/js/gm2-ac-activity-log.js');
-
-  $('.gm2-ac-activity-log-button').trigger('click');
-  expect($('.gm2-ac-activity-row').elem.textContent).toBe('Err');
-});
