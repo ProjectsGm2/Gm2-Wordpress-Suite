@@ -104,6 +104,7 @@ class Gm2_Analytics {
         $event_type = isset($_POST['event_type']) ? sanitize_text_field(wp_unslash($_POST['event_type'])) : '';
         $duration   = isset($_POST['duration']) ? intval($_POST['duration']) : 0;
         $element    = isset($_POST['element']) ? sanitize_text_field(wp_unslash($_POST['element'])) : '';
+        // Pass event type through so special handling (e.g. 'duration') occurs in log_event.
         $this->log_event($url, $referrer, $event_type, $duration, $element);
         wp_send_json_success();
     }
@@ -120,6 +121,20 @@ class Gm2_Analytics {
         $device     = wp_is_mobile() ? 'mobile' : 'desktop';
         $ip         = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field($_SERVER['REMOTE_ADDR']) : '';
         $ip         = $ip ? wp_privacy_anonymize_ip($ip) : '';
+
+        if ($event_type === 'duration') {
+            global $wpdb;
+            $table = $wpdb->prefix . 'gm2_analytics_log';
+            $id = $wpdb->get_var($wpdb->prepare(
+                "SELECT id FROM $table WHERE session_id = %s AND url = %s AND event_type = 'pageview' ORDER BY `timestamp` DESC LIMIT 1",
+                $session_id,
+                $url
+            ));
+            if ($id) {
+                $wpdb->update($table, [ 'duration' => $duration ], [ 'id' => $id ], [ '%d' ], [ '%d' ]);
+            }
+            return;
+        }
 
         $this->insert_log([
             'session_id' => $session_id,

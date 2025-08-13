@@ -35,7 +35,7 @@
         function handleVisibility() {
             if (document.visibilityState === 'hidden') {
                 var duration = Math.round((Date.now() - startTime) / 1000);
-                send({ event_type: 'pageview', duration: duration });
+                send({ event_type: 'duration', duration: duration });
             }
         }
 
