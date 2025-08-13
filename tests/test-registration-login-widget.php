@@ -3,7 +3,9 @@ use Gm2\Gm2_Elementor_Registration_Login;
 use Gm2\GM2_Registration_Login_Widget;
 
 if (!function_exists('is_user_logged_in')) {
-    function is_user_logged_in() { return false; }
+    function is_user_logged_in() {
+        return !empty($GLOBALS['gm2_tests_is_user_logged_in']);
+    }
 }
 if (!function_exists('woocommerce_login_form')) {
     function woocommerce_login_form($args = []) { echo '<form class="login"></form>'; }
@@ -80,5 +82,18 @@ class RegistrationLoginWidgetTest extends WP_UnitTestCase {
         $widget->render();
         $html2 = ob_get_clean();
         $this->assertStringNotContainsString('Continue with Google', $html2);
+    }
+
+    public function test_edit_mode_renders_forms_for_logged_in_user() {
+        require_once GM2_PLUGIN_DIR . 'includes/widgets/class-gm2-registration-login-widget.php';
+        $GLOBALS['gm2_tests_is_user_logged_in'] = true;
+        $_GET['elementor-preview'] = 1;
+        $widget = new GM2_Registration_Login_Widget();
+        ob_start();
+        $widget->render();
+        $html = ob_get_clean();
+        unset($_GET['elementor-preview'], $GLOBALS['gm2_tests_is_user_logged_in']);
+        $this->assertStringContainsString('class="login"', $html);
+        $this->assertStringNotContainsString('already logged in', strtolower($html));
     }
 }
