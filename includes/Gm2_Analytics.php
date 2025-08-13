@@ -46,6 +46,7 @@ class Gm2_Analytics {
         $user_agent = isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '';
         $device     = wp_is_mobile() ? 'mobile' : 'desktop';
         $ip         = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field($_SERVER['REMOTE_ADDR']) : '';
+        $ip         = $ip ? wp_privacy_anonymize_ip($ip) : '';
 
         $this->insert_log([
             'session_id' => $session_id,
@@ -91,6 +92,7 @@ class Gm2_Analytics {
         $user_agent = isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '';
         $device     = wp_is_mobile() ? 'mobile' : 'desktop';
         $ip         = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field($_SERVER['REMOTE_ADDR']) : '';
+        $ip         = $ip ? wp_privacy_anonymize_ip($ip) : '';
 
         $this->insert_log([
             'session_id' => $session_id,

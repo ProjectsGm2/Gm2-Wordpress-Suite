@@ -444,3 +444,7 @@ and run them with:
 npm install
 npm test
 ```
+
+== Privacy ==
+
+This plugin logs page visits and events to a custom table. IP addresses are anonymized before storage by truncating the final octet of IPv4 addresses (and the equivalent segment for IPv6) using WordPress's `wp_privacy_anonymize_ip()` function. No full IP addresses are retained.
