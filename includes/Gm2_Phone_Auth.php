@@ -15,6 +15,9 @@ class Gm2_Phone_Auth {
         add_action('woocommerce_edit_account_form', [$this, 'render_account_phone_field']);
         add_action('woocommerce_save_account_details', [$this, 'save_account_phone']);
         add_action('woocommerce_save_account_details_errors', [$this, 'require_account_phone'], 10, 2);
+        add_filter('woocommerce_login_username_label', function ($label) {
+            return __('Phone or Email or Username', 'gm2-wordpress-suite');
+        }, 20);
     }
 
     public function render_registration_phone_field() {
