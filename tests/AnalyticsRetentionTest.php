@@ -6,7 +6,7 @@ class AnalyticsRetentionTest extends WP_UnitTestCase {
         global $wpdb;
         $table = $wpdb->prefix . 'gm2_analytics_log';
         $wpdb->query("DROP TABLE IF EXISTS $table");
-        $wpdb->query("CREATE TABLE $table (id bigint(20) unsigned NOT NULL AUTO_INCREMENT, session_id varchar(64) NOT NULL, user_id varchar(64) NOT NULL, url text NOT NULL, referrer text, `timestamp` datetime NOT NULL, user_agent text NOT NULL, device varchar(20) NOT NULL, ip varchar(100) NOT NULL, PRIMARY KEY(id))");
+        $wpdb->query("CREATE TABLE $table (id bigint(20) unsigned NOT NULL AUTO_INCREMENT, session_id varchar(64) NOT NULL, user_id varchar(64) NOT NULL, url text NOT NULL, referrer text, `timestamp` datetime NOT NULL, user_agent text NOT NULL, device varchar(20) NOT NULL, ip varchar(100) NOT NULL, event_type varchar(20) NOT NULL DEFAULT '', duration int NOT NULL DEFAULT 0, element text, PRIMARY KEY(id))");
 
         $wpdb->insert($table, [
             'session_id' => 'new',
@@ -17,6 +17,9 @@ class AnalyticsRetentionTest extends WP_UnitTestCase {
             'user_agent' => 'UA',
             'device' => 'desktop',
             'ip' => '0.0.0.0',
+            'event_type' => 'pageview',
+            'duration' => 0,
+            'element' => '',
         ]);
         $wpdb->insert($table, [
             'session_id' => 'old',
@@ -27,6 +30,9 @@ class AnalyticsRetentionTest extends WP_UnitTestCase {
             'user_agent' => 'UA',
             'device' => 'desktop',
             'ip' => '0.0.0.0',
+            'event_type' => 'pageview',
+            'duration' => 0,
+            'element' => '',
         ]);
 
         update_option('gm2_analytics_retention_days', 30);

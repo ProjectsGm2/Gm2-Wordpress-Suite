@@ -61,6 +61,9 @@ class Gm2_Analytics {
             'user_agent' => $user_agent,
             'device'     => $device,
             'ip'         => $ip,
+            'event_type' => 'pageview',
+            'duration'   => 0,
+            'element'    => '',
         ]);
     }
 
@@ -96,13 +99,16 @@ class Gm2_Analytics {
 
     public function ajax_track() {
         check_ajax_referer('gm2_analytics', 'nonce');
-        $url      = isset($_POST['url']) ? esc_url_raw(wp_unslash($_POST['url'])) : '';
-        $referrer = isset($_POST['referrer']) ? esc_url_raw(wp_unslash($_POST['referrer'])) : '';
-        $this->log_event($url, $referrer);
+        $url        = isset($_POST['url']) ? esc_url_raw(wp_unslash($_POST['url'])) : '';
+        $referrer   = isset($_POST['referrer']) ? esc_url_raw(wp_unslash($_POST['referrer'])) : '';
+        $event_type = isset($_POST['event_type']) ? sanitize_text_field(wp_unslash($_POST['event_type'])) : '';
+        $duration   = isset($_POST['duration']) ? intval($_POST['duration']) : 0;
+        $element    = isset($_POST['element']) ? sanitize_text_field(wp_unslash($_POST['element'])) : '';
+        $this->log_event($url, $referrer, $event_type, $duration, $element);
         wp_send_json_success();
     }
 
-    private function log_event($url, $referrer = '') {
+    private function log_event($url, $referrer = '', $event_type = '', $duration = 0, $element = '') {
         $user_agent = isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '';
 
         if ($this->should_skip_logging($user_agent)) {
@@ -124,6 +130,9 @@ class Gm2_Analytics {
             'user_agent' => $user_agent,
             'device'     => $device,
             'ip'         => $ip,
+            'event_type' => $event_type,
+            'duration'   => $duration,
+            'element'    => $element,
         ]);
     }
 
@@ -158,6 +167,9 @@ class Gm2_Analytics {
                 'user_agent' => $data['user_agent'],
                 'device'     => $data['device'],
                 'ip'         => $data['ip'],
+                'event_type' => $data['event_type'],
+                'duration'   => $data['duration'],
+                'element'    => $data['element'],
             ],
             [
                 '%s',
@@ -167,6 +179,9 @@ class Gm2_Analytics {
                 '%s',
                 '%s',
                 '%s',
+                '%s',
+                '%s',
+                '%d',
                 '%s',
             ]
         );

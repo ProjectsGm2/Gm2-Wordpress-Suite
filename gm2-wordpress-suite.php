@@ -150,6 +150,9 @@ function gm2_activate_plugin() {
         user_agent text NOT NULL,
         device varchar(20) NOT NULL,
         ip varchar(100) NOT NULL,
+        event_type varchar(20) NOT NULL DEFAULT '',
+        duration int NOT NULL DEFAULT 0,
+        element text DEFAULT NULL,
         PRIMARY KEY  (id),
         KEY session_id (session_id),
         KEY user_id (user_id),
@@ -184,11 +187,9 @@ register_deactivation_hook(__FILE__, 'gm2_deactivate_plugin');
 function gm2_upgrade_analytics_log_index() {
     global $wpdb;
     $table_name = $wpdb->prefix . 'gm2_analytics_log';
-    $index = $wpdb->get_results("SHOW INDEX FROM $table_name WHERE Key_name = 'timestamp'");
-    if (empty($index)) {
-        $charset_collate = $wpdb->get_charset_collate();
-        require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-        $sql = "CREATE TABLE $table_name (
+    $charset_collate = $wpdb->get_charset_collate();
+    require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+    $sql = "CREATE TABLE $table_name (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
             session_id varchar(64) NOT NULL,
             user_id varchar(64) NOT NULL,
@@ -198,13 +199,15 @@ function gm2_upgrade_analytics_log_index() {
             user_agent text NOT NULL,
             device varchar(20) NOT NULL,
             ip varchar(100) NOT NULL,
+            event_type varchar(20) NOT NULL DEFAULT '',
+            duration int NOT NULL DEFAULT 0,
+            element text DEFAULT NULL,
             PRIMARY KEY  (id),
             KEY session_id (session_id),
             KEY user_id (user_id),
             KEY `timestamp` (`timestamp`)
         ) $charset_collate;";
-        dbDelta($sql);
-    }
+    dbDelta($sql);
 }
 add_action('plugins_loaded', 'gm2_upgrade_analytics_log_index');
 
