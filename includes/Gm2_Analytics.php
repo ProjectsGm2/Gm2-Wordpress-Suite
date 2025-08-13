@@ -135,18 +135,34 @@ class Gm2_Analytics {
     private function insert_log($data) {
         global $wpdb;
         $table = $wpdb->prefix . 'gm2_analytics_log';
-        $wpdb->query(
-            $wpdb->prepare(
-                "INSERT INTO $table (`session_id`,`user_id`,`url`,`referrer`,`timestamp`,`user_agent`,`device`,`ip`) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
-                $data['session_id'],
-                $data['user_id'],
-                $data['url'],
-                $data['referrer'],
-                $data['timestamp'],
-                $data['user_agent'],
-                $data['device'],
-                $data['ip']
-            )
+        $inserted = $wpdb->insert(
+            $table,
+            [
+                'session_id' => $data['session_id'],
+                'user_id'    => $data['user_id'],
+                'url'        => $data['url'],
+                'referrer'   => $data['referrer'],
+                'timestamp'  => $data['timestamp'],
+                'user_agent' => $data['user_agent'],
+                'device'     => $data['device'],
+                'ip'         => $data['ip'],
+            ],
+            [
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+            ]
         );
+
+        if (false === $inserted) {
+            error_log($wpdb->last_error);
+        }
+
+        return $inserted;
     }
 }
