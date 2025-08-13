@@ -778,8 +778,14 @@ class Gm2_Abandoned_Carts {
             if (!empty($_SERVER['HTTP_CF_IPCOUNTRY'])) {
                 $location = sanitize_text_field(wp_unslash($_SERVER['HTTP_CF_IPCOUNTRY']));
             } elseif (!empty($ip)) {
-                $response = wp_remote_get('https://ipapi.co/' . rawurlencode($ip) . '/json/', ['timeout' => 2]);
-                if (!is_wp_error($response)) {
+                $response = wp_safe_remote_get(
+                    'https://ipapi.co/' . rawurlencode($ip) . '/json/',
+                    ['timeout' => 5]
+                );
+                if (
+                    !is_wp_error($response) &&
+                    200 === wp_remote_retrieve_response_code($response)
+                ) {
                     $body = wp_remote_retrieve_body($response);
                     $data = json_decode($body, true);
                     if (!empty($data['country'])) {
@@ -795,6 +801,9 @@ class Gm2_Abandoned_Carts {
                     }
                 }
             }
+        }
+        if (empty($location)) {
+            $location = 'Unknown';
         }
         return [ 'ip' => $ip, 'location' => $location ];
     }

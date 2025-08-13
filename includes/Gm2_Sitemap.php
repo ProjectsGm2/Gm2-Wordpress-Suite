@@ -169,7 +169,7 @@ class Gm2_Sitemap {
             'https://www.bing.com/ping?sitemap=' . rawurlencode($sitemap_url),
         ];
         foreach ($endpoints as $endpoint) {
-            wp_remote_get($endpoint);
+            wp_safe_remote_get($endpoint, ['timeout' => 5]);
         }
     }
 

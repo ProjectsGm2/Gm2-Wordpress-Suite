@@ -104,7 +104,7 @@ class Gm2_ChatGPT {
             'timeout' => 20,
         ];
 
-        $response = wp_remote_get('https://api.openai.com/v1/models', $args);
+        $response = wp_safe_remote_get('https://api.openai.com/v1/models', $args);
 
         if (is_wp_error($response)) {
             return $defaults;

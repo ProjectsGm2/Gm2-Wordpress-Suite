@@ -19,7 +19,7 @@ class Gm2_PageSpeed {
             'strategy' => $strategy,
             'key' => $this->api_key,
         ]);
-        $resp = wp_remote_get($api . '?' . $query, ['timeout' => 20]);
+        $resp = wp_safe_remote_get($api . '?' . $query, ['timeout' => 20]);
         if (is_wp_error($resp)) {
             return $resp;
         }
