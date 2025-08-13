@@ -2,3 +2,5 @@
 .gm2-login-widget .gm2-login-form.active,
 .gm2-login-widget .gm2-register-form.active{display:block}
 .gm2-login-widget .gm2-google-btn{display:inline-block;}
+.gm2-login-widget.gm2-edit-mode .gm2-register-form,
+.gm2-login-widget.gm2-edit-mode .gm2-login-form{display:block!important}
