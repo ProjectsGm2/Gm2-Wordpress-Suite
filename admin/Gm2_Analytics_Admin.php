@@ -101,7 +101,12 @@ class Gm2_Analytics_Admin {
         }
 
         $summary_sql = $wpdb->prepare(
-            "SELECT user_id, COUNT(*) AS events, COUNT(DISTINCT session_id) AS sessions, MAX(`timestamp`) AS last_time FROM $table WHERE $summary_where GROUP BY user_id ORDER BY last_time DESC LIMIT %d OFFSET %d",
+            "SELECT user_id,
+                SUM(CASE WHEN event_type = 'pageview' THEN 1 ELSE 0 END) AS pageviews,
+                SUM(CASE WHEN event_type <> 'pageview' THEN 1 ELSE 0 END) AS other_events,
+                COUNT(DISTINCT session_id) AS sessions,
+                MAX(`timestamp`) AS last_time
+             FROM $table WHERE $summary_where GROUP BY user_id ORDER BY last_time DESC LIMIT %d OFFSET %d",
             $per_page,
             $offset
         );
@@ -117,18 +122,18 @@ class Gm2_Analytics_Admin {
         submit_button(esc_html__('Apply', 'gm2-wordpress-suite'), 'secondary', '', false);
         echo '</form>';
 
-        echo '<table class="widefat fixed gm2-activity-summary"><thead><tr><th></th><th>' . esc_html__('User', 'gm2-wordpress-suite') . '</th><th>' . esc_html__('Sessions', 'gm2-wordpress-suite') . '</th><th>' . esc_html__('Events', 'gm2-wordpress-suite') . '</th></tr></thead><tbody>';
+        echo '<table class="widefat fixed gm2-activity-summary"><thead><tr><th></th><th>' . esc_html__('User', 'gm2-wordpress-suite') . '</th><th>' . esc_html__('Sessions', 'gm2-wordpress-suite') . '</th><th>' . esc_html__('Pageviews', 'gm2-wordpress-suite') . '</th><th>' . esc_html__('Other Events', 'gm2-wordpress-suite') . '</th></tr></thead><tbody>';
         if ($groups) {
             foreach ($groups as $group) {
                 $uid      = $group->user_id;
                 $uid_attr = sanitize_title($uid);
-                echo '<tr class="gm2-summary-row"><td><button type="button" class="gm2-toggle-user-events" data-target="' . esc_attr($uid_attr) . '">+</button></td><td>' . esc_html($uid) . '</td><td>' . intval($group->sessions) . '</td><td>' . intval($group->events) . '</td></tr>';
+                echo '<tr class="gm2-summary-row"><td><button type="button" class="gm2-toggle-user-events" data-target="' . esc_attr($uid_attr) . '">+</button></td><td>' . esc_html($uid) . '</td><td>' . intval($group->sessions) . '</td><td>' . intval($group->pageviews) . '</td><td>' . intval($group->other_events) . '</td></tr>';
 
                 $event_where = $base_where . $wpdb->prepare(" AND user_id = %s", $uid);
                 // Retrieve only pageview and click events; duration now lives on the original pageview row.
                 $events = $wpdb->get_results("SELECT `timestamp`, url, duration, event_type, element FROM $table WHERE $event_where AND (event_type = 'pageview' OR event_type = 'click') ORDER BY `timestamp` DESC");
 
-                echo '<tr id="gm2-events-' . esc_attr($uid_attr) . '" class="gm2-user-events" style="display:none"><td colspan="4"><table class="widefat"><thead><tr><th>' . esc_html__('Time', 'gm2-wordpress-suite') . '</th><th>' . esc_html__('URL', 'gm2-wordpress-suite') . '</th><th>' . esc_html__('Duration', 'gm2-wordpress-suite') . '</th><th>' . esc_html__('Clicks', 'gm2-wordpress-suite') . '</th></tr></thead><tbody>';
+                echo '<tr id="gm2-events-' . esc_attr($uid_attr) . '" class="gm2-user-events" style="display:none"><td colspan="5"><table class="widefat"><thead><tr><th>' . esc_html__('Time', 'gm2-wordpress-suite') . '</th><th>' . esc_html__('URL', 'gm2-wordpress-suite') . '</th><th>' . esc_html__('Duration', 'gm2-wordpress-suite') . '</th><th>' . esc_html__('Clicks', 'gm2-wordpress-suite') . '</th></tr></thead><tbody>';
                 if ($events) {
                     foreach ($events as $event) {
                         $click = $event->event_type === 'click' ? $event->element : '';
@@ -140,7 +145,7 @@ class Gm2_Analytics_Admin {
                 echo '</tbody></table></td></tr>';
             }
         } else {
-            echo '<tr><td colspan="4">' . esc_html__('No activity found.', 'gm2-wordpress-suite') . '</td></tr>';
+            echo '<tr><td colspan="5">' . esc_html__('No activity found.', 'gm2-wordpress-suite') . '</td></tr>';
         }
         echo '</tbody></table>';
 
@@ -184,11 +189,11 @@ class Gm2_Analytics_Admin {
             $device_labels[] = $r['device'];
             $device_counts[] = (int) $r['sessions'];
         }
-        $session_rows = $wpdb->get_results($wpdb->prepare("SELECT session_id, COUNT(*) as hits, MIN(`timestamp`) as start_time, MAX(`timestamp`) as end_time FROM $table WHERE `timestamp` BETWEEN %s AND %s GROUP BY session_id", $start_time, $end_time), ARRAY_A);
+        $session_rows = $wpdb->get_results($wpdb->prepare("SELECT session_id, COUNT(CASE WHEN event_type='pageview' THEN 1 END) as pageviews, MIN(`timestamp`) as start_time, MAX(`timestamp`) as end_time FROM $table WHERE `timestamp` BETWEEN %s AND %s GROUP BY session_id", $start_time, $end_time), ARRAY_A);
         $bounce = 0;
         $durations = [];
         foreach ($session_rows as $s) {
-            if ((int) $s['hits'] === 1) {
+            if ((int) $s['pageviews'] === 1) {
                 $bounce++;
             }
             $durations[] = strtotime($s['end_time']) - strtotime($s['start_time']);
