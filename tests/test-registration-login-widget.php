@@ -8,9 +8,6 @@ if (!function_exists('is_user_logged_in')) {
 if (!function_exists('woocommerce_login_form')) {
     function woocommerce_login_form($args = []) { echo '<form class="login"></form>'; }
 }
-if (!function_exists('woocommerce_register_form')) {
-    function woocommerce_register_form($args = []) { echo '<form class="register"></form>'; }
-}
 if (!class_exists('Elementor\\Widget_Base')) {
     eval('namespace Elementor; class Widget_Base {}');
 }
@@ -48,11 +45,17 @@ class RegistrationLoginWidgetTest extends WP_UnitTestCase {
 
     public function test_render_outputs_forms_and_restricts_role() {
         require_once GM2_PLUGIN_DIR . 'includes/widgets/class-gm2-registration-login-widget.php';
+        add_action('woocommerce_register_form', function(){ echo '<form class="register"></form>'; });
+        ob_start();
+        do_action('woocommerce_register_form'); // simulate hook output
+        $registration_html = ob_get_clean();
+
         $widget = new GM2_Registration_Login_Widget();
         ob_start();
         $widget->render();
         $html = ob_get_clean();
         $this->assertStringContainsString('class="login"', $html);
+        $this->assertStringContainsString('class="register"', $registration_html);
         $this->assertStringContainsString('class="register"', $html);
 
         $user = new \WP_User(1, 'test');
