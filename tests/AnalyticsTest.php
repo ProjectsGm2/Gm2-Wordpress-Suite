@@ -19,6 +19,7 @@ namespace Gm2 {
     function wp_send_json_success($data = null) {}
     function current_user_can($cap) { global $gm2_current_user_can; return $gm2_current_user_can ?? false; }
     function apply_filters($hook, $value) { return $value; }
+    function error_log($message) { global $gm2_error_logged; $gm2_error_logged = $message; }
 }
 namespace {
     if (!defined('ABSPATH')) {
@@ -51,11 +52,18 @@ namespace {
 namespace {
     class WPDBStub {
         public string $prefix = '';
-        public array $prepared_args = [];
-        public function prepare($query, ...$args) {
-            $this->prepared_args = $args;
-            return '';
+        public array $insert_data = [];
+        public array $insert_format = [];
+        public $insert_result = 1;
+        public string $last_error = '';
+
+        public function insert($table, $data, $format) {
+            $this->insert_data  = $data;
+            $this->insert_format = $format;
+            return $this->insert_result;
         }
+
+        public function prepare($query, ...$args) {}
         public function query($query) {}
     }
 
@@ -81,7 +89,7 @@ namespace {
             $analytics = new \Gm2\Gm2_Analytics();
             $analytics->maybe_log_request();
 
-            $this->assertSame('123.123.123.0', $this->wpdbStub->prepared_args[7]);
+            $this->assertSame('123.123.123.0', $this->wpdbStub->insert_data['ip']);
         }
 
         public function test_log_event_anonymizes_ip() {
@@ -94,7 +102,7 @@ namespace {
             $_POST = ['url' => 'https://example.com', 'referrer' => '', 'nonce' => 'ok'];
             $analytics->ajax_track();
 
-            $this->assertSame('123.123.123.0', $this->wpdbStub->prepared_args[7]);
+            $this->assertSame('123.123.123.0', $this->wpdbStub->insert_data['ip']);
         }
 
         public function test_maybe_log_request_skips_for_admin() {
@@ -109,7 +117,7 @@ namespace {
             $analytics = new \Gm2\Gm2_Analytics();
             $analytics->maybe_log_request();
 
-            $this->assertEmpty($this->wpdbStub->prepared_args);
+            $this->assertEmpty($this->wpdbStub->insert_data);
         }
 
         public function test_maybe_log_request_skips_for_bots() {
@@ -122,7 +130,7 @@ namespace {
             $analytics = new \Gm2\Gm2_Analytics();
             $analytics->maybe_log_request();
 
-            $this->assertEmpty($this->wpdbStub->prepared_args);
+            $this->assertEmpty($this->wpdbStub->insert_data);
         }
 
         public function test_maybe_log_request_skips_for_dnt_header() {
@@ -136,7 +144,24 @@ namespace {
             $analytics = new \Gm2\Gm2_Analytics();
             $analytics->maybe_log_request();
 
-            $this->assertEmpty($this->wpdbStub->prepared_args);
+            $this->assertEmpty($this->wpdbStub->insert_data);
+        }
+
+        public function test_insert_failure_logs_error() {
+            global $gm2_error_logged;
+            $_COOKIE[\Gm2\Gm2_Analytics::COOKIE_NAME] = 'uid';
+            $_COOKIE[\Gm2\Gm2_Analytics::SESSION_COOKIE] = 'sid';
+            $_SERVER['REQUEST_URI'] = '/test';
+            $_SERVER['REMOTE_ADDR'] = '123.123.123.123';
+            $_SERVER['HTTP_USER_AGENT'] = 'UA';
+
+            $this->wpdbStub->insert_result = false;
+            $this->wpdbStub->last_error    = 'insert failed';
+
+            $analytics = new \Gm2\Gm2_Analytics();
+            $analytics->maybe_log_request();
+
+            $this->assertSame('insert failed', $gm2_error_logged);
         }
     }
 }
