@@ -119,6 +119,23 @@ class Gm2_Analytics_Admin {
         );
         $groups = $wpdb->get_results($summary_sql);
 
+        // Fetch all events for the listed users in a single query.
+        $events_by_user = [];
+        if ($groups) {
+            $user_ids = array_map(fn($g) => $g->user_id, $groups);
+            $placeholders = implode(',', array_fill(0, count($user_ids), '%s'));
+            $event_sql = $wpdb->prepare(
+                "SELECT user_id, `timestamp`, url, duration, event_type, element FROM $table WHERE $base_where AND user_id IN ($placeholders) AND (event_type = 'pageview' OR event_type = 'click') ORDER BY `timestamp` DESC",
+                $user_ids
+            );
+            foreach ($wpdb->get_results($event_sql) as $row) {
+                if (!isset($events_by_user[$row->user_id])) {
+                    $events_by_user[$row->user_id] = [];
+                }
+                $events_by_user[$row->user_id][] = $row;
+            }
+        }
+
         echo '<h2>' . esc_html__('Activity Log', 'gm2-wordpress-suite') . '</h2>';
         echo '<form method="get"><input type="hidden" name="page" value="gm2-analytics" />';
         wp_nonce_field('gm2_activity_log_filter', 'gm2_activity_log_nonce');
@@ -136,10 +153,7 @@ class Gm2_Analytics_Admin {
                 $uid_attr = sanitize_title($uid);
                 echo '<tr class="gm2-summary-row"><td><button type="button" class="gm2-toggle-user-events" data-target="' . esc_attr($uid_attr) . '">+</button></td><td>' . esc_html($uid) . '</td><td>' . intval($group->sessions) . '</td><td>' . intval($group->pageviews) . '</td><td>' . intval($group->other_events) . '</td></tr>';
 
-                $event_where = $base_where . $wpdb->prepare(" AND user_id = %s", $uid);
-                // Retrieve only pageview and click events; duration now lives on the original pageview row.
-                $events = $wpdb->get_results("SELECT `timestamp`, url, duration, event_type, element FROM $table WHERE $event_where AND (event_type = 'pageview' OR event_type = 'click') ORDER BY `timestamp` DESC");
-
+                $events = $events_by_user[$uid] ?? [];
                 echo '<tr id="gm2-events-' . esc_attr($uid_attr) . '" class="gm2-user-events" style="display:none"><td colspan="5"><table class="widefat"><thead><tr><th>' . esc_html__('Time', 'gm2-wordpress-suite') . '</th><th>' . esc_html__('URL', 'gm2-wordpress-suite') . '</th><th>' . esc_html__('Duration', 'gm2-wordpress-suite') . '</th><th>' . esc_html__('Clicks', 'gm2-wordpress-suite') . '</th></tr></thead><tbody>';
                 if ($events) {
                     foreach ($events as $event) {
