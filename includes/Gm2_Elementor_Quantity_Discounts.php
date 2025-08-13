@@ -22,12 +22,12 @@ class Gm2_Elementor_Quantity_Discounts {
     }
 
     public function register_widget( $widgets_manager = null ) {
-        if ( $widgets_manager === null && class_exists( '\\Elementor\\Plugin' ) ) {
+        if ( $widgets_manager === null && class_exists( '\Elementor\Plugin' ) ) {
             $widgets_manager = \Elementor\Plugin::$instance->widgets_manager;
         }
 
         // Only load the widget class if Elementor's Widget_Base exists.
-        if ( ! class_exists( '\\Elementor\\Widget_Base' ) ) {
+        if ( ! class_exists( '\Elementor\Widget_Base' ) ) {
             return;
         }
 

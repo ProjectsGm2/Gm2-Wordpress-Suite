@@ -5,7 +5,7 @@ use Elementor\Icons_Manager;
 
 if (!defined('ABSPATH')) { exit; }
 
-if ( class_exists( '\\Elementor\\Widget_Base' ) ) {
+if ( class_exists( '\Elementor\Widget_Base' ) ) {
 class GM2_QD_Widget extends \Elementor\Widget_Base {
     public function get_name() {
         return 'gm2_quantity_discounts';
@@ -573,7 +573,7 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
 
     protected function render() {
         $in_edit_mode = false;
-        if ( class_exists( '\\Elementor\\Plugin' ) && \Elementor\Plugin::$instance->editor ) {
+        if ( class_exists( '\Elementor\Plugin' ) && \Elementor\Plugin::$instance->editor ) {
             $in_edit_mode = \Elementor\Plugin::$instance->editor->is_edit_mode();
         }
 
