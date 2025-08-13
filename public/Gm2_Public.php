@@ -45,8 +45,11 @@ class Gm2_Public {
         );
 
         $in_edit_mode = false;
-        if (class_exists('\\Elementor\\Plugin') && \Elementor\Plugin::$instance->editor) {
-            $in_edit_mode = \Elementor\Plugin::$instance->editor->is_edit_mode();
+        if ( class_exists( '\\Elementor\\Plugin' ) ) {
+            $elementor = \Elementor\Plugin::instance();
+            if ( $elementor && isset( $elementor->editor ) && method_exists( $elementor->editor, 'is_edit_mode' ) ) {
+                $in_edit_mode = $elementor->editor->is_edit_mode();
+            }
         }
 
         if ((function_exists('is_product') && is_product()) || $in_edit_mode) {
