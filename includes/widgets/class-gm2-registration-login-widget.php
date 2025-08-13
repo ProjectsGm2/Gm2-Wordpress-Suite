@@ -357,8 +357,14 @@ class GM2_Registration_Login_Widget extends \Elementor\Widget_Base {
     }
 
     protected function render() {
-        if ( is_user_logged_in() ) {
-            echo '<div class="gm2-login-widget-logged">' . esc_html__( 'You are already logged in.', 'gm2-wordpress-suite' ) . '</div>';
+        $in_edit_mode = class_exists( '\\Elementor\\Plugin' )
+            && \Elementor\Plugin::$instance->editor
+            && \Elementor\Plugin::$instance->editor->is_edit_mode();
+
+        if ( is_user_logged_in() && ! $in_edit_mode ) {
+            echo '<div class="gm2-login-widget-logged">'
+                . esc_html__( 'You are already logged in.', 'gm2-wordpress-suite' )
+                . '</div>';
             return;
         }
         $settings = $this->get_settings_for_display();
