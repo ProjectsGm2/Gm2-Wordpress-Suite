@@ -14,7 +14,7 @@ class ActivityLogFilterPaginationTest extends WP_UnitTestCase {
         $this->orig_get = $_GET;
         $this->table = $wpdb->prefix . 'gm2_analytics_log';
         $wpdb->query("DROP TABLE IF EXISTS {$this->table}");
-        $wpdb->query("CREATE TABLE {$this->table} (id bigint(20) unsigned NOT NULL AUTO_INCREMENT, session_id varchar(64) NOT NULL, user_id varchar(64) NOT NULL, url text NOT NULL, referrer text, `timestamp` datetime NOT NULL, user_agent text NOT NULL, device varchar(20) NOT NULL, ip varchar(100) NOT NULL, PRIMARY KEY(id))");
+        $wpdb->query("CREATE TABLE {$this->table} (id bigint(20) unsigned NOT NULL AUTO_INCREMENT, session_id varchar(64) NOT NULL, user_id varchar(64) NOT NULL, url text NOT NULL, referrer text, `timestamp` datetime NOT NULL, user_agent text NOT NULL, device varchar(20) NOT NULL, ip varchar(100) NOT NULL, event_type varchar(20) NOT NULL DEFAULT '', duration int NOT NULL DEFAULT 0, element text, PRIMARY KEY(id))");
     }
 
     protected function tearDown(): void {
@@ -25,8 +25,8 @@ class ActivityLogFilterPaginationTest extends WP_UnitTestCase {
     public function test_filters_by_user_and_device() {
         global $wpdb;
         $now = gmdate('Y-m-d H:i:s');
-        $wpdb->insert($this->table, [ 'session_id' => 's1', 'user_id' => 'u1', 'url' => '/', 'referrer' => '', 'timestamp' => $now, 'user_agent' => 'UA', 'device' => 'desktop', 'ip' => '0.0.0.0' ]);
-        $wpdb->insert($this->table, [ 'session_id' => 's2', 'user_id' => 'u2', 'url' => '/two', 'referrer' => '', 'timestamp' => $now, 'user_agent' => 'UA', 'device' => 'mobile', 'ip' => '0.0.0.0' ]);
+        $wpdb->insert($this->table, [ 'session_id' => 's1', 'user_id' => 'u1', 'url' => '/', 'referrer' => '', 'timestamp' => $now, 'user_agent' => 'UA', 'device' => 'desktop', 'ip' => '0.0.0.0', 'event_type' => 'pageview', 'duration' => 0, 'element' => '' ]);
+        $wpdb->insert($this->table, [ 'session_id' => 's2', 'user_id' => 'u2', 'url' => '/two', 'referrer' => '', 'timestamp' => $now, 'user_agent' => 'UA', 'device' => 'mobile', 'ip' => '0.0.0.0', 'event_type' => 'pageview', 'duration' => 0, 'element' => '' ]);
 
         $_GET['log_user'] = 'u2';
         $_GET['log_device'] = 'mobile';
@@ -48,7 +48,7 @@ class ActivityLogFilterPaginationTest extends WP_UnitTestCase {
         global $wpdb;
         $now = gmdate('Y-m-d H:i:s');
         for ($i = 1; $i <= 25; $i++) {
-            $wpdb->insert($this->table, [ 'session_id' => "s{$i}", 'user_id' => "u{$i}", 'url' => '/p', 'referrer' => '', 'timestamp' => $now, 'user_agent' => 'UA', 'device' => 'desktop', 'ip' => '0.0.0.0' ]);
+            $wpdb->insert($this->table, [ 'session_id' => "s{$i}", 'user_id' => "u{$i}", 'url' => '/p', 'referrer' => '', 'timestamp' => $now, 'user_agent' => 'UA', 'device' => 'desktop', 'ip' => '0.0.0.0', 'event_type' => 'pageview', 'duration' => 0, 'element' => '' ]);
         }
         $_GET['paged'] = '2';
         $_GET['gm2_activity_log_nonce'] = wp_create_nonce('gm2_activity_log_filter');
