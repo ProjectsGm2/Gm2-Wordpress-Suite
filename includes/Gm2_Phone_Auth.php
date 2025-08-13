@@ -8,9 +8,9 @@ if (!defined('ABSPATH')) {
 
 class Gm2_Phone_Auth {
     public function run() {
-        add_action('woocommerce_register_form_start', [$this, 'render_registration_phone_field']);
-        add_filter('woocommerce_register_post', [$this, 'require_phone'], 10, 3);
-        add_action('woocommerce_created_customer', [$this, 'save_phone_on_register']);
+        add_action('woocommerce_register_form_start', [$this, 'render_registration_contact_field']);
+        add_filter('woocommerce_register_post', [$this, 'validate_contact_field'], 10, 3);
+        add_filter('woocommerce_new_customer_data', [$this, 'assign_contact_field']);
         add_filter('authenticate', [$this, 'authenticate'], 10, 3);
         add_action('woocommerce_edit_account_form', [$this, 'render_account_phone_field']);
         add_action('woocommerce_save_account_details', [$this, 'save_account_phone']);
@@ -26,27 +26,51 @@ class Gm2_Phone_Auth {
         }, 20, 3);
     }
 
-    public function render_registration_phone_field() {
-        $phone = isset($_POST['billing_phone']) ? wc_clean(wp_unslash($_POST['billing_phone'])) : '';
-        woocommerce_form_field('billing_phone', [
-            'type'     => 'tel',
-            'label'    => __('Phone', 'gm2-wordpress-suite'),
+    public function render_registration_contact_field() {
+        $contact = isset($_POST['contact']) ? wc_clean(wp_unslash($_POST['contact'])) : '';
+        woocommerce_form_field('contact', [
+            'type'     => 'text',
+            'label'    => __('Phone or Email', 'gm2-wordpress-suite'),
             'required' => true,
-        ], $phone);
+        ], $contact);
     }
 
-    public function require_phone($username, $email, $errors) {
-        $phone = isset($_POST['billing_phone']) ? trim(wp_unslash($_POST['billing_phone'])) : '';
-        if (empty($phone)) {
-            $errors->add('registration-error-phone', __('Please enter a phone number.', 'gm2-wordpress-suite'));
+    public function validate_contact_field($username, $email, $errors) {
+        $contact = isset($_POST['contact']) ? trim(wp_unslash($_POST['contact'])) : '';
+        if (empty($contact)) {
+            $errors->add('registration-error-contact', __('Please enter a phone number or email address.', 'gm2-wordpress-suite'));
+            return $errors;
         }
+
+        if (false !== strpos($contact, '@')) {
+            if (!is_email($contact)) {
+                $errors->add('registration-error-contact', __('Please enter a valid email address.', 'gm2-wordpress-suite'));
+            } else {
+                $_POST['email'] = $contact;
+            }
+        } else {
+            if (!preg_match('/^\+?\d+$/', $contact)) {
+                $errors->add('registration-error-contact', __('Please enter a valid phone number.', 'gm2-wordpress-suite'));
+            } else {
+                $_POST['billing_phone'] = $contact;
+                $_POST['email']         = $contact . '@example.com';
+            }
+        }
+
         return $errors;
     }
 
-    public function save_phone_on_register($customer_id) {
-        if (isset($_POST['billing_phone'])) {
-            update_user_meta($customer_id, 'billing_phone', wc_clean(wp_unslash($_POST['billing_phone'])));
+    public function assign_contact_field($data) {
+        $contact = isset($_POST['contact']) ? wc_clean(wp_unslash($_POST['contact'])) : '';
+        if (false !== strpos($contact, '@') && is_email($contact)) {
+            $data['user_email'] = $contact;
+        } else {
+            $data['user_email']        = $contact . '@example.com';
+            $data['meta_input']        = isset($data['meta_input']) ? $data['meta_input'] : [];
+            $data['meta_input']['billing_phone'] = $contact;
         }
+
+        return $data;
     }
 
     public function authenticate($user, $username, $password) {
