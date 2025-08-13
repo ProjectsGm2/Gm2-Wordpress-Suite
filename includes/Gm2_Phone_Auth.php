@@ -38,6 +38,7 @@ class Gm2_Phone_Auth {
             'label'    => __('Phone or Email', 'gm2-wordpress-suite'),
             'required' => true,
         ], $contact);
+        echo '<input type="email" name="email" id="gm2_hidden_email" style="display:none;" />';
     }
 
     /**
