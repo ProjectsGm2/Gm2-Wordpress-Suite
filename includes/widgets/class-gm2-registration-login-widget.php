@@ -400,7 +400,11 @@ class GM2_Registration_Login_Widget extends \Elementor\Widget_Base {
         }
         if ( $settings['show_register_form'] === 'yes' ) {
             echo '<div class="gm2-register-form" style="display:none">';
-            woocommerce_register_form();
+            if ( function_exists( 'woocommerce_register_form' ) ) {
+                \woocommerce_register_form();
+            } else {
+                do_action( 'woocommerce_register_form' );
+            }
             echo '</div>';
         }
         if ( $settings['show_google'] === 'yes' && apply_filters( 'gm2_sitekit_login_enabled', true ) && class_exists( 'Google\\Site_Kit\\Plugin' ) ) {
