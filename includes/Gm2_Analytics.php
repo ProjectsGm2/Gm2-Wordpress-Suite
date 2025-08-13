@@ -29,6 +29,7 @@ class Gm2_Analytics {
             'gm2Analytics',
             [
                 'ajax_url' => admin_url('admin-ajax.php'),
+                'nonce'    => wp_create_nonce('gm2_analytics'),
             ]
         );
     }
@@ -77,6 +78,7 @@ class Gm2_Analytics {
     }
 
     public function ajax_track() {
+        check_ajax_referer('gm2_analytics', 'nonce');
         $url      = isset($_POST['url']) ? esc_url_raw(wp_unslash($_POST['url'])) : '';
         $referrer = isset($_POST['referrer']) ? esc_url_raw(wp_unslash($_POST['referrer'])) : '';
         $this->log_event($url, $referrer);
