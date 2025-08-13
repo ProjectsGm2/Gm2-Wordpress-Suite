@@ -18,6 +18,12 @@ class Gm2_Phone_Auth {
         add_filter('woocommerce_login_username_label', function ($label) {
             return __('Phone or Email or Username', 'gm2-wordpress-suite');
         }, 20);
+        add_filter('gettext', function ($translated, $original, $domain) {
+            if ('Username or email address' === $original && 'woocommerce' === $domain) {
+                return __('Phone or Email or Username', 'gm2-wordpress-suite');
+            }
+            return $translated;
+        }, 20, 3);
     }
 
     public function render_registration_phone_field() {
