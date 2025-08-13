@@ -29,9 +29,16 @@ class Gm2_Analytics_Admin {
         }
         $this->data = $this->get_analytics_data();
         wp_enqueue_script(
+            'chart-js',
+            'https://cdn.jsdelivr.net/npm/chart.js',
+            [],
+            '4.4.2',
+            true
+        );
+        wp_enqueue_script(
             'gm2-analytics',
             GM2_PLUGIN_URL . 'admin/js/gm2-analytics.js',
-            [ 'jquery' ],
+            [ 'jquery', 'chart-js' ],
             file_exists( GM2_PLUGIN_DIR . 'admin/js/gm2-analytics.js' ) ? filemtime( GM2_PLUGIN_DIR . 'admin/js/gm2-analytics.js' ) : GM2_VERSION,
             true
         );

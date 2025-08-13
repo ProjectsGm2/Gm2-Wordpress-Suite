@@ -927,6 +927,20 @@ class Gm2_SEO_Admin {
                 $queries = $oauth->get_search_console_metrics($site, $limit);
                 $metrics = $oauth->get_analytics_metrics($prop, $days);
                 $trends  = $oauth->get_analytics_trends($prop, $days);
+                wp_enqueue_script(
+                    'chart-js',
+                    'https://cdn.jsdelivr.net/npm/chart.js',
+                    [],
+                    '4.4.2',
+                    true
+                );
+                wp_enqueue_script(
+                    'gm2-analytics',
+                    GM2_PLUGIN_URL . 'admin/js/gm2-analytics.js',
+                    [ 'jquery', 'chart-js' ],
+                    file_exists( GM2_PLUGIN_DIR . 'admin/js/gm2-analytics.js' ) ? filemtime( GM2_PLUGIN_DIR . 'admin/js/gm2-analytics.js' ) : GM2_VERSION,
+                    true
+                );
                 wp_localize_script(
                     'gm2-analytics',
                     'gm2Analytics',
