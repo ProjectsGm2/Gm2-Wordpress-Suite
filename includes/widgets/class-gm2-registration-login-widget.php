@@ -365,9 +365,10 @@ class GM2_Registration_Login_Widget extends \Elementor\Widget_Base {
                         || ( isset( $p->preview ) && method_exists( $p->preview, 'is_preview_mode' ) && $p->preview->is_preview_mode() ) ) ) )
             || ( wp_doing_ajax() && isset( $_REQUEST['action'] ) && 'elementor_ajax' === $_REQUEST['action'] )
             || isset( $_GET['elementor-preview'] )
+            || current_user_can( 'edit_posts' )
         );
 
-        if ( is_user_logged_in() && ! $in_edit_mode && ! current_user_can( 'edit_posts' ) ) {
+        if ( is_user_logged_in() && ! $in_edit_mode ) {
             echo '<div class="gm2-login-widget-logged">' .
                 esc_html__( 'You are already logged in.', 'gm2-wordpress-suite' ) .
                 '</div>';

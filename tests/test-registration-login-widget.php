@@ -96,4 +96,19 @@ class RegistrationLoginWidgetTest extends WP_UnitTestCase {
         $this->assertStringContainsString('class="login"', $html);
         $this->assertStringNotContainsString('already logged in', strtolower($html));
     }
+
+    public function test_editor_bypasses_logged_in_guard() {
+        require_once GM2_PLUGIN_DIR . 'includes/widgets/class-gm2-registration-login-widget.php';
+        $editor_id = self::factory()->user->create([ 'role' => 'editor' ]);
+        wp_set_current_user($editor_id);
+        $GLOBALS['gm2_tests_is_user_logged_in'] = true;
+        $widget = new GM2_Registration_Login_Widget();
+        ob_start();
+        $widget->render();
+        $html = ob_get_clean();
+        unset($GLOBALS['gm2_tests_is_user_logged_in']);
+        wp_set_current_user(0);
+        $this->assertStringContainsString('class="login"', $html);
+        $this->assertStringNotContainsString('already logged in', strtolower($html));
+    }
 }
