@@ -52,6 +52,22 @@ class GM2_Registration_Login_Widget extends \Elementor\Widget_Base {
             ]
         );
         $this->add_control(
+            'edit_mode_default_form',
+            [
+                'label' => __( 'Default Form in Editor', 'gm2-wordpress-suite' ),
+                'type' => Controls_Manager::SELECT,
+                'options' => [
+                    'login'    => __( 'Login', 'gm2-wordpress-suite' ),
+                    'register' => __( 'Register', 'gm2-wordpress-suite' ),
+                ],
+                'default' => 'login',
+                'condition' => [
+                    'show_login_form'    => 'yes',
+                    'show_register_form' => 'yes',
+                ],
+            ]
+        );
+        $this->add_control(
             'show_remember',
             [
                 'label' => __( 'Show "Remember Me"', 'gm2-wordpress-suite' ),
@@ -376,8 +392,12 @@ class GM2_Registration_Login_Widget extends \Elementor\Widget_Base {
         }
         $settings = $this->get_settings_for_display();
         add_filter( 'authenticate', [ $this, 'restrict_auth_roles' ], 30 );
+        $wrap_class = 'gm2-login-widget';
+        if ( $in_edit_mode ) {
+            $wrap_class .= ' gm2-edit-mode';
+        }
         $wrap_attrs = [
-            'class' => 'gm2-login-widget',
+            'class' => $wrap_class,
             'data-show-remember' => $settings['show_remember'] === 'yes' ? 'yes' : 'no',
             'data-login-placeholder' => esc_attr( $settings['login_placeholder'] ),
             'data-pass-placeholder'  => esc_attr( $settings['pass_placeholder'] ),
@@ -388,12 +408,25 @@ class GM2_Registration_Login_Widget extends \Elementor\Widget_Base {
         }
         echo '<div' . $attr_html . '>';
         if ( $settings['show_login_form'] === 'yes' ) {
-            echo '<div class="gm2-login-form">';
+            $login_classes = 'gm2-login-form';
+            if ( $in_edit_mode && ( ! isset( $settings['edit_mode_default_form'] ) || 'login' === $settings['edit_mode_default_form'] ) ) {
+                $login_classes .= ' active';
+            }
+            echo '<div class="' . esc_attr( $login_classes ) . '">';
             woocommerce_login_form( [ 'redirect' => home_url() ] );
             echo '</div>';
         }
         if ( $settings['show_register_form'] === 'yes' ) {
-            echo '<div class="gm2-register-form" style="display:none">';
+            $register_classes = 'gm2-register-form';
+            $register_style = '';
+            if ( $in_edit_mode ) {
+                if ( isset( $settings['edit_mode_default_form'] ) && 'register' === $settings['edit_mode_default_form'] ) {
+                    $register_classes .= ' active';
+                }
+            } else {
+                $register_style = ' style="display:none"';
+            }
+            echo '<div class="' . esc_attr( $register_classes ) . '"' . $register_style . '>';
             if ( did_action( 'init' ) && class_exists( 'WooCommerce' ) ) {
                 if ( function_exists( 'woocommerce_register_form' ) ) {
                     \woocommerce_register_form();
