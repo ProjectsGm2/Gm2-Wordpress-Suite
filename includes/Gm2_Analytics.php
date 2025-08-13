@@ -38,6 +38,9 @@ class Gm2_Analytics {
         if (wp_doing_ajax() || (defined('REST_REQUEST') && REST_REQUEST)) {
             return;
         }
+        if (wp_doing_cron()) {
+            return;
+        }
         $user_agent = isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '';
 
         if ($this->should_skip_logging($user_agent)) {
