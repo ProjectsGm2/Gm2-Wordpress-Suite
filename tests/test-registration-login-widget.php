@@ -13,6 +13,7 @@ if (!function_exists('woocommerce_login_form')) {
 if (!class_exists('Elementor\\Widget_Base')) {
     eval('namespace Elementor; class Widget_Base {}');
 }
+if (!class_exists('WooCommerce')) { class WooCommerce {} }
 
 class RegistrationLoginWidgetTest extends WP_UnitTestCase {
     public function setUp(): void {
@@ -32,7 +33,6 @@ class RegistrationLoginWidgetTest extends WP_UnitTestCase {
         do_action('elementor/widgets/register', \Elementor\Plugin::$instance->widgets_manager);
         $this->assertEmpty(\Elementor\Plugin::$instance->widgets_manager->registered);
 
-        if (!class_exists('WooCommerce')) { class WooCommerce {} }
         \Elementor\Plugin::$instance->widgets_manager->registered = [];
         $loader = new Gm2_Elementor_Registration_Login();
         $loader->run();
@@ -86,6 +86,8 @@ class RegistrationLoginWidgetTest extends WP_UnitTestCase {
 
     public function test_edit_mode_renders_forms_for_logged_in_user() {
         require_once GM2_PLUGIN_DIR . 'includes/widgets/class-gm2-registration-login-widget.php';
+        $admin_id = self::factory()->user->create([ 'role' => 'administrator' ]);
+        wp_set_current_user($admin_id);
         $GLOBALS['gm2_tests_is_user_logged_in'] = true;
         $_GET['elementor-preview'] = 1;
         $widget = new GM2_Registration_Login_Widget();
@@ -93,14 +95,15 @@ class RegistrationLoginWidgetTest extends WP_UnitTestCase {
         $widget->render();
         $html = ob_get_clean();
         unset($_GET['elementor-preview'], $GLOBALS['gm2_tests_is_user_logged_in']);
+        wp_set_current_user(0);
         $this->assertStringContainsString('class="login"', $html);
         $this->assertStringNotContainsString('already logged in', strtolower($html));
     }
 
-    public function test_editor_bypasses_logged_in_guard() {
+    public function test_logged_in_admin_hidden_on_live_site() {
         require_once GM2_PLUGIN_DIR . 'includes/widgets/class-gm2-registration-login-widget.php';
-        $editor_id = self::factory()->user->create([ 'role' => 'editor' ]);
-        wp_set_current_user($editor_id);
+        $admin_id = self::factory()->user->create([ 'role' => 'administrator' ]);
+        wp_set_current_user($admin_id);
         $GLOBALS['gm2_tests_is_user_logged_in'] = true;
         $widget = new GM2_Registration_Login_Widget();
         ob_start();
@@ -108,7 +111,7 @@ class RegistrationLoginWidgetTest extends WP_UnitTestCase {
         $html = ob_get_clean();
         unset($GLOBALS['gm2_tests_is_user_logged_in']);
         wp_set_current_user(0);
-        $this->assertStringContainsString('class="login"', $html);
-        $this->assertStringNotContainsString('already logged in', strtolower($html));
+        $this->assertStringNotContainsString('class="login"', $html);
+        $this->assertStringContainsString('already logged in', strtolower($html));
     }
 }
