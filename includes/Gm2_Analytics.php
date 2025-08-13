@@ -65,11 +65,23 @@ class Gm2_Analytics {
     }
 
     private function get_user_id() {
-        if (!isset($_COOKIE[self::COOKIE_NAME])) {
-            $id = wp_generate_uuid4();
+        $user_id = get_current_user_id();
+
+        if ($user_id) {
+            $id = (string) $user_id;
+        } else {
+            if (!isset($_COOKIE[self::COOKIE_NAME])) {
+                $id = wp_generate_uuid4();
+            } else {
+                $id = $_COOKIE[self::COOKIE_NAME];
+            }
+        }
+
+        if (!isset($_COOKIE[self::COOKIE_NAME]) || $_COOKIE[self::COOKIE_NAME] !== $id) {
             setcookie(self::COOKIE_NAME, $id, time() + YEAR_IN_SECONDS * 2, COOKIEPATH, COOKIE_DOMAIN);
             $_COOKIE[self::COOKIE_NAME] = $id;
         }
+
         return sanitize_text_field($_COOKIE[self::COOKIE_NAME]);
     }
 
