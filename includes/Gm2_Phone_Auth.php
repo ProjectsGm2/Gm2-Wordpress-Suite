@@ -9,11 +9,12 @@ if (!defined('ABSPATH')) {
 class Gm2_Phone_Auth {
     public function run() {
         add_action('woocommerce_register_form', [$this, 'render_registration_phone_field']);
-        add_filter('woocommerce_register_post', [$this, 'require_phone_or_email'], 10, 3);
+        add_filter('woocommerce_register_post', [$this, 'require_phone'], 10, 3);
         add_action('woocommerce_created_customer', [$this, 'save_phone_on_register']);
         add_filter('authenticate', [$this, 'authenticate'], 10, 3);
         add_action('woocommerce_edit_account_form', [$this, 'render_account_phone_field']);
         add_action('woocommerce_save_account_details', [$this, 'save_account_phone']);
+        add_action('woocommerce_save_account_details_errors', [$this, 'require_account_phone'], 10, 2);
     }
 
     public function render_registration_phone_field() {
@@ -21,14 +22,14 @@ class Gm2_Phone_Auth {
         woocommerce_form_field('billing_phone', [
             'type'     => 'tel',
             'label'    => __('Phone', 'gm2-wordpress-suite'),
-            'required' => false,
+            'required' => true,
         ], $phone);
     }
 
-    public function require_phone_or_email($username, $email, $errors) {
+    public function require_phone($username, $email, $errors) {
         $phone = isset($_POST['billing_phone']) ? trim(wp_unslash($_POST['billing_phone'])) : '';
-        if (empty($email) && empty($phone)) {
-            $errors->add('registration-error-phone-email', __('Please enter an email address or phone number.', 'gm2-wordpress-suite'));
+        if (empty($phone)) {
+            $errors->add('registration-error-phone', __('Please enter a phone number.', 'gm2-wordpress-suite'));
         }
         return $errors;
     }
@@ -65,13 +66,20 @@ class Gm2_Phone_Auth {
         woocommerce_form_field('billing_phone', [
             'type'     => 'tel',
             'label'    => __('Phone', 'gm2-wordpress-suite'),
-            'required' => false,
+            'required' => true,
         ], $phone);
     }
 
     public function save_account_phone($user_id) {
         if (isset($_POST['billing_phone'])) {
             update_user_meta($user_id, 'billing_phone', wc_clean(wp_unslash($_POST['billing_phone'])));
+        }
+    }
+
+    public function require_account_phone($errors, $user) {
+        $phone = isset($_POST['billing_phone']) ? trim(wp_unslash($_POST['billing_phone'])) : '';
+        if (empty($phone)) {
+            $errors->add('account-error-phone', __('Please enter a phone number.', 'gm2-wordpress-suite'));
         }
     }
 }
