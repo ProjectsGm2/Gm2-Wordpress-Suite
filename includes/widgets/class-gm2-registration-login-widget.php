@@ -426,11 +426,14 @@ class GM2_Registration_Login_Widget extends \Elementor\Widget_Base {
                 $register_style = ' style="display:none"';
             }
             echo '<div class="' . esc_attr( $register_classes ) . '"' . $register_style . '>';
-            if ( did_action( 'init' ) && class_exists( 'WooCommerce' ) ) {
-                if ( function_exists( 'woocommerce_register_form' ) ) {
-                    \woocommerce_register_form();
+            if ( did_action( 'init' ) && class_exists( 'WooCommerce' ) && function_exists( 'wc_get_template' ) ) {
+                ob_start();
+                wc_get_template( 'myaccount/form-login.php' );
+                $tpl = ob_get_clean();
+                if ( preg_match( '#<form[^>]*class="[^"]*woocommerce-form[^"]*register[^"]*"[^>]*>.*?</form>#s', $tpl, $m ) ) {
+                    echo $m[0];
                 } else {
-                    do_action( 'woocommerce_register_form' );
+                    echo $tpl;
                 }
             } else {
                 echo '<p class="gm2-woocommerce-placeholder">' . esc_html__( 'WooCommerce registration form will appear here', 'gm2-wordpress-suite' ) . '</p>';
