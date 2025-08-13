@@ -18,6 +18,7 @@ namespace Gm2 {
     function check_ajax_referer($action, $query_arg = false) { global $gm2_checked_nonce; $gm2_checked_nonce = [$action, $query_arg]; }
     function wp_send_json_success($data = null) {}
     function current_user_can($cap) { global $gm2_current_user_can; return $gm2_current_user_can ?? false; }
+    function get_current_user_id() { global $gm2_current_user_id; return $gm2_current_user_id ?? 0; }
     function apply_filters($hook, $value) { return $value; }
     function error_log($message) { global $gm2_error_logged; $gm2_error_logged = $message; }
 }
@@ -71,14 +72,31 @@ namespace {
         private WPDBStub $wpdbStub;
 
         protected function setUp(): void {
-            global $wpdb, $gm2_current_user_can, $gm2_doing_ajax, $gm2_checked_nonce;
+            global $wpdb, $gm2_current_user_can, $gm2_doing_ajax, $gm2_checked_nonce, $gm2_current_user_id;
             $this->wpdbStub = new WPDBStub();
             $wpdb = $this->wpdbStub;
             $_COOKIE = [];
             unset($_SERVER['HTTP_DNT']);
             $gm2_current_user_can = false;
             $gm2_doing_ajax = false;
+            $gm2_current_user_id = 0;
             $gm2_checked_nonce = null;
+        }
+
+        public function test_logged_in_user_sets_cookie_to_user_id() {
+            global $gm2_current_user_id;
+            $gm2_current_user_id = 42;
+
+            $_COOKIE[\Gm2\Gm2_Analytics::SESSION_COOKIE] = 'sid';
+            $_SERVER['REQUEST_URI'] = '/test';
+            $_SERVER['REMOTE_ADDR'] = '123.123.123.123';
+            $_SERVER['HTTP_USER_AGENT'] = 'UA';
+
+            $analytics = new \Gm2\Gm2_Analytics();
+            $analytics->maybe_log_request();
+
+            $this->assertSame('42', $this->wpdbStub->insert_data['user_id']);
+            $this->assertSame('42', $_COOKIE[\Gm2\Gm2_Analytics::COOKIE_NAME]);
         }
 
         public function test_maybe_log_request_anonymizes_ip() {
