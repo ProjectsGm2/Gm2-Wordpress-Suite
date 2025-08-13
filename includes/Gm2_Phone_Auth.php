@@ -9,6 +9,11 @@ if (!defined('ABSPATH')) {
 class Gm2_Phone_Auth {
     public function run() {
         add_action('woocommerce_register_form_start', [$this, 'render_registration_contact_field']);
+        // Hide WooCommerce's default email field so only the phone/email field is visible
+        add_action('woocommerce_register_form', [$this, 'hide_default_email_field'], 0);
+        // Some versions of WooCommerce expose the registration fields via a filter.
+        // Remove the default email field from that array as well for completeness.
+        add_filter('woocommerce_register_form_fields', [$this, 'remove_default_email_field']);
         add_filter('woocommerce_register_post', [$this, 'validate_contact_field'], 10, 3);
         add_filter('woocommerce_new_customer_data', [$this, 'assign_contact_field']);
         add_filter('authenticate', [$this, 'authenticate'], 10, 3);
@@ -33,6 +38,26 @@ class Gm2_Phone_Auth {
             'label'    => __('Phone or Email', 'gm2-wordpress-suite'),
             'required' => true,
         ], $contact);
+    }
+
+    /**
+     * Remove the default WooCommerce email field from the registration form.
+     * Some themes may already hide the field with JavaScript; this ensures it is
+     * not displayed when WooCommerce outputs it.
+     */
+    public function hide_default_email_field() {
+        echo '<style>#reg_email_field{display:none !important;}</style>';
+    }
+
+    /**
+     * Filter WooCommerce registration fields to unset the core email field when
+     * the fields array is available.
+     */
+    public function remove_default_email_field($fields) {
+        if (is_array($fields) && isset($fields['email'])) {
+            unset($fields['email']);
+        }
+        return $fields;
     }
 
     public function validate_contact_field($username, $email, $errors) {
