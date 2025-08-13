@@ -8,7 +8,7 @@ if (!defined('ABSPATH')) {
 
 class Gm2_Phone_Auth {
     public function run() {
-        add_action('woocommerce_register_form', [$this, 'render_registration_phone_field']);
+        add_action('woocommerce_register_form_start', [$this, 'render_registration_phone_field']);
         add_filter('woocommerce_register_post', [$this, 'require_phone'], 10, 3);
         add_action('woocommerce_created_customer', [$this, 'save_phone_on_register']);
         add_filter('authenticate', [$this, 'authenticate'], 10, 3);
