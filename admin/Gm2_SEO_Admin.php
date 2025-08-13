@@ -416,6 +416,9 @@ class Gm2_SEO_Admin {
         register_setting('gm2_seo_options', 'gm2_analytics_days', [
             'sanitize_callback' => 'absint',
         ]);
+        register_setting('gm2_seo_options', 'gm2_analytics_retention_days', [
+            'sanitize_callback' => 'absint',
+        ]);
         register_setting('gm2_seo_options', 'gm2_clean_slugs', [
             'sanitize_callback' => 'sanitize_text_field',
         ]);
@@ -856,8 +859,9 @@ class Gm2_SEO_Admin {
             $lang   = get_option('gm2_gads_language', 'languageConstants/1000');
             $geo    = get_option('gm2_gads_geo_target', 'geoTargetConstants/2840');
             $login  = get_option('gm2_gads_login_customer_id', '');
-            $limit  = get_option('gm2_sc_query_limit', 10);
-            $days   = get_option('gm2_analytics_days', 30);
+            $limit     = get_option('gm2_sc_query_limit', 10);
+            $days      = get_option('gm2_analytics_days', 30);
+            $retention = get_option('gm2_analytics_retention_days', 30);
 
             echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
             wp_nonce_field('gm2_keyword_settings_save', 'gm2_keyword_settings_nonce');
@@ -868,6 +872,7 @@ class Gm2_SEO_Admin {
             echo '<tr><th scope="row">' . esc_html__( 'Login Customer ID', 'gm2-wordpress-suite' ) . '</th><td><input type="text" name="gm2_gads_login_customer_id" id="gm2_gads_login_customer_id" value="' . esc_attr($login) . '" class="regular-text" /></td></tr>';
             echo '<tr><th scope="row">' . esc_html__( 'Search Console Query Limit', 'gm2-wordpress-suite' ) . '</th><td><input type="number" name="gm2_sc_query_limit" id="gm2_sc_query_limit" value="' . esc_attr($limit) . '" class="small-text" /></td></tr>';
             echo '<tr><th scope="row">' . esc_html__( 'Analytics Days', 'gm2-wordpress-suite' ) . '</th><td><input type="number" name="gm2_analytics_days" id="gm2_analytics_days" value="' . esc_attr($days) . '" class="small-text" /></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Analytics Retention Days', 'gm2-wordpress-suite' ) . '</th><td><input type="number" name="gm2_analytics_retention_days" id="gm2_analytics_retention_days" value="' . esc_attr($retention) . '" class="small-text" /></td></tr>';
             echo '</tbody></table>';
             echo '<p class="description">' . esc_html__( 'Defaults: English / United States.', 'gm2-wordpress-suite' ) . '</p>';
             submit_button( esc_html__( 'Save Settings', 'gm2-wordpress-suite' ) );
@@ -2816,14 +2821,16 @@ class Gm2_SEO_Admin {
         $lang  = isset($_POST['gm2_gads_language']) ? sanitize_text_field($_POST['gm2_gads_language']) : '';
         $geo   = isset($_POST['gm2_gads_geo_target']) ? sanitize_text_field($_POST['gm2_gads_geo_target']) : '';
         $login = isset($_POST['gm2_gads_login_customer_id']) ? $this->sanitize_customer_id($_POST['gm2_gads_login_customer_id']) : '';
-        $sc_limit = isset($_POST['gm2_sc_query_limit']) ? absint($_POST['gm2_sc_query_limit']) : 0;
-        $days     = isset($_POST['gm2_analytics_days']) ? absint($_POST['gm2_analytics_days']) : 0;
+        $sc_limit  = isset($_POST['gm2_sc_query_limit']) ? absint($_POST['gm2_sc_query_limit']) : 0;
+        $days      = isset($_POST['gm2_analytics_days']) ? absint($_POST['gm2_analytics_days']) : 0;
+        $retention = isset($_POST['gm2_analytics_retention_days']) ? absint($_POST['gm2_analytics_retention_days']) : 0;
 
         update_option('gm2_gads_language', $lang);
         update_option('gm2_gads_geo_target', $geo);
         update_option('gm2_gads_login_customer_id', $login);
         update_option('gm2_sc_query_limit', $sc_limit);
         update_option('gm2_analytics_days', $days);
+        update_option('gm2_analytics_retention_days', $retention);
 
         wp_redirect(admin_url('admin.php?page=gm2-seo&tab=keywords&updated=1'));
         exit;
