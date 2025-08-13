@@ -572,10 +572,15 @@ class GM2_QD_Widget extends \Elementor\Widget_Base {
     }
 
     protected function render() {
-        $in_edit_mode = false;
-        if ( class_exists( '\Elementor\Plugin' ) && \Elementor\Plugin::$instance->editor ) {
-            $in_edit_mode = \Elementor\Plugin::$instance->editor->is_edit_mode();
-        }
+        $in_edit_mode = (
+            ( defined( 'ELEMENTOR_EDITOR' ) && ELEMENTOR_EDITOR ) ||
+            ( class_exists( '\Elementor\Plugin' )
+              && ( ( $p = \Elementor\Plugin::instance() )
+                   && ( ( isset( $p->editor ) && method_exists( $p->editor, 'is_edit_mode' ) && $p->editor->is_edit_mode() )
+                        || ( isset( $p->preview ) && method_exists( $p->preview, 'is_preview_mode' ) && $p->preview->is_preview_mode() ) ) ) )
+            || ( wp_doing_ajax() && isset( $_REQUEST['action'] ) && 'elementor_ajax' === $_REQUEST['action'] )
+            || isset( $_GET['elementor-preview'] )
+        );
 
         if ( ! $in_edit_mode && ( ! function_exists( 'is_product' ) || ! is_product() ) ) {
             return;
