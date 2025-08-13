@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Gm2 WordPress Suite
  * Description:       A powerful suite of tools and features for WordPress, by Gm2.
- * Version:           1.6.18
+ * Version:           1.6.19
  * Author:            Your Name or Team Gm2
  * Author URI:        https://yourwebsite.com
  * License:           GPL-2.0+
@@ -15,7 +15,7 @@
 defined('ABSPATH') or die('No script kiddies please!');
 
 // Define constants
-define('GM2_VERSION', '1.6.18');
+define('GM2_VERSION', '1.6.19');
 define('GM2_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('GM2_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('GM2_CHATGPT_LOG_FILE', GM2_PLUGIN_DIR . 'chatgpt.log');
@@ -152,7 +152,8 @@ function gm2_activate_plugin() {
         ip varchar(100) NOT NULL,
         PRIMARY KEY  (id),
         KEY session_id (session_id),
-        KEY user_id (user_id)
+        KEY user_id (user_id),
+        KEY `timestamp` (`timestamp`)
     ) $charset_collate;";
     dbDelta($sql);
 
@@ -179,6 +180,33 @@ function gm2_deactivate_plugin() {
     Gm2_Abandoned_Carts::clear_scheduled_event();
 }
 register_deactivation_hook(__FILE__, 'gm2_deactivate_plugin');
+
+function gm2_upgrade_analytics_log_index() {
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'gm2_analytics_log';
+    $index = $wpdb->get_results("SHOW INDEX FROM $table_name WHERE Key_name = 'timestamp'");
+    if (empty($index)) {
+        $charset_collate = $wpdb->get_charset_collate();
+        require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+        $sql = "CREATE TABLE $table_name (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            session_id varchar(64) NOT NULL,
+            user_id varchar(64) NOT NULL,
+            url text NOT NULL,
+            referrer text DEFAULT NULL,
+            `timestamp` datetime NOT NULL,
+            user_agent text NOT NULL,
+            device varchar(20) NOT NULL,
+            ip varchar(100) NOT NULL,
+            PRIMARY KEY  (id),
+            KEY session_id (session_id),
+            KEY user_id (user_id),
+            KEY `timestamp` (`timestamp`)
+        ) $charset_collate;";
+        dbDelta($sql);
+    }
+}
+add_action('plugins_loaded', 'gm2_upgrade_analytics_log_index');
 
 function gm2_maybe_run_setup_wizard() {
     if (get_option('gm2_do_activation_redirect') === '1') {
