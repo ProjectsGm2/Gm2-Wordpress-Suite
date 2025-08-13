@@ -46,7 +46,10 @@ class Gm2_Phone_Auth {
      * not displayed when WooCommerce outputs it.
      */
     public function hide_default_email_field() {
-        echo '<style>#reg_email_field{display:none !important;}</style>';
+        // Hide any core email inputs that may still be rendered by WooCommerce.
+        // Themes sometimes override the field markup or selector, so target
+        // email inputs within common registration form containers.
+        echo '<style>.woocommerce-form-register input[type="email"],form.register input[type="email"]{display:none!important;}</style>';
     }
 
     /**
