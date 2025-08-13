@@ -8,6 +8,9 @@
             url: window.location.href,
             referrer: document.referrer
         });
+        if (gm2Analytics.nonce) {
+            params.append('nonce', gm2Analytics.nonce);
+        }
         if (navigator.sendBeacon) {
             navigator.sendBeacon(gm2Analytics.ajax_url, params);
         } else {
