@@ -357,27 +357,20 @@ class GM2_Registration_Login_Widget extends \Elementor\Widget_Base {
     }
 
     protected function render() {
-        $in_edit_mode = false;
-        if ( class_exists( '\\Elementor\\Plugin' ) ) {
-            $elementor = \Elementor\Plugin::instance();
-            if ( $elementor ) {
-                if ( isset( $elementor->editor ) && method_exists( $elementor->editor, 'is_edit_mode' )
-                    && $elementor->editor->is_edit_mode() ) {
-                    $in_edit_mode = true;
-                } elseif ( isset( $elementor->preview ) && method_exists( $elementor->preview, 'is_preview_mode' )
-                    && $elementor->preview->is_preview_mode() ) {
-                    $in_edit_mode = true;
-                }
-            }
-        }
-        if ( ! $in_edit_mode && isset( $_GET['elementor-preview'] ) ) {
-            $in_edit_mode = true;
-        }
+        $in_edit_mode = (
+            ( defined( 'ELEMENTOR_EDITOR' ) && ELEMENTOR_EDITOR ) ||
+            ( class_exists( '\\Elementor\\Plugin' )
+              && ( ( $p = \Elementor\Plugin::instance() )
+                   && ( ( isset( $p->editor ) && method_exists( $p->editor, 'is_edit_mode' ) && $p->editor->is_edit_mode() )
+                        || ( isset( $p->preview ) && method_exists( $p->preview, 'is_preview_mode' ) && $p->preview->is_preview_mode() ) ) ) )
+            || ( wp_doing_ajax() && isset( $_REQUEST['action'] ) && 'elementor_ajax' === $_REQUEST['action'] )
+            || isset( $_GET['elementor-preview'] )
+        );
 
-        if ( is_user_logged_in() && ! $in_edit_mode ) {
-            echo '<div class="gm2-login-widget-logged">'
-                . esc_html__( 'You are already logged in.', 'gm2-wordpress-suite' )
-                . '</div>';
+        if ( is_user_logged_in() && ! $in_edit_mode && ! current_user_can( 'edit_posts' ) ) {
+            echo '<div class="gm2-login-widget-logged">' .
+                esc_html__( 'You are already logged in.', 'gm2-wordpress-suite' ) .
+                '</div>';
             return;
         }
         $settings = $this->get_settings_for_display();
