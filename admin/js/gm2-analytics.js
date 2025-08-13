@@ -89,5 +89,10 @@ jQuery(function($){
             });
         }
     }
+
+    $(document).on('click', '.gm2-toggle-user-events', function(){
+        var target = $(this).data('target');
+        $('#gm2-events-' + target).toggle();
+    });
 });
 
