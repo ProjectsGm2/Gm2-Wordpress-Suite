@@ -125,7 +125,8 @@ class Gm2_Analytics_Admin {
                 echo '<tr class="gm2-summary-row"><td><button type="button" class="gm2-toggle-user-events" data-target="' . esc_attr($uid_attr) . '">+</button></td><td>' . esc_html($uid) . '</td><td>' . intval($group->sessions) . '</td><td>' . intval($group->events) . '</td></tr>';
 
                 $event_where = $base_where . $wpdb->prepare(" AND user_id = %s", $uid);
-                $events = $wpdb->get_results("SELECT `timestamp`, url, duration, event_type, element FROM $table WHERE $event_where ORDER BY `timestamp` DESC");
+                // Retrieve only pageview and click events; duration now lives on the original pageview row.
+                $events = $wpdb->get_results("SELECT `timestamp`, url, duration, event_type, element FROM $table WHERE $event_where AND (event_type = 'pageview' OR event_type = 'click') ORDER BY `timestamp` DESC");
 
                 echo '<tr id="gm2-events-' . esc_attr($uid_attr) . '" class="gm2-user-events" style="display:none"><td colspan="4"><table class="widefat"><thead><tr><th>' . esc_html__('Time', 'gm2-wordpress-suite') . '</th><th>' . esc_html__('URL', 'gm2-wordpress-suite') . '</th><th>' . esc_html__('Duration', 'gm2-wordpress-suite') . '</th><th>' . esc_html__('Clicks', 'gm2-wordpress-suite') . '</th></tr></thead><tbody>';
                 if ($events) {
