@@ -1,6 +1,7 @@
 <?php
 namespace Gm2 {
     function wp_doing_ajax() { global $gm2_doing_ajax; return $gm2_doing_ajax ?? false; }
+    function wp_doing_cron() { global $gm2_doing_cron; return $gm2_doing_cron ?? false; }
     function home_url($path = '') { return 'https://example.com' . $path; }
     function esc_url_raw($url) { return $url; }
     function sanitize_text_field($str) { return $str; }
@@ -21,6 +22,10 @@ namespace Gm2 {
     function get_current_user_id() { global $gm2_current_user_id; return $gm2_current_user_id ?? 0; }
     function apply_filters($hook, $value) { return $value; }
     function error_log($message) { global $gm2_error_logged; $gm2_error_logged = $message; }
+    function setcookie($name, $value = '', $expire = 0, $path = '', $domain = '', $secure = false, $httponly = false) {
+        $_COOKIE[$name] = $value;
+        return true;
+    }
 }
 namespace {
     if (!defined('ABSPATH')) {
@@ -72,13 +77,14 @@ namespace {
         private WPDBStub $wpdbStub;
 
         protected function setUp(): void {
-            global $wpdb, $gm2_current_user_can, $gm2_doing_ajax, $gm2_checked_nonce, $gm2_current_user_id;
+            global $wpdb, $gm2_current_user_can, $gm2_doing_ajax, $gm2_doing_cron, $gm2_checked_nonce, $gm2_current_user_id;
             $this->wpdbStub = new WPDBStub();
             $wpdb = $this->wpdbStub;
             $_COOKIE = [];
             unset($_SERVER['HTTP_DNT']);
             $gm2_current_user_can = false;
             $gm2_doing_ajax = false;
+            $gm2_doing_cron = false;
             $gm2_current_user_id = 0;
             $gm2_checked_nonce = null;
         }
@@ -170,6 +176,21 @@ namespace {
         public function test_maybe_log_request_skips_when_doing_ajax() {
             global $gm2_doing_ajax;
             $gm2_doing_ajax = true;
+            $_COOKIE[\Gm2\Gm2_Analytics::COOKIE_NAME] = 'uid';
+            $_COOKIE[\Gm2\Gm2_Analytics::SESSION_COOKIE] = 'sid';
+            $_SERVER['REQUEST_URI'] = '/test';
+            $_SERVER['REMOTE_ADDR'] = '123.123.123.123';
+            $_SERVER['HTTP_USER_AGENT'] = 'UA';
+
+            $analytics = new \Gm2\Gm2_Analytics();
+            $analytics->maybe_log_request();
+
+            $this->assertEmpty($this->wpdbStub->insert_data);
+        }
+
+        public function test_maybe_log_request_skips_when_doing_cron() {
+            global $gm2_doing_cron;
+            $gm2_doing_cron = true;
             $_COOKIE[\Gm2\Gm2_Analytics::COOKIE_NAME] = 'uid';
             $_COOKIE[\Gm2\Gm2_Analytics::SESSION_COOKIE] = 'sid';
             $_SERVER['REQUEST_URI'] = '/test';
