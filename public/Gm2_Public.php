@@ -16,6 +16,20 @@ class Gm2_Public {
     }
 
     public function enqueue_scripts() {
+        $in_edit_mode = (
+            ( defined( 'ELEMENTOR_EDITOR' ) && ELEMENTOR_EDITOR ) ||
+            ( class_exists( '\Elementor\Plugin' )
+              && ( ( $p = \Elementor\Plugin::instance() )
+                   && ( ( isset( $p->editor ) && method_exists( $p->editor, 'is_edit_mode' ) && $p->editor->is_edit_mode() )
+                        || ( isset( $p->preview ) && method_exists( $p->preview, 'is_preview_mode' ) && $p->preview->is_preview_mode() ) ) ) )
+            || ( wp_doing_ajax() && isset( $_REQUEST['action'] ) && 'elementor_ajax' === $_REQUEST['action'] )
+            || isset( $_GET['elementor-preview'] )
+        );
+
+        if ( is_admin() && ! $in_edit_mode && ! wp_doing_ajax() ) {
+            return;
+        }
+
         wp_enqueue_style(
             'gm2-public-style',
             GM2_PLUGIN_URL . 'public/css/gm2-public.css',
@@ -44,24 +58,7 @@ class Gm2_Public {
             true
         );
 
-        $in_edit_mode = false;
-        if ( class_exists( '\\Elementor\\Plugin' ) ) {
-            $elementor = \Elementor\Plugin::instance();
-            if ( $elementor ) {
-                if ( isset( $elementor->editor ) && method_exists( $elementor->editor, 'is_edit_mode' )
-                    && $elementor->editor->is_edit_mode() ) {
-                    $in_edit_mode = true;
-                } elseif ( isset( $elementor->preview ) && method_exists( $elementor->preview, 'is_preview_mode' )
-                    && $elementor->preview->is_preview_mode() ) {
-                    $in_edit_mode = true;
-                }
-            }
-        }
-        if ( ! $in_edit_mode && isset( $_GET['elementor-preview'] ) ) {
-            $in_edit_mode = true;
-        }
-
-        if ((function_exists('is_product') && is_product()) || $in_edit_mode) {
+        if ( ( function_exists( 'is_product' ) && is_product() ) || $in_edit_mode ) {
             if (get_option('gm2_enable_quantity_discounts', '1') === '1') {
                 wp_enqueue_style(
                     'gm2-qd-widget',
