@@ -73,6 +73,15 @@ class Gm2_Analytics_Admin {
 
     private function render_activity_log($data) {
         global $wpdb;
+
+        // Verify nonce before processing any filter parameters.
+        if ( isset($_GET['log_user']) || isset($_GET['log_device']) || isset($_GET['paged']) ) {
+            $nonce = isset($_GET['gm2_activity_log_nonce']) ? sanitize_text_field( wp_unslash($_GET['gm2_activity_log_nonce']) ) : '';
+            if ( ! wp_verify_nonce( $nonce, 'gm2_activity_log_filter' ) ) {
+                return;
+            }
+        }
+
         $table = $wpdb->prefix . 'gm2_analytics_log';
         $per_page = 20;
         $paged = isset($_GET['paged']) ? max(1, absint($_GET['paged'])) : 1;
@@ -89,6 +98,7 @@ class Gm2_Analytics_Admin {
         $logs = $wpdb->get_results("SELECT * FROM $table WHERE $where ORDER BY `timestamp` DESC LIMIT $per_page OFFSET $offset");
         echo '<h2>' . esc_html__('Activity Log', 'gm2-wordpress-suite') . '</h2>';
         echo '<form method="get"><input type="hidden" name="page" value="gm2-analytics" />';
+        wp_nonce_field('gm2_activity_log_filter', 'gm2_activity_log_nonce');
         echo '<input type="hidden" name="start" value="' . esc_attr($data['start']) . '" />';
         echo '<input type="hidden" name="end" value="' . esc_attr($data['end']) . '" />';
         echo '<label>' . esc_html__('User', 'gm2-wordpress-suite') . ': <input type="text" name="log_user" value="' . esc_attr($user_filter) . '" /></label> ';
