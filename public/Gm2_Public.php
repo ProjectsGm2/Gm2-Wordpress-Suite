@@ -46,9 +46,15 @@ class Gm2_Public {
 
         $in_edit_mode = false;
         if ( class_exists( '\\Elementor\\Plugin' ) ) {
-            $elementor = \Elementor\Plugin::instance();
-            if ( $elementor && isset( $elementor->editor ) && method_exists( $elementor->editor, 'is_edit_mode' ) ) {
-                $in_edit_mode = $elementor->editor->is_edit_mode();
+            $plugin = \Elementor\Plugin::$instance;
+            if ( $plugin ) {
+                if ( isset( $plugin->editor ) && method_exists( $plugin->editor, 'is_edit_mode' )
+                    && $plugin->editor->is_edit_mode() ) {
+                    $in_edit_mode = true;
+                } elseif ( isset( $plugin->preview ) && method_exists( $plugin->preview, 'is_preview_mode' )
+                    && $plugin->preview->is_preview_mode() ) {
+                    $in_edit_mode = true;
+                }
             }
         }
 
