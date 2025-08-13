@@ -17,6 +17,8 @@ namespace Gm2 {
     }
     function check_ajax_referer($action, $query_arg = false) {}
     function wp_send_json_success($data = null) {}
+    function current_user_can($cap) { global $gm2_current_user_can; return $gm2_current_user_can ?? false; }
+    function apply_filters($hook, $value) { return $value; }
 }
 namespace {
     if (!defined('ABSPATH')) {
@@ -57,14 +59,16 @@ namespace {
         public function query($query) {}
     }
 
-    class AnalyticsIpAnonymizationTest extends \PHPUnit\Framework\TestCase {
+    class AnalyticsTest extends \PHPUnit\Framework\TestCase {
         private WPDBStub $wpdbStub;
 
         protected function setUp(): void {
-            global $wpdb;
+            global $wpdb, $gm2_current_user_can;
             $this->wpdbStub = new WPDBStub();
             $wpdb = $this->wpdbStub;
             $_COOKIE = [];
+            unset($_SERVER['HTTP_DNT']);
+            $gm2_current_user_can = false;
         }
 
         public function test_maybe_log_request_anonymizes_ip() {
@@ -91,6 +95,48 @@ namespace {
             $analytics->ajax_track();
 
             $this->assertSame('123.123.123.0', $this->wpdbStub->prepared_args[7]);
+        }
+
+        public function test_maybe_log_request_skips_for_admin() {
+            global $gm2_current_user_can;
+            $gm2_current_user_can = true;
+            $_COOKIE[\Gm2\Gm2_Analytics::COOKIE_NAME] = 'uid';
+            $_COOKIE[\Gm2\Gm2_Analytics::SESSION_COOKIE] = 'sid';
+            $_SERVER['REQUEST_URI'] = '/test';
+            $_SERVER['REMOTE_ADDR'] = '123.123.123.123';
+            $_SERVER['HTTP_USER_AGENT'] = 'UA';
+
+            $analytics = new \Gm2\Gm2_Analytics();
+            $analytics->maybe_log_request();
+
+            $this->assertEmpty($this->wpdbStub->prepared_args);
+        }
+
+        public function test_maybe_log_request_skips_for_bots() {
+            $_COOKIE[\Gm2\Gm2_Analytics::COOKIE_NAME] = 'uid';
+            $_COOKIE[\Gm2\Gm2_Analytics::SESSION_COOKIE] = 'sid';
+            $_SERVER['REQUEST_URI'] = '/test';
+            $_SERVER['REMOTE_ADDR'] = '123.123.123.123';
+            $_SERVER['HTTP_USER_AGENT'] = 'Googlebot';
+
+            $analytics = new \Gm2\Gm2_Analytics();
+            $analytics->maybe_log_request();
+
+            $this->assertEmpty($this->wpdbStub->prepared_args);
+        }
+
+        public function test_maybe_log_request_skips_for_dnt_header() {
+            $_COOKIE[\Gm2\Gm2_Analytics::COOKIE_NAME] = 'uid';
+            $_COOKIE[\Gm2\Gm2_Analytics::SESSION_COOKIE] = 'sid';
+            $_SERVER['REQUEST_URI'] = '/test';
+            $_SERVER['REMOTE_ADDR'] = '123.123.123.123';
+            $_SERVER['HTTP_USER_AGENT'] = 'UA';
+            $_SERVER['HTTP_DNT'] = '1';
+
+            $analytics = new \Gm2\Gm2_Analytics();
+            $analytics->maybe_log_request();
+
+            $this->assertEmpty($this->wpdbStub->prepared_args);
         }
     }
 }

@@ -38,12 +38,16 @@ class Gm2_Analytics {
         if (wp_doing_ajax() || (defined('REST_REQUEST') && REST_REQUEST)) {
             return;
         }
+        $user_agent = isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '';
+
+        if ($this->should_skip_logging($user_agent)) {
+            return;
+        }
 
         $user_id    = $this->get_user_id();
         $session_id = $this->get_session_id();
         $url        = esc_url_raw(home_url($_SERVER['REQUEST_URI'] ?? ''));
         $referrer   = isset($_SERVER['HTTP_REFERER']) ? esc_url_raw($_SERVER['HTTP_REFERER']) : '';
-        $user_agent = isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '';
         $device     = wp_is_mobile() ? 'mobile' : 'desktop';
         $ip         = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field($_SERVER['REMOTE_ADDR']) : '';
         $ip         = $ip ? wp_privacy_anonymize_ip($ip) : '';
@@ -87,9 +91,14 @@ class Gm2_Analytics {
     }
 
     private function log_event($url, $referrer = '') {
+        $user_agent = isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '';
+
+        if ($this->should_skip_logging($user_agent)) {
+            return;
+        }
+
         $user_id    = $this->get_user_id();
         $session_id = $this->get_session_id();
-        $user_agent = isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '';
         $device     = wp_is_mobile() ? 'mobile' : 'desktop';
         $ip         = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field($_SERVER['REMOTE_ADDR']) : '';
         $ip         = $ip ? wp_privacy_anonymize_ip($ip) : '';
@@ -104,6 +113,23 @@ class Gm2_Analytics {
             'device'     => $device,
             'ip'         => $ip,
         ]);
+    }
+
+    private function should_skip_logging($user_agent) {
+        if (current_user_can('manage_options')) {
+            return true;
+        }
+
+        $bot_pattern = '/(bot|crawl|slurp|spider|facebookexternalhit|facebot|pingdom|crawler)/i';
+        if ($user_agent && preg_match($bot_pattern, $user_agent)) {
+            return true;
+        }
+
+        if (apply_filters('gm2_analytics_respect_dnt', true) && isset($_SERVER['HTTP_DNT']) && '1' === $_SERVER['HTTP_DNT']) {
+            return true;
+        }
+
+        return false;
     }
 
     private function insert_log($data) {
