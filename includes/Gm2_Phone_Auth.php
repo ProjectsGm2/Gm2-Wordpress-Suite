@@ -49,7 +49,15 @@ class Gm2_Phone_Auth {
         // Hide any core email inputs that may still be rendered by WooCommerce.
         // Themes sometimes override the field markup or selector, so target
         // email inputs within common registration form containers.
-        echo '<style>.woocommerce-form-register input[type="email"],form.register input[type="email"]{display:none!important;}</style>';
+        echo '<style>
+            #reg_email_field,
+            label[for="reg_email"],
+            input#reg_email,
+            .woocommerce-form-register input[type="email"],
+            form.register input[type="email"] {
+                display:none!important;
+            }
+        </style>';
     }
 
     /**
