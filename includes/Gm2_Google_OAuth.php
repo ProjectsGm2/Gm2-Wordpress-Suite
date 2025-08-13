@@ -54,7 +54,7 @@ class Gm2_Google_OAuth {
         if (strtoupper($method) === 'POST') {
             $resp = wp_remote_post($url, $args);
         } else {
-            $resp = wp_remote_get($url, $args);
+            $resp = wp_safe_remote_get($url, $args);
         }
         if (is_wp_error($resp)) {
             return $resp;

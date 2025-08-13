@@ -169,7 +169,7 @@ class Gm2_Analytics_Admin {
         $locations = [];
         foreach ($ips as $ip) {
             $country = $this->get_ip_country($ip);
-            if ('' === $country) {
+            if ('Unknown' === $country) {
                 $country = esc_html__('Unknown', 'gm2-wordpress-suite');
             }
             if (!isset($locations[$country])) {
@@ -199,11 +199,21 @@ class Gm2_Analytics_Admin {
         if (false !== $country) {
             return $country;
         }
-        $response = wp_remote_get('https://ipapi.co/' . rawurlencode($ip) . '/country_name/');
-        if (is_wp_error($response)) {
-            return '';
+        $response = wp_safe_remote_get(
+            'https://ipapi.co/' . rawurlencode($ip) . '/country_name/',
+            ['timeout' => 5]
+        );
+        if (
+            is_wp_error($response) ||
+            200 !== wp_remote_retrieve_response_code($response)
+        ) {
+            return 'Unknown';
         }
-        $country = sanitize_text_field(wp_remote_retrieve_body($response));
+        $body = wp_remote_retrieve_body($response);
+        if ($body === '') {
+            return 'Unknown';
+        }
+        $country = sanitize_text_field($body);
         set_transient($key, $country, DAY_IN_SECONDS);
         return $country;
     }
