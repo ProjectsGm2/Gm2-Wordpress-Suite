@@ -20,10 +20,10 @@ class Gm2_Elementor_Registration_Login {
     }
 
     public function register_widget( $widgets_manager = null ) {
-        if ( $widgets_manager === null && class_exists( '\\Elementor\\Plugin' ) ) {
+        if ( $widgets_manager === null && class_exists( '\Elementor\Plugin' ) ) {
             $widgets_manager = \Elementor\Plugin::$instance->widgets_manager;
         }
-        if ( ! class_exists( '\\Elementor\\Widget_Base' ) ) {
+        if ( ! class_exists( '\Elementor\Widget_Base' ) ) {
             return;
         }
         if ( ! class_exists( GM2_Registration_Login_Widget::class ) ) {

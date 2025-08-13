@@ -192,7 +192,7 @@ class QuantityDiscountsTest extends WP_UnitTestCase {
     public function test_widget_renders_in_edit_mode() {
         require_once GM2_PLUGIN_DIR . 'includes/widgets/class-gm2-qd-widget.php';
 
-        if ( ! class_exists( '\\Elementor\\Plugin' ) ) {
+        if ( ! class_exists( '\Elementor\Plugin' ) ) {
             eval('namespace Elementor; class Plugin { public static $instance; public $editor; public function __construct(){ self::$instance = $this; $this->editor = new class { public function is_edit_mode(){ return true; } }; } }');
         } else {
             \Elementor\Plugin::$instance = new class { public $editor; public function __construct(){ $this->editor = new class { public function is_edit_mode(){ return true; } }; } };
@@ -220,7 +220,7 @@ class QuantityDiscountsTest extends WP_UnitTestCase {
     public function test_widget_renders_with_preview_id() {
         require_once GM2_PLUGIN_DIR . 'includes/widgets/class-gm2-qd-widget.php';
 
-        if ( ! class_exists( '\\Elementor\\Plugin' ) ) {
+        if ( ! class_exists( '\Elementor\Plugin' ) ) {
             eval('namespace Elementor; class Plugin { public static $instance; public $editor; public function __construct(){ self::$instance = $this; $this->editor = new class { public function is_edit_mode(){ return true; } }; } }');
         } else {
             \Elementor\Plugin::$instance = new class { public $editor; public function __construct(){ $this->editor = new class { public function is_edit_mode(){ return true; } }; } };
@@ -251,7 +251,7 @@ class QuantityDiscountsTest extends WP_UnitTestCase {
     public function test_widget_outputs_br_in_label() {
         require_once GM2_PLUGIN_DIR . 'includes/widgets/class-gm2-qd-widget.php';
 
-        if ( ! class_exists( '\\Elementor\\Plugin' ) ) {
+        if ( ! class_exists( '\Elementor\Plugin' ) ) {
             eval('namespace Elementor; class Plugin { public static $instance; public $editor; public function __construct(){ self::$instance = $this; $this->editor = new class { public function is_edit_mode(){ return true; } }; } }');
         } else {
             \Elementor\Plugin::$instance = new class { public $editor; public function __construct(){ $this->editor = new class { public function is_edit_mode(){ return true; } }; } };

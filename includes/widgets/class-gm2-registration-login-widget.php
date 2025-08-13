@@ -9,7 +9,7 @@ use Elementor\Group_Control_Border;
 use Elementor\Group_Control_Box_Shadow;
 use Elementor\Group_Control_Typography;
 
-if ( class_exists('\\Elementor\\Widget_Base') ) {
+if ( class_exists('\Elementor\Widget_Base') ) {
 class GM2_Registration_Login_Widget extends \Elementor\Widget_Base {
     public function get_name() {
         return 'gm2_registration_login';
@@ -359,7 +359,7 @@ class GM2_Registration_Login_Widget extends \Elementor\Widget_Base {
     protected function render() {
         $in_edit_mode = (
             ( defined( 'ELEMENTOR_EDITOR' ) && ELEMENTOR_EDITOR ) ||
-            ( class_exists( '\\Elementor\\Plugin' )
+            ( class_exists( '\Elementor\Plugin' )
               && ( ( $p = \Elementor\Plugin::instance() )
                    && ( ( isset( $p->editor ) && method_exists( $p->editor, 'is_edit_mode' ) && $p->editor->is_edit_mode() )
                         || ( isset( $p->preview ) && method_exists( $p->preview, 'is_preview_mode' ) && $p->preview->is_preview_mode() ) ) ) )
