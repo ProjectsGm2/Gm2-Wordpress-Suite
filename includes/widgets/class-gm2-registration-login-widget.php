@@ -359,16 +359,19 @@ class GM2_Registration_Login_Widget extends \Elementor\Widget_Base {
     protected function render() {
         $in_edit_mode = false;
         if ( class_exists( '\\Elementor\\Plugin' ) ) {
-            $plugin = \Elementor\Plugin::$instance;
-            if ( $plugin ) {
-                if ( isset( $plugin->editor ) && method_exists( $plugin->editor, 'is_edit_mode' )
-                    && $plugin->editor->is_edit_mode() ) {
+            $elementor = \Elementor\Plugin::instance();
+            if ( $elementor ) {
+                if ( isset( $elementor->editor ) && method_exists( $elementor->editor, 'is_edit_mode' )
+                    && $elementor->editor->is_edit_mode() ) {
                     $in_edit_mode = true;
-                } elseif ( isset( $plugin->preview ) && method_exists( $plugin->preview, 'is_preview_mode' )
-                    && $plugin->preview->is_preview_mode() ) {
+                } elseif ( isset( $elementor->preview ) && method_exists( $elementor->preview, 'is_preview_mode' )
+                    && $elementor->preview->is_preview_mode() ) {
                     $in_edit_mode = true;
                 }
             }
+        }
+        if ( ! $in_edit_mode && isset( $_GET['elementor-preview'] ) ) {
+            $in_edit_mode = true;
         }
 
         if ( is_user_logged_in() && ! $in_edit_mode ) {
