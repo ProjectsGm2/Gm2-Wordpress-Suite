@@ -394,10 +394,14 @@ class GM2_Registration_Login_Widget extends \Elementor\Widget_Base {
         }
         if ( $settings['show_register_form'] === 'yes' ) {
             echo '<div class="gm2-register-form" style="display:none">';
-            if ( function_exists( 'woocommerce_register_form' ) ) {
-                \woocommerce_register_form();
+            if ( did_action( 'init' ) && class_exists( 'WooCommerce' ) ) {
+                if ( function_exists( 'woocommerce_register_form' ) ) {
+                    \woocommerce_register_form();
+                } else {
+                    do_action( 'woocommerce_register_form' );
+                }
             } else {
-                do_action( 'woocommerce_register_form' );
+                echo '<p class="gm2-woocommerce-placeholder">' . esc_html__( 'WooCommerce registration form will appear here', 'gm2-wordpress-suite' ) . '</p>';
             }
             echo '</div>';
         }
