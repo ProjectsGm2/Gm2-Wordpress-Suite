@@ -108,6 +108,10 @@ function gm2_activate_plugin() {
         wp_schedule_event(time(), 'weekly', 'gm2_pagespeed_check');
     }
 
+    if (!wp_next_scheduled('gm2_analytics_purge')) {
+        wp_schedule_event(time(), 'daily', 'gm2_analytics_purge');
+    }
+
     gm2_initialize_content_rules();
     gm2_initialize_guideline_rules();
     gm2_maybe_migrate_content_rules();
@@ -123,6 +127,7 @@ function gm2_activate_plugin() {
     add_option('gm2_enable_chatgpt', '1');
     add_option('gm2_enable_analytics', '1');
     add_option('gm2_enable_chatgpt_logging', '0');
+    add_option('gm2_analytics_retention_days', 30);
     add_option('gm2_sitemap_path', ABSPATH . 'sitemap.xml');
     add_option('gm2_sitemap_max_urls', 1000);
     add_option('gm2_enable_abandoned_carts', '1');
@@ -166,6 +171,11 @@ function gm2_deactivate_plugin() {
         wp_unschedule_event($ts, 'gm2_pagespeed_check');
     }
 
+    $ts = wp_next_scheduled('gm2_analytics_purge');
+    if ($ts) {
+        wp_unschedule_event($ts, 'gm2_analytics_purge');
+    }
+
     Gm2_Abandoned_Carts::clear_scheduled_event();
 }
 register_deactivation_hook(__FILE__, 'gm2_deactivate_plugin');
@@ -180,6 +190,21 @@ function gm2_maybe_run_setup_wizard() {
     }
 }
 add_action('admin_init', 'gm2_maybe_run_setup_wizard');
+
+function gm2_purge_analytics_logs() {
+    global $wpdb;
+    $days = absint(get_option('gm2_analytics_retention_days', 30));
+    if ($days > 0) {
+        $table = $wpdb->prefix . 'gm2_analytics_log';
+        $wpdb->query(
+            $wpdb->prepare(
+                "DELETE FROM $table WHERE `timestamp` < (NOW() - INTERVAL %d DAY)",
+                $days
+            )
+        );
+    }
+}
+add_action('gm2_analytics_purge', 'gm2_purge_analytics_logs');
 
 function gm2_initialize_content_rules() {
     $existing = get_option('gm2_content_rules', null);
