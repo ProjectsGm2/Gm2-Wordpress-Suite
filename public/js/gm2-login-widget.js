@@ -34,17 +34,15 @@ jQuery(window).on('elementor/frontend/init', function() {
   elementorFrontend.hooks.addAction(
     'frontend/element_ready/global',
     function($scope) {
-      var $form = $scope.find('form.register');
-      if (!$form.length) {
+      var form = $scope[0] && $scope[0].querySelector('form.register');
+      if (!form) {
         return;
       }
-      $form.on('submit', function() {
-        var contactVal = $form.find('input[name="contact"]').val() || '';
-        var $hidden = $form.find('#gm2_hidden_email');
-        if (contactVal.indexOf('@') !== -1) {
-          $hidden.val(contactVal);
-        } else {
-          $hidden.val('');
+      form.addEventListener('submit', function() {
+        var contact = form.querySelector('#gm2_contact');
+        var emailHidden = form.querySelector('#gm2_hidden_email');
+        if (contact && emailHidden) {
+          emailHidden.value = /@/.test(contact.value) ? contact.value : '';
         }
       });
     }
