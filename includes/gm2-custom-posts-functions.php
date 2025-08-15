@@ -418,6 +418,9 @@ function gm2_render_field_group($fields, $object_id, $context_type = 'post') {
         $type  = $field['type'] ?? 'text';
         $class = gm2_get_field_type_class($type);
         echo '<div class="' . esc_attr($wrapper) . '" data-type="' . esc_attr($type) . '"';
+        if ($field['disabled']) {
+            echo ' data-disabled="1"';
+        }
         if (!$visible) {
             echo ' style="display:none;"';
         }

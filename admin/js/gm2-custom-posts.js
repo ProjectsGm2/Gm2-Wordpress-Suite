@@ -1,6 +1,7 @@
 (function($){
     function evaluate(groups){
         var result = null;
+        var disabled = false;
         $.each(groups, function(i, group){
             var groupRes = null;
             $.each(group.conditions || [], function(j, cond){
@@ -22,8 +23,22 @@
             if(groupRes === null){ groupRes = false; }
             if(result === null){ result = groupRes; }
             else{ result = group.relation === 'AND' ? (result && groupRes) : (result || groupRes); }
+            if(groupRes && group.action){
+                switch(group.action){
+                    case 'hide':
+                        result = false;
+                        break;
+                    case 'show':
+                        result = true;
+                        break;
+                    case 'disable':
+                        disabled = true;
+                        break;
+                }
+            }
         });
-        return result;
+        var visible = (result === null) ? true : !!result;
+        return { show: visible, disabled: disabled };
     }
 
     function setupConditional(){
@@ -48,7 +63,14 @@
         });
         function run(){
             $.each(items, function(i,it){
-                it.el.toggle( evaluate(it.conds) );
+                var state = evaluate(it.conds);
+                it.el.toggle(state.show);
+                it.el.find(':input').prop('disabled', state.disabled);
+                if(state.disabled){
+                    it.el.attr('data-disabled', '1');
+                }else{
+                    it.el.removeAttr('data-disabled');
+                }
             });
         }
         run();
