@@ -156,3 +156,46 @@ function gm2_register_field_group_patterns() {
     }
 }
 add_action('init', 'gm2_register_field_group_patterns');
+
+/**
+ * Generate basic Twig and Blade templates listing registered field names.
+ * Writes files to the plugin's theme-integration/ directory when enabled.
+ */
+function gm2_maybe_write_theme_integration_templates() {
+    if (get_option('gm2_enable_theme_integration', '0') !== '1') {
+        return;
+    }
+
+    $groups = get_option('gm2_field_groups', []);
+    if (!is_array($groups) || empty($groups)) {
+        return;
+    }
+
+    $dir = GM2_PLUGIN_DIR . 'theme-integration/';
+    if (!file_exists($dir)) {
+        wp_mkdir_p($dir);
+    }
+
+    foreach ($groups as $group_key => $group) {
+        $fields = $group['fields'] ?? [];
+        if (empty($fields)) {
+            continue;
+        }
+        $slug = sanitize_key($group_key);
+        $twig = $dir . $slug . '.twig';
+        $blade = $dir . $slug . '.blade.php';
+        // Build template content from field names.
+        $lines = [];
+        foreach ($fields as $field_key => $field) {
+            $lines[] = "{{ gm2_field('" . $field_key . "') }}";
+        }
+        $content = implode("\n", $lines) . "\n";
+        if (!file_exists($twig)) {
+            file_put_contents($twig, $content);
+        }
+        if (!file_exists($blade)) {
+            file_put_contents($blade, $content);
+        }
+    }
+}
+add_action('init', 'gm2_maybe_write_theme_integration_templates', 20);
