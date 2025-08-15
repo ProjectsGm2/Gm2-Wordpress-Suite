@@ -108,6 +108,13 @@ class Gm2_Custom_Posts_Admin {
         echo '<p><label>' . esc_html__( 'Type', 'gm2-wordpress-suite' ) . '<br /><select id="gm2-field-type"><option value="text">Text</option><option value="number">Number</option><option value="checkbox">Checkbox</option><option value="select">Dropdown</option><option value="radio">Radio</option></select></label></p>';
         echo '<p><label>' . esc_html__( 'Default', 'gm2-wordpress-suite' ) . '<br /><input type="text" id="gm2-field-default" class="regular-text" /></label></p>';
         echo '<p><label>' . esc_html__( 'Description', 'gm2-wordpress-suite' ) . '<br /><input type="text" id="gm2-field-description" class="regular-text" /></label></p>';
+        echo '<p><label>' . esc_html__( 'Order', 'gm2-wordpress-suite' ) . '<br /><input type="number" id="gm2-field-order" class="small-text" /></label></p>';
+        echo '<p><label>' . esc_html__( 'Container', 'gm2-wordpress-suite' ) . '<br /><select id="gm2-field-container"><option value="">' . esc_html__( 'None', 'gm2-wordpress-suite' ) . '</option><option value="tab">' . esc_html__( 'Tab', 'gm2-wordpress-suite' ) . '</option><option value="accordion">' . esc_html__( 'Accordion', 'gm2-wordpress-suite' ) . '</option></select></label></p>';
+        echo '<p><label>' . esc_html__( 'Instructions', 'gm2-wordpress-suite' ) . '<br /><textarea id="gm2-field-instructions" class="large-text" rows="3"></textarea></label></p>';
+        echo '<p><label>' . esc_html__( 'Placeholder', 'gm2-wordpress-suite' ) . '<br /><input type="text" id="gm2-field-placeholder" class="regular-text" /></label></p>';
+        echo '<p><label>' . esc_html__( 'Admin CSS Classes', 'gm2-wordpress-suite' ) . '<br /><input type="text" id="gm2-field-class" class="regular-text" /></label></p>';
+        echo '<h3>' . esc_html__( 'Location Rules', 'gm2-wordpress-suite' ) . '</h3>';
+        echo '<div id="gm2-field-location" class="gm2-conditions"><div class="gm2-condition-groups"></div><p><button type="button" class="button gm2-add-condition-group">' . esc_html__( 'Add Location Group', 'gm2-wordpress-suite' ) . '</button></p></div>';
         echo '<h3>' . esc_html__( 'Display Conditions', 'gm2-wordpress-suite' ) . '</h3>';
         echo '<div id="gm2-field-conditions" class="gm2-conditions"><div class="gm2-condition-groups"></div><p><button type="button" class="button gm2-add-condition-group">' . esc_html__( 'Add Condition Group', 'gm2-wordpress-suite' ) . '</button></p></div>';
         echo '<p><button type="button" class="button button-primary" id="gm2-field-save">' . esc_html__( 'Save', 'gm2-wordpress-suite' ) . '</button> <button type="button" class="button" id="gm2-field-cancel">' . esc_html__( 'Cancel', 'gm2-wordpress-suite' ) . '</button></p>';
@@ -450,14 +457,22 @@ class Gm2_Custom_Posts_Admin {
             if (!$slug) {
                 continue;
             }
-            $type = in_array($field['type'] ?? 'text', [ 'text', 'number', 'checkbox', 'select', 'radio' ], true) ? $field['type'] : 'text';
-            $def  = sanitize_text_field($field['default'] ?? '');
+            $type  = in_array($field['type'] ?? 'text', [ 'text', 'number', 'checkbox', 'select', 'radio' ], true) ? $field['type'] : 'text';
+            $def   = sanitize_text_field($field['default'] ?? '');
+            $order = isset($field['order']) ? (int) $field['order'] : 0;
+            $container = in_array($field['container'] ?? '', [ 'tab', 'accordion' ], true) ? $field['container'] : '';
             $sanitized = [
-                'label'       => sanitize_text_field($field['label'] ?? ''),
-                'type'        => $type,
-                'default'     => $def,
-                'description' => sanitize_text_field($field['description'] ?? ''),
-                'conditions'  => $this->sanitize_conditions($field['conditions'] ?? []),
+                'label'        => sanitize_text_field($field['label'] ?? ''),
+                'type'         => $type,
+                'default'      => $def,
+                'description'  => sanitize_text_field($field['description'] ?? ''),
+                'order'        => $order,
+                'container'    => $container,
+                'instructions' => sanitize_textarea_field($field['instructions'] ?? ''),
+                'placeholder'  => sanitize_text_field($field['placeholder'] ?? ''),
+                'class'        => sanitize_html_class($field['class'] ?? ''),
+                'location'     => $this->sanitize_location($field['location'] ?? []),
+                'conditions'   => $this->sanitize_conditions($field['conditions'] ?? []),
             ];
             if (!empty($field['options']) && is_array($field['options'])) {
                 $opts = [];
@@ -578,6 +593,38 @@ class Gm2_Custom_Posts_Admin {
         return $out;
     }
 
+    private function sanitize_location($groups) {
+        $out = [];
+        if (!is_array($groups)) {
+            return $out;
+        }
+        foreach ($groups as $group) {
+            if (!is_array($group)) {
+                continue;
+            }
+            $g_rel = in_array($group['relation'] ?? 'AND', [ 'AND', 'OR' ], true) ? $group['relation'] : 'AND';
+            $rules = [];
+            if (!empty($group['rules']) && is_array($group['rules'])) {
+                foreach ($group['rules'] as $rule) {
+                    if (!is_array($rule)) {
+                        continue;
+                    }
+                    $param = sanitize_key($rule['param'] ?? '');
+                    $op    = in_array($rule['operator'] ?? '==', [ '==', '!=' ], true) ? $rule['operator'] : '==';
+                    $val   = sanitize_text_field($rule['value'] ?? '');
+                    if ($param === '') {
+                        continue;
+                    }
+                    $rules[] = [ 'param' => $param, 'operator' => $op, 'value' => $val ];
+                }
+            }
+            if ($rules) {
+                $out[] = [ 'relation' => $g_rel, 'rules' => $rules ];
+            }
+        }
+        return $out;
+    }
+
     private function sanitize_conditions($groups) {
         $out = [];
         if (!is_array($groups)) {
@@ -618,6 +665,9 @@ class Gm2_Custom_Posts_Admin {
 
     public function render_meta_box($post, $fields, $slug) {
         wp_nonce_field('gm2_save_custom_fields', 'gm2_custom_fields_nonce');
+        uasort($fields, function ($a, $b) {
+            return ($a['order'] ?? 0) <=> ($b['order'] ?? 0);
+        });
         foreach ($fields as $key => $field) {
             $type   = $field['type'] ?? 'text';
             $label  = $field['label'] ?? $key;
@@ -625,11 +675,18 @@ class Gm2_Custom_Posts_Admin {
             if ($value === '' && isset($field['default'])) {
                 $value = $field['default'];
             }
-            $cond   = $field['conditional'] ?? [];
-            $conds  = $field['conditions'] ?? [];
+            $cond    = $field['conditional'] ?? [];
+            $conds   = $field['conditions'] ?? [];
             $options = $field['options'] ?? [];
             $visible = gm2_evaluate_conditions($field, $post->ID);
-            echo '<div class="gm2-field"';
+            $classes = 'gm2-field';
+            if (!empty($field['class'])) {
+                $classes .= ' ' . esc_attr($field['class']);
+            }
+            if (!empty($field['container'])) {
+                $classes .= ' gm2-container-' . esc_attr($field['container']);
+            }
+            echo '<div class="' . $classes . '"';
             if (!empty($conds)) {
                 echo ' data-conditions="' . esc_attr(wp_json_encode($conds)) . '"';
             } elseif (!empty($cond['field']) && isset($cond['value'])) {
@@ -642,7 +699,7 @@ class Gm2_Custom_Posts_Admin {
             echo '<p><label for="' . esc_attr($key) . '">' . esc_html($label) . '</label><br />';
             switch ($type) {
                 case 'number':
-                    echo '<input type="number" id="' . esc_attr($key) . '" name="' . esc_attr($key) . '" value="' . esc_attr($value) . '" class="regular-text" />';
+                    echo '<input type="number" id="' . esc_attr($key) . '" name="' . esc_attr($key) . '" value="' . esc_attr($value) . '" placeholder="' . esc_attr($field['placeholder'] ?? '') . '" class="regular-text" />';
                     break;
                 case 'checkbox':
                     echo '<input type="checkbox" id="' . esc_attr($key) . '" name="' . esc_attr($key) . '" value="1"' . checked($value, '1', false) . ' />';
@@ -660,11 +717,14 @@ class Gm2_Custom_Posts_Admin {
                     }
                     break;
                 default:
-                    echo '<input type="text" id="' . esc_attr($key) . '" name="' . esc_attr($key) . '" value="' . esc_attr($value) . '" class="regular-text" />';
+                    echo '<input type="text" id="' . esc_attr($key) . '" name="' . esc_attr($key) . '" value="' . esc_attr($value) . '" placeholder="' . esc_attr($field['placeholder'] ?? '') . '" class="regular-text" />';
                     break;
             }
             if (!empty($field['description'])) {
                 echo '<br /><span class="description">' . esc_html($field['description']) . '</span>';
+            }
+            if (!empty($field['instructions'])) {
+                echo '<br /><span class="description">' . esc_html($field['instructions']) . '</span>';
             }
             echo '</p></div>';
         }
@@ -763,12 +823,18 @@ class Gm2_Custom_Posts_Admin {
             $fields = [];
             foreach ($post['fields'] ?? [] as $f_slug => $f) {
                 $fields[] = [
-                    'label'       => $f['label'] ?? '',
-                    'slug'        => $f_slug,
-                    'type'        => $f['type'] ?? 'text',
-                    'default'     => $f['default'] ?? '',
-                    'description' => $f['description'] ?? '',
-                    'conditions'  => $f['conditions'] ?? [],
+                    'label'        => $f['label'] ?? '',
+                    'slug'         => $f_slug,
+                    'type'         => $f['type'] ?? 'text',
+                    'default'      => $f['default'] ?? '',
+                    'description'  => $f['description'] ?? '',
+                    'order'        => $f['order'] ?? 0,
+                    'container'    => $f['container'] ?? '',
+                    'instructions' => $f['instructions'] ?? '',
+                    'placeholder'  => $f['placeholder'] ?? '',
+                    'class'        => $f['class'] ?? '',
+                    'location'     => $f['location'] ?? [],
+                    'conditions'   => $f['conditions'] ?? [],
                 ];
             }
             $args = [];
