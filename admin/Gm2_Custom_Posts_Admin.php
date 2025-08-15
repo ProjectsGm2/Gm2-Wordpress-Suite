@@ -19,6 +19,8 @@ class Gm2_Custom_Posts_Admin {
         add_action('restrict_manage_posts', [ $this, 'restrict_manage_posts' ]);
         add_action('pre_get_posts', [ $this, 'pre_get_posts' ]);
         add_action('admin_init', [ $this, 'add_list_table_hooks' ]);
+        add_action('bulk_edit_custom_box', [ $this, 'inline_edit_fields' ], 10, 2);
+        add_action('quick_edit_custom_box', [ $this, 'inline_edit_fields' ], 10, 2);
     }
 
     private function get_config() {
@@ -825,8 +827,50 @@ class Gm2_Custom_Posts_Admin {
         }
     }
 
+    public function inline_edit_fields($column_name, $post_type) {
+        if ($column_name !== 'cb') {
+            return;
+        }
+        $config = $this->get_config();
+        if (empty($config['post_types'][$post_type]['fields'])) {
+            return;
+        }
+        wp_nonce_field('gm2_save_custom_fields', 'gm2_custom_fields_nonce');
+        foreach ($config['post_types'][$post_type]['fields'] as $key => $field) {
+            $type   = $field['type'] ?? 'text';
+            $label  = $field['label'] ?? $key;
+            $options = $field['options'] ?? [];
+            echo '<div class="gm2-inline-field">';
+            echo '<label><span class="title">' . esc_html($label) . '</span> ';
+            switch ($type) {
+                case 'number':
+                    echo '<input type="number" name="' . esc_attr($key) . '" />';
+                    break;
+                case 'checkbox':
+                    echo '<input type="checkbox" name="' . esc_attr($key) . '" value="1" />';
+                    break;
+                case 'select':
+                    echo '<select name="' . esc_attr($key) . '">';
+                    foreach ($options as $opt_val => $opt_label) {
+                        echo '<option value="' . esc_attr($opt_val) . '">' . esc_html($opt_label) . '</option>';
+                    }
+                    echo '</select>';
+                    break;
+                case 'radio':
+                    foreach ($options as $opt_val => $opt_label) {
+                        echo '<label><input type="radio" name="' . esc_attr($key) . '" value="' . esc_attr($opt_val) . '" /> ' . esc_html($opt_label) . '</label> ';
+                    }
+                    break;
+                default:
+                    echo '<input type="text" name="' . esc_attr($key) . '" />';
+                    break;
+            }
+            echo '</label></div>';
+        }
+    }
+
     public function save_meta_boxes($post_id) {
-        if (!isset($_POST['gm2_custom_fields_nonce']) || !wp_verify_nonce($_POST['gm2_custom_fields_nonce'], 'gm2_save_custom_fields')) {
+        if (!isset($_REQUEST['gm2_custom_fields_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_REQUEST['gm2_custom_fields_nonce'])), 'gm2_save_custom_fields')) {
             return;
         }
         if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
@@ -853,17 +897,17 @@ class Gm2_Custom_Posts_Admin {
             $type    = $field['type'] ?? 'text';
             $options = $field['options'] ?? [];
             if ($type === 'checkbox') {
-                $value = isset($_POST[$key]) ? '1' : '0';
+                $value = isset($_REQUEST[$key]) ? '1' : '0';
             } elseif ($type === 'number') {
-                if (isset($_POST[$key])) {
-                    $value = sanitize_text_field(wp_unslash($_POST[$key]));
+                if (isset($_REQUEST[$key])) {
+                    $value = sanitize_text_field(wp_unslash($_REQUEST[$key]));
                     $value = ($value === '') ? '' : (string) (0 + $value);
                 } else {
                     $value = null;
                 }
             } elseif (in_array($type, [ 'select', 'radio' ], true)) {
-                if (isset($_POST[$key])) {
-                    $value = sanitize_text_field(wp_unslash($_POST[$key]));
+                if (isset($_REQUEST[$key])) {
+                    $value = sanitize_text_field(wp_unslash($_REQUEST[$key]));
                     if (!empty($options) && !array_key_exists($value, $options)) {
                         $value = null;
                     }
@@ -871,8 +915,8 @@ class Gm2_Custom_Posts_Admin {
                     $value = null;
                 }
             } else {
-                if (isset($_POST[$key])) {
-                    $value = sanitize_text_field(wp_unslash($_POST[$key]));
+                if (isset($_REQUEST[$key])) {
+                    $value = sanitize_text_field(wp_unslash($_REQUEST[$key]));
                 } else {
                     $value = null;
                 }

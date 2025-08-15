@@ -51,6 +51,7 @@ class CustomPostsFieldsTest extends WP_UnitTestCase {
             unregister_post_type('book');
         }
         $_POST = [];
+        $_REQUEST = [];
         wp_set_current_user(0);
     }
 
@@ -193,5 +194,34 @@ class CustomPostsFieldsTest extends WP_UnitTestCase {
         unset($_REQUEST['trig']);
         $this->assertStringContainsString('data-disabled="1"', $html);
         $this->assertMatchesRegularExpression('/<input[^>]*name="locked"[^>]*disabled/', $html);
+    }
+
+    public function test_inline_edit_fields_render_inputs() {
+        $admin = new Gm2_Custom_Posts_Admin();
+        ob_start();
+        $admin->inline_edit_fields('cb', 'book');
+        $html = ob_get_clean();
+        $this->assertStringContainsString('name="price"', $html);
+        $this->assertStringContainsString('name="show_extra"', $html);
+        $this->assertStringContainsString('gm2_custom_fields_nonce', $html);
+    }
+
+    public function test_save_meta_boxes_uses_request_values() {
+        $admin = new Gm2_Custom_Posts_Admin();
+        $post_id = self::factory()->post->create([
+            'post_type' => 'book',
+            'post_status' => 'publish',
+        ]);
+
+        $_REQUEST = [
+            'gm2_custom_fields_nonce' => wp_create_nonce('gm2_save_custom_fields'),
+            'price' => '30',
+            'show_extra' => '1',
+        ];
+
+        $admin->save_meta_boxes($post_id);
+
+        $this->assertSame('30', get_post_meta($post_id, 'price', true));
+        $this->assertSame('1', get_post_meta($post_id, 'show_extra', true));
     }
 }
