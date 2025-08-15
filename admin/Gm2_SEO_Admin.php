@@ -328,8 +328,8 @@ class Gm2_SEO_Admin {
 
     public function add_settings_pages() {
         $hook = add_menu_page(
-            esc_html__( 'SEO', 'gm2-wordpress-suite' ),
-            esc_html__( 'SEO', 'gm2-wordpress-suite' ),
+            esc_html__( 'Gm2 SEO', 'gm2-wordpress-suite' ),
+            esc_html__( 'Gm2 SEO', 'gm2-wordpress-suite' ),
             'manage_options',
             'gm2-seo',
             [$this, 'display_dashboard']

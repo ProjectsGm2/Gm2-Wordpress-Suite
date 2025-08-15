@@ -422,8 +422,8 @@ class Gm2_Admin {
 
         if ($this->chatgpt_enabled) {
             add_menu_page(
-                esc_html__( 'AI', 'gm2-wordpress-suite' ),
-                esc_html__( 'AI', 'gm2-wordpress-suite' ),
+                esc_html__( 'Gm2 Ai', 'gm2-wordpress-suite' ),
+                esc_html__( 'Gm2 Ai', 'gm2-wordpress-suite' ),
                 'manage_options',
                 'gm2-ai',
                 [ $this, 'display_chatgpt_page' ],
