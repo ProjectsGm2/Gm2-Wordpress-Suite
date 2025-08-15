@@ -86,6 +86,15 @@ class Gm2_Custom_Posts_Admin {
             'gm2_query_builder',
             [ $this, 'display_query_builder' ]
         );
+
+        add_submenu_page(
+            'gm2-custom-posts',
+            esc_html__( 'Workflows', 'gm2-wordpress-suite' ),
+            esc_html__( 'Workflows', 'gm2-wordpress-suite' ),
+            $cap,
+            'gm2_workflows',
+            [ $this, 'display_workflows_page' ]
+        );
     }
 
     public function display_cpt_wizard() {
@@ -280,6 +289,111 @@ class Gm2_Custom_Posts_Admin {
             echo '<li><code>' . esc_html($id) . '</code> - <code>[gm2_query id="' . esc_html($id) . '"]</code></li>';
         }
         echo '</ul>';
+        echo '</div>';
+    }
+
+    public function display_workflows_page() {
+        if (!$this->can_manage()) {
+            wp_die(esc_html__( 'Permission denied', 'gm2-wordpress-suite' ));
+        }
+
+        $workflows = get_option('gm2_workflows', []);
+        $statuses  = get_option('gm2_workflow_statuses', []);
+
+        if (isset($_POST['gm2_add_workflow']) && check_admin_referer('gm2_save_workflow', 'gm2_workflow_nonce')) {
+            $name   = sanitize_text_field($_POST['wf_name'] ?? '');
+            $trigger = sanitize_key($_POST['wf_trigger'] ?? '');
+            $type    = sanitize_key($_POST['wf_action_type'] ?? '');
+            $data    = json_decode(wp_unslash($_POST['wf_action_data'] ?? ''), true);
+            if (!is_array($data)) {
+                $data = [];
+            }
+            $action = array_merge(['type' => $type], $data);
+            if ($name && $trigger && $type) {
+                $workflows[] = [
+                    'name'    => $name,
+                    'trigger' => $trigger,
+                    'actions' => [ $action ],
+                ];
+                update_option('gm2_workflows', $workflows);
+                \Gm2\Gm2_Workflow_Manager::register_trigger($trigger, [ $action ]);
+                echo '<div class="notice notice-success"><p>' . esc_html__( 'Workflow saved.', 'gm2-wordpress-suite' ) . '</p></div>';
+            }
+        }
+
+        if (isset($_POST['gm2_add_status']) && check_admin_referer('gm2_save_status', 'gm2_status_nonce')) {
+            $slug  = sanitize_key($_POST['status_slug'] ?? '');
+            $label = sanitize_text_field($_POST['status_label'] ?? '');
+            if ($slug && $label) {
+                $statuses[$slug] = $label;
+                update_option('gm2_workflow_statuses', $statuses);
+                \Gm2\Gm2_Workflow_Manager::register_statuses([ $slug => $label ]);
+                echo '<div class="notice notice-success"><p>' . esc_html__( 'Status added.', 'gm2-wordpress-suite' ) . '</p></div>';
+            }
+        }
+
+        if (isset($_POST['gm2_schedule_transition']) && check_admin_referer('gm2_save_transition', 'gm2_transition_nonce')) {
+            $post_id = absint($_POST['transition_post'] ?? 0);
+            $status  = sanitize_key($_POST['transition_status'] ?? '');
+            $time    = sanitize_text_field($_POST['transition_time'] ?? '');
+            $ts      = strtotime($time);
+            if ($post_id && $status && $ts) {
+                \Gm2\Gm2_Workflow_Manager::schedule_transition($post_id, $status, $ts);
+                echo '<div class="notice notice-success"><p>' . esc_html__( 'Transition scheduled.', 'gm2-wordpress-suite' ) . '</p></div>';
+            }
+        }
+
+        echo '<div class="wrap">';
+        echo '<h1>' . esc_html__( 'Workflows', 'gm2-wordpress-suite' ) . '</h1>';
+
+        echo '<h2>' . esc_html__( 'Existing Workflows', 'gm2-wordpress-suite' ) . '</h2>';
+        if (!empty($workflows)) {
+            echo '<table class="widefat"><thead><tr><th>' . esc_html__( 'Name', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'Trigger', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'Actions', 'gm2-wordpress-suite' ) . '</th></tr></thead><tbody>';
+            foreach ($workflows as $wf) {
+                $actions = array_map(function($a){ return esc_html($a['type']); }, $wf['actions'] ?? []);
+                echo '<tr><td>' . esc_html($wf['name']) . '</td><td>' . esc_html($wf['trigger']) . '</td><td>' . implode(', ', $actions) . '</td></tr>';
+            }
+            echo '</tbody></table>';
+        } else {
+            echo '<p>' . esc_html__( 'No workflows defined.', 'gm2-wordpress-suite' ) . '</p>';
+        }
+
+        echo '<h2>' . esc_html__( 'Add Workflow', 'gm2-wordpress-suite' ) . '</h2>';
+        echo '<form method="post">';
+        wp_nonce_field('gm2_save_workflow', 'gm2_workflow_nonce');
+        echo '<p><label>' . esc_html__( 'Name', 'gm2-wordpress-suite' ) . '<br /><input type="text" name="wf_name" class="regular-text" /></label></p>';
+        echo '<p><label>' . esc_html__( 'Trigger', 'gm2-wordpress-suite' ) . '<br /><select name="wf_trigger"><option value="save_post">' . esc_html__( 'Save', 'gm2-wordpress-suite' ) . '</option><option value="status_change">' . esc_html__( 'Status Change', 'gm2-wordpress-suite' ) . '</option><option value="term_assignment">' . esc_html__( 'Term Assignment', 'gm2-wordpress-suite' ) . '</option><option value="field_change">' . esc_html__( 'Field Change', 'gm2-wordpress-suite' ) . '</option></select></label></p>';
+        echo '<p><label>' . esc_html__( 'Action Type', 'gm2-wordpress-suite' ) . '<br /><select name="wf_action_type"><option value="email">' . esc_html__( 'Email', 'gm2-wordpress-suite' ) . '</option><option value="webhook">' . esc_html__( 'Webhook', 'gm2-wordpress-suite' ) . '</option><option value="schedule">' . esc_html__( 'Scheduler', 'gm2-wordpress-suite' ) . '</option></select></label></p>';
+        echo '<p><label>' . esc_html__( 'Action Data (JSON)', 'gm2-wordpress-suite' ) . '<br /><textarea name="wf_action_data" class="large-text" rows="3"></textarea></label></p>';
+        echo '<p><button type="submit" class="button button-primary" name="gm2_add_workflow" value="1">' . esc_html__( 'Save Workflow', 'gm2-wordpress-suite' ) . '</button></p>';
+        echo '</form>';
+
+        echo '<h2>' . esc_html__( 'Custom Statuses', 'gm2-wordpress-suite' ) . '</h2>';
+        if (!empty($statuses)) {
+            echo '<table class="widefat"><thead><tr><th>' . esc_html__( 'Slug', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'Label', 'gm2-wordpress-suite' ) . '</th></tr></thead><tbody>';
+            foreach ($statuses as $slug => $label) {
+                echo '<tr><td>' . esc_html($slug) . '</td><td>' . esc_html($label) . '</td></tr>';
+            }
+            echo '</tbody></table>';
+        } else {
+            echo '<p>' . esc_html__( 'No custom statuses defined.', 'gm2-wordpress-suite' ) . '</p>';
+        }
+        echo '<form method="post">';
+        wp_nonce_field('gm2_save_status', 'gm2_status_nonce');
+        echo '<p><label>' . esc_html__( 'Status Slug', 'gm2-wordpress-suite' ) . '<br /><input type="text" name="status_slug" class="regular-text" /></label></p>';
+        echo '<p><label>' . esc_html__( 'Label', 'gm2-wordpress-suite' ) . '<br /><input type="text" name="status_label" class="regular-text" /></label></p>';
+        echo '<p><button type="submit" class="button" name="gm2_add_status" value="1">' . esc_html__( 'Add Status', 'gm2-wordpress-suite' ) . '</button></p>';
+        echo '</form>';
+
+        echo '<h2>' . esc_html__( 'Schedule Transition', 'gm2-wordpress-suite' ) . '</h2>';
+        echo '<form method="post">';
+        wp_nonce_field('gm2_save_transition', 'gm2_transition_nonce');
+        echo '<p><label>' . esc_html__( 'Post ID', 'gm2-wordpress-suite' ) . '<br /><input type="number" name="transition_post" class="regular-text" /></label></p>';
+        echo '<p><label>' . esc_html__( 'Status', 'gm2-wordpress-suite' ) . '<br /><input type="text" name="transition_status" class="regular-text" /></label></p>';
+        echo '<p><label>' . esc_html__( 'Date/Time', 'gm2-wordpress-suite' ) . '<br /><input type="datetime-local" name="transition_time" /></label></p>';
+        echo '<p><button type="submit" class="button" name="gm2_schedule_transition" value="1">' . esc_html__( 'Schedule', 'gm2-wordpress-suite' ) . '</button></p>';
+        echo '</form>';
+
         echo '</div>';
     }
 

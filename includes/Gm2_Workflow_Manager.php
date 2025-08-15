@@ -21,6 +21,22 @@ class Gm2_Workflow_Manager {
         add_action('transition_post_status', [__CLASS__, 'on_status_change'], 10, 3);
         add_action('set_object_terms', [__CLASS__, 'on_term_assignment'], 10, 6);
         add_action('updated_post_meta', [__CLASS__, 'on_meta_update'], 10, 4);
+
+        $statuses = get_option('gm2_workflow_statuses', []);
+        if (is_array($statuses) && $statuses) {
+            self::register_statuses($statuses);
+        }
+
+        $workflows = get_option('gm2_workflows', []);
+        if (is_array($workflows)) {
+            foreach ($workflows as $workflow) {
+                $trigger = $workflow['trigger'] ?? '';
+                $actions = $workflow['actions'] ?? [];
+                if ($trigger && $actions) {
+                    self::register_trigger($trigger, $actions);
+                }
+            }
+        }
     }
 
     /**
