@@ -8,13 +8,16 @@ require_once __DIR__ . '/fields/loader.php';
 /**
  * Evaluate condition groups for a field or argument.
  *
+ * Supports show/hide/disable actions. When no conditions are supplied the
+ * function defaults to showing the field.
+ *
  * @param array $item    Field or arg array possibly containing `conditions` or `conditional` keys.
  * @param int   $post_id Post ID context for meta lookup.
- * @return bool True if conditions pass or none are defined.
+ * @return array { show: bool, disabled: bool }
  */
 function gm2_evaluate_conditions($item, $post_id = 0) {
     if (!is_array($item)) {
-        return true;
+        return [ 'show' => true, 'disabled' => false ];
     }
 
     // Build groups from modern `conditions` or legacy `conditional`.
@@ -38,10 +41,11 @@ function gm2_evaluate_conditions($item, $post_id = 0) {
     }
 
     if (empty($groups)) {
-        return true;
+        return [ 'show' => true, 'disabled' => false ];
     }
 
-    $result = null;
+    $result   = null;
+    $disabled = false;
     foreach ($groups as $group) {
         $group_res = null;
         foreach (($group['conditions'] ?? []) as $cond) {
@@ -58,9 +62,9 @@ function gm2_evaluate_conditions($item, $post_id = 0) {
             } else {
                 $current = ($post_id) ? get_post_meta($post_id, $target, true) : '';
             }
-            $current = (string) $current;
+            $current  = (string) $current;
             $expected = (string) ($cond['value'] ?? '');
-            $ok = false;
+            $ok       = false;
             switch ($cond['operator'] ?? '=') {
                 case '!=':
                     $ok = $current !== $expected;
@@ -81,7 +85,7 @@ function gm2_evaluate_conditions($item, $post_id = 0) {
             if ($group_res === null) {
                 $group_res = $ok;
             } else {
-                $rel = strtoupper($cond['relation'] ?? 'AND');
+                $rel       = strtoupper($cond['relation'] ?? 'AND');
                 $group_res = ($rel === 'OR') ? ($group_res || $ok) : ($group_res && $ok);
             }
         }
@@ -91,12 +95,172 @@ function gm2_evaluate_conditions($item, $post_id = 0) {
         if ($result === null) {
             $result = $group_res;
         } else {
-            $rel = strtoupper($group['relation'] ?? 'AND');
+            $rel    = strtoupper($group['relation'] ?? 'AND');
             $result = ($rel === 'OR') ? ($result || $group_res) : ($result && $group_res);
+        }
+
+        if ($group_res && !empty($group['action'])) {
+            switch ($group['action']) {
+                case 'hide':
+                    $result = false;
+                    break;
+                case 'show':
+                    $result = true;
+                    break;
+                case 'disable':
+                    $disabled = true;
+                    break;
+            }
         }
     }
 
-    return ($result === null) ? true : $result;
+    $visible = ($result === null) ? true : (bool) $result;
+
+    return [ 'show' => $visible, 'disabled' => $disabled ];
+}
+
+/**
+ * Resolve the default value for a field, supporting static, callback and
+ * templated defaults.
+ */
+function gm2_resolve_default($field, $object_id = 0, $context_type = 'post') {
+    // Static default.
+    $default = $field['default'] ?? '';
+
+    // Array syntax for defaults allowing value/callback/template.
+    if (is_array($default)) {
+        if (isset($default['value'])) {
+            $default = $default['value'];
+        }
+        if (isset($default['callback']) && is_callable($default['callback'])) {
+            return call_user_func($default['callback'], $object_id, $field, $context_type);
+        }
+        if (isset($default['template'])) {
+            $field['default_template'] = $default['template'];
+        }
+    }
+
+    // Callback default.
+    if (isset($field['default_callback']) && is_callable($field['default_callback'])) {
+        return call_user_func($field['default_callback'], $object_id, $field, $context_type);
+    }
+
+    // Template default.
+    if (!empty($field['default_template'])) {
+        $template = $field['default_template'];
+        $replacements = [
+            '{post_id}' => $object_id,
+        ];
+        if ($context_type === 'post' && $object_id) {
+            $post = get_post($object_id);
+            if ($post) {
+                $replacements['{post_title}'] = $post->post_title;
+                $replacements['{post_slug}']  = $post->post_name;
+            }
+        }
+        return strtr($template, $replacements);
+    }
+
+    return $default;
+}
+
+/**
+ * Validate a value against field rules.
+ *
+ * @param string $key         Field key/meta key.
+ * @param array  $field       Field definition.
+ * @param mixed  $value       Value to validate.
+ * @param int    $object_id   Context object ID.
+ * @param string $context_type Context type (post, user, etc.).
+ * @return true|WP_Error True when valid.
+ */
+function gm2_validate_field($key, $field, $value, $object_id = 0, $context_type = 'post') {
+    $messages = $field['messages'] ?? [];
+
+    if (!empty($field['validate_callback']) && is_callable($field['validate_callback'])) {
+        $res = call_user_func($field['validate_callback'], $value, $object_id, $field, $context_type);
+        if ($res !== true) {
+            $msg = is_string($res) ? $res : ($messages['callback'] ?? __('Invalid value.', 'gm2-wordpress-suite'));
+            return new WP_Error('gm2_callback', $msg);
+        }
+    }
+
+    $is_empty = ($value === '' || $value === null || (is_array($value) && count(array_filter($value, function ($v) {
+        return $v !== '' && $v !== null;
+    })) === 0));
+
+    if (!empty($field['required']) && $is_empty) {
+        $msg = $messages['required'] ?? __('This field is required.', 'gm2-wordpress-suite');
+        return new WP_Error('gm2_required', $msg);
+    }
+
+    if ($is_empty) {
+        return true; // Nothing more to validate.
+    }
+
+    $numeric = is_numeric($value);
+    $length  = $numeric ? $value : (is_array($value) ? count($value) : strlen((string) $value));
+
+    if (isset($field['min']) && $length < $field['min']) {
+        $msg = $messages['min'] ?? sprintf(__('Minimum value is %s.', 'gm2-wordpress-suite'), $field['min']);
+        return new WP_Error('gm2_min', $msg);
+    }
+    if (isset($field['max']) && $length > $field['max']) {
+        $msg = $messages['max'] ?? sprintf(__('Maximum value is %s.', 'gm2-wordpress-suite'), $field['max']);
+        return new WP_Error('gm2_max', $msg);
+    }
+
+    if (!empty($field['regex']) && is_string($value) && !preg_match($field['regex'], $value)) {
+        $msg = $messages['regex'] ?? __('Invalid format.', 'gm2-wordpress-suite');
+        return new WP_Error('gm2_regex', $msg);
+    }
+
+    if (is_array($value)) {
+        if (isset($field['min_rows']) && count($value) < $field['min_rows']) {
+            $msg = $messages['min_rows'] ?? sprintf(__('Minimum %s rows required.', 'gm2-wordpress-suite'), $field['min_rows']);
+            return new WP_Error('gm2_min_rows', $msg);
+        }
+        if (isset($field['max_rows']) && count($value) > $field['max_rows']) {
+            $msg = $messages['max_rows'] ?? sprintf(__('Maximum %s rows allowed.', 'gm2-wordpress-suite'), $field['max_rows']);
+            return new WP_Error('gm2_max_rows', $msg);
+        }
+    }
+
+    if (!empty($field['unique']) && $context_type === 'post') {
+        $scope = $field['unique_scope'] ?? 'post_type';
+        $args  = [
+            'post_type'      => ($scope === 'post_type') ? get_post_type($object_id) : 'any',
+            'post__not_in'   => [ $object_id ],
+            'meta_query'     => [ [ 'key' => $key, 'value' => $value ] ],
+            'posts_per_page' => 1,
+            'fields'         => 'ids',
+        ];
+        $existing = get_posts($args);
+        if ($existing) {
+            $msg = $messages['unique'] ?? __('Value must be unique.', 'gm2-wordpress-suite');
+            return new WP_Error('gm2_unique', $msg);
+        }
+    }
+
+    if (($field['type'] ?? '') === 'media' && $value) {
+        if (!empty($field['allowed_types'])) {
+            $mime    = get_post_mime_type($value);
+            $allowed = array_map('strtolower', (array) $field['allowed_types']);
+            if ($mime && !in_array(strtolower($mime), $allowed, true)) {
+                $msg = $messages['file_type'] ?? __('Invalid file type.', 'gm2-wordpress-suite');
+                return new WP_Error('gm2_file_type', $msg);
+            }
+        }
+        if (!empty($field['max_size'])) {
+            $file = get_attached_file($value);
+            if ($file && filesize($file) > $field['max_size']) {
+                $msg = $messages['file_size'] ?? __('File is too large.', 'gm2-wordpress-suite');
+                return new WP_Error('gm2_file_size', $msg);
+            }
+        }
+    }
+
+    return true;
 }
 
 /**
@@ -241,7 +405,9 @@ function gm2_render_field_group($fields, $object_id, $context_type = 'post') {
         return ($a['order'] ?? 0) <=> ($b['order'] ?? 0);
     });
     foreach ($fields as $key => $field) {
-        $visible = gm2_evaluate_conditions($field, $object_id);
+        $state   = gm2_evaluate_conditions($field, $object_id);
+        $visible = $state['show'];
+        $field['disabled'] = $state['disabled'];
         $wrapper = 'gm2-field';
         if (!empty($field['class'])) {
             $wrapper .= ' ' . sanitize_html_class($field['class']);
@@ -288,8 +454,8 @@ function gm2_get_meta_value($object_id, $key, $context_type, $field, $type = 'po
         default:
             $value = get_post_meta($object_id, $key, true);
     }
-    if ($value === '' && isset($field['default'])) {
-        $value = $field['default'];
+    if ($value === '' || $value === null) {
+        $value = gm2_resolve_default($field, $object_id, $context_type);
     }
     return $value;
 }
@@ -302,12 +468,17 @@ function gm2_save_field_group($fields, $object_id, $context_type = 'post') {
         return;
     }
     foreach ($fields as $key => $field) {
-        if (!gm2_evaluate_conditions($field, $object_id)) {
+        $state = gm2_evaluate_conditions($field, $object_id);
+        if (!$state['show']) {
             continue;
         }
         $type  = $field['type'] ?? 'text';
         $class = gm2_get_field_type_class($type);
         $val   = $_POST[$key] ?? null;
+        $valid = gm2_validate_field($key, $field, $val, $object_id, $context_type);
+        if (is_wp_error($valid)) {
+            wp_die($valid->get_error_message());
+        }
         if ($class && class_exists($class)) {
             $obj = new $class($key, $field);
             $obj->save($object_id, $val, $context_type);

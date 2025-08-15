@@ -9,7 +9,8 @@ class GM2_Field_Computed extends GM2_Field {
         if ( is_callable( $cb ) ) {
             $value = call_user_func( $cb, $object_id );
         }
-        echo '<span class="gm2-computed" data-key="' . esc_attr( $this->key ) . '">' . esc_html( $value ) . '</span>';
+        $disabled = $this->args['disabled'] ?? false ? ' data-disabled="1"' : '';
+        echo '<span class="gm2-computed" data-key="' . esc_attr( $this->key ) . '"' . $disabled . '>' . esc_html( $value ) . '</span>';
     }
 
     public function save( $object_id, $value, $context_type = 'post' ) {
