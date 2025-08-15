@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-const GM2_CUSTOM_TABLES_VERSION = 1;
+const GM2_CUSTOM_TABLES_VERSION = 2;
 
 /**
  * Determine whether to use custom tables.
@@ -84,7 +84,8 @@ function gm2_custom_tables_maybe_install() {
         field_id bigint(20) unsigned NOT NULL,
         PRIMARY KEY  (id),
         KEY object_field (object_id, field_id),
-        KEY field_id (field_id)
+        KEY field_id (field_id),
+        KEY object_id (object_id)
     ) $charset_collate;";
     dbDelta( $sql );
 
@@ -101,8 +102,12 @@ function gm2_custom_tables_maybe_install() {
 function gm2_fields_create( $name, $value ) {
     global $wpdb;
     $table = gm2_get_fields_table_name();
+    $name  = sanitize_key( $name );
     $wpdb->insert( $table, [ 'name' => $name, 'value' => maybe_serialize( $value ) ], [ '%s', '%s' ] );
-    return (int) $wpdb->insert_id;
+    $id = (int) $wpdb->insert_id;
+    wp_cache_delete( "full_$id", 'gm2_fields' );
+    wp_cache_delete( "meta_$id", 'gm2_fields' );
+    return $id;
 }
 
 /**
@@ -111,13 +116,20 @@ function gm2_fields_create( $name, $value ) {
  * @param int $id Field ID.
  * @return array|null
  */
-function gm2_fields_get( $id ) {
+function gm2_fields_get( $id, $with_value = true ) {
+    $cache_key = ( $with_value ? 'full_' : 'meta_' ) . (int) $id;
+    $cached    = wp_cache_get( $cache_key, 'gm2_fields' );
+    if ( false !== $cached ) {
+        return $cached;
+    }
     global $wpdb;
-    $table = gm2_get_fields_table_name();
-    $row   = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table WHERE id = %d", $id ), ARRAY_A );
-    if ( $row && isset( $row['value'] ) ) {
+    $table   = gm2_get_fields_table_name();
+    $select  = $with_value ? '*' : 'id, name';
+    $row     = $wpdb->get_row( $wpdb->prepare( "SELECT $select FROM $table WHERE id = %d", $id ), ARRAY_A );
+    if ( $with_value && $row && isset( $row['value'] ) ) {
         $row['value'] = maybe_unserialize( $row['value'] );
     }
+    wp_cache_set( $cache_key, $row, 'gm2_fields' );
     return $row;
 }
 
@@ -134,7 +146,15 @@ function gm2_fields_update( $id, $data ) {
     if ( isset( $data['value'] ) ) {
         $data['value'] = maybe_serialize( $data['value'] );
     }
-    return false !== $wpdb->update( $table, $data, [ 'id' => $id ] );
+    if ( isset( $data['name'] ) ) {
+        $data['name'] = sanitize_key( $data['name'] );
+    }
+    $updated = false !== $wpdb->update( $table, $data, [ 'id' => $id ] );
+    if ( $updated ) {
+        wp_cache_delete( "full_$id", 'gm2_fields' );
+        wp_cache_delete( "meta_$id", 'gm2_fields' );
+    }
+    return $updated;
 }
 
 /**
@@ -145,8 +165,13 @@ function gm2_fields_update( $id, $data ) {
  */
 function gm2_fields_delete( $id ) {
     global $wpdb;
-    $table = gm2_get_fields_table_name();
-    return false !== $wpdb->delete( $table, [ 'id' => $id ] );
+    $table   = gm2_get_fields_table_name();
+    $deleted = false !== $wpdb->delete( $table, [ 'id' => $id ] );
+    if ( $deleted ) {
+        wp_cache_delete( "full_$id", 'gm2_fields' );
+        wp_cache_delete( "meta_$id", 'gm2_fields' );
+    }
+    return $deleted;
 }
 
 /**
@@ -160,6 +185,7 @@ function gm2_relations_create( $object_id, $field_id ) {
     global $wpdb;
     $table = gm2_get_relations_table_name();
     $wpdb->insert( $table, [ 'object_id' => $object_id, 'field_id' => $field_id ], [ '%d', '%d' ] );
+    wp_cache_delete( "obj_$object_id", 'gm2_relations' );
     return (int) $wpdb->insert_id;
 }
 
@@ -170,9 +196,16 @@ function gm2_relations_create( $object_id, $field_id ) {
  * @return array
  */
 function gm2_relations_get_by_object( $object_id ) {
+    $cache_key = 'obj_' . (int) $object_id;
+    $cached    = wp_cache_get( $cache_key, 'gm2_relations' );
+    if ( false !== $cached ) {
+        return $cached;
+    }
     global $wpdb;
-    $table = gm2_get_relations_table_name();
-    return $wpdb->get_results( $wpdb->prepare( "SELECT * FROM $table WHERE object_id = %d", $object_id ), ARRAY_A );
+    $table  = gm2_get_relations_table_name();
+    $result = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM $table WHERE object_id = %d", $object_id ), ARRAY_A );
+    wp_cache_set( $cache_key, $result, 'gm2_relations' );
+    return $result;
 }
 
 /**
@@ -184,8 +217,12 @@ function gm2_relations_get_by_object( $object_id ) {
  */
 function gm2_relations_delete( $object_id, $field_id ) {
     global $wpdb;
-    $table = gm2_get_relations_table_name();
-    return false !== $wpdb->delete( $table, [ 'object_id' => $object_id, 'field_id' => $field_id ], [ '%d', '%d' ] );
+    $table   = gm2_get_relations_table_name();
+    $deleted = false !== $wpdb->delete( $table, [ 'object_id' => $object_id, 'field_id' => $field_id ], [ '%d', '%d' ] );
+    if ( $deleted ) {
+        wp_cache_delete( "obj_$object_id", 'gm2_relations' );
+    }
+    return $deleted;
 }
 
 /**
@@ -198,6 +235,8 @@ function gm2_relations_delete( $object_id, $field_id ) {
 function gm2_fields_rename( $old, $new ) {
     global $wpdb;
     $table = gm2_get_fields_table_name();
+    $old = sanitize_key( $old );
+    $new = sanitize_key( $new );
     return false !== $wpdb->update( $table, [ 'name' => $new ], [ 'name' => $old ] );
 }
 

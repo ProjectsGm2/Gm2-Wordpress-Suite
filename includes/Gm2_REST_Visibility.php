@@ -69,9 +69,21 @@ class Gm2_REST_Visibility {
                     return current_user_can('manage_options');
                 },
                 'args' => [
-                    'post_types' => [ 'type' => 'object' ],
-                    'taxonomies' => [ 'type' => 'object' ],
-                    'fields'     => [ 'type' => 'object' ],
+                    'post_types' => [
+                        'type' => 'object',
+                        'sanitize_callback' => [ __CLASS__, 'sanitize_bool_map' ],
+                        'validate_callback' => [ __CLASS__, 'validate_bool_map' ],
+                    ],
+                    'taxonomies' => [
+                        'type' => 'object',
+                        'sanitize_callback' => [ __CLASS__, 'sanitize_bool_map' ],
+                        'validate_callback' => [ __CLASS__, 'validate_bool_map' ],
+                    ],
+                    'fields'     => [
+                        'type' => 'object',
+                        'sanitize_callback' => [ __CLASS__, 'sanitize_bool_map' ],
+                        'validate_callback' => [ __CLASS__, 'validate_bool_map' ],
+                    ],
                 ],
                 'schema'   => [ __CLASS__, 'get_schema' ],
             ],
@@ -91,6 +103,15 @@ class Gm2_REST_Visibility {
         update_option(self::OPTION, $data);
         self::apply_visibility();
         return rest_ensure_response($data);
+    }
+
+    public static function sanitize_bool_map($value) {
+        $value = (array) $value;
+        return array_map('rest_sanitize_boolean', $value);
+    }
+
+    public static function validate_bool_map($value) {
+        return is_array($value);
     }
 
     public static function get_schema() : array {
