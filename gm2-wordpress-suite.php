@@ -67,6 +67,11 @@ require_once GM2_PLUGIN_DIR . 'admin/class-gm2-ac-table.php';
 require_once GM2_PLUGIN_DIR . 'admin/class-gm2-bulk-ai-list-table.php';
 require_once GM2_PLUGIN_DIR . 'admin/class-gm2-bulk-ai-tax-list-table.php';
 require_once GM2_PLUGIN_DIR . 'public/Gm2_Abandoned_Carts_Public.php';
+require_once GM2_PLUGIN_DIR . 'includes/Gm2_REST_Visibility.php';
+require_once GM2_PLUGIN_DIR . 'includes/Gm2_Webhooks.php';
+
+\Gm2\Gm2_REST_Visibility::init();
+\Gm2\Gm2_Webhooks::init();
 
 function gm2_add_weekly_schedule($schedules) {
     if (!isset($schedules['weekly'])) {
