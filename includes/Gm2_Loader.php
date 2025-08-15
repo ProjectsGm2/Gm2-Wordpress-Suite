@@ -21,6 +21,11 @@ class Gm2_Loader {
         $admin = new Gm2_Admin();
         $admin->run();
 
+        if (is_multisite() && is_admin()) {
+            $network_admin = new Gm2_Network_Admin();
+            $network_admin->run();
+        }
+
         if (is_admin()) {
             $wizard = new Gm2_SEO_Wizard();
             $wizard->run();
