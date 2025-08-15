@@ -108,6 +108,8 @@ class Gm2_Custom_Posts_Admin {
         echo '<p><label>' . esc_html__( 'Type', 'gm2-wordpress-suite' ) . '<br /><select id="gm2-field-type"><option value="text">Text</option><option value="number">Number</option><option value="checkbox">Checkbox</option><option value="select">Dropdown</option><option value="radio">Radio</option></select></label></p>';
         echo '<p><label>' . esc_html__( 'Default', 'gm2-wordpress-suite' ) . '<br /><input type="text" id="gm2-field-default" class="regular-text" /></label></p>';
         echo '<p><label>' . esc_html__( 'Description', 'gm2-wordpress-suite' ) . '<br /><input type="text" id="gm2-field-description" class="regular-text" /></label></p>';
+        echo '<h3>' . esc_html__( 'Display Conditions', 'gm2-wordpress-suite' ) . '</h3>';
+        echo '<div id="gm2-field-conditions" class="gm2-conditions"><div class="gm2-condition-groups"></div><p><button type="button" class="button gm2-add-condition-group">' . esc_html__( 'Add Condition Group', 'gm2-wordpress-suite' ) . '</button></p></div>';
         echo '<p><button type="button" class="button button-primary" id="gm2-field-save">' . esc_html__( 'Save', 'gm2-wordpress-suite' ) . '</button> <button type="button" class="button" id="gm2-field-cancel">' . esc_html__( 'Cancel', 'gm2-wordpress-suite' ) . '</button></p>';
         echo '</div>';
 
@@ -115,6 +117,8 @@ class Gm2_Custom_Posts_Admin {
         echo '<input type="hidden" id="gm2-arg-index" />';
         echo '<p><label>' . esc_html__( 'Key', 'gm2-wordpress-suite' ) . '<br /><input type="text" id="gm2-arg-key" class="regular-text" /></label></p>';
         echo '<div id="gm2-arg-value-wrap"></div>';
+        echo '<h3>' . esc_html__( 'Display Conditions', 'gm2-wordpress-suite' ) . '</h3>';
+        echo '<div id="gm2-arg-conditions" class="gm2-conditions"><div class="gm2-condition-groups"></div><p><button type="button" class="button gm2-add-condition-group">' . esc_html__( 'Add Condition Group', 'gm2-wordpress-suite' ) . '</button></p></div>';
         echo '<p><button type="button" class="button button-primary" id="gm2-arg-save">' . esc_html__( 'Save', 'gm2-wordpress-suite' ) . '</button> <button type="button" class="button" id="gm2-arg-cancel">' . esc_html__( 'Cancel', 'gm2-wordpress-suite' ) . '</button></p>';
         echo '</div>';
 
@@ -152,6 +156,8 @@ class Gm2_Custom_Posts_Admin {
         echo '<input type="hidden" id="gm2-tax-arg-index" />';
         echo '<p><label>' . esc_html__( 'Key', 'gm2-wordpress-suite' ) . '<br /><input type="text" id="gm2-tax-arg-key" class="regular-text" /></label></p>';
         echo '<div id="gm2-tax-arg-value-wrap"></div>';
+        echo '<h3>' . esc_html__( 'Display Conditions', 'gm2-wordpress-suite' ) . '</h3>';
+        echo '<div id="gm2-tax-conditions" class="gm2-conditions"><div class="gm2-condition-groups"></div><p><button type="button" class="button gm2-add-condition-group">' . esc_html__( 'Add Condition Group', 'gm2-wordpress-suite' ) . '</button></p></div>';
         echo '<p><button type="button" class="button button-primary" id="gm2-tax-arg-save">' . esc_html__( 'Save', 'gm2-wordpress-suite' ) . '</button> <button type="button" class="button" id="gm2-tax-arg-cancel">' . esc_html__( 'Cancel', 'gm2-wordpress-suite' ) . '</button></p>';
         echo '</div>';
 
@@ -280,6 +286,44 @@ class Gm2_Custom_Posts_Admin {
         }
     }
 
+    private function sanitize_conditions($groups) {
+        $out = [];
+        if (!is_array($groups)) {
+            return $out;
+        }
+        foreach ($groups as $group) {
+            if (!is_array($group)) {
+                continue;
+            }
+            $g_rel = in_array($group['relation'] ?? 'AND', [ 'AND', 'OR' ], true) ? $group['relation'] : 'AND';
+            $conds = [];
+            if (!empty($group['conditions']) && is_array($group['conditions'])) {
+                foreach ($group['conditions'] as $cond) {
+                    if (!is_array($cond)) {
+                        continue;
+                    }
+                    $c_rel = in_array($cond['relation'] ?? 'AND', [ 'AND', 'OR' ], true) ? $cond['relation'] : 'AND';
+                    $target = sanitize_text_field($cond['target'] ?? '');
+                    $op = in_array($cond['operator'] ?? '=', [ '=', '!=', '>', '<', 'contains' ], true) ? $cond['operator'] : '=';
+                    $val = sanitize_text_field($cond['value'] ?? '');
+                    if ($target === '') {
+                        continue;
+                    }
+                    $conds[] = [
+                        'relation' => $c_rel,
+                        'target'   => $target,
+                        'operator' => $op,
+                        'value'    => $val,
+                    ];
+                }
+            }
+            if ($conds) {
+                $out[] = [ 'relation' => $g_rel, 'conditions' => $conds ];
+            }
+        }
+        return $out;
+    }
+
     public function render_meta_box($post, $fields, $slug) {
         wp_nonce_field('gm2_save_custom_fields', 'gm2_custom_fields_nonce');
         foreach ($fields as $key => $field) {
@@ -290,9 +334,12 @@ class Gm2_Custom_Posts_Admin {
                 $value = $field['default'];
             }
             $cond  = $field['conditional'] ?? [];
+            $conds = $field['conditions'] ?? [];
             $options = $field['options'] ?? [];
             echo '<div class="gm2-field"';
-            if (!empty($cond['field']) && isset($cond['value'])) {
+            if (!empty($conds)) {
+                echo ' data-conditions="' . esc_attr(wp_json_encode($conds)) . '"';
+            } elseif (!empty($cond['field']) && isset($cond['value'])) {
                 echo ' data-conditional-field="' . esc_attr($cond['field']) . '" data-conditional-value="' . esc_attr($cond['value']) . '"';
             }
             echo '>';
@@ -369,11 +416,19 @@ class Gm2_Custom_Posts_Admin {
         }
 
         if ($hook === 'gm2-custom-posts_page_gm2_cpt_fields') {
+            $cond_js = GM2_PLUGIN_DIR . 'admin/js/conditions.js';
+            wp_enqueue_script(
+                'gm2-conditions',
+                GM2_PLUGIN_URL . 'admin/js/conditions.js',
+                [ 'jquery' ],
+                file_exists($cond_js) ? filemtime($cond_js) : GM2_VERSION,
+                true
+            );
             $admin_js = GM2_PLUGIN_DIR . 'admin/js/gm2-custom-posts-admin.js';
             wp_enqueue_script(
                 'gm2-custom-posts-admin',
                 GM2_PLUGIN_URL . 'admin/js/gm2-custom-posts-admin.js',
-                [ 'jquery' ],
+                [ 'jquery', 'gm2-conditions' ],
                 file_exists($admin_js) ? filemtime($admin_js) : GM2_VERSION,
                 true
             );
@@ -389,13 +444,15 @@ class Gm2_Custom_Posts_Admin {
                     'type'        => $f['type'] ?? 'text',
                     'default'     => $f['default'] ?? '',
                     'description' => $f['description'] ?? '',
+                    'conditions'  => $f['conditions'] ?? [],
                 ];
             }
             $args = [];
             foreach ($post['args'] ?? [] as $a_key => $a_val) {
                 $args[] = [
                     'key'   => $a_key,
-                    'value' => $a_val,
+                    'value' => is_array($a_val) && array_key_exists('value', $a_val) ? $a_val['value'] : $a_val,
+                    'conditions' => is_array($a_val) && isset($a_val['conditions']) ? $a_val['conditions'] : [],
                 ];
             }
             wp_localize_script('gm2-custom-posts-admin', 'gm2CPTFields', [
@@ -416,11 +473,19 @@ class Gm2_Custom_Posts_Admin {
         }
 
         if ($hook === 'gm2-custom-posts_page_gm2_tax_args') {
+            $cond_js = GM2_PLUGIN_DIR . 'admin/js/conditions.js';
+            wp_enqueue_script(
+                'gm2-conditions',
+                GM2_PLUGIN_URL . 'admin/js/conditions.js',
+                [ 'jquery' ],
+                file_exists($cond_js) ? filemtime($cond_js) : GM2_VERSION,
+                true
+            );
             $tax_js = GM2_PLUGIN_DIR . 'admin/js/gm2-custom-tax-admin.js';
             wp_enqueue_script(
                 'gm2-custom-tax-admin',
                 GM2_PLUGIN_URL . 'admin/js/gm2-custom-tax-admin.js',
-                [ 'jquery' ],
+                [ 'jquery', 'gm2-conditions' ],
                 file_exists($tax_js) ? filemtime($tax_js) : GM2_VERSION,
                 true
             );
@@ -430,13 +495,20 @@ class Gm2_Custom_Posts_Admin {
             $tax    = $config['taxonomies'][$slug] ?? [];
             $args   = [];
             foreach ($tax['args'] ?? [] as $a_key => $a_val) {
-                $args[] = [ 'key' => $a_key, 'value' => $a_val ];
+                $args[] = [ 'key' => $a_key, 'value' => is_array($a_val) && array_key_exists('value', $a_val) ? $a_val['value'] : $a_val, 'conditions' => is_array($a_val) && isset($a_val['conditions']) ? $a_val['conditions'] : [] ];
+            }
+            $fields = [];
+            foreach ($tax['post_types'] ?? [] as $pt_slug) {
+                foreach ($config['post_types'][$pt_slug]['fields'] ?? [] as $f_slug => $f) {
+                    $fields[] = [ 'slug' => $f_slug ];
+                }
             }
             wp_localize_script('gm2-custom-tax-admin', 'gm2TaxArgs', [
-                'nonce' => wp_create_nonce('gm2_save_tax_args'),
-                'ajax'  => admin_url('admin-ajax.php'),
-                'slug'  => $slug,
-                'args'  => $args,
+                'nonce'  => wp_create_nonce('gm2_save_tax_args'),
+                'ajax'   => admin_url('admin-ajax.php'),
+                'slug'   => $slug,
+                'args'   => $args,
+                'fields' => $fields,
             ]);
         }
     }
@@ -475,6 +547,7 @@ class Gm2_Custom_Posts_Admin {
                 'type'        => $type,
                 'default'     => $def,
                 'description' => sanitize_text_field($field['description'] ?? ''),
+                'conditions'  => $this->sanitize_conditions($field['conditions'] ?? []),
             ];
         }
 
@@ -485,17 +558,19 @@ class Gm2_Custom_Posts_Admin {
                 continue;
             }
             $value = $arg['value'] ?? '';
+            $conditions = $this->sanitize_conditions($arg['conditions'] ?? []);
             if (in_array($a_key, [ 'public', 'hierarchical' ], true)) {
-                $sanitized_args[$a_key] = !empty($value);
+                $val = !empty($value);
             } elseif ($a_key === 'supports') {
                 if (is_array($value)) {
-                    $sanitized_args[$a_key] = array_filter(array_map('sanitize_key', $value));
+                    $val = array_filter(array_map('sanitize_key', $value));
                 } else {
-                    $sanitized_args[$a_key] = array_filter(array_map('sanitize_key', explode(',', (string) $value)));
+                    $val = array_filter(array_map('sanitize_key', explode(',', (string) $value)));
                 }
             } else {
-                $sanitized_args[$a_key] = sanitize_text_field($value);
+                $val = sanitize_text_field($value);
             }
+            $sanitized_args[$a_key] = [ 'value' => $val, 'conditions' => $conditions ];
         }
 
         $config['post_types'][$slug]['fields'] = $sanitized;
@@ -533,11 +608,13 @@ class Gm2_Custom_Posts_Admin {
                 continue;
             }
             $value = $arg['value'] ?? '';
+            $conditions = $this->sanitize_conditions($arg['conditions'] ?? []);
             if (in_array($a_key, [ 'public', 'hierarchical' ], true)) {
-                $sanitized_args[$a_key] = !empty($value);
+                $val = !empty($value);
             } else {
-                $sanitized_args[$a_key] = sanitize_text_field($value);
+                $val = sanitize_text_field($value);
             }
+            $sanitized_args[$a_key] = [ 'value' => $val, 'conditions' => $conditions ];
         }
         $config['taxonomies'][$slug]['args']       = $sanitized_args;
         if ($label) {

@@ -54,6 +54,9 @@ jQuery(function($){
         $('#gm2-field-type').val(data ? data.type : 'text');
         $('#gm2-field-default').val(data ? data.default : '');
         $('#gm2-field-description').val(data ? data.description : '');
+        var targets = fields.map(function(f){ return f.slug; });
+        targets.push('page_id','post_id');
+        gm2Conditions.init($('#gm2-field-conditions'), { targets: targets, data: data ? data.conditions : [] });
         $('#gm2-field-form').show();
     }
 
@@ -76,6 +79,9 @@ jQuery(function($){
         $('#gm2-arg-index').val(index !== undefined ? index : '');
         $('#gm2-arg-key').prop('disabled', index !== undefined).val(data ? data.key : '');
         showArgControl(data ? data.key : '', data ? data.value : '');
+        var targets = fields.map(function(f){ return f.slug; });
+        targets.push('page_id','post_id');
+        gm2Conditions.init($('#gm2-arg-conditions'), { targets: targets, data: data ? data.conditions : [] });
         $('#gm2-arg-form').show();
     }
 
@@ -96,12 +102,13 @@ jQuery(function($){
                         slug: slug,
                         type: f.type || 'text',
                         default: f.default || '',
-                        description: f.description || ''
+                        description: f.description || '',
+                        conditions: f.conditions || []
                     });
                 });
                 args = [];
                 $.each(resp.data.args || {}, function(key, val){
-                    args.push({ key: key, value: val });
+                    args.push({ key: key, value: val.value !== undefined ? val.value : val, conditions: val.conditions || [] });
                 });
                 renderFields();
                 renderArgs();
@@ -123,7 +130,8 @@ jQuery(function($){
             slug: $('#gm2-field-slug').val(),
             type: $('#gm2-field-type').val(),
             default: $('#gm2-field-default').val(),
-            description: $('#gm2-field-description').val()
+            description: $('#gm2-field-description').val(),
+            conditions: gm2Conditions.getData($('#gm2-field-conditions'))
         };
         if(idx === ''){ fields.push(obj); } else { fields[idx] = obj; }
         saveAll(function(){ $('#gm2-field-form').hide(); });
@@ -152,7 +160,7 @@ jQuery(function($){
         }else{
             val = $('#gm2-arg-value').val();
         }
-        var obj = { key: key, value: val };
+        var obj = { key: key, value: val, conditions: gm2Conditions.getData($('#gm2-arg-conditions')) };
         if(idx === ''){ args.push(obj); } else { args[idx] = obj; }
         saveAll(function(){ $('#gm2-arg-form').hide(); });
     });
