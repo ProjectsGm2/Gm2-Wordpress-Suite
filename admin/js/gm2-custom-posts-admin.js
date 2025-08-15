@@ -56,6 +56,9 @@ jQuery(function($){
         $('#gm2-field-type').val(data ? data.type : 'text');
         $('#gm2-field-default').val(data ? data.default : '');
         $('#gm2-field-description').val(data ? data.description : '');
+        $('#gm2-field-cap').val(data ? data.capability : '');
+        $('#gm2-field-edit-cap').val(data ? data.edit_capability : '');
+        $('#gm2-field-help').val(data ? data.help : '');
         var targets = fields.map(function(f){ return f.slug; });
         targets.push('page_id','post_id');
         gm2Conditions.init($('#gm2-field-conditions'), { targets: targets, data: data ? data.conditions : [] });
@@ -137,6 +140,9 @@ jQuery(function($){
             type: $('#gm2-field-type').val(),
             default: $('#gm2-field-default').val(),
             description: $('#gm2-field-description').val(),
+            capability: $('#gm2-field-cap').val(),
+            edit_capability: $('#gm2-field-edit-cap').val(),
+            help: $('#gm2-field-help').val(),
             conditions: gm2Conditions.getData($('#gm2-field-conditions'))
         };
         if(idx === ''){ fields.push(obj); } else { fields[idx] = obj; }
