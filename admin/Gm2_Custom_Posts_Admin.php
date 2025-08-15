@@ -26,34 +26,48 @@ class Gm2_Custom_Posts_Admin {
         return $config;
     }
 
+    private function can_manage() {
+        return current_user_can('manage_options') || current_user_can('gm2_manage_cpts');
+    }
+
     public function add_menu() {
+        $cap = current_user_can('gm2_manage_cpts') ? 'gm2_manage_cpts' : 'manage_options';
+
         add_menu_page(
             esc_html__( 'Gm2 Custom Posts', 'gm2-wordpress-suite' ),
             esc_html__( 'Gm2 Custom Posts', 'gm2-wordpress-suite' ),
-            'manage_options',
+            $cap,
             'gm2-custom-posts',
             [ $this, 'display_page' ],
             'dashicons-admin-post'
         );
 
-        $config = $this->get_config();
-        foreach ($config['post_types'] as $slug => $pt) {
-            add_submenu_page(
-                'gm2-custom-posts',
-                sprintf(esc_html__( '%s Fields', 'gm2-wordpress-suite' ), $pt['label'] ?? $slug),
-                sprintf(esc_html__( '%s Fields', 'gm2-wordpress-suite' ), $pt['label'] ?? $slug),
-                'manage_options',
-                'gm2-custom-posts-fields-' . $slug,
-                function () use ($slug) {
-                    $this->display_fields_page($slug);
-                }
-            );
-        }
+        add_submenu_page(
+            'gm2-custom-posts',
+            esc_html__( 'Edit Post Type', 'gm2-wordpress-suite' ),
+            esc_html__( 'Edit Post Type', 'gm2-wordpress-suite' ),
+            $cap,
+            'gm2_cpt_fields',
+            [ $this, 'display_fields_page' ]
+        );
+
+        add_submenu_page(
+            'gm2-custom-posts',
+            esc_html__( 'Edit Taxonomy', 'gm2-wordpress-suite' ),
+            esc_html__( 'Edit Taxonomy', 'gm2-wordpress-suite' ),
+            $cap,
+            'gm2_tax_args',
+            [ $this, 'display_taxonomy_page' ]
+        );
     }
 
-    public function display_fields_page($slug) {
-        if (!current_user_can('manage_options')) {
+    public function display_fields_page($slug = '') {
+        if (!$this->can_manage()) {
             wp_die(esc_html__( 'Permission denied', 'gm2-wordpress-suite' ));
+        }
+
+        if (!$slug) {
+            $slug = sanitize_key($_GET['cpt'] ?? '');
         }
 
         $config = $this->get_config();
@@ -117,8 +131,56 @@ class Gm2_Custom_Posts_Admin {
         echo '</div>';
     }
 
+    public function display_taxonomy_page() {
+        if (!$this->can_manage()) {
+            wp_die(esc_html__( 'Permission denied', 'gm2-wordpress-suite' ));
+        }
+
+        $slug = sanitize_key($_GET['tax'] ?? '');
+        $config = $this->get_config();
+        $taxonomy = $config['taxonomies'][$slug] ?? null;
+        if (!$taxonomy) {
+            echo '<div class="wrap"><h1>' . esc_html__( 'Invalid taxonomy.', 'gm2-wordpress-suite' ) . '</h1></div>';
+            return;
+        }
+
+        if (isset($_POST['gm2_save_tax_args']) && check_admin_referer('gm2_save_tax_args')) {
+            $label      = sanitize_text_field($_POST['tax_label'] ?? '');
+            $post_types = array_filter(array_map('sanitize_key', explode(',', $_POST['tax_post_types'] ?? '')));
+            $args       = json_decode(wp_unslash($_POST['tax_args'] ?? ''), true);
+            if (!is_array($args)) {
+                $args = [];
+            }
+            $config['taxonomies'][$slug] = [
+                'label'      => $label ?: ($taxonomy['label'] ?? ucfirst($slug)),
+                'post_types' => $post_types,
+                'args'       => $args,
+            ];
+            update_option('gm2_custom_posts_config', $config);
+            $taxonomy = $config['taxonomies'][$slug];
+            echo '<div class="notice notice-success"><p>' . esc_html__( 'Taxonomy saved.', 'gm2-wordpress-suite' ) . '</p></div>';
+        }
+
+        $args_json = wp_json_encode($taxonomy['args'] ?? [], JSON_PRETTY_PRINT);
+
+        echo '<div class="wrap">';
+        echo '<h1>' . sprintf(esc_html__( '%s Taxonomy', 'gm2-wordpress-suite' ), esc_html($taxonomy['label'] ?? $slug)) . '</h1>';
+        echo '<form method="post">';
+        wp_nonce_field('gm2_save_tax_args');
+        echo '<input type="hidden" name="tax_slug" value="' . esc_attr($slug) . '" />';
+        echo '<p><label>' . esc_html__( 'Label', 'gm2-wordpress-suite' ) . '<br />';
+        echo '<input type="text" name="tax_label" class="regular-text" value="' . esc_attr($taxonomy['label'] ?? '') . '" /></label></p>';
+        echo '<p><label>' . esc_html__( 'Post Types (comma separated)', 'gm2-wordpress-suite' ) . '<br />';
+        echo '<input type="text" name="tax_post_types" class="regular-text" value="' . esc_attr(implode(',', $taxonomy['post_types'] ?? [])) . '" /></label></p>';
+        echo '<p><label>' . esc_html__( 'Args (JSON)', 'gm2-wordpress-suite' ) . '<br />';
+        echo '<textarea name="tax_args" class="large-text code" rows="5">' . esc_textarea($args_json) . '</textarea></label></p>';
+        echo '<p><input type="submit" name="gm2_save_tax_args" class="button button-primary" value="' . esc_attr__( 'Save Taxonomy', 'gm2-wordpress-suite' ) . '" /></p>';
+        echo '</form>';
+        echo '</div>';
+    }
+
     public function display_page() {
-        if (!current_user_can('manage_options')) {
+        if (!$this->can_manage()) {
             wp_die( esc_html__( 'Permission denied', 'gm2-wordpress-suite' ) );
         }
 
@@ -167,7 +229,8 @@ class Gm2_Custom_Posts_Admin {
         if (!empty($config['post_types'])) {
             echo '<ul>';
             foreach ($config['post_types'] as $slug => $pt) {
-                echo '<li>' . esc_html($slug . ' - ' . ($pt['label'] ?? $slug)) . '</li>';
+                $link = admin_url('admin.php?page=gm2_cpt_fields&cpt=' . $slug);
+                echo '<li><a href="' . esc_url($link) . '">' . esc_html($slug . ' - ' . ($pt['label'] ?? $slug)) . '</a></li>';
             }
             echo '</ul>';
         } else {
@@ -178,7 +241,8 @@ class Gm2_Custom_Posts_Admin {
         if (!empty($config['taxonomies'])) {
             echo '<ul>';
             foreach ($config['taxonomies'] as $slug => $tax) {
-                echo '<li>' . esc_html($slug . ' - ' . ($tax['label'] ?? $slug)) . '</li>';
+                $link = admin_url('admin.php?page=gm2_tax_args&tax=' . $slug);
+                echo '<li><a href="' . esc_url($link) . '">' . esc_html($slug . ' - ' . ($tax['label'] ?? $slug)) . '</a></li>';
             }
             echo '</ul>';
         } else {
@@ -321,7 +385,7 @@ class Gm2_Custom_Posts_Admin {
             return;
         }
 
-        if (strpos($hook, 'gm2-custom-posts_page_gm2-custom-posts-fields-') === 0) {
+        if ($hook === 'gm2-custom-posts_page_gm2_cpt_fields') {
             $admin_js = GM2_PLUGIN_DIR . 'admin/js/gm2-custom-posts-admin.js';
             wp_enqueue_script(
                 'gm2-custom-posts-admin',
@@ -346,7 +410,7 @@ class Gm2_Custom_Posts_Admin {
     }
 
     public function ajax_save_fields() {
-        if (!current_user_can('manage_options')) {
+        if (!$this->can_manage()) {
             wp_send_json_error('permission');
         }
         $nonce = $_POST['nonce'] ?? '';
