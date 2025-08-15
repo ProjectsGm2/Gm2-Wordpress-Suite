@@ -72,6 +72,7 @@ require_once GM2_PLUGIN_DIR . 'public/Gm2_Abandoned_Carts_Public.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_REST_Visibility.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_REST_Rate_Limiter.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_REST_Media.php';
+require_once GM2_PLUGIN_DIR . 'includes/Gm2_REST_Fields.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Webhooks.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Capability_Manager.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Workflow_Manager.php';
@@ -80,6 +81,7 @@ require_once GM2_PLUGIN_DIR . 'includes/Gm2_Audit_Log.php';
 \Gm2\Gm2_REST_Visibility::init();
 \Gm2\Gm2_REST_Rate_Limiter::init();
 \Gm2\Gm2_REST_Media::init();
+\Gm2\Gm2_REST_Fields::init();
 \Gm2\Gm2_Webhooks::init();
 
 function gm2_add_weekly_schedule($schedules) {
