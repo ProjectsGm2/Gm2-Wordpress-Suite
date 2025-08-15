@@ -69,6 +69,9 @@ require_once GM2_PLUGIN_DIR . 'admin/class-gm2-bulk-ai-tax-list-table.php';
 require_once GM2_PLUGIN_DIR . 'public/Gm2_Abandoned_Carts_Public.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_REST_Visibility.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Webhooks.php';
+require_once GM2_PLUGIN_DIR . 'includes/Gm2_Capability_Manager.php';
+require_once GM2_PLUGIN_DIR . 'includes/Gm2_Workflow_Manager.php';
+require_once GM2_PLUGIN_DIR . 'includes/Gm2_Audit_Log.php';
 
 \Gm2\Gm2_REST_Visibility::init();
 \Gm2\Gm2_Webhooks::init();
@@ -172,6 +175,8 @@ function gm2_activate_plugin() {
         KEY `timestamp` (`timestamp`)
     ) $charset_collate;";
     dbDelta($sql);
+
+    \Gm2\Gm2_Audit_Log::install();
 
     Gm2_Abandoned_Carts::schedule_event();
 }
