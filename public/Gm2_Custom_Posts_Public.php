@@ -22,7 +22,8 @@ class Gm2_Custom_Posts_Public {
                 $args = [];
                 foreach (($pt['args'] ?? []) as $a_key => $a_val) {
                     if (is_array($a_val)) {
-                        if (!gm2_evaluate_conditions($a_val)) {
+                        $state = gm2_evaluate_conditions($a_val);
+                        if (!$state['show']) {
                             continue;
                         }
                         $args[$a_key] = array_key_exists('value', $a_val) ? $a_val['value'] : $a_val;
@@ -42,7 +43,8 @@ class Gm2_Custom_Posts_Public {
                 $args = [];
                 foreach (($tax['args'] ?? []) as $a_key => $a_val) {
                     if (is_array($a_val)) {
-                        if (!gm2_evaluate_conditions($a_val)) {
+                        $state = gm2_evaluate_conditions($a_val);
+                        if (!$state['show']) {
                             continue;
                         }
                         $args[$a_key] = array_key_exists('value', $a_val) ? $a_val['value'] : $a_val;
@@ -101,7 +103,7 @@ function gm2_render_custom_post_fields($post = null) {
     $fields = $config['post_types'][$ptype]['fields'];
     $out = '<div class="gm2-custom-fields">';
     foreach ($fields as $key => $field) {
-        if (!gm2_evaluate_conditions($field, $post->ID)) {
+        if (!gm2_evaluate_conditions($field, $post->ID)['show']) {
             continue;
         }
         $label   = $field['label'] ?? $key;
@@ -126,10 +128,10 @@ function gm2_get_custom_post_field($key, $post = null) {
         return '';
     }
     $field = $config['post_types'][$ptype]['fields'][$key];
-    if (!gm2_evaluate_conditions($field, $post->ID)) {
+    if (!gm2_evaluate_conditions($field, $post->ID)['show']) {
         return '';
     }
-    $value = get_post_meta($post->ID, $key, true);
+    $value = gm2_get_meta_value($post->ID, $key, 'post', $field);
     if ($value === '' || $value === null) {
         return '';
     }

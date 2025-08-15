@@ -671,14 +671,13 @@ class Gm2_Custom_Posts_Admin {
         foreach ($fields as $key => $field) {
             $type   = $field['type'] ?? 'text';
             $label  = $field['label'] ?? $key;
-            $value  = get_post_meta($post->ID, $key, true);
-            if ($value === '' && isset($field['default'])) {
-                $value = $field['default'];
-            }
+            $value  = gm2_get_meta_value($post->ID, $key, 'post', $field);
             $cond    = $field['conditional'] ?? [];
             $conds   = $field['conditions'] ?? [];
             $options = $field['options'] ?? [];
-            $visible = gm2_evaluate_conditions($field, $post->ID);
+            $state   = gm2_evaluate_conditions($field, $post->ID);
+            $visible = $state['show'];
+            $disabled = $state['disabled'];
             $classes = 'gm2-field';
             if (!empty($field['class'])) {
                 $classes .= ' ' . esc_attr($field['class']);
@@ -697,15 +696,16 @@ class Gm2_Custom_Posts_Admin {
             }
             echo '>';
             echo '<p><label for="' . esc_attr($key) . '">' . esc_html($label) . '</label><br />';
+            $disable_attr = $disabled ? ' disabled="disabled"' : '';
             switch ($type) {
                 case 'number':
-                    echo '<input type="number" id="' . esc_attr($key) . '" name="' . esc_attr($key) . '" value="' . esc_attr($value) . '" placeholder="' . esc_attr($field['placeholder'] ?? '') . '" class="regular-text" />';
+                    echo '<input type="number" id="' . esc_attr($key) . '" name="' . esc_attr($key) . '" value="' . esc_attr($value) . '" placeholder="' . esc_attr($field['placeholder'] ?? '') . '" class="regular-text"' . $disable_attr . ' />';
                     break;
                 case 'checkbox':
-                    echo '<input type="checkbox" id="' . esc_attr($key) . '" name="' . esc_attr($key) . '" value="1"' . checked($value, '1', false) . ' />';
+                    echo '<input type="checkbox" id="' . esc_attr($key) . '" name="' . esc_attr($key) . '" value="1"' . checked($value, '1', false) . $disable_attr . ' />';
                     break;
                 case 'select':
-                    echo '<select id="' . esc_attr($key) . '" name="' . esc_attr($key) . '">';
+                    echo '<select id="' . esc_attr($key) . '" name="' . esc_attr($key) . '"' . $disable_attr . '>';
                     foreach ($options as $opt_val => $opt_label) {
                         echo '<option value="' . esc_attr($opt_val) . '"' . selected($value, $opt_val, false) . '>' . esc_html($opt_label) . '</option>';
                     }
@@ -713,11 +713,11 @@ class Gm2_Custom_Posts_Admin {
                     break;
                 case 'radio':
                     foreach ($options as $opt_val => $opt_label) {
-                        echo '<label><input type="radio" name="' . esc_attr($key) . '" value="' . esc_attr($opt_val) . '"' . checked($value, $opt_val, false) . '/> ' . esc_html($opt_label) . '</label><br />';
+                        echo '<label><input type="radio" name="' . esc_attr($key) . '" value="' . esc_attr($opt_val) . '"' . checked($value, $opt_val, false) . $disable_attr . '/> ' . esc_html($opt_label) . '</label><br />';
                     }
                     break;
                 default:
-                    echo '<input type="text" id="' . esc_attr($key) . '" name="' . esc_attr($key) . '" value="' . esc_attr($value) . '" placeholder="' . esc_attr($field['placeholder'] ?? '') . '" class="regular-text" />';
+                    echo '<input type="text" id="' . esc_attr($key) . '" name="' . esc_attr($key) . '" value="' . esc_attr($value) . '" placeholder="' . esc_attr($field['placeholder'] ?? '') . '" class="regular-text"' . $disable_attr . ' />';
                     break;
             }
             if (!empty($field['description'])) {
@@ -747,7 +747,8 @@ class Gm2_Custom_Posts_Admin {
             return;
         }
         foreach ($config['post_types'][$post_type]['fields'] as $key => $field) {
-            if (!gm2_evaluate_conditions($field, $post_id)) {
+            $state = gm2_evaluate_conditions($field, $post_id);
+            if (!$state['show']) {
                 delete_post_meta($post_id, $key);
                 continue;
             }
@@ -755,33 +756,39 @@ class Gm2_Custom_Posts_Admin {
             $options = $field['options'] ?? [];
             if ($type === 'checkbox') {
                 $value = isset($_POST[$key]) ? '1' : '0';
-                update_post_meta($post_id, $key, $value);
             } elseif ($type === 'number') {
                 if (isset($_POST[$key])) {
                     $value = sanitize_text_field(wp_unslash($_POST[$key]));
                     $value = ($value === '') ? '' : (string) (0 + $value);
-                    update_post_meta($post_id, $key, $value);
                 } else {
-                    delete_post_meta($post_id, $key);
+                    $value = null;
                 }
             } elseif (in_array($type, [ 'select', 'radio' ], true)) {
                 if (isset($_POST[$key])) {
                     $value = sanitize_text_field(wp_unslash($_POST[$key]));
-                    if (empty($options) || array_key_exists($value, $options)) {
-                        update_post_meta($post_id, $key, $value);
-                    } else {
-                        delete_post_meta($post_id, $key);
+                    if (!empty($options) && !array_key_exists($value, $options)) {
+                        $value = null;
                     }
                 } else {
-                    delete_post_meta($post_id, $key);
+                    $value = null;
                 }
             } else {
                 if (isset($_POST[$key])) {
                     $value = sanitize_text_field(wp_unslash($_POST[$key]));
-                    update_post_meta($post_id, $key, $value);
                 } else {
-                    delete_post_meta($post_id, $key);
+                    $value = null;
                 }
+            }
+
+            $valid = gm2_validate_field($key, $field, $value, $post_id, 'post');
+            if (is_wp_error($valid)) {
+                wp_die($valid->get_error_message());
+            }
+
+            if ($value === null) {
+                delete_post_meta($post_id, $key);
+            } else {
+                update_post_meta($post_id, $key, $value);
             }
         }
     }
