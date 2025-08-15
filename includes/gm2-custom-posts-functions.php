@@ -450,6 +450,12 @@ function gm2_match_location($groups, $context = []) {
 /**
  * Render a generic set of fields for any object context.
  *
+ * Supports lazy-loading of tab or accordion containers. Developers can
+ * filter `gm2_should_lazy_load_group` to control whether a group should be
+ * rendered immediately. When a group is deferred, the action
+ * `gm2_lazy_load_group_placeholder` fires and a placeholder element is output
+ * for asynchronous loading.
+ *
  * @param array  $fields       Field definitions.
  * @param int    $object_id    Object identifier.
  * @param string $context_type Context type: post, term, user, etc.
@@ -462,6 +468,16 @@ function gm2_render_field_group($fields, $object_id, $context_type = 'post') {
         return ($a['order'] ?? 0) <=> ($b['order'] ?? 0);
     });
     foreach ($fields as $key => $field) {
+        $container = $field['container'] ?? '';
+        if (in_array($container, [ 'tab', 'accordion' ], true)) {
+            $defer = apply_filters('gm2_should_lazy_load_group', true, $key, $field, $object_id, $context_type);
+            if ($defer) {
+                do_action('gm2_lazy_load_group_placeholder', $key, $field, $object_id, $context_type);
+                echo '<div class="gm2-lazy-group-placeholder" data-group="' . esc_attr($key) . '" data-context="' . esc_attr($context_type) . '" data-object="' . esc_attr($object_id) . '"></div>';
+                continue;
+            }
+        }
+
         $state   = gm2_evaluate_conditions($field, $object_id);
         $visible = $state['show'];
         $field['disabled'] = $state['disabled'];
@@ -518,6 +534,25 @@ function gm2_get_meta_value($object_id, $key, $context_type, $field, $type = 'po
         $value = gm2_resolve_default($field, $object_id, $context_type);
     }
     return $value;
+}
+
+/**
+ * Queue a background job to regenerate attachment metadata.
+ *
+ * Uses Action Scheduler when available, otherwise falls back to WP-Cron.
+ *
+ * @param int $attachment_id Attachment ID.
+ */
+function gm2_queue_thumbnail_regeneration($attachment_id) {
+    if (!wp_attachment_is_image($attachment_id)) {
+        return;
+    }
+
+    if (function_exists('as_enqueue_async_action')) {
+        as_enqueue_async_action('gm2_generate_thumbnails', [ $attachment_id ], 'gm2');
+    } else {
+        wp_schedule_single_event(time(), 'gm2_generate_thumbnails', [ $attachment_id ]);
+    }
 }
 
 /**
