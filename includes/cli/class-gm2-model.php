@@ -5,6 +5,8 @@ if ( ! defined( 'WP_CLI' ) || ! WP_CLI ) {
     return;
 }
 
+require_once GM2_PLUGIN_DIR . 'includes/class-gm2-model-migrator.php';
+
 /**
  * Manage data models via WP-CLI.
  */
@@ -167,7 +169,29 @@ class Gm2_Model_CLI extends \WP_CLI_Command {
      * Run model database migrations.
      */
     public function migrate( $args, $assoc_args ) {
-        \WP_CLI::success( 'Model migrations completed.' );
+        $models   = get_option( 'gm2_models', [] );
+        $versions = get_option( 'gm2_model_versions', [] );
+        $migrated = 0;
+
+        foreach ( $models as $model ) {
+            $slug    = $model['slug'] ?? ( $model['post_type'] ?? '' );
+            $target  = (int) ( $model['version'] ?? 1 );
+            $current = (int) ( $versions[ $slug ] ?? 0 );
+
+            if ( $slug && $target > $current ) {
+                gm2_run_model_migrations( $slug, $current, $target );
+                $versions[ $slug ] = $target;
+                $migrated++;
+            }
+        }
+
+        update_option( 'gm2_model_versions', $versions );
+
+        if ( $migrated ) {
+            \WP_CLI::success( sprintf( '%d model migrations completed.', $migrated ) );
+        } else {
+            \WP_CLI::success( 'Models are up to date.' );
+        }
     }
 
     /**
