@@ -53,5 +53,36 @@
         }
         run();
     }
-    $(document).ready(setupConditional);
+    $(document).ready(function(){
+        setupConditional();
+    });
+
+    $(document).on('click', '.gm2-media-upload', function(e){
+        e.preventDefault();
+        var target = $(this).data('target');
+        var frame = wp.media({ multiple: false });
+        frame.on('select', function(){
+            var attachment = frame.state().get('selection').first().toJSON();
+            var field = $('[name="'+target+'"]');
+            field.val(attachment.id);
+            var preview = field.closest('.gm2-media-field').find('.gm2-media-preview');
+            if(attachment.type === 'image' && attachment.sizes && attachment.sizes.thumbnail){
+                preview.html('<img src="'+attachment.sizes.thumbnail.url+'" alt="" />');
+            }else{
+                preview.html('<span>'+attachment.filename+'</span>');
+            }
+        });
+        frame.open();
+    });
+
+    $(document).on('click', '.gm2-repeater-add', function(){
+        var key = $(this).data('target');
+        var wrap = $(this).closest('.gm2-repeater');
+        var row = $('<div class="gm2-repeater-row"><input type="text" name="'+key+'[]" /> <button type="button" class="button gm2-repeater-remove">&times;</button></div>');
+        row.insertBefore($(this).parent());
+    });
+
+    $(document).on('click', '.gm2-repeater-remove', function(){
+        $(this).closest('.gm2-repeater-row').remove();
+    });
 })(jQuery);

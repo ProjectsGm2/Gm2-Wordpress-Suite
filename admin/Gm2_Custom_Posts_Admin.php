@@ -136,7 +136,7 @@ class Gm2_Custom_Posts_Admin {
         echo '<input type="hidden" id="gm2-field-index" />';
         echo '<p><label>' . esc_html__( 'Label', 'gm2-wordpress-suite' ) . '<br /><input type="text" id="gm2-field-label" class="regular-text" /></label></p>';
         echo '<p><label>' . esc_html__( 'Slug', 'gm2-wordpress-suite' ) . '<br /><input type="text" id="gm2-field-slug" class="regular-text" /></label></p>';
-        echo '<p><label>' . esc_html__( 'Type', 'gm2-wordpress-suite' ) . '<br /><select id="gm2-field-type"><option value="text">Text</option><option value="number">Number</option><option value="checkbox">Checkbox</option><option value="select">Dropdown</option><option value="radio">Radio</option></select></label></p>';
+        echo '<p><label>' . esc_html__( 'Type', 'gm2-wordpress-suite' ) . '<br /><select id="gm2-field-type"><option value="text">Text</option><option value="number">Number</option><option value="checkbox">Checkbox</option><option value="select">Dropdown</option><option value="radio">Radio</option><option value="media">Media</option><option value="wysiwyg">WYSIWYG</option><option value="date">Date</option><option value="repeater">Repeater</option></select></label></p>';
         echo '<p><label>' . esc_html__( 'Default', 'gm2-wordpress-suite' ) . '<br /><input type="text" id="gm2-field-default" class="regular-text" /></label></p>';
         echo '<p><label>' . esc_html__( 'Description', 'gm2-wordpress-suite' ) . '<br /><input type="text" id="gm2-field-description" class="regular-text" /></label></p>';
         echo '<p><label>' . esc_html__( 'Order', 'gm2-wordpress-suite' ) . '<br /><input type="number" id="gm2-field-order" class="small-text" /></label></p>';
@@ -147,6 +147,9 @@ class Gm2_Custom_Posts_Admin {
         echo '<p><label>' . esc_html__( 'Capability', 'gm2-wordpress-suite' ) . '<br /><input type="text" id="gm2-field-cap" class="regular-text" /></label></p>';
         echo '<p><label>' . esc_html__( 'Edit Capability', 'gm2-wordpress-suite' ) . '<br /><input type="text" id="gm2-field-edit-cap" class="regular-text" /></label></p>';
         echo '<p><label>' . esc_html__( 'Help Text', 'gm2-wordpress-suite' ) . '<br /><input type="text" id="gm2-field-help" class="regular-text" /></label></p>';
+        echo '<div id="gm2-field-date-options" style="display:none;"><p><label>' . esc_html__( 'Min Date', 'gm2-wordpress-suite' ) . '<br /><input type="date" id="gm2-field-date-min" class="regular-text" /></label></p><p><label>' . esc_html__( 'Max Date', 'gm2-wordpress-suite' ) . '<br /><input type="date" id="gm2-field-date-max" class="regular-text" /></label></p></div>';
+        echo '<div id="gm2-field-wysiwyg-options" style="display:none;"><p><label><input type="checkbox" id="gm2-field-wysiwyg-media" value="1" /> ' . esc_html__( 'Show Media Buttons', 'gm2-wordpress-suite' ) . '</label></p><p><label>' . esc_html__( 'Rows', 'gm2-wordpress-suite' ) . '<br /><input type="number" id="gm2-field-wysiwyg-rows" class="small-text" /></label></p></div>';
+        echo '<div id="gm2-field-repeater-options" style="display:none;"><p><label>' . esc_html__( 'Min Rows', 'gm2-wordpress-suite' ) . '<br /><input type="number" id="gm2-field-repeater-min" class="small-text" /></label></p><p><label>' . esc_html__( 'Max Rows', 'gm2-wordpress-suite' ) . '<br /><input type="number" id="gm2-field-repeater-max" class="small-text" /></label></p></div>';
         echo '<h3>' . esc_html__( 'Location Rules', 'gm2-wordpress-suite' ) . '</h3>';
         echo '<div id="gm2-field-location" class="gm2-conditions"><div class="gm2-condition-groups"></div><p><button type="button" class="button gm2-add-condition-group">' . esc_html__( 'Add Location Group', 'gm2-wordpress-suite' ) . '</button></p></div>';
         echo '<h3>' . esc_html__( 'Display Conditions', 'gm2-wordpress-suite' ) . '</h3>';
@@ -525,7 +528,7 @@ class Gm2_Custom_Posts_Admin {
             if (!$slug) {
                 continue;
             }
-            $type  = in_array($field['type'] ?? 'text', [ 'text', 'number', 'checkbox', 'select', 'radio' ], true) ? $field['type'] : 'text';
+            $type  = in_array($field['type'] ?? 'text', [ 'text', 'number', 'checkbox', 'select', 'radio', 'media', 'wysiwyg', 'date', 'repeater' ], true) ? $field['type'] : 'text';
             $def   = sanitize_text_field($field['default'] ?? '');
             $order = isset($field['order']) ? (int) $field['order'] : 0;
             $container = in_array($field['container'] ?? '', [ 'tab', 'accordion' ], true) ? $field['container'] : '';
@@ -545,6 +548,16 @@ class Gm2_Custom_Posts_Admin {
                 'location'     => $this->sanitize_location($field['location'] ?? []),
                 'conditions'   => $this->sanitize_conditions($field['conditions'] ?? []),
             ];
+            if ($type === 'date') {
+                $sanitized['date_min'] = sanitize_text_field($field['date_min'] ?? '');
+                $sanitized['date_max'] = sanitize_text_field($field['date_max'] ?? '');
+            } elseif ($type === 'wysiwyg') {
+                $sanitized['wysiwyg_media'] = !empty($field['wysiwyg_media']);
+                $sanitized['wysiwyg_rows']  = isset($field['wysiwyg_rows']) ? (int) $field['wysiwyg_rows'] : 10;
+            } elseif ($type === 'repeater') {
+                if (isset($field['min_rows'])) { $sanitized['min_rows'] = (int) $field['min_rows']; }
+                if (isset($field['max_rows'])) { $sanitized['max_rows'] = (int) $field['max_rows']; }
+            }
             if (!empty($field['options']) && is_array($field['options'])) {
                 $opts = [];
                 foreach ($field['options'] as $opt_val => $opt_label) {
