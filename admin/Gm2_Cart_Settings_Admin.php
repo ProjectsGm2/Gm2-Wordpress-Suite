@@ -10,8 +10,17 @@ class Gm2_Cart_Settings_Admin {
     }
 
     public function add_admin_menu() {
+        add_menu_page(
+            esc_html__( 'Gm2 Cart', 'gm2-wordpress-suite' ),
+            esc_html__( 'Gm2 Cart', 'gm2-wordpress-suite' ),
+            'manage_options',
+            'gm2-cart',
+            '__return_null',
+            'dashicons-cart'
+        );
+
         add_submenu_page(
-            'gm2',
+            'gm2-cart',
             esc_html__( 'Cart Settings', 'gm2-wordpress-suite' ),
             esc_html__( 'Cart Settings', 'gm2-wordpress-suite' ),
             'manage_options',
