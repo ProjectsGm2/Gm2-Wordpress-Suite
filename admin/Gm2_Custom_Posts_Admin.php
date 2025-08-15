@@ -13,6 +13,7 @@ class Gm2_Custom_Posts_Admin {
         add_action('admin_enqueue_scripts', [ $this, 'enqueue_scripts' ]);
         add_action('wp_ajax_gm2_save_cpt_fields', [ $this, 'ajax_save_fields' ]);
         add_action('wp_ajax_gm2_save_tax_args', [ $this, 'ajax_save_tax_args' ]);
+        add_action('wp_ajax_gm2_save_query', [ $this, 'ajax_save_query' ]);
         add_action('enqueue_block_editor_assets', [ $this, 'enqueue_block_editor_assets' ]);
         add_action('restrict_manage_posts', [ $this, 'restrict_manage_posts' ]);
         add_action('pre_get_posts', [ $this, 'pre_get_posts' ]);
@@ -72,6 +73,15 @@ class Gm2_Custom_Posts_Admin {
             $cap,
             'gm2_tax_args',
             [ $this, 'display_taxonomy_page' ]
+        );
+
+        add_submenu_page(
+            'gm2-custom-posts',
+            esc_html__( 'Query Builder', 'gm2-wordpress-suite' ),
+            esc_html__( 'Query Builder', 'gm2-wordpress-suite' ),
+            $cap,
+            'gm2_query_builder',
+            [ $this, 'display_query_builder' ]
         );
     }
 
@@ -230,6 +240,40 @@ class Gm2_Custom_Posts_Admin {
         echo '</div>';
 
         echo '<p><button type="button" class="button button-primary" id="gm2-tax-save">' . esc_html__( 'Save Taxonomy', 'gm2-wordpress-suite' ) . '</button></p>';
+        echo '</div>';
+    }
+
+    public function display_query_builder() {
+        if (!$this->can_manage()) {
+            wp_die(esc_html__( 'Permission denied', 'gm2-wordpress-suite' ));
+        }
+        $queries = \Gm2\Query_Manager::get_queries();
+        echo '<div class="wrap">';
+        echo '<h1>' . esc_html__( 'WP_Query Builder', 'gm2-wordpress-suite' ) . '</h1>';
+        echo '<div id="gm2-query-builder-form">';
+        echo '<p><label>' . esc_html__( 'Query ID', 'gm2-wordpress-suite' ) . '<br /><input type="text" id="gm2-qb-id" class="regular-text" /></label></p>';
+        echo '<p><label>' . esc_html__( 'Post Type', 'gm2-wordpress-suite' ) . '<br /><select id="gm2-qb-post-type"><option value="">' . esc_html__( 'Select', 'gm2-wordpress-suite' ) . '</option>';
+        foreach (get_post_types([], 'objects') as $slug => $obj) {
+            echo '<option value="' . esc_attr($slug) . '">' . esc_html($obj->labels->singular_name) . '</option>';
+        }
+        echo '</select></label></p>';
+        echo '<p><label>' . esc_html__( 'Taxonomy', 'gm2-wordpress-suite' ) . '<br /><select id="gm2-qb-taxonomy"><option value="">' . esc_html__( 'Select', 'gm2-wordpress-suite' ) . '</option>';
+        foreach (get_taxonomies([], 'objects') as $slug => $obj) {
+            echo '<option value="' . esc_attr($slug) . '">' . esc_html($obj->labels->singular_name) . '</option>';
+        }
+        echo '</select></label></p>';
+        echo '<p><label>' . esc_html__( 'Term Slug', 'gm2-wordpress-suite' ) . '<br /><input type="text" id="gm2-qb-term" class="regular-text" /></label></p>';
+        echo '<p><label>' . esc_html__( 'Meta Key', 'gm2-wordpress-suite' ) . '<br /><input type="text" id="gm2-qb-meta-key" class="regular-text" /></label></p>';
+        echo '<p><label>' . esc_html__( 'Meta Value', 'gm2-wordpress-suite' ) . '<br /><input type="text" id="gm2-qb-meta-value" class="regular-text" /></label></p>';
+        echo '<p><label>' . esc_html__( 'Date After', 'gm2-wordpress-suite' ) . '<br /><input type="date" id="gm2-qb-after" /></label></p>';
+        echo '<p><label>' . esc_html__( 'Date Before', 'gm2-wordpress-suite' ) . '<br /><input type="date" id="gm2-qb-before" /></label></p>';
+        echo '<p><button type="button" class="button button-primary" id="gm2-save-query">' . esc_html__( 'Save Query', 'gm2-wordpress-suite' ) . '</button></p>';
+        echo '</div>';
+        echo '<h2>' . esc_html__( 'Saved Queries', 'gm2-wordpress-suite' ) . '</h2><ul>';
+        foreach ($queries as $id => $args) {
+            echo '<li><code>' . esc_html($id) . '</code> - <code>[gm2_query id="' . esc_html($id) . '"]</code></li>';
+        }
+        echo '</ul>';
         echo '</div>';
     }
 
@@ -920,6 +964,21 @@ class Gm2_Custom_Posts_Admin {
             );
         }
 
+        if ($hook === 'gm2-custom-posts_page_gm2_query_builder') {
+            $file = GM2_PLUGIN_DIR . 'admin/js/gm2-query-builder.js';
+            wp_enqueue_script(
+                'gm2-query-builder',
+                GM2_PLUGIN_URL . 'admin/js/gm2-query-builder.js',
+                [ 'jquery' ],
+                file_exists($file) ? filemtime($file) : GM2_VERSION,
+                true
+            );
+            wp_localize_script('gm2-query-builder', 'gm2QB', [
+                'nonce' => wp_create_nonce('gm2_save_query'),
+                'ajax'  => admin_url('admin-ajax.php'),
+            ]);
+        }
+
         if ($hook === 'edit.php') {
             $screen = get_current_screen();
             $pt = $screen ? $screen->post_type : '';
@@ -1081,6 +1140,66 @@ class Gm2_Custom_Posts_Admin {
         ]);
     }
 
+    public function ajax_save_query() {
+        if (!$this->can_manage()) {
+            wp_send_json_error('permission');
+        }
+        $nonce = $_POST['nonce'] ?? '';
+        if (!wp_verify_nonce($nonce, 'gm2_save_query')) {
+            wp_send_json_error('nonce');
+        }
+        $id   = sanitize_key($_POST['id'] ?? '');
+        $args = $_POST['args'] ?? [];
+        if (!$id || !is_array($args)) {
+            wp_send_json_error('data');
+        }
+
+        $sanitized = [];
+        $post_type = sanitize_key($args['post_type'] ?? '');
+        if ($post_type) {
+            $sanitized['post_type'] = $post_type;
+        }
+        if (!empty($args['tax_query']) && is_array($args['tax_query'])) {
+            $sanitized['tax_query'] = [];
+            foreach ($args['tax_query'] as $tax) {
+                $sanitized['tax_query'][] = [
+                    'taxonomy' => sanitize_key($tax['taxonomy'] ?? ''),
+                    'field'    => 'slug',
+                    'terms'    => array_map('sanitize_text_field', (array)($tax['terms'] ?? [])),
+                ];
+            }
+        }
+        if (!empty($args['meta_query']) && is_array($args['meta_query'])) {
+            $sanitized['meta_query'] = [];
+            foreach ($args['meta_query'] as $meta) {
+                $sanitized['meta_query'][] = [
+                    'key'     => sanitize_key($meta['key'] ?? ''),
+                    'value'   => sanitize_text_field($meta['value'] ?? ''),
+                    'compare' => sanitize_text_field($meta['compare'] ?? '='),
+                ];
+            }
+        }
+        if (!empty($args['date_query']) && is_array($args['date_query'])) {
+            $sanitized['date_query'] = [];
+            foreach ($args['date_query'] as $date) {
+                $dq = [];
+                if (!empty($date['after'])) {
+                    $dq['after'] = sanitize_text_field($date['after']);
+                }
+                if (!empty($date['before'])) {
+                    $dq['before'] = sanitize_text_field($date['before']);
+                }
+                if ($dq) {
+                    $dq['inclusive'] = true;
+                    $sanitized['date_query'][] = $dq;
+                }
+            }
+        }
+
+        \Gm2\Query_Manager::save_query($id, $sanitized);
+        wp_send_json_success();
+    }
+
     public function enqueue_block_editor_assets() {
         $screen = get_current_screen();
         if (!$screen) {
@@ -1145,12 +1264,22 @@ class Gm2_Custom_Posts_Admin {
         }
         $pt = $screen->post_type;
         $config = $this->get_config();
-        if (empty($config['post_types'][$pt]['fields'])) {
-            return;
+        if (!empty($config['post_types'][$pt]['fields'])) {
+            foreach ($config['post_types'][$pt]['fields'] as $slug => $field) {
+                $val = sanitize_text_field($_GET[$slug] ?? '');
+                echo '<input type="text" name="' . esc_attr($slug) . '" value="' . esc_attr($val) . '" placeholder="' . esc_attr($field['label'] ?? $slug) . '" />';
+            }
         }
-        foreach ($config['post_types'][$pt]['fields'] as $slug => $field) {
-            $val = sanitize_text_field($_GET[$slug] ?? '');
-            echo '<input type="text" name="' . esc_attr($slug) . '" value="' . esc_attr($val) . '" placeholder="' . esc_attr($field['label'] ?? $slug) . '" />';
+        $saved = \Gm2\Query_Manager::get_queries();
+        $options = '';
+        foreach ($saved as $id => $args) {
+            if (empty($args['post_type']) || $args['post_type'] === $pt) {
+                $selected = selected($_GET['gm2_query_id'] ?? '', $id, false);
+                $options .= '<option value="' . esc_attr($id) . '" ' . $selected . '>' . esc_html($id) . '</option>';
+            }
+        }
+        if ($options) {
+            echo '<select name="gm2_query_id"><option value="">' . esc_html__( 'Saved Query', 'gm2-wordpress-suite' ) . '</option>' . $options . '</select>';
         }
     }
 
@@ -1161,6 +1290,15 @@ class Gm2_Custom_Posts_Admin {
         $pt = $query->get('post_type');
         if (is_array($pt)) {
             return;
+        }
+        if (!empty($_GET['gm2_query_id'])) {
+            $saved = \Gm2\Query_Manager::get_query(sanitize_key($_GET['gm2_query_id']));
+            if ($saved) {
+                foreach ($saved as $k => $v) {
+                    $query->set($k, $v);
+                }
+                return;
+            }
         }
         $config = $this->get_config();
         if (empty($config['post_types'][$pt]['fields'])) {
