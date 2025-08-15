@@ -327,8 +327,7 @@ class Gm2_SEO_Admin {
     }
 
     public function add_settings_pages() {
-        $hook = add_submenu_page(
-            'gm2',
+        $hook = add_menu_page(
             esc_html__( 'SEO', 'gm2-wordpress-suite' ),
             esc_html__( 'SEO', 'gm2-wordpress-suite' ),
             'manage_options',
@@ -341,7 +340,7 @@ class Gm2_SEO_Admin {
 
         if (get_option('gm2_enable_google_oauth', '1') === '1') {
             add_submenu_page(
-                'gm2',
+                'gm2-seo',
                 esc_html__( 'Connect Google Account', 'gm2-wordpress-suite' ),
                 esc_html__( 'Connect Google Account', 'gm2-wordpress-suite' ),
                 'manage_options',
@@ -351,7 +350,7 @@ class Gm2_SEO_Admin {
         }
 
         add_submenu_page(
-            'gm2',
+            'gm2-seo',
             esc_html__( 'Robots.txt', 'gm2-wordpress-suite' ),
             esc_html__( 'Robots.txt', 'gm2-wordpress-suite' ),
             'manage_options',
@@ -360,7 +359,7 @@ class Gm2_SEO_Admin {
         );
 
         add_submenu_page(
-            'gm2',
+            'gm2-seo',
             esc_html__( 'Bulk AI Review', 'gm2-wordpress-suite' ),
             esc_html__( 'Bulk AI Review', 'gm2-wordpress-suite' ),
             'edit_posts',
@@ -370,7 +369,7 @@ class Gm2_SEO_Admin {
 
         $cap = apply_filters('gm2_bulk_ai_tax_capability', 'manage_categories');
         add_submenu_page(
-            'gm2',
+            'gm2-seo',
             esc_html__( 'Bulk AI Taxonomies', 'gm2-wordpress-suite' ),
             esc_html__( 'Bulk AI Taxonomies', 'gm2-wordpress-suite' ),
             $cap,
