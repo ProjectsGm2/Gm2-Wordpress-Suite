@@ -96,3 +96,43 @@ function gm2_evaluate_conditions($item, $post_id = 0) {
 
     return ($result === null) ? true : $result;
 }
+
+/**
+ * Register custom post types and taxonomies from stored configuration.
+ */
+function gm2_register_custom_posts() {
+    $config = get_option('gm2_custom_posts_config', []);
+    if (!is_array($config)) {
+        return;
+    }
+    foreach ($config['post_types'] ?? [] as $slug => $pt) {
+        $args = [];
+        foreach ($pt['args'] ?? [] as $key => $val) {
+            $value = is_array($val) && array_key_exists('value', $val) ? $val['value'] : $val;
+            if ($key === 'supports' && is_array($value)) {
+                $args['supports'] = $value;
+            } elseif ($key === 'labels' && is_array($value)) {
+                $args['labels'] = $value;
+            } elseif ($key === 'rewrite' && is_array($value)) {
+                $args['rewrite'] = $value;
+            } elseif ($key === 'capabilities' && is_array($value)) {
+                $args['capabilities'] = $value;
+            } elseif ($key === 'template' && is_array($value)) {
+                $args['template'] = $value;
+            } else {
+                $args[$key] = $value;
+            }
+        }
+        $args = apply_filters('gm2_register_post_type_args', $args, $slug, $pt);
+        register_post_type($slug, $args);
+    }
+
+    foreach ($config['taxonomies'] ?? [] as $slug => $tax) {
+        $args = [];
+        foreach ($tax['args'] ?? [] as $key => $val) {
+            $args[$key] = is_array($val) && array_key_exists('value', $val) ? $val['value'] : $val;
+        }
+        register_taxonomy($slug, $tax['post_types'] ?? [], $args);
+    }
+}
+add_action('init', 'gm2_register_custom_posts');

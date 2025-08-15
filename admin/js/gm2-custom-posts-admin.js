@@ -37,6 +37,8 @@ jQuery(function($){
                 val = 'true';
             } else if(val === false){
                 val = 'false';
+            } else if(typeof val === 'object'){
+                val = JSON.stringify(val);
             }
             var row = $('<tr>\
 <td>'+esc(a.key)+'</td>\
@@ -62,7 +64,8 @@ jQuery(function($){
 
     function showArgControl(key, value){
         var wrap = $('#gm2-arg-value-wrap').empty();
-        if(key === 'public' || key === 'hierarchical'){
+        var boolKeys = ['public','hierarchical','publicly_queryable','show_ui','show_in_menu','show_in_nav_menus','show_in_admin_bar','exclude_from_search','has_archive','show_in_rest','map_meta_cap'];
+        if(boolKeys.indexOf(key) !== -1){
             var chk = $('<label><input type="checkbox" id="gm2-arg-value" value="1"/> '+key+'</label>');
             if(value){ chk.find('input').prop('checked', true); }
             wrap.append(chk);
@@ -71,6 +74,9 @@ jQuery(function($){
             $('#gm2-arg-value').val($.isArray(value) ? value.join(',') : value);
         }else{
             wrap.append('<input type="text" id="gm2-arg-value" class="regular-text" />');
+            if(typeof value === 'object'){
+                value = JSON.stringify(value);
+            }
             $('#gm2-arg-value').val(value);
         }
     }
@@ -153,7 +159,8 @@ jQuery(function($){
         var idx = $('#gm2-arg-index').val();
         var key = $('#gm2-arg-key').val();
         var val;
-        if(key === 'public' || key === 'hierarchical'){
+        var boolKeys = ['public','hierarchical','publicly_queryable','show_ui','show_in_menu','show_in_nav_menus','show_in_admin_bar','exclude_from_search','has_archive','show_in_rest','map_meta_cap'];
+        if(boolKeys.indexOf(key) !== -1){
             val = $('#gm2-arg-value').is(':checked');
         }else if(key === 'supports'){
             val = $('#gm2-arg-value').val();
