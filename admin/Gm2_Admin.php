@@ -13,7 +13,6 @@ class Gm2_Admin {
     private $cart_settings;
     private $oauth_enabled;
     private $chatgpt_enabled;
-    private $analytics;
 
     public function run() {
         $this->diagnostics = new Gm2_Diagnostics();
@@ -29,10 +28,6 @@ class Gm2_Admin {
         }
         $this->cart_settings = new Gm2_Cart_Settings_Admin();
         $this->cart_settings->register_hooks();
-        if (get_option('gm2_enable_analytics', '1') === '1') {
-            $this->analytics = new Gm2_Analytics_Admin();
-            $this->analytics->run();
-        }
         add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_scripts']);
         add_action('wp_ajax_gm2_add_tariff', [$this, 'ajax_add_tariff']);
         add_action('wp_ajax_nopriv_gm2_add_tariff', [$this, 'ajax_add_tariff']);

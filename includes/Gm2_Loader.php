@@ -56,6 +56,11 @@ class Gm2_Loader {
         $public->run();
 
         if ($enable_analytics) {
+            if (is_admin()) {
+                $analytics_admin = new Gm2_Analytics_Admin();
+                $analytics_admin->run();
+            }
+
             $analytics = new Gm2_Analytics();
             $analytics->run();
         }
