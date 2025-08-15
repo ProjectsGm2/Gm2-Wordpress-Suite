@@ -302,7 +302,7 @@ class Gm2_Custom_Posts_Admin {
                 $value = isset($_POST[$key]) ? '1' : '0';
                 update_post_meta($post_id, $key, $value);
             } elseif (isset($_POST[$key])) {
-                $value = sanitize_text_field($_POST[$key]);
+                $value = sanitize_text_field(wp_unslash($_POST[$key]));
                 update_post_meta($post_id, $key, $value);
             }
         }
