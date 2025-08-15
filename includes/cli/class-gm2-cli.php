@@ -66,6 +66,54 @@ class Gm2_CLI extends \WP_CLI_Command {
         $count = $ac->migrate_recovered_carts();
         \WP_CLI::success( sprintf( '%d carts migrated.', $count ) );
     }
+
+    /**
+     * Scaffold theme assets such as Twig/Blade templates or theme.json.
+     *
+     * ## SUBCOMMANDS
+     *
+     * twig <slug>       Create a Twig template under templates/.
+     * blade <slug>      Create a Blade template under resources/views/.
+     * theme-json        Create a basic theme.json if one does not exist.
+     */
+    public function scaffold( $args, $assoc_args ) {
+        $type = $args[0] ?? '';
+        $slug = $args[1] ?? 'example';
+        $theme_dir = get_stylesheet_directory();
+
+        switch ( $type ) {
+            case 'twig':
+                $path = trailingslashit( $theme_dir ) . 'templates/' . $slug . '.twig';
+                if ( ! file_exists( dirname( $path ) ) ) {
+                    wp_mkdir_p( dirname( $path ) );
+                }
+                file_put_contents( $path, "{{ gm2_field('example') }}\n" );
+                \WP_CLI::success( 'Twig template created at ' . $path );
+                break;
+            case 'blade':
+                $path = trailingslashit( $theme_dir ) . 'resources/views/' . $slug . '.blade.php';
+                if ( ! file_exists( dirname( $path ) ) ) {
+                    wp_mkdir_p( dirname( $path ) );
+                }
+                file_put_contents( $path, "{{ gm2_field('example') }}\n" );
+                \WP_CLI::success( 'Blade template created at ' . $path );
+                break;
+            case 'theme-json':
+            case 'theme':
+                $path = trailingslashit( $theme_dir ) . 'theme.json';
+                if ( ! file_exists( $path ) ) {
+                    $contents = json_encode( [ '$schema' => 'https://schemas.wp.org/wp/6.4/theme.json' ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES );
+                    file_put_contents( $path, $contents );
+                    \WP_CLI::success( 'theme.json created at ' . $path );
+                } else {
+                    \WP_CLI::success( 'theme.json already exists at ' . $path );
+                }
+                \WP_CLI::line( 'Hint: update theme.json to reference custom templates and patterns.' );
+                break;
+            default:
+                \WP_CLI::error( 'Usage: wp gm2 scaffold <twig|blade|theme-json> <slug>' );
+        }
+    }
 }
 
 \WP_CLI::add_command( 'gm2', __NAMESPACE__ . '\\Gm2_CLI' );

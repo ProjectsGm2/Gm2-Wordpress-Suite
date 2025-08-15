@@ -56,6 +56,7 @@ require_once GM2_PLUGIN_DIR . 'includes/Gm2_CSV_Helper.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Abandoned_Carts.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Analytics.php';
 require_once GM2_PLUGIN_DIR . 'includes/gm2-custom-posts-functions.php';
+require_once GM2_PLUGIN_DIR . 'includes/gm2-theme-tools.php';
 // Temporarily disable Recovery Email Queue.
 // require_once GM2_PLUGIN_DIR . 'includes/Gm2_Abandoned_Carts_Messaging.php';
 require_once GM2_PLUGIN_DIR . 'admin/Gm2_Abandoned_Carts_Admin.php';
@@ -129,6 +130,7 @@ function gm2_activate_plugin() {
     add_option('gm2_enable_analytics', '1');
     add_option('gm2_enable_chatgpt_logging', '0');
     add_option('gm2_enable_custom_posts', '1');
+    add_option('gm2_enable_block_templates', '0');
     add_option('gm2_analytics_retention_days', 30);
     add_option('gm2_sitemap_path', ABSPATH . 'sitemap.xml');
     add_option('gm2_sitemap_max_urls', 1000);
