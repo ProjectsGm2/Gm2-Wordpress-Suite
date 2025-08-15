@@ -3,6 +3,7 @@
 This release adds several new SEO and AI options:
 
 - Added an index on the `timestamp` column of the `gm2_analytics_log` table for faster lookups. Existing installations upgrade automatically.
+- Developer option to scaffold basic Twig and Blade templates in `theme-integration/` using registered field groups.
 - **Project Description** and **Custom Prompts** fields under **SEO → Context**. The project description falls back to the site tagline or a snippet of post content if empty.
  - **Business Context Prompt** builder that compiles your Context answers into a single prompt for generating a short business summary.
 - Each context field now includes a guiding question so users know what to enter.

@@ -151,6 +151,7 @@ function gm2_activate_plugin() {
     add_option('gm2_enable_chatgpt_logging', '0');
     add_option('gm2_enable_custom_posts', '1');
     add_option('gm2_enable_block_templates', '0');
+    add_option('gm2_enable_theme_integration', '0');
     add_option('gm2_analytics_retention_days', 30);
     add_option('gm2_sitemap_path', ABSPATH . 'sitemap.xml');
     add_option('gm2_sitemap_max_urls', 1000);

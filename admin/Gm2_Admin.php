@@ -446,6 +446,7 @@ class Gm2_Admin {
             update_option('gm2_enable_analytics', empty($_POST['gm2_enable_analytics']) ? '0' : '1');
             update_option('gm2_enable_custom_posts', empty($_POST['gm2_enable_custom_posts']) ? '0' : '1');
             update_option('gm2_enable_block_templates', empty($_POST['gm2_enable_block_templates']) ? '0' : '1');
+            update_option('gm2_enable_theme_integration', empty($_POST['gm2_enable_theme_integration']) ? '0' : '1');
 
             $enabled = !empty($_POST['gm2_enable_abandoned_carts']);
             if ($enabled) {
@@ -472,6 +473,7 @@ class Gm2_Admin {
         $analytics = get_option('gm2_enable_analytics', '1') === '1';
         $custom_posts = get_option('gm2_enable_custom_posts', '1') === '1';
         $block_templates = get_option('gm2_enable_block_templates', '0') === '1';
+        $theme_integration = get_option('gm2_enable_theme_integration', '0') === '1';
 
         echo '<div class="wrap">';
         echo '<h1>' . esc_html__( 'Gm2 Suite', 'gm2-wordpress-suite' ) . '</h1>';
@@ -486,6 +488,7 @@ class Gm2_Admin {
         echo '<tr><th scope="row">' . esc_html__( 'Analytics', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_enable_analytics"' . checked($analytics, true, false) . '> ' . esc_html__( 'Enabled', 'gm2-wordpress-suite' ) . '</label></td></tr>';
         echo '<tr><th scope="row">' . esc_html__( 'Custom Posts', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_enable_custom_posts"' . checked($custom_posts, true, false) . '> ' . esc_html__( 'Enabled', 'gm2-wordpress-suite' ) . '</label></td></tr>';
         echo '<tr><th scope="row">' . esc_html__( 'Block Templates', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_enable_block_templates"' . checked($block_templates, true, false) . '> ' . esc_html__( 'Enabled', 'gm2-wordpress-suite' ) . '</label></td></tr>';
+        echo '<tr><th scope="row">' . esc_html__( 'Theme Integration', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_enable_theme_integration"' . checked($theme_integration, true, false) . '> ' . esc_html__( 'Enabled', 'gm2-wordpress-suite' ) . '</label></td></tr>';
         echo '<tr><th scope="row">' . esc_html__( 'Abandoned Carts', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_enable_abandoned_carts"' . checked($abandoned, true, false) . '> ' . esc_html__( 'Enabled', 'gm2-wordpress-suite' ) . '</label></td></tr>';
         echo '</tbody></table>';
         submit_button();
