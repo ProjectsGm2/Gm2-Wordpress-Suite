@@ -34,6 +34,7 @@ class Gm2_Loader {
         $enable_ac        = get_option('gm2_enable_abandoned_carts', '1') === '1';
         $enable_phone_login = get_option('gm2_enable_phone_login', '0') === '1';
         $enable_analytics = get_option('gm2_enable_analytics', '1') === '1';
+        $enable_custom_posts = get_option('gm2_enable_custom_posts', '1') === '1';
 
         if (!$enable_ac && is_admin()) {
             add_action('admin_notices', function () {
@@ -57,6 +58,11 @@ class Gm2_Loader {
         if ($enable_analytics) {
             $analytics = new Gm2_Analytics();
             $analytics->run();
+        }
+
+        if ($enable_custom_posts && is_admin()) {
+            $cp_admin = new Gm2_Custom_Posts_Admin();
+            $cp_admin->run();
         }
 
         if ($enable_phone_login) {
