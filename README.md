@@ -108,6 +108,17 @@ Clear cached AI data and ChatGPT logs:
 wp gm2 ai clear
 ```
 
+Generate PHP code for saved models:
+
+```bash
+wp gm2 model generate [--mu-plugin] [--php=<file>] [--json=<file>]
+```
+
+This writes `register_post_type()`, `register_taxonomy()` and field bootstrap
+code to disk. Use `--mu-plugin` to output to the `mu-plugins` directory. The
+generated PHP and JSON are also surfaced via `gm2_render_open_in_code()` for
+easy download in the admin UI.
+
 ## Google Merchant Centre Real-Time Updates
 
 The plugin tracks real-time product updates for Google Merchant Centre. Price,
