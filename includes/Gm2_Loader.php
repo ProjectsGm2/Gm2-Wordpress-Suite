@@ -65,9 +65,13 @@ class Gm2_Loader {
             $analytics->run();
         }
 
-        if ($enable_custom_posts && is_admin()) {
-            $cp_admin = new Gm2_Custom_Posts_Admin();
-            $cp_admin->run();
+        if ($enable_custom_posts) {
+            if (is_admin()) {
+                $cp_admin = new Gm2_Custom_Posts_Admin();
+                $cp_admin->run();
+            }
+            $cp_public = new Gm2_Custom_Posts_Public();
+            $cp_public->run();
         }
 
         if ($enable_phone_login) {
