@@ -14,6 +14,7 @@ class Gm2_Custom_Posts_Admin {
         add_action('wp_ajax_gm2_save_cpt_fields', [ $this, 'ajax_save_fields' ]);
         add_action('wp_ajax_gm2_save_tax_args', [ $this, 'ajax_save_tax_args' ]);
         add_action('wp_ajax_gm2_save_query', [ $this, 'ajax_save_query' ]);
+        add_action('wp_ajax_gm2_save_cpt_model', [ $this, 'ajax_save_cpt_model' ]);
         add_action('enqueue_block_editor_assets', [ $this, 'enqueue_block_editor_assets' ]);
         add_action('restrict_manage_posts', [ $this, 'restrict_manage_posts' ]);
         add_action('pre_get_posts', [ $this, 'pre_get_posts' ]);
@@ -962,6 +963,37 @@ class Gm2_Custom_Posts_Admin {
                 file_exists($file) ? filemtime($file) : GM2_VERSION,
                 true
             );
+            $config = $this->get_config();
+            $models = [];
+            foreach ($config['post_types'] as $slug => $pt) {
+                $fields = [];
+                foreach ($pt['fields'] ?? [] as $f_slug => $f) {
+                    $fields[] = [
+                        'slug'  => $f_slug,
+                        'label' => $f['label'] ?? '',
+                        'type'  => $f['type'] ?? 'text',
+                    ];
+                }
+                $taxes = [];
+                foreach ($config['taxonomies'] ?? [] as $tax_slug => $tax) {
+                    if (!empty($tax['post_types']) && in_array($slug, $tax['post_types'], true)) {
+                        $taxes[] = [
+                            'slug'  => $tax_slug,
+                            'label' => $tax['label'] ?? '',
+                        ];
+                    }
+                }
+                $models[$slug] = [
+                    'label'      => $pt['label'] ?? '',
+                    'fields'     => $fields,
+                    'taxonomies' => $taxes,
+                ];
+            }
+            wp_localize_script('gm2-cpt-wizard', 'gm2CPTWizard', [
+                'nonce'  => wp_create_nonce('gm2_save_cpt_model'),
+                'ajax'   => admin_url('admin-ajax.php'),
+                'models' => $models,
+            ]);
         }
 
         if ($hook === 'gm2-custom-posts_page_gm2_query_builder') {
@@ -1198,6 +1230,49 @@ class Gm2_Custom_Posts_Admin {
 
         \Gm2\Query_Manager::save_query($id, $sanitized);
         wp_send_json_success();
+    }
+
+    public function ajax_save_cpt_model() {
+        if (!$this->can_manage()) {
+            wp_send_json_error('permission');
+        }
+        $nonce = $_POST['nonce'] ?? '';
+        if (!wp_verify_nonce($nonce, 'gm2_save_cpt_model')) {
+            wp_send_json_error('nonce');
+        }
+        $slug   = sanitize_key($_POST['slug'] ?? '');
+        $label  = sanitize_text_field($_POST['label'] ?? '');
+        $fields = json_decode(wp_unslash($_POST['fields'] ?? ''), true);
+        $taxes  = json_decode(wp_unslash($_POST['taxonomies'] ?? ''), true);
+        if (!$slug || !is_array($fields) || !is_array($taxes)) {
+            wp_send_json_error('data');
+        }
+        $config = $this->get_config();
+        $sanitized_fields = $this->sanitize_fields_array($fields);
+        $config['post_types'][$slug] = [
+            'label'  => $label ?: ucfirst($slug),
+            'fields' => $sanitized_fields,
+            'args'   => $config['post_types'][$slug]['args'] ?? [],
+        ];
+        foreach ($taxes as $tax) {
+            if (!is_array($tax)) { continue; }
+            $tax_slug = sanitize_key($tax['slug'] ?? '');
+            if (!$tax_slug) { continue; }
+            $tax_label = sanitize_text_field($tax['label'] ?? '');
+            $existing = $config['taxonomies'][$tax_slug]['post_types'] ?? [];
+            if (!in_array($slug, $existing, true)) {
+                $existing[] = $slug;
+            }
+            $config['taxonomies'][$tax_slug]['label'] = $tax_label ?: ($config['taxonomies'][$tax_slug]['label'] ?? ucfirst($tax_slug));
+            $config['taxonomies'][$tax_slug]['post_types'] = $existing;
+            if (!isset($config['taxonomies'][$tax_slug]['args'])) {
+                $config['taxonomies'][$tax_slug]['args'] = [];
+            }
+        }
+        update_option('gm2_custom_posts_config', $config);
+        wp_send_json_success([
+            'post_type' => $config['post_types'][$slug],
+        ]);
     }
 
     public function enqueue_block_editor_assets() {
