@@ -162,4 +162,36 @@ class CustomPostsFieldsTest extends WP_UnitTestCase {
         $this->assertSame('show_extra', $saved['conditions'][0]['conditions'][0]['target']);
         $this->assertSame('=', $saved['conditions'][0]['conditions'][0]['operator']);
     }
+
+    public function test_render_field_group_outputs_disabled_flag() {
+        $_REQUEST['trig'] = '1';
+        $fields = [
+            'trig' => [
+                'type' => 'checkbox',
+            ],
+            'locked' => [
+                'type' => 'text',
+                'conditions' => [
+                    [
+                        'relation' => 'AND',
+                        'action'   => 'disable',
+                        'conditions' => [
+                            [
+                                'relation' => 'AND',
+                                'target'   => 'trig',
+                                'operator' => '=',
+                                'value'    => '1',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+        ob_start();
+        gm2_render_field_group($fields, 0, 'post');
+        $html = ob_get_clean();
+        unset($_REQUEST['trig']);
+        $this->assertStringContainsString('data-disabled="1"', $html);
+        $this->assertMatchesRegularExpression('/<input[^>]*name="locked"[^>]*disabled/', $html);
+    }
 }
