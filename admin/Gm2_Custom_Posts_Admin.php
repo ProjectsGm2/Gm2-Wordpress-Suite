@@ -1300,11 +1300,49 @@ class Gm2_Custom_Posts_Admin {
         }
         $fields = [];
         foreach ($config['post_types'][$pt]['fields'] as $slug => $field) {
-            $fields[] = [ 'key' => $slug, 'label' => $field['label'] ?? $slug ];
+            $field_type = $field['type'] ?? 'text';
+            $meta_type = 'string';
+            $sanitize  = 'sanitize_text_field';
+
+            switch ($field_type) {
+                case 'number':
+                    $meta_type = 'number';
+                    $sanitize  = 'floatval';
+                    break;
+                case 'media':
+                    $meta_type = 'integer';
+                    $sanitize  = 'absint';
+                    break;
+                case 'checkbox':
+                case 'toggle':
+                    $meta_type = 'boolean';
+                    $sanitize  = 'rest_sanitize_boolean';
+                    break;
+                case 'textarea':
+                    $sanitize = 'sanitize_textarea_field';
+                    break;
+            }
+
+            $field_config = [
+                'key'   => $slug,
+                'label' => $field['label'] ?? $slug,
+                'type'  => $field_type,
+            ];
+            if ($field_type === 'select' && !empty($field['options']) && is_array($field['options'])) {
+                $options = [];
+                foreach ($field['options'] as $val => $label) {
+                    $options[] = [ 'value' => $val, 'label' => $label ];
+                }
+                $field_config['options'] = $options;
+            }
+
+            $fields[] = $field_config;
+
             register_post_meta($pt, $slug, [
                 'show_in_rest' => true,
                 'single' => true,
-                'type' => 'string',
+                'type' => $meta_type,
+                'sanitize_callback' => $sanitize,
                 'auth_callback' => function() { return current_user_can('edit_posts'); }
             ]);
         }
@@ -1312,7 +1350,7 @@ class Gm2_Custom_Posts_Admin {
         wp_enqueue_script(
             'gm2-custom-posts-gutenberg',
             GM2_PLUGIN_URL . 'admin/js/gm2-custom-posts-gutenberg.js',
-            [ 'wp-edit-post', 'wp-element', 'wp-components', 'wp-data', 'wp-plugins' ],
+            [ 'wp-edit-post', 'wp-element', 'wp-components', 'wp-data', 'wp-plugins', 'wp-block-editor' ],
             file_exists($file) ? filemtime($file) : GM2_VERSION,
             true
         );
