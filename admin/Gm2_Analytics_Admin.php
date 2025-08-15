@@ -14,8 +14,8 @@ class Gm2_Analytics_Admin {
 
     public function add_menu() {
         add_menu_page(
-            esc_html__( 'Analytics', 'gm2-wordpress-suite' ),
-            esc_html__( 'Analytics', 'gm2-wordpress-suite' ),
+            esc_html__( 'Gm2 Analytics', 'gm2-wordpress-suite' ),
+            esc_html__( 'Gm2 Analytics', 'gm2-wordpress-suite' ),
             'manage_options',
             'gm2-analytics',
             [ $this, 'display_page' ],
