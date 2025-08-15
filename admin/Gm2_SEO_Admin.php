@@ -2907,8 +2907,7 @@ class Gm2_SEO_Admin {
                 $new    = $dir . '/' . $name;
                 if ($new !== $file && @rename($file, $new)) {
                     update_attached_file($attachment_id, $new);
-                    $meta = wp_generate_attachment_metadata($attachment_id, $new);
-                    wp_update_attachment_metadata($attachment_id, $meta);
+                    \gm2_queue_thumbnail_regeneration($attachment_id);
                 }
             }
         }
@@ -2980,8 +2979,7 @@ class Gm2_SEO_Admin {
             $body = wp_remote_retrieve_body($response);
             if ($body !== '') {
                 file_put_contents($file, $body);
-                $metadata = wp_generate_attachment_metadata($attachment_id, $file);
-                wp_update_attachment_metadata($attachment_id, $metadata);
+                \gm2_queue_thumbnail_regeneration($attachment_id);
             }
         }
     }

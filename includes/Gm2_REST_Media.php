@@ -34,7 +34,7 @@ class Gm2_REST_Media {
         if (!wp_attachment_is_image($id)) {
             return new \WP_Error('gm2_invalid_attachment', __('Attachment must be an image.', 'gm2-wordpress-suite'), [ 'status' => 400 ]);
         }
-        wp_schedule_single_event(time(), 'gm2_generate_thumbnails', [ $id ]);
+        \gm2_queue_thumbnail_regeneration($id);
         return rest_ensure_response([ 'scheduled' => true ]);
     }
 
