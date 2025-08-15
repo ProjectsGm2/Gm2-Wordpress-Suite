@@ -19,7 +19,10 @@ class Gm2_Custom_Posts_Public {
         }
         if (!empty($config['post_types'])) {
             foreach ($config['post_types'] as $slug => $pt) {
-                $args = $pt['args'] ?? [];
+                $args = [];
+                foreach (($pt['args'] ?? []) as $a_key => $a_val) {
+                    $args[$a_key] = is_array($a_val) && array_key_exists('value', $a_val) ? $a_val['value'] : $a_val;
+                }
                 $label = $pt['label'] ?? ucfirst($slug);
                 $args['labels']['name'] = $label;
                 $args['labels']['singular_name'] = $label;
@@ -29,7 +32,10 @@ class Gm2_Custom_Posts_Public {
         }
         if (!empty($config['taxonomies'])) {
             foreach ($config['taxonomies'] as $slug => $tax) {
-                $args = $tax['args'] ?? [];
+                $args = [];
+                foreach (($tax['args'] ?? []) as $a_key => $a_val) {
+                    $args[$a_key] = is_array($a_val) && array_key_exists('value', $a_val) ? $a_val['value'] : $a_val;
+                }
                 $label = $tax['label'] ?? ucfirst($slug);
                 $args['labels']['name'] = $label;
                 $args['labels']['singular_name'] = $label;

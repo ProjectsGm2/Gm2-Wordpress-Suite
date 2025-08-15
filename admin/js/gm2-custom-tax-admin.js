@@ -37,6 +37,9 @@ jQuery(function($){
         $('#gm2-tax-arg-index').val(index !== undefined ? index : '');
         $('#gm2-tax-arg-key').prop('disabled', index !== undefined).val(data ? data.key : '');
         showArgControl(data ? data.key : '', data ? data.value : '');
+        var targets = (gm2TaxArgs.fields || []).map(function(f){ return f.slug; });
+        targets.push('page_id','post_id');
+        gm2Conditions.init($('#gm2-tax-conditions'), { targets: targets, data: data ? data.conditions : [] });
         $('#gm2-tax-arg-form').show();
     }
 
@@ -52,7 +55,7 @@ jQuery(function($){
         $.post(gm2TaxArgs.ajax, data, function(resp){
             if(resp && resp.success){
                 args = [];
-                $.each(resp.data.args || {}, function(key, val){ args.push({ key:key, value:val }); });
+                $.each(resp.data.args || {}, function(key, val){ args.push({ key:key, value: val.value !== undefined ? val.value : val, conditions: val.conditions || [] }); });
                 renderArgs();
                 if(cb) cb(true);
             }else{
@@ -68,7 +71,7 @@ jQuery(function($){
         var idx = $('#gm2-tax-arg-index').val();
         var key = $('#gm2-tax-arg-key').val();
         var val = (key === 'public' || key === 'hierarchical') ? $('#gm2-tax-arg-value').is(':checked') : $('#gm2-tax-arg-value').val();
-        var obj = { key:key, value:val };
+        var obj = { key:key, value:val, conditions: gm2Conditions.getData($('#gm2-tax-conditions')) };
         if(idx === ''){ args.push(obj); } else { args[idx] = obj; }
         saveAll(function(){ $('#gm2-tax-arg-form').hide(); });
     });

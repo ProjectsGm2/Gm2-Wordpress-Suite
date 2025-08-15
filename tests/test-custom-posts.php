@@ -20,9 +20,18 @@ class CustomPostsFieldsTest extends WP_UnitTestCase {
                         'extra' => [
                             'label' => 'Extra',
                             'type' => 'text',
-                            'conditional' => [
-                                'field' => 'show_extra',
-                                'value' => '1',
+                            'conditions' => [
+                                [
+                                    'relation' => 'AND',
+                                    'conditions' => [
+                                        [
+                                            'relation' => 'AND',
+                                            'target'   => 'show_extra',
+                                            'operator' => '=',
+                                            'value'    => '1',
+                                        ],
+                                    ],
+                                ],
                             ],
                         ],
                     ],
@@ -75,7 +84,12 @@ class CustomPostsFieldsTest extends WP_UnitTestCase {
         $admin->render_meta_box($post, $fields, 'book');
         $html = ob_get_clean();
 
-        $this->assertStringContainsString('data-conditional-field="show_extra"', $html);
-        $this->assertStringContainsString('data-conditional-value="1"', $html);
+        $this->assertStringContainsString('data-conditions=', $html);
+        preg_match('/data-conditions="([^"]+)"/', $html, $m);
+        $this->assertNotEmpty($m);
+        $decoded = json_decode(htmlspecialchars_decode($m[1]), true);
+        $this->assertSame('show_extra', $decoded[0]['conditions'][0]['target']);
+        $this->assertSame('=', $decoded[0]['conditions'][0]['operator']);
+        $this->assertSame('1', $decoded[0]['conditions'][0]['value']);
     }
 }
