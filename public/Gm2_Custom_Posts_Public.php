@@ -21,7 +21,14 @@ class Gm2_Custom_Posts_Public {
             foreach ($config['post_types'] as $slug => $pt) {
                 $args = [];
                 foreach (($pt['args'] ?? []) as $a_key => $a_val) {
-                    $args[$a_key] = is_array($a_val) && array_key_exists('value', $a_val) ? $a_val['value'] : $a_val;
+                    if (is_array($a_val)) {
+                        if (!gm2_evaluate_conditions($a_val)) {
+                            continue;
+                        }
+                        $args[$a_key] = array_key_exists('value', $a_val) ? $a_val['value'] : $a_val;
+                    } else {
+                        $args[$a_key] = $a_val;
+                    }
                 }
                 $label = $pt['label'] ?? ucfirst($slug);
                 $args['labels']['name'] = $label;
@@ -34,7 +41,14 @@ class Gm2_Custom_Posts_Public {
             foreach ($config['taxonomies'] as $slug => $tax) {
                 $args = [];
                 foreach (($tax['args'] ?? []) as $a_key => $a_val) {
-                    $args[$a_key] = is_array($a_val) && array_key_exists('value', $a_val) ? $a_val['value'] : $a_val;
+                    if (is_array($a_val)) {
+                        if (!gm2_evaluate_conditions($a_val)) {
+                            continue;
+                        }
+                        $args[$a_key] = array_key_exists('value', $a_val) ? $a_val['value'] : $a_val;
+                    } else {
+                        $args[$a_key] = $a_val;
+                    }
                 }
                 $label = $tax['label'] ?? ucfirst($slug);
                 $args['labels']['name'] = $label;
@@ -87,7 +101,10 @@ function gm2_render_custom_post_fields($post = null) {
     $fields = $config['post_types'][$ptype]['fields'];
     $out = '<div class="gm2-custom-fields">';
     foreach ($fields as $key => $field) {
-        $label = $field['label'] ?? $key;
+        if (!gm2_evaluate_conditions($field, $post->ID)) {
+            continue;
+        }
+        $label   = $field['label'] ?? $key;
         $display = gm2_get_custom_post_field($key, $post);
         if ($display === '') {
             continue;
@@ -109,6 +126,9 @@ function gm2_get_custom_post_field($key, $post = null) {
         return '';
     }
     $field = $config['post_types'][$ptype]['fields'][$key];
+    if (!gm2_evaluate_conditions($field, $post->ID)) {
+        return '';
+    }
     $value = get_post_meta($post->ID, $key, true);
     if ($value === '' || $value === null) {
         return '';
