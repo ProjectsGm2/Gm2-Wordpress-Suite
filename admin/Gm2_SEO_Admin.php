@@ -359,7 +359,7 @@ class Gm2_SEO_Admin {
         );
 
         add_submenu_page(
-            'gm2-seo',
+            'gm2-ai',
             esc_html__( 'Bulk AI Review', 'gm2-wordpress-suite' ),
             esc_html__( 'Bulk AI Review', 'gm2-wordpress-suite' ),
             'edit_posts',
@@ -369,7 +369,7 @@ class Gm2_SEO_Admin {
 
         $cap = apply_filters('gm2_bulk_ai_tax_capability', 'manage_categories');
         add_submenu_page(
-            'gm2-seo',
+            'gm2-ai',
             esc_html__( 'Bulk AI Taxonomies', 'gm2-wordpress-suite' ),
             esc_html__( 'Bulk AI Taxonomies', 'gm2-wordpress-suite' ),
             $cap,
