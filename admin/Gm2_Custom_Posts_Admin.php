@@ -36,7 +36,20 @@ class Gm2_Custom_Posts_Admin {
     }
 
     private function can_manage() {
+        if (get_option('gm2_model_locked')) {
+            return false;
+        }
         return current_user_can('manage_options') || current_user_can('gm2_manage_cpts');
+    }
+
+    private function is_locked() {
+        return (bool) get_option('gm2_model_locked');
+    }
+
+    private function display_locked_page($title) {
+        echo '<div class="wrap"><h1>' . esc_html($title) . '</h1>';
+        echo '<div class="notice notice-warning"><p>' . esc_html__( 'Model editing is locked for this site.', 'gm2-wordpress-suite' ) . '</p></div>';
+        echo '</div>';
     }
 
     public function add_menu() {
@@ -98,6 +111,10 @@ class Gm2_Custom_Posts_Admin {
     }
 
     public function display_cpt_wizard() {
+        if ($this->is_locked()) {
+            $this->display_locked_page(esc_html__( 'CPT Model Builder', 'gm2-wordpress-suite' ));
+            return;
+        }
         if ( ! $this->can_manage() ) {
             wp_die( esc_html__( 'Permission denied', 'gm2-wordpress-suite' ) );
         }
@@ -105,6 +122,10 @@ class Gm2_Custom_Posts_Admin {
     }
 
     public function display_fields_page($slug = '') {
+        if ($this->is_locked()) {
+            $this->display_locked_page(esc_html__( 'Edit Post Type', 'gm2-wordpress-suite' ));
+            return;
+        }
         if (!$this->can_manage()) {
             wp_die(esc_html__( 'Permission denied', 'gm2-wordpress-suite' ));
         }
@@ -181,6 +202,10 @@ class Gm2_Custom_Posts_Admin {
     }
 
     public function display_taxonomy_page() {
+        if ($this->is_locked()) {
+            $this->display_locked_page(esc_html__( 'Edit Taxonomy', 'gm2-wordpress-suite' ));
+            return;
+        }
         if (!$this->can_manage()) {
             wp_die(esc_html__( 'Permission denied', 'gm2-wordpress-suite' ));
         }
@@ -259,6 +284,10 @@ class Gm2_Custom_Posts_Admin {
     }
 
     public function display_query_builder() {
+        if ($this->is_locked()) {
+            $this->display_locked_page(esc_html__( 'WP_Query Builder', 'gm2-wordpress-suite' ));
+            return;
+        }
         if (!$this->can_manage()) {
             wp_die(esc_html__( 'Permission denied', 'gm2-wordpress-suite' ));
         }
@@ -293,6 +322,10 @@ class Gm2_Custom_Posts_Admin {
     }
 
     public function display_workflows_page() {
+        if ($this->is_locked()) {
+            $this->display_locked_page(esc_html__( 'Workflows', 'gm2-wordpress-suite' ));
+            return;
+        }
         if (!$this->can_manage()) {
             wp_die(esc_html__( 'Permission denied', 'gm2-wordpress-suite' ));
         }
@@ -398,6 +431,10 @@ class Gm2_Custom_Posts_Admin {
     }
 
     public function display_page() {
+        if ($this->is_locked()) {
+            $this->display_locked_page(esc_html__( 'Gm2 Custom Posts', 'gm2-wordpress-suite' ));
+            return;
+        }
         if (!$this->can_manage()) {
             wp_die( esc_html__( 'Permission denied', 'gm2-wordpress-suite' ) );
         }
