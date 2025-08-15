@@ -327,20 +327,24 @@ class Gm2_Custom_Posts_Admin {
     public function render_meta_box($post, $fields, $slug) {
         wp_nonce_field('gm2_save_custom_fields', 'gm2_custom_fields_nonce');
         foreach ($fields as $key => $field) {
-            $type  = $field['type'] ?? 'text';
-            $label = $field['label'] ?? $key;
-            $value = get_post_meta($post->ID, $key, true);
+            $type   = $field['type'] ?? 'text';
+            $label  = $field['label'] ?? $key;
+            $value  = get_post_meta($post->ID, $key, true);
             if ($value === '' && isset($field['default'])) {
                 $value = $field['default'];
             }
-            $cond  = $field['conditional'] ?? [];
-            $conds = $field['conditions'] ?? [];
+            $cond   = $field['conditional'] ?? [];
+            $conds  = $field['conditions'] ?? [];
             $options = $field['options'] ?? [];
+            $visible = gm2_evaluate_conditions($field, $post->ID);
             echo '<div class="gm2-field"';
             if (!empty($conds)) {
                 echo ' data-conditions="' . esc_attr(wp_json_encode($conds)) . '"';
             } elseif (!empty($cond['field']) && isset($cond['value'])) {
                 echo ' data-conditional-field="' . esc_attr($cond['field']) . '" data-conditional-value="' . esc_attr($cond['value']) . '"';
+            }
+            if (!$visible) {
+                echo ' style="display:none;"';
             }
             echo '>';
             echo '<p><label for="' . esc_attr($key) . '">' . esc_html($label) . '</label><br />';
