@@ -12,6 +12,7 @@ class Gm2_Custom_Posts_Admin {
         add_action('save_post', [ $this, 'save_meta_boxes' ]);
         add_action('admin_enqueue_scripts', [ $this, 'enqueue_scripts' ]);
         add_action('wp_ajax_gm2_save_cpt_fields', [ $this, 'ajax_save_fields' ]);
+        add_action('wp_ajax_gm2_save_tax_args', [ $this, 'ajax_save_tax_args' ]);
     }
 
     private function get_config() {
@@ -76,58 +77,47 @@ class Gm2_Custom_Posts_Admin {
             echo '<div class="wrap"><h1>' . esc_html__( 'Invalid post type.', 'gm2-wordpress-suite' ) . '</h1></div>';
             return;
         }
-        $fields = $post_type['fields'] ?? [];
 
         echo '<div class="wrap">';
         echo '<h1>' . sprintf(esc_html__( '%s Fields', 'gm2-wordpress-suite' ), esc_html($post_type['label'] ?? $slug)) . '</h1>';
-        echo '<form id="gm2-fields-form">';
-        wp_nonce_field('gm2_save_cpt_fields', 'gm2_save_cpt_fields_nonce');
-        echo '<input type="hidden" name="pt_slug" value="' . esc_attr($slug) . '" />';
         echo '<table class="widefat fixed" id="gm2-fields-table">';
         echo '<thead><tr>';
-        echo '<th></th>';
         echo '<th>' . esc_html__( 'Label', 'gm2-wordpress-suite' ) . '</th>';
         echo '<th>' . esc_html__( 'Slug', 'gm2-wordpress-suite' ) . '</th>';
         echo '<th>' . esc_html__( 'Type', 'gm2-wordpress-suite' ) . '</th>';
         echo '<th>' . esc_html__( 'Default', 'gm2-wordpress-suite' ) . '</th>';
-        echo '<th>' . esc_html__( 'Options', 'gm2-wordpress-suite' ) . '</th>';
-        echo '<th>' . esc_html__( 'Conditional Field', 'gm2-wordpress-suite' ) . '</th>';
-        echo '<th>' . esc_html__( 'Conditional Value', 'gm2-wordpress-suite' ) . '</th>';
+        echo '<th>' . esc_html__( 'Description', 'gm2-wordpress-suite' ) . '</th>';
         echo '<th>' . esc_html__( 'Actions', 'gm2-wordpress-suite' ) . '</th>';
-        echo '</tr></thead><tbody>';
-        foreach ($fields as $key => $field) {
-            $label = $field['label'] ?? '';
-            $type  = $field['type'] ?? 'text';
-            $def   = $field['default'] ?? '';
-            $cond  = $field['conditional'] ?? [];
-            $opt   = '';
-            if (!empty($field['options']) && is_array($field['options'])) {
-                $pairs = [];
-                foreach ($field['options'] as $ov => $ol) {
-                    $pairs[] = $ov . ':' . $ol;
-                }
-                $opt = implode(',', $pairs);
-            }
-            echo '<tr>';
-            echo '<td class="gm2-move-field"><span class="dashicons dashicons-move"></span></td>';
-            echo '<td><input type="text" class="gm2-field-label" value="' . esc_attr($label) . '" /></td>';
-            echo '<td><input type="text" class="gm2-field-slug" value="' . esc_attr($key) . '" /></td>';
-            echo '<td><select class="gm2-field-type">';
-            foreach ([ 'text', 'number', 'checkbox', 'select', 'radio' ] as $t) {
-                echo '<option value="' . esc_attr($t) . '"' . selected($type, $t, false) . '>' . esc_html(ucfirst($t)) . '</option>';
-            }
-            echo '</select></td>';
-            echo '<td><input type="text" class="gm2-field-default" value="' . esc_attr($def) . '" /></td>';
-            echo '<td><input type="text" class="gm2-field-options" value="' . esc_attr($opt) . '" /></td>';
-            echo '<td><input type="text" class="gm2-cond-field" value="' . esc_attr($cond['field'] ?? '') . '" /></td>';
-            echo '<td><input type="text" class="gm2-cond-value" value="' . esc_attr($cond['value'] ?? '') . '" /></td>';
-            echo '<td><button type="button" class="button gm2-remove-field">' . esc_html__( 'Remove', 'gm2-wordpress-suite' ) . '</button></td>';
-            echo '</tr>';
-        }
-        echo '</tbody></table>';
-        echo '<p><button type="button" id="gm2-add-field" class="button">' . esc_html__( 'Add Field', 'gm2-wordpress-suite' ) . '</button></p>';
-        echo '<p><button type="submit" class="button button-primary">' . esc_html__( 'Save Fields', 'gm2-wordpress-suite' ) . '</button></p>';
-        echo '</form>';
+        echo '</tr></thead><tbody></tbody></table>';
+        echo '<p><button type="button" id="gm2-add-field" class="button">' . esc_html__( 'Add New', 'gm2-wordpress-suite' ) . '</button></p>';
+
+        echo '<h2>' . esc_html__( 'Registration Arguments', 'gm2-wordpress-suite' ) . '</h2>';
+        echo '<table class="widefat fixed" id="gm2-args-table">';
+        echo '<thead><tr>';
+        echo '<th>' . esc_html__( 'Argument', 'gm2-wordpress-suite' ) . '</th>';
+        echo '<th>' . esc_html__( 'Value', 'gm2-wordpress-suite' ) . '</th>';
+        echo '<th>' . esc_html__( 'Actions', 'gm2-wordpress-suite' ) . '</th>';
+        echo '</tr></thead><tbody></tbody></table>';
+        echo '<p><button type="button" id="gm2-add-arg" class="button">' . esc_html__( 'Add New', 'gm2-wordpress-suite' ) . '</button></p>';
+
+        // Hidden forms for fields and args
+        echo '<div id="gm2-field-form" style="display:none;">';
+        echo '<input type="hidden" id="gm2-field-index" />';
+        echo '<p><label>' . esc_html__( 'Label', 'gm2-wordpress-suite' ) . '<br /><input type="text" id="gm2-field-label" class="regular-text" /></label></p>';
+        echo '<p><label>' . esc_html__( 'Slug', 'gm2-wordpress-suite' ) . '<br /><input type="text" id="gm2-field-slug" class="regular-text" /></label></p>';
+        echo '<p><label>' . esc_html__( 'Type', 'gm2-wordpress-suite' ) . '<br /><select id="gm2-field-type"><option value="text">Text</option><option value="number">Number</option><option value="checkbox">Checkbox</option><option value="select">Dropdown</option><option value="radio">Radio</option></select></label></p>';
+        echo '<p><label>' . esc_html__( 'Default', 'gm2-wordpress-suite' ) . '<br /><input type="text" id="gm2-field-default" class="regular-text" /></label></p>';
+        echo '<p><label>' . esc_html__( 'Description', 'gm2-wordpress-suite' ) . '<br /><input type="text" id="gm2-field-description" class="regular-text" /></label></p>';
+        echo '<p><button type="button" class="button button-primary" id="gm2-field-save">' . esc_html__( 'Save', 'gm2-wordpress-suite' ) . '</button> <button type="button" class="button" id="gm2-field-cancel">' . esc_html__( 'Cancel', 'gm2-wordpress-suite' ) . '</button></p>';
+        echo '</div>';
+
+        echo '<div id="gm2-arg-form" style="display:none;">';
+        echo '<input type="hidden" id="gm2-arg-index" />';
+        echo '<p><label>' . esc_html__( 'Key', 'gm2-wordpress-suite' ) . '<br /><input type="text" id="gm2-arg-key" class="regular-text" /></label></p>';
+        echo '<div id="gm2-arg-value-wrap"></div>';
+        echo '<p><button type="button" class="button button-primary" id="gm2-arg-save">' . esc_html__( 'Save', 'gm2-wordpress-suite' ) . '</button> <button type="button" class="button" id="gm2-arg-cancel">' . esc_html__( 'Cancel', 'gm2-wordpress-suite' ) . '</button></p>';
+        echo '</div>';
+
         echo '</div>';
     }
 
@@ -144,38 +134,28 @@ class Gm2_Custom_Posts_Admin {
             return;
         }
 
-        if (isset($_POST['gm2_save_tax_args']) && check_admin_referer('gm2_save_tax_args')) {
-            $label      = sanitize_text_field($_POST['tax_label'] ?? '');
-            $post_types = array_filter(array_map('sanitize_key', explode(',', $_POST['tax_post_types'] ?? '')));
-            $args       = json_decode(wp_unslash($_POST['tax_args'] ?? ''), true);
-            if (!is_array($args)) {
-                $args = [];
-            }
-            $config['taxonomies'][$slug] = [
-                'label'      => $label ?: ($taxonomy['label'] ?? ucfirst($slug)),
-                'post_types' => $post_types,
-                'args'       => $args,
-            ];
-            update_option('gm2_custom_posts_config', $config);
-            $taxonomy = $config['taxonomies'][$slug];
-            echo '<div class="notice notice-success"><p>' . esc_html__( 'Taxonomy saved.', 'gm2-wordpress-suite' ) . '</p></div>';
-        }
-
-        $args_json = wp_json_encode($taxonomy['args'] ?? [], JSON_PRETTY_PRINT);
-
         echo '<div class="wrap">';
         echo '<h1>' . sprintf(esc_html__( '%s Taxonomy', 'gm2-wordpress-suite' ), esc_html($taxonomy['label'] ?? $slug)) . '</h1>';
-        echo '<form method="post">';
-        wp_nonce_field('gm2_save_tax_args');
-        echo '<input type="hidden" name="tax_slug" value="' . esc_attr($slug) . '" />';
-        echo '<p><label>' . esc_html__( 'Label', 'gm2-wordpress-suite' ) . '<br />';
-        echo '<input type="text" name="tax_label" class="regular-text" value="' . esc_attr($taxonomy['label'] ?? '') . '" /></label></p>';
-        echo '<p><label>' . esc_html__( 'Post Types (comma separated)', 'gm2-wordpress-suite' ) . '<br />';
-        echo '<input type="text" name="tax_post_types" class="regular-text" value="' . esc_attr(implode(',', $taxonomy['post_types'] ?? [])) . '" /></label></p>';
-        echo '<p><label>' . esc_html__( 'Args (JSON)', 'gm2-wordpress-suite' ) . '<br />';
-        echo '<textarea name="tax_args" class="large-text code" rows="5">' . esc_textarea($args_json) . '</textarea></label></p>';
-        echo '<p><input type="submit" name="gm2_save_tax_args" class="button button-primary" value="' . esc_attr__( 'Save Taxonomy', 'gm2-wordpress-suite' ) . '" /></p>';
-        echo '</form>';
+        echo '<p><label>' . esc_html__( 'Label', 'gm2-wordpress-suite' ) . '<br /><input type="text" id="gm2-tax-label" class="regular-text" value="' . esc_attr($taxonomy['label'] ?? '') . '" /></label></p>';
+        echo '<p><label>' . esc_html__( 'Post Types (comma separated)', 'gm2-wordpress-suite' ) . '<br /><input type="text" id="gm2-tax-post-types" class="regular-text" value="' . esc_attr(implode(',', $taxonomy['post_types'] ?? [])) . '" /></label></p>';
+
+        echo '<h2>' . esc_html__( 'Registration Arguments', 'gm2-wordpress-suite' ) . '</h2>';
+        echo '<table class="widefat fixed" id="gm2-tax-args-table">';
+        echo '<thead><tr>';
+        echo '<th>' . esc_html__( 'Argument', 'gm2-wordpress-suite' ) . '</th>';
+        echo '<th>' . esc_html__( 'Value', 'gm2-wordpress-suite' ) . '</th>';
+        echo '<th>' . esc_html__( 'Actions', 'gm2-wordpress-suite' ) . '</th>';
+        echo '</tr></thead><tbody></tbody></table>';
+        echo '<p><button type="button" id="gm2-add-tax-arg" class="button">' . esc_html__( 'Add New', 'gm2-wordpress-suite' ) . '</button></p>';
+
+        echo '<div id="gm2-tax-arg-form" style="display:none;">';
+        echo '<input type="hidden" id="gm2-tax-arg-index" />';
+        echo '<p><label>' . esc_html__( 'Key', 'gm2-wordpress-suite' ) . '<br /><input type="text" id="gm2-tax-arg-key" class="regular-text" /></label></p>';
+        echo '<div id="gm2-tax-arg-value-wrap"></div>';
+        echo '<p><button type="button" class="button button-primary" id="gm2-tax-arg-save">' . esc_html__( 'Save', 'gm2-wordpress-suite' ) . '</button> <button type="button" class="button" id="gm2-tax-arg-cancel">' . esc_html__( 'Cancel', 'gm2-wordpress-suite' ) . '</button></p>';
+        echo '</div>';
+
+        echo '<p><button type="button" class="button button-primary" id="gm2-tax-save">' . esc_html__( 'Save Taxonomy', 'gm2-wordpress-suite' ) . '</button></p>';
         echo '</div>';
     }
 
@@ -340,6 +320,9 @@ class Gm2_Custom_Posts_Admin {
                     echo '<input type="text" id="' . esc_attr($key) . '" name="' . esc_attr($key) . '" value="' . esc_attr($value) . '" class="regular-text" />';
                     break;
             }
+            if (!empty($field['description'])) {
+                echo '<br /><span class="description">' . esc_html($field['description']) . '</span>';
+            }
             echo '</p></div>';
         }
     }
@@ -390,13 +373,37 @@ class Gm2_Custom_Posts_Admin {
             wp_enqueue_script(
                 'gm2-custom-posts-admin',
                 GM2_PLUGIN_URL . 'admin/js/gm2-custom-posts-admin.js',
-                [ 'jquery', 'jquery-ui-sortable' ],
+                [ 'jquery' ],
                 file_exists($admin_js) ? filemtime($admin_js) : GM2_VERSION,
                 true
             );
+
+            $slug   = sanitize_key($_GET['cpt'] ?? '');
+            $config = $this->get_config();
+            $post   = $config['post_types'][$slug] ?? [];
+            $fields = [];
+            foreach ($post['fields'] ?? [] as $f_slug => $f) {
+                $fields[] = [
+                    'label'       => $f['label'] ?? '',
+                    'slug'        => $f_slug,
+                    'type'        => $f['type'] ?? 'text',
+                    'default'     => $f['default'] ?? '',
+                    'description' => $f['description'] ?? '',
+                ];
+            }
+            $args = [];
+            foreach ($post['args'] ?? [] as $a_key => $a_val) {
+                $args[] = [
+                    'key'   => $a_key,
+                    'value' => $a_val,
+                ];
+            }
             wp_localize_script('gm2-custom-posts-admin', 'gm2CPTFields', [
-                'nonce' => wp_create_nonce('gm2_save_cpt_fields'),
-                'ajax'  => admin_url('admin-ajax.php'),
+                'nonce'  => wp_create_nonce('gm2_save_cpt_fields'),
+                'ajax'   => admin_url('admin-ajax.php'),
+                'slug'   => $slug,
+                'fields' => $fields,
+                'args'   => $args,
             ]);
 
             $admin_css = GM2_PLUGIN_DIR . 'admin/css/gm2-custom-posts-admin.css';
@@ -406,6 +413,31 @@ class Gm2_Custom_Posts_Admin {
                 [],
                 file_exists($admin_css) ? filemtime($admin_css) : GM2_VERSION
             );
+        }
+
+        if ($hook === 'gm2-custom-posts_page_gm2_tax_args') {
+            $tax_js = GM2_PLUGIN_DIR . 'admin/js/gm2-custom-tax-admin.js';
+            wp_enqueue_script(
+                'gm2-custom-tax-admin',
+                GM2_PLUGIN_URL . 'admin/js/gm2-custom-tax-admin.js',
+                [ 'jquery' ],
+                file_exists($tax_js) ? filemtime($tax_js) : GM2_VERSION,
+                true
+            );
+
+            $slug   = sanitize_key($_GET['tax'] ?? '');
+            $config = $this->get_config();
+            $tax    = $config['taxonomies'][$slug] ?? [];
+            $args   = [];
+            foreach ($tax['args'] ?? [] as $a_key => $a_val) {
+                $args[] = [ 'key' => $a_key, 'value' => $a_val ];
+            }
+            wp_localize_script('gm2-custom-tax-admin', 'gm2TaxArgs', [
+                'nonce' => wp_create_nonce('gm2_save_tax_args'),
+                'ajax'  => admin_url('admin-ajax.php'),
+                'slug'  => $slug,
+                'args'  => $args,
+            ]);
         }
     }
 
@@ -418,9 +450,10 @@ class Gm2_Custom_Posts_Admin {
             wp_send_json_error('nonce');
         }
 
-        $slug = sanitize_key($_POST['slug'] ?? '');
+        $slug   = sanitize_key($_POST['slug'] ?? '');
         $fields = $_POST['fields'] ?? [];
-        if (!$slug || !is_array($fields)) {
+        $args   = $_POST['args'] ?? [];
+        if (!$slug || !is_array($fields) || !is_array($args)) {
             wp_send_json_error('data');
         }
 
@@ -437,34 +470,83 @@ class Gm2_Custom_Posts_Admin {
             }
             $type = in_array($field['type'] ?? 'text', [ 'text', 'number', 'checkbox', 'select', 'radio' ], true) ? $field['type'] : 'text';
             $def  = sanitize_text_field($field['default'] ?? '');
-            $options = [];
-            $opt_str = $field['options'] ?? '';
-            if (is_string($opt_str) && $opt_str !== '') {
-                foreach (explode(',', $opt_str) as $pair) {
-                    $parts = array_map('trim', explode(':', $pair));
-                    if (!empty($parts[0])) {
-                        $options[$parts[0]] = $parts[1] ?? $parts[0];
-                    }
-                }
-            }
-            $cond = [];
-            if (!empty($field['conditional']['field']) && isset($field['conditional']['value'])) {
-                $cond = [
-                    'field' => sanitize_key($field['conditional']['field']),
-                    'value' => sanitize_text_field($field['conditional']['value']),
-                ];
-            }
             $sanitized[$f_slug] = [
                 'label'       => sanitize_text_field($field['label'] ?? ''),
                 'type'        => $type,
                 'default'     => $def,
-                'options'     => $options,
-                'conditional' => $cond,
+                'description' => sanitize_text_field($field['description'] ?? ''),
             ];
         }
 
+        $sanitized_args = [];
+        foreach ($args as $arg) {
+            $a_key = sanitize_key($arg['key'] ?? '');
+            if (!$a_key) {
+                continue;
+            }
+            $value = $arg['value'] ?? '';
+            if (in_array($a_key, [ 'public', 'hierarchical' ], true)) {
+                $sanitized_args[$a_key] = !empty($value);
+            } elseif ($a_key === 'supports') {
+                if (is_array($value)) {
+                    $sanitized_args[$a_key] = array_filter(array_map('sanitize_key', $value));
+                } else {
+                    $sanitized_args[$a_key] = array_filter(array_map('sanitize_key', explode(',', (string) $value)));
+                }
+            } else {
+                $sanitized_args[$a_key] = sanitize_text_field($value);
+            }
+        }
+
         $config['post_types'][$slug]['fields'] = $sanitized;
+        $config['post_types'][$slug]['args']   = $sanitized_args;
         update_option('gm2_custom_posts_config', $config);
-        wp_send_json_success();
+        wp_send_json_success([
+            'fields' => $sanitized,
+            'args'   => $sanitized_args,
+        ]);
+    }
+
+    public function ajax_save_tax_args() {
+        if (!$this->can_manage()) {
+            wp_send_json_error('permission');
+        }
+        $nonce = $_POST['nonce'] ?? '';
+        if (!wp_verify_nonce($nonce, 'gm2_save_tax_args')) {
+            wp_send_json_error('nonce');
+        }
+        $slug = sanitize_key($_POST['slug'] ?? '');
+        $args = $_POST['args'] ?? [];
+        $label = sanitize_text_field($_POST['label'] ?? '');
+        $post_types = array_filter(array_map('sanitize_key', explode(',', $_POST['post_types'] ?? '')));
+        if (!$slug || !is_array($args)) {
+            wp_send_json_error('data');
+        }
+        $config = $this->get_config();
+        if (empty($config['taxonomies'][$slug])) {
+            wp_send_json_error('invalid');
+        }
+        $sanitized_args = [];
+        foreach ($args as $arg) {
+            $a_key = sanitize_key($arg['key'] ?? '');
+            if (!$a_key) {
+                continue;
+            }
+            $value = $arg['value'] ?? '';
+            if (in_array($a_key, [ 'public', 'hierarchical' ], true)) {
+                $sanitized_args[$a_key] = !empty($value);
+            } else {
+                $sanitized_args[$a_key] = sanitize_text_field($value);
+            }
+        }
+        $config['taxonomies'][$slug]['args']       = $sanitized_args;
+        if ($label) {
+            $config['taxonomies'][$slug]['label'] = $label;
+        }
+        $config['taxonomies'][$slug]['post_types'] = $post_types;
+        update_option('gm2_custom_posts_config', $config);
+        wp_send_json_success([
+            'args' => $sanitized_args,
+        ]);
     }
 }
