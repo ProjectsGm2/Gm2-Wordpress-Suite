@@ -49,6 +49,12 @@ jQuery(function($){
         });
     }
 
+    function toggleFieldOptions(type){
+        $('#gm2-field-date-options').toggle(type === 'date');
+        $('#gm2-field-wysiwyg-options').toggle(type === 'wysiwyg');
+        $('#gm2-field-repeater-options').toggle(type === 'repeater');
+    }
+
     function showFieldForm(data, index){
         $('#gm2-field-index').val(index !== undefined ? index : '');
         $('#gm2-field-label').val(data ? data.label : '');
@@ -59,9 +65,16 @@ jQuery(function($){
         $('#gm2-field-cap').val(data ? data.capability : '');
         $('#gm2-field-edit-cap').val(data ? data.edit_capability : '');
         $('#gm2-field-help').val(data ? data.help : '');
+        $('#gm2-field-date-min').val(data ? data.date_min || '' : '');
+        $('#gm2-field-date-max').val(data ? data.date_max || '' : '');
+        $('#gm2-field-wysiwyg-media').prop('checked', data ? !!data.wysiwyg_media : false);
+        $('#gm2-field-wysiwyg-rows').val(data ? data.wysiwyg_rows || '' : '');
+        $('#gm2-field-repeater-min').val(data ? data.min_rows || '' : '');
+        $('#gm2-field-repeater-max').val(data ? data.max_rows || '' : '');
         var targets = fields.map(function(f){ return f.slug; });
         targets.push('page_id','post_id');
         gm2Conditions.init($('#gm2-field-conditions'), { targets: targets, data: data ? data.conditions : [] });
+        toggleFieldOptions($('#gm2-field-type').val());
         $('#gm2-field-form').show();
     }
 
@@ -131,6 +144,7 @@ jQuery(function($){
 
     // Field handlers
     $('#gm2-add-field').on('click', function(){ showFieldForm(); });
+    $('#gm2-field-type').on('change', function(){ toggleFieldOptions($(this).val()); });
     $('#gm2-field-cancel').on('click', function(){ $('#gm2-field-form').hide(); });
     $('#gm2-field-save').on('click', function(){
         var idx = $('#gm2-field-index').val();
@@ -145,6 +159,16 @@ jQuery(function($){
             help: $('#gm2-field-help').val(),
             conditions: gm2Conditions.getData($('#gm2-field-conditions'))
         };
+        if(obj.type === 'date'){
+            obj.date_min = $('#gm2-field-date-min').val();
+            obj.date_max = $('#gm2-field-date-max').val();
+        } else if(obj.type === 'wysiwyg'){
+            obj.wysiwyg_media = $('#gm2-field-wysiwyg-media').is(':checked');
+            obj.wysiwyg_rows = $('#gm2-field-wysiwyg-rows').val();
+        } else if(obj.type === 'repeater'){
+            obj.min_rows = $('#gm2-field-repeater-min').val();
+            obj.max_rows = $('#gm2-field-repeater-max').val();
+        }
         if(idx === ''){ fields.push(obj); } else { fields[idx] = obj; }
         saveAll(function(){ $('#gm2-field-form').hide(); });
     });
