@@ -181,6 +181,24 @@ jQuery(function($){
         saveAll();
     });
 
+    // Media uploader for media field type
+    $(document).on('click', '.gm2-media-upload', function(e){
+        e.preventDefault();
+        var target = $(this).data('target');
+        var frame = wp.media({ multiple: false });
+        frame.on('select', function(){
+            var attachment = frame.state().get('selection').first().toJSON();
+            $('[name="'+target+'"]').val(attachment.id);
+        });
+        frame.open();
+    });
+
+    // Basic sanitization for relationship fields
+    $(document).on('input', '.gm2-relationship', function(){
+        var val = $(this).val();
+        $(this).val(val.replace(/[^0-9,]/g,''));
+    });
+
     renderFields();
     renderArgs();
 });
