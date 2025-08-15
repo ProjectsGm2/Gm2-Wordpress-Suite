@@ -11,6 +11,7 @@ class Gm2_Custom_Posts_Admin {
         add_action('add_meta_boxes', [ $this, 'add_meta_boxes' ]);
         add_action('save_post', [ $this, 'save_meta_boxes' ]);
         add_action('admin_enqueue_scripts', [ $this, 'enqueue_scripts' ]);
+        add_action('wp_ajax_gm2_save_cpt_fields', [ $this, 'ajax_save_fields' ]);
     }
 
     private function get_config() {
@@ -34,6 +35,86 @@ class Gm2_Custom_Posts_Admin {
             [ $this, 'display_page' ],
             'dashicons-admin-post'
         );
+
+        $config = $this->get_config();
+        foreach ($config['post_types'] as $slug => $pt) {
+            add_submenu_page(
+                'gm2-custom-posts',
+                sprintf(esc_html__( '%s Fields', 'gm2-wordpress-suite' ), $pt['label'] ?? $slug),
+                sprintf(esc_html__( '%s Fields', 'gm2-wordpress-suite' ), $pt['label'] ?? $slug),
+                'manage_options',
+                'gm2-custom-posts-fields-' . $slug,
+                function () use ($slug) {
+                    $this->display_fields_page($slug);
+                }
+            );
+        }
+    }
+
+    public function display_fields_page($slug) {
+        if (!current_user_can('manage_options')) {
+            wp_die(esc_html__( 'Permission denied', 'gm2-wordpress-suite' ));
+        }
+
+        $config = $this->get_config();
+        $post_type = $config['post_types'][$slug] ?? null;
+        if (!$post_type) {
+            echo '<div class="wrap"><h1>' . esc_html__( 'Invalid post type.', 'gm2-wordpress-suite' ) . '</h1></div>';
+            return;
+        }
+        $fields = $post_type['fields'] ?? [];
+
+        echo '<div class="wrap">';
+        echo '<h1>' . sprintf(esc_html__( '%s Fields', 'gm2-wordpress-suite' ), esc_html($post_type['label'] ?? $slug)) . '</h1>';
+        echo '<form id="gm2-fields-form">';
+        wp_nonce_field('gm2_save_cpt_fields', 'gm2_save_cpt_fields_nonce');
+        echo '<input type="hidden" name="pt_slug" value="' . esc_attr($slug) . '" />';
+        echo '<table class="widefat fixed" id="gm2-fields-table">';
+        echo '<thead><tr>';
+        echo '<th></th>';
+        echo '<th>' . esc_html__( 'Label', 'gm2-wordpress-suite' ) . '</th>';
+        echo '<th>' . esc_html__( 'Slug', 'gm2-wordpress-suite' ) . '</th>';
+        echo '<th>' . esc_html__( 'Type', 'gm2-wordpress-suite' ) . '</th>';
+        echo '<th>' . esc_html__( 'Default', 'gm2-wordpress-suite' ) . '</th>';
+        echo '<th>' . esc_html__( 'Options', 'gm2-wordpress-suite' ) . '</th>';
+        echo '<th>' . esc_html__( 'Conditional Field', 'gm2-wordpress-suite' ) . '</th>';
+        echo '<th>' . esc_html__( 'Conditional Value', 'gm2-wordpress-suite' ) . '</th>';
+        echo '<th>' . esc_html__( 'Actions', 'gm2-wordpress-suite' ) . '</th>';
+        echo '</tr></thead><tbody>';
+        foreach ($fields as $key => $field) {
+            $label = $field['label'] ?? '';
+            $type  = $field['type'] ?? 'text';
+            $def   = $field['default'] ?? '';
+            $cond  = $field['conditional'] ?? [];
+            $opt   = '';
+            if (!empty($field['options']) && is_array($field['options'])) {
+                $pairs = [];
+                foreach ($field['options'] as $ov => $ol) {
+                    $pairs[] = $ov . ':' . $ol;
+                }
+                $opt = implode(',', $pairs);
+            }
+            echo '<tr>';
+            echo '<td class="gm2-move-field"><span class="dashicons dashicons-move"></span></td>';
+            echo '<td><input type="text" class="gm2-field-label" value="' . esc_attr($label) . '" /></td>';
+            echo '<td><input type="text" class="gm2-field-slug" value="' . esc_attr($key) . '" /></td>';
+            echo '<td><select class="gm2-field-type">';
+            foreach ([ 'text', 'number', 'checkbox', 'select', 'radio' ] as $t) {
+                echo '<option value="' . esc_attr($t) . '"' . selected($type, $t, false) . '>' . esc_html(ucfirst($t)) . '</option>';
+            }
+            echo '</select></td>';
+            echo '<td><input type="text" class="gm2-field-default" value="' . esc_attr($def) . '" /></td>';
+            echo '<td><input type="text" class="gm2-field-options" value="' . esc_attr($opt) . '" /></td>';
+            echo '<td><input type="text" class="gm2-cond-field" value="' . esc_attr($cond['field'] ?? '') . '" /></td>';
+            echo '<td><input type="text" class="gm2-cond-value" value="' . esc_attr($cond['value'] ?? '') . '" /></td>';
+            echo '<td><button type="button" class="button gm2-remove-field">' . esc_html__( 'Remove', 'gm2-wordpress-suite' ) . '</button></td>';
+            echo '</tr>';
+        }
+        echo '</tbody></table>';
+        echo '<p><button type="button" id="gm2-add-field" class="button">' . esc_html__( 'Add Field', 'gm2-wordpress-suite' ) . '</button></p>';
+        echo '<p><button type="submit" class="button button-primary">' . esc_html__( 'Save Fields', 'gm2-wordpress-suite' ) . '</button></p>';
+        echo '</form>';
+        echo '</div>';
     }
 
     public function display_page() {
@@ -161,6 +242,9 @@ class Gm2_Custom_Posts_Admin {
             $type  = $field['type'] ?? 'text';
             $label = $field['label'] ?? $key;
             $value = get_post_meta($post->ID, $key, true);
+            if ($value === '' && isset($field['default'])) {
+                $value = $field['default'];
+            }
             $cond  = $field['conditional'] ?? [];
             $options = $field['options'] ?? [];
             echo '<div class="gm2-field"';
@@ -225,16 +309,98 @@ class Gm2_Custom_Posts_Admin {
     }
 
     public function enqueue_scripts($hook) {
-        if (!in_array($hook, [ 'post.php', 'post-new.php' ], true)) {
+        if (in_array($hook, [ 'post.php', 'post-new.php' ], true)) {
+            $file = GM2_PLUGIN_DIR . 'admin/js/gm2-custom-posts.js';
+            wp_enqueue_script(
+                'gm2-custom-posts',
+                GM2_PLUGIN_URL . 'admin/js/gm2-custom-posts.js',
+                ['jquery'],
+                file_exists($file) ? filemtime($file) : GM2_VERSION,
+                true
+            );
             return;
         }
-        $file = GM2_PLUGIN_DIR . 'admin/js/gm2-custom-posts.js';
-        wp_enqueue_script(
-            'gm2-custom-posts',
-            GM2_PLUGIN_URL . 'admin/js/gm2-custom-posts.js',
-            ['jquery'],
-            file_exists($file) ? filemtime($file) : GM2_VERSION,
-            true
-        );
+
+        if (strpos($hook, 'gm2-custom-posts_page_gm2-custom-posts-fields-') === 0) {
+            $admin_js = GM2_PLUGIN_DIR . 'admin/js/gm2-custom-posts-admin.js';
+            wp_enqueue_script(
+                'gm2-custom-posts-admin',
+                GM2_PLUGIN_URL . 'admin/js/gm2-custom-posts-admin.js',
+                [ 'jquery', 'jquery-ui-sortable' ],
+                file_exists($admin_js) ? filemtime($admin_js) : GM2_VERSION,
+                true
+            );
+            wp_localize_script('gm2-custom-posts-admin', 'gm2CPTFields', [
+                'nonce' => wp_create_nonce('gm2_save_cpt_fields'),
+                'ajax'  => admin_url('admin-ajax.php'),
+            ]);
+
+            $admin_css = GM2_PLUGIN_DIR . 'admin/css/gm2-custom-posts-admin.css';
+            wp_enqueue_style(
+                'gm2-custom-posts-admin',
+                GM2_PLUGIN_URL . 'admin/css/gm2-custom-posts-admin.css',
+                [],
+                file_exists($admin_css) ? filemtime($admin_css) : GM2_VERSION
+            );
+        }
+    }
+
+    public function ajax_save_fields() {
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('permission');
+        }
+        $nonce = $_POST['nonce'] ?? '';
+        if (!wp_verify_nonce($nonce, 'gm2_save_cpt_fields')) {
+            wp_send_json_error('nonce');
+        }
+
+        $slug = sanitize_key($_POST['slug'] ?? '');
+        $fields = $_POST['fields'] ?? [];
+        if (!$slug || !is_array($fields)) {
+            wp_send_json_error('data');
+        }
+
+        $config = $this->get_config();
+        if (empty($config['post_types'][$slug])) {
+            wp_send_json_error('invalid');
+        }
+
+        $sanitized = [];
+        foreach ($fields as $field) {
+            $f_slug = sanitize_key($field['slug'] ?? '');
+            if (!$f_slug) {
+                continue;
+            }
+            $type = in_array($field['type'] ?? 'text', [ 'text', 'number', 'checkbox', 'select', 'radio' ], true) ? $field['type'] : 'text';
+            $def  = sanitize_text_field($field['default'] ?? '');
+            $options = [];
+            $opt_str = $field['options'] ?? '';
+            if (is_string($opt_str) && $opt_str !== '') {
+                foreach (explode(',', $opt_str) as $pair) {
+                    $parts = array_map('trim', explode(':', $pair));
+                    if (!empty($parts[0])) {
+                        $options[$parts[0]] = $parts[1] ?? $parts[0];
+                    }
+                }
+            }
+            $cond = [];
+            if (!empty($field['conditional']['field']) && isset($field['conditional']['value'])) {
+                $cond = [
+                    'field' => sanitize_key($field['conditional']['field']),
+                    'value' => sanitize_text_field($field['conditional']['value']),
+                ];
+            }
+            $sanitized[$f_slug] = [
+                'label'       => sanitize_text_field($field['label'] ?? ''),
+                'type'        => $type,
+                'default'     => $def,
+                'options'     => $options,
+                'conditional' => $cond,
+            ];
+        }
+
+        $config['post_types'][$slug]['fields'] = $sanitized;
+        update_option('gm2_custom_posts_config', $config);
+        wp_send_json_success();
     }
 }
