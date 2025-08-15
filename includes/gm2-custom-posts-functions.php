@@ -300,6 +300,63 @@ function gm2_register_custom_posts() {
         }
         register_taxonomy($slug, $tax['post_types'] ?? [], $args);
 
+        // Output and save basic term fields.
+        add_action("{$slug}_add_form_fields", function () {
+            ?>
+            <div class="form-field term-color-wrap">
+                <label for="color"><?php echo esc_html__('Color', 'gm2-wordpress-suite'); ?></label>
+                <input type="text" name="color" id="color" value="" />
+            </div>
+            <div class="form-field term-icon-wrap">
+                <label for="icon"><?php echo esc_html__('Icon', 'gm2-wordpress-suite'); ?></label>
+                <input type="text" name="icon" id="icon" value="" />
+            </div>
+            <div class="form-field term-order-wrap">
+                <label for="_gm2_order"><?php echo esc_html__('Order', 'gm2-wordpress-suite'); ?></label>
+                <input type="number" name="_gm2_order" id="_gm2_order" value="" />
+            </div>
+            <?php
+        });
+
+        add_action("{$slug}_edit_form_fields", function ($term) {
+            $color = get_term_meta($term->term_id, 'color', true);
+            $icon  = get_term_meta($term->term_id, 'icon', true);
+            $order = get_term_meta($term->term_id, '_gm2_order', true);
+            ?>
+            <tr class="form-field term-color-wrap">
+                <th scope="row"><label for="color"><?php echo esc_html__('Color', 'gm2-wordpress-suite'); ?></label></th>
+                <td><input type="text" name="color" id="color" value="<?php echo esc_attr($color); ?>" /></td>
+            </tr>
+            <tr class="form-field term-icon-wrap">
+                <th scope="row"><label for="icon"><?php echo esc_html__('Icon', 'gm2-wordpress-suite'); ?></label></th>
+                <td><input type="text" name="icon" id="icon" value="<?php echo esc_attr($icon); ?>" /></td>
+            </tr>
+            <tr class="form-field term-order-wrap">
+                <th scope="row"><label for="_gm2_order"><?php echo esc_html__('Order', 'gm2-wordpress-suite'); ?></label></th>
+                <td><input type="number" name="_gm2_order" id="_gm2_order" value="<?php echo esc_attr($order); ?>" /></td>
+            </tr>
+            <?php
+        });
+
+        $save_term_meta = function ($term_id) {
+            if (isset($_POST['color'])) {
+                $color = sanitize_hex_color($_POST['color']);
+                if ($color) {
+                    update_term_meta($term_id, 'color', $color);
+                } else {
+                    delete_term_meta($term_id, 'color');
+                }
+            }
+            if (isset($_POST['icon'])) {
+                update_term_meta($term_id, 'icon', sanitize_text_field($_POST['icon']));
+            }
+            if (isset($_POST['_gm2_order'])) {
+                update_term_meta($term_id, '_gm2_order', (int) $_POST['_gm2_order']);
+            }
+        };
+        add_action("created_{$slug}", $save_term_meta);
+        add_action("edited_{$slug}", $save_term_meta);
+
         // Register term meta fields.
         foreach ($tax['term_fields'] ?? [] as $meta_key => $field) {
             $type = ($field['type'] ?? '') === 'number' ? 'number' : 'string';
