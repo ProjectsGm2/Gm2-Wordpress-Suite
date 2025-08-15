@@ -179,6 +179,7 @@ class Gm2_Custom_Posts_Admin {
             if (!is_array($fields)) {
                 $fields = [];
             }
+            $fields = $this->sanitize_fields_array($fields);
             if ($slug) {
                 $config['post_types'][$slug] = [
                     'label'  => $label ?: ucfirst($slug),
@@ -197,6 +198,7 @@ class Gm2_Custom_Posts_Admin {
             if (!is_array($args)) {
                 $args = [];
             }
+            $args = $this->sanitize_args_array($args);
             if ($slug) {
                 $config['taxonomies'][$slug] = [
                     'label'      => $label ?: ucfirst($slug),
@@ -286,6 +288,65 @@ class Gm2_Custom_Posts_Admin {
         }
     }
 
+    private function sanitize_fields_array($fields) {
+        $out = [];
+        if (!is_array($fields)) {
+            return $out;
+        }
+        foreach ($fields as $key => $field) {
+            $slug = sanitize_key(is_array($field) && isset($field['slug']) ? $field['slug'] : $key);
+            if (!$slug) {
+                continue;
+            }
+            $type = in_array($field['type'] ?? 'text', [ 'text', 'number', 'checkbox', 'select', 'radio' ], true) ? $field['type'] : 'text';
+            $def  = sanitize_text_field($field['default'] ?? '');
+            $sanitized = [
+                'label'       => sanitize_text_field($field['label'] ?? ''),
+                'type'        => $type,
+                'default'     => $def,
+                'description' => sanitize_text_field($field['description'] ?? ''),
+                'conditions'  => $this->sanitize_conditions($field['conditions'] ?? []),
+            ];
+            if (!empty($field['options']) && is_array($field['options'])) {
+                $opts = [];
+                foreach ($field['options'] as $opt_val => $opt_label) {
+                    $opts[sanitize_text_field($opt_val)] = sanitize_text_field($opt_label);
+                }
+                $sanitized['options'] = $opts;
+            }
+            $out[$slug] = $sanitized;
+        }
+        return $out;
+    }
+
+    private function sanitize_args_array($args) {
+        $sanitized_args = [];
+        if (!is_array($args)) {
+            return $sanitized_args;
+        }
+        foreach ($args as $arg) {
+            $a_key = sanitize_key($arg['key'] ?? '');
+            if (!$a_key) {
+                continue;
+            }
+            $value = $arg['value'] ?? '';
+            $conditions = $this->sanitize_conditions($arg['conditions'] ?? []);
+            if (in_array($a_key, [ 'public', 'hierarchical' ], true)) {
+                $val = !empty($value);
+            } elseif ($a_key === 'supports') {
+                if (is_array($value)) {
+                    $val = array_filter(array_map('sanitize_key', $value));
+                } else {
+                    $val = array_filter(array_map('sanitize_key', explode(',', (string) $value)));
+                }
+            } else {
+                $val = sanitize_text_field($value);
+            }
+            $sanitized_args[$a_key] = [ 'value' => $val, 'conditions' => $conditions ];
+        }
+        return $sanitized_args;
+    }
+
     private function sanitize_conditions($groups) {
         $out = [];
         if (!is_array($groups)) {
@@ -303,7 +364,7 @@ class Gm2_Custom_Posts_Admin {
                         continue;
                     }
                     $c_rel = in_array($cond['relation'] ?? 'AND', [ 'AND', 'OR' ], true) ? $cond['relation'] : 'AND';
-                    $target = sanitize_text_field($cond['target'] ?? '');
+                    $target = sanitize_key($cond['target'] ?? '');
                     $op = in_array($cond['operator'] ?? '=', [ '=', '!=', '>', '<', 'contains' ], true) ? $cond['operator'] : '=';
                     $val = sanitize_text_field($cond['value'] ?? '');
                     if ($target === '') {
@@ -395,13 +456,41 @@ class Gm2_Custom_Posts_Admin {
             return;
         }
         foreach ($config['post_types'][$post_type]['fields'] as $key => $field) {
-            $type = $field['type'] ?? 'text';
+            if (!gm2_evaluate_conditions($field, $post_id)) {
+                delete_post_meta($post_id, $key);
+                continue;
+            }
+            $type    = $field['type'] ?? 'text';
+            $options = $field['options'] ?? [];
             if ($type === 'checkbox') {
                 $value = isset($_POST[$key]) ? '1' : '0';
                 update_post_meta($post_id, $key, $value);
-            } elseif (isset($_POST[$key])) {
-                $value = sanitize_text_field(wp_unslash($_POST[$key]));
-                update_post_meta($post_id, $key, $value);
+            } elseif ($type === 'number') {
+                if (isset($_POST[$key])) {
+                    $value = sanitize_text_field(wp_unslash($_POST[$key]));
+                    $value = ($value === '') ? '' : (string) (0 + $value);
+                    update_post_meta($post_id, $key, $value);
+                } else {
+                    delete_post_meta($post_id, $key);
+                }
+            } elseif (in_array($type, [ 'select', 'radio' ], true)) {
+                if (isset($_POST[$key])) {
+                    $value = sanitize_text_field(wp_unslash($_POST[$key]));
+                    if (empty($options) || array_key_exists($value, $options)) {
+                        update_post_meta($post_id, $key, $value);
+                    } else {
+                        delete_post_meta($post_id, $key);
+                    }
+                } else {
+                    delete_post_meta($post_id, $key);
+                }
+            } else {
+                if (isset($_POST[$key])) {
+                    $value = sanitize_text_field(wp_unslash($_POST[$key]));
+                    update_post_meta($post_id, $key, $value);
+                } else {
+                    delete_post_meta($post_id, $key);
+                }
             }
         }
     }
@@ -538,44 +627,8 @@ class Gm2_Custom_Posts_Admin {
             wp_send_json_error('invalid');
         }
 
-        $sanitized = [];
-        foreach ($fields as $field) {
-            $f_slug = sanitize_key($field['slug'] ?? '');
-            if (!$f_slug) {
-                continue;
-            }
-            $type = in_array($field['type'] ?? 'text', [ 'text', 'number', 'checkbox', 'select', 'radio' ], true) ? $field['type'] : 'text';
-            $def  = sanitize_text_field($field['default'] ?? '');
-            $sanitized[$f_slug] = [
-                'label'       => sanitize_text_field($field['label'] ?? ''),
-                'type'        => $type,
-                'default'     => $def,
-                'description' => sanitize_text_field($field['description'] ?? ''),
-                'conditions'  => $this->sanitize_conditions($field['conditions'] ?? []),
-            ];
-        }
-
-        $sanitized_args = [];
-        foreach ($args as $arg) {
-            $a_key = sanitize_key($arg['key'] ?? '');
-            if (!$a_key) {
-                continue;
-            }
-            $value = $arg['value'] ?? '';
-            $conditions = $this->sanitize_conditions($arg['conditions'] ?? []);
-            if (in_array($a_key, [ 'public', 'hierarchical' ], true)) {
-                $val = !empty($value);
-            } elseif ($a_key === 'supports') {
-                if (is_array($value)) {
-                    $val = array_filter(array_map('sanitize_key', $value));
-                } else {
-                    $val = array_filter(array_map('sanitize_key', explode(',', (string) $value)));
-                }
-            } else {
-                $val = sanitize_text_field($value);
-            }
-            $sanitized_args[$a_key] = [ 'value' => $val, 'conditions' => $conditions ];
-        }
+        $sanitized      = $this->sanitize_fields_array($fields);
+        $sanitized_args = $this->sanitize_args_array($args);
 
         $config['post_types'][$slug]['fields'] = $sanitized;
         $config['post_types'][$slug]['args']   = $sanitized_args;
@@ -605,21 +658,7 @@ class Gm2_Custom_Posts_Admin {
         if (empty($config['taxonomies'][$slug])) {
             wp_send_json_error('invalid');
         }
-        $sanitized_args = [];
-        foreach ($args as $arg) {
-            $a_key = sanitize_key($arg['key'] ?? '');
-            if (!$a_key) {
-                continue;
-            }
-            $value = $arg['value'] ?? '';
-            $conditions = $this->sanitize_conditions($arg['conditions'] ?? []);
-            if (in_array($a_key, [ 'public', 'hierarchical' ], true)) {
-                $val = !empty($value);
-            } else {
-                $val = sanitize_text_field($value);
-            }
-            $sanitized_args[$a_key] = [ 'value' => $val, 'conditions' => $conditions ];
-        }
+        $sanitized_args = $this->sanitize_args_array($args);
         $config['taxonomies'][$slug]['args']       = $sanitized_args;
         if ($label) {
             $config['taxonomies'][$slug]['label'] = $label;
