@@ -3,6 +3,8 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+require_once __DIR__ . '/fields/loader.php';
+
 /**
  * Evaluate condition groups for a field or argument.
  *
@@ -227,11 +229,11 @@ function gm2_match_location($groups, $context = []) {
 /**
  * Render a generic set of fields for any object context.
  *
- * @param array  $fields    Field definitions.
- * @param int    $object_id Object identifier.
- * @param string $type      Context type: post, term, user, etc.
+ * @param array  $fields       Field definitions.
+ * @param int    $object_id    Object identifier.
+ * @param string $context_type Context type: post, term, user, etc.
  */
-function gm2_render_field_group($fields, $object_id, $type = 'post') {
+function gm2_render_field_group($fields, $object_id, $context_type = 'post') {
     if (empty($fields) || !is_array($fields)) {
         return;
     }
@@ -247,47 +249,17 @@ function gm2_render_field_group($fields, $object_id, $type = 'post') {
         if (!empty($field['container'])) {
             $wrapper .= ' gm2-container-' . sanitize_html_class($field['container']);
         }
-        echo '<div class="' . esc_attr($wrapper) . '"';
+        $type  = $field['type'] ?? 'text';
+        $class = gm2_get_field_type_class($type);
+        echo '<div class="' . esc_attr($wrapper) . '" data-type="' . esc_attr($type) . '"';
         if (!$visible) {
             echo ' style="display:none;"';
         }
         echo '>';
-        $type   = $field['type'] ?? 'text';
-        $label  = $field['label'] ?? $key;
-        $value  = '';
-        switch ($type) {
-            case 'number':
-                $value = gm2_get_meta_value($object_id, $key, $type, $field, $type = $type);
-                echo '<p><label>' . esc_html($label) . '<br /><input type="number" name="' . esc_attr($key) . '" value="' . esc_attr($value) . '" placeholder="' . esc_attr($field['placeholder'] ?? '') . '" /></label></p>';
-                break;
-            case 'checkbox':
-                $value = gm2_get_meta_value($object_id, $key, $type, $field, $type = $type);
-                echo '<p><label><input type="checkbox" name="' . esc_attr($key) . '" value="1"' . checked($value, '1', false) . ' /> ' . esc_html($label) . '</label></p>';
-                break;
-            case 'select':
-            case 'radio':
-                $value   = gm2_get_meta_value($object_id, $key, $type, $field, $type = $type);
-                $options = $field['options'] ?? [];
-                if ($type === 'select') {
-                    echo '<p><label>' . esc_html($label) . '<br /><select name="' . esc_attr($key) . '">';
-                    foreach ($options as $ov => $ol) {
-                        echo '<option value="' . esc_attr($ov) . '"' . selected($value, $ov, false) . '>' . esc_html($ol) . '</option>';
-                    }
-                    echo '</select></label></p>';
-                } else {
-                    echo '<p>' . esc_html($label) . '<br />';
-                    foreach ($options as $ov => $ol) {
-                        echo '<label><input type="radio" name="' . esc_attr($key) . '" value="' . esc_attr($ov) . '"' . checked($value, $ov, false) . ' /> ' . esc_html($ol) . '</label><br />';
-                    }
-                    echo '</p>';
-                }
-                break;
-            default:
-                $value = gm2_get_meta_value($object_id, $key, $type, $field, $type = $type);
-                echo '<p><label>' . esc_html($label) . '<br /><input type="text" name="' . esc_attr($key) . '" value="' . esc_attr($value) . '" placeholder="' . esc_attr($field['placeholder'] ?? '') . '" /></label></p>';
-        }
-        if (!empty($field['instructions'])) {
-            echo '<p class="description">' . esc_html($field['instructions']) . '</p>';
+        if ($class && class_exists($class)) {
+            $obj   = new $class($key, $field);
+            $value = gm2_get_meta_value($object_id, $key, $context_type, $field);
+            $obj->render_admin($value, $object_id, $context_type);
         }
         echo '</div>';
     }
@@ -333,56 +305,12 @@ function gm2_save_field_group($fields, $object_id, $context_type = 'post') {
         if (!gm2_evaluate_conditions($field, $object_id)) {
             continue;
         }
-        $type = $field['type'] ?? 'text';
-        $val  = $_POST[$key] ?? null;
-        if ($type === 'checkbox') {
-            $val = $val ? '1' : '0';
-        } elseif ($val !== null) {
-            $val = sanitize_text_field($val);
-        }
-        switch ($context_type) {
-            case 'user':
-                if ($val === null) {
-                    delete_user_meta($object_id, $key);
-                } else {
-                    update_user_meta($object_id, $key, $val);
-                }
-                break;
-            case 'term':
-                if ($val === null) {
-                    delete_term_meta($object_id, $key);
-                } else {
-                    update_term_meta($object_id, $key, $val);
-                }
-                break;
-            case 'comment':
-                if ($val === null) {
-                    delete_comment_meta($object_id, $key);
-                } else {
-                    update_comment_meta($object_id, $key, $val);
-                }
-                break;
-            case 'option':
-                if ($val === null) {
-                    delete_option($key);
-                } else {
-                    update_option($key, $val);
-                }
-                break;
-            case 'site':
-                if ($val === null) {
-                    delete_site_option($key);
-                } else {
-                    update_site_option($key, $val);
-                }
-                break;
-            default:
-                if ($val === null) {
-                    delete_post_meta($object_id, $key);
-                } else {
-                    update_post_meta($object_id, $key, $val);
-                }
-                break;
+        $type  = $field['type'] ?? 'text';
+        $class = gm2_get_field_type_class($type);
+        $val   = $_POST[$key] ?? null;
+        if ($class && class_exists($class)) {
+            $obj = new $class($key, $field);
+            $obj->save($object_id, $val, $context_type);
         }
     }
 }
