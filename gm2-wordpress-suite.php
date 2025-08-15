@@ -55,6 +55,7 @@ require_once GM2_PLUGIN_DIR . 'includes/Gm2_SEO_Utils.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_CSV_Helper.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Abandoned_Carts.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Analytics.php';
+require_once GM2_PLUGIN_DIR . 'includes/gm2-custom-tables.php';
 require_once GM2_PLUGIN_DIR . 'includes/gm2-custom-posts-functions.php';
 require_once GM2_PLUGIN_DIR . 'includes/gm2-theme-tools.php';
 // Temporarily disable Recovery Email Queue.
@@ -118,6 +119,8 @@ function gm2_activate_plugin() {
     gm2_initialize_guideline_rules();
     gm2_maybe_migrate_content_rules();
     gm2_maybe_migrate_guideline_rules();
+
+    gm2_custom_tables_maybe_install();
 
     $ac = new Gm2_Abandoned_Carts();
     $ac->install();
@@ -572,5 +575,6 @@ add_filter('plugin_action_links_' . plugin_basename(__FILE__), 'gm2_plugin_actio
 
 if (defined('WP_CLI') && WP_CLI) {
     require_once GM2_PLUGIN_DIR . 'includes/cli/class-gm2-cli.php';
+    require_once GM2_PLUGIN_DIR . 'includes/cli/class-gm2-migrate.php';
 }
 
