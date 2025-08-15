@@ -1,0 +1,9 @@
+#gm2-fields-table .gm2-move-field {
+    cursor: move;
+    width: 20px;
+}
+#gm2-fields-table input[type="text"],
+#gm2-fields-table select {
+    width: 100%;
+    box-sizing: border-box;
+}
