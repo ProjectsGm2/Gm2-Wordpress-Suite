@@ -50,6 +50,19 @@ jQuery(function($){
             slug: gm2TaxArgs.slug,
             label: $('#gm2-tax-label').val(),
             post_types: $('#gm2-tax-post-types').val(),
+            hierarchical: $('#gm2-tax-hierarchical').is(':checked') ? 1 : 0,
+            public: $('#gm2-tax-public').is(':checked') ? 1 : 0,
+            show_ui: $('#gm2-tax-show_ui').is(':checked') ? 1 : 0,
+            show_in_nav_menus: $('#gm2-tax-show_in_nav_menus').is(':checked') ? 1 : 0,
+            show_admin_column: $('#gm2-tax-show_admin_column').is(':checked') ? 1 : 0,
+            show_tagcloud: $('#gm2-tax-show_tagcloud').is(':checked') ? 1 : 0,
+            show_in_quick_edit: $('#gm2-tax-show_in_quick_edit').is(':checked') ? 1 : 0,
+            show_in_rest: $('#gm2-tax-show-rest').is(':checked') ? 1 : 0,
+            rewrite_slug: $('#gm2-tax-rewrite-slug').val(),
+            default_terms: $('#gm2-tax-default-terms').val(),
+            orderby: $('#gm2-tax-orderby').val(),
+            order: $('#gm2-tax-order').val(),
+            term_fields: $('#gm2-tax-term-fields').val(),
             args: args
         };
         $.post(gm2TaxArgs.ajax, data, function(resp){

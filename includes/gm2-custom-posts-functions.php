@@ -133,6 +133,53 @@ function gm2_register_custom_posts() {
             $args[$key] = is_array($val) && array_key_exists('value', $val) ? $val['value'] : $val;
         }
         register_taxonomy($slug, $tax['post_types'] ?? [], $args);
+
+        // Register term meta fields.
+        foreach ($tax['term_fields'] ?? [] as $meta_key => $field) {
+            $type = ($field['type'] ?? '') === 'number' ? 'number' : 'string';
+            register_term_meta($slug, $meta_key, [
+                'type'              => $type,
+                'single'            => true,
+                'show_in_rest'      => true,
+                'sanitize_callback' => ($type === 'number') ? 'intval' : 'sanitize_text_field',
+                'description'       => $field['description'] ?? '',
+            ]);
+        }
+
+        // Ensure default terms exist with meta.
+        if (!empty($tax['default_terms']) && taxonomy_exists($slug)) {
+            foreach ($tax['default_terms'] as $term) {
+                if (!is_array($term)) {
+                    continue;
+                }
+                $existing = term_exists($term['slug'], $slug);
+                if ($existing && is_array($existing)) {
+                    $term_id = $existing['term_id'];
+                } elseif ($existing) {
+                    $term_id = $existing;
+                } else {
+                    $inserted = wp_insert_term($term['name'], $slug, [ 'slug' => $term['slug'] ]);
+                    if (is_wp_error($inserted)) {
+                        continue;
+                    }
+                    $term_id = $inserted['term_id'];
+                }
+                if (!empty($term['color'])) {
+                    update_term_meta($term_id, 'color', $term['color']);
+                }
+                if (!empty($term['icon'])) {
+                    update_term_meta($term_id, 'icon', $term['icon']);
+                }
+                if (isset($term['order'])) {
+                    update_term_meta($term_id, '_gm2_order', (int) $term['order']);
+                }
+                if (!empty($term['meta']) && is_array($term['meta'])) {
+                    foreach ($term['meta'] as $mk => $mv) {
+                        update_term_meta($term_id, $mk, $mv);
+                    }
+                }
+            }
+        }
     }
 }
 add_action('init', 'gm2_register_custom_posts');
