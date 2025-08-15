@@ -143,6 +143,44 @@ class Gm2_Custom_Posts_Admin {
         echo '<p><label>' . esc_html__( 'Label', 'gm2-wordpress-suite' ) . '<br /><input type="text" id="gm2-tax-label" class="regular-text" value="' . esc_attr($taxonomy['label'] ?? '') . '" /></label></p>';
         echo '<p><label>' . esc_html__( 'Post Types (comma separated)', 'gm2-wordpress-suite' ) . '<br /><input type="text" id="gm2-tax-post-types" class="regular-text" value="' . esc_attr(implode(',', $taxonomy['post_types'] ?? [])) . '" /></label></p>';
 
+        $hier = !empty($taxonomy['args']['hierarchical']['value'] ?? $taxonomy['args']['hierarchical'] ?? false);
+        echo '<p><label><input type="checkbox" id="gm2-tax-hierarchical" value="1"' . checked($hier, true, false) . ' /> ' . esc_html__( 'Hierarchical', 'gm2-wordpress-suite' ) . '</label></p>';
+
+        echo '<fieldset><legend>' . esc_html__( 'Visibility', 'gm2-wordpress-suite' ) . '</legend>';
+        foreach ([ 'public', 'show_ui', 'show_in_nav_menus', 'show_admin_column', 'show_tagcloud', 'show_in_quick_edit' ] as $vis) {
+            $checked = !empty($taxonomy['args'][$vis]['value'] ?? $taxonomy['args'][$vis] ?? false);
+            echo '<label><input type="checkbox" id="gm2-tax-' . esc_attr($vis) . '" value="1"' . checked($checked, true, false) . ' /> ' . esc_html( ucwords(str_replace('_', ' ', $vis)) ) . '</label><br />';
+        }
+        echo '</fieldset>';
+
+        echo '<fieldset><legend>' . esc_html__( 'REST API', 'gm2-wordpress-suite' ) . '</legend>';
+        $rest_checked = !empty($taxonomy['args']['show_in_rest']['value'] ?? $taxonomy['args']['show_in_rest'] ?? false);
+        echo '<p><label><input type="checkbox" id="gm2-tax-show-rest" value="1"' . checked($rest_checked, true, false) . ' /> ' . esc_html__( 'Show in REST', 'gm2-wordpress-suite' ) . '</label></p>';
+        echo '</fieldset>';
+
+        $rewrite_slug = '';
+        if (!empty($taxonomy['args']['rewrite']['value']['slug'])) {
+            $rewrite_slug = $taxonomy['args']['rewrite']['value']['slug'];
+        } elseif (!empty($taxonomy['args']['rewrite']['slug'])) {
+            $rewrite_slug = $taxonomy['args']['rewrite']['slug'];
+        }
+        echo '<fieldset><legend>' . esc_html__( 'Rewrite', 'gm2-wordpress-suite' ) . '</legend>';
+        echo '<p><label>' . esc_html__( 'Slug', 'gm2-wordpress-suite' ) . '<br /><input type="text" id="gm2-tax-rewrite-slug" class="regular-text" value="' . esc_attr($rewrite_slug) . '" /></label></p>';
+        echo '</fieldset>';
+
+        $orderby = $taxonomy['args']['orderby']['value'] ?? $taxonomy['args']['orderby'] ?? '';
+        $order   = $taxonomy['args']['order']['value'] ?? $taxonomy['args']['order'] ?? '';
+        echo '<fieldset><legend>' . esc_html__( 'Ordering', 'gm2-wordpress-suite' ) . '</legend>';
+        echo '<p><label>' . esc_html__( 'Order By', 'gm2-wordpress-suite' ) . '<br /><select id="gm2-tax-orderby"><option value="">' . esc_html__( 'Default', 'gm2-wordpress-suite' ) . '</option><option value="name"' . selected($orderby, 'name', false) . '>Name</option><option value="slug"' . selected($orderby, 'slug', false) . '>Slug</option><option value="term_order"' . selected($orderby, 'term_order', false) . '>Term Order</option></select></label></p>';
+        echo '<p><label>' . esc_html__( 'Order', 'gm2-wordpress-suite' ) . '<br /><select id="gm2-tax-order"><option value="">' . esc_html__( 'Default', 'gm2-wordpress-suite' ) . '</option><option value="ASC"' . selected(strtoupper($order), 'ASC', false) . '>ASC</option><option value="DESC"' . selected(strtoupper($order), 'DESC', false) . '>DESC</option></select></label></p>';
+        echo '</fieldset>';
+
+        $default_terms = !empty($taxonomy['default_terms']) ? wp_json_encode($taxonomy['default_terms']) : '';
+        echo '<p><label>' . esc_html__( 'Default Terms (JSON)', 'gm2-wordpress-suite' ) . '<br /><textarea id="gm2-tax-default-terms" class="large-text code" rows="5">' . esc_textarea($default_terms) . '</textarea></label></p>';
+
+        $term_fields = !empty($taxonomy['term_fields']) ? wp_json_encode($taxonomy['term_fields']) : '';
+        echo '<p><label>' . esc_html__( 'Term Meta Fields (JSON)', 'gm2-wordpress-suite' ) . '<br /><textarea id="gm2-tax-term-fields" class="large-text code" rows="5">' . esc_textarea($term_fields) . '</textarea></label></p>';
+
         echo '<h2>' . esc_html__( 'Registration Arguments', 'gm2-wordpress-suite' ) . '</h2>';
         echo '<table class="widefat fixed" id="gm2-tax-args-table">';
         echo '<thead><tr>';
@@ -438,7 +476,7 @@ class Gm2_Custom_Posts_Admin {
         if (!is_array($args)) {
             return $sanitized_args;
         }
-        $bool_keys = [ 'public', 'hierarchical', 'publicly_queryable', 'show_ui', 'show_in_menu', 'show_in_nav_menus', 'show_in_admin_bar', 'exclude_from_search', 'has_archive', 'show_in_rest', 'map_meta_cap' ];
+        $bool_keys = [ 'public', 'hierarchical', 'publicly_queryable', 'show_ui', 'show_in_menu', 'show_in_nav_menus', 'show_in_admin_bar', 'exclude_from_search', 'has_archive', 'show_in_rest', 'map_meta_cap', 'show_admin_column', 'show_tagcloud', 'show_in_quick_edit' ];
         foreach ($args as $arg) {
             $a_key = sanitize_key($arg['key'] ?? '');
             if (!$a_key) {
@@ -493,12 +531,51 @@ class Gm2_Custom_Posts_Admin {
                 $val = is_array($value) ? $value : [];
             } elseif ($a_key === 'menu_position') {
                 $val = is_numeric($value) ? (int) $value : 0;
+            } elseif ($a_key === 'orderby') {
+                $val = sanitize_key($value);
+            } elseif ($a_key === 'order') {
+                $val = in_array(strtoupper($value), [ 'ASC', 'DESC' ], true) ? strtoupper($value) : 'ASC';
             } else {
                 $val = sanitize_text_field($value);
             }
             $sanitized_args[$a_key] = [ 'value' => $val, 'conditions' => $conditions ];
         }
         return $sanitized_args;
+    }
+
+    private function sanitize_terms_array($terms) {
+        $out = [];
+        if (!is_array($terms)) {
+            return $out;
+        }
+        foreach ($terms as $term) {
+            if (!is_array($term)) {
+                continue;
+            }
+            $slug = sanitize_key($term['slug'] ?? '');
+            $name = sanitize_text_field($term['name'] ?? '');
+            if ($slug === '' && $name === '') {
+                continue;
+            }
+            if ($slug === '') {
+                $slug = sanitize_title($name);
+            }
+            $item = [
+                'slug'  => $slug,
+                'name'  => $name ?: $slug,
+                'order' => isset($term['order']) ? (int) $term['order'] : 0,
+                'color' => sanitize_hex_color($term['color'] ?? ''),
+                'icon'  => sanitize_text_field($term['icon'] ?? ''),
+                'meta'  => [],
+            ];
+            if (!empty($term['meta']) && is_array($term['meta'])) {
+                foreach ($term['meta'] as $k => $v) {
+                    $item['meta'][sanitize_key($k)] = sanitize_text_field($v);
+                }
+            }
+            $out[] = $item;
+        }
+        return $out;
     }
 
     private function sanitize_conditions($groups) {
@@ -805,6 +882,24 @@ class Gm2_Custom_Posts_Admin {
         $args = $_POST['args'] ?? [];
         $label = sanitize_text_field($_POST['label'] ?? '');
         $post_types = array_filter(array_map('sanitize_key', explode(',', $_POST['post_types'] ?? '')));
+        $hierarchical = !empty($_POST['hierarchical']);
+        $visibility_keys = [ 'public', 'show_ui', 'show_in_nav_menus', 'show_admin_column', 'show_tagcloud', 'show_in_quick_edit' ];
+        $visibilities = [];
+        foreach ($visibility_keys as $vk) {
+            $visibilities[$vk] = !empty($_POST[$vk]);
+        }
+        $show_rest = !empty($_POST['show_in_rest']);
+        $rewrite_slug = sanitize_title_with_dashes($_POST['rewrite_slug'] ?? '');
+        $default_terms = json_decode(wp_unslash($_POST['default_terms'] ?? ''), true);
+        if (!is_array($default_terms)) {
+            $default_terms = [];
+        }
+        $term_fields = json_decode(wp_unslash($_POST['term_fields'] ?? ''), true);
+        if (!is_array($term_fields)) {
+            $term_fields = [];
+        }
+        $orderby = sanitize_key($_POST['orderby'] ?? '');
+        $order   = sanitize_text_field($_POST['order'] ?? '');
         if (!$slug || !is_array($args)) {
             wp_send_json_error('data');
         }
@@ -812,12 +907,29 @@ class Gm2_Custom_Posts_Admin {
         if (empty($config['taxonomies'][$slug])) {
             wp_send_json_error('invalid');
         }
-        $sanitized_args = $this->sanitize_args_array($args);
+        $args_input = $args;
+        $args_input[] = [ 'key' => 'hierarchical', 'value' => $hierarchical ];
+        foreach ($visibilities as $vk => $val) {
+            $args_input[] = [ 'key' => $vk, 'value' => $val ];
+        }
+        $args_input[] = [ 'key' => 'show_in_rest', 'value' => $show_rest ];
+        if ($rewrite_slug !== '') {
+            $args_input[] = [ 'key' => 'rewrite', 'value' => [ 'slug' => $rewrite_slug ] ];
+        }
+        if ($orderby !== '') {
+            $args_input[] = [ 'key' => 'orderby', 'value' => $orderby ];
+        }
+        if ($order !== '') {
+            $args_input[] = [ 'key' => 'order', 'value' => $order ];
+        }
+        $sanitized_args = $this->sanitize_args_array($args_input);
         $config['taxonomies'][$slug]['args']       = $sanitized_args;
         if ($label) {
             $config['taxonomies'][$slug]['label'] = $label;
         }
-        $config['taxonomies'][$slug]['post_types'] = $post_types;
+        $config['taxonomies'][$slug]['post_types']   = $post_types;
+        $config['taxonomies'][$slug]['default_terms'] = $this->sanitize_terms_array($default_terms);
+        $config['taxonomies'][$slug]['term_fields']   = $this->sanitize_fields_array($term_fields);
         update_option('gm2_custom_posts_config', $config);
         wp_send_json_success([
             'args' => $sanitized_args,
