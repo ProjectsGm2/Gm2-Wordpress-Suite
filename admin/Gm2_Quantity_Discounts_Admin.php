@@ -16,7 +16,7 @@ class Gm2_Quantity_Discounts_Admin {
     public function add_admin_menu() {
         if (get_option('gm2_enable_quantity_discounts', '1') === '1') {
             add_submenu_page(
-                'gm2',
+                'gm2-cart',
                 esc_html__( 'Quantity Discounts', 'gm2-wordpress-suite' ),
                 esc_html__( 'Quantity Discounts', 'gm2-wordpress-suite' ),
                 'manage_options',
@@ -27,7 +27,7 @@ class Gm2_Quantity_Discounts_Admin {
     }
 
     public function enqueue_scripts( $hook ) {
-        if ( $hook !== 'gm2_page_gm2-quantity-discounts' ) {
+        if ( $hook !== 'gm2-cart_page_gm2-quantity-discounts' ) {
             return;
         }
         wp_enqueue_style(

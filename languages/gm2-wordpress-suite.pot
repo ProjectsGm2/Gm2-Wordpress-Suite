@@ -543,7 +543,11 @@ msgstr ""
 msgid "Configure ChatGPT under %s."
 msgstr ""
 
-#: ../admin/Gm2_Cart_Settings_Admin.php:15, ../admin/Gm2_Cart_Settings_Admin.php:16, ../admin/Gm2_Cart_Settings_Admin.php:57
+#: ../admin/Gm2_Cart_Settings_Admin.php:14, ../admin/Gm2_Cart_Settings_Admin.php:15
+msgid "Gm2 Cart"
+msgstr ""
+
+#: ../admin/Gm2_Cart_Settings_Admin.php:24, ../admin/Gm2_Cart_Settings_Admin.php:25, ../admin/Gm2_Cart_Settings_Admin.php:66
 msgid "Cart Settings"
 msgstr ""
 

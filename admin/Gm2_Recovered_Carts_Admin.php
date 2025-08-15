@@ -14,7 +14,7 @@ class Gm2_Recovered_Carts_Admin {
 
     public function add_menu() {
         add_submenu_page(
-            'gm2',
+            'gm2-cart',
             __('Recovered Carts', 'gm2-wordpress-suite'),
             __('Recovered Carts', 'gm2-wordpress-suite'),
             'manage_options',

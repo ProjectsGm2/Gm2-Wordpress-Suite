@@ -16,7 +16,7 @@ class Gm2_Abandoned_Carts_Admin {
 
     public function add_menu() {
         add_submenu_page(
-            'gm2',
+            'gm2-cart',
             __('Abandoned Carts', 'gm2-wordpress-suite'),
             __('Abandoned Carts', 'gm2-wordpress-suite'),
             'manage_options',
@@ -26,7 +26,7 @@ class Gm2_Abandoned_Carts_Admin {
     }
 
     public function enqueue_scripts($hook) {
-        if ($hook !== 'gm2_page_gm2-abandoned-carts') {
+        if ($hook !== 'gm2-cart_page_gm2-abandoned-carts') {
             return;
         }
         wp_enqueue_script(
