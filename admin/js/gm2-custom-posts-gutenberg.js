@@ -52,11 +52,30 @@
 
     const MetaPanel = () => {
         const meta = useSelect( select => select('core/editor').getEditedPostAttribute('meta'), [] );
+        const selectedBlock = useSelect( select => select('core/block-editor').getSelectedBlock(), [] );
         const { editPost } = useDispatch('core/editor');
         const fields = window.gm2BlockFields || [];
+
+        const filtered = fields.filter(f => {
+            if(!f.block){
+                return true;
+            }
+            const blocks = Array.isArray(f.block) ? f.block : [ f.block ];
+            return selectedBlock && blocks.includes(selectedBlock.name);
+        });
+
+        const sections = filtered.reduce((acc, field) => {
+            const section = field.section || 'General';
+            acc[section] = acc[section] || [];
+            acc[section].push(field);
+            return acc;
+        }, {});
+
         return el(PluginSidebar, { name: 'gm2-meta', title: 'Gm2 Fields' },
-            el(PanelBody, {},
-                fields.map(f => controlFactory(f, meta[f.key], v => editPost({ meta: { [f.key]: v } })))
+            Object.keys(sections).map(sec =>
+                el(PanelBody, { key: sec, title: sec },
+                    sections[sec].map(f => controlFactory(f, meta[f.key], v => editPost({ meta: { [f.key]: v } })))
+                )
             )
         );
     };
