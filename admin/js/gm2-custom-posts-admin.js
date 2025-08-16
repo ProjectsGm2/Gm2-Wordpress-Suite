@@ -62,6 +62,11 @@ jQuery(function($){
         $('#gm2-field-type').val(data ? data.type : 'text');
         $('#gm2-field-default').val(data ? data.default : '');
         $('#gm2-field-description').val(data ? data.description : '');
+        $('#gm2-field-order').val(data ? data.order || '' : '');
+        $('#gm2-field-container').val(data ? data.container || '' : '');
+        $('#gm2-field-instructions').val(data ? data.instructions || '' : '');
+        $('#gm2-field-placeholder').val(data ? data.placeholder || '' : '');
+        $('#gm2-field-class').val(data ? data.class || '' : '');
         $('#gm2-field-cap').val(data ? data.capability : '');
         $('#gm2-field-edit-cap').val(data ? data.edit_capability : '');
         $('#gm2-field-help').val(data ? data.help : '');
@@ -74,6 +79,19 @@ jQuery(function($){
         var targets = fields.map(function(f){ return f.slug; });
         targets.push('page_id','post_id');
         gm2Conditions.init($('#gm2-field-conditions'), { targets: targets, data: data ? data.conditions : [] });
+
+        var locTargets = ['post_type','taxonomy','user','comment','media','options_page','term','site','network'];
+        var locData = [];
+        if(data && data.location){
+            $.each(data.location, function(i,g){
+                var cg = { relation: g.relation || 'AND', conditions: [] };
+                $.each(g.rules || [], function(j,r){
+                    cg.conditions.push({ relation: 'AND', target: r.param, operator: r.operator === '!=' ? '!=' : '=', value: r.value || '' });
+                });
+                locData.push(cg);
+            });
+        }
+        gm2Conditions.init($('#gm2-field-location'), { targets: locTargets, data: locData, addGroupText: 'Add Location Group', addConditionText: 'Add Rule' });
         toggleFieldOptions($('#gm2-field-type').val());
         $('#gm2-field-form').show();
     }
@@ -145,6 +163,15 @@ jQuery(function($){
                         type: f.type || 'text',
                         default: f.default || '',
                         description: f.description || '',
+                        order: f.order || 0,
+                        container: f.container || '',
+                        instructions: f.instructions || '',
+                        placeholder: f.placeholder || '',
+                        class: f.class || '',
+                        capability: f.capability || '',
+                        edit_capability: f.edit_capability || '',
+                        help: f.help || '',
+                        location: f.location || [],
                         conditions: f.conditions || []
                     });
                 });
@@ -168,15 +195,31 @@ jQuery(function($){
     $('#gm2-field-cancel').on('click', function(){ $('#gm2-field-form').hide(); });
     $('#gm2-field-save').on('click', function(){
         var idx = $('#gm2-field-index').val();
+        var locRaw = gm2Conditions.getData($('#gm2-field-location'));
+        var locGroups = [];
+        $.each(locRaw, function(i,g){
+            var rules = [];
+            $.each(g.conditions || [], function(j,c){
+                var op = c.operator === '!=' ? '!=' : '==';
+                rules.push({ param: c.target, operator: op, value: c.value });
+            });
+            if(rules.length){ locGroups.push({ relation: g.relation || 'AND', rules: rules }); }
+        });
         var obj = {
             label: $('#gm2-field-label').val(),
             slug: $('#gm2-field-slug').val(),
             type: $('#gm2-field-type').val(),
             default: $('#gm2-field-default').val(),
             description: $('#gm2-field-description').val(),
+            order: $('#gm2-field-order').val(),
+            container: $('#gm2-field-container').val(),
+            instructions: $('#gm2-field-instructions').val(),
+            placeholder: $('#gm2-field-placeholder').val(),
+            class: $('#gm2-field-class').val(),
             capability: $('#gm2-field-cap').val(),
             edit_capability: $('#gm2-field-edit-cap').val(),
             help: $('#gm2-field-help').val(),
+            location: locGroups,
             conditions: gm2Conditions.getData($('#gm2-field-conditions'))
         };
         if(obj.type === 'date'){
