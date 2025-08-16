@@ -45,3 +45,26 @@ class TaxonomyContentRulesTest extends WP_Ajax_UnitTestCase {
     }
 }
 
+class FieldCapabilityPermissionsTest extends WP_UnitTestCase {
+    public function tearDown(): void {
+        parent::tearDown();
+        delete_option('gm2_field_caps');
+    }
+
+    public function test_role_based_field_capability() {
+        update_option('gm2_field_caps', ['foo' => ['edit' => ['administrator']]]);
+        $admin = self::factory()->user->create(['role' => 'administrator']);
+        $subscriber = self::factory()->user->create(['role' => 'subscriber']);
+        $this->assertTrue(user_can($admin, 'gm2_field_edit_foo'));
+        $this->assertFalse(user_can($subscriber, 'gm2_field_edit_foo'));
+    }
+
+    public function test_capability_based_field_capability() {
+        update_option('gm2_field_caps', ['bar' => ['edit' => ['edit_posts']]]);
+        $editor = self::factory()->user->create(['role' => 'editor']);
+        $subscriber = self::factory()->user->create(['role' => 'subscriber']);
+        $this->assertTrue(user_can($editor, 'gm2_field_edit_bar'));
+        $this->assertFalse(user_can($subscriber, 'gm2_field_edit_bar'));
+    }
+}
+
