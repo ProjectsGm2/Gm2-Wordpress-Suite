@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-const GM2_CUSTOM_TABLES_VERSION = 2;
+const GM2_CUSTOM_TABLES_VERSION = 3;
 
 /**
  * Determine whether to use custom tables.
@@ -83,11 +83,21 @@ function gm2_custom_tables_maybe_install() {
         object_id bigint(20) unsigned NOT NULL,
         field_id bigint(20) unsigned NOT NULL,
         PRIMARY KEY  (id),
-        KEY object_field (object_id, field_id),
+        KEY post_post (object_id, field_id),
+        KEY post_term (field_id, object_id),
         KEY field_id (field_id),
         KEY object_id (object_id)
     ) $charset_collate;";
     dbDelta( $sql );
+
+    // Ensure required composite indexes exist on upgrade.
+    $indexes = $wpdb->get_col( "SHOW INDEX FROM $relations_table", 2 );
+    if ( ! in_array( 'post_post', $indexes, true ) ) {
+        $wpdb->query( "ALTER TABLE $relations_table ADD KEY post_post (object_id, field_id)" );
+    }
+    if ( ! in_array( 'post_term', $indexes, true ) ) {
+        $wpdb->query( "ALTER TABLE $relations_table ADD KEY post_term (field_id, object_id)" );
+    }
 
     update_option( 'gm2_custom_tables_version', GM2_CUSTOM_TABLES_VERSION );
 }
@@ -246,6 +256,48 @@ function gm2_fields_rename( $old, $new ) {
  * @return int Number of rows inserted.
  */
 function gm2_custom_tables_backfill() {
-    // TODO: Implement copying from core tables such as postmeta.
-    return 0;
+    if ( ! gm2_use_custom_tables() ) {
+        return 0;
+    }
+
+    global $wpdb;
+    $fields_table    = gm2_get_fields_table_name( true );
+    $relations_table = gm2_get_relations_table_name( true );
+
+    $inserted = 0;
+
+    // Backfill post meta into custom tables.
+    $meta_rows = $wpdb->get_results( "SELECT post_id, meta_key, meta_value FROM {$wpdb->postmeta}", ARRAY_A );
+    foreach ( $meta_rows as $row ) {
+        $name  = sanitize_key( $row['meta_key'] );
+        $value = maybe_unserialize( $row['meta_value'] );
+        $serialized = maybe_serialize( $value );
+
+        $field_id = $wpdb->get_var( $wpdb->prepare( "SELECT id FROM $fields_table WHERE name = %s AND value = %s LIMIT 1", $name, $serialized ) );
+        if ( ! $field_id ) {
+            $wpdb->insert( $fields_table, [ 'name' => $name, 'value' => $serialized ], [ '%s', '%s' ] );
+            $field_id = (int) $wpdb->insert_id;
+        }
+
+        $wpdb->insert( $relations_table, [ 'object_id' => (int) $row['post_id'], 'field_id' => (int) $field_id ], [ '%d', '%d' ] );
+        $inserted++;
+    }
+
+    // Backfill term relationships.
+    $term_rows = $wpdb->get_results( "SELECT tr.object_id, tt.taxonomy, tt.term_id FROM {$wpdb->term_relationships} tr INNER JOIN {$wpdb->term_taxonomy} tt ON tt.term_taxonomy_id = tr.term_taxonomy_id", ARRAY_A );
+    foreach ( $term_rows as $row ) {
+        $name  = sanitize_key( $row['taxonomy'] );
+        $value = (int) $row['term_id'];
+
+        $field_id = $wpdb->get_var( $wpdb->prepare( "SELECT id FROM $fields_table WHERE name = %s AND value = %d LIMIT 1", $name, $value ) );
+        if ( ! $field_id ) {
+            $wpdb->insert( $fields_table, [ 'name' => $name, 'value' => $value ], [ '%s', '%d' ] );
+            $field_id = (int) $wpdb->insert_id;
+        }
+
+        $wpdb->insert( $relations_table, [ 'object_id' => (int) $row['object_id'], 'field_id' => (int) $field_id ], [ '%d', '%d' ] );
+        $inserted++;
+    }
+
+    return $inserted;
 }
