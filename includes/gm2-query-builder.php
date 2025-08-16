@@ -93,7 +93,7 @@ function gm2_register_query_block() {
 }
 add_action('init', __NAMESPACE__ . '\\gm2_register_query_block');
 
-add_filter('rest_post_query', function($args, $request) {
+add_filter('rest_post_query', function ($args, $request) {
     $id = sanitize_key($request->get_param('gm2_query'));
     if ($id) {
         $saved = Query_Manager::get_query($id);
@@ -101,5 +101,52 @@ add_filter('rest_post_query', function($args, $request) {
             $args = array_merge($args, $saved);
         }
     }
+
+    $meta_key = sanitize_key($request->get_param('meta_key'));
+    if ($meta_key) {
+        if (!isset($args['meta_query'])) {
+            $args['meta_query'] = [];
+        }
+        $meta = [
+            'key'   => $meta_key,
+            'value' => sanitize_text_field($request->get_param('meta_value')),
+        ];
+        $compare = $request->get_param('meta_compare');
+        if ($compare) {
+            $meta['compare'] = sanitize_text_field($compare);
+        }
+        $args['meta_query'][] = $meta;
+    }
+
+    $taxonomy = sanitize_key($request->get_param('taxonomy'));
+    $term     = $request->get_param('term');
+    if ($taxonomy && $term) {
+        if (!isset($args['tax_query'])) {
+            $args['tax_query'] = [];
+        }
+        $args['tax_query'][] = [
+            'taxonomy' => $taxonomy,
+            'field'    => 'slug',
+            'terms'    => array_map('sanitize_text_field', (array) $term),
+        ];
+    }
+
+    $after  = $request->get_param('after');
+    $before = $request->get_param('before');
+    if ($after || $before) {
+        if (!isset($args['date_query'])) {
+            $args['date_query'] = [];
+        }
+        $date = [];
+        if ($after) {
+            $date['after'] = sanitize_text_field($after);
+        }
+        if ($before) {
+            $date['before'] = sanitize_text_field($before);
+        }
+        $date['inclusive'] = true;
+        $args['date_query'][] = $date;
+    }
+
     return $args;
 }, 10, 2);
