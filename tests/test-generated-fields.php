@@ -70,5 +70,15 @@ class GeneratedFieldsTest extends WP_UnitTestCase {
         $path = get_attached_file($attachment_id);
         $this->assertSame('my-image-name.jpg', wp_basename($path));
     }
+
+    public function test_toggle_field_save_and_retrieve() {
+        $post_id = self::factory()->post->create();
+        $field   = new GM2_Field_Toggle('gm2_toggle');
+        $field->save($post_id, '1');
+        $this->assertSame('1', get_post_meta($post_id, 'gm2_toggle', true));
+
+        $field->save($post_id, '0');
+        $this->assertSame('', get_post_meta($post_id, 'gm2_toggle', true));
+    }
 }
 
