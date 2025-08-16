@@ -76,6 +76,30 @@ class Gm2_Webhooks {
             }
             $data['media'] = $media;
         }
+
+        $visibility = Gm2_REST_Visibility::get_visibility();
+        $fields = array_keys(array_filter($visibility['fields'] ?? []));
+        if (!empty($fields)) {
+            $config = get_option('gm2_custom_posts_config', []);
+            $defs = $config['post_types'][$post->post_type]['fields'] ?? [];
+            $data['fields'] = [];
+            foreach ($fields as $field) {
+                $value = get_post_meta($post->ID, $field, true);
+                $mode_field = $defs[$field]['serialize'] ?? 'raw';
+                if ($mode_field === 'rendered') {
+                    $data['fields'][$field] = is_scalar($value) ? apply_filters('the_content', $value) : $value;
+                } elseif ($mode_field === 'media') {
+                    if (is_numeric($value) && ($attachment = get_post((int) $value)) && $attachment->post_type === 'attachment') {
+                        $data['fields'][$field] = wp_prepare_attachment_for_js((int) $value);
+                    } else {
+                        $data['fields'][$field] = $value;
+                    }
+                } else {
+                    $data['fields'][$field] = $value;
+                }
+            }
+        }
+
         return $data;
     }
 }
