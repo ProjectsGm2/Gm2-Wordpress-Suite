@@ -755,26 +755,29 @@ function gm2_register_field_groups() {
             case 'post_type':
             default:
                 foreach (($group['objects'] ?? []) as $pt) {
-                    add_action('add_meta_boxes_' . $pt, function () use ($fields, $group, $group_key, $pt, $locations) {
-                        add_meta_box('gm2_fg_' . $group_key, $group['title'] ?? $group_key, function ($post) use ($fields, $locations) {
+                    $use_block = function_exists('use_block_editor_for_post_type') && use_block_editor_for_post_type($pt);
+                    if (!$use_block) {
+                        add_action('add_meta_boxes_' . $pt, function () use ($fields, $group, $group_key, $pt, $locations) {
+                            add_meta_box('gm2_fg_' . $group_key, $group['title'] ?? $group_key, function ($post) use ($fields, $locations) {
+                                $context = [
+                                    'post_type' => $post->post_type,
+                                    'template'  => get_page_template_slug($post->ID),
+                                ];
+                                if (gm2_match_location($locations, $context)) {
+                                    gm2_render_field_group($fields, $post->ID, 'post');
+                                }
+                            }, $pt, 'normal', 'default');
+                        });
+                        add_action('save_post_' . $pt, function ($post_id) use ($fields, $locations) {
                             $context = [
-                                'post_type' => $post->post_type,
-                                'template'  => get_page_template_slug($post->ID),
+                                'post_type' => get_post_type($post_id),
+                                'template'  => get_page_template_slug($post_id),
                             ];
                             if (gm2_match_location($locations, $context)) {
-                                gm2_render_field_group($fields, $post->ID, 'post');
+                                gm2_save_field_group($fields, $post_id, 'post');
                             }
-                        }, $pt, 'normal', 'default');
-                    });
-                    add_action('save_post_' . $pt, function ($post_id) use ($fields, $locations) {
-                        $context = [
-                            'post_type' => get_post_type($post_id),
-                            'template'  => get_page_template_slug($post_id),
-                        ];
-                        if (gm2_match_location($locations, $context)) {
-                            gm2_save_field_group($fields, $post_id, 'post');
-                        }
-                    });
+                        });
+                    }
                 }
                 break;
         }
