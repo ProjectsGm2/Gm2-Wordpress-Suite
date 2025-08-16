@@ -86,8 +86,25 @@ jQuery(function($){
             if(value){ chk.find('input').prop('checked', true); }
             wrap.append(chk);
         }else if(key === 'supports'){
-            wrap.append('<input type="text" id="gm2-arg-value" class="regular-text" />');
-            $('#gm2-arg-value').val($.isArray(value) ? value.join(',') : value);
+            var opts = ['title','editor','excerpt','author','thumbnail','page-attributes','custom-fields','revisions'];
+            $.each(opts, function(i, sup){
+                var id = 'gm2-support-'+sup;
+                var chk = $('<label><input type="checkbox" class="gm2-support-item" value="'+sup+'" id="'+id+'"/> '+sup.replace('-', ' ')+'</label><br/>');
+                wrap.append(chk);
+            });
+            if($.isArray(value)){
+                $.each(value, function(i,v){ wrap.find('input[value="'+v+'"]').prop('checked', true); });
+            }
+        }else if(key === 'rewrite'){
+            var html = '<p><label>Slug<br/><input type="text" id="gm2-rewrite-slug" class="regular-text" /></label></p>';
+            $.each(['with_front','hierarchical','feeds','pages'], function(i, opt){
+                html += '<label><input type="checkbox" class="gm2-rewrite-flag" id="gm2-rewrite-'+opt+'" value="1"/> '+opt.replace('_',' ')+'</label><br/>';
+            });
+            wrap.append(html);
+            if(value && typeof value === 'object'){
+                $('#gm2-rewrite-slug').val(value.slug || '');
+                $.each(['with_front','hierarchical','feeds','pages'], function(i,opt){ if(value[opt]) $('#gm2-rewrite-'+opt).prop('checked', true); });
+            }
         }else{
             wrap.append('<input type="text" id="gm2-arg-value" class="regular-text" />');
             if(typeof value === 'object'){
@@ -101,6 +118,9 @@ jQuery(function($){
         $('#gm2-arg-index').val(index !== undefined ? index : '');
         $('#gm2-arg-key').prop('disabled', index !== undefined).val(data ? data.key : '');
         showArgControl(data ? data.key : '', data ? data.value : '');
+        $('#gm2-arg-key').off('input.gm2').on('input.gm2', function(){
+            showArgControl($(this).val(), null);
+        });
         var targets = fields.map(function(f){ return f.slug; });
         targets.push('page_id','post_id');
         gm2Conditions.init($('#gm2-arg-conditions'), { targets: targets, data: data ? data.conditions : [] });
@@ -193,7 +213,20 @@ jQuery(function($){
         if(boolKeys.indexOf(key) !== -1){
             val = $('#gm2-arg-value').is(':checked');
         }else if(key === 'supports'){
-            val = $('#gm2-arg-value').val();
+            val = [];
+            $('.gm2-support-item:checked').each(function(){ val.push($(this).val()); });
+        }else if(key === 'rewrite'){
+            val = {
+                slug: $('#gm2-rewrite-slug').val(),
+                with_front: $('#gm2-rewrite-with_front').is(':checked'),
+                hierarchical: $('#gm2-rewrite-hierarchical').is(':checked'),
+                feeds: $('#gm2-rewrite-feeds').is(':checked'),
+                pages: $('#gm2-rewrite-pages').is(':checked')
+            };
+        }else if(key === 'capability_type'){
+            var raw = $('#gm2-arg-value').val();
+            var parts = raw.split(',').map(function(s){ return $.trim(s); }).filter(function(s){ return s.length; });
+            val = parts.length > 1 ? parts : parts[0];
         }else{
             val = $('#gm2-arg-value').val();
         }

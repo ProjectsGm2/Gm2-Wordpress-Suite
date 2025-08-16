@@ -463,7 +463,10 @@ class Gm2_Custom_Posts_Admin {
             if ($menu_position !== '') {
                 $args_input[] = [ 'key' => 'menu_position', 'value' => $menu_position ];
             }
-            $supports = array_filter(array_map('sanitize_key', explode(',', $_POST['pt_supports'] ?? '')));
+            $supports = [];
+            if (!empty($_POST['pt_supports']) && is_array($_POST['pt_supports'])) {
+                $supports = array_filter(array_map('sanitize_key', (array) $_POST['pt_supports']));
+            }
             if ($supports) {
                 $args_input[] = [ 'key' => 'supports', 'value' => $supports ];
             }
@@ -502,9 +505,13 @@ class Gm2_Custom_Posts_Admin {
             if (!empty($_POST['pt_map_meta_cap'])) {
                 $args_input[] = [ 'key' => 'map_meta_cap', 'value' => true ];
             }
-            $cap_type = sanitize_text_field($_POST['pt_capability_type'] ?? '');
-            if ($cap_type !== '') {
-                $args_input[] = [ 'key' => 'capability_type', 'value' => $cap_type ];
+            $cap_type_raw = sanitize_text_field($_POST['pt_capability_type'] ?? '');
+            if ($cap_type_raw !== '') {
+                $parts = array_filter(array_map('sanitize_key', array_map('trim', explode(',', $cap_type_raw))));
+                $cap_type = count($parts) > 1 ? array_slice($parts, 0, 2) : ($parts[0] ?? '');
+                if ($cap_type !== '') {
+                    $args_input[] = [ 'key' => 'capability_type', 'value' => $cap_type ];
+                }
             }
             $caps = json_decode(wp_unslash($_POST['pt_capabilities'] ?? ''), true);
             if (is_array($caps)) {
@@ -594,8 +601,11 @@ class Gm2_Custom_Posts_Admin {
         echo '<input type="text" name="pt_menu_icon" class="regular-text" /></label></p>';
         echo '<p><label>' . esc_html__( 'Menu Position', 'gm2-wordpress-suite' ) . '<br />';
         echo '<input type="number" name="pt_menu_position" class="small-text" /></label></p>';
-        echo '<p><label>' . esc_html__( 'Supports (comma separated)', 'gm2-wordpress-suite' ) . '<br />';
-        echo '<input type="text" name="pt_supports" class="regular-text" /></label></p>';
+        echo '<fieldset><legend>' . esc_html__( 'Supports', 'gm2-wordpress-suite' ) . '</legend>';
+        foreach ([ 'title', 'editor', 'excerpt', 'author', 'thumbnail', 'page-attributes', 'custom-fields', 'revisions' ] as $sup) {
+            echo '<label><input type="checkbox" name="pt_supports[]" value="' . esc_attr($sup) . '" /> ' . esc_html( ucwords(str_replace('-', ' ', $sup)) ) . '</label><br />';
+        }
+        echo '</fieldset>';
         echo '<p><label><input type="checkbox" name="pt_hierarchical" value="1" /> ' . esc_html__( 'Hierarchical', 'gm2-wordpress-suite' ) . '</label></p>';
         echo '<fieldset><legend>' . esc_html__( 'Visibility', 'gm2-wordpress-suite' ) . '</legend>';
         foreach ([ 'public', 'publicly_queryable', 'show_ui', 'show_in_menu', 'show_in_nav_menus', 'show_in_admin_bar', 'exclude_from_search', 'has_archive' ] as $vis) {
@@ -739,10 +749,11 @@ class Gm2_Custom_Posts_Admin {
             if (in_array($a_key, $bool_keys, true)) {
                 $val = !empty($value);
             } elseif ($a_key === 'supports') {
+                $allowed = [ 'title', 'editor', 'excerpt', 'author', 'thumbnail', 'page-attributes', 'custom-fields', 'revisions' ];
                 if (is_array($value)) {
-                    $val = array_filter(array_map('sanitize_key', $value));
+                    $val = array_values(array_intersect($allowed, array_map('sanitize_key', $value)));
                 } else {
-                    $val = array_filter(array_map('sanitize_key', explode(',', (string) $value)));
+                    $val = array_values(array_intersect($allowed, array_map('sanitize_key', explode(',', (string) $value))));
                 }
             } elseif ($a_key === 'labels') {
                 if (is_string($value)) {
@@ -774,6 +785,20 @@ class Gm2_Custom_Posts_Admin {
                 if (is_array($value)) {
                     foreach ($value as $k => $v) {
                         $val[sanitize_key($k)] = sanitize_text_field($v);
+                    }
+                }
+            } elseif ($a_key === 'capability_type') {
+                if (is_array($value)) {
+                    $val = array_slice(array_map('sanitize_key', $value), 0, 2);
+                    if (count($val) === 1) {
+                        $val = $val[0];
+                    }
+                } else {
+                    $parts = array_filter(array_map('sanitize_key', explode(',', (string) $value)));
+                    if (count($parts) > 1) {
+                        $val = array_slice($parts, 0, 2);
+                    } else {
+                        $val = $parts[0] ?? '';
                     }
                 }
             } elseif ($a_key === 'template') {
