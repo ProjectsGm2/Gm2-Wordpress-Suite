@@ -1159,6 +1159,9 @@ class Gm2_Custom_Posts_Admin {
                     'instructions' => $f['instructions'] ?? '',
                     'placeholder'  => $f['placeholder'] ?? '',
                     'class'        => $f['class'] ?? '',
+                    'capability'   => $f['capability'] ?? '',
+                    'edit_capability' => $f['edit_capability'] ?? '',
+                    'help'         => $f['help'] ?? '',
                     'location'     => $f['location'] ?? [],
                     'conditions'   => $f['conditions'] ?? [],
                 ];
@@ -1334,6 +1337,20 @@ class Gm2_Custom_Posts_Admin {
         $config['post_types'][$slug]['fields'] = $sanitized;
         $config['post_types'][$slug]['args']   = $sanitized_args;
         update_option('gm2_custom_posts_config', $config);
+
+        $groups = get_option('gm2_field_groups', []);
+        if (!is_array($groups)) {
+            $groups = [];
+        }
+        $groups[$slug] = [
+            'title'   => $config['post_types'][$slug]['label'] ?? $slug,
+            'fields'  => $sanitized,
+            'scope'   => 'post_type',
+            'objects' => [ $slug ],
+            'location'=> [],
+        ];
+        update_option('gm2_field_groups', $groups);
+
         wp_send_json_success([
             'fields' => $sanitized,
             'args'   => $sanitized_args,
