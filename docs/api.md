@@ -47,3 +47,22 @@ Provides copy-to-clipboard and download buttons for code blocks rendered by `gm2
 // Behaviour is attached to markup produced by the PHP helper; no direct API is exposed.
 ```
 
+### `Gm2_Custom_Posts_Admin::register_help( string $screen, string $content, array $tooltips = [] ): void`
+Registers contextual help for an admin screen. The `$tooltips` array maps CSS selectors to messages that appear as native tooltips. A "Help" tab is added automatically.
+
+```php
+$admin = new Gm2_Custom_Posts_Admin();
+$admin->register_help(
+    'toplevel_page_gm2-custom-posts',
+    __( 'Manage custom post types and taxonomies.', 'gm2-wordpress-suite' ),
+    [ 'input[name="pt_slug"]' => __( 'Unique identifier for the post type.', 'gm2-wordpress-suite' ) ]
+);
+```
+
+### `gm2-help`
+Elements targeted by the help registry receive their message as a tooltip.
+
+```js
+// Tooltips are applied automatically based on localized data.
+```
+
