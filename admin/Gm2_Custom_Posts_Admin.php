@@ -179,6 +179,11 @@ class Gm2_Custom_Posts_Admin {
         echo '<p><label>' . esc_html__( 'Capability', 'gm2-wordpress-suite' ) . '<br /><input type="text" id="gm2-field-cap" class="regular-text" /></label></p>';
         echo '<p><label>' . esc_html__( 'Edit Capability', 'gm2-wordpress-suite' ) . '<br /><input type="text" id="gm2-field-edit-cap" class="regular-text" /></label></p>';
         echo '<p><label>' . esc_html__( 'Help Text', 'gm2-wordpress-suite' ) . '<br /><input type="text" id="gm2-field-help" class="regular-text" /></label></p>';
+        echo '<p><label><input type="checkbox" id="gm2-field-column" value="1" /> ' . esc_html__( 'Show in Admin Column', 'gm2-wordpress-suite' ) . '</label></p>';
+        echo '<p><label><input type="checkbox" id="gm2-field-sortable" value="1" /> ' . esc_html__( 'Sortable Column', 'gm2-wordpress-suite' ) . '</label></p>';
+        echo '<p><label><input type="checkbox" id="gm2-field-quick-edit" value="1" /> ' . esc_html__( 'Enable Quick Edit', 'gm2-wordpress-suite' ) . '</label></p>';
+        echo '<p><label><input type="checkbox" id="gm2-field-bulk-edit" value="1" /> ' . esc_html__( 'Enable Bulk Edit', 'gm2-wordpress-suite' ) . '</label></p>';
+        echo '<p><label><input type="checkbox" id="gm2-field-filter" value="1" /> ' . esc_html__( 'Enable List Filter', 'gm2-wordpress-suite' ) . '</label></p>';
         echo '<div id="gm2-field-date-options" style="display:none;"><p><label>' . esc_html__( 'Min Date', 'gm2-wordpress-suite' ) . '<br /><input type="date" id="gm2-field-date-min" class="regular-text" /></label></p><p><label>' . esc_html__( 'Max Date', 'gm2-wordpress-suite' ) . '<br /><input type="date" id="gm2-field-date-max" class="regular-text" /></label></p></div>';
         echo '<div id="gm2-field-wysiwyg-options" style="display:none;"><p><label><input type="checkbox" id="gm2-field-wysiwyg-media" value="1" /> ' . esc_html__( 'Show Media Buttons', 'gm2-wordpress-suite' ) . '</label></p><p><label>' . esc_html__( 'Rows', 'gm2-wordpress-suite' ) . '<br /><input type="number" id="gm2-field-wysiwyg-rows" class="small-text" /></label></p></div>';
         echo '<div id="gm2-field-repeater-options" style="display:none;"><p><label>' . esc_html__( 'Min Rows', 'gm2-wordpress-suite' ) . '<br /><input type="number" id="gm2-field-repeater-min" class="small-text" /></label></p><p><label>' . esc_html__( 'Max Rows', 'gm2-wordpress-suite' ) . '<br /><input type="number" id="gm2-field-repeater-max" class="small-text" /></label></p></div>';
@@ -710,6 +715,11 @@ class Gm2_Custom_Posts_Admin {
                 'help'         => sanitize_text_field($field['help'] ?? ''),
                 'location'     => $this->sanitize_location($field['location'] ?? []),
                 'conditions'   => $this->sanitize_conditions($field['conditions'] ?? []),
+                'column'       => !empty($field['column']),
+                'sortable'     => !empty($field['sortable']),
+                'quick_edit'   => !empty($field['quick_edit']),
+                'bulk_edit'    => !empty($field['bulk_edit']),
+                'filter'       => !empty($field['filter']),
             ];
             if ($type === 'date') {
                 $sanitized['date_min'] = sanitize_text_field($field['date_min'] ?? '');
@@ -1013,7 +1023,14 @@ class Gm2_Custom_Posts_Admin {
             return;
         }
         wp_nonce_field('gm2_save_custom_fields', 'gm2_custom_fields_nonce');
+        $action = current_action();
         foreach ($config['post_types'][$post_type]['fields'] as $key => $field) {
+            if ($action === 'quick_edit_custom_box' && empty($field['quick_edit'])) {
+                continue;
+            }
+            if ($action === 'bulk_edit_custom_box' && empty($field['bulk_edit'])) {
+                continue;
+            }
             $type   = $field['type'] ?? 'text';
             $label  = $field['label'] ?? $key;
             $options = $field['options'] ?? [];
@@ -1164,6 +1181,11 @@ class Gm2_Custom_Posts_Admin {
                     'help'         => $f['help'] ?? '',
                     'location'     => $f['location'] ?? [],
                     'conditions'   => $f['conditions'] ?? [],
+                    'column'       => !empty($f['column']),
+                    'sortable'     => !empty($f['sortable']),
+                    'quick_edit'   => !empty($f['quick_edit']),
+                    'bulk_edit'    => !empty($f['bulk_edit']),
+                    'filter'       => !empty($f['filter']),
                 ];
             }
             $args = [];
@@ -1253,19 +1275,23 @@ class Gm2_Custom_Posts_Admin {
             $pt = $screen ? $screen->post_type : '';
             $config = $this->get_config();
             if (!empty($config['post_types'][$pt]['fields'])) {
-                $list_js = GM2_PLUGIN_DIR . 'admin/js/gm2-list-table.js';
-                wp_enqueue_script(
-                    'gm2-list-table',
-                    GM2_PLUGIN_URL . 'admin/js/gm2-list-table.js',
-                    [ 'jquery' ],
-                    file_exists($list_js) ? filemtime($list_js) : GM2_VERSION,
-                    true
-                );
                 $cols = [];
                 foreach ($config['post_types'][$pt]['fields'] as $slug => $f) {
-                    $cols[] = [ 'slug' => $slug, 'label' => $f['label'] ?? $slug ];
+                    if (!empty($f['quick_edit']) || !empty($f['bulk_edit'])) {
+                        $cols[] = [ 'slug' => $slug, 'label' => $f['label'] ?? $slug ];
+                    }
                 }
-                wp_localize_script('gm2-list-table', 'gm2ListTable', [ 'fields' => $cols ]);
+                if ($cols) {
+                    $list_js = GM2_PLUGIN_DIR . 'admin/js/gm2-list-table.js';
+                    wp_enqueue_script(
+                        'gm2-list-table',
+                        GM2_PLUGIN_URL . 'admin/js/gm2-list-table.js',
+                        [ 'jquery' ],
+                        file_exists($list_js) ? filemtime($list_js) : GM2_VERSION,
+                        true
+                    );
+                    wp_localize_script('gm2-list-table', 'gm2ListTable', [ 'fields' => $cols ]);
+                }
             }
         }
 
@@ -1370,6 +1396,7 @@ class Gm2_Custom_Posts_Admin {
         $label = sanitize_text_field($_POST['label'] ?? '');
         $post_types = array_filter(array_map('sanitize_key', explode(',', $_POST['post_types'] ?? '')));
         $hierarchical = !empty($_POST['hierarchical']);
+        $filter = !empty($_POST['filter']);
         $visibility_keys = [ 'public', 'show_ui', 'show_in_nav_menus', 'show_admin_column', 'show_tagcloud', 'show_in_quick_edit' ];
         $visibilities = [];
         foreach ($visibility_keys as $vk) {
@@ -1411,6 +1438,7 @@ class Gm2_Custom_Posts_Admin {
         }
         $sanitized_args = $this->sanitize_args_array($args_input);
         $config['taxonomies'][$slug]['args']       = $sanitized_args;
+        $config['taxonomies'][$slug]['filter']     = $filter;
         if ($label) {
             $config['taxonomies'][$slug]['label'] = $label;
         }
@@ -1603,18 +1631,22 @@ class Gm2_Custom_Posts_Admin {
             }
             add_filter("manage_{$slug}_posts_columns", function($cols) use ($pt) {
                 foreach ($pt['fields'] as $field_slug => $field) {
-                    $cols[$field_slug] = $field['label'] ?? $field_slug;
+                    if (!empty($field['column'])) {
+                        $cols[$field_slug] = $field['label'] ?? $field_slug;
+                    }
                 }
                 return $cols;
             });
             add_action("manage_{$slug}_posts_custom_column", function($column, $post_id) use ($pt) {
-                if (isset($pt['fields'][$column])) {
+                if (!empty($pt['fields'][$column]['column'])) {
                     echo esc_html(get_post_meta($post_id, $column, true));
                 }
             }, 10, 2);
             add_filter("manage_edit-{$slug}_sortable_columns", function($cols) use ($pt) {
                 foreach ($pt['fields'] as $field_slug => $field) {
-                    $cols[$field_slug] = $field_slug;
+                    if (!empty($field['sortable'])) {
+                        $cols[$field_slug] = $field_slug;
+                    }
                 }
                 return $cols;
             });
@@ -1630,8 +1662,27 @@ class Gm2_Custom_Posts_Admin {
         $config = $this->get_config();
         if (!empty($config['post_types'][$pt]['fields'])) {
             foreach ($config['post_types'][$pt]['fields'] as $slug => $field) {
+                if (empty($field['filter'])) {
+                    continue;
+                }
                 $val = sanitize_text_field($_GET[$slug] ?? '');
                 echo '<input type="text" name="' . esc_attr($slug) . '" value="' . esc_attr($val) . '" placeholder="' . esc_attr($field['label'] ?? $slug) . '" />';
+            }
+        }
+        if (!empty($config['taxonomies'])) {
+            foreach ($config['taxonomies'] as $tax_slug => $tax) {
+                if (empty($tax['filter']) || empty($tax['post_types']) || !in_array($pt, $tax['post_types'], true)) {
+                    continue;
+                }
+                $selected = sanitize_text_field($_GET[$tax_slug] ?? '');
+                wp_dropdown_categories([
+                    'taxonomy' => $tax_slug,
+                    'name' => $tax_slug,
+                    'show_option_all' => $tax['label'] ?? $tax_slug,
+                    'hide_empty' => false,
+                    'selected' => $selected,
+                    'orderby' => 'name',
+                ]);
             }
         }
         $saved = \Gm2\Query_Manager::get_queries();
@@ -1665,23 +1716,40 @@ class Gm2_Custom_Posts_Admin {
             }
         }
         $config = $this->get_config();
-        if (empty($config['post_types'][$pt]['fields'])) {
-            return;
-        }
-        $meta_query = $query->get('meta_query');
-        if (!is_array($meta_query)) {
-            $meta_query = [];
-        }
-        foreach ($config['post_types'][$pt]['fields'] as $slug => $field) {
-            if (isset($_GET[$slug]) && $_GET[$slug] !== '') {
-                $meta_query[] = [ 'key' => $slug, 'value' => sanitize_text_field($_GET[$slug]), 'compare' => 'LIKE' ];
+        if (!empty($config['post_types'][$pt]['fields'])) {
+            $meta_query = $query->get('meta_query');
+            if (!is_array($meta_query)) {
+                $meta_query = [];
+            }
+            foreach ($config['post_types'][$pt]['fields'] as $slug => $field) {
+                if (!empty($field['filter']) && isset($_GET[$slug]) && $_GET[$slug] !== '') {
+                    $meta_query[] = [ 'key' => $slug, 'value' => sanitize_text_field($_GET[$slug]), 'compare' => 'LIKE' ];
+                }
+            }
+            if ($meta_query) {
+                $query->set('meta_query', $meta_query);
             }
         }
-        if ($meta_query) {
-            $query->set('meta_query', $meta_query);
+        if (!empty($config['taxonomies'])) {
+            $tax_query = [];
+            foreach ($config['taxonomies'] as $tax_slug => $tax) {
+                if (empty($tax['filter']) || empty($tax['post_types']) || !in_array($pt, $tax['post_types'], true)) {
+                    continue;
+                }
+                if (isset($_GET[$tax_slug]) && $_GET[$tax_slug] !== '') {
+                    $tax_query[] = [
+                        'taxonomy' => $tax_slug,
+                        'field'    => 'slug',
+                        'terms'    => sanitize_text_field($_GET[$tax_slug]),
+                    ];
+                }
+            }
+            if ($tax_query) {
+                $query->set('tax_query', $tax_query);
+            }
         }
         $orderby = $query->get('orderby');
-        if ($orderby && isset($config['post_types'][$pt]['fields'][$orderby])) {
+        if ($orderby && isset($config['post_types'][$pt]['fields'][$orderby]) && !empty($config['post_types'][$pt]['fields'][$orderby]['sortable'])) {
             $query->set('meta_key', $orderby);
             $query->set('orderby', 'meta_value');
         }

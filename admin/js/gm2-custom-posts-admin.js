@@ -79,6 +79,11 @@ jQuery(function($){
         $('#gm2-field-cap').val(data ? data.capability : '');
         $('#gm2-field-edit-cap').val(data ? data.edit_capability : '');
         $('#gm2-field-help').val(data ? data.help : '');
+        $('#gm2-field-column').prop('checked', data ? !!data.column : false);
+        $('#gm2-field-sortable').prop('checked', data ? !!data.sortable : false);
+        $('#gm2-field-quick-edit').prop('checked', data ? !!data.quick_edit : false);
+        $('#gm2-field-bulk-edit').prop('checked', data ? !!data.bulk_edit : false);
+        $('#gm2-field-filter').prop('checked', data ? !!data.filter : false);
         $('#gm2-field-date-min').val(data ? data.date_min || '' : '');
         $('#gm2-field-date-max').val(data ? data.date_max || '' : '');
         $('#gm2-field-wysiwyg-media').prop('checked', data ? !!data.wysiwyg_media : false);
@@ -228,6 +233,11 @@ jQuery(function($){
             capability: $('#gm2-field-cap').val(),
             edit_capability: $('#gm2-field-edit-cap').val(),
             help: $('#gm2-field-help').val(),
+            column: $('#gm2-field-column').is(':checked'),
+            sortable: $('#gm2-field-sortable').is(':checked'),
+            quick_edit: $('#gm2-field-quick-edit').is(':checked'),
+            bulk_edit: $('#gm2-field-bulk-edit').is(':checked'),
+            filter: $('#gm2-field-filter').is(':checked'),
             location: locGroups,
             conditions: gm2Conditions.getData($('#gm2-field-conditions'))
         };
