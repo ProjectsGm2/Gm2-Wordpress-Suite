@@ -78,19 +78,56 @@ class Gm2_Audit_Log {
         self::log_change($object_id, $meta_key, $_meta_value, '');
     }
 
-    public static function tag_field_as_pii($field_key) {
+    public static function tag_field_as_pii($field_key, $retention_days = null) {
         $fields = get_option('gm2_pii_fields', []);
         if (!in_array($field_key, $fields, true)) {
             $fields[] = $field_key;
             update_option('gm2_pii_fields', $fields);
         }
+        if ($retention_days !== null) {
+            $retention = get_option('gm2_pii_retention', []);
+            $retention[$field_key] = absint($retention_days);
+            update_option('gm2_pii_retention', $retention);
+        }
+    }
+
+    public static function export_pii($object_id) {
+        $fields = get_option('gm2_pii_fields', []);
+        $data   = [];
+        foreach ($fields as $field) {
+            $value = get_post_meta($object_id, $field, true);
+            if ($value !== '' && $value !== null) {
+                $data[$field] = maybe_unserialize($value);
+            }
+        }
+        return $data;
     }
 
     public static function purge() {
         global $wpdb;
-        $days = absint(get_option('gm2_audit_log_retention_days', 30));
-        $table = self::table();
-        $wpdb->query($wpdb->prepare("DELETE FROM $table WHERE changed_at < DATE_SUB(NOW(), INTERVAL %d DAY)", $days));
+        $default_days = absint(get_option('gm2_audit_log_retention_days', 30));
+        $retentions   = get_option('gm2_pii_retention', []);
+        $table        = self::table();
+
+        foreach ($retentions as $meta_key => $days) {
+            $days = absint($days);
+            if ($days > 0) {
+                $ids = $wpdb->get_col($wpdb->prepare("SELECT object_id FROM $table WHERE meta_key = %s AND changed_at < DATE_SUB(NOW(), INTERVAL %d DAY)", $meta_key, $days));
+                foreach ($ids as $id) {
+                    delete_post_meta($id, $meta_key);
+                }
+                $wpdb->query($wpdb->prepare("DELETE FROM $table WHERE meta_key = %s AND changed_at < DATE_SUB(NOW(), INTERVAL %d DAY)", $meta_key, $days));
+            }
+        }
+        $placeholders = implode(',', array_fill(0, count($retentions), '%s'));
+        $sql = "DELETE FROM $table WHERE changed_at < DATE_SUB(NOW(), INTERVAL %d DAY)";
+        if (!empty($retentions)) {
+            $sql .= " AND meta_key NOT IN ($placeholders)";
+            $params = array_merge([$default_days], array_keys($retentions));
+            $wpdb->query($wpdb->prepare($sql, ...$params));
+        } else {
+            $wpdb->query($wpdb->prepare($sql, $default_days));
+        }
     }
 
     public static function schedule_purge() {
