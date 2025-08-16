@@ -39,25 +39,29 @@ class Gm2_REST_Fields {
 
     public static function rest_get(\WP_REST_Request $req) {
         $id = (int) $req->get_param('id');
-        if (!$id || !get_post($id)) {
+        $post = get_post($id);
+        if (!$id || !$post) {
             return new \WP_Error('gm2_invalid_id', __('Invalid object ID.', 'gm2-wordpress-suite'), [ 'status' => 404 ]);
         }
         $format = $req->get_param('format');
         if (!$format) {
             $format = $req->get_param('context');
         }
-        if (!in_array($format, [ 'rendered', 'media' ], true)) {
-            $format = 'raw';
+        if (!in_array($format, [ 'raw', 'rendered', 'media' ], true)) {
+            $format = null;
         }
 
         $visibility = Gm2_REST_Visibility::get_visibility();
         $fields = array_keys(array_filter($visibility['fields'] ?? []));
+        $config = get_option('gm2_custom_posts_config', []);
+        $defs = $config['post_types'][$post->post_type]['fields'] ?? [];
         $data = [];
         foreach ($fields as $field) {
             $value = get_post_meta($id, $field, true);
-            if ($format === 'rendered') {
+            $mode = $format ?: ($defs[$field]['serialize'] ?? 'raw');
+            if ($mode === 'rendered') {
                 $data[$field] = is_scalar($value) ? apply_filters('the_content', $value) : $value;
-            } elseif ($format === 'media') {
+            } elseif ($mode === 'media') {
                 if (is_numeric($value) && ($attachment = get_post((int) $value)) && $attachment->post_type === 'attachment') {
                     $data[$field] = wp_prepare_attachment_for_js((int) $value);
                 } else {

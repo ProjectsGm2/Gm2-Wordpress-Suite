@@ -31,6 +31,23 @@ $field = [ 'default_template' => 'Published on {date:Y-m-d}' ];
 $value = gm2_resolve_default( $field );
 ```
 
+### Field serialization
+Field definitions support a `serialize` key that determines how values are
+exposed through the REST API and webhooks. Supported modes are:
+
+- `raw` – return the stored value.
+- `rendered` – pass the value through `the_content` filter.
+- `media` – treat the value as an attachment ID and return the
+  `wp_prepare_attachment_for_js()` array.
+
+```php
+$field = [
+    'label'     => 'Summary',
+    'type'      => 'text',
+    'serialize' => 'rendered',
+];
+```
+
 ## JavaScript APIs
 
 ### `gm2-schema-tooltips`

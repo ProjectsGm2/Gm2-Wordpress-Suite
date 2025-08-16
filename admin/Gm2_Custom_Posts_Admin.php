@@ -854,9 +854,11 @@ class Gm2_Custom_Posts_Admin {
             $def   = sanitize_text_field($field['default'] ?? '');
             $order = isset($field['order']) ? (int) $field['order'] : 0;
             $container = in_array($field['container'] ?? '', [ 'tab', 'accordion' ], true) ? $field['container'] : '';
+            $serialize = in_array($field['serialize'] ?? 'raw', [ 'raw', 'rendered', 'media' ], true) ? $field['serialize'] : 'raw';
             $sanitized = [
                 'label'        => sanitize_text_field($field['label'] ?? ''),
                 'type'         => $type,
+                'serialize'    => $serialize,
                 'default'      => $def,
                 'description'  => sanitize_text_field($field['description'] ?? ''),
                 'order'        => $order,
