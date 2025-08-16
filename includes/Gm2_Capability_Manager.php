@@ -53,17 +53,17 @@ class Gm2_Capability_Manager {
         if (!$field || !$action) {
             return $allcaps;
         }
-        $roles = $map[$field][$action] ?? [];
-        if (empty($roles)) {
-            // No roles restriction means allowed.
+        $required = $map[$field][$action] ?? [];
+        if (empty($required)) {
+            // No restriction means allowed.
             $allcaps[$cap] = true;
             return $allcaps;
         }
         $user = get_userdata($user_id);
         $allowed = false;
         if ($user) {
-            foreach ((array) $user->roles as $role) {
-                if (in_array($role, $roles, true)) {
+            foreach ((array) $required as $need) {
+                if (in_array($need, (array) $user->roles, true) || !empty($user->allcaps[$need])) {
                     $allowed = true;
                     break;
                 }

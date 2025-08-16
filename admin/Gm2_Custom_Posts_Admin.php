@@ -21,6 +21,7 @@ class Gm2_Custom_Posts_Admin {
         add_action('admin_init', [ $this, 'add_list_table_hooks' ]);
         add_action('bulk_edit_custom_box', [ $this, 'inline_edit_fields' ], 10, 2);
         add_action('quick_edit_custom_box', [ $this, 'inline_edit_fields' ], 10, 2);
+        add_action('admin_post_gm2_save_field_caps', [ $this, 'save_field_caps' ]);
     }
 
     private function get_config() {
@@ -107,6 +108,15 @@ class Gm2_Custom_Posts_Admin {
             $cap,
             'gm2_workflows',
             [ $this, 'display_workflows_page' ]
+        );
+
+        add_submenu_page(
+            'gm2-custom-posts',
+            esc_html__( 'Field Permissions', 'gm2-wordpress-suite' ),
+            esc_html__( 'Field Permissions', 'gm2-wordpress-suite' ),
+            $cap,
+            'gm2_field_caps',
+            [ $this, 'display_field_caps_page' ]
         );
     }
 
@@ -433,6 +443,69 @@ class Gm2_Custom_Posts_Admin {
         echo '</form>';
 
         echo '</div>';
+    }
+
+    public function display_field_caps_page() {
+        if (!$this->can_manage()) {
+            wp_die(esc_html__( 'Permission denied', 'gm2-wordpress-suite' ));
+        }
+        $groups = get_option('gm2_field_groups', []);
+        $fields = [];
+        if (is_array($groups)) {
+            foreach ($groups as $group) {
+                if (!empty($group['fields']) && is_array($group['fields'])) {
+                    foreach ($group['fields'] as $field) {
+                        $slug = sanitize_key($field['slug'] ?? '');
+                        if ($slug) {
+                            $fields[$slug] = $field['label'] ?? $slug;
+                        }
+                    }
+                }
+            }
+        }
+        $map = get_option('gm2_field_caps', []);
+        echo '<div class="wrap"><h1>' . esc_html__( 'Field Permissions', 'gm2-wordpress-suite' ) . '</h1>';
+        echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
+        wp_nonce_field('gm2_save_field_caps');
+        echo '<input type="hidden" name="action" value="gm2_save_field_caps" />';
+        echo '<table class="widefat fixed"><thead><tr><th>' . esc_html__( 'Field', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'Read Roles/Capabilities', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'Edit Roles/Capabilities', 'gm2-wordpress-suite' ) . '</th></tr></thead><tbody>';
+        foreach ($fields as $slug => $label) {
+            $read = isset($map[$slug]['read']) ? implode(',', (array) $map[$slug]['read']) : '';
+            $edit = isset($map[$slug]['edit']) ? implode(',', (array) $map[$slug]['edit']) : '';
+            echo '<tr><td>' . esc_html($label) . '<br /><code>' . esc_html($slug) . '</code></td>';
+            echo '<td><input type="text" class="regular-text" name="field_caps[' . esc_attr($slug) . '][read]" value="' . esc_attr($read) . '" /></td>';
+            echo '<td><input type="text" class="regular-text" name="field_caps[' . esc_attr($slug) . '][edit]" value="' . esc_attr($edit) . '" /></td></tr>';
+        }
+        echo '</tbody></table><p><button type="submit" class="button button-primary">' . esc_html__( 'Save', 'gm2-wordpress-suite' ) . '</button></p></form></div>';
+    }
+
+    public function save_field_caps() {
+        if (!$this->can_manage()) {
+            wp_die(esc_html__( 'Permission denied', 'gm2-wordpress-suite' ));
+        }
+        check_admin_referer('gm2_save_field_caps');
+        $input = $_POST['field_caps'] ?? [];
+        $map = [];
+        if (is_array($input)) {
+            foreach ($input as $field => $caps) {
+                $field = sanitize_key($field);
+                $read = [];
+                $edit = [];
+                if (isset($caps['read'])) {
+                    $read = array_filter(array_map('sanitize_key', array_map('trim', explode(',', $caps['read']))));
+                }
+                if (isset($caps['edit'])) {
+                    $edit = array_filter(array_map('sanitize_key', array_map('trim', explode(',', $caps['edit']))));
+                }
+                $map[$field] = [
+                    'read' => array_values($read),
+                    'edit' => array_values($edit),
+                ];
+            }
+        }
+        update_option('gm2_field_caps', $map);
+        wp_safe_redirect(add_query_arg(['page' => 'gm2_field_caps', 'updated' => 'true'], admin_url('admin.php')));
+        exit;
     }
 
     public function display_page() {
