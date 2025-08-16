@@ -69,6 +69,60 @@ function gm2_field($key, $default = '', $object_id = null, $context_type = 'post
 }
 
 /**
+ * Retrieve an attachment object stored in a field.
+ *
+ * Attempts to resolve the stored value to a \WP_Post attachment object. The
+ * value may be saved as an ID or an array containing an `ID` key. When the
+ * field is empty the provided default is returned.
+ *
+ * @param string      $key          Meta field key.
+ * @param mixed       $default      Default value when the field is empty.
+ * @param int|null    $object_id    Context object ID.
+ * @param string      $context_type Context type.
+ * @return WP_Post|mixed
+ */
+function gm2_field_media_object($key, $default = null, $object_id = null, $context_type = 'post') {
+    $value = gm2_field($key, '', $object_id, $context_type);
+    if (is_array($value) && isset($value['ID'])) {
+        $value = $value['ID'];
+    }
+    if (is_numeric($value)) {
+        $attachment = get_post((int) $value);
+        if ($attachment instanceof WP_Post) {
+            return $attachment;
+        }
+    }
+    return $default;
+}
+
+/**
+ * Render an image element for a media field.
+ *
+ * @param string      $key          Meta field key.
+ * @param string      $size         Image size to retrieve.
+ * @param array       $attr         Optional attributes for the image tag.
+ * @param int|null    $object_id    Context object ID.
+ * @param string      $context_type Context type.
+ * @return string HTML markup or empty string when no image is available.
+ */
+function gm2_field_image($key, $size = 'full', $attr = [], $object_id = null, $context_type = 'post') {
+    $attachment = gm2_field_media_object($key, null, $object_id, $context_type);
+    if ($attachment) {
+        return wp_get_attachment_image($attachment->ID, $size, false, $attr);
+    }
+
+    $url = gm2_field($key, '', $object_id, $context_type);
+    if (is_string($url) && $url !== '' && filter_var($url, FILTER_VALIDATE_URL)) {
+        $attr_str = '';
+        foreach ($attr as $k => $v) {
+            $attr_str .= sprintf(' %s="%s"', esc_attr($k), esc_attr($v));
+        }
+        return sprintf('<img src="%s"%s />', esc_url($url), $attr_str);
+    }
+    return '';
+}
+
+/**
  * Locate a field definition from stored field groups.
  *
  * @param string $key Field key.
@@ -187,7 +241,13 @@ function gm2_maybe_write_theme_integration_templates() {
         // Build template content from field names.
         $lines = [];
         foreach ($fields as $field_key => $field) {
-            $lines[] = "{{ gm2_field('" . $field_key . "') }}";
+            $type = $field['type'] ?? '';
+            if ($type === 'media') {
+                $lines[] = "{{ gm2_field_image('" . $field_key . "') }}";
+                $lines[] = "{{ gm2_field_media_object('" . $field_key . "')|json_encode }}";
+            } else {
+                $lines[] = "{{ gm2_field('" . $field_key . "') }}";
+            }
         }
         $content = implode("\n", $lines) . "\n";
         if (!file_exists($twig)) {
@@ -199,3 +259,75 @@ function gm2_maybe_write_theme_integration_templates() {
     }
 }
 add_action('init', 'gm2_maybe_write_theme_integration_templates', 20);
+
+/**
+ * Write theme.json snippets derived from registered fields.
+ *
+ * When enabled via the `gm2_enable_theme_json` option the plugin inspects
+ * registered field groups for color and typography fields and generates a
+ * `theme.json` file under `theme-integration/` containing the appropriate
+ * `settings.color.palette` and `settings.typography.fontFamilies` entries. The
+ * file is intended to be merged into a theme's existing configuration.
+ */
+function gm2_maybe_write_theme_json_snippets() {
+    if (get_option('gm2_enable_theme_json', '0') !== '1') {
+        return;
+    }
+
+    $groups = get_option('gm2_field_groups', []);
+    if (!is_array($groups) || empty($groups)) {
+        return;
+    }
+
+    $palette     = [];
+    $typography  = [];
+
+    foreach ($groups as $group) {
+        foreach (($group['fields'] ?? []) as $key => $field) {
+            $type  = $field['theme'] ?? ($field['type'] ?? '');
+            $label = $field['label'] ?? $key;
+            $value = gm2_resolve_default($field);
+
+            if (in_array($type, ['color', 'design'], true)) {
+                $color = sanitize_hex_color($value);
+                if ($color) {
+                    $palette[] = [
+                        'slug'  => sanitize_key($key),
+                        'color' => $color,
+                        'name'  => $label,
+                    ];
+                }
+            } elseif ($type === 'typography') {
+                if (is_string($value) && $value !== '') {
+                    $typography['fontFamilies'][] = [
+                        'slug'       => sanitize_key($key),
+                        'fontFamily' => $value,
+                        'name'       => $label,
+                    ];
+                }
+            }
+        }
+    }
+
+    $settings = [];
+    if (!empty($palette)) {
+        $settings['color']['palette'] = $palette;
+    }
+    if (!empty($typography)) {
+        $settings['typography'] = $typography;
+    }
+
+    if (empty($settings)) {
+        return;
+    }
+
+    $dir = GM2_PLUGIN_DIR . 'theme-integration/';
+    if (!file_exists($dir)) {
+        wp_mkdir_p($dir);
+    }
+
+    $path = $dir . 'theme.json';
+    $json = json_encode(['settings' => $settings], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+    file_put_contents($path, $json);
+}
+add_action('init', 'gm2_maybe_write_theme_json_snippets', 30);
