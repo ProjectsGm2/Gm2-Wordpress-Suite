@@ -650,6 +650,12 @@ function gm2_register_field_groups() {
         $locations = $group['location'] ?? [];
         $scope     = $group['scope'] ?? 'post_type';
 
+        foreach ($fields as $key => $field) {
+            if (!empty($field['pii'])) {
+                \Gm2\Gm2_Audit_Log::tag_field_as_pii($key, $field['retention'] ?? null);
+            }
+        }
+
         switch ($scope) {
             case 'taxonomy':
                 foreach (($group['objects'] ?? []) as $tax) {

@@ -1750,6 +1750,13 @@ class Gm2_Custom_Posts_Admin {
                 'label' => $field['label'] ?? $slug,
                 'type'  => $field_type,
             ];
+            if (!empty($field['pii'])) {
+                $field_config['pii'] = true;
+                if (!empty($field['retention'])) {
+                    $field_config['retention'] = (int) $field['retention'];
+                }
+                \Gm2\Gm2_Audit_Log::tag_field_as_pii($slug, $field['retention'] ?? null);
+            }
             if ($field_type === 'select' && !empty($field['options']) && is_array($field['options'])) {
                 $options = [];
                 foreach ($field['options'] as $val => $label) {
