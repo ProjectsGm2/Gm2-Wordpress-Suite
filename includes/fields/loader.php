@@ -21,6 +21,7 @@ require_once __DIR__ . '/class-field-commerce.php';
 require_once __DIR__ . '/class-field-design.php';
 require_once __DIR__ . '/class-field-computed.php';
 require_once __DIR__ . '/class-field-message.php';
+require_once __DIR__ . '/class-field-toggle.php';
 
 $gm2_field_types = array();
 
@@ -52,5 +53,6 @@ function gm2_register_default_field_types() {
     gm2_register_field_type( 'design', 'GM2_Field_Design' );
     gm2_register_field_type( 'computed', 'GM2_Field_Computed' );
     gm2_register_field_type( 'message', 'GM2_Field_Message' );
+    gm2_register_field_type( 'toggle', 'GM2_Field_Toggle' );
 }
 add_action( 'init', 'gm2_register_default_field_types' );

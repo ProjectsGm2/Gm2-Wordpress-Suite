@@ -2,6 +2,15 @@ jQuery(function($){
     var fields = gm2CPTFields.fields || [];
     var args   = gm2CPTFields.args || [];
 
+    // Ensure textarea and toggle field types are available in the selector.
+    var typeSelect = $('#gm2-field-type');
+    if(!typeSelect.find('option[value="textarea"]').length){
+        typeSelect.append('<option value="textarea">Textarea</option>');
+    }
+    if(!typeSelect.find('option[value="toggle"]').length){
+        typeSelect.append('<option value="toggle">Toggle</option>');
+    }
+
     function esc(str){ return $('<div>').text(str).html(); }
 
     function renderFields(){
