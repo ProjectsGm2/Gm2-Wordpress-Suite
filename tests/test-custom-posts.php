@@ -47,8 +47,10 @@ class CustomPostsFieldsTest extends WP_UnitTestCase {
     public function tearDown(): void {
         parent::tearDown();
         delete_option('gm2_custom_posts_config');
-        if (post_type_exists('book')) {
-            unregister_post_type('book');
+        foreach (['book','movie'] as $pt) {
+            if (post_type_exists($pt)) {
+                unregister_post_type($pt);
+            }
         }
         $_POST = [];
         $_REQUEST = [];
@@ -223,5 +225,68 @@ class CustomPostsFieldsTest extends WP_UnitTestCase {
 
         $this->assertSame('30', get_post_meta($post_id, 'price', true));
         $this->assertSame('1', get_post_meta($post_id, 'show_extra', true));
+    }
+
+    public function test_register_post_type_args() {
+        update_option('gm2_custom_posts_config', [
+            'post_types' => [
+                'movie' => [
+                    'label' => 'Movie',
+                    'fields' => [],
+                    'args' => [
+                        'labels' => [ 'value' => [ 'name' => 'Movies', 'singular_name' => 'Movie' ] ],
+                        'menu_icon' => [ 'value' => 'dashicons-video-alt' ],
+                        'menu_position' => [ 'value' => 7 ],
+                        'supports' => [ 'value' => [ 'title','editor','excerpt','author','thumbnail','page-attributes','custom-fields','revisions' ] ],
+                        'public' => [ 'value' => true ],
+                        'publicly_queryable' => [ 'value' => true ],
+                        'show_in_nav_menus' => [ 'value' => true ],
+                        'show_ui' => [ 'value' => true ],
+                        'show_in_menu' => [ 'value' => true ],
+                        'show_in_admin_bar' => [ 'value' => true ],
+                        'show_in_rest' => [ 'value' => true ],
+                        'rest_base' => [ 'value' => 'film' ],
+                        'rest_controller_class' => [ 'value' => 'WP_REST_Posts_Controller' ],
+                        'rewrite' => [ 'value' => [ 'slug'=>'films','with_front'=>true,'hierarchical'=>true,'feeds'=>true,'pages'=>true ] ],
+                        'map_meta_cap' => [ 'value' => true ],
+                        'capability_type' => [ 'value' => [ 'movie','movies' ] ],
+                        'capabilities' => [ 'value' => [ 'edit_post' => 'edit_movie' ] ],
+                        'template' => [ 'value' => [ [ 'core/paragraph', [] ] ] ],
+                        'template_lock' => [ 'value' => 'all' ],
+                    ],
+                ],
+            ],
+            'taxonomies' => [],
+        ]);
+
+        gm2_register_custom_posts();
+        $pt = get_post_type_object('movie');
+
+        $this->assertSame('Movies', $pt->labels->name);
+        $this->assertSame('dashicons-video-alt', $pt->menu_icon);
+        $this->assertSame(7, $pt->menu_position);
+        $supports = get_all_post_type_supports('movie');
+        foreach(['title','editor','excerpt','author','thumbnail','page-attributes','custom-fields','revisions'] as $s){
+            $this->assertArrayHasKey($s, $supports);
+        }
+        $this->assertTrue($pt->public);
+        $this->assertTrue($pt->publicly_queryable);
+        $this->assertTrue($pt->show_in_nav_menus);
+        $this->assertTrue($pt->show_ui);
+        $this->assertTrue($pt->show_in_menu);
+        $this->assertTrue($pt->show_in_admin_bar);
+        $this->assertTrue($pt->show_in_rest);
+        $this->assertSame('film', $pt->rest_base);
+        $this->assertSame('WP_REST_Posts_Controller', $pt->rest_controller_class);
+        $this->assertSame('films', $pt->rewrite['slug']);
+        $this->assertTrue($pt->rewrite['with_front']);
+        $this->assertTrue($pt->rewrite['hierarchical']);
+        $this->assertTrue($pt->rewrite['feeds']);
+        $this->assertTrue($pt->rewrite['pages']);
+        $this->assertTrue($pt->map_meta_cap);
+        $this->assertSame('movie', $pt->capability_type);
+        $this->assertSame('edit_movie', $pt->cap->edit_post);
+        $this->assertSame([ [ 'core/paragraph', [] ] ], $pt->template);
+        $this->assertSame('all', $pt->template_lock);
     }
 }
