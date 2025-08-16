@@ -838,12 +838,13 @@ class Gm2_Custom_Posts_Admin {
                 $slug = sanitize_title($name);
             }
             $item = [
-                'slug'  => $slug,
-                'name'  => $name ?: $slug,
-                'order' => isset($term['order']) ? (int) $term['order'] : 0,
-                'color' => sanitize_hex_color($term['color'] ?? ''),
-                'icon'  => sanitize_text_field($term['icon'] ?? ''),
-                'meta'  => [],
+                'slug'        => $slug,
+                'name'        => $name ?: $slug,
+                'description' => sanitize_textarea_field($term['description'] ?? ''),
+                'order'       => isset($term['order']) ? (int) $term['order'] : 0,
+                'color'       => sanitize_hex_color($term['color'] ?? ''),
+                'icon'        => sanitize_text_field($term['icon'] ?? ''),
+                'meta'        => [],
             ];
             if (!empty($term['meta']) && is_array($term['meta'])) {
                 foreach ($term['meta'] as $k => $v) {
