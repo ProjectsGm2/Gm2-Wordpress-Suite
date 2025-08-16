@@ -52,8 +52,12 @@ class CustomPostsFieldsTest extends WP_UnitTestCase {
                 unregister_post_type($pt);
             }
         }
+        if (taxonomy_exists('genre')) {
+            unregister_taxonomy('genre');
+        }
         $_POST = [];
         $_REQUEST = [];
+        $_GET = [];
         wp_set_current_user(0);
     }
 
@@ -225,6 +229,73 @@ class CustomPostsFieldsTest extends WP_UnitTestCase {
 
         $this->assertSame('30', get_post_meta($post_id, 'price', true));
         $this->assertSame('1', get_post_meta($post_id, 'show_extra', true));
+    }
+
+    public function test_list_table_columns_and_filters() {
+        $config = get_option('gm2_custom_posts_config');
+        $config['post_types']['book']['fields']['price']['column'] = true;
+        $config['post_types']['book']['fields']['price']['sortable'] = true;
+        $config['post_types']['book']['fields']['price']['quick_edit'] = true;
+        $config['post_types']['book']['fields']['price']['bulk_edit'] = true;
+        $config['post_types']['book']['fields']['price']['filter'] = true;
+        $config['taxonomies'] = [
+            'genre' => [
+                'label' => 'Genre',
+                'post_types' => [ 'book' ],
+                'filter' => true,
+                'args' => [],
+            ],
+        ];
+        update_option('gm2_custom_posts_config', $config);
+        register_taxonomy('genre', 'book');
+
+        $admin = new Gm2_Custom_Posts_Admin();
+        $admin->run();
+        $admin->add_list_table_hooks();
+
+        $post_id = self::factory()->post->create([
+            'post_type' => 'book',
+            'post_status' => 'publish',
+        ]);
+        update_post_meta($post_id, 'price', '9');
+
+        $cols = apply_filters('manage_book_posts_columns', []);
+        $this->assertArrayHasKey('price', $cols);
+        $sortable = apply_filters('manage_edit-book_sortable_columns', []);
+        $this->assertArrayHasKey('price', $sortable);
+        ob_start();
+        do_action('manage_book_posts_custom_column', 'price', $post_id);
+        $out = trim(ob_get_clean());
+        $this->assertSame('9', $out);
+
+        ob_start();
+        do_action('quick_edit_custom_box', 'cb', 'book');
+        $quick_html = ob_get_clean();
+        $this->assertStringContainsString('name="price"', $quick_html);
+
+        ob_start();
+        do_action('bulk_edit_custom_box', 'cb', 'book');
+        $bulk_html = ob_get_clean();
+        $this->assertStringContainsString('name="price"', $bulk_html);
+
+        set_current_screen('edit-book');
+        ob_start();
+        $admin->restrict_manage_posts();
+        $filters_html = ob_get_clean();
+        $this->assertStringContainsString('name="price"', $filters_html);
+        $this->assertStringContainsString('name="genre"', $filters_html);
+
+        $_GET['price'] = '9';
+        $_GET['genre'] = 'fiction';
+        $query = new WP_Query(['post_type' => 'book']);
+        $query->is_admin = true;
+        $query->is_main_query = true;
+        set_current_screen('edit-book');
+        $admin->pre_get_posts($query);
+        $mq = $query->get('meta_query');
+        $this->assertSame('price', $mq[0]['key']);
+        $tq = $query->get('tax_query');
+        $this->assertSame('genre', $tq[0]['taxonomy']);
     }
 
     public function test_register_post_type_args() {
