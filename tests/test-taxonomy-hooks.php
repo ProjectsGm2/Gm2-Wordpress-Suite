@@ -27,5 +27,66 @@ class TaxonomyHooksTest extends WP_UnitTestCase {
 
         $this->assertSame('Cat Title', get_term_meta($term_id, '_gm2_title', true));
     }
+
+    public function test_default_terms_created_with_meta_and_hooks() {
+        update_option('gm2_custom_posts_config', [
+            'post_types' => [],
+            'taxonomies' => [
+                'genre' => [
+                    'label' => 'Genre',
+                    'post_types' => ['post'],
+                    'args' => [
+                        'public'      => [ 'value' => true ],
+                        'show_ui'     => [ 'value' => true ],
+                        'show_in_rest'=> [ 'value' => true ],
+                    ],
+                    'default_terms' => [
+                        [
+                            'slug' => 'horror',
+                            'name' => 'Horror',
+                            'description' => 'Scary stuff',
+                            'color' => '#ff0000',
+                            'icon'  => 'dashicons-media-text',
+                            'order' => 1,
+                            'meta'  => [ 'rating' => '5' ],
+                        ],
+                    ],
+                    'term_fields' => [
+                        'rating' => [ 'type' => 'number', 'description' => 'Rating' ],
+                    ],
+                ],
+            ],
+        ]);
+
+        gm2_register_custom_posts();
+
+        $this->assertTrue( taxonomy_exists('genre') );
+        $this->assertNotFalse( has_action('genre_add_form_fields') );
+        $this->assertNotFalse( has_action('created_genre') );
+
+        ob_start();
+        do_action('genre_add_form_fields');
+        $html = ob_get_clean();
+        $this->assertStringContainsString('name="color"', $html);
+        $this->assertStringContainsString('name="icon"', $html);
+        $this->assertStringContainsString('name="_gm2_order"', $html);
+
+        $term = get_term_by('slug', 'horror', 'genre');
+        $this->assertNotEmpty($term);
+        $this->assertSame('Scary stuff', $term->description);
+        $this->assertSame('#ff0000', get_term_meta($term->term_id, 'color', true));
+        $this->assertSame('dashicons-media-text', get_term_meta($term->term_id, 'icon', true));
+        $this->assertSame('1', get_term_meta($term->term_id, '_gm2_order', true));
+        $this->assertSame('5', get_term_meta($term->term_id, 'rating', true));
+
+        $meta_keys = get_registered_meta_keys('term', 'genre');
+        $this->assertArrayHasKey('color', $meta_keys);
+        $this->assertArrayHasKey('icon', $meta_keys);
+        $this->assertArrayHasKey('_gm2_order', $meta_keys);
+        $this->assertArrayHasKey('rating', $meta_keys);
+
+        unregister_taxonomy('genre');
+        delete_option('gm2_custom_posts_config');
+    }
 }
 

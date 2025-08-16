@@ -23,7 +23,8 @@ jQuery(function($){
 
     function showArgControl(key, value){
         var wrap = $('#gm2-tax-arg-value-wrap').empty();
-        if(key === 'public' || key === 'hierarchical'){
+        var boolKeys = ['public','hierarchical','show_ui','show_in_nav_menus','show_admin_column','show_tagcloud','show_in_quick_edit','show_in_rest'];
+        if(boolKeys.indexOf(key) !== -1){
             var chk = $('<label><input type="checkbox" id="gm2-tax-arg-value" value="1"/> '+key+'</label>');
             if(value){ chk.find('input').prop('checked', true); }
             wrap.append(chk);

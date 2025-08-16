@@ -29,4 +29,53 @@ class TermSchemaTest extends WP_UnitTestCase {
         }
         $this->assertTrue($found);
     }
+
+    public function test_term_meta_field_exposed_in_rest_schema() {
+        update_option('gm2_custom_posts_config', [
+            'post_types' => [],
+            'taxonomies' => [
+                'genre' => [
+                    'label' => 'Genre',
+                    'post_types' => ['post'],
+                    'args' => [
+                        'show_in_rest' => [ 'value' => true ],
+                    ],
+                    'default_terms' => [
+                        [
+                            'slug' => 'horror',
+                            'name' => 'Horror',
+                            'meta' => [ 'rating' => '5' ],
+                        ],
+                    ],
+                    'term_fields' => [
+                        'rating' => [ 'type' => 'number', 'description' => 'Rating' ],
+                    ],
+                ],
+            ],
+        ]);
+
+        gm2_register_custom_posts();
+
+        $request  = new WP_REST_Request('OPTIONS', '/wp/v2/genre');
+        $response = rest_get_server()->dispatch($request);
+        $schema   = $response->get_data();
+        $this->assertArrayHasKey('meta', $schema['schema']['properties']);
+        $this->assertArrayHasKey('rating', $schema['schema']['properties']['meta']['properties']);
+
+        $get = new WP_REST_Request('GET', '/wp/v2/genre');
+        $get->set_param('_fields', 'slug,meta');
+        $resp = rest_get_server()->dispatch($get);
+        $data = $resp->get_data();
+        $found = false;
+        foreach ($data as $term) {
+            if ($term['slug'] === 'horror') {
+                $found = true;
+                $this->assertSame('5', $term['meta']['rating']);
+            }
+        }
+        $this->assertTrue($found);
+
+        unregister_taxonomy('genre');
+        delete_option('gm2_custom_posts_config');
+    }
 }

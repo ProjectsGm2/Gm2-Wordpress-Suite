@@ -356,6 +356,28 @@ function gm2_register_custom_posts() {
         };
         add_action("created_{$slug}", $save_term_meta);
         add_action("edited_{$slug}", $save_term_meta);
+        // Register default term meta keys.
+        register_term_meta($slug, 'color', [
+            'type'              => 'string',
+            'single'            => true,
+            'show_in_rest'      => true,
+            'sanitize_callback' => 'sanitize_hex_color',
+            'description'       => 'Term color',
+        ]);
+        register_term_meta($slug, 'icon', [
+            'type'              => 'string',
+            'single'            => true,
+            'show_in_rest'      => true,
+            'sanitize_callback' => 'sanitize_text_field',
+            'description'       => 'Term icon',
+        ]);
+        register_term_meta($slug, '_gm2_order', [
+            'type'              => 'integer',
+            'single'            => true,
+            'show_in_rest'      => true,
+            'sanitize_callback' => 'intval',
+            'description'       => 'Term order',
+        ]);
 
         // Register term meta fields.
         foreach ($tax['term_fields'] ?? [] as $meta_key => $field) {
@@ -378,10 +400,20 @@ function gm2_register_custom_posts() {
                 $existing = term_exists($term['slug'], $slug);
                 if ($existing && is_array($existing)) {
                     $term_id = $existing['term_id'];
+                    if (!empty($term['description'])) {
+                        wp_update_term($term_id, $slug, [ 'description' => $term['description'] ]);
+                    }
                 } elseif ($existing) {
                     $term_id = $existing;
+                    if (!empty($term['description'])) {
+                        wp_update_term($term_id, $slug, [ 'description' => $term['description'] ]);
+                    }
                 } else {
-                    $inserted = wp_insert_term($term['name'], $slug, [ 'slug' => $term['slug'] ]);
+                    $insert_args = [ 'slug' => $term['slug'] ];
+                    if (!empty($term['description'])) {
+                        $insert_args['description'] = $term['description'];
+                    }
+                    $inserted = wp_insert_term($term['name'], $slug, $insert_args);
                     if (is_wp_error($inserted)) {
                         continue;
                     }
