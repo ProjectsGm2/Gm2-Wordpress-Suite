@@ -21,6 +21,16 @@ $json = json_encode( ['hello' => 'world'] );
 echo gm2_render_open_in_code( $php, $json );
 ```
 
+### `gm2_resolve_default( array $field, int $object_id = 0, string $context_type = 'post' ): mixed`
+Resolves a field's default value. Besides static values and callbacks, template
+strings may contain tokens such as `{post_id}` or `{date:Y-m-d}`. Date tokens are
+rendered using the site's timezone.
+
+```php
+$field = [ 'default_template' => 'Published on {date:Y-m-d}' ];
+$value = gm2_resolve_default( $field );
+```
+
 ## JavaScript APIs
 
 ### `gm2-schema-tooltips`

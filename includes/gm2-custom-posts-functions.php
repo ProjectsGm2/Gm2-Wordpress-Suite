@@ -158,10 +158,33 @@ function gm2_resolve_default($field, $object_id = 0, $context_type = 'post') {
                 $replacements['{post_slug}']  = $post->post_name;
             }
         }
-        return strtr($template, $replacements);
+        $template = strtr($template, $replacements);
+        return gm2_render_default_tokens($template);
     }
 
-    return $default;
+    return gm2_render_default_tokens($default);
+}
+
+/**
+ * Replace dynamic tokens within a default string.
+ *
+ * Currently supports date tokens of the form `{date:FORMAT}` which are
+ * formatted using the site's timezone.
+ *
+ * @param mixed $value Value containing tokens.
+ * @return mixed Value with tokens replaced.
+ */
+function gm2_render_default_tokens($value) {
+    if (!is_string($value)) {
+        return $value;
+    }
+
+    $value = preg_replace_callback('/{date:([^}]+)}/', function ($matches) {
+        $format = trim($matches[1]);
+        return wp_date($format, time(), wp_timezone());
+    }, $value);
+
+    return $value;
 }
 
 /**

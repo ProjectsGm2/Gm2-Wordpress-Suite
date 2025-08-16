@@ -80,5 +80,18 @@ class GeneratedFieldsTest extends WP_UnitTestCase {
         $field->save($post_id, '0');
         $this->assertSame('', get_post_meta($post_id, 'gm2_toggle', true));
     }
+
+    public function test_date_token_renders_using_site_timezone() {
+        $prev_tz = get_option('timezone_string');
+        update_option('timezone_string', 'America/Chicago');
+
+        $field  = [ 'default_template' => '{date:Y-m-d}' ];
+        $value  = gm2_resolve_default($field);
+        $expect = wp_date('Y-m-d', time(), wp_timezone());
+
+        $this->assertSame($expect, $value);
+
+        update_option('timezone_string', $prev_tz);
+    }
 }
 
