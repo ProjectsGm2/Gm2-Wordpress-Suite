@@ -3353,3 +3353,59 @@ msgstr ""
 #: public/Gm2_SEO_Public.php:135
 msgid "Review rating value"
 msgstr ""
+
+#: admin/Gm2_Custom_Posts_Admin.php:88
+msgid "Help"
+msgstr ""
+
+#: admin/Gm2_Custom_Posts_Admin.php:34
+msgid "Manage custom post types and taxonomies."
+msgstr ""
+
+#: admin/Gm2_Custom_Posts_Admin.php:36
+msgid "Unique identifier for the post type."
+msgstr ""
+
+#: admin/Gm2_Custom_Posts_Admin.php:37
+msgid "Unique identifier for the taxonomy."
+msgstr ""
+
+#: admin/Gm2_Custom_Posts_Admin.php:42
+msgid "Edit fields and registration arguments for the selected post type."
+msgstr ""
+
+#: admin/Gm2_Custom_Posts_Admin.php:44
+msgid "Add a new field."
+msgstr ""
+
+#: admin/Gm2_Custom_Posts_Admin.php:45
+msgid "Add a new argument."
+msgstr ""
+
+#: admin/Gm2_Custom_Posts_Admin.php:50
+msgid "Modify taxonomy settings and meta fields."
+msgstr ""
+
+#: admin/Gm2_Custom_Posts_Admin.php:52
+msgid "Add a new taxonomy argument."
+msgstr ""
+
+#: admin/Gm2_Custom_Posts_Admin.php:57
+msgid "Build reusable WP_Query snippets."
+msgstr ""
+
+#: admin/Gm2_Custom_Posts_Admin.php:59
+msgid "Save the configured query."
+msgstr ""
+
+#: admin/Gm2_Custom_Posts_Admin.php:64
+msgid "Interactive model builder for custom post types."
+msgstr ""
+
+#: admin/Gm2_Custom_Posts_Admin.php:68
+msgid "Automate actions with workflows and statuses."
+msgstr ""
+
+#: admin/Gm2_Custom_Posts_Admin.php:72
+msgid "Restrict who can edit specific fields."
+msgstr ""

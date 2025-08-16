@@ -6,7 +6,12 @@ if (!defined('ABSPATH')) {
 }
 
 class Gm2_Custom_Posts_Admin {
+    private $help_registry = [];
+
     public function run() {
+        $this->init_help();
+        add_action('current_screen', [ $this, 'setup_help' ]);
+        add_action('admin_enqueue_scripts', [ $this, 'enqueue_help_assets' ]);
         add_action('admin_menu', [ $this, 'add_menu' ]);
         add_action('add_meta_boxes', [ $this, 'add_meta_boxes' ]);
         add_action('save_post', [ $this, 'save_meta_boxes' ]);
@@ -22,6 +27,82 @@ class Gm2_Custom_Posts_Admin {
         add_action('bulk_edit_custom_box', [ $this, 'inline_edit_fields' ], 10, 2);
         add_action('quick_edit_custom_box', [ $this, 'inline_edit_fields' ], 10, 2);
         add_action('admin_post_gm2_save_field_caps', [ $this, 'save_field_caps' ]);
+    }
+
+    private function init_help() {
+        $this->register_help('toplevel_page_gm2-custom-posts',
+            '<p>' . esc_html__( 'Manage custom post types and taxonomies.', 'gm2-wordpress-suite' ) . '</p>',
+            [
+                'input[name="pt_slug"]'  => esc_html__( 'Unique identifier for the post type.', 'gm2-wordpress-suite' ),
+                'input[name="tax_slug"]' => esc_html__( 'Unique identifier for the taxonomy.', 'gm2-wordpress-suite' ),
+            ]
+        );
+
+        $this->register_help('gm2-custom-posts_page_gm2_cpt_fields',
+            '<p>' . esc_html__( 'Edit fields and registration arguments for the selected post type.', 'gm2-wordpress-suite' ) . '</p>',
+            [
+                '#gm2-add-field' => esc_html__( 'Add a new field.', 'gm2-wordpress-suite' ),
+                '#gm2-add-arg'   => esc_html__( 'Add a new argument.', 'gm2-wordpress-suite' ),
+            ]
+        );
+
+        $this->register_help('gm2-custom-posts_page_gm2_tax_args',
+            '<p>' . esc_html__( 'Modify taxonomy settings and meta fields.', 'gm2-wordpress-suite' ) . '</p>',
+            [
+                '#gm2-add-tax-arg' => esc_html__( 'Add a new taxonomy argument.', 'gm2-wordpress-suite' ),
+            ]
+        );
+
+        $this->register_help('gm2-custom-posts_page_gm2_query_builder',
+            '<p>' . esc_html__( 'Build reusable WP_Query snippets.', 'gm2-wordpress-suite' ) . '</p>',
+            [
+                '#gm2-save-query' => esc_html__( 'Save the configured query.', 'gm2-wordpress-suite' ),
+            ]
+        );
+
+        $this->register_help('gm2-custom-posts_page_gm2_cpt_wizard',
+            '<p>' . esc_html__( 'Interactive model builder for custom post types.', 'gm2-wordpress-suite' ) . '</p>'
+        );
+
+        $this->register_help('gm2-custom-posts_page_gm2_workflows',
+            '<p>' . esc_html__( 'Automate actions with workflows and statuses.', 'gm2-wordpress-suite' ) . '</p>'
+        );
+
+        $this->register_help('gm2-custom-posts_page_gm2_field_caps',
+            '<p>' . esc_html__( 'Restrict who can edit specific fields.', 'gm2-wordpress-suite' ) . '</p>'
+        );
+    }
+
+    public function register_help($screen, $content, $tooltips = []) {
+        $this->help_registry[$screen] = [
+            'content'  => $content,
+            'tooltips' => $tooltips,
+        ];
+    }
+
+    public function setup_help($screen) {
+        $id = $screen->id;
+        if (isset($this->help_registry[$id])) {
+            $screen->add_help_tab([
+                'id'      => 'gm2-cpt-help',
+                'title'   => __( 'Help', 'gm2-wordpress-suite' ),
+                'content' => $this->help_registry[$id]['content'],
+            ]);
+        }
+    }
+
+    public function enqueue_help_assets($hook) {
+        if (isset($this->help_registry[$hook]['tooltips']) && $this->help_registry[$hook]['tooltips']) {
+            $file = GM2_PLUGIN_DIR . 'admin/js/gm2-help.js';
+            wp_enqueue_script(
+                'gm2-help',
+                GM2_PLUGIN_URL . 'admin/js/gm2-help.js',
+                [ 'jquery' ],
+                file_exists($file) ? filemtime($file) : GM2_VERSION,
+                true
+            );
+            wp_localize_script('gm2-help', 'gm2CPTHelp', $this->help_registry[$hook]['tooltips']);
+        }
     }
 
     private function get_config() {
