@@ -9,4 +9,5 @@ register_post_type( 'gm2_event', [
 ] );
 
 echo gm2_render_open_in_code( '<?php // event php ?>', json_encode( ['type' => 'event'] ) );
+echo gm2_schema_tooltip( 'Event venue', 'Venue' );
 ```

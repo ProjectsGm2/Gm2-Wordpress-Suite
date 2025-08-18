@@ -1,4 +1,4 @@
-.PHONY: test install-tests check-tests
+.PHONY: test install-tests check-tests docs
 
 WP_TESTS_DIR ?= $(TMPDIR)/wordpress-tests-lib
 
@@ -19,3 +19,7 @@ test: check-tests
 
 install-tests:
 	bash bin/install-wp-tests.sh $(DB_NAME) $(DB_USER) $(DB_PASS) $(DB_HOST) $(WP_VERSION)
+
+
+docs:
+	node bin/generate-hooks-docs.js

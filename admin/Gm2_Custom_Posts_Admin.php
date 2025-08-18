@@ -94,15 +94,7 @@ class Gm2_Custom_Posts_Admin {
 
     public function enqueue_help_assets($hook) {
         if (isset($this->help_registry[$hook]['tooltips']) && $this->help_registry[$hook]['tooltips']) {
-            $file = GM2_PLUGIN_DIR . 'admin/js/gm2-help.js';
-            wp_enqueue_script(
-                'gm2-help',
-                GM2_PLUGIN_URL . 'admin/js/gm2-help.js',
-                [ 'jquery' ],
-                file_exists($file) ? filemtime($file) : GM2_VERSION,
-                true
-            );
-            wp_localize_script('gm2-help', 'gm2CPTHelp', $this->help_registry[$hook]['tooltips']);
+            wp_localize_script('gm2-schema-tooltips', 'gm2CPTHelp', $this->help_registry[$hook]['tooltips']);
         }
     }
 
