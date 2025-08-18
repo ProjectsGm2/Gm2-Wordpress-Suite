@@ -324,7 +324,58 @@ jQuery(function($){
         $(this).val(val.replace(/[^0-9,]/g,''));
     });
 
+    function applyEnhancements(){
+        $('.gm2-field[data-placeholder]').each(function(){
+            var ph = $(this).data('placeholder');
+            $(this).find('input, textarea, select').first().attr('placeholder', ph);
+        });
+        $('.gm2-field[data-admin-class]').each(function(){
+            var cls = $(this).data('admin-class');
+            $(this).find(':input').addClass(cls);
+        });
+        var tabs = [];
+        $('.gm2-field[data-tab]').each(function(){
+            var t = $(this).data('tab');
+            if(tabs.indexOf(t) === -1){ tabs.push(t); }
+        });
+        if(tabs.length){
+            var nav = $('<ul class="gm2-tab-nav"></ul>');
+            $.each(tabs, function(i, t){ nav.append('<li data-tab="'+t+'">'+t+'</li>'); });
+            var firstField = $('.gm2-field[data-tab]').first();
+            firstField.before(nav);
+            function showTab(tab){
+                $('.gm2-field[data-tab]').hide();
+                $('.gm2-field[data-tab="'+tab+'"]').show();
+                nav.find('li').removeClass('active');
+                nav.find('li[data-tab="'+tab+'"]').addClass('active');
+            }
+            nav.on('click', 'li', function(){
+                showTab($(this).data('tab'));
+            });
+            showTab(tabs[0]);
+        }
+        var accGroups = {};
+        $('.gm2-field[data-accordion]').each(function(){
+            var name = $(this).data('accordion');
+            if(!accGroups[name]){ accGroups[name] = []; }
+            accGroups[name].push(this);
+        });
+        $.each(accGroups, function(name, fields){
+            var first = $(fields[0]);
+            var wrap = $('<div class="gm2-accordion-group"></div>');
+            var header = $('<h3 class="gm2-accordion-header">'+name+'</h3>');
+            var content = $('<div class="gm2-accordion-content"></div>');
+            $(fields).each(function(){ content.append(this); });
+            wrap.append(header).append(content);
+            first.before(wrap);
+        });
+        $(document).on('click', '.gm2-accordion-header', function(){
+            $(this).next('.gm2-accordion-content').slideToggle();
+        });
+    }
+
     renderFields();
     renderArgs();
+    applyEnhancements();
 });
 

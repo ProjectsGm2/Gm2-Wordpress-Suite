@@ -540,6 +540,9 @@ function gm2_render_field_group($fields, $object_id, $context_type = 'post') {
         if (!empty($field['class'])) {
             $wrapper .= ' ' . sanitize_html_class($field['class']);
         }
+        if (!empty($field['admin_class'])) {
+            $wrapper .= ' ' . sanitize_html_class($field['admin_class']);
+        }
         if (!empty($field['container'])) {
             $wrapper .= ' gm2-container-' . sanitize_html_class($field['container']);
         }
@@ -552,11 +555,26 @@ function gm2_render_field_group($fields, $object_id, $context_type = 'post') {
         if (!$visible) {
             echo ' style="display:none;"';
         }
+        if (!empty($field['tab'])) {
+            echo ' data-tab="' . esc_attr($field['tab']) . '"';
+        }
+        if (!empty($field['accordion'])) {
+            echo ' data-accordion="' . esc_attr($field['accordion']) . '"';
+        }
+        if (!empty($field['placeholder'])) {
+            echo ' data-placeholder="' . esc_attr($field['placeholder']) . '"';
+        }
+        if (!empty($field['admin_class'])) {
+            echo ' data-admin-class="' . esc_attr($field['admin_class']) . '"';
+        }
         echo '>';
         if ($class && class_exists($class)) {
             $obj   = new $class($key, $field);
             $value = gm2_get_meta_value($object_id, $key, $context_type, $field);
             $obj->render_admin($value, $object_id, $context_type);
+        }
+        if (!empty($field['instructions'])) {
+            echo '<p class="description">' . esc_html($field['instructions']) . '</p>';
         }
         echo '</div>';
     }
