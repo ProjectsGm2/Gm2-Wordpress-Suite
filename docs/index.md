@@ -1,5 +1,7 @@
 # Gm2 WordPress Suite Updates
 
+See [model-cli.md](model-cli.md) for managing custom post types, taxonomies and fields via WP-CLI.
+
 This release adds several new SEO and AI options:
 
 - Added an index on the `timestamp` column of the `gm2_analytics_log` table for faster lookups. Existing installations upgrade automatically.
