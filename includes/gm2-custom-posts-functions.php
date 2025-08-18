@@ -363,6 +363,41 @@ function gm2_validate_field($key, $field, $value, $object_id = 0, $context_type 
 }
 
 /**
+ * Set default term ordering for taxonomies that opt in.
+ *
+ * When a taxonomy configuration contains an `ordering` flag, its term
+ * queries default to `orderby=meta_value_num` and `meta_key=_gm2_order`
+ * unless a different orderby is explicitly provided.
+ *
+ * @param WP_Term_Query $query Term query instance.
+ */
+function gm2_maybe_order_terms($query) {
+    $config = get_option('gm2_custom_posts_config', []);
+    $ordered = [];
+    foreach ($config['taxonomies'] ?? [] as $slug => $tax) {
+        if (!empty($tax['ordering'])) {
+            $ordered[] = $slug;
+        }
+    }
+    if (!$ordered) {
+        return;
+    }
+    $taxonomies = (array) ($query->query_vars['taxonomy'] ?? []);
+    foreach ($taxonomies as $tax) {
+        if (in_array($tax, $ordered, true)) {
+            if (!isset($query->query_vars['orderby']) || $query->query_vars['orderby'] === 'name') {
+                $query->query_vars['orderby'] = 'meta_value_num';
+            }
+            if (empty($query->query_vars['meta_key'])) {
+                $query->query_vars['meta_key'] = '_gm2_order';
+            }
+            break;
+        }
+    }
+}
+add_action('pre_get_terms', 'gm2_maybe_order_terms');
+
+/**
  * Register custom post types and taxonomies from stored configuration.
  */
 function gm2_register_custom_posts() {
