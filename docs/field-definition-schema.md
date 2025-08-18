@@ -4,7 +4,8 @@ Each field definition used by `gm2_render_field_group()` accepts the following k
 
 - `label` – Human‑readable label displayed with the field.
 - `slug` – Unique key used to store the value.
-- `type` – Field type such as `text`, `textarea`, `select` or `checkbox`.
+- `type` – Field type such as `text`, `textarea`, `select`, `checkbox`,
+  or design helpers like `gradient`, `icon`, `badge` and `rating`.
 - `default` – Optional default value.
 - `description` – Short description shown in field listings.
 - `instructions` – Additional help text rendered below the field.

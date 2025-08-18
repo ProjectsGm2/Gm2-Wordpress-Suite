@@ -39,6 +39,10 @@ require_once __DIR__ . '/class-field-toggle.php';
 require_once __DIR__ . '/class-field-markdown.php';
 require_once __DIR__ . '/class-field-code.php';
 require_once __DIR__ . '/class-field-oembed.php';
+require_once __DIR__ . '/class-field-gradient.php';
+require_once __DIR__ . '/class-field-icon.php';
+require_once __DIR__ . '/class-field-badge.php';
+require_once __DIR__ . '/class-field-rating.php';
 
 $gm2_field_types = array();
 
@@ -88,5 +92,9 @@ function gm2_register_default_field_types() {
     gm2_register_field_type( 'markdown', 'GM2_Field_Markdown' );
     gm2_register_field_type( 'code', 'GM2_Field_Code' );
     gm2_register_field_type( 'oembed', 'GM2_Field_Oembed' );
+    gm2_register_field_type( 'gradient', 'GM2_Field_Gradient' );
+    gm2_register_field_type( 'icon', 'GM2_Field_Icon' );
+    gm2_register_field_type( 'badge', 'GM2_Field_Badge' );
+    gm2_register_field_type( 'rating', 'GM2_Field_Rating' );
 }
 add_action( 'init', 'gm2_register_default_field_types' );
