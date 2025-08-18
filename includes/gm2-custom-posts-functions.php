@@ -614,6 +614,9 @@ function gm2_render_field_group($fields, $object_id, $context_type = 'post') {
         return ($a['order'] ?? 0) <=> ($b['order'] ?? 0);
     });
     foreach ($fields as $key => $field) {
+        if (!\Gm2\Gm2_Capability_Manager::can_read_field($key, $object_id)) {
+            continue;
+        }
         $container = $field['container'] ?? '';
         if (in_array($container, [ 'tab', 'accordion' ], true)) {
             $defer = apply_filters('gm2_should_lazy_load_group', true, $key, $field, $object_id, $context_type);
@@ -835,6 +838,9 @@ function gm2_save_field_group($fields, $object_id, $context_type = 'post') {
         return;
     }
     foreach ($fields as $key => $field) {
+        if (!\Gm2\Gm2_Capability_Manager::can_edit_field($key, $object_id)) {
+            continue;
+        }
         $state = gm2_evaluate_conditions($field, $object_id);
         if (!$state['show']) {
             continue;

@@ -1,5 +1,7 @@
 <?php
 use Gm2\Gm2_SEO_Admin;
+use Gm2\Gm2_REST_Fields;
+use Gm2\Gm2_REST_Visibility;
 
 class TaxonomyPermissionsTest extends WP_UnitTestCase {
     public function test_save_taxonomy_meta_without_permission_does_nothing() {
@@ -65,6 +67,105 @@ class FieldCapabilityPermissionsTest extends WP_UnitTestCase {
         $subscriber = self::factory()->user->create(['role' => 'subscriber']);
         $this->assertTrue(user_can($editor, 'gm2_field_edit_bar'));
         $this->assertFalse(user_can($subscriber, 'gm2_field_edit_bar'));
+    }
+
+    public function test_render_field_group_respects_read_capability() {
+        update_option('gm2_field_caps', ['secret' => ['read' => ['administrator']]]);
+        $post_id = self::factory()->post->create();
+        $subscriber = self::factory()->user->create(['role' => 'subscriber']);
+        wp_set_current_user($subscriber);
+        ob_start();
+        gm2_render_field_group(['secret' => ['type' => 'text']], $post_id, 'post');
+        $output = trim(ob_get_clean());
+        wp_set_current_user(0);
+        $this->assertSame('', $output);
+    }
+
+    public function test_save_field_group_respects_edit_capability() {
+        update_option('gm2_field_caps', ['secret' => ['edit' => ['administrator']]]);
+        $post_id = self::factory()->post->create();
+        $subscriber = self::factory()->user->create(['role' => 'subscriber']);
+        wp_set_current_user($subscriber);
+        $_POST['secret'] = 'value';
+        gm2_save_field_group(['secret' => ['type' => 'text']], $post_id, 'post');
+        wp_set_current_user(0);
+        $_POST = [];
+        $this->assertFalse(metadata_exists('post', $post_id, 'secret'));
+    }
+
+    public function test_rest_and_graphql_respect_field_capabilities() {
+        register_post_type('book');
+        update_option('gm2_custom_posts_config', [
+            'post_types' => [
+                'book' => [
+                    'label' => 'Book',
+                    'fields' => [ 'secret' => [ 'type' => 'text' ] ],
+                ],
+            ],
+            'taxonomies' => [],
+        ]);
+        update_option(Gm2_REST_Visibility::OPTION, [
+            'post_types' => [ 'book' => true ],
+            'taxonomies' => [],
+            'fields' => [ 'secret' => true ],
+        ]);
+        update_option('gm2_field_caps', ['secret' => ['read' => ['administrator']]]);
+        Gm2_REST_Fields::init();
+        do_action('rest_api_init');
+        if (class_exists('WPGraphQL')) {
+            do_action('graphql_register_types');
+        }
+
+        $post_id = self::factory()->post->create(['post_type' => 'book']);
+        update_post_meta($post_id, 'secret', 'top');
+        $subscriber = self::factory()->user->create(['role' => 'subscriber']);
+        wp_set_current_user($subscriber);
+
+        $request = new WP_REST_Request('GET', '/gm2/v1/fields/' . $post_id);
+        $response = rest_get_server()->dispatch($request);
+        $data = $response->get_data();
+        $this->assertArrayNotHasKey('secret', $data);
+
+        if (class_exists('WPGraphQL')) {
+            $query = 'query ($id:ID!){ nodeById(id:$id){ ... on Book { secret } } }';
+            if (function_exists('graphql')) {
+                $res = graphql(['query' => $query, 'variables' => ['id' => $post_id]]);
+            } elseif (function_exists('do_graphql_request')) {
+                $res = do_graphql_request($query, ['id' => $post_id]);
+            } else {
+                $res = null;
+            }
+            if ($res) {
+                $this->assertNull($res['data']['nodeById']['secret']);
+            }
+        }
+
+        $admin = self::factory()->user->create(['role' => 'administrator']);
+        wp_set_current_user($admin);
+
+        $request = new WP_REST_Request('GET', '/gm2/v1/fields/' . $post_id);
+        $response = rest_get_server()->dispatch($request);
+        $data = $response->get_data();
+        $this->assertSame('top', $data['secret']);
+
+        if (class_exists('WPGraphQL')) {
+            $query = 'query ($id:ID!){ nodeById(id:$id){ ... on Book { secret } } }';
+            if (function_exists('graphql')) {
+                $res = graphql(['query' => $query, 'variables' => ['id' => $post_id]]);
+            } elseif (function_exists('do_graphql_request')) {
+                $res = do_graphql_request($query, ['id' => $post_id]);
+            } else {
+                $res = null;
+            }
+            if ($res) {
+                $this->assertSame('top', $res['data']['nodeById']['secret']);
+            }
+        }
+
+        unregister_post_type('book');
+        delete_option('gm2_custom_posts_config');
+        delete_option(Gm2_REST_Visibility::OPTION);
+        wp_set_current_user(0);
     }
 }
 

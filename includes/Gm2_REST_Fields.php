@@ -57,6 +57,9 @@ class Gm2_REST_Fields {
         $defs = $config['post_types'][$post->post_type]['fields'] ?? [];
         $data = [];
         foreach ($fields as $field) {
+            if (!Gm2_Capability_Manager::can_read_field($field, $id)) {
+                continue;
+            }
             $value = get_post_meta($id, $field, true);
             $mode = $format ?: ($defs[$field]['serialize'] ?? 'raw');
             if ($mode === 'rendered') {
@@ -120,11 +123,11 @@ class Gm2_REST_Fields {
                 'type'        => 'String',
                 'description' => sprintf(__('GM2 field %s', 'gm2-wordpress-suite'), $field),
                 'resolve'     => function ($post) use ($field) {
-                    if (isset($post->ID)) {
-                        $value = get_post_meta((int) $post->ID, $field, true);
-                        return is_scalar($value) ? (string) $value : $value;
+                    if (!isset($post->ID) || !Gm2_Capability_Manager::can_read_field($field, (int) $post->ID)) {
+                        return null;
                     }
-                    return null;
+                    $value = get_post_meta((int) $post->ID, $field, true);
+                    return is_scalar($value) ? (string) $value : $value;
                 },
             ]);
         }
