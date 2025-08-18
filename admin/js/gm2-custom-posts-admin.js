@@ -3,7 +3,7 @@ jQuery(function($){
     var args   = gm2CPTFields.args || [];
     var flexTypes = [];
 
-    // Ensure textarea, toggle and media-based field types are available in the selector.
+    // Ensure various field types are available in the selector.
     var typeSelect = $('#gm2-field-type');
     var opts = [
         {val:'textarea', label:'Textarea'},
@@ -11,7 +11,8 @@ jQuery(function($){
         {val:'file',     label:'File'},
         {val:'audio',    label:'Audio'},
         {val:'video',    label:'Video'},
-        {val:'gallery',  label:'Gallery'}
+        {val:'gallery',  label:'Gallery'},
+        {val:'relationship', label:'Relationship'}
     ];
     $.each(opts, function(i, o){
         if(!typeSelect.find('option[value="'+o.val+'"]').length){
@@ -89,6 +90,7 @@ jQuery(function($){
         $('#gm2-field-repeater-options').toggle(type === 'repeater');
         $('#gm2-field-flexible-options').toggle(type === 'flexible');
         $('#gm2-field-select-options').toggle(type === 'select');
+        $('#gm2-field-relationship-options').toggle(type === 'relationship');
     }
 
     function showFieldForm(data, index){
@@ -106,6 +108,8 @@ jQuery(function($){
         $('#gm2-field-cap').val(data ? data.capability : '');
         $('#gm2-field-edit-cap').val(data ? data.edit_capability : '');
         $('#gm2-field-help').val(data ? data.help : '');
+        $('#gm2-field-rel-type').val(data ? data.relationship_type || 'post' : 'post');
+        $('#gm2-field-sync').val(data ? data.sync || 'two-way' : 'two-way');
         $('#gm2-field-column').prop('checked', data ? !!data.column : false);
         $('#gm2-field-sortable').prop('checked', data ? !!data.sortable : false);
         $('#gm2-field-quick-edit').prop('checked', data ? !!data.quick_edit : false);
@@ -284,6 +288,9 @@ jQuery(function($){
             obj.layouts = flexTypes;
         } else if(obj.type === 'select'){
             obj.multiple = $('#gm2-field-multiple').is(':checked');
+        } else if(obj.type === 'relationship'){
+            obj.relationship_type = $('#gm2-field-rel-type').val();
+            obj.sync = $('#gm2-field-sync').val();
         }
         if(idx === ''){ fields.push(obj); } else { fields[idx] = obj; }
         saveAll(function(){ $('#gm2-field-form').hide(); });
@@ -403,7 +410,7 @@ jQuery(function($){
     // Basic sanitization for relationship fields
     $(document).on('input', '.gm2-relationship', function(){
         var val = $(this).val();
-        $(this).val(val.replace(/[^0-9,]/g,''));
+        $(this).val(val.replace(/[^0-9a-z_,]/gi,''));
     });
 
     function applyEnhancements(){

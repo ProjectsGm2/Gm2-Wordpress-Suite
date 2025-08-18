@@ -4,36 +4,110 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 class GM2_Field_Relationship extends GM2_Field {
+
+    /**
+     * Determine the object type we are relating to. Defaults to posts.
+     *
+     * @var string
+     */
+    private $rel_type = 'post';
+
+    /**
+     * Sync strategy: none, one-way, two-way. Defaults to two-way to match
+     * previous behaviour.
+     *
+     * @var string
+     */
+    private $sync = 'two-way';
+
+    public function __construct( $key, $args = array() ) {
+        parent::__construct( $key, $args );
+        $this->rel_type = in_array( $args['relationship_type'] ?? 'post', array( 'post', 'term', 'user', 'role' ), true ) ? $args['relationship_type'] : 'post';
+        $this->sync     = in_array( $args['sync'] ?? 'two-way', array( 'none', 'one-way', 'two-way' ), true ) ? $args['sync'] : 'two-way';
+    }
+
     protected function render_field( $value, $object_id, $context_type ) {
-        $vals = is_array( $value ) ? $value : ( $value ? array( $value ) : array() );
+        $vals     = is_array( $value ) ? $value : ( $value ? array( $value ) : array() );
         $disabled = disabled( $this->args['disabled'] ?? false, true, false );
         echo '<input type="text" name="' . esc_attr( $this->key ) . '[]" value="' . esc_attr( implode( ',', $vals ) ) . '" class="gm2-relationship"' . $disabled . ' />';
     }
 
     public function sanitize( $value ) {
         $value = is_array( $value ) ? $value : array( $value );
-        return array_filter( array_map( 'absint', $value ) );
+        $out   = array();
+        foreach ( $value as $v ) {
+            if ( 'role' === $this->rel_type ) {
+                $v = sanitize_key( $v );
+                if ( $v ) {
+                    $out[] = $v;
+                }
+            } else {
+                $v = absint( $v );
+                if ( $v ) {
+                    $out[] = $v;
+                }
+            }
+        }
+        return $out;
     }
 
     public function save( $object_id, $value, $context_type = 'post' ) {
-        $old = get_post_meta( $object_id, $this->key, true );
-        $old = is_array( $old ) ? $old : array();
+        $old = $this->get_related( $object_id, $context_type );
         $new = $this->sanitize( $value );
-        update_post_meta( $object_id, $this->key, $new );
-        $remove = array_diff( $old, $new );
-        foreach ( $remove as $rid ) {
-            $related = get_post_meta( $rid, $this->key, true );
-            $related = is_array( $related ) ? $related : array();
-            $related = array_diff( $related, array( $object_id ) );
-            update_post_meta( $rid, $this->key, $related );
+        $this->update_related( $object_id, $new, $context_type );
+
+        if ( 'none' === $this->sync ) {
+            return;
         }
+
+        $remove = array_diff( $old, $new );
+        if ( 'two-way' === $this->sync ) {
+            foreach ( $remove as $rid ) {
+                $related = $this->get_related( $rid, $this->rel_type );
+                $related = array_diff( $related, array( $object_id ) );
+                $this->update_related( $rid, $related, $this->rel_type );
+            }
+        }
+
         foreach ( $new as $rid ) {
-            $related = get_post_meta( $rid, $this->key, true );
-            $related = is_array( $related ) ? $related : array();
+            $related = $this->get_related( $rid, $this->rel_type );
             if ( ! in_array( $object_id, $related, true ) ) {
                 $related[] = $object_id;
-                update_post_meta( $rid, $this->key, $related );
+                $this->update_related( $rid, $related, $this->rel_type );
             }
+        }
+    }
+
+    private function get_related( $object_id, $type ) {
+        switch ( $type ) {
+            case 'user':
+                $val = get_user_meta( $object_id, $this->key, true );
+                break;
+            case 'term':
+                $val = get_term_meta( $object_id, $this->key, true );
+                break;
+            case 'role':
+                $val = get_option( $this->key . '_role_' . $object_id, array() );
+                break;
+            default:
+                $val = get_post_meta( $object_id, $this->key, true );
+        }
+        return is_array( $val ) ? $val : array();
+    }
+
+    private function update_related( $object_id, $vals, $type ) {
+        switch ( $type ) {
+            case 'user':
+                update_user_meta( $object_id, $this->key, $vals );
+                break;
+            case 'term':
+                update_term_meta( $object_id, $this->key, $vals );
+                break;
+            case 'role':
+                update_option( $this->key . '_role_' . $object_id, $vals );
+                break;
+            default:
+                update_post_meta( $object_id, $this->key, $vals );
         }
     }
 }

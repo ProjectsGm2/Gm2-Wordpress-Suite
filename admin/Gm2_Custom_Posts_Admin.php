@@ -252,7 +252,7 @@ class Gm2_Custom_Posts_Admin {
         echo '<input type="hidden" id="gm2-field-index" />';
         echo '<p><label>' . esc_html__( 'Label', 'gm2-wordpress-suite' ) . '<br /><input type="text" id="gm2-field-label" class="regular-text" /></label></p>';
         echo '<p><label>' . esc_html__( 'Slug', 'gm2-wordpress-suite' ) . '<br /><input type="text" id="gm2-field-slug" class="regular-text" /></label></p>';
-        echo '<p><label>' . esc_html__( 'Type', 'gm2-wordpress-suite' ) . '<br /><select id="gm2-field-type"><option value="text">Text</option><option value="textarea">Textarea</option><option value="number">Number</option><option value="checkbox">Checkbox</option><option value="toggle">Toggle</option><option value="select">Dropdown</option><option value="radio">Radio</option><option value="media">Media</option><option value="file">File</option><option value="audio">Audio</option><option value="video">Video</option><option value="gallery">Gallery</option><option value="wysiwyg">WYSIWYG</option><option value="date">Date</option><option value="repeater">Repeater</option><option value="flexible">Flexible</option></select></label></p>';
+        echo '<p><label>' . esc_html__( 'Type', 'gm2-wordpress-suite' ) . '<br /><select id="gm2-field-type"><option value="text">Text</option><option value="textarea">Textarea</option><option value="number">Number</option><option value="checkbox">Checkbox</option><option value="toggle">Toggle</option><option value="select">Dropdown</option><option value="radio">Radio</option><option value="media">Media</option><option value="file">File</option><option value="audio">Audio</option><option value="video">Video</option><option value="gallery">Gallery</option><option value="wysiwyg">WYSIWYG</option><option value="date">Date</option><option value="repeater">Repeater</option><option value="flexible">Flexible</option><option value="relationship">Relationship</option></select></label></p>';
         echo '<p><label>' . esc_html__( 'Default', 'gm2-wordpress-suite' ) . '<br /><input type="text" id="gm2-field-default" class="regular-text" /></label></p>';
         echo '<p><label>' . esc_html__( 'Description', 'gm2-wordpress-suite' ) . '<br /><input type="text" id="gm2-field-description" class="regular-text" /></label></p>';
         echo '<p><label>' . esc_html__( 'Order', 'gm2-wordpress-suite' ) . '<br /><input type="number" id="gm2-field-order" class="small-text" /></label></p>';
@@ -273,6 +273,10 @@ class Gm2_Custom_Posts_Admin {
         echo '<div id="gm2-field-repeater-options" style="display:none;"><p><label>' . esc_html__( 'Min Rows', 'gm2-wordpress-suite' ) . '<br /><input type="number" id="gm2-field-repeater-min" class="small-text" /></label></p><p><label>' . esc_html__( 'Max Rows', 'gm2-wordpress-suite' ) . '<br /><input type="number" id="gm2-field-repeater-max" class="small-text" /></label></p></div>';
         echo '<div id="gm2-field-flexible-options" style="display:none;"><div id="gm2-flexible-types"></div><p><button type="button" class="button gm2-flex-type-add">' . esc_html__( 'Add Row Type', 'gm2-wordpress-suite' ) . '</button></p></div>';
         echo '<div id="gm2-field-select-options" style="display:none;"><p><label><input type="checkbox" id="gm2-field-multiple" value="1" /> ' . esc_html__( 'Allow Multiple Selections', 'gm2-wordpress-suite' ) . '</label></p></div>';
+        echo '<div id="gm2-field-relationship-options" style="display:none;">';
+        echo '<p><label>' . esc_html__( 'Relationship Type', 'gm2-wordpress-suite' ) . '<br /><select id="gm2-field-rel-type"><option value="post">' . esc_html__( 'Post', 'gm2-wordpress-suite' ) . '</option><option value="term">' . esc_html__( 'Term', 'gm2-wordpress-suite' ) . '</option><option value="user">' . esc_html__( 'User', 'gm2-wordpress-suite' ) . '</option><option value="role">' . esc_html__( 'Role', 'gm2-wordpress-suite' ) . '</option></select></label></p>';
+        echo '<p><label>' . esc_html__( 'Sync Strategy', 'gm2-wordpress-suite' ) . '<br /><select id="gm2-field-sync"><option value="two-way">' . esc_html__( 'Two-way', 'gm2-wordpress-suite' ) . '</option><option value="one-way">' . esc_html__( 'One-way', 'gm2-wordpress-suite' ) . '</option><option value="none">' . esc_html__( 'None', 'gm2-wordpress-suite' ) . '</option></select></label></p>';
+        echo '</div>';
         echo '<h3>' . esc_html__( 'Location Rules', 'gm2-wordpress-suite' ) . '</h3>';
         echo '<div id="gm2-field-location" class="gm2-conditions"><div class="gm2-condition-groups"></div><p><button type="button" class="button gm2-add-condition-group">' . esc_html__( 'Add Location Group', 'gm2-wordpress-suite' ) . '</button></p></div>';
         echo '<h3>' . esc_html__( 'Display Conditions', 'gm2-wordpress-suite' ) . '</h3>';
@@ -850,7 +854,7 @@ class Gm2_Custom_Posts_Admin {
             if (!$slug) {
                 continue;
             }
-            $type  = in_array($field['type'] ?? 'text', [ 'text', 'number', 'checkbox', 'select', 'radio', 'media', 'wysiwyg', 'date', 'repeater' ], true) ? $field['type'] : 'text';
+            $type  = in_array($field['type'] ?? 'text', [ 'text', 'number', 'checkbox', 'select', 'radio', 'media', 'wysiwyg', 'date', 'repeater', 'relationship' ], true) ? $field['type'] : 'text';
             $def   = sanitize_text_field($field['default'] ?? '');
             $order = isset($field['order']) ? (int) $field['order'] : 0;
             $container = in_array($field['container'] ?? '', [ 'tab', 'accordion' ], true) ? $field['container'] : '';
@@ -888,6 +892,11 @@ class Gm2_Custom_Posts_Admin {
                 if (isset($field['max_rows'])) { $sanitized['max_rows'] = (int) $field['max_rows']; }
             } elseif ($type === 'select') {
                 $sanitized['multiple'] = !empty($field['multiple']);
+            } elseif ($type === 'relationship') {
+                $rel_type = in_array($field['relationship_type'] ?? 'post', [ 'post', 'term', 'user', 'role' ], true ) ? $field['relationship_type'] : 'post';
+                $sync     = in_array($field['sync'] ?? 'two-way', [ 'none', 'one-way', 'two-way' ], true ) ? $field['sync'] : 'two-way';
+                $sanitized['relationship_type'] = $rel_type;
+                $sanitized['sync'] = $sync;
             }
             if (!empty($field['options']) && is_array($field['options'])) {
                 $opts = [];
