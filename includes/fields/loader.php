@@ -32,6 +32,9 @@ require_once __DIR__ . '/class-field-design.php';
 require_once __DIR__ . '/class-field-computed.php';
 require_once __DIR__ . '/class-field-message.php';
 require_once __DIR__ . '/class-field-toggle.php';
+require_once __DIR__ . '/class-field-markdown.php';
+require_once __DIR__ . '/class-field-code.php';
+require_once __DIR__ . '/class-field-oembed.php';
 
 $gm2_field_types = array();
 
@@ -74,5 +77,8 @@ function gm2_register_default_field_types() {
     gm2_register_field_type( 'computed', 'GM2_Field_Computed' );
     gm2_register_field_type( 'message', 'GM2_Field_Message' );
     gm2_register_field_type( 'toggle', 'GM2_Field_Toggle' );
+    gm2_register_field_type( 'markdown', 'GM2_Field_Markdown' );
+    gm2_register_field_type( 'code', 'GM2_Field_Code' );
+    gm2_register_field_type( 'oembed', 'GM2_Field_Oembed' );
 }
 add_action( 'init', 'gm2_register_default_field_types' );
