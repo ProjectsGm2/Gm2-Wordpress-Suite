@@ -13,6 +13,21 @@ class Gm2_Webhooks {
         add_action('save_post', [ __CLASS__, 'handle_save' ], 10, 3);
         add_action('deleted_post', [ __CLASS__, 'handle_delete' ], 10, 1);
         add_action('transition_post_status', [ __CLASS__, 'handle_transition' ], 10, 3);
+        add_action('add_attachment', [ __CLASS__, 'handle_add_attachment' ]);
+        add_action('gm2_webhook_media', [ __CLASS__, 'process_media_webhook' ]);
+    }
+
+    public static function handle_add_attachment(int $post_id) : void {
+        if (function_exists('as_enqueue_async_action')) {
+            as_enqueue_async_action('gm2_webhook_media', [ $post_id ], 'gm2');
+        } else {
+            wp_schedule_single_event(time(), 'gm2_webhook_media', [ $post_id ]);
+        }
+    }
+
+    public static function process_media_webhook(int $post_id) : void {
+        $post = get_post($post_id);
+        self::fire('media_upload', $post);
     }
 
     public static function handle_save(int $post_id, \WP_Post $post, bool $update) : void {

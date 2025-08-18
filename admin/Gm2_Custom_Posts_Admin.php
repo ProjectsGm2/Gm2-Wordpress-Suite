@@ -20,6 +20,7 @@ class Gm2_Custom_Posts_Admin {
         add_action('wp_ajax_gm2_save_tax_args', [ $this, 'ajax_save_tax_args' ]);
         add_action('wp_ajax_gm2_save_query', [ $this, 'ajax_save_query' ]);
         add_action('wp_ajax_gm2_save_cpt_model', [ $this, 'ajax_save_cpt_model' ]);
+        add_action('wp_ajax_gm2_regenerate_thumbnails', [ $this, 'ajax_regenerate_thumbnails' ]);
         add_action('enqueue_block_editor_assets', [ $this, 'enqueue_block_editor_assets' ]);
         add_action('restrict_manage_posts', [ $this, 'restrict_manage_posts' ]);
         add_action('pre_get_posts', [ $this, 'pre_get_posts' ]);
@@ -817,6 +818,11 @@ class Gm2_Custom_Posts_Admin {
         echo '<p><input type="submit" name="gm2_add_taxonomy" class="button button-primary" value="' . esc_attr__( 'Save Taxonomy', 'gm2-wordpress-suite' ) . '" /></p>';
         echo '</form>';
 
+        echo '<hr />';
+        echo '<h2>' . esc_html__( 'Thumbnail Regeneration', 'gm2-wordpress-suite' ) . '</h2>';
+        echo '<p><button type="button" class="button" id="gm2-start-thumb-regeneration">' . esc_html__( 'Regenerate Thumbnails', 'gm2-wordpress-suite' ) . '</button></p>';
+        echo '<div id="gm2-thumb-progress" style="display:none"><progress value="0" max="100"></progress> <span class="percent">0%</span></div>';
+
         echo '</div>';
     }
 
@@ -1298,6 +1304,21 @@ class Gm2_Custom_Posts_Admin {
             return;
         }
 
+        if ($hook === 'toplevel_page_gm2-custom-posts') {
+            $regen = GM2_PLUGIN_DIR . 'admin/js/gm2-thumbnails.js';
+            wp_enqueue_script(
+                'gm2-thumbnails',
+                GM2_PLUGIN_URL . 'admin/js/gm2-thumbnails.js',
+                [ 'jquery' ],
+                file_exists($regen) ? filemtime($regen) : GM2_VERSION,
+                true
+            );
+            wp_localize_script('gm2-thumbnails', 'gm2Thumbs', [
+                'nonce' => wp_create_nonce('gm2_regenerate_thumbs'),
+            ]);
+            return;
+        }
+
         if ($hook === 'gm2-custom-posts_page_gm2_cpt_fields') {
             $cond_js = GM2_PLUGIN_DIR . 'admin/js/conditions.js';
             wp_enqueue_script(
@@ -1707,6 +1728,28 @@ class Gm2_Custom_Posts_Admin {
         update_option('gm2_custom_posts_config', $config);
         wp_send_json_success([
             'post_type' => $config['post_types'][$slug],
+        ]);
+    }
+
+    public function ajax_regenerate_thumbnails() {
+        if (!$this->can_manage()) {
+            wp_send_json_error('permission');
+        }
+        $nonce = $_POST['nonce'] ?? '';
+        if (!wp_verify_nonce($nonce, 'gm2_regenerate_thumbs')) {
+            wp_send_json_error('nonce');
+        }
+        $ids = get_posts([
+            'post_type'      => 'attachment',
+            'post_mime_type' => 'image',
+            'posts_per_page' => -1,
+            'fields'         => 'ids',
+        ]);
+        foreach ($ids as $id) {
+            \gm2_queue_thumbnail_regeneration($id);
+        }
+        wp_send_json_success([
+            'total' => count($ids),
         ]);
     }
 
