@@ -15,6 +15,8 @@ class Gm2_Workflow_Manager {
 
     public static function init() {
         add_action('gm2_transition_post_status', [__CLASS__, 'handle_transition'], 10, 2);
+        add_action('gm2_expire_content', [__CLASS__, 'expire_content']);
+        add_action('gm2_rotate_featured', [__CLASS__, 'rotate_featured']);
 
         // Core trigger hooks.
         add_action('save_post', [__CLASS__, 'on_save'], 10, 3);
@@ -72,11 +74,14 @@ class Gm2_Workflow_Manager {
      *
      * Supported action types:
      *  - email          : Send an email.
-     *  - webhook        : POST data to an external URL (e.g., Slack).
+     *  - webhook        : POST data to an external URL.
+     *  - slack          : Send a message to a Slack webhook.
      *  - action_scheduler: Queue a job using Action Scheduler if available.
      *  - image_regeneration: Regenerate attachment metadata.
      *  - recalculate_field: Run a callback to recompute fields.
      *  - schedule       : Schedule a single event via WP-Cron.
+     *  - content_expiration   : Schedule a post to expire.
+     *  - featured_rotation    : Schedule removal of featured flag.
      *
      * @param array $actions
      * @param array $args
@@ -97,6 +102,16 @@ class Gm2_Workflow_Manager {
                         wp_remote_post($action['url'], [
                             'headers' => ['Content-Type' => 'application/json'],
                             'body'    => wp_json_encode($body),
+                            'timeout' => 5,
+                        ]);
+                    }
+                    break;
+
+                case 'slack':
+                    if (!empty($action['webhook']) && !empty($action['message'])) {
+                        wp_remote_post($action['webhook'], [
+                            'headers' => ['Content-Type' => 'application/json'],
+                            'body'    => wp_json_encode(['text' => $action['message']]),
                             'timeout' => 5,
                         ]);
                     }
@@ -130,6 +145,18 @@ class Gm2_Workflow_Manager {
                         wp_schedule_single_event($action['timestamp'], $action['hook'], $action['args'] ?? []);
                     }
                     break;
+
+                case 'content_expiration':
+                    if (!empty($action['post_id']) && !empty($action['timestamp'])) {
+                        self::schedule_content_expiration($action['post_id'], $action['timestamp']);
+                    }
+                    break;
+
+                case 'featured_rotation':
+                    if (!empty($action['post_id']) && !empty($action['timestamp'])) {
+                        self::schedule_featured_rotation($action['post_id'], $action['timestamp']);
+                    }
+                    break;
             }
         }
     }
@@ -146,6 +173,9 @@ class Gm2_Workflow_Manager {
      */
     public static function on_status_change($new_status, $old_status, $post) {
         self::run_triggers('status_change', [$new_status, $old_status, $post]);
+        if ('publish' === $new_status) {
+            self::run_triggers('publish', [$post]);
+        }
     }
 
     /**
@@ -153,6 +183,7 @@ class Gm2_Workflow_Manager {
      */
     public static function on_term_assignment($object_id, $terms, $tt_ids, $taxonomy, $append, $old_tt_ids) {
         self::run_triggers('term_assignment', [$object_id, $terms, $taxonomy]);
+        self::run_triggers('term_assign', [$object_id, $terms, $taxonomy]);
     }
 
     /**
@@ -194,6 +225,37 @@ class Gm2_Workflow_Manager {
             'ID'          => $post_id,
             'post_status' => $status,
         ]);
+    }
+
+    /**
+     * Schedule post expiration.
+     */
+    public static function schedule_content_expiration($post_id, $timestamp) {
+        wp_schedule_single_event($timestamp, 'gm2_expire_content', [$post_id]);
+    }
+
+    /**
+     * Expire content handler.
+     */
+    public static function expire_content($post_id) {
+        wp_update_post([
+            'ID'          => $post_id,
+            'post_status' => 'expired',
+        ]);
+    }
+
+    /**
+     * Schedule featured rotation.
+     */
+    public static function schedule_featured_rotation($post_id, $timestamp) {
+        wp_schedule_single_event($timestamp, 'gm2_rotate_featured', [$post_id]);
+    }
+
+    /**
+     * Rotate featured handler.
+     */
+    public static function rotate_featured($post_id) {
+        delete_post_meta($post_id, '_gm2_featured');
     }
 
     /**
