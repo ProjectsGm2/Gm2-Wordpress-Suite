@@ -6,13 +6,14 @@ if ( ! defined( 'WP_CLI' ) || ! WP_CLI ) {
 }
 
 require_once GM2_PLUGIN_DIR . 'includes/class-gm2-model-migrator.php';
+require_once GM2_PLUGIN_DIR . 'includes/gm2-model-export.php';
 
 /**
  * Manage data models via WP-CLI.
  */
 class Gm2_Model_CLI extends \WP_CLI_Command {
     /**
-     * Export models stored in the `gm2_models` option.
+     * Export model configuration to a file.
      *
      * ## OPTIONS
      *
@@ -28,22 +29,16 @@ class Gm2_Model_CLI extends \WP_CLI_Command {
             \WP_CLI::error( 'Missing file argument.' );
         }
         $format = $assoc_args['format'] ?? 'json';
-        $models = get_option( 'gm2_models', [] );
-        if ( 'yaml' === $format ) {
-            if ( function_exists( 'yaml_emit' ) ) {
-                $data = yaml_emit( $models );
-            } else {
-                \WP_CLI::error( 'YAML support is not available.' );
-            }
-        } else {
-            $data = wp_json_encode( $models, JSON_PRETTY_PRINT );
+        $data   = \gm2_model_export( $format );
+        if ( is_wp_error( $data ) ) {
+            \WP_CLI::error( $data->get_error_message() );
         }
         file_put_contents( $file, $data );
         \WP_CLI::success( 'Models exported to ' . $file );
     }
 
     /**
-     * Import models from a JSON or YAML file into the `gm2_models` option.
+     * Import model configuration from a file.
      *
      * ## OPTIONS
      *
@@ -60,27 +55,39 @@ class Gm2_Model_CLI extends \WP_CLI_Command {
         }
         $format = $assoc_args['format'] ?? '';
         if ( ! $format ) {
-            if ( preg_match( '/\.ya?ml$/i', $file ) ) {
-                $format = 'yaml';
-            } else {
-                $format = 'json';
-            }
+            $format = preg_match( '/\.ya?ml$/i', $file ) ? 'yaml' : 'json';
         }
         $contents = file_get_contents( $file );
-        if ( 'yaml' === $format ) {
-            if ( function_exists( 'yaml_parse' ) ) {
-                $models = yaml_parse( $contents );
-            } else {
-                \WP_CLI::error( 'YAML support is not available.' );
-            }
-        } else {
-            $models = json_decode( $contents, true );
+        $result   = \gm2_model_import( $contents, $format );
+        if ( is_wp_error( $result ) ) {
+            \WP_CLI::error( $result->get_error_message() );
         }
-        if ( ! is_array( $models ) ) {
-            \WP_CLI::error( 'Invalid model data.' );
-        }
-        update_option( 'gm2_models', $models );
         \WP_CLI::success( 'Models imported from ' . $file );
+    }
+
+    /**
+     * Generate a plugin or mu-plugin zip containing the registered models.
+     *
+     * ## OPTIONS
+     *
+     * <file>
+     * : Destination zip file path.
+     *
+     * [--mu]
+     * : Generate as a must-use plugin.
+     */
+    public function generate_plugin( $args, $assoc_args ) {
+        $file = $args[0] ?? '';
+        if ( empty( $file ) ) {
+            \WP_CLI::error( 'Missing file argument.' );
+        }
+        $mu   = ! empty( $assoc_args['mu'] );
+        $data = \gm2_model_export( 'array' );
+        $zip  = \gm2_model_generate_plugin( $data, $file, $mu );
+        if ( is_wp_error( $zip ) ) {
+            \WP_CLI::error( $zip->get_error_message() );
+        }
+        \WP_CLI::success( 'Plugin generated at ' . $file );
     }
 
     /**

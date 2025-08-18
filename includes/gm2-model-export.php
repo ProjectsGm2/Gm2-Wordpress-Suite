@@ -1,0 +1,125 @@
+<?php
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+if (!function_exists('gm2_model_export')) {
+    /**
+     * Export model configuration including post types, taxonomies and field groups.
+     *
+     * @param string $format Output format: json, yaml or array.
+     * @return string|array|WP_Error
+     */
+    function gm2_model_export(string $format = 'json') {
+        $config = get_option('gm2_custom_posts_config', []);
+        if (!is_array($config)) {
+            $config = [];
+        }
+        $field_groups = get_option('gm2_field_groups', []);
+        if (!is_array($field_groups)) {
+            $field_groups = [];
+        }
+        $data = [
+            'post_types'   => $config['post_types'] ?? [],
+            'taxonomies'   => $config['taxonomies'] ?? [],
+            'field_groups' => $field_groups,
+        ];
+        switch ($format) {
+            case 'array':
+                return $data;
+            case 'yaml':
+                if (function_exists('yaml_emit')) {
+                    return yaml_emit($data);
+                }
+                return new \WP_Error('yaml_unavailable', __('YAML support is not available.', 'gm2-wordpress-suite'));
+            case 'json':
+            default:
+                $encode = function_exists('wp_json_encode') ? 'wp_json_encode' : 'json_encode';
+                return $encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        }
+    }
+}
+
+if (!function_exists('gm2_model_import')) {
+    /**
+     * Import model configuration.
+     *
+     * @param string|array $input  Model data.
+     * @param string       $format Input format: json, yaml or array.
+     * @return true|WP_Error
+     */
+    function gm2_model_import($input, string $format = 'json') {
+        if ('array' === $format) {
+            $data = $input;
+        } elseif ('yaml' === $format) {
+            if (!function_exists('yaml_parse')) {
+                return new \WP_Error('yaml_unavailable', __('YAML support is not available.', 'gm2-wordpress-suite'));
+            }
+            $data = yaml_parse($input);
+        } else {
+            $data = json_decode($input, true);
+        }
+
+        if (!is_array($data)) {
+            return new \WP_Error('invalid_data', __('Invalid model data.', 'gm2-wordpress-suite'));
+        }
+
+        $config = [
+            'post_types' => $data['post_types'] ?? [],
+            'taxonomies' => $data['taxonomies'] ?? [],
+        ];
+        update_option('gm2_custom_posts_config', $config);
+        update_option('gm2_field_groups', $data['field_groups'] ?? []);
+        return true;
+    }
+}
+
+if (!function_exists('gm2_model_generate_plugin')) {
+    /**
+     * Generate a plugin or MU plugin zip containing model registrations.
+     *
+     * @param array  $data Model data array.
+     * @param string $dest Destination zip path.
+     * @param bool   $mu   Whether to generate as mu-plugin.
+     * @return string|WP_Error Path to generated zip or error.
+     */
+    function gm2_model_generate_plugin(array $data, string $dest, bool $mu = false) {
+        $slug = 'gm2-models';
+        $plugin_name = 'Gm2 Models';
+        $code  = "<?php\n";
+        $code .= "/*\nPlugin Name: {$plugin_name}\n*/\n";
+        $code .= "if (!defined('ABSPATH')) { exit; }\n";
+        $code .= "add_action('init', function() {\n";
+        foreach ($data['post_types'] as $pt_slug => $args) {
+            $code .= "    register_post_type('" . $pt_slug . "', " . var_export($args, true) . ");\n";
+        }
+        foreach ($data['taxonomies'] as $tax_slug => $tax_args) {
+            $objects = $tax_args['object_type'] ?? [];
+            unset($tax_args['object_type']);
+            $code .= "    register_taxonomy('" . $tax_slug . "', " . var_export($objects, true) . ', ' . var_export($tax_args, true) . ");\n";
+        }
+        $code .= "    \$groups = " . var_export($data['field_groups'] ?? [], true) . ";\n";
+        $code .= "    \$existing = get_option('gm2_field_groups', []);\n";
+        $code .= "    update_option('gm2_field_groups', array_merge(\$existing, \$groups));\n";
+        $code .= "});\n";
+
+        $tmp_dir = sys_get_temp_dir() . '/gm2_model_' . uniqid();
+        if (!mkdir($tmp_dir) && !is_dir($tmp_dir)) {
+            return new \WP_Error('mkdir_failed', __('Could not create temporary directory.', 'gm2-wordpress-suite'));
+        }
+        $file_path = $tmp_dir . '/' . $slug . '.php';
+        file_put_contents($file_path, $code);
+
+        $zip = new \ZipArchive();
+        if (true !== $zip->open($dest, \ZipArchive::CREATE | \ZipArchive::OVERWRITE)) {
+            return new \WP_Error('zip_failed', __('Could not create zip archive.', 'gm2-wordpress-suite'));
+        }
+        if ($mu) {
+            $zip->addFile($file_path, $slug . '.php');
+        } else {
+            $zip->addFile($file_path, $slug . '/' . $slug . '.php');
+        }
+        $zip->close();
+        return $dest;
+    }
+}

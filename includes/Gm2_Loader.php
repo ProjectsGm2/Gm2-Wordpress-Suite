@@ -74,6 +74,8 @@ class Gm2_Loader {
             if (is_admin()) {
                 $cp_admin = new Gm2_Custom_Posts_Admin();
                 $cp_admin->run();
+                $model_export = new Gm2_Model_Export_Admin();
+                $model_export->run();
             }
             $cp_public = new Gm2_Custom_Posts_Public();
             $cp_public->run();
