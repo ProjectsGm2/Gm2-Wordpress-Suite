@@ -17,9 +17,6 @@ abstract class GM2_Field {
         echo '<p><label>' . esc_html( $label ) . '<br />';
         $this->render_field( $value, $object_id, $context_type );
         echo '</label></p>';
-        if ( ! empty( $this->args['instructions'] ) ) {
-            echo '<p class="description">' . esc_html( $this->args['instructions'] ) . '</p>';
-        }
     }
 
     public function render_public( $value ) {
