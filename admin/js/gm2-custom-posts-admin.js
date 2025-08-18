@@ -2,14 +2,21 @@ jQuery(function($){
     var fields = gm2CPTFields.fields || [];
     var args   = gm2CPTFields.args || [];
 
-    // Ensure textarea and toggle field types are available in the selector.
+    // Ensure textarea, toggle and media-based field types are available in the selector.
     var typeSelect = $('#gm2-field-type');
-    if(!typeSelect.find('option[value="textarea"]').length){
-        typeSelect.append('<option value="textarea">Textarea</option>');
-    }
-    if(!typeSelect.find('option[value="toggle"]').length){
-        typeSelect.append('<option value="toggle">Toggle</option>');
-    }
+    var opts = [
+        {val:'textarea', label:'Textarea'},
+        {val:'toggle',   label:'Toggle'},
+        {val:'file',     label:'File'},
+        {val:'audio',    label:'Audio'},
+        {val:'video',    label:'Video'},
+        {val:'gallery',  label:'Gallery'}
+    ];
+    $.each(opts, function(i, o){
+        if(!typeSelect.find('option[value="'+o.val+'"]').length){
+            typeSelect.append('<option value="'+o.val+'">'+o.label+'</option>');
+        }
+    });
 
     function esc(str){ return $('<div>').text(str).html(); }
 
@@ -318,6 +325,20 @@ jQuery(function($){
         frame.on('select', function(){
             var attachment = frame.state().get('selection').first().toJSON();
             $('[name="'+target+'"]').val(attachment.id);
+        });
+        frame.open();
+    });
+
+    $(document).on('click', '.gm2-gallery-upload', function(e){
+        e.preventDefault();
+        var target = $(this).data('target');
+        var frame = wp.media({ multiple: true });
+        frame.on('select', function(){
+            var ids = [];
+            frame.state().get('selection').each(function(att){
+                ids.push(att.toJSON().id);
+            });
+            $('[name="'+target+'"]').val(ids.join(','));
         });
         frame.open();
     });

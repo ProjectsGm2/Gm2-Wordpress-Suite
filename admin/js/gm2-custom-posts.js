@@ -85,14 +85,39 @@
         var frame = wp.media({ multiple: false });
         frame.on('select', function(){
             var attachment = frame.state().get('selection').first().toJSON();
-            var field = $('[name="'+target+'"]');
+            var field = $('[name="' + target + '"]');
             field.val(attachment.id);
             var preview = field.closest('.gm2-media-field').find('.gm2-media-preview');
             if(attachment.type === 'image' && attachment.sizes && attachment.sizes.thumbnail){
-                preview.html('<img src="'+attachment.sizes.thumbnail.url+'" alt="" />');
+                preview.html('<img src="' + attachment.sizes.thumbnail.url + '" alt="" />');
+            }else if(attachment.type === 'audio'){
+                preview.html('<audio controls src="' + attachment.url + '"></audio>');
+            }else if(attachment.type === 'video'){
+                preview.html('<video controls src="' + attachment.url + '" width="320"></video>');
             }else{
-                preview.html('<span>'+attachment.filename+'</span>');
+                preview.html('<span>' + attachment.filename + '</span>');
             }
+        });
+        frame.open();
+    });
+
+    $(document).on('click', '.gm2-gallery-upload', function(e){
+        e.preventDefault();
+        var target = $(this).data('target');
+        var frame = wp.media({ multiple: true });
+        frame.on('select', function(){
+            var ids = [];
+            var html = '';
+            frame.state().get('selection').each(function(att){
+                var attachment = att.toJSON();
+                ids.push(attachment.id);
+                if(attachment.type === 'image' && attachment.sizes && attachment.sizes.thumbnail){
+                    html += '<img src="' + attachment.sizes.thumbnail.url + '" alt="" />';
+                }
+            });
+            var field = $('[name="' + target + '"]');
+            field.val(ids.join(','));
+            field.closest('.gm2-media-field').find('.gm2-media-preview').html(html);
         });
         frame.open();
     });
