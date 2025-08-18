@@ -271,6 +271,7 @@ class Gm2_Custom_Posts_Admin {
         echo '<div id="gm2-field-date-options" style="display:none;"><p><label>' . esc_html__( 'Min Date', 'gm2-wordpress-suite' ) . '<br /><input type="date" id="gm2-field-date-min" class="regular-text" /></label></p><p><label>' . esc_html__( 'Max Date', 'gm2-wordpress-suite' ) . '<br /><input type="date" id="gm2-field-date-max" class="regular-text" /></label></p></div>';
         echo '<div id="gm2-field-wysiwyg-options" style="display:none;"><p><label><input type="checkbox" id="gm2-field-wysiwyg-media" value="1" /> ' . esc_html__( 'Show Media Buttons', 'gm2-wordpress-suite' ) . '</label></p><p><label>' . esc_html__( 'Rows', 'gm2-wordpress-suite' ) . '<br /><input type="number" id="gm2-field-wysiwyg-rows" class="small-text" /></label></p></div>';
         echo '<div id="gm2-field-repeater-options" style="display:none;"><p><label>' . esc_html__( 'Min Rows', 'gm2-wordpress-suite' ) . '<br /><input type="number" id="gm2-field-repeater-min" class="small-text" /></label></p><p><label>' . esc_html__( 'Max Rows', 'gm2-wordpress-suite' ) . '<br /><input type="number" id="gm2-field-repeater-max" class="small-text" /></label></p></div>';
+        echo '<div id="gm2-field-select-options" style="display:none;"><p><label><input type="checkbox" id="gm2-field-multiple" value="1" /> ' . esc_html__( 'Allow Multiple Selections', 'gm2-wordpress-suite' ) . '</label></p></div>';
         echo '<h3>' . esc_html__( 'Location Rules', 'gm2-wordpress-suite' ) . '</h3>';
         echo '<div id="gm2-field-location" class="gm2-conditions"><div class="gm2-condition-groups"></div><p><button type="button" class="button gm2-add-condition-group">' . esc_html__( 'Add Location Group', 'gm2-wordpress-suite' ) . '</button></p></div>';
         echo '<h3>' . esc_html__( 'Display Conditions', 'gm2-wordpress-suite' ) . '</h3>';
@@ -884,6 +885,8 @@ class Gm2_Custom_Posts_Admin {
             } elseif ($type === 'repeater') {
                 if (isset($field['min_rows'])) { $sanitized['min_rows'] = (int) $field['min_rows']; }
                 if (isset($field['max_rows'])) { $sanitized['max_rows'] = (int) $field['max_rows']; }
+            } elseif ($type === 'select') {
+                $sanitized['multiple'] = !empty($field['multiple']);
             }
             if (!empty($field['options']) && is_array($field['options'])) {
                 $opts = [];
@@ -1355,6 +1358,7 @@ class Gm2_Custom_Posts_Admin {
                     'quick_edit'   => !empty($f['quick_edit']),
                     'bulk_edit'    => !empty($f['bulk_edit']),
                     'filter'       => !empty($f['filter']),
+                    'multiple'     => !empty($f['multiple']),
                 ];
             }
             $args = [];
