@@ -88,5 +88,35 @@ class TaxonomyHooksTest extends WP_UnitTestCase {
         unregister_taxonomy('genre');
         delete_option('gm2_custom_posts_config');
     }
+
+    public function test_terms_ordered_when_enabled() {
+        update_option('gm2_custom_posts_config', [
+            'post_types' => [],
+            'taxonomies' => [
+                'ordered' => [
+                    'label'      => 'Ordered',
+                    'post_types' => ['post'],
+                    'ordering'   => true,
+                    'default_terms' => [
+                        [ 'slug' => 'b-term', 'name' => 'B', 'order' => 1 ],
+                        [ 'slug' => 'a-term', 'name' => 'A', 'order' => 2 ],
+                    ],
+                ],
+            ],
+        ]);
+
+        gm2_register_custom_posts();
+
+        $terms = get_terms([
+            'taxonomy'   => 'ordered',
+            'hide_empty' => false,
+        ]);
+
+        $this->assertSame(['b-term', 'a-term'], wp_list_pluck($terms, 'slug'));
+
+        unregister_taxonomy('ordered');
+        delete_option('gm2_custom_posts_config');
+        remove_all_filters('pre_get_terms');
+    }
 }
 
