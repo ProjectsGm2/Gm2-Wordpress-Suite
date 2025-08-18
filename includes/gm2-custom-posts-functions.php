@@ -382,8 +382,23 @@ function gm2_register_custom_posts() {
                 $args['rewrite'] = $value;
             } elseif ($key === 'capabilities' && is_array($value)) {
                 $args['capabilities'] = $value;
-            } elseif ($key === 'template' && is_array($value)) {
-                $args['template'] = $value;
+            } elseif ($key === 'template') {
+                if (is_string($value)) {
+                    $decoded = json_decode(wp_unslash($value), true);
+                    if (is_array($decoded)) {
+                        $args['template'] = $decoded;
+                    }
+                } elseif (is_array($value)) {
+                    $args['template'] = $value;
+                }
+            } elseif ($key === 'template_lock') {
+                if (in_array($value, [ 'all', 'insert' ], true)) {
+                    $args['template_lock'] = $value;
+                } elseif ($value === true || $value === '1' || $value === 1) {
+                    $args['template_lock'] = 'all';
+                } elseif ($value === false || $value === '0' || $value === 0 || $value === '') {
+                    // Explicitly no lock; omit to fall back to default behaviour.
+                }
             } else {
                 $args[$key] = $value;
             }
