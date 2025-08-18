@@ -688,9 +688,81 @@ class Gm2_Model_CLI extends \WP_CLI_Command {
 
     /**
      * Seed model data.
+     *
+     * ## OPTIONS
+     *
+     * [--qty=<number>]
+     * : Number of items to create for posts and terms. Defaults to 1.
+     *
+     * [--cpt=<slug>]
+     * : Restrict seeding to a specific custom post type.
+     *
+     * [--taxonomy=<slug>]
+     * : Restrict seeding to a specific taxonomy.
+     *
+     * [--media=<number>]
+     * : Number of attachment posts to create.
      */
     public function seed( $args, $assoc_args ) {
-        \WP_CLI::success( 'Model seeding completed.' );
+        $qty       = max( 0, (int) ( $assoc_args['qty'] ?? 1 ) );
+        $cpt_filter = $assoc_args['cpt'] ?? '';
+        $tax_filter = $assoc_args['taxonomy'] ?? '';
+        $media_qty  = max( 0, (int) ( $assoc_args['media'] ?? 0 ) );
+
+        $models     = get_option( 'gm2_models', [] );
+        $post_count = 0;
+        $term_count = 0;
+        $media_count = 0;
+
+        foreach ( $models as $model ) {
+            $cpt = $model['slug'] ?? ( $model['post_type'] ?? '' );
+            if ( ! $cpt ) {
+                continue;
+            }
+            if ( $cpt_filter && $cpt !== $cpt_filter ) {
+                continue;
+            }
+
+            for ( $i = 1; $i <= $qty; $i++ ) {
+                wp_insert_post(
+                    [
+                        'post_type'   => $cpt,
+                        'post_title'  => sprintf( '%s Seed %d', ucfirst( $cpt ), $i ),
+                        'post_status' => 'publish',
+                    ]
+                );
+                $post_count++;
+            }
+
+            foreach ( $model['taxonomies'] ?? [] as $tax ) {
+                $tax_slug = $tax['taxonomy'] ?? ( $tax['slug'] ?? '' );
+                if ( ! $tax_slug ) {
+                    continue;
+                }
+                if ( $tax_filter && $tax_slug !== $tax_filter ) {
+                    continue;
+                }
+                for ( $i = 1; $i <= $qty; $i++ ) {
+                    wp_insert_term( sprintf( '%s Term %d', ucfirst( $tax_slug ), $i ), $tax_slug );
+                    $term_count++;
+                }
+            }
+        }
+
+        for ( $i = 1; $i <= $media_qty; $i++ ) {
+            wp_insert_attachment(
+                [
+                    'post_title'    => sprintf( 'Seed Attachment %d', $i ),
+                    'post_status'   => 'inherit',
+                    'post_mime_type'=> 'image/jpeg',
+                ],
+                '',
+                0
+            );
+            $media_count++;
+        }
+
+        \WP_CLI::success( sprintf( 'Seeded %d posts, %d terms and %d media items.', $post_count, $term_count, $media_count ) );
     }
 
     /**

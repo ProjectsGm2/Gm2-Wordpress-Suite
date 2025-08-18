@@ -4,7 +4,7 @@
 define( 'WP_CLI', true );
 define( 'GM2_PLUGIN_DIR', dirname( __DIR__, 2 ) . '/' );
 
-class WP_CLI {
+class WP_CLI { 
     public static function error( $msg ) { throw new Exception( $msg ); }
     public static function success( $msg ) { echo $msg, "\n"; }
     public static function warning( $msg ) { echo $msg, "\n"; }
@@ -18,6 +18,14 @@ $GLOBALS['gm2_options'] = [];
 function get_option( $name, $default = [] ) { return $GLOBALS['gm2_options'][$name] ?? $default; }
 function update_option( $name, $value ) { $GLOBALS['gm2_options'][$name] = $value; return true; }
 function delete_option( $name ) { unset( $GLOBALS['gm2_options'][$name] ); return true; }
+
+// Storage for seeded content.
+$GLOBALS['gm2_seeded_posts'] = [];
+$GLOBALS['gm2_seeded_terms'] = [];
+$GLOBALS['gm2_seeded_media'] = [];
+function wp_insert_post( $data ) { $GLOBALS['gm2_seeded_posts'][] = $data; return count( $GLOBALS['gm2_seeded_posts'] ); }
+function wp_insert_term( $name, $taxonomy, $args = [] ) { $GLOBALS['gm2_seeded_terms'][] = [ 'taxonomy' => $taxonomy, 'name' => $name ]; return [ 'term_id' => count( $GLOBALS['gm2_seeded_terms'] ) ]; }
+function wp_insert_attachment( $data, $file = '', $parent = 0 ) { $GLOBALS['gm2_seeded_media'][] = $data; return count( $GLOBALS['gm2_seeded_media'] ); }
 
 function gm2_run_model_migrations( $slug, $from, $to ) {
     echo "migrate {$slug} {$from}->{$to}\n";
@@ -49,6 +57,41 @@ if ( empty( $models[0]['taxonomies'] ) || $models[0]['taxonomies'][0]['slug'] !=
 }
 if ( ! empty( $models[0]['fields'] ) ) {
     throw new Exception( 'Field delete failed.' );
+}
+
+// Seeding tests.
+$GLOBALS['gm2_seeded_posts'] = [];
+$GLOBALS['gm2_seeded_terms'] = [];
+$GLOBALS['gm2_seeded_media'] = [];
+$cli->seed( [], ['qty' => 2] );
+if ( count( $GLOBALS['gm2_seeded_posts'] ) !== 2 || count( $GLOBALS['gm2_seeded_terms'] ) !== 2 ) {
+    throw new Exception( 'Seed default quantity failed.' );
+}
+
+$GLOBALS['gm2_seeded_posts'] = [];
+$GLOBALS['gm2_seeded_terms'] = [];
+$cli->seed( [], ['qty' => 1, 'cpt' => 'book'] );
+foreach ( $GLOBALS['gm2_seeded_posts'] as $p ) {
+    if ( $p['post_type'] !== 'book' ) {
+        throw new Exception( 'CPT filter failed.' );
+    }
+}
+
+$GLOBALS['gm2_seeded_posts'] = [];
+$GLOBALS['gm2_seeded_terms'] = [];
+$cli->seed( [], ['qty' => 1, 'taxonomy' => 'genre'] );
+foreach ( $GLOBALS['gm2_seeded_terms'] as $t ) {
+    if ( $t['taxonomy'] !== 'genre' ) {
+        throw new Exception( 'Taxonomy filter failed.' );
+    }
+}
+
+$GLOBALS['gm2_seeded_posts'] = [];
+$GLOBALS['gm2_seeded_terms'] = [];
+$GLOBALS['gm2_seeded_media'] = [];
+$cli->seed( [], ['qty' => 0, 'media' => 3] );
+if ( count( $GLOBALS['gm2_seeded_media'] ) !== 3 ) {
+    throw new Exception( 'Media seeding failed.' );
 }
 
 // Cleanup.
