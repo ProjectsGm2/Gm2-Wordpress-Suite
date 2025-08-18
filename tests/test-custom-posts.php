@@ -322,7 +322,7 @@ class CustomPostsFieldsTest extends WP_UnitTestCase {
                         'map_meta_cap' => [ 'value' => true ],
                         'capability_type' => [ 'value' => [ 'movie','movies' ] ],
                         'capabilities' => [ 'value' => [ 'edit_post' => 'edit_movie' ] ],
-                        'template' => [ 'value' => [ [ 'core/paragraph', [] ] ] ],
+                        'template' => [ 'value' => [ [ 'core/paragraph', [ 'placeholder' => 'Add summary...' ] ] ] ],
                         'template_lock' => [ 'value' => 'all' ],
                     ],
                 ],
@@ -357,7 +357,7 @@ class CustomPostsFieldsTest extends WP_UnitTestCase {
         $this->assertTrue($pt->map_meta_cap);
         $this->assertSame('movie', $pt->capability_type);
         $this->assertSame('edit_movie', $pt->cap->edit_post);
-        $this->assertSame([ [ 'core/paragraph', [] ] ], $pt->template);
+        $this->assertSame([ [ 'core/paragraph', [ 'placeholder' => 'Add summary...' ] ] ], $pt->template);
         $this->assertSame('all', $pt->template_lock);
     }
 }

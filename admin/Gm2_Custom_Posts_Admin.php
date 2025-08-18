@@ -704,8 +704,8 @@ class Gm2_Custom_Posts_Admin {
             if (is_array($template)) {
                 $args_input[] = [ 'key' => 'template', 'value' => $template ];
             }
-            $template_lock = sanitize_text_field($_POST['pt_template_lock'] ?? '');
-            if ($template_lock !== '') {
+            $template_lock = sanitize_key($_POST['pt_template_lock'] ?? '');
+            if (in_array($template_lock, [ 'all', 'insert' ], true)) {
                 $args_input[] = [ 'key' => 'template_lock', 'value' => $template_lock ];
             }
 
@@ -820,7 +820,11 @@ class Gm2_Custom_Posts_Admin {
         echo '<p><label>' . esc_html__( 'Template (JSON)', 'gm2-wordpress-suite' ) . '<br />';
         echo '<textarea name="pt_template" class="large-text code" rows="5"></textarea></label></p>';
         echo '<p><label>' . esc_html__( 'Template Lock', 'gm2-wordpress-suite' ) . '<br />';
-        echo '<input type="text" name="pt_template_lock" class="regular-text" /></label></p>';
+        echo '<select name="pt_template_lock" class="regular-text">';
+        echo '<option value="">' . esc_html__( 'None', 'gm2-wordpress-suite' ) . '</option>';
+        echo '<option value="insert">' . esc_html__( 'Insert', 'gm2-wordpress-suite' ) . '</option>';
+        echo '<option value="all">' . esc_html__( 'All', 'gm2-wordpress-suite' ) . '</option>';
+        echo '</select></label></p>';
         echo '</fieldset>';
         echo '<p><label>' . esc_html__( 'Fields (JSON)', 'gm2-wordpress-suite' ) . '<br />';
         echo '<textarea name="pt_fields" class="large-text code" rows="5" placeholder="{\n  \"field_key\": {\n    \"label\": \"Field Label\",\n    \"type\": \"text\"\n  }\n}"></textarea></label></p>';
@@ -1008,6 +1012,8 @@ class Gm2_Custom_Posts_Admin {
                     $value = json_decode(wp_unslash($value), true);
                 }
                 $val = is_array($value) ? $value : [];
+            } elseif ($a_key === 'template_lock') {
+                $val = in_array($value, [ 'all', 'insert' ], true) ? $value : false;
             } elseif ($a_key === 'menu_position') {
                 $val = is_numeric($value) ? (int) $value : 0;
             } elseif ($a_key === 'orderby') {
