@@ -563,9 +563,54 @@ function gm2_render_field_group($fields, $object_id, $context_type = 'post') {
 }
 
 /**
- * Retrieve a stored meta value for any object type.
+ * Simple wrapper used for deferred metadata lookups. The callback is executed
+ * only when the value is accessed via {@see get()} or string casting.
  */
-function gm2_get_meta_value($object_id, $key, $context_type, $field, $type = 'post') {
+class GM2_Lazy_Meta_Value {
+    /** @var callable */
+    private $resolver;
+
+    /** @var bool */
+    private $loaded = false;
+
+    /** @var mixed */
+    private $value;
+
+    /**
+     * @param callable $resolver Callback that resolves the actual value.
+     */
+    public function __construct(callable $resolver) {
+        $this->resolver = $resolver;
+    }
+
+    /**
+     * Retrieve the resolved value, loading it on first access.
+     *
+     * @return mixed
+     */
+    public function get() {
+        if (!$this->loaded) {
+            $this->value  = call_user_func($this->resolver);
+            $this->loaded = true;
+        }
+        return $this->value;
+    }
+
+    public function __toString() {
+        $value = $this->get();
+        if (is_array($value) || is_object($value)) {
+            return wp_json_encode($value);
+        }
+        return (string) $value;
+    }
+}
+
+/**
+ * Low level metadata fetcher used by {@see gm2_get_meta_value()} and the lazy
+ * loader. This function contains the original switch statement and default
+ * resolution logic.
+ */
+function gm2_fetch_meta_value($object_id, $key, $context_type, $field, $type = 'post') {
     switch ($context_type) {
         case 'user':
             $value = get_user_meta($object_id, $key, true);
@@ -589,6 +634,47 @@ function gm2_get_meta_value($object_id, $key, $context_type, $field, $type = 'po
         $value = gm2_resolve_default($field, $object_id, $context_type);
     }
     return $value;
+}
+
+/**
+ * Retrieve a stored meta value for any object type.
+ *
+ * The `gm2_lazy_load_meta_value` filter allows heavy fields to be loaded
+ * lazily. When the filter returns true a {@see GM2_Lazy_Meta_Value} instance is
+ * returned instead of the raw value. The actual lookup is deferred until the
+ * object is accessed. Developers may wrap the resolver callback via the
+ * `gm2_lazy_meta_loader` filter for custom caching or instrumentation.
+ */
+function gm2_get_meta_value($object_id, $key, $context_type, $field, $type = 'post') {
+    $defer = apply_filters(
+        'gm2_lazy_load_meta_value',
+        false,
+        $object_id,
+        $key,
+        $context_type,
+        $field,
+        $type
+    );
+
+    if ($defer) {
+        $resolver = function () use ($object_id, $key, $context_type, $field, $type) {
+            return gm2_fetch_meta_value($object_id, $key, $context_type, $field, $type);
+        };
+
+        $resolver = apply_filters(
+            'gm2_lazy_meta_loader',
+            $resolver,
+            $object_id,
+            $key,
+            $context_type,
+            $field,
+            $type
+        );
+
+        return new GM2_Lazy_Meta_Value($resolver);
+    }
+
+    return gm2_fetch_meta_value($object_id, $key, $context_type, $field, $type);
 }
 
 /**
