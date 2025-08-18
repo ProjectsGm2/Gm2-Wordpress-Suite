@@ -20,6 +20,7 @@ class Gm2_Custom_Posts_Admin {
         add_action('wp_ajax_gm2_save_tax_args', [ $this, 'ajax_save_tax_args' ]);
         add_action('wp_ajax_gm2_save_query', [ $this, 'ajax_save_query' ]);
         add_action('wp_ajax_gm2_save_cpt_model', [ $this, 'ajax_save_cpt_model' ]);
+        add_action('wp_ajax_gm2_save_field_group', [ $this, 'ajax_save_field_group' ]);
         add_action('wp_ajax_gm2_regenerate_thumbnails', [ $this, 'ajax_regenerate_thumbnails' ]);
         add_action('enqueue_block_editor_assets', [ $this, 'enqueue_block_editor_assets' ]);
         add_action('restrict_manage_posts', [ $this, 'restrict_manage_posts' ]);
@@ -63,6 +64,10 @@ class Gm2_Custom_Posts_Admin {
 
         $this->register_help('gm2-custom-posts_page_gm2_cpt_wizard',
             '<p>' . esc_html__( 'Interactive model builder for custom post types.', 'gm2-wordpress-suite' ) . '</p>'
+        );
+
+        $this->register_help('gm2-custom-posts_page_gm2_field_group_wizard',
+            '<p>' . esc_html__( 'Create reusable field groups and assign them to various objects.', 'gm2-wordpress-suite' ) . '</p>'
         );
 
         $this->register_help('gm2-custom-posts_page_gm2_workflows',
@@ -159,6 +164,15 @@ class Gm2_Custom_Posts_Admin {
 
         add_submenu_page(
             'gm2-custom-posts',
+            esc_html__( 'Field Group Wizard', 'gm2-wordpress-suite' ),
+            esc_html__( 'Field Group Wizard', 'gm2-wordpress-suite' ),
+            $cap,
+            'gm2_field_group_wizard',
+            [ $this, 'display_field_group_wizard' ]
+        );
+
+        add_submenu_page(
+            'gm2-custom-posts',
             esc_html__( 'Edit Taxonomy', 'gm2-wordpress-suite' ),
             esc_html__( 'Edit Taxonomy', 'gm2-wordpress-suite' ),
             $cap,
@@ -203,6 +217,17 @@ class Gm2_Custom_Posts_Admin {
             wp_die( esc_html__( 'Permission denied', 'gm2-wordpress-suite' ) );
         }
         echo '<div class="wrap"><h1>' . esc_html__( 'CPT Model Builder', 'gm2-wordpress-suite' ) . '</h1><div id="gm2-cpt-wizard-root"></div></div>';
+    }
+
+    public function display_field_group_wizard() {
+        if ($this->is_locked()) {
+            $this->display_locked_page(esc_html__( 'Field Group Wizard', 'gm2-wordpress-suite' ));
+            return;
+        }
+        if (!$this->can_manage()) {
+            wp_die(esc_html__( 'Permission denied', 'gm2-wordpress-suite' ));
+        }
+        echo '<div class="wrap"><h1>' . esc_html__( 'Field Group Wizard', 'gm2-wordpress-suite' ) . '</h1><div id="gm2-fg-wizard-root"></div></div>';
     }
 
     public function display_fields_page($slug = '') {
@@ -1438,6 +1463,26 @@ class Gm2_Custom_Posts_Admin {
             ]);
         }
 
+        if ($hook === 'gm2-custom-posts_page_gm2_field_group_wizard') {
+            $file = GM2_PLUGIN_DIR . 'admin/js/gm2-fg-wizard.js';
+            wp_enqueue_script(
+                'gm2-fg-wizard',
+                GM2_PLUGIN_URL . 'admin/js/gm2-fg-wizard.js',
+                [ 'wp-element', 'wp-components', 'wp-data', 'wp-i18n' ],
+                file_exists($file) ? filemtime($file) : GM2_VERSION,
+                true
+            );
+            $groups = get_option('gm2_field_groups', []);
+            if (!is_array($groups)) {
+                $groups = [];
+            }
+            wp_localize_script('gm2-fg-wizard', 'gm2FGWizard', [
+                'nonce'  => wp_create_nonce('gm2_save_field_group'),
+                'ajax'   => admin_url('admin-ajax.php'),
+                'groups' => $groups,
+            ]);
+        }
+
         if ($hook === 'gm2-custom-posts_page_gm2_query_builder') {
             $file = GM2_PLUGIN_DIR . 'admin/js/gm2-query-builder.js';
             wp_enqueue_script(
@@ -1734,6 +1779,49 @@ class Gm2_Custom_Posts_Admin {
         update_option('gm2_custom_posts_config', $config);
         wp_send_json_success([
             'post_type' => $config['post_types'][$slug],
+        ]);
+    }
+
+    public function ajax_save_field_group() {
+        if (!$this->can_manage()) {
+            wp_send_json_error('permission');
+        }
+        $nonce = $_POST['nonce'] ?? '';
+        if (!wp_verify_nonce($nonce, 'gm2_save_field_group')) {
+            wp_send_json_error('nonce');
+        }
+        $slug     = sanitize_key($_POST['slug'] ?? '');
+        $title    = sanitize_text_field($_POST['title'] ?? '');
+        $scope    = sanitize_key($_POST['scope'] ?? 'post_type');
+        $objects  = json_decode(wp_unslash($_POST['objects'] ?? '[]'), true);
+        $fields   = json_decode(wp_unslash($_POST['fields'] ?? ''), true);
+        $location = json_decode(wp_unslash($_POST['location'] ?? ''), true);
+        if (!$slug || !is_array($fields) || !is_array($objects) || !is_array($location)) {
+            wp_send_json_error('data');
+        }
+        $sanitized_fields = $this->sanitize_fields_array($fields);
+        $sanitized_loc    = $this->sanitize_location($location);
+        $sanitized_objects = [];
+        foreach ($objects as $obj) {
+            $o = sanitize_key($obj);
+            if ($o) {
+                $sanitized_objects[] = $o;
+            }
+        }
+        $groups = get_option('gm2_field_groups', []);
+        if (!is_array($groups)) {
+            $groups = [];
+        }
+        $groups[$slug] = [
+            'title'    => $title ?: $slug,
+            'fields'   => $sanitized_fields,
+            'scope'    => $scope,
+            'objects'  => $sanitized_objects,
+            'location' => $sanitized_loc,
+        ];
+        update_option('gm2_field_groups', $groups);
+        wp_send_json_success([
+            'group' => $groups[$slug],
         ]);
     }
 
