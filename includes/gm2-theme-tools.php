@@ -146,15 +146,30 @@ function gm2_maybe_generate_block_templates() {
     if (get_option('gm2_enable_block_templates', '0') !== '1') {
         return;
     }
+    $templates = [];
 
     $post_types = get_post_types(['public' => true], 'names');
     foreach ($post_types as $type) {
         if (in_array($type, ['post', 'page', 'attachment'], true)) {
             continue;
         }
+        $templates[] = 'single-' . $type;
         gm2_ensure_block_template('single-' . $type, "<!-- wp:post-title /-->\n<!-- wp:post-content /-->\n");
+        $templates[] = 'archive-' . $type;
         gm2_ensure_block_template('archive-' . $type, "<!-- wp:query {\"inherit\":true} --><!-- wp:post-template --><!-- wp:post-title /--><!-- /wp:post-template --><!-- /wp:query -->\n");
     }
+
+    $patterns = [];
+    $groups = get_option('gm2_field_groups', []);
+    if (is_array($groups)) {
+        foreach ($groups as $group) {
+            if (!empty($group['pattern'])) {
+                $patterns[] = 'gm2/' . sanitize_key($group['pattern']);
+            }
+        }
+    }
+
+    gm2_update_theme_json_references($templates, $patterns);
 }
 add_action('init', 'gm2_maybe_generate_block_templates');
 
@@ -182,6 +197,62 @@ function gm2_ensure_block_template($slug, $content) {
         'post_content'=> $content,
         'tax_input'   => [ 'wp_theme' => get_stylesheet() ],
     ]);
+}
+
+/**
+ * Update or create theme.json entries for custom templates and patterns.
+ *
+ * @param array $templates Array of template slugs.
+ * @param array $patterns  Array of pattern slugs.
+ */
+function gm2_update_theme_json_references($templates = [], $patterns = []) {
+    $theme_dir = get_stylesheet_directory();
+    if (!$theme_dir) {
+        return;
+    }
+
+    $path = trailingslashit($theme_dir) . 'theme.json';
+    $data = [];
+    if (file_exists($path)) {
+        $json = json_decode(file_get_contents($path), true);
+        if (is_array($json)) {
+            $data = $json;
+        }
+    } else {
+        $data['$schema'] = 'https://schemas.wp.org/wp/6.4/theme.json';
+    }
+
+    if (!empty($templates)) {
+        $existing = $data['customTemplates'] ?? [];
+        foreach ($templates as $slug) {
+            $found = false;
+            foreach ($existing as $item) {
+                if (($item['name'] ?? '') === $slug) {
+                    $found = true;
+                    break;
+                }
+            }
+            if (!$found) {
+                $existing[] = [
+                    'name'  => $slug,
+                    'title' => ucwords(str_replace(['-', '_'], ' ', $slug)),
+                ];
+            }
+        }
+        $data['customTemplates'] = $existing;
+    }
+
+    if (!empty($patterns)) {
+        $existing = $data['patterns'] ?? [];
+        foreach ($patterns as $slug) {
+            if (!in_array($slug, $existing, true)) {
+                $existing[] = $slug;
+            }
+        }
+        $data['patterns'] = $existing;
+    }
+
+    file_put_contents($path, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 }
 
 /**
