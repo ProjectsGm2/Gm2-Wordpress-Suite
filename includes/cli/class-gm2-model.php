@@ -84,6 +84,377 @@ class Gm2_Model_CLI extends \WP_CLI_Command {
     }
 
     /**
+     * Create a custom post type.
+     *
+     * ## OPTIONS
+     *
+     * <slug>
+     * : CPT slug.
+     *
+     * [--args=<json>]
+     * : JSON encoded arguments for register_post_type().
+     */
+    public function cpt_create( $args, $assoc_args ) {
+        $slug = $args[0] ?? '';
+        if ( ! $slug ) {
+            \WP_CLI::error( 'Missing CPT slug.' );
+        }
+
+        $models = get_option( 'gm2_models', [] );
+        foreach ( $models as $model ) {
+            $pt = $model['slug'] ?? ( $model['post_type'] ?? '' );
+            if ( $pt === $slug ) {
+                \WP_CLI::error( 'CPT already exists.' );
+            }
+        }
+
+        $args_json = $assoc_args['args'] ?? '{}';
+        $pt_args   = json_decode( $args_json, true );
+        if ( ! is_array( $pt_args ) ) {
+            \WP_CLI::error( 'Invalid args JSON.' );
+        }
+
+        $model = [
+            'slug'       => $slug,
+            'post_type'  => $slug,
+            'args'       => $pt_args,
+            'taxonomies' => [],
+            'fields'     => [],
+            'version'    => (int) ( $assoc_args['version'] ?? 1 ),
+        ];
+
+        $models[] = $model;
+        update_option( 'gm2_models', $models );
+        $this->run_migrations_for_model( $slug, $model );
+        \WP_CLI::success( 'CPT created.' );
+    }
+
+    /**
+     * Update a custom post type.
+     *
+     * ## OPTIONS
+     *
+     * <slug>
+     * : CPT slug.
+     *
+     * [--args=<json>]
+     * : JSON encoded arguments to merge.
+     *
+     * [--version=<version>]
+     * : Target schema version.
+     */
+    public function cpt_update( $args, $assoc_args ) {
+        $slug = $args[0] ?? '';
+        if ( ! $slug ) {
+            \WP_CLI::error( 'Missing CPT slug.' );
+        }
+
+        $models = get_option( 'gm2_models', [] );
+        foreach ( $models as &$model ) {
+            $pt = $model['slug'] ?? ( $model['post_type'] ?? '' );
+            if ( $pt === $slug ) {
+                if ( isset( $assoc_args['args'] ) ) {
+                    $new_args = json_decode( $assoc_args['args'], true );
+                    if ( ! is_array( $new_args ) ) {
+                        \WP_CLI::error( 'Invalid args JSON.' );
+                    }
+                    $model['args'] = array_merge( $model['args'] ?? [], $new_args );
+                }
+                if ( isset( $assoc_args['version'] ) ) {
+                    $model['version'] = (int) $assoc_args['version'];
+                }
+                update_option( 'gm2_models', $models );
+                $this->run_migrations_for_model( $slug, $model );
+                \WP_CLI::success( 'CPT updated.' );
+                return;
+            }
+        }
+        \WP_CLI::error( 'CPT not found.' );
+    }
+
+    /**
+     * Delete a custom post type.
+     *
+     * ## OPTIONS
+     *
+     * <slug>
+     * : CPT slug.
+     */
+    public function cpt_delete( $args, $assoc_args ) {
+        $slug = $args[0] ?? '';
+        if ( ! $slug ) {
+            \WP_CLI::error( 'Missing CPT slug.' );
+        }
+
+        $models = get_option( 'gm2_models', [] );
+        foreach ( $models as $index => $model ) {
+            $pt = $model['slug'] ?? ( $model['post_type'] ?? '' );
+            if ( $pt === $slug ) {
+                unset( $models[ $index ] );
+                update_option( 'gm2_models', array_values( $models ) );
+                $versions = get_option( 'gm2_model_versions', [] );
+                unset( $versions[ $slug ] );
+                update_option( 'gm2_model_versions', $versions );
+                \WP_CLI::success( 'CPT deleted.' );
+                return;
+            }
+        }
+        \WP_CLI::error( 'CPT not found.' );
+    }
+
+    /**
+     * Create a taxonomy for a CPT.
+     *
+     * ## OPTIONS
+     *
+     * <cpt>
+     * : CPT slug.
+     *
+     * <taxonomy>
+     * : Taxonomy slug.
+     *
+     * [--args=<json>]
+     * : JSON encoded arguments for register_taxonomy().
+     */
+    public function taxonomy_create( $args, $assoc_args ) {
+        $cpt = $args[0] ?? '';
+        $slug = $args[1] ?? '';
+        if ( ! $cpt || ! $slug ) {
+            \WP_CLI::error( 'Usage: wp gm2 model taxonomy create <cpt> <slug> [--args]' );
+        }
+
+        $models = get_option( 'gm2_models', [] );
+        foreach ( $models as &$model ) {
+            $pt = $model['slug'] ?? ( $model['post_type'] ?? '' );
+            if ( $pt === $cpt ) {
+                $taxes = $model['taxonomies'] ?? [];
+                foreach ( $taxes as $tax ) {
+                    $tax_slug = $tax['taxonomy'] ?? ( $tax['slug'] ?? '' );
+                    if ( $tax_slug === $slug ) {
+                        \WP_CLI::error( 'Taxonomy already exists.' );
+                    }
+                }
+                $tax_args = isset( $assoc_args['args'] ) ? json_decode( $assoc_args['args'], true ) : [];
+                if ( isset( $assoc_args['args'] ) && ! is_array( $tax_args ) ) {
+                    \WP_CLI::error( 'Invalid args JSON.' );
+                }
+                $model['taxonomies'][] = [
+                    'slug'        => $slug,
+                    'taxonomy'    => $slug,
+                    'object_type' => $cpt,
+                    'args'        => $tax_args,
+                ];
+                update_option( 'gm2_models', $models );
+                $this->run_migrations_for_model( $cpt, $model );
+                \WP_CLI::success( 'Taxonomy created.' );
+                return;
+            }
+        }
+        \WP_CLI::error( 'CPT not found.' );
+    }
+
+    /**
+     * Update a taxonomy for a CPT.
+     */
+    public function taxonomy_update( $args, $assoc_args ) {
+        $cpt = $args[0] ?? '';
+        $slug = $args[1] ?? '';
+        if ( ! $cpt || ! $slug ) {
+            \WP_CLI::error( 'Usage: wp gm2 model taxonomy update <cpt> <slug> [--args]' );
+        }
+
+        $models = get_option( 'gm2_models', [] );
+        foreach ( $models as &$model ) {
+            $pt = $model['slug'] ?? ( $model['post_type'] ?? '' );
+            if ( $pt === $cpt ) {
+                foreach ( $model['taxonomies'] ?? [] as &$tax ) {
+                    $tax_slug = $tax['taxonomy'] ?? ( $tax['slug'] ?? '' );
+                    if ( $tax_slug === $slug ) {
+                        if ( isset( $assoc_args['args'] ) ) {
+                            $new_args = json_decode( $assoc_args['args'], true );
+                            if ( ! is_array( $new_args ) ) {
+                                \WP_CLI::error( 'Invalid args JSON.' );
+                            }
+                            $tax['args'] = array_merge( $tax['args'] ?? [], $new_args );
+                        }
+                        update_option( 'gm2_models', $models );
+                        $this->run_migrations_for_model( $cpt, $model );
+                        \WP_CLI::success( 'Taxonomy updated.' );
+                        return;
+                    }
+                }
+                \WP_CLI::error( 'Taxonomy not found.' );
+            }
+        }
+        \WP_CLI::error( 'CPT not found.' );
+    }
+
+    /**
+     * Delete a taxonomy for a CPT.
+     */
+    public function taxonomy_delete( $args, $assoc_args ) {
+        $cpt = $args[0] ?? '';
+        $slug = $args[1] ?? '';
+        if ( ! $cpt || ! $slug ) {
+            \WP_CLI::error( 'Usage: wp gm2 model taxonomy delete <cpt> <slug>' );
+        }
+
+        $models = get_option( 'gm2_models', [] );
+        foreach ( $models as &$model ) {
+            $pt = $model['slug'] ?? ( $model['post_type'] ?? '' );
+            if ( $pt === $cpt ) {
+                foreach ( $model['taxonomies'] ?? [] as $i => $tax ) {
+                    $tax_slug = $tax['taxonomy'] ?? ( $tax['slug'] ?? '' );
+                    if ( $tax_slug === $slug ) {
+                        unset( $model['taxonomies'][ $i ] );
+                        $model['taxonomies'] = array_values( $model['taxonomies'] );
+                        update_option( 'gm2_models', $models );
+                        $this->run_migrations_for_model( $cpt, $model );
+                        \WP_CLI::success( 'Taxonomy deleted.' );
+                        return;
+                    }
+                }
+                \WP_CLI::error( 'Taxonomy not found.' );
+            }
+        }
+        \WP_CLI::error( 'CPT not found.' );
+    }
+
+    /**
+     * Create a field for a CPT.
+     *
+     * ## OPTIONS
+     *
+     * <cpt>
+     * : CPT slug.
+     *
+     * <key>
+     * : Field key.
+     *
+     * [--args=<json>]
+     * : JSON encoded arguments for register_post_meta().
+     */
+    public function field_create( $args, $assoc_args ) {
+        $cpt = $args[0] ?? '';
+        $key = $args[1] ?? '';
+        if ( ! $cpt || ! $key ) {
+            \WP_CLI::error( 'Usage: wp gm2 model field create <cpt> <key> [--args]' );
+        }
+
+        $models = get_option( 'gm2_models', [] );
+        foreach ( $models as &$model ) {
+            $pt = $model['slug'] ?? ( $model['post_type'] ?? '' );
+            if ( $pt === $cpt ) {
+                foreach ( $model['fields'] ?? [] as $field ) {
+                    $f_key = $field['key'] ?? ( $field['name'] ?? '' );
+                    if ( $f_key === $key ) {
+                        \WP_CLI::error( 'Field already exists.' );
+                    }
+                }
+                $field_args = isset( $assoc_args['args'] ) ? json_decode( $assoc_args['args'], true ) : [];
+                if ( isset( $assoc_args['args'] ) && ! is_array( $field_args ) ) {
+                    \WP_CLI::error( 'Invalid args JSON.' );
+                }
+                $model['fields'][] = [
+                    'key'  => $key,
+                    'name' => $key,
+                    'args' => $field_args,
+                ];
+                update_option( 'gm2_models', $models );
+                $this->run_migrations_for_model( $cpt, $model );
+                \WP_CLI::success( 'Field created.' );
+                return;
+            }
+        }
+        \WP_CLI::error( 'CPT not found.' );
+    }
+
+    /**
+     * Update a field for a CPT.
+     */
+    public function field_update( $args, $assoc_args ) {
+        $cpt = $args[0] ?? '';
+        $key = $args[1] ?? '';
+        if ( ! $cpt || ! $key ) {
+            \WP_CLI::error( 'Usage: wp gm2 model field update <cpt> <key> [--args]' );
+        }
+
+        $models = get_option( 'gm2_models', [] );
+        foreach ( $models as &$model ) {
+            $pt = $model['slug'] ?? ( $model['post_type'] ?? '' );
+            if ( $pt === $cpt ) {
+                foreach ( $model['fields'] ?? [] as &$field ) {
+                    $f_key = $field['key'] ?? ( $field['name'] ?? '' );
+                    if ( $f_key === $key ) {
+                        if ( isset( $assoc_args['args'] ) ) {
+                            $new_args = json_decode( $assoc_args['args'], true );
+                            if ( ! is_array( $new_args ) ) {
+                                \WP_CLI::error( 'Invalid args JSON.' );
+                            }
+                            $field['args'] = array_merge( $field['args'] ?? [], $new_args );
+                        }
+                        update_option( 'gm2_models', $models );
+                        $this->run_migrations_for_model( $cpt, $model );
+                        \WP_CLI::success( 'Field updated.' );
+                        return;
+                    }
+                }
+                \WP_CLI::error( 'Field not found.' );
+            }
+        }
+        \WP_CLI::error( 'CPT not found.' );
+    }
+
+    /**
+     * Delete a field for a CPT.
+     */
+    public function field_delete( $args, $assoc_args ) {
+        $cpt = $args[0] ?? '';
+        $key = $args[1] ?? '';
+        if ( ! $cpt || ! $key ) {
+            \WP_CLI::error( 'Usage: wp gm2 model field delete <cpt> <key>' );
+        }
+
+        $models = get_option( 'gm2_models', [] );
+        foreach ( $models as &$model ) {
+            $pt = $model['slug'] ?? ( $model['post_type'] ?? '' );
+            if ( $pt === $cpt ) {
+                foreach ( $model['fields'] ?? [] as $i => $field ) {
+                    $f_key = $field['key'] ?? ( $field['name'] ?? '' );
+                    if ( $f_key === $key ) {
+                        unset( $model['fields'][ $i ] );
+                        $model['fields'] = array_values( $model['fields'] );
+                        update_option( 'gm2_models', $models );
+                        $this->run_migrations_for_model( $cpt, $model );
+                        \WP_CLI::success( 'Field deleted.' );
+                        return;
+                    }
+                }
+                \WP_CLI::error( 'Field not found.' );
+            }
+        }
+        \WP_CLI::error( 'CPT not found.' );
+    }
+
+    /**
+     * Run migrations for a specific model.
+     *
+     * @param string $slug  CPT slug.
+     * @param array  $model Model data.
+     * @return void
+     */
+    private function run_migrations_for_model( $slug, $model ) {
+        $versions = get_option( 'gm2_model_versions', [] );
+        $target   = (int) ( $model['version'] ?? 1 );
+        $current  = (int) ( $versions[ $slug ] ?? 0 );
+        if ( $target > $current ) {
+            gm2_run_model_migrations( $slug, $current, $target );
+            $versions[ $slug ] = $target;
+            update_option( 'gm2_model_versions', $versions );
+        }
+    }
+
+    /**
      * Generate PHP code for registered models.
      *
      * [--mu-plugin]

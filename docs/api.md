@@ -83,3 +83,33 @@ Elements targeted by the help registry receive their message as a tooltip.
 // Tooltips are applied automatically based on localized data.
 ```
 
+## WP-CLI Model Commands
+
+Manage custom post types, taxonomies and fields via the command line.
+
+### Custom Post Types
+
+`wp gm2 model cpt create <slug> [--args=<json>]`
+
+`wp gm2 model cpt update <slug> [--args=<json>] [--version=<n>]`
+
+`wp gm2 model cpt delete <slug>`
+
+### Taxonomies
+
+`wp gm2 model taxonomy create <cpt> <slug> [--args=<json>]`
+
+`wp gm2 model taxonomy update <cpt> <slug> [--args=<json>]`
+
+`wp gm2 model taxonomy delete <cpt> <slug>`
+
+### Fields
+
+`wp gm2 model field create <cpt> <key> [--args=<json>]`
+
+`wp gm2 model field update <cpt> <key> [--args=<json>]`
+
+`wp gm2 model field delete <cpt> <key>`
+
+Each command updates the `gm2_models` option and runs migrations for the affected model.
+
