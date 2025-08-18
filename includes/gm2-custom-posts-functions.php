@@ -282,16 +282,43 @@ function gm2_validate_field($key, $field, $value, $object_id = 0, $context_type 
         }
     }
 
-    if (!empty($field['unique']) && $context_type === 'post') {
-        $scope = $field['unique_scope'] ?? 'post_type';
-        $args  = [
-            'post_type'      => ($scope === 'post_type') ? get_post_type($object_id) : 'any',
-            'post__not_in'   => [ $object_id ],
-            'meta_query'     => [ [ 'key' => $key, 'value' => $value ] ],
-            'posts_per_page' => 1,
-            'fields'         => 'ids',
-        ];
-        $existing = get_posts($args);
+    if (!empty($field['unique'])) {
+        global $wpdb;
+        $scope   = $field['unique_scope'] ?? $context_type;
+        $existing = false;
+        $maybe_serialized = maybe_serialize($value);
+        switch ($scope) {
+            case 'post_type':
+            case 'post':
+            case 'site':
+                if ($context_type === 'post') {
+                    $args = [
+                        'post_type'      => ($scope === 'post_type') ? get_post_type($object_id) : 'any',
+                        'post__not_in'   => [ $object_id ],
+                        'meta_query'     => [ [ 'key' => $key, 'value' => $value ] ],
+                        'posts_per_page' => 1,
+                        'fields'         => 'ids',
+                    ];
+                    $existing = get_posts($args);
+                }
+                break;
+            case 'user':
+                $sql      = $wpdb->prepare("SELECT umeta_id FROM {$wpdb->usermeta} WHERE meta_key = %s AND meta_value = %s AND user_id != %d LIMIT 1", $key, $maybe_serialized, (int) $object_id);
+                $existing = $wpdb->get_var($sql);
+                break;
+            case 'term':
+                $sql      = $wpdb->prepare("SELECT meta_id FROM {$wpdb->termmeta} WHERE meta_key = %s AND meta_value = %s AND term_id != %d LIMIT 1", $key, $maybe_serialized, (int) $object_id);
+                $existing = $wpdb->get_var($sql);
+                break;
+            case 'comment':
+                $sql      = $wpdb->prepare("SELECT meta_id FROM {$wpdb->commentmeta} WHERE meta_key = %s AND meta_value = %s AND comment_id != %d LIMIT 1", $key, $maybe_serialized, (int) $object_id);
+                $existing = $wpdb->get_var($sql);
+                break;
+            case 'option':
+                $sql      = $wpdb->prepare("SELECT option_id FROM {$wpdb->options} WHERE option_name != %s AND option_value = %s LIMIT 1", $key, $maybe_serialized);
+                $existing = $wpdb->get_var($sql);
+                break;
+        }
         if ($existing) {
             $msg = $messages['unique'] ?? __('Value must be unique.', 'gm2-wordpress-suite');
             return new WP_Error('gm2_unique', $msg);
