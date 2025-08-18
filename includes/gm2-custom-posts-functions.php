@@ -238,6 +238,39 @@ function gm2_validate_field($key, $field, $value, $object_id = 0, $context_type 
         return new WP_Error('gm2_regex', $msg);
     }
 
+    $type = $field['type'] ?? '';
+    if ($type === 'time') {
+        $tz = wp_timezone();
+        $dt = date_create_from_format('H:i:s', $value, $tz);
+        if (!$dt) {
+            $dt = date_create_from_format('H:i', $value, $tz);
+        }
+        if (!$dt) {
+            $msg = $messages['time'] ?? __('Invalid time.', 'gm2-wordpress-suite');
+            return new WP_Error('gm2_time', $msg);
+        }
+    } elseif ($type === 'datetime') {
+        $tz  = wp_timezone();
+        $val = is_string($value) ? str_replace('T', ' ', $value) : $value;
+        $dt  = $val ? date_create($val, $tz) : false;
+        if (!$dt) {
+            $msg = $messages['datetime'] ?? __('Invalid date/time.', 'gm2-wordpress-suite');
+            return new WP_Error('gm2_datetime', $msg);
+        }
+    } elseif ($type === 'daterange') {
+        if (!is_array($value) || !array_key_exists('start', $value) || !array_key_exists('end', $value)) {
+            $msg = $messages['daterange'] ?? __('Invalid date range.', 'gm2-wordpress-suite');
+            return new WP_Error('gm2_daterange', $msg);
+        }
+        $tz    = wp_timezone();
+        $start = $value['start'] !== '' ? date_create($value['start'], $tz) : false;
+        $end   = $value['end'] !== '' ? date_create($value['end'], $tz) : false;
+        if (!$start || !$end || $start > $end) {
+            $msg = $messages['daterange'] ?? __('Invalid date range.', 'gm2-wordpress-suite');
+            return new WP_Error('gm2_daterange', $msg);
+        }
+    }
+
     if (is_array($value)) {
         if (isset($field['min_rows']) && count($value) < $field['min_rows']) {
             $msg = $messages['min_rows'] ?? sprintf(__('Minimum %s rows required.', 'gm2-wordpress-suite'), $field['min_rows']);
