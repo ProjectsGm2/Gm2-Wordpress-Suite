@@ -188,6 +188,8 @@ function gm2_activate_plugin() {
     \Gm2\Gm2_Audit_Log::install();
 
     Gm2_Abandoned_Carts::schedule_event();
+
+    gm2_maybe_add_indexes();
 }
 register_activation_hook(__FILE__, 'gm2_activate_plugin');
 
@@ -237,6 +239,58 @@ function gm2_upgrade_analytics_log_index() {
     dbDelta($sql);
 }
 add_action('plugins_loaded', 'gm2_upgrade_analytics_log_index');
+
+/**
+ * Ensure auxiliary database indexes exist for meta lookups and custom tables.
+ *
+ * Runs on activation and on plugin load to catch version upgrades.
+ */
+function gm2_maybe_add_indexes() {
+    global $wpdb;
+
+    if ((int) get_option('gm2_meta_indexes_version', 0) >= 1) {
+        return;
+    }
+
+    $meta_tables = [
+        [ 'table' => $wpdb->postmeta,   'id' => 'post_id' ],
+        [ 'table' => $wpdb->usermeta,   'id' => 'user_id' ],
+        [ 'table' => $wpdb->termmeta,   'id' => 'term_id' ],
+        [ 'table' => $wpdb->commentmeta,'id' => 'comment_id' ],
+    ];
+
+    foreach ($meta_tables as $info) {
+        $index = 'gm2_' . $info['id'] . '_meta';
+        $exists = $wpdb->get_results( "SHOW INDEX FROM {$info['table']} WHERE Key_name = '$index'" );
+        if (empty($exists)) {
+            $wpdb->query( "ALTER TABLE {$info['table']} ADD INDEX $index ({$info['id']}, meta_key(191))" );
+        }
+    }
+
+    $audit = $wpdb->prefix . 'gm2_audit_log';
+    $exists = $wpdb->get_results( "SHOW INDEX FROM $audit WHERE Key_name = 'gm2_object_key'" );
+    if (empty($exists)) {
+        $wpdb->query( "ALTER TABLE $audit ADD INDEX gm2_object_key (object_id, meta_key(191))" );
+    }
+
+    $carts = $wpdb->prefix . 'wc_ac_carts';
+    foreach ([ 'gm2_user' => 'user_id', 'gm2_abandoned_at' => 'abandoned_at', 'gm2_email' => 'email(191)' ] as $index => $cols) {
+        $exists = $wpdb->get_results( "SHOW INDEX FROM $carts WHERE Key_name = '$index'" );
+        if (empty($exists)) {
+            $wpdb->query( "ALTER TABLE $carts ADD INDEX $index ($cols)" );
+        }
+    }
+
+    $queue = $wpdb->prefix . 'wc_ac_email_queue';
+    $exists = $wpdb->get_results( "SHOW INDEX FROM $queue WHERE Key_name = 'gm2_send_at'" );
+    if (empty($exists)) {
+        $wpdb->query( "ALTER TABLE $queue ADD INDEX gm2_send_at (send_at, sent)" );
+    }
+
+    update_option('gm2_meta_indexes_version', 1);
+}
+
+add_action('plugins_loaded', 'gm2_maybe_add_indexes');
 
 function gm2_maybe_run_setup_wizard() {
     if (get_option('gm2_do_activation_redirect') === '1') {
