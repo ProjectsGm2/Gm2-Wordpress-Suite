@@ -62,6 +62,7 @@ require_once GM2_PLUGIN_DIR . 'includes/gm2-theme-tools.php';
 require_once GM2_PLUGIN_DIR . 'includes/gm2-open-in-code.php';
 require_once GM2_PLUGIN_DIR . 'includes/gm2-field-renderers.php';
 require_once GM2_PLUGIN_DIR . 'includes/gm2-schema-tooltips.php';
+require_once GM2_PLUGIN_DIR . 'includes/gm2-model-export.php';
 // Temporarily disable Recovery Email Queue.
 // require_once GM2_PLUGIN_DIR . 'includes/Gm2_Abandoned_Carts_Messaging.php';
 require_once GM2_PLUGIN_DIR . 'admin/Gm2_Abandoned_Carts_Admin.php';
@@ -69,6 +70,7 @@ require_once GM2_PLUGIN_DIR . 'admin/Gm2_Recovered_Carts_Admin.php';
 require_once GM2_PLUGIN_DIR . 'admin/class-gm2-ac-table.php';
 require_once GM2_PLUGIN_DIR . 'admin/class-gm2-bulk-ai-list-table.php';
 require_once GM2_PLUGIN_DIR . 'admin/class-gm2-bulk-ai-tax-list-table.php';
+require_once GM2_PLUGIN_DIR . 'admin/Gm2_Model_Export_Admin.php';
 require_once GM2_PLUGIN_DIR . 'public/Gm2_Abandoned_Carts_Public.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_REST_Visibility.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_REST_Rate_Limiter.php';
