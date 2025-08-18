@@ -787,9 +787,22 @@ function gm2_get_meta_value($object_id, $key, $context_type, $field, $type = 'po
 }
 
 /**
- * Queue a background job to regenerate attachment metadata.
+ * Enqueue an asynchronous action using Action Scheduler or WP-Cron.
  *
- * Uses Action Scheduler when available, otherwise falls back to WP-Cron.
+ * @param string $hook  Hook name to trigger.
+ * @param array  $args  Optional arguments for the hook.
+ * @param string $group Optional group for Action Scheduler.
+ */
+function gm2_enqueue_async_action($hook, $args = [], $group = 'gm2') {
+    if (function_exists('as_enqueue_async_action')) {
+        as_enqueue_async_action($hook, $args, $group);
+    } else {
+        wp_schedule_single_event(time(), $hook, $args);
+    }
+}
+
+/**
+ * Queue a background job to regenerate attachment metadata.
  *
  * @param int $attachment_id Attachment ID.
  */
@@ -798,11 +811,20 @@ function gm2_queue_thumbnail_regeneration($attachment_id) {
         return;
     }
 
-    if (function_exists('as_enqueue_async_action')) {
-        as_enqueue_async_action('gm2_generate_thumbnails', [ $attachment_id ], 'gm2');
-    } else {
-        wp_schedule_single_event(time(), 'gm2_generate_thumbnails', [ $attachment_id ]);
+    gm2_enqueue_async_action('gm2_generate_thumbnails', [ $attachment_id ]);
+}
+
+/**
+ * Queue a background job to optimize an image attachment.
+ *
+ * @param int $attachment_id Attachment ID.
+ */
+function gm2_queue_image_optimization($attachment_id) {
+    if (!wp_attachment_is_image($attachment_id)) {
+        return;
     }
+
+    gm2_enqueue_async_action('gm2_optimize_image', [ $attachment_id ]);
 }
 
 /**

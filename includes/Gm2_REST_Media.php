@@ -9,6 +9,7 @@ class Gm2_REST_Media {
     public static function init(): void {
         add_action('rest_api_init', [ __CLASS__, 'register_routes' ]);
         add_action('gm2_generate_thumbnails', [ __CLASS__, 'generate_thumbnails' ]);
+        add_action('gm2_optimize_image', [ __CLASS__, 'optimize_image' ]);
     }
 
     public static function register_routes(): void {
@@ -47,6 +48,14 @@ class Gm2_REST_Media {
         if (!is_wp_error($metadata)) {
             wp_update_attachment_metadata($id, $metadata);
         }
+    }
+
+    public static function optimize_image($id): void {
+        $file = get_attached_file($id);
+        if (!$file) {
+            return;
+        }
+        do_action('gm2_optimize_image_file', $file, $id);
     }
 
     public static function get_schema(): array {
