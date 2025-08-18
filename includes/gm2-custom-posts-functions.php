@@ -298,20 +298,36 @@ function gm2_validate_field($key, $field, $value, $object_id = 0, $context_type 
         }
     }
 
-    if (($field['type'] ?? '') === 'media' && $value) {
-        if (!empty($field['allowed_types'])) {
-            $mime    = get_post_mime_type($value);
-            $allowed = array_map('strtolower', (array) $field['allowed_types']);
-            if ($mime && !in_array(strtolower($mime), $allowed, true)) {
-                $msg = $messages['file_type'] ?? __('Invalid file type.', 'gm2-wordpress-suite');
-                return new WP_Error('gm2_file_type', $msg);
+    if (in_array($type, ['media', 'file', 'audio', 'video', 'gallery'], true) && $value) {
+        $ids = is_array($value) ? $value : explode(',', (string) $value);
+        $ids = array_filter(array_map('intval', $ids));
+        $allowed = array_map('strtolower', (array) ($field['allowed_types'] ?? []));
+        if (!$allowed) {
+            if ($type === 'gallery') {
+                $allowed = ['image'];
+            } elseif ($type === 'audio') {
+                $allowed = ['audio'];
+            } elseif ($type === 'video') {
+                $allowed = ['video'];
             }
         }
-        if (!empty($field['max_size'])) {
-            $file = get_attached_file($value);
-            if ($file && filesize($file) > $field['max_size']) {
-                $msg = $messages['file_size'] ?? __('File is too large.', 'gm2-wordpress-suite');
-                return new WP_Error('gm2_file_size', $msg);
+        foreach ($ids as $id) {
+            if ($allowed) {
+                $mime = get_post_mime_type($id);
+                $mime = $mime ? strtolower($mime) : '';
+                $top  = strstr($mime, '/', true);
+                $is_allowed = in_array($mime, $allowed, true) || ($top && in_array($top, $allowed, true));
+                if (!$is_allowed) {
+                    $msg = $messages['file_type'] ?? __('Invalid file type.', 'gm2-wordpress-suite');
+                    return new WP_Error('gm2_file_type', $msg);
+                }
+            }
+            if (!empty($field['max_size'])) {
+                $file = get_attached_file($id);
+                if ($file && filesize($file) > $field['max_size']) {
+                    $msg = $messages['file_size'] ?? __('File is too large.', 'gm2-wordpress-suite');
+                    return new WP_Error('gm2_file_size', $msg);
+                }
             }
         }
     }
