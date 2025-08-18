@@ -7,4 +7,6 @@ register_post_type( 'gm2_directory', [
     'label' => 'Directory',
     'public' => true,
 ] );
+
+echo gm2_schema_tooltip( 'Business address', 'Address' );
 ```
