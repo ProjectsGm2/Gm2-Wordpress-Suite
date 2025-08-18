@@ -84,6 +84,120 @@ class Gm2_Model_CLI extends \WP_CLI_Command {
     }
 
     /**
+     * Create a CPT, taxonomy or field group.
+     *
+     * ## OPTIONS
+     *
+     * <type>
+     * : Model type to create. Accepts `cpt`, `taxonomy` or `field`.
+     *
+     * [<args>...]
+     * : Additional arguments passed to the underlying command.
+     */
+    public function create( $args, $assoc_args ) {
+        $type = $args[0] ?? '';
+        if ( ! $type ) {
+            \WP_CLI::error( 'Usage: wp gm2 model create <cpt|taxonomy|field> ...' );
+        }
+
+        array_shift( $args );
+        switch ( $type ) {
+            case 'cpt':
+            case 'post-type':
+                $this->cpt_create( $args, $assoc_args );
+                break;
+            case 'taxonomy':
+                $this->taxonomy_create( $args, $assoc_args );
+                break;
+            case 'field':
+            case 'field-group':
+                $this->field_create( $args, $assoc_args );
+                break;
+            default:
+                \WP_CLI::error( 'Unknown type. Use cpt, taxonomy or field.' );
+        }
+    }
+
+    /**
+     * Update an existing CPT, taxonomy or field group.
+     *
+     * ## OPTIONS
+     *
+     * <type>
+     * : Model type to update. Accepts `cpt`, `taxonomy` or `field`.
+     *
+     * [<args>...]
+     * : Additional arguments passed to the underlying command.
+     */
+    public function update( $args, $assoc_args ) {
+        $type = $args[0] ?? '';
+        if ( ! $type ) {
+            \WP_CLI::error( 'Usage: wp gm2 model update <cpt|taxonomy|field> ...' );
+        }
+
+        array_shift( $args );
+        switch ( $type ) {
+            case 'cpt':
+            case 'post-type':
+                $this->cpt_update( $args, $assoc_args );
+                break;
+            case 'taxonomy':
+                $this->taxonomy_update( $args, $assoc_args );
+                break;
+            case 'field':
+            case 'field-group':
+                $this->field_update( $args, $assoc_args );
+                break;
+            default:
+                \WP_CLI::error( 'Unknown type. Use cpt, taxonomy or field.' );
+        }
+    }
+
+    /**
+     * Modify an existing CPT, taxonomy or field group.
+     *
+     * This is an alias of the `update` subcommand.
+     */
+    public function modify( $args, $assoc_args ) {
+        $this->update( $args, $assoc_args );
+    }
+
+    /**
+     * Delete a CPT, taxonomy or field group.
+     *
+     * ## OPTIONS
+     *
+     * <type>
+     * : Model type to delete. Accepts `cpt`, `taxonomy` or `field`.
+     *
+     * [<args>...]
+     * : Additional arguments passed to the underlying command.
+     */
+    public function delete( $args, $assoc_args ) {
+        $type = $args[0] ?? '';
+        if ( ! $type ) {
+            \WP_CLI::error( 'Usage: wp gm2 model delete <cpt|taxonomy|field> ...' );
+        }
+
+        array_shift( $args );
+        switch ( $type ) {
+            case 'cpt':
+            case 'post-type':
+                $this->cpt_delete( $args, $assoc_args );
+                break;
+            case 'taxonomy':
+                $this->taxonomy_delete( $args, $assoc_args );
+                break;
+            case 'field':
+            case 'field-group':
+                $this->field_delete( $args, $assoc_args );
+                break;
+            default:
+                \WP_CLI::error( 'Unknown type. Use cpt, taxonomy or field.' );
+        }
+    }
+
+    /**
      * Create a custom post type.
      *
      * ## OPTIONS
