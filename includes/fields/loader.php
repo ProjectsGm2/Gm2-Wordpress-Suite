@@ -24,6 +24,7 @@ require_once __DIR__ . '/class-field-datetime.php';
 require_once __DIR__ . '/class-field-daterange.php';
 require_once __DIR__ . '/class-field-wysiwyg.php';
 require_once __DIR__ . '/class-field-repeater.php';
+require_once __DIR__ . '/class-field-flexible.php';
 require_once __DIR__ . '/class-field-group.php';
 require_once __DIR__ . '/class-field-relationship.php';
 require_once __DIR__ . '/class-field-geospatial.php';
@@ -69,6 +70,7 @@ function gm2_register_default_field_types() {
     gm2_register_field_type( 'daterange', 'GM2_Field_Daterange' );
     gm2_register_field_type( 'wysiwyg', 'GM2_Field_Wysiwyg' );
     gm2_register_field_type( 'repeater', 'GM2_Field_Repeater' );
+    gm2_register_field_type( 'flexible', 'GM2_Field_Flexible' );
     gm2_register_field_type( 'group', 'GM2_Field_Group' );
     gm2_register_field_type( 'relationship', 'GM2_Field_Relationship' );
     gm2_register_field_type( 'geo', 'GM2_Field_Geospatial' );

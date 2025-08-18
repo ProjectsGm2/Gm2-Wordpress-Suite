@@ -1,6 +1,7 @@
 jQuery(function($){
     var fields = gm2CPTFields.fields || [];
     var args   = gm2CPTFields.args || [];
+    var flexTypes = [];
 
     // Ensure textarea, toggle and media-based field types are available in the selector.
     var typeSelect = $('#gm2-field-type');
@@ -65,10 +66,28 @@ jQuery(function($){
         });
     }
 
+    function renderFlexTypes(){
+        var wrap = $('#gm2-flexible-types').empty();
+        if(!flexTypes.length){
+            wrap.append('<p>'+esc(gm2CPTFields.noFlex || 'No row types')+'</p>');
+            return;
+        }
+        $.each(flexTypes, function(i, ft){
+            var row = $('<div class="gm2-flex-type" data-index="'+i+'">\
+<input type="text" class="gm2-flex-type-name" placeholder="Slug" value="'+esc(ft.name || '')+'" /> \
+<input type="text" class="gm2-flex-type-label" placeholder="Label" value="'+esc(ft.label || '')+'" /> \
+<button type="button" class="button gm2-flex-type-up">&#8593;</button> \
+<button type="button" class="button gm2-flex-type-down">&#8595;</button> \
+<button type="button" class="button gm2-flex-type-remove">&times;</button></div>');
+            wrap.append(row);
+        });
+    }
+
     function toggleFieldOptions(type){
         $('#gm2-field-date-options').toggle(type === 'date');
         $('#gm2-field-wysiwyg-options').toggle(type === 'wysiwyg');
         $('#gm2-field-repeater-options').toggle(type === 'repeater');
+        $('#gm2-field-flexible-options').toggle(type === 'flexible');
         $('#gm2-field-select-options').toggle(type === 'select');
     }
 
@@ -99,6 +118,8 @@ jQuery(function($){
         $('#gm2-field-wysiwyg-rows').val(data ? data.wysiwyg_rows || '' : '');
         $('#gm2-field-repeater-min').val(data ? data.min_rows || '' : '');
         $('#gm2-field-repeater-max').val(data ? data.max_rows || '' : '');
+        flexTypes = data ? (data.layouts || []) : [];
+        renderFlexTypes();
         var targets = fields.map(function(f){ return f.slug; });
         targets.push('page_id','post_id');
         gm2Conditions.init($('#gm2-field-conditions'), { targets: targets, data: data ? data.conditions : [] });
@@ -259,6 +280,8 @@ jQuery(function($){
         } else if(obj.type === 'repeater'){
             obj.min_rows = $('#gm2-field-repeater-min').val();
             obj.max_rows = $('#gm2-field-repeater-max').val();
+        } else if(obj.type === 'flexible'){
+            obj.layouts = flexTypes;
         } else if(obj.type === 'select'){
             obj.multiple = $('#gm2-field-multiple').is(':checked');
         }
@@ -315,6 +338,40 @@ jQuery(function($){
         var idx = $(this).data('index');
         args.splice(idx,1);
         saveAll();
+    });
+
+    $('#gm2-field-flexible-options').on('click', '.gm2-flex-type-add', function(){
+        flexTypes.push({ name:'', label:'' });
+        renderFlexTypes();
+    });
+    $('#gm2-flexible-types').on('click', '.gm2-flex-type-remove', function(){
+        var idx = $(this).closest('.gm2-flex-type').data('index');
+        flexTypes.splice(idx,1);
+        renderFlexTypes();
+    });
+    $('#gm2-flexible-types').on('click', '.gm2-flex-type-up', function(){
+        var idx = $(this).closest('.gm2-flex-type').data('index');
+        if(idx > 0){
+            var tmp = flexTypes[idx-1];
+            flexTypes[idx-1] = flexTypes[idx];
+            flexTypes[idx] = tmp;
+            renderFlexTypes();
+        }
+    });
+    $('#gm2-flexible-types').on('click', '.gm2-flex-type-down', function(){
+        var idx = $(this).closest('.gm2-flex-type').data('index');
+        if(idx < flexTypes.length-1){
+            var tmp = flexTypes[idx+1];
+            flexTypes[idx+1] = flexTypes[idx];
+            flexTypes[idx] = tmp;
+            renderFlexTypes();
+        }
+    });
+    $('#gm2-flexible-types').on('input', '.gm2-flex-type-name, .gm2-flex-type-label', function(){
+        var row = $(this).closest('.gm2-flex-type');
+        var idx = row.data('index');
+        flexTypes[idx].name = row.find('.gm2-flex-type-name').val();
+        flexTypes[idx].label = row.find('.gm2-flex-type-label').val();
     });
 
     // Media uploader for media field type
