@@ -21,6 +21,22 @@ define('GM2_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('GM2_CHATGPT_LOG_FILE', GM2_PLUGIN_DIR . 'chatgpt.log');
 define('GM2_CONTENT_RULES_VERSION', 2);
 define('GM2_GUIDELINE_RULES_VERSION', 2);
+if (!defined('GM2_ENV')) {
+    $env = getenv('GM2_ENV');
+    if ($env === false || $env === '') {
+        $env = get_option('gm2_env', 'production');
+    }
+    define('GM2_ENV', $env);
+}
+
+/**
+ * Retrieve the current environment for the plugin.
+ *
+ * @return string
+ */
+function gm2_get_environment() {
+    return apply_filters('gm2_env', GM2_ENV);
+}
 if (!defined('GM2_GCLOUD_PROJECT_ID')) {
     $project = getenv('GM2_GCLOUD_PROJECT_ID');
     if ($project === false || $project === '') {
@@ -649,6 +665,37 @@ function gm2_plugin_action_links($links) {
     return $links;
 }
 add_filter('plugin_action_links_' . plugin_basename(__FILE__), 'gm2_plugin_action_links');
+
+add_action('init', 'gm2_apply_model_lock_by_env', 1);
+/**
+ * Ensure the model editor is locked in production environments.
+ */
+function gm2_apply_model_lock_by_env() {
+    $env    = gm2_get_environment();
+    $locked = ($env === 'production');
+    $locked = apply_filters('gm2_model_locked', $locked, $env);
+    $desired = $locked ? 1 : 0;
+    if ((int) get_option('gm2_model_locked') !== $desired) {
+        update_option('gm2_model_locked', $desired);
+    }
+}
+
+add_action('admin_bar_menu', 'gm2_add_env_to_admin_bar', 100);
+/**
+ * Display the current environment in the WordPress admin bar.
+ *
+ * @param \WP_Admin_Bar $wp_admin_bar Admin bar instance.
+ */
+function gm2_add_env_to_admin_bar($wp_admin_bar) {
+    if (!current_user_can('manage_options')) {
+        return;
+    }
+    $env = gm2_get_environment();
+    $wp_admin_bar->add_node([
+        'id'    => 'gm2-env',
+        'title' => sprintf('GM2 %s', esc_html($env)),
+    ]);
+}
 
 if (defined('WP_CLI') && WP_CLI) {
     require_once GM2_PLUGIN_DIR . 'includes/cli/class-gm2-cli.php';
