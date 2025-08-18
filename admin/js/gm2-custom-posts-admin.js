@@ -62,6 +62,7 @@ jQuery(function($){
         $('#gm2-field-date-options').toggle(type === 'date');
         $('#gm2-field-wysiwyg-options').toggle(type === 'wysiwyg');
         $('#gm2-field-repeater-options').toggle(type === 'repeater');
+        $('#gm2-field-select-options').toggle(type === 'select');
     }
 
     function showFieldForm(data, index){
@@ -84,6 +85,7 @@ jQuery(function($){
         $('#gm2-field-quick-edit').prop('checked', data ? !!data.quick_edit : false);
         $('#gm2-field-bulk-edit').prop('checked', data ? !!data.bulk_edit : false);
         $('#gm2-field-filter').prop('checked', data ? !!data.filter : false);
+        $('#gm2-field-multiple').prop('checked', data ? !!data.multiple : false);
         $('#gm2-field-date-min').val(data ? data.date_min || '' : '');
         $('#gm2-field-date-max').val(data ? data.date_max || '' : '');
         $('#gm2-field-wysiwyg-media').prop('checked', data ? !!data.wysiwyg_media : false);
@@ -250,6 +252,8 @@ jQuery(function($){
         } else if(obj.type === 'repeater'){
             obj.min_rows = $('#gm2-field-repeater-min').val();
             obj.max_rows = $('#gm2-field-repeater-max').val();
+        } else if(obj.type === 'select'){
+            obj.multiple = $('#gm2-field-multiple').is(':checked');
         }
         if(idx === ''){ fields.push(obj); } else { fields[idx] = obj; }
         saveAll(function(){ $('#gm2-field-form').hide(); });
