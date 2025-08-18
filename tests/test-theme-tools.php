@@ -42,5 +42,28 @@ class ThemeToolsTest extends WP_UnitTestCase {
         $this->assertSame('#ff0000', $data['settings']['color']['palette'][0]['color']);
         $this->assertSame('Roboto', $data['settings']['typography']['fontFamilies'][0]['fontFamily']);
     }
+
+    public function test_theme_json_references_are_updated() {
+        // Ensure clean slate.
+        $theme_json = get_stylesheet_directory() . '/theme.json';
+        if (file_exists($theme_json)) {
+            unlink($theme_json);
+        }
+
+        register_post_type('book', ['public' => true]);
+        update_option('gm2_enable_block_templates', '1');
+        update_option('gm2_field_groups', [
+            [ 'pattern' => 'sample', 'fields' => [] ],
+        ]);
+
+        gm2_maybe_generate_block_templates();
+
+        $this->assertFileExists($theme_json);
+        $data = json_decode(file_get_contents($theme_json), true);
+        $templates = wp_list_pluck($data['customTemplates'], 'name');
+        $this->assertContains('single-book', $templates);
+        $this->assertContains('archive-book', $templates);
+        $this->assertContains('gm2/sample', $data['patterns']);
+    }
 }
 

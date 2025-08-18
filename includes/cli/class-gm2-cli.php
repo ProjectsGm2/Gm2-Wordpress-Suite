@@ -108,7 +108,16 @@ class Gm2_CLI extends \WP_CLI_Command {
                 } else {
                     \WP_CLI::success( 'theme.json already exists at ' . $path );
                 }
-                \WP_CLI::line( 'Hint: update theme.json to reference custom templates and patterns.' );
+                $label = ucwords( str_replace( '-', ' ', $slug ) );
+                $sample = [
+                    'customTemplates' => [
+                        [ 'name' => 'single-' . $slug, 'title' => 'Single ' . $label ],
+                        [ 'name' => 'archive-' . $slug, 'title' => 'Archive ' . $label ],
+                    ],
+                    'patterns' => [ 'gm2/' . $slug ],
+                ];
+                \WP_CLI::line( 'Hint: add the following to theme.json to reference custom templates and patterns:' );
+                \WP_CLI::line( json_encode( $sample, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ) );
                 break;
             default:
                 \WP_CLI::error( 'Usage: wp gm2 scaffold <twig|blade|theme-json> <slug>' );
