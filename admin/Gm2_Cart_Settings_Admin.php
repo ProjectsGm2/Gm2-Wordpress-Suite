@@ -34,13 +34,25 @@ class Gm2_Cart_Settings_Admin {
             wp_die( esc_html__( 'Permission denied', 'gm2-wordpress-suite' ) );
         }
 
-        $notice = '';
+        $notice             = '';
         $enable_phone_login = get_option('gm2_enable_phone_login', '0');
+        $currency           = get_option('gm2_currency', 'USD');
+        $stock_min          = (int) get_option('gm2_stock_min', 0);
+        $stock_max          = (int) get_option('gm2_stock_max', 0);
+        $sku_pattern        = get_option('gm2_sku_pattern', '^[A-Z0-9-]+$');
         if (isset($_POST['gm2_cart_settings_nonce']) && wp_verify_nonce($_POST['gm2_cart_settings_nonce'], 'gm2_cart_settings_save')) {
             $popup_id = isset($_POST['gm2_cart_popup_id']) ? absint($_POST['gm2_cart_popup_id']) : 0;
             update_option('gm2_cart_popup_id', $popup_id);
             $enable_phone_login = isset($_POST['gm2_enable_phone_login']) ? '1' : '0';
             update_option('gm2_enable_phone_login', $enable_phone_login);
+            $currency    = isset($_POST['gm2_currency']) ? sanitize_text_field($_POST['gm2_currency']) : $currency;
+            update_option('gm2_currency', $currency);
+            $stock_min   = isset($_POST['gm2_stock_min']) ? (int) $_POST['gm2_stock_min'] : 0;
+            $stock_max   = isset($_POST['gm2_stock_max']) ? (int) $_POST['gm2_stock_max'] : 0;
+            update_option('gm2_stock_min', $stock_min);
+            update_option('gm2_stock_max', $stock_max);
+            $sku_pattern = isset($_POST['gm2_sku_pattern']) ? sanitize_text_field($_POST['gm2_sku_pattern']) : $sku_pattern;
+            update_option('gm2_sku_pattern', $sku_pattern);
             $notice = '<div class="updated notice"><p>' . esc_html__( 'Settings saved.', 'gm2-wordpress-suite' ) . '</p></div>';
         }
 
@@ -81,6 +93,24 @@ class Gm2_Cart_Settings_Admin {
         echo '</td></tr>';
         echo '<tr><th scope="row"><label for="gm2_enable_phone_login">' . esc_html__( 'Enable phone number', 'gm2-wordpress-suite' ) . '</label></th><td>';
         echo '<input type="checkbox" name="gm2_enable_phone_login" id="gm2_enable_phone_login" value="1"' . checked($enable_phone_login, '1', false) . ' />';
+        echo '</td></tr>';
+        echo '<tr><th scope="row"><label for="gm2_currency">' . esc_html__( 'Currency', 'gm2-wordpress-suite' ) . '</label></th><td>';
+        $currencies = ['USD','EUR','GBP','JPY'];
+        echo '<select name="gm2_currency" id="gm2_currency">';
+        foreach ($currencies as $c) {
+            $sel = selected($currency, $c, false);
+            echo '<option value="' . esc_attr($c) . '"' . $sel . '>' . esc_html($c) . '</option>';
+        }
+        echo '</select>';
+        echo '</td></tr>';
+        echo '<tr><th scope="row"><label for="gm2_stock_min">' . esc_html__( 'Min Stock', 'gm2-wordpress-suite' ) . '</label></th><td>';
+        echo '<input type="number" name="gm2_stock_min" id="gm2_stock_min" value="' . esc_attr($stock_min) . '" />';
+        echo '</td></tr>';
+        echo '<tr><th scope="row"><label for="gm2_stock_max">' . esc_html__( 'Max Stock', 'gm2-wordpress-suite' ) . '</label></th><td>';
+        echo '<input type="number" name="gm2_stock_max" id="gm2_stock_max" value="' . esc_attr($stock_max) . '" />';
+        echo '</td></tr>';
+        echo '<tr><th scope="row"><label for="gm2_sku_pattern">' . esc_html__( 'SKU Pattern', 'gm2-wordpress-suite' ) . '</label></th><td>';
+        echo '<input type="text" name="gm2_sku_pattern" id="gm2_sku_pattern" value="' . esc_attr($sku_pattern) . '" />';
         echo '</td></tr>';
         echo '</tbody></table>';
         submit_button();
