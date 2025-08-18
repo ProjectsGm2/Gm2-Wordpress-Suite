@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-const GM2_CUSTOM_TABLES_VERSION = 3;
+const GM2_CUSTOM_TABLES_VERSION = 4;
 
 /**
  * Determine whether to use custom tables.
@@ -82,11 +82,15 @@ function gm2_custom_tables_maybe_install() {
         id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
         object_id bigint(20) unsigned NOT NULL,
         field_id bigint(20) unsigned NOT NULL,
+        term_id bigint(20) unsigned NOT NULL DEFAULT 0,
         PRIMARY KEY  (id),
         KEY post_post (object_id, field_id),
         KEY post_term (field_id, object_id),
+        KEY term_post (term_id, object_id),
+        KEY term_term (term_id, field_id),
         KEY field_id (field_id),
-        KEY object_id (object_id)
+        KEY object_id (object_id),
+        KEY term_id (term_id)
     ) $charset_collate;";
     dbDelta( $sql );
 
@@ -98,8 +102,41 @@ function gm2_custom_tables_maybe_install() {
     if ( ! in_array( 'post_term', $indexes, true ) ) {
         $wpdb->query( "ALTER TABLE $relations_table ADD KEY post_term (field_id, object_id)" );
     }
+    if ( ! in_array( 'term_post', $indexes, true ) ) {
+        $wpdb->query( "ALTER TABLE $relations_table ADD KEY term_post (term_id, object_id)" );
+    }
+    if ( ! in_array( 'term_term', $indexes, true ) ) {
+        $wpdb->query( "ALTER TABLE $relations_table ADD KEY term_term (term_id, field_id)" );
+    }
+
+    // Populate term_id column on upgrade from older versions.
+    if ( $current < 4 ) {
+        gm2_relations_populate_term_ids();
+    }
 
     update_option( 'gm2_custom_tables_version', GM2_CUSTOM_TABLES_VERSION );
+}
+
+/**
+ * Populate the term_id column for existing relations.
+ */
+function gm2_relations_populate_term_ids() {
+    global $wpdb;
+
+    $relations_table = gm2_get_relations_table_name( true );
+    $fields_table    = gm2_get_fields_table_name( true );
+
+    $taxonomies = get_taxonomies();
+    if ( empty( $taxonomies ) ) {
+        return;
+    }
+
+    $placeholders = implode( ', ', array_fill( 0, count( $taxonomies ), '%s' ) );
+
+    $sql = "UPDATE $relations_table r INNER JOIN $fields_table f ON r.field_id = f.id SET r.term_id = CAST(f.value AS UNSIGNED) WHERE r.term_id = 0 AND f.name IN ($placeholders)";
+
+    // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+    $wpdb->query( $wpdb->prepare( $sql, $taxonomies ) );
 }
 
 /**
@@ -189,13 +226,17 @@ function gm2_fields_delete( $id ) {
  *
  * @param int $object_id Object ID.
  * @param int $field_id  Field ID.
+ * @param int $term_id   Term ID.
  * @return int Insert ID.
  */
-function gm2_relations_create( $object_id, $field_id ) {
+function gm2_relations_create( $object_id, $field_id, $term_id = 0 ) {
     global $wpdb;
     $table = gm2_get_relations_table_name();
-    $wpdb->insert( $table, [ 'object_id' => $object_id, 'field_id' => $field_id ], [ '%d', '%d' ] );
+    $wpdb->insert( $table, [ 'object_id' => $object_id, 'field_id' => $field_id, 'term_id' => $term_id ], [ '%d', '%d', '%d' ] );
     wp_cache_delete( "obj_$object_id", 'gm2_relations' );
+    if ( $term_id ) {
+        wp_cache_delete( "term_$term_id", 'gm2_relations' );
+    }
     return (int) $wpdb->insert_id;
 }
 
@@ -219,18 +260,41 @@ function gm2_relations_get_by_object( $object_id ) {
 }
 
 /**
+ * Get relations for a term.
+ *
+ * @param int $term_id Term ID.
+ * @return array
+ */
+function gm2_relations_get_by_term( $term_id ) {
+    $cache_key = 'term_' . (int) $term_id;
+    $cached    = wp_cache_get( $cache_key, 'gm2_relations' );
+    if ( false !== $cached ) {
+        return $cached;
+    }
+    global $wpdb;
+    $table  = gm2_get_relations_table_name();
+    $result = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM $table WHERE term_id = %d", $term_id ), ARRAY_A );
+    wp_cache_set( $cache_key, $result, 'gm2_relations' );
+    return $result;
+}
+
+/**
  * Delete a relation.
  *
  * @param int $object_id Object ID.
  * @param int $field_id  Field ID.
+ * @param int $term_id   Term ID.
  * @return bool
  */
-function gm2_relations_delete( $object_id, $field_id ) {
+function gm2_relations_delete( $object_id, $field_id, $term_id = 0 ) {
     global $wpdb;
     $table   = gm2_get_relations_table_name();
-    $deleted = false !== $wpdb->delete( $table, [ 'object_id' => $object_id, 'field_id' => $field_id ], [ '%d', '%d' ] );
+    $deleted = false !== $wpdb->delete( $table, [ 'object_id' => $object_id, 'field_id' => $field_id, 'term_id' => $term_id ], [ '%d', '%d', '%d' ] );
     if ( $deleted ) {
         wp_cache_delete( "obj_$object_id", 'gm2_relations' );
+        if ( $term_id ) {
+            wp_cache_delete( "term_$term_id", 'gm2_relations' );
+        }
     }
     return $deleted;
 }
@@ -279,7 +343,7 @@ function gm2_custom_tables_backfill() {
             $field_id = (int) $wpdb->insert_id;
         }
 
-        $wpdb->insert( $relations_table, [ 'object_id' => (int) $row['post_id'], 'field_id' => (int) $field_id ], [ '%d', '%d' ] );
+        $wpdb->insert( $relations_table, [ 'object_id' => (int) $row['post_id'], 'field_id' => (int) $field_id, 'term_id' => 0 ], [ '%d', '%d', '%d' ] );
         $inserted++;
     }
 
@@ -295,7 +359,7 @@ function gm2_custom_tables_backfill() {
             $field_id = (int) $wpdb->insert_id;
         }
 
-        $wpdb->insert( $relations_table, [ 'object_id' => (int) $row['object_id'], 'field_id' => (int) $field_id ], [ '%d', '%d' ] );
+        $wpdb->insert( $relations_table, [ 'object_id' => (int) $row['object_id'], 'field_id' => (int) $field_id, 'term_id' => (int) $row['term_id'] ], [ '%d', '%d', '%d' ] );
         $inserted++;
     }
 
