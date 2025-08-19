@@ -4,16 +4,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 class GM2_Field_Select extends GM2_Field {
-    protected function render_field( $value, $object_id, $context_type ) {
+    protected function render_field( $value, $object_id, $context_type, $placeholder = '' ) {
         $options  = $this->args['options'] ?? array();
         $multiple = ! empty( $this->args['multiple'] );
         $disabled = disabled( $this->args['disabled'] ?? false, true, false );
+        $placeholder_attr = $placeholder !== '' ? ' placeholder="' . esc_attr( $placeholder ) . '"' : '';
 
         $name    = esc_attr( $this->key ) . ( $multiple ? '[]' : '' );
         $multi   = $multiple ? ' multiple' : '';
         $current = $multiple ? (array) $value : $value;
 
-        echo '<select name="' . $name . '"' . $multi . $disabled . '>';
+        echo '<select name="' . $name . '"' . $multi . $disabled . $placeholder_attr . '>';
         foreach ( $options as $ov => $ol ) {
             $selected = $multiple
                 ? selected( in_array( $ov, $current, true ), true, false )

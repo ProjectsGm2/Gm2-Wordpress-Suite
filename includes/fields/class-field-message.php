@@ -4,7 +4,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 class GM2_Field_Message extends GM2_Field {
-    protected function render_field( $value, $object_id, $context_type ) {
+    protected function render_field( $value, $object_id, $context_type, $placeholder = '' ) {
         $disabled = $this->args['disabled'] ?? false ? ' data-disabled="1"' : '';
         echo '<div class="gm2-field-message"' . $disabled . '>' . esc_html( $this->args['message'] ?? '' ) . '</div>';
     }

@@ -22,9 +22,10 @@ class GM2_Field_Icon extends GM2_Field {
         }
     }
 
-    protected function render_field( $value, $object_id, $context_type ) {
+    protected function render_field( $value, $object_id, $context_type, $placeholder = '' ) {
         $value    = is_string( $value ) ? $value : '';
         $disabled = disabled( $this->args['disabled'] ?? false, true, false );
+        $placeholder_attr = $placeholder !== '' ? ' placeholder="' . esc_attr( $placeholder ) . '"' : '';
 
         if ( 'public' === $context_type ) {
             echo '<span class="gm2-icon-preview dashicons ' . esc_attr( $value ) . '"></span>';
@@ -32,7 +33,7 @@ class GM2_Field_Icon extends GM2_Field {
         }
 
         echo '<div class="gm2-icon-field">';
-        echo '<input type="text" class="gm2-icon-input" name="' . esc_attr( $this->key ) . '" value="' . esc_attr( $value ) . '"' . $disabled . ' />';
+        echo '<input type="text" class="gm2-icon-input" name="' . esc_attr( $this->key ) . '" value="' . esc_attr( $value ) . '"' . $disabled . $placeholder_attr . ' />';
         echo '<span class="gm2-icon-preview dashicons ' . esc_attr( $value ) . '"></span>';
         echo '</div>';
     }

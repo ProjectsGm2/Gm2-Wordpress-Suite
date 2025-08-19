@@ -24,11 +24,12 @@ class GM2_Field_Gradient extends GM2_Field {
         }
     }
 
-    protected function render_field( $value, $object_id, $context_type ) {
+    protected function render_field( $value, $object_id, $context_type, $placeholder = '' ) {
         $value    = is_array( $value ) ? $value : array();
         $start    = $value['start'] ?? '';
         $end      = $value['end'] ?? '';
         $disabled = disabled( $this->args['disabled'] ?? false, true, false );
+        $placeholder_attr = $placeholder !== '' ? ' placeholder="' . esc_attr( $placeholder ) . '"' : '';
 
         if ( 'public' === $context_type ) {
             $style = ( $start && $end ) ? ' style="background: linear-gradient(' . esc_attr( $start ) . ',' . esc_attr( $end ) . ');"' : '';
@@ -37,8 +38,8 @@ class GM2_Field_Gradient extends GM2_Field {
         }
 
         echo '<div class="gm2-gradient-field">';
-        echo '<input type="text" class="gm2-color gm2-gradient-start" name="' . esc_attr( $this->key ) . '[start]" value="' . esc_attr( $start ) . '"' . $disabled . ' />';
-        echo '<input type="text" class="gm2-color gm2-gradient-end" name="' . esc_attr( $this->key ) . '[end]" value="' . esc_attr( $end ) . '"' . $disabled . ' />';
+        echo '<input type="text" class="gm2-color gm2-gradient-start" name="' . esc_attr( $this->key ) . '[start]" value="' . esc_attr( $start ) . '"' . $disabled . $placeholder_attr . ' />';
+        echo '<input type="text" class="gm2-color gm2-gradient-end" name="' . esc_attr( $this->key ) . '[end]" value="' . esc_attr( $end ) . '"' . $disabled . $placeholder_attr . ' />';
         echo '<div class="gm2-gradient-preview"></div>';
         echo '</div>';
     }

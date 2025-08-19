@@ -26,10 +26,11 @@ class GM2_Field_Relationship extends GM2_Field {
         $this->sync     = in_array( $args['sync'] ?? 'two-way', array( 'none', 'one-way', 'two-way' ), true ) ? $args['sync'] : 'two-way';
     }
 
-    protected function render_field( $value, $object_id, $context_type ) {
+    protected function render_field( $value, $object_id, $context_type, $placeholder = '' ) {
         $vals     = is_array( $value ) ? $value : ( $value ? array( $value ) : array() );
         $disabled = disabled( $this->args['disabled'] ?? false, true, false );
-        echo '<input type="text" name="' . esc_attr( $this->key ) . '[]" value="' . esc_attr( implode( ',', $vals ) ) . '" class="gm2-relationship"' . $disabled . ' />';
+        $placeholder_attr = $placeholder !== '' ? ' placeholder="' . esc_attr( $placeholder ) . '"' : '';
+        echo '<input type="text" name="' . esc_attr( $this->key ) . '[]" value="' . esc_attr( implode( ',', $vals ) ) . '" class="gm2-relationship"' . $disabled . $placeholder_attr . ' />';
     }
 
     public function sanitize( $value ) {
