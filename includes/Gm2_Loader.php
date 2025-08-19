@@ -87,6 +87,9 @@ class Gm2_Loader {
         }
 
         if ($enable_ac) {
+            // Ensure the abandonment cron is always scheduled when the module is active.
+            Gm2_Abandoned_Carts::schedule_event();
+
             $ac = new Gm2_Abandoned_Carts();
             $ac->run();
 
