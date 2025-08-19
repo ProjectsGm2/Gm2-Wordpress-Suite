@@ -135,7 +135,7 @@
                 setFieldError('');
             };
             const editField = (i) => {
-                setField(data.fields[i]);
+                setField({ ...data.fields[i] });
                 setEditIndex(i);
                 setFieldError('');
             };
@@ -214,7 +214,7 @@
                 setTaxError('');
             };
             const editTax = (i) => {
-                setTax(data.taxonomies[i]);
+                setTax({ ...data.taxonomies[i] });
                 setEditIndex(i);
                 setTaxError('');
             };
