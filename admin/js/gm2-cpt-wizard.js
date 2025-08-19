@@ -50,11 +50,23 @@
         };
 
         const FieldsStep = () => {
-            const [ field, setField ] = useState({ label: '', slug: '', type: 'text' });
+            const [ field, setField ] = useState({ label: '', slug: '', type: '' });
+            const typeOptions = [
+                { label: 'Text', value: 'text' },
+                { label: 'Textarea', value: 'textarea' },
+                { label: 'Number', value: 'number' },
+                { label: 'Select', value: 'select' },
+                { label: 'Checkbox', value: 'checkbox' },
+                { label: 'Radio', value: 'radio' },
+                { label: 'Email', value: 'email' },
+                { label: 'URL', value: 'url' },
+                { label: 'Date', value: 'date' }
+            ];
+            const validTypes = typeOptions.map(o => o.value);
             const addField = () => {
-                if(!field.slug){ return; }
+                if(!field.slug || !validTypes.includes(field.type)){ return; }
                 setData({ ...data, fields: [ ...data.fields, field ] });
-                setField({ label: '', slug: '', type: 'text' });
+                setField({ label: '', slug: '', type: '' });
             };
             const removeField = (i) => {
                 const copy = data.fields.slice();
@@ -76,9 +88,10 @@
                     value: field.slug,
                     onChange: v => setField({ ...field, slug: v })
                 }),
-                el(TextControl, {
+                el(SelectControl, {
                     label: 'Field Type',
                     value: field.type,
+                    options: [ { label: 'Select Type', value: '' }, ...typeOptions ],
                     onChange: v => setField({ ...field, type: v })
                 }),
                 el(Button, { isPrimary: true, onClick: addField }, 'Add Field')
