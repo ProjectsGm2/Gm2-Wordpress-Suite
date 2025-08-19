@@ -51,6 +51,8 @@
 
         const FieldsStep = () => {
             const [ field, setField ] = useState({ label: '', slug: '', type: '' });
+            const [ editIndex, setEditIndex ] = useState(null);
+            const [ dragIndex, setDragIndex ] = useState(null);
             const typeOptions = [
                 { label: 'Text', value: 'text' },
                 { label: 'Textarea', value: 'textarea' },
@@ -65,17 +67,46 @@
             const validTypes = typeOptions.map(o => o.value);
             const addField = () => {
                 if(!field.slug || !validTypes.includes(field.type)){ return; }
-                setData({ ...data, fields: [ ...data.fields, field ] });
+                const copy = data.fields.slice();
+                if(editIndex !== null){
+                    copy[editIndex] = field;
+                } else {
+                    copy.push(field);
+                }
+                setData({ ...data, fields: copy });
                 setField({ label: '', slug: '', type: '' });
+                setEditIndex(null);
             };
             const removeField = (i) => {
                 const copy = data.fields.slice();
                 copy.splice(i,1);
                 setData({ ...data, fields: copy });
             };
+            const editField = (i) => {
+                setField(data.fields[i]);
+                setEditIndex(i);
+            };
+            const onDragStart = (i) => setDragIndex(i);
+            const onDragOver = (i) => {
+                if(dragIndex === null || dragIndex === i){ return; }
+                const updated = data.fields.slice();
+                const [moved] = updated.splice(dragIndex, 1);
+                updated.splice(i, 0, moved);
+                setDragIndex(i);
+                setData({ ...data, fields: updated });
+            };
+            const onDragEnd = () => setDragIndex(null);
             return el('div', {},
-                data.fields.map((f,i) => el('div', { key: i },
+                data.fields.map((f,i) => el('div', {
+                    key: i,
+                    draggable: true,
+                    onDragStart: () => onDragStart(i),
+                    onDragOver: e => { e.preventDefault(); onDragOver(i); },
+                    onDragEnd,
+                    className: 'gm2-sortable-item'
+                },
                     `${f.label} (${f.slug})`,
+                    el(Button, { isLink: true, onClick: () => editField(i) }, 'Edit'),
                     el(Button, { isLink: true, onClick: () => removeField(i) }, 'Delete')
                 )),
                 el(TextControl, {
@@ -94,25 +125,56 @@
                     options: [ { label: 'Select Type', value: '' }, ...typeOptions ],
                     onChange: v => setField({ ...field, type: v })
                 }),
-                el(Button, { isPrimary: true, onClick: addField }, 'Add Field')
+                el(Button, { isPrimary: true, onClick: addField }, editIndex !== null ? 'Update Field' : 'Add Field')
             );
         };
 
         const TaxStep = () => {
             const [ tax, setTax ] = useState({ slug: '', label: '' });
+            const [ editIndex, setEditIndex ] = useState(null);
+            const [ dragIndex, setDragIndex ] = useState(null);
             const addTax = () => {
                 if(!tax.slug){ return; }
-                setData({ ...data, taxonomies: [ ...data.taxonomies, tax ] });
+                const copy = data.taxonomies.slice();
+                if(editIndex !== null){
+                    copy[editIndex] = tax;
+                } else {
+                    copy.push(tax);
+                }
+                setData({ ...data, taxonomies: copy });
                 setTax({ slug: '', label: '' });
+                setEditIndex(null);
             };
             const removeTax = (i) => {
                 const copy = data.taxonomies.slice();
                 copy.splice(i,1);
                 setData({ ...data, taxonomies: copy });
             };
+            const editTax = (i) => {
+                setTax(data.taxonomies[i]);
+                setEditIndex(i);
+            };
+            const onDragStart = (i) => setDragIndex(i);
+            const onDragOver = (i) => {
+                if(dragIndex === null || dragIndex === i){ return; }
+                const updated = data.taxonomies.slice();
+                const [moved] = updated.splice(dragIndex, 1);
+                updated.splice(i, 0, moved);
+                setDragIndex(i);
+                setData({ ...data, taxonomies: updated });
+            };
+            const onDragEnd = () => setDragIndex(null);
             return el('div', {},
-                data.taxonomies.map((t,i) => el('div', { key: i },
+                data.taxonomies.map((t,i) => el('div', {
+                    key: i,
+                    draggable: true,
+                    onDragStart: () => onDragStart(i),
+                    onDragOver: e => { e.preventDefault(); onDragOver(i); },
+                    onDragEnd,
+                    className: 'gm2-sortable-item'
+                },
                     `${t.label} (${t.slug})`,
+                    el(Button, { isLink: true, onClick: () => editTax(i) }, 'Edit'),
                     el(Button, { isLink: true, onClick: () => removeTax(i) }, 'Delete')
                 )),
                 el(TextControl, {
@@ -125,7 +187,7 @@
                     value: tax.label,
                     onChange: v => setTax({ ...tax, label: v })
                 }),
-                el(Button, { isPrimary: true, onClick: addTax }, 'Add Taxonomy')
+                el(Button, { isPrimary: true, onClick: addTax }, editIndex !== null ? 'Update Taxonomy' : 'Add Taxonomy')
             );
         };
 
