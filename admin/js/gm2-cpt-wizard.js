@@ -1,5 +1,5 @@
 (function(wp){
-    const { createElement: el, useState } = wp.element;
+    const { createElement: el, useState, useEffect } = wp.element;
     const { render } = wp.element;
     const { Button, TextControl, SelectControl, PanelBody, Panel } = wp.components;
     const { dispatch } = wp.data;
@@ -9,6 +9,7 @@
         const steps = ['Post Type', 'Fields', 'Taxonomies', 'Review'];
         const [ step, setStep ] = useState(1);
         const [ data, setData ] = useState({ slug: '', label: '', fields: [], taxonomies: [] });
+        const [ rawSlug, setRawSlug ] = useState('');
         const [ currentModel, setCurrentModel ] = useState('');
         const [ stepOneErrors, setStepOneErrors ] = useState({});
 
@@ -42,6 +43,7 @@
             if(!slug){
                 setCurrentModel('');
                 setData({ slug: '', label: '', fields: [], taxonomies: [] });
+                setRawSlug('');
                 return;
             }
             const model = existing[slug] || {};
@@ -50,7 +52,12 @@
             setCurrentModel(slug);
             setStepOneErrors({});
             setData({ slug: slug, label: model.label || '', fields, taxonomies });
+            setRawSlug(slug);
         };
+
+        useEffect(() => {
+            setData(d => ({ ...d, slug: slugify(rawSlug) }));
+        }, [ rawSlug ]);
 
         const StepOne = () => {
             const options = [ { label: 'New', value: '' } ];
@@ -66,16 +73,19 @@
                 }),
                 el(TextControl, {
                     label: 'Post Type Slug',
-                    value: data.slug,
-                    onChange: v => { setData({ ...data, slug: slugify(v) }); setStepOneErrors(e => ({ ...e, slug: undefined })); },
+                    value: rawSlug,
+                    onChange: v => { setRawSlug(v); setStepOneErrors(e => ({ ...e, slug: undefined })); },
+                    onBlur: () => setRawSlug(slugify(rawSlug)),
                     help: stepOneErrors.slug
                 }),
                 el(TextControl, {
                     label: 'Label',
                     value: data.label,
                     onChange: v => {
-                        const newSlug = data.slug ? data.slug : slugify(v);
-                        setData({ ...data, label: v, slug: newSlug });
+                        setData(d => ({ ...d, label: v }));
+                        if(!rawSlug){
+                            setRawSlug(slugify(v));
+                        }
                         setStepOneErrors(e => ({ ...e, label: undefined, slug: undefined }));
                     },
                     help: stepOneErrors.label
