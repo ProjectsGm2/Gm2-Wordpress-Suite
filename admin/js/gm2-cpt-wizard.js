@@ -97,6 +97,7 @@
             const [ field, setField ] = useState({ label: '', slug: '', type: '' });
             const [ editIndex, setEditIndex ] = useState(null);
             const [ dragIndex, setDragIndex ] = useState(null);
+            const [ fieldError, setFieldError ] = useState('');
             const typeOptions = [
                 { label: 'Text', value: 'text' },
                 { label: 'Textarea', value: 'textarea' },
@@ -112,6 +113,11 @@
             const addField = () => {
                 if(!field.slug || !validTypes.includes(field.type)){ return; }
                 const copy = data.fields.slice();
+                const isDuplicate = copy.some((f,i) => f.slug === field.slug && i !== editIndex);
+                if(isDuplicate){
+                    setFieldError('Field slug must be unique');
+                    return;
+                }
                 if(editIndex !== null){
                     copy[editIndex] = field;
                 } else {
@@ -120,15 +126,18 @@
                 setData({ ...data, fields: copy });
                 setField({ label: '', slug: '', type: '' });
                 setEditIndex(null);
+                setFieldError('');
             };
             const removeField = (i) => {
                 const copy = data.fields.slice();
                 copy.splice(i,1);
                 setData({ ...data, fields: copy });
+                setFieldError('');
             };
             const editField = (i) => {
                 setField(data.fields[i]);
                 setEditIndex(i);
+                setFieldError('');
             };
             const onDragStart = (i) => setDragIndex(i);
             const onDragOver = (i) => {
@@ -161,7 +170,9 @@
                 el(TextControl, {
                     label: 'Field Slug',
                     value: field.slug,
-                    onChange: v => setField({ ...field, slug: v })
+                    onChange: v => setField({ ...field, slug: slugify(v) }),
+                    onBlur: () => setField({ ...field, slug: slugify(field.slug) }),
+                    help: fieldError
                 }),
                 el(SelectControl, {
                     label: 'Field Type',
@@ -177,9 +188,15 @@
             const [ tax, setTax ] = useState({ slug: '', label: '' });
             const [ editIndex, setEditIndex ] = useState(null);
             const [ dragIndex, setDragIndex ] = useState(null);
+            const [ taxError, setTaxError ] = useState('');
             const addTax = () => {
                 if(!tax.slug){ return; }
                 const copy = data.taxonomies.slice();
+                const isDuplicate = copy.some((t,i) => t.slug === tax.slug && i !== editIndex);
+                if(isDuplicate){
+                    setTaxError('Taxonomy slug must be unique');
+                    return;
+                }
                 if(editIndex !== null){
                     copy[editIndex] = tax;
                 } else {
@@ -188,15 +205,18 @@
                 setData({ ...data, taxonomies: copy });
                 setTax({ slug: '', label: '' });
                 setEditIndex(null);
+                setTaxError('');
             };
             const removeTax = (i) => {
                 const copy = data.taxonomies.slice();
                 copy.splice(i,1);
                 setData({ ...data, taxonomies: copy });
+                setTaxError('');
             };
             const editTax = (i) => {
                 setTax(data.taxonomies[i]);
                 setEditIndex(i);
+                setTaxError('');
             };
             const onDragStart = (i) => setDragIndex(i);
             const onDragOver = (i) => {
@@ -224,7 +244,9 @@
                 el(TextControl, {
                     label: 'Taxonomy Slug',
                     value: tax.slug,
-                    onChange: v => setTax({ ...tax, slug: v })
+                    onChange: v => setTax({ ...tax, slug: slugify(v) }),
+                    onBlur: () => setTax({ ...tax, slug: slugify(tax.slug) }),
+                    help: taxError
                 }),
                 el(TextControl, {
                     label: 'Taxonomy Label',
@@ -284,10 +306,10 @@
             const payload = new URLSearchParams();
             payload.append('action','gm2_save_cpt_model');
             payload.append('nonce', window.gm2CPTWizard.nonce);
-            payload.append('slug', data.slug);
+            payload.append('slug', slugify(data.slug));
             payload.append('label', data.label);
-            payload.append('fields', JSON.stringify(data.fields));
-            payload.append('taxonomies', JSON.stringify(data.taxonomies));
+            payload.append('fields', JSON.stringify(data.fields.map(f => ({ ...f, slug: slugify(f.slug) }))));
+            payload.append('taxonomies', JSON.stringify(data.taxonomies.map(t => ({ ...t, slug: slugify(t.slug) }))));
             fetch(window.gm2CPTWizard.ajax, {
                 method: 'POST',
                 credentials: 'same-origin',
