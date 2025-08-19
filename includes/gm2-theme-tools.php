@@ -154,9 +154,9 @@ function gm2_maybe_generate_block_templates() {
             continue;
         }
         $templates[] = 'single-' . $type;
-        gm2_ensure_block_template('single-' . $type, "<!-- wp:post-title /-->\n<!-- wp:post-content /-->\n");
+        gm2_ensure_block_template('single-' . $type, "<!-- wp:post-title /-->\n<!-- wp:post-content /-->\n", 'all');
         $templates[] = 'archive-' . $type;
-        gm2_ensure_block_template('archive-' . $type, "<!-- wp:query {\"inherit\":true} --><!-- wp:post-template --><!-- wp:post-title /--><!-- /wp:post-template --><!-- /wp:query -->\n");
+        gm2_ensure_block_template('archive-' . $type, "<!-- wp:query {\"inherit\":true} --><!-- wp:post-template --><!-- wp:post-title /--><!-- /wp:post-template --><!-- /wp:query -->\n", 'all');
     }
 
     $patterns = [];
@@ -178,8 +178,9 @@ add_action('init', 'gm2_maybe_generate_block_templates');
  *
  * @param string $slug    Template slug.
  * @param string $content Block template content.
+ * @param string $template_lock Lock setting for the template.
  */
-function gm2_ensure_block_template($slug, $content) {
+function gm2_ensure_block_template($slug, $content, $template_lock = 'all') {
     $exists = get_posts([
         'post_type'      => 'wp_template',
         'post_status'    => 'publish',
@@ -196,6 +197,7 @@ function gm2_ensure_block_template($slug, $content) {
         'post_title'  => ucwords(str_replace('-', ' ', $slug)),
         'post_content'=> $content,
         'tax_input'   => [ 'wp_theme' => get_stylesheet() ],
+        'meta_input'  => [ 'template_lock' => $template_lock ],
     ]);
 }
 
@@ -277,6 +279,7 @@ function gm2_register_field_group_patterns() {
             'title'       => $group['pattern'],
             'description' => $group['description'] ?? '',
             'content'     => $content,
+            'lock'        => 'all',
         ]);
     }
 }
