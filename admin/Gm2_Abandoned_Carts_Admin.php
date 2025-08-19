@@ -12,6 +12,7 @@ class Gm2_Abandoned_Carts_Admin {
         add_action('admin_post_gm2_ac_reset', [ $this, 'handle_reset' ]);
         add_action('admin_enqueue_scripts', [ $this, 'enqueue_scripts' ]);
         add_action('wp_ajax_gm2_ac_get_carts', [ $this, 'ajax_get_carts' ]);
+        add_action('wp_ajax_gm2_ac_process', [ $this, 'ajax_process' ]);
     }
 
     public function add_menu() {
@@ -68,6 +69,7 @@ class Gm2_Abandoned_Carts_Admin {
             [
                 'ajax_url' => admin_url('admin-ajax.php'),
                 'nonce'    => wp_create_nonce('gm2_ac_get_carts'),
+                'process_nonce' => wp_create_nonce('gm2_ac_process'),
                 'paged'    => $paged,
                 's'        => $search,
             ]
@@ -115,6 +117,8 @@ class Gm2_Abandoned_Carts_Admin {
         echo '<input type="hidden" name="action" value="gm2_ac_reset" />';
         submit_button( esc_html__( 'Reset Logs', 'gm2-wordpress-suite' ), 'delete', '', false );
         echo '</form>';
+
+        echo '<button type="button" class="button" id="gm2-ac-process" style="margin-left:10px;">' . esc_html__( 'Process Pending Carts', 'gm2-wordpress-suite' ) . '</button>';
 
         $table = new GM2_AC_Table();
         $table->process_bulk_action();
@@ -188,6 +192,15 @@ class Gm2_Abandoned_Carts_Admin {
         $rows = ob_get_clean();
 
         wp_send_json_success([ 'rows' => $rows ]);
+    }
+
+    public function ajax_process() {
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error();
+        }
+        check_ajax_referer('gm2_ac_process', 'nonce');
+        Gm2_Abandoned_Carts::cron_mark_abandoned();
+        wp_send_json_success();
     }
 
     public function handle_reset() {

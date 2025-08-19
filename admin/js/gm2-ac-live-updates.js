@@ -13,4 +13,14 @@ jQuery(function($){
     }
     fetchCarts();
     setInterval(fetchCarts, 30000);
+
+    $('#gm2-ac-process').on('click', function(e){
+        e.preventDefault();
+        $.post(gm2AcLive.ajax_url, {
+            action: 'gm2_ac_process',
+            nonce: gm2AcLive.process_nonce
+        }).done(function(){
+            fetchCarts();
+        });
+    });
 });
