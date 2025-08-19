@@ -4,6 +4,42 @@
     const { Button, TextControl, SelectControl, PanelBody, Panel } = wp.components;
     const { dispatch } = wp.data;
 
+    const slugify = (str) => str.toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '');
+
+    const StepOne = ({ existing, currentModel, setCurrentModel, loadModel, rawSlug, setRawSlug, stepOneErrors, data, setData, setStepOneErrors }) => {
+        const options = [ { label: 'New', value: '' } ];
+        Object.keys(existing).forEach(sl => {
+            options.push({ label: existing[sl].label || sl, value: sl });
+        });
+        return el('div', {},
+            options.length > 1 && el(SelectControl, {
+                label: 'Existing Models',
+                value: currentModel,
+                options: options,
+                onChange: v => { setCurrentModel(v); loadModel(v); }
+            }),
+            el(TextControl, {
+                label: 'Post Type Slug',
+                value: rawSlug,
+                onChange: v => { setRawSlug(v); setStepOneErrors(e => ({ ...e, slug: undefined })); },
+                onBlur: () => setRawSlug(slugify(rawSlug)),
+                help: stepOneErrors.slug
+            }),
+            el(TextControl, {
+                label: 'Label',
+                value: data.label,
+                onChange: v => {
+                    setData(d => ({ ...d, label: v }));
+                    if(!rawSlug){
+                        setRawSlug(slugify(v));
+                    }
+                    setStepOneErrors(e => ({ ...e, label: undefined, slug: undefined }));
+                },
+                help: stepOneErrors.label
+            })
+        );
+    };
+
     const Wizard = () => {
         const [ existing, setExisting ] = useState((window.gm2CPTWizard && window.gm2CPTWizard.models) || {});
         const steps = ['Post Type', 'Fields', 'Taxonomies', 'Review'];
@@ -12,8 +48,6 @@
         const [ rawSlug, setRawSlug ] = useState('');
         const [ currentModel, setCurrentModel ] = useState('');
         const [ stepOneErrors, setStepOneErrors ] = useState({});
-
-        const slugify = (str) => str.toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '');
 
         const validateStepOne = () => {
             const errs = {};
@@ -58,40 +92,6 @@
         useEffect(() => {
             setData(d => ({ ...d, slug: slugify(rawSlug) }));
         }, [ rawSlug ]);
-
-        const StepOne = () => {
-            const options = [ { label: 'New', value: '' } ];
-            Object.keys(existing).forEach(sl => {
-                options.push({ label: existing[sl].label || sl, value: sl });
-            });
-            return el('div', {},
-                options.length > 1 && el(SelectControl, {
-                    label: 'Existing Models',
-                    value: currentModel,
-                    options: options,
-                    onChange: v => { setCurrentModel(v); loadModel(v); }
-                }),
-                el(TextControl, {
-                    label: 'Post Type Slug',
-                    value: rawSlug,
-                    onChange: v => { setRawSlug(v); setStepOneErrors(e => ({ ...e, slug: undefined })); },
-                    onBlur: () => setRawSlug(slugify(rawSlug)),
-                    help: stepOneErrors.slug
-                }),
-                el(TextControl, {
-                    label: 'Label',
-                    value: data.label,
-                    onChange: v => {
-                        setData(d => ({ ...d, label: v }));
-                        if(!rawSlug){
-                            setRawSlug(slugify(v));
-                        }
-                        setStepOneErrors(e => ({ ...e, label: undefined, slug: undefined }));
-                    },
-                    help: stepOneErrors.label
-                })
-            );
-        };
 
         const FieldsStep = () => {
             const [ field, setField ] = useState({ label: '', slug: '', type: '' });
@@ -296,7 +296,18 @@
         );
 
         const renderStep = () => {
-            if(step === 1) return el(StepOne);
+            if(step === 1) return el(StepOne, {
+                existing,
+                currentModel,
+                setCurrentModel,
+                loadModel,
+                rawSlug,
+                setRawSlug,
+                stepOneErrors,
+                data,
+                setData,
+                setStepOneErrors
+            });
             if(step === 2) return el(FieldsStep);
             if(step === 3) return el(TaxStep);
             return el(ReviewStep);
