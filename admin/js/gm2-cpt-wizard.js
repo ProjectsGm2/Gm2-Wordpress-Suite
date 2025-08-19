@@ -9,18 +9,46 @@
         const steps = ['Post Type', 'Fields', 'Taxonomies', 'Review'];
         const [ step, setStep ] = useState(1);
         const [ data, setData ] = useState({ slug: '', label: '', fields: [], taxonomies: [] });
+        const [ currentModel, setCurrentModel ] = useState('');
+        const [ stepOneErrors, setStepOneErrors ] = useState({});
 
-        const next = () => setStep(Math.min(step + 1, steps.length));
+        const slugify = (str) => str.toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '');
+
+        const validateStepOne = () => {
+            const errs = {};
+            if(!data.label.trim()){
+                errs.label = 'Label is required';
+            }
+            if(!data.slug.trim()){
+                errs.slug = 'Slug is required';
+            } else if(!/^[a-z][a-z0-9_-]*$/.test(data.slug)){
+                errs.slug = 'Slug must start with a letter and contain only lowercase letters, numbers, hyphens, or underscores';
+            } else if(existing[data.slug] && data.slug !== currentModel){
+                errs.slug = 'Slug already exists';
+            }
+            setStepOneErrors(errs);
+            return Object.keys(errs).length === 0;
+        };
+
+        const next = () => {
+            if(step === 1 && !validateStepOne()){
+                return;
+            }
+            setStep(Math.min(step + 1, steps.length));
+        };
         const back = () => setStep(Math.max(step - 1, 1));
 
         const loadModel = (slug) => {
             if(!slug){
+                setCurrentModel('');
                 setData({ slug: '', label: '', fields: [], taxonomies: [] });
                 return;
             }
             const model = existing[slug] || {};
             const fields = (model.fields || []).map(f => ({ label: f.label || '', slug: f.slug || '', type: f.type || 'text' }));
             const taxonomies = (model.taxonomies || []).map(t => ({ slug: t.slug || '', label: t.label || '' }));
+            setCurrentModel(slug);
+            setStepOneErrors({});
             setData({ slug: slug, label: model.label || '', fields, taxonomies });
         };
 
@@ -32,19 +60,25 @@
             return el('div', {},
                 options.length > 1 && el(SelectControl, {
                     label: 'Existing Models',
-                    value: data.slug && existing[data.slug] ? data.slug : '',
+                    value: currentModel,
                     options: options,
-                    onChange: v => loadModel(v)
+                    onChange: v => { setCurrentModel(v); loadModel(v); }
                 }),
                 el(TextControl, {
                     label: 'Post Type Slug',
                     value: data.slug,
-                    onChange: v => setData({ ...data, slug: v })
+                    onChange: v => { setData({ ...data, slug: slugify(v) }); setStepOneErrors(e => ({ ...e, slug: undefined })); },
+                    help: stepOneErrors.slug
                 }),
                 el(TextControl, {
                     label: 'Label',
                     value: data.label,
-                    onChange: v => setData({ ...data, label: v })
+                    onChange: v => {
+                        const newSlug = data.slug ? data.slug : slugify(v);
+                        setData({ ...data, label: v, slug: newSlug });
+                        setStepOneErrors(e => ({ ...e, label: undefined, slug: undefined }));
+                    },
+                    help: stepOneErrors.label
                 })
             );
         };
