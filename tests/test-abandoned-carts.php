@@ -1,8 +1,12 @@
 <?php
 namespace Gm2 {
-    function check_ajax_referer($action, $query_arg = false) { return true; }
+    function check_ajax_referer($action, $query_arg = false, $die = true) {
+        return $GLOBALS['gm2_nonce_ok'] ?? true;
+    }
     function wp_send_json_success($data = null) { return ['success'=>true,'data'=>$data]; }
     function wp_send_json_error($data = null) { return ['success'=>false,'data'=>$data]; }
+    function error_log($message) { $GLOBALS['gm2_error_log'][] = $message; }
+    function do_action($tag, ...$args) {}
     function current_time($type) { return gmdate('Y-m-d H:i:s'); }
     function current_user_can($cap = '') { return $GLOBALS['gm2_is_admin'] ?? false; }
     function esc_url_raw($url) { return $url; }
@@ -20,7 +24,8 @@ namespace Gm2 {
     function wp_next_scheduled() { return false; }
     function wp_clear_scheduled_hook() {}
     function apply_filters($tag, $value) { return $value; }
-    function get_option($option, $default = false) { return $default; }
+    function get_option($option, $default = false) { return $GLOBALS['gm2_options'][$option] ?? $default; }
+    function update_option($option, $value) { $GLOBALS['gm2_options'][$option] = $value; return true; }
     function is_ssl() { return false; }
 }
 
@@ -105,6 +110,9 @@ class AbandonedCartsTest extends WP_UnitTestCase {
         $GLOBALS['wpdb'] = new AbandonedCartFakeDB($this->token);
         global $wc_session_obj;
         $wc_session_obj = (object) ['session' => new WC_Session($this->token)];
+        $GLOBALS['gm2_error_log'] = [];
+        $GLOBALS['gm2_options'] = [];
+        $GLOBALS['gm2_nonce_ok'] = true;
     }
 
     public function tearDown(): void {
@@ -282,6 +290,32 @@ class AbandonedCartsTest extends WP_UnitTestCase {
         $threshold_after = time() - 5 * 60;
         $status_after = strtotime($row['session_start']) <= $threshold_after ? 'Pending Abandonment' : 'Active';
         $this->assertSame('Active', $status_after);
+    }
+
+    public function test_nonce_failure_logged() {
+        $GLOBALS['gm2_nonce_ok'] = false;
+        $_POST = [ 'nonce' => 'bad' ];
+        $_REQUEST = $_POST;
+        $result = \Gm2\Gm2_Abandoned_Carts::gm2_ac_mark_active();
+        $this->assertFalse($result['success']);
+        $this->assertSame('invalid_nonce', $result['data']);
+        $this->assertNotEmpty($GLOBALS['gm2_error_log']);
+        $this->assertStringContainsString('invalid nonce', $GLOBALS['gm2_error_log'][0]);
+        $counts = $GLOBALS['gm2_options']['gm2_ac_failure_count'];
+        $this->assertSame(1, $counts['nonce']);
+    }
+
+    public function test_token_failure_logged() {
+        global $wc_session_obj;
+        $wc_session_obj = (object) ['session' => new WC_Session('')];
+        $_POST = [ 'nonce' => 'n', 'url' => 'https://example.com' ];
+        $_REQUEST = $_POST;
+        $result = \Gm2\Gm2_Abandoned_Carts::gm2_ac_mark_active();
+        $this->assertFalse($result['success']);
+        $this->assertSame('no_cart', $result['data']);
+        $this->assertStringContainsString('without cart token', $GLOBALS['gm2_error_log'][0]);
+        $counts = $GLOBALS['gm2_options']['gm2_ac_failure_count'];
+        $this->assertSame(1, $counts['token']);
     }
 }
 

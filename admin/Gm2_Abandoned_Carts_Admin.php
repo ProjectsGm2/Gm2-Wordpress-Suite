@@ -13,6 +13,7 @@ class Gm2_Abandoned_Carts_Admin {
         add_action('admin_enqueue_scripts', [ $this, 'enqueue_scripts' ]);
         add_action('wp_ajax_gm2_ac_get_carts', [ $this, 'ajax_get_carts' ]);
         add_action('wp_ajax_gm2_ac_process', [ $this, 'ajax_process' ]);
+        add_action('admin_notices', [ $this, 'maybe_show_failures_notice' ]);
     }
 
     public function add_menu() {
@@ -201,6 +202,24 @@ class Gm2_Abandoned_Carts_Admin {
         check_ajax_referer('gm2_ac_process', 'nonce');
         Gm2_Abandoned_Carts::cron_mark_abandoned();
         wp_send_json_success();
+    }
+
+    public function maybe_show_failures_notice() {
+        if (!current_user_can('manage_options')) {
+            return;
+        }
+        $counts = get_option('gm2_ac_failure_count', []);
+        $threshold = (int) apply_filters('gm2_ac_failure_threshold', 5);
+        $nonce = isset($counts['nonce']) ? (int) $counts['nonce'] : 0;
+        $token = isset($counts['token']) ? (int) $counts['token'] : 0;
+        if ($nonce >= $threshold || $token >= $threshold) {
+            $message = sprintf(
+                __('Abandoned cart issues detected: %d nonce failures, %d token failures.', 'gm2-wordpress-suite'),
+                $nonce,
+                $token
+            );
+            echo '<div class="notice notice-error"><p>' . esc_html($message) . '</p></div>';
+        }
     }
 
     public function handle_reset() {
