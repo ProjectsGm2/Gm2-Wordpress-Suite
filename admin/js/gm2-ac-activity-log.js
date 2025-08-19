@@ -6,7 +6,7 @@ jQuery(function($){
         }
         return false;
     }
-    $('.gm2-ac-activity-log-button').on('click', function(e){
+    $(document).on('click', '.gm2-ac-activity-log-button', function(e){
         e.preventDefault();
         var btn = $(this);
         var tr = btn.closest('tr');
