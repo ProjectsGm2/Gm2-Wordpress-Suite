@@ -5,7 +5,7 @@
     const { dispatch } = wp.data;
 
     const Wizard = () => {
-        const existing = (window.gm2CPTWizard && window.gm2CPTWizard.models) || {};
+        const [ existing, setExisting ] = useState((window.gm2CPTWizard && window.gm2CPTWizard.models) || {});
         const steps = ['Post Type', 'Fields', 'Taxonomies', 'Review'];
         const [ step, setStep ] = useState(1);
         const [ data, setData ] = useState({ slug: '', label: '', fields: [], taxonomies: [] });
@@ -39,14 +39,14 @@
         };
         const back = () => setStep(Math.max(step - 1, 1));
 
-        const loadModel = (slug) => {
+        const loadModel = (slug, source = existing) => {
             if(!slug){
                 setCurrentModel('');
                 setData({ slug: '', label: '', fields: [], taxonomies: [] });
                 setRawSlug('');
                 return;
             }
-            const model = existing[slug] || {};
+            const model = source[slug] || {};
             const fields = (model.fields || []).map(f => ({ label: f.label || '', slug: f.slug || '', type: f.type || 'text' }));
             const taxonomies = (model.taxonomies || []).map(t => ({ slug: t.slug || '', label: t.label || '' }));
             setCurrentModel(slug);
@@ -317,6 +317,12 @@
                 body: payload.toString()
             }).then(r => r.json()).then(resp => {
                 if(resp && resp.success){
+                    const slug = slugify(data.slug);
+                    const saved = (resp.data && resp.data.post_type) ? resp.data.post_type : {};
+                    const model = { ...saved, taxonomies: data.taxonomies };
+                    const updated = { ...existing, [slug]: model };
+                    setExisting(updated);
+                    loadModel(slug, updated);
                     dispatch('core/notices').createNotice('success', 'Model saved', { type: 'snackbar' });
                 } else {
                     dispatch('core/notices').createNotice('error', 'Error saving', { type: 'snackbar' });
