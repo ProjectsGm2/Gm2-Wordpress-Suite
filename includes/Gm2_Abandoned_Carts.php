@@ -394,12 +394,18 @@ class Gm2_Abandoned_Carts {
 
     private static function log_no_cart($action) {
         $message = sprintf('Gm2 Abandoned Carts: %s called without cart token.', $action);
+        self::log_failure('token', $message);
+    }
+
+    private static function log_failure($type, $message) {
         error_log($message);
-        if (is_admin()) {
-            add_action('admin_notices', function () use ($message) {
-                echo '<div class="notice notice-error"><p>' . esc_html($message) . '</p></div>';
-            });
+        do_action('gm2_ac_debug', $type, $message);
+        $counts = get_option('gm2_ac_failure_count', []);
+        if (!is_array($counts)) {
+            $counts = [];
         }
+        $counts[$type] = isset($counts[$type]) ? (int) $counts[$type] + 1 : 1;
+        update_option('gm2_ac_failure_count', $counts);
     }
 
     public static function gm2_ac_mark_active() {
@@ -410,9 +416,12 @@ class Gm2_Abandoned_Carts {
             function_exists('current_user_can') &&
             current_user_can('manage_options')
         ) {
-            wp_send_json_success();
+            return wp_send_json_success();
         }
-        check_ajax_referer('gm2_ac_activity', 'nonce');
+        if (!check_ajax_referer('gm2_ac_activity', 'nonce', false)) {
+            self::log_failure('nonce', __FUNCTION__ . ': invalid nonce');
+            return wp_send_json_error('invalid_nonce');
+        }
 
         $url   = esc_url_raw($_POST['url'] ?? '');
         $token = '';
@@ -433,7 +442,7 @@ class Gm2_Abandoned_Carts {
         }
         if (empty($token)) {
             self::log_no_cart(__FUNCTION__);
-            wp_send_json_error('no_cart');
+            return wp_send_json_error('no_cart');
         }
 
         // Build a snapshot of the current cart and visitor details.
@@ -545,7 +554,7 @@ class Gm2_Abandoned_Carts {
             ]);
         }
 
-        wp_send_json_success();
+        return wp_send_json_success();
     }
 
     public static function gm2_ac_mark_abandoned() {
@@ -556,9 +565,12 @@ class Gm2_Abandoned_Carts {
             function_exists('current_user_can') &&
             current_user_can('manage_options')
         ) {
-            wp_send_json_success();
+            return wp_send_json_success();
         }
-        check_ajax_referer('gm2_ac_activity', 'nonce');
+        if (!check_ajax_referer('gm2_ac_activity', 'nonce', false)) {
+            self::log_failure('nonce', __FUNCTION__ . ': invalid nonce');
+            return wp_send_json_error('invalid_nonce');
+        }
 
         $token = '';
         $url   = esc_url_raw($_POST['url'] ?? '');
@@ -573,7 +585,7 @@ class Gm2_Abandoned_Carts {
         }
         if (empty($token)) {
             self::log_no_cart(__FUNCTION__);
-            wp_send_json_error('no_cart');
+            return wp_send_json_error('no_cart');
         }
 
         global $wpdb;
@@ -597,13 +609,16 @@ class Gm2_Abandoned_Carts {
             $wpdb->update($table, $update, [ 'id' => $row->id ]);
         }
 
-        wp_send_json_success();
+        return wp_send_json_success();
     }
 
     public static function gm2_ac_get_activity() {
-        check_ajax_referer('gm2_ac_get_activity', 'nonce');
+        if (!check_ajax_referer('gm2_ac_get_activity', 'nonce', false)) {
+            self::log_failure('nonce', __FUNCTION__ . ': invalid nonce');
+            return wp_send_json_error('invalid_nonce');
+        }
         if (!current_user_can('manage_options')) {
-            wp_send_json_error('no_permission');
+            return wp_send_json_error('no_permission');
         }
         $ip      = isset($_POST['ip']) ? sanitize_text_field(wp_unslash($_POST['ip'])) : '';
         $cart_id = isset($_POST['cart_id']) ? absint($_POST['cart_id']) : 0;
