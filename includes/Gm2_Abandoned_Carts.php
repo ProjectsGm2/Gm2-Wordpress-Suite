@@ -837,8 +837,17 @@ class Gm2_Abandoned_Carts {
         if ($minutes < 1) {
             $minutes = 1;
         }
-        if (!wp_next_scheduled('gm2_ac_mark_abandoned_cron')) {
-            wp_schedule_event(time(), 'gm2_ac_' . $minutes . '_mins', 'gm2_ac_mark_abandoned_cron');
+
+        $hook     = 'gm2_ac_mark_abandoned_cron';
+        $schedule = 'gm2_ac_' . $minutes . '_mins';
+        $next     = wp_next_scheduled($hook);
+
+        // If the event is missing or on a different interval, reschedule it.
+        if (!$next || wp_get_schedule($hook) !== $schedule) {
+            if ($next) {
+                wp_unschedule_event($next, $hook);
+            }
+            wp_schedule_event(time(), $schedule, $hook);
         }
     }
 
