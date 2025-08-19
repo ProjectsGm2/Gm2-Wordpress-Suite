@@ -191,8 +191,30 @@
             );
         };
 
-        const ReviewStep = () => el('div', {},
-            el('pre', { className: 'gm2-cpt-review' }, JSON.stringify(data, null, 2))
+        const ReviewStep = () => el('div', { className: 'gm2-cpt-review' },
+            el('div', { className: 'gm2-cpt-review-section' },
+                el('h3', {}, 'Post Type'),
+                el('p', {}, `${data.label} (${data.slug})`),
+                el(Button, { isLink: true, onClick: () => setStep(1) }, 'Edit')
+            ),
+            el('div', { className: 'gm2-cpt-review-section' },
+                el('h3', {}, 'Fields'),
+                data.fields.length
+                    ? el('ul', {}, data.fields.map((f,i) =>
+                        el('li', { key: i }, `${f.label} (${f.slug}) - ${f.type}`)
+                    ))
+                    : el('p', {}, 'None'),
+                el(Button, { isLink: true, onClick: () => setStep(2) }, 'Edit')
+            ),
+            el('div', { className: 'gm2-cpt-review-section' },
+                el('h3', {}, 'Taxonomies'),
+                data.taxonomies.length
+                    ? el('ul', {}, data.taxonomies.map((t,i) =>
+                        el('li', { key: i }, `${t.label} (${t.slug})`)
+                    ))
+                    : el('p', {}, 'None'),
+                el(Button, { isLink: true, onClick: () => setStep(3) }, 'Edit')
+            )
         );
 
         const StepIndicator = () => el('div', { className: 'gm2-cpt-stepper' },
