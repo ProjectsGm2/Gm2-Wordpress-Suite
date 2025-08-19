@@ -55,16 +55,24 @@ class Gm2_CLI extends \WP_CLI_Command {
      * ## SUBCOMMANDS
      *
      * migrate  Move recovered carts into wc_ac_recovered table
+     * process  Run the abandonment processor immediately
      */
     public function ac( $args, $assoc_args ) {
         $sub = $args[0] ?? '';
-        if ( $sub !== 'migrate' ) {
-            \WP_CLI::error( 'Usage: wp gm2 ac migrate' );
+        if ( $sub === 'migrate' ) {
+            $ac    = new Gm2_Abandoned_Carts();
+            $count = $ac->migrate_recovered_carts();
+            \WP_CLI::success( sprintf( '%d carts migrated.', $count ) );
+            return;
         }
 
-        $ac = new Gm2_Abandoned_Carts();
-        $count = $ac->migrate_recovered_carts();
-        \WP_CLI::success( sprintf( '%d carts migrated.', $count ) );
+        if ( $sub === 'process' ) {
+            Gm2_Abandoned_Carts::cron_mark_abandoned();
+            \WP_CLI::success( 'Abandoned carts processed.' );
+            return;
+        }
+
+        \WP_CLI::error( 'Usage: wp gm2 ac <migrate|process>' );
     }
 
     /**
