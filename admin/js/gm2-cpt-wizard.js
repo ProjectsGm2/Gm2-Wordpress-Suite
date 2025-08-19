@@ -6,11 +6,12 @@
 
     const Wizard = () => {
         const existing = (window.gm2CPTWizard && window.gm2CPTWizard.models) || {};
+        const steps = ['Post Type', 'Fields', 'Taxonomies', 'Review'];
         const [ step, setStep ] = useState(1);
         const [ data, setData ] = useState({ slug: '', label: '', fields: [], taxonomies: [] });
 
-        const next = () => setStep(step + 1);
-        const back = () => setStep(step - 1);
+        const next = () => setStep(Math.min(step + 1, steps.length));
+        const back = () => setStep(Math.max(step - 1, 1));
 
         const loadModel = (slug) => {
             if(!slug){
@@ -119,6 +120,18 @@
             el('pre', { className: 'gm2-cpt-review' }, JSON.stringify(data, null, 2))
         );
 
+        const StepIndicator = () => el('div', { className: 'gm2-cpt-stepper' },
+            steps.map((label, i) =>
+                el('div', {
+                    key: i,
+                    className: 'gm2-cpt-step' + (step === i + 1 ? ' active' : '')
+                },
+                    el('span', { className: 'gm2-cpt-step-number' }, i + 1),
+                    el('span', { className: 'gm2-cpt-step-label' }, label)
+                )
+            )
+        );
+
         const renderStep = () => {
             if(step === 1) return el(StepOne);
             if(step === 2) return el(FieldsStep);
@@ -153,11 +166,12 @@
         return el('div', { className: 'gm2-cpt-wizard' },
             el(Panel, {},
                 el(PanelBody, { title: 'CPT Wizard', initialOpen: true },
+                    el(StepIndicator),
                     renderStep(),
                     el('div', { className: 'gm2-cpt-wizard-buttons' }, [
                         step > 1 && el(Button, { onClick: back }, 'Back'),
-                        step < 4 && el(Button, { isPrimary: true, onClick: next }, 'Next'),
-                        step === 4 && el(Button, { isPrimary: true, onClick: save }, 'Finish')
+                        step < steps.length && el(Button, { isPrimary: true, onClick: next }, 'Next'),
+                        step === steps.length && el(Button, { isPrimary: true, onClick: save }, 'Finish')
                     ])
                 )
             )
