@@ -65,5 +65,33 @@ class ThemeToolsTest extends WP_UnitTestCase {
         $this->assertContains('archive-book', $templates);
         $this->assertContains('gm2/sample', $data['patterns']);
     }
+
+    public function test_generated_templates_are_locked() {
+        register_post_type('novel', ['public' => true]);
+        update_option('gm2_enable_block_templates', '1');
+
+        gm2_maybe_generate_block_templates();
+
+        $template = get_posts([
+            'post_type'      => 'wp_template',
+            'name'           => 'single-novel',
+            'post_status'    => 'publish',
+            'posts_per_page' => 1,
+        ]);
+        $this->assertNotEmpty($template);
+        $lock = get_post_meta($template[0]->ID, 'template_lock', true);
+        $this->assertSame('all', $lock);
+    }
+
+    public function test_registered_patterns_are_locked() {
+        update_option('gm2_field_groups', [
+            [ 'pattern' => 'locked', 'fields' => [] ],
+        ]);
+
+        gm2_register_field_group_patterns();
+        $pattern = WP_Block_Patterns_Registry::get_instance()->get_registered('gm2/locked');
+        $this->assertIsArray($pattern);
+        $this->assertSame('all', $pattern['lock']);
+    }
 }
 
