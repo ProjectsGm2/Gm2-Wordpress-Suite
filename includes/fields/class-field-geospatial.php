@@ -26,12 +26,13 @@ class GM2_Field_Geospatial extends GM2_Field {
         }
     }
 
-    protected function render_field( $value, $object_id, $context_type ) {
+    protected function render_field( $value, $object_id, $context_type, $placeholder = '' ) {
         $value   = is_array( $value ) ? $value : array();
         $lat     = $value['lat'] ?? '';
         $lng     = $value['lng'] ?? '';
         $address = $value['address'] ?? array();
         $disabled = disabled( $this->args['disabled'] ?? false, true, false );
+        $placeholder_attr = $placeholder !== '' ? ' placeholder="' . esc_attr( $placeholder ) . '"' : '';
 
         if ( 'public' === $context_type ) {
             echo '<div class="gm2-geo-address">' . esc_html( self::format_address( $address ) ) . '</div>';
@@ -40,9 +41,9 @@ class GM2_Field_Geospatial extends GM2_Field {
 
         echo '<div class="gm2-geo-field">';
         echo '<div id="' . esc_attr( $this->key ) . '-map" class="gm2-geo-map"></div>';
-        echo '<input type="hidden" name="' . esc_attr( $this->key ) . '[lat]" value="' . esc_attr( $lat ) . '"' . $disabled . ' />';
-        echo '<input type="hidden" name="' . esc_attr( $this->key ) . '[lng]" value="' . esc_attr( $lng ) . '"' . $disabled . ' />';
-        echo '<input type="hidden" class="gm2-geo-address-data" name="' . esc_attr( $this->key ) . '[address]" value="' . esc_attr( wp_json_encode( $address ) ) . '"' . $disabled . ' />';
+        echo '<input type="hidden" name="' . esc_attr( $this->key ) . '[lat]" value="' . esc_attr( $lat ) . '"' . $disabled . $placeholder_attr . ' />';
+        echo '<input type="hidden" name="' . esc_attr( $this->key ) . '[lng]" value="' . esc_attr( $lng ) . '"' . $disabled . $placeholder_attr . ' />';
+        echo '<input type="hidden" class="gm2-geo-address-data" name="' . esc_attr( $this->key ) . '[address]" value="' . esc_attr( wp_json_encode( $address ) ) . '"' . $disabled . $placeholder_attr . ' />';
         echo '<div class="gm2-geo-address">' . esc_html( self::format_address( $address ) ) . '</div>';
         echo '</div>';
     }

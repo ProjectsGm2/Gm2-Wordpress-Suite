@@ -39,7 +39,7 @@ class GM2_Field_Flexible extends GM2_Field {
      * @param int    $object_id   Current object ID.
      * @param string $context_type Context type.
      */
-    protected function render_field( $value, $object_id, $context_type ) {
+    protected function render_field( $value, $object_id, $context_type, $placeholder = '' ) {
         $layouts  = $this->args['layouts'] ?? array();
         $value    = is_array( $value ) ? $value : array();
         $disabled = $this->args['disabled'] ?? false ? ' data-disabled="1"' : '';

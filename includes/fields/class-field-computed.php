@@ -4,7 +4,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 class GM2_Field_Computed extends GM2_Field {
-    protected function render_field( $value, $object_id, $context_type ) {
+    protected function render_field( $value, $object_id, $context_type, $placeholder = '' ) {
         $value    = $this->calculate_value( $object_id, $context_type );
         $disabled = $this->args['disabled'] ?? false ? ' data-disabled="1"' : '';
         echo '<span class="gm2-computed" data-key="' . esc_attr( $this->key ) . '"' . $disabled . '>' . esc_html( $value ) . '</span>';

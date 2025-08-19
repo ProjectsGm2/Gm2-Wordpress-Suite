@@ -4,7 +4,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 class GM2_Field_Wysiwyg extends GM2_Field {
-    protected function render_field( $value, $object_id, $context_type ) {
+    protected function render_field( $value, $object_id, $context_type, $placeholder = '' ) {
         $settings = array(
             'textarea_name' => $this->key,
             'textarea_rows' => $this->args['wysiwyg_rows'] ?? 10,

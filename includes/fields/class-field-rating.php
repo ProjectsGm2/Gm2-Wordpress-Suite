@@ -22,10 +22,11 @@ class GM2_Field_Rating extends GM2_Field {
         }
     }
 
-    protected function render_field( $value, $object_id, $context_type ) {
+    protected function render_field( $value, $object_id, $context_type, $placeholder = '' ) {
         $value    = intval( $value );
         $value    = max( 0, min( 5, $value ) );
         $disabled = disabled( $this->args['disabled'] ?? false, true, false );
+        $placeholder_attr = $placeholder !== '' ? ' placeholder="' . esc_attr( $placeholder ) . '"' : '';
 
         if ( 'public' === $context_type ) {
             echo '<div class="gm2-rating-display">' . self::stars_html( $value ) . '</div>';

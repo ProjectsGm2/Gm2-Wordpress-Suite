@@ -15,19 +15,22 @@ abstract class GM2_Field {
     public function render_admin( $value, $object_id, $context_type ) {
         $label = $this->args['label'] ?? $this->key;
         echo '<p><label>' . esc_html( $label ) . '<br />';
-        $this->render_field( $value, $object_id, $context_type );
+        $placeholder = $this->args['placeholder'] ?? '';
+        $this->render_field( $value, $object_id, $context_type, $placeholder );
         echo '</label></p>';
     }
 
     public function render_public( $value ) {
         echo '<div class="gm2-field gm2-field-' . esc_attr( $this->key ) . '">';
-        $this->render_field( $value, 0, 'public' );
+        $placeholder = $this->args['placeholder'] ?? '';
+        $this->render_field( $value, 0, 'public', $placeholder );
         echo '</div>';
     }
 
-    protected function render_field( $value, $object_id, $context_type ) {
-        $disabled = disabled( $this->args['disabled'] ?? false, true, false );
-        echo '<input type="text" name="' . esc_attr( $this->key ) . '" value="' . esc_attr( $value ) . '"' . $disabled . ' />';
+    protected function render_field( $value, $object_id, $context_type, $placeholder = '' ) {
+        $disabled         = disabled( $this->args['disabled'] ?? false, true, false );
+        $placeholder_attr = $placeholder !== '' ? ' placeholder="' . esc_attr( $placeholder ) . '"' : '';
+        echo '<input type="text" name="' . esc_attr( $this->key ) . '" value="' . esc_attr( $value ) . '"' . $disabled . $placeholder_attr . ' />';
     }
 
     public function sanitize( $value ) {

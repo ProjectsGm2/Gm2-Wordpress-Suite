@@ -4,10 +4,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 class GM2_Field_Toggle extends GM2_Field {
-    protected function render_field( $value, $object_id, $context_type ) {
+    protected function render_field( $value, $object_id, $context_type, $placeholder = '' ) {
         $checked  = checked( $value, '1', false );
         $disabled = disabled( $this->args['disabled'] ?? false, true, false );
-        echo '<input type="checkbox" class="gm2-toggle" name="' . esc_attr( $this->key ) . '" value="1"' . $checked . $disabled . ' />';
+        $placeholder_attr = $placeholder !== '' ? ' placeholder="' . esc_attr( $placeholder ) . '"' : '';
+        echo '<input type="checkbox" class="gm2-toggle" name="' . esc_attr( $this->key ) . '" value="1"' . $checked . $disabled . $placeholder_attr . ' />';
     }
 
     public function sanitize( $value ) {
