@@ -448,6 +448,14 @@ class Gm2_Admin {
             update_option('gm2_enable_block_templates', empty($_POST['gm2_enable_block_templates']) ? '0' : '1');
             update_option('gm2_enable_theme_integration', empty($_POST['gm2_enable_theme_integration']) ? '0' : '1');
 
+            if (isset($_POST['gm2_env'])) {
+                $env = sanitize_text_field($_POST['gm2_env']);
+                update_option('gm2_env', $env);
+                $locked = ($env === 'production');
+                $locked = apply_filters('gm2_model_locked', $locked, $env);
+                update_option('gm2_model_locked', $locked ? 1 : 0);
+            }
+
             $enabled = !empty($_POST['gm2_enable_abandoned_carts']);
             if ($enabled) {
                 global $wpdb;
@@ -461,7 +469,7 @@ class Gm2_Admin {
                 }
             }
 
-            echo '<div class="updated notice"><p>' . esc_html__( 'Settings saved.', 'gm2-wordpress-suite' ) . '</p></div>';
+            echo '<div class="updated notice"><p>' . esc_html__( 'Settings saved. Environment updated.', 'gm2-wordpress-suite' ) . '</p></div>';
         }
 
         $tariff = get_option('gm2_enable_tariff', '1') === '1';
@@ -474,6 +482,7 @@ class Gm2_Admin {
         $custom_posts = get_option('gm2_enable_custom_posts', '1') === '1';
         $block_templates = get_option('gm2_enable_block_templates', '0') === '1';
         $theme_integration = get_option('gm2_enable_theme_integration', '0') === '1';
+        $env_current = isset($env) ? $env : gm2_get_environment();
 
         echo '<div class="wrap">';
         echo '<h1>' . esc_html__( 'Gm2 Suite', 'gm2-wordpress-suite' ) . '</h1>';
@@ -489,6 +498,7 @@ class Gm2_Admin {
         echo '<tr><th scope="row">' . esc_html__( 'Custom Posts', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_enable_custom_posts"' . checked($custom_posts, true, false) . '> ' . esc_html__( 'Enabled', 'gm2-wordpress-suite' ) . '</label></td></tr>';
         echo '<tr><th scope="row">' . esc_html__( 'Block Templates', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_enable_block_templates"' . checked($block_templates, true, false) . '> ' . esc_html__( 'Enabled', 'gm2-wordpress-suite' ) . '</label></td></tr>';
         echo '<tr><th scope="row">' . esc_html__( 'Theme Integration', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_enable_theme_integration"' . checked($theme_integration, true, false) . '> ' . esc_html__( 'Enabled', 'gm2-wordpress-suite' ) . '</label></td></tr>';
+        echo '<tr><th scope="row">' . esc_html__( 'Environment', 'gm2-wordpress-suite' ) . '</th><td><select name="gm2_env"><option value="development"' . selected($env_current, 'development', false) . '>' . esc_html__( 'Development', 'gm2-wordpress-suite' ) . '</option><option value="production"' . selected($env_current, 'production', false) . '>' . esc_html__( 'Production', 'gm2-wordpress-suite' ) . '</option></select></td></tr>';
         echo '<tr><th scope="row">' . esc_html__( 'Abandoned Carts', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_enable_abandoned_carts"' . checked($abandoned, true, false) . '> ' . esc_html__( 'Enabled', 'gm2-wordpress-suite' ) . '</label></td></tr>';
         echo '</tbody></table>';
         submit_button();
