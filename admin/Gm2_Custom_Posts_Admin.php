@@ -1467,6 +1467,13 @@ class Gm2_Custom_Posts_Admin {
                 'ajax'   => admin_url('admin-ajax.php'),
                 'models' => $models,
             ]);
+            $css = GM2_PLUGIN_DIR . 'admin/css/gm2-cpt-wizard.css';
+            wp_enqueue_style(
+                'gm2-cpt-wizard',
+                GM2_PLUGIN_URL . 'admin/css/gm2-cpt-wizard.css',
+                [],
+                file_exists($css) ? filemtime($css) : GM2_VERSION
+            );
         }
 
         if ($hook === 'gm2-custom-posts_page_gm2_field_group_wizard') {
