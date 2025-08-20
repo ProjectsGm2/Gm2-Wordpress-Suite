@@ -18,6 +18,7 @@ class Gm2_Abandoned_Carts {
         $carts_sql = "CREATE TABLE $carts (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
             cart_token varchar(100) NOT NULL,
+            client_id varchar(100) DEFAULT NULL,
             user_id bigint(20) unsigned DEFAULT 0,
             cart_contents longtext NOT NULL,
             created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -37,7 +38,8 @@ class Gm2_Abandoned_Carts {
             exit_url text DEFAULT NULL,
             cart_total decimal(10,2) DEFAULT 0,
             PRIMARY KEY  (id),
-            KEY cart_token (cart_token)
+            KEY cart_token (cart_token),
+            KEY client_id (client_id)
         ) $charset_collate;";
 
         $queue_sql = "CREATE TABLE $queue (
@@ -229,6 +231,7 @@ class Gm2_Abandoned_Carts {
             return;
         }
         $token      = $wc->session->get_customer_id();
+        $client_id  = isset($_POST['client_id']) ? sanitize_text_field(wp_unslash($_POST['client_id'])) : (isset($_COOKIE['gm2_ac_client_id']) ? sanitize_text_field(wp_unslash($_COOKIE['gm2_ac_client_id'])) : '');
         $agent      = isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '';
         $browser    = self::get_browser($agent);
         $ip_info    = self::get_ip_and_location();
@@ -270,12 +273,29 @@ class Gm2_Abandoned_Carts {
         $total      = (float) $cart->get_cart_contents_total();
         global $wpdb;
         $table = $wpdb->prefix . 'wc_ac_carts';
-        $row = $wpdb->get_row(
-            $wpdb->prepare(
-                "SELECT id, entry_url, exit_url, abandoned_at, revisit_count, session_start, location, cart_contents FROM $table WHERE cart_token = %s",
-                $token
-            )
-        );
+        if (!empty($client_id)) {
+            $row = $wpdb->get_row(
+                $wpdb->prepare(
+                    "SELECT id, entry_url, exit_url, abandoned_at, revisit_count, session_start, location, cart_contents FROM $table WHERE client_id = %s",
+                    $client_id
+                )
+            );
+            if (!$row) {
+                $row = $wpdb->get_row(
+                    $wpdb->prepare(
+                        "SELECT id, entry_url, exit_url, abandoned_at, revisit_count, session_start, location, cart_contents FROM $table WHERE cart_token = %s",
+                        $token
+                    )
+                );
+            }
+        } else {
+            $row = $wpdb->get_row(
+                $wpdb->prepare(
+                    "SELECT id, entry_url, exit_url, abandoned_at, revisit_count, session_start, location, cart_contents FROM $table WHERE cart_token = %s",
+                    $token
+                )
+            );
+        }
 
         // Determine previous cart state
         $prev_map = [];
@@ -354,6 +374,9 @@ class Gm2_Abandoned_Carts {
             } elseif (!$row->session_start) {
                 $update['session_start'] = current_time('mysql');
             }
+            if (!empty($client_id)) {
+                $update['client_id'] = $client_id;
+            }
             if (!empty($update)) {
                 $wpdb->update($table, $update, ['id' => $row->id]);
             }
@@ -367,7 +390,7 @@ class Gm2_Abandoned_Carts {
             }
             $cart_id = $row->id;
         } else {
-            $wpdb->insert($table, [
+            $insert = [
                 'cart_token'    => $token,
                 'user_id'       => get_current_user_id(),
                 'cart_contents' => $contents,
@@ -384,7 +407,11 @@ class Gm2_Abandoned_Carts {
                 'cart_total'    => $total,
                 'browsing_time' => 0,
                 'revisit_count' => 0,
-            ]);
+            ];
+            if (!empty($client_id)) {
+                $insert['client_id'] = $client_id;
+            }
+            $wpdb->insert($table, $insert);
             $cart_id = $wpdb->insert_id;
         }
 
@@ -435,8 +462,9 @@ class Gm2_Abandoned_Carts {
             return wp_send_json_error('invalid_nonce');
         }
 
-        $url   = esc_url_raw($_POST['url'] ?? '');
-        $token = '';
+        $url       = esc_url_raw($_POST['url'] ?? '');
+        $client_id = isset($_POST['client_id']) ? sanitize_text_field(wp_unslash($_POST['client_id'])) : '';
+        $token     = '';
         if (class_exists('WC_Session') && WC()->session) {
             $token = WC()->session->get_customer_id();
             if (method_exists(WC()->session, 'set')) {
@@ -452,7 +480,7 @@ class Gm2_Abandoned_Carts {
                 }
             }
         }
-        if (empty($token)) {
+        if (empty($token) && empty($client_id)) {
             self::log_no_cart(__FUNCTION__);
             return wp_send_json_error('no_cart');
         }
@@ -508,8 +536,15 @@ class Gm2_Abandoned_Carts {
         }
 
         global $wpdb;
-        $table   = $wpdb->prefix . 'wc_ac_carts';
-        $row     = $wpdb->get_row($wpdb->prepare("SELECT id, abandoned_at, revisit_count, session_start, ip_address, location FROM $table WHERE cart_token = %s", $token));
+        $table = $wpdb->prefix . 'wc_ac_carts';
+        if (!empty($client_id)) {
+            $row = $wpdb->get_row($wpdb->prepare("SELECT id, abandoned_at, revisit_count, session_start, ip_address, location FROM $table WHERE client_id = %s", $client_id));
+            if (!$row && !empty($token)) {
+                $row = $wpdb->get_row($wpdb->prepare("SELECT id, abandoned_at, revisit_count, session_start, ip_address, location FROM $table WHERE cart_token = %s", $token));
+            }
+        } else {
+            $row = $wpdb->get_row($wpdb->prepare("SELECT id, abandoned_at, revisit_count, session_start, ip_address, location FROM $table WHERE cart_token = %s", $token));
+        }
         $cart_id = $row ? (int) $row->id : 0;
         $minutes = absint(apply_filters('gm2_ac_mark_abandoned_interval', (int) get_option('gm2_ac_mark_abandoned_interval', 5)));
         if ($minutes < 1) {
@@ -554,11 +589,14 @@ class Gm2_Abandoned_Carts {
                 $update['exit_url'] = '';
             }
 
+            if (!empty($client_id)) {
+                $update['client_id'] = $client_id;
+            }
             if (!empty($update)) {
                 $wpdb->update($table, $update, ['id' => $row->id]);
             }
         } else {
-            $wpdb->insert($table, [
+            $insert = [
                 'cart_token'    => $token,
                 'user_id'       => get_current_user_id(),
                 'cart_contents' => $contents,
@@ -575,7 +613,11 @@ class Gm2_Abandoned_Carts {
                 'cart_total'    => $total,
                 'browsing_time' => 0,
                 'revisit_count' => 0,
-            ]);
+            ];
+            if (!empty($client_id)) {
+                $insert['client_id'] = $client_id;
+            }
+            $wpdb->insert($table, $insert);
             $cart_id     = $wpdb->insert_id;
             $new_session = true;
         }
@@ -607,8 +649,9 @@ class Gm2_Abandoned_Carts {
             return wp_send_json_error('invalid_nonce');
         }
 
-        $token = '';
-        $url   = esc_url_raw($_POST['url'] ?? '');
+        $client_id = isset($_POST['client_id']) ? sanitize_text_field(wp_unslash($_POST['client_id'])) : '';
+        $token     = '';
+        $url       = esc_url_raw($_POST['url'] ?? '');
         if (class_exists('WC_Session') && WC()->session) {
             $token = WC()->session->get_customer_id();
             if (empty($url) && method_exists(WC()->session, 'get')) {
@@ -618,14 +661,21 @@ class Gm2_Abandoned_Carts {
                 WC()->session->set('gm2_ac_last_seen_url', null);
             }
         }
-        if (empty($token)) {
+        if (empty($token) && empty($client_id)) {
             self::log_no_cart(__FUNCTION__);
             return wp_send_json_error('no_cart');
         }
 
         global $wpdb;
         $table = $wpdb->prefix . 'wc_ac_carts';
-        $row = $wpdb->get_row($wpdb->prepare("SELECT id, session_start, browsing_time FROM $table WHERE cart_token = %s", $token));
+        if (!empty($client_id)) {
+            $row = $wpdb->get_row($wpdb->prepare("SELECT id, session_start, browsing_time FROM $table WHERE client_id = %s", $client_id));
+            if (!$row && !empty($token)) {
+                $row = $wpdb->get_row($wpdb->prepare("SELECT id, session_start, browsing_time FROM $table WHERE cart_token = %s", $token));
+            }
+        } else {
+            $row = $wpdb->get_row($wpdb->prepare("SELECT id, session_start, browsing_time FROM $table WHERE cart_token = %s", $token));
+        }
         if ($row) {
             $update = [
                 'abandoned_at'  => current_time('mysql'),
@@ -640,6 +690,9 @@ class Gm2_Abandoned_Carts {
                     $elapsed = 0;
                 }
                 $update['browsing_time'] = (int) $row->browsing_time + $elapsed;
+            }
+            if (!empty($client_id)) {
+                $update['client_id'] = $client_id;
             }
             $wpdb->update($table, $update, [ 'id' => $row->id ]);
 
@@ -805,6 +858,12 @@ class Gm2_Abandoned_Carts {
                 $this->install();
             }
             return;
+        }
+
+        $has_client_id = $wpdb->get_var($wpdb->prepare("SHOW COLUMNS FROM $carts_table LIKE %s", 'client_id'));
+        if (!$has_client_id) {
+            $wpdb->query("ALTER TABLE $carts_table ADD client_id varchar(100) DEFAULT NULL AFTER cart_token");
+            $wpdb->query("ALTER TABLE $carts_table ADD KEY client_id (client_id)");
         }
 
         $has_browser = $wpdb->get_var($wpdb->prepare("SHOW COLUMNS FROM $carts_table LIKE %s", 'browser'));
