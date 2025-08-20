@@ -13,6 +13,7 @@ class Gm2_Custom_Posts_Admin {
         add_action('current_screen', [ $this, 'setup_help' ]);
         add_action('admin_enqueue_scripts', [ $this, 'enqueue_help_assets' ]);
         add_action('admin_menu', [ $this, 'add_menu' ]);
+        add_action('admin_head', [ $this, 'hide_submenus' ]);
         add_action('add_meta_boxes', [ $this, 'add_meta_boxes' ]);
         add_action('save_post', [ $this, 'save_meta_boxes' ]);
         add_action('admin_enqueue_scripts', [ $this, 'enqueue_scripts' ]);
@@ -152,7 +153,6 @@ class Gm2_Custom_Posts_Admin {
             'gm2_cpt_fields',
             [ $this, 'display_fields_page' ]
         );
-        remove_submenu_page('gm2-custom-posts', 'gm2_cpt_fields');
 
         add_submenu_page(
             'gm2-custom-posts',
@@ -180,7 +180,6 @@ class Gm2_Custom_Posts_Admin {
             'gm2_tax_args',
             [ $this, 'display_taxonomy_page' ]
         );
-        remove_submenu_page('gm2-custom-posts', 'gm2_tax_args');
 
         add_submenu_page(
             'gm2-custom-posts',
@@ -208,6 +207,17 @@ class Gm2_Custom_Posts_Admin {
             'gm2_field_caps',
             [ $this, 'display_field_caps_page' ]
         );
+    }
+
+    public function hide_submenus() {
+        global $submenu;
+        if (isset($submenu['gm2-custom-posts'])) {
+            foreach ($submenu['gm2-custom-posts'] as $index => $item) {
+                if (in_array($item[2], [ 'gm2_cpt_fields', 'gm2_tax_args' ], true)) {
+                    unset($submenu['gm2-custom-posts'][$index]);
+                }
+            }
+        }
     }
 
     public function display_cpt_wizard() {
