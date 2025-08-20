@@ -13,6 +13,7 @@ class Gm2_Abandoned_Carts {
         $queue = $wpdb->prefix . 'wc_ac_email_queue';
         $recovered = $wpdb->prefix . 'wc_ac_recovered';
         $activity = $wpdb->prefix . 'wc_ac_cart_activity';
+        $visit_log = $wpdb->prefix . 'wc_ac_visit_log';
 
         $carts_sql = "CREATE TABLE $carts (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -86,11 +87,23 @@ class Gm2_Abandoned_Carts {
             KEY cart_id (cart_id)
         ) $charset_collate;";
 
+        $visit_sql = "CREATE TABLE $visit_log (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            cart_id bigint(20) unsigned NOT NULL,
+            entry_url text NOT NULL,
+            exit_url text DEFAULT NULL,
+            visit_start datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            visit_end datetime DEFAULT NULL,
+            PRIMARY KEY  (id),
+            KEY cart_id (cart_id)
+        ) $charset_collate;";
+
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
         dbDelta($carts_sql);
         dbDelta($queue_sql);
         dbDelta($recovered_sql);
         dbDelta($activity_sql);
+        dbDelta($visit_sql);
     }
 
     public function run() {
@@ -497,6 +510,7 @@ class Gm2_Abandoned_Carts {
         global $wpdb;
         $table   = $wpdb->prefix . 'wc_ac_carts';
         $row     = $wpdb->get_row($wpdb->prepare("SELECT id, abandoned_at, revisit_count, session_start, ip_address, location FROM $table WHERE cart_token = %s", $token));
+        $cart_id = $row ? (int) $row->id : 0;
         $minutes = absint(apply_filters('gm2_ac_mark_abandoned_interval', (int) get_option('gm2_ac_mark_abandoned_interval', 5)));
         if ($minutes < 1) {
             $minutes = 1;
@@ -562,6 +576,17 @@ class Gm2_Abandoned_Carts {
                 'browsing_time' => 0,
                 'revisit_count' => 0,
             ]);
+            $cart_id     = $wpdb->insert_id;
+            $new_session = true;
+        }
+
+        if ($new_session && $cart_id) {
+            $visit_table = $wpdb->prefix . 'wc_ac_visit_log';
+            $wpdb->insert($visit_table, [
+                'cart_id'     => $cart_id,
+                'entry_url'   => $url,
+                'visit_start' => current_time('mysql'),
+            ]);
         }
 
         return wp_send_json_success();
@@ -617,6 +642,16 @@ class Gm2_Abandoned_Carts {
                 $update['browsing_time'] = (int) $row->browsing_time + $elapsed;
             }
             $wpdb->update($table, $update, [ 'id' => $row->id ]);
+
+            $log_table = $wpdb->prefix . 'wc_ac_visit_log';
+            $log_row   = $wpdb->get_row($wpdb->prepare("SELECT id FROM $log_table WHERE cart_id = %d ORDER BY visit_start DESC LIMIT 1", $row->id));
+            if ($log_row) {
+                $log_update = [ 'visit_end' => current_time('mysql') ];
+                if (!empty($url)) {
+                    $log_update['exit_url'] = $url;
+                }
+                $wpdb->update($log_table, $log_update, [ 'id' => $log_row->id ]);
+            }
         }
 
         return wp_send_json_success();
@@ -634,15 +669,21 @@ class Gm2_Abandoned_Carts {
         $cart_id = isset($_POST['cart_id']) ? absint($_POST['cart_id']) : 0;
         global $wpdb;
         $activity_table = $wpdb->prefix . 'wc_ac_cart_activity';
+        $visit_table    = $wpdb->prefix . 'wc_ac_visit_log';
         $carts_table    = $wpdb->prefix . 'wc_ac_carts';
         if ($cart_id) {
-            $sql  = "SELECT action, sku, quantity, changed_at FROM $activity_table WHERE cart_id = %d ORDER BY changed_at DESC";
-            $rows = $wpdb->get_results($wpdb->prepare($sql, $cart_id));
+            $sql        = "SELECT action, sku, quantity, changed_at FROM $activity_table WHERE cart_id = %d ORDER BY changed_at DESC";
+            $rows       = $wpdb->get_results($wpdb->prepare($sql, $cart_id));
+            $visit_sql  = "SELECT entry_url, exit_url, visit_start, visit_end FROM $visit_table WHERE cart_id = %d ORDER BY visit_start DESC";
+            $visit_rows = $wpdb->get_results($wpdb->prepare($visit_sql, $cart_id));
         } elseif ($ip !== '') {
             $sql = "SELECT a.action, a.sku, a.quantity, a.changed_at FROM $activity_table a INNER JOIN $carts_table c ON a.cart_id = c.id WHERE c.ip_address = %s ORDER BY a.changed_at DESC";
             $rows = $wpdb->get_results($wpdb->prepare($sql, $ip));
+            $visit_sql = "SELECT v.entry_url, v.exit_url, v.visit_start, v.visit_end FROM $visit_table v INNER JOIN $carts_table c ON v.cart_id = c.id WHERE c.ip_address = %s ORDER BY v.visit_start DESC";
+            $visit_rows = $wpdb->get_results($wpdb->prepare($visit_sql, $ip));
         } else {
-            $rows = [];
+            $rows       = [];
+            $visit_rows = [];
         }
         $data = [];
         if ($rows) {
@@ -655,7 +696,22 @@ class Gm2_Abandoned_Carts {
                 ];
             }
         }
-        wp_send_json_success($data);
+
+        $visit_data = [];
+        if ($visit_rows) {
+            foreach ($visit_rows as $vrow) {
+                $visit_data[] = [
+                    'entry_url'   => $vrow->entry_url,
+                    'exit_url'    => $vrow->exit_url,
+                    'visit_start' => mysql2date(get_option('date_format') . ' ' . get_option('time_format'), $vrow->visit_start),
+                    'visit_end'   => $vrow->visit_end ? mysql2date(get_option('date_format') . ' ' . get_option('time_format'), $vrow->visit_end) : '',
+                ];
+            }
+        }
+        wp_send_json_success([
+            'activity' => $data,
+            'visits'   => $visit_data,
+        ]);
     }
 
     public function mark_cart_recovered($order_id) {
