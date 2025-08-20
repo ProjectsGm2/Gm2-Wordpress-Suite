@@ -1468,7 +1468,7 @@ class Gm2_Custom_Posts_Admin {
             wp_enqueue_script(
                 'gm2-cpt-wizard',
                 GM2_PLUGIN_URL . 'admin/js/gm2-cpt-wizard.js',
-                [ 'wp-element', 'wp-components', 'wp-data', 'wp-i18n' ],
+                [ 'wp-element', 'wp-components', 'wp-data', 'wp-i18n', 'wp-notices' ],
                 file_exists($file) ? filemtime($file) : GM2_VERSION,
                 true
             );
