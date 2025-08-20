@@ -130,8 +130,8 @@ class AbandonedCartsTest extends WP_UnitTestCase {
         $this->assertNotEmpty($row['session_start']);
         $this->assertNull($row['abandoned_at']);
         $this->assertSame(0, $row['revisit_count']);
-        // exit_url should remain unchanged on active ping
-        $this->assertSame('https://initial.com', $row['exit_url']);
+        // A fresh session should reset the recorded exit_url
+        $this->assertSame('', $row['exit_url']);
 
         // Abandon the cart and ensure exit_url reflects the last visited page
         $_POST = [ 'nonce' => 'n', 'url' => 'https://example.com/page1' ];
@@ -143,7 +143,7 @@ class AbandonedCartsTest extends WP_UnitTestCase {
         $this->assertNull($row['session_start']);
         $this->assertSame('https://example.com/page1', $row['exit_url']);
 
-        // Reactivate the cart; exit_url should not change until abandonment
+        // Reactivate the cart; exit_url resets for the new session
         $_POST = [ 'nonce' => 'n', 'url' => 'https://example.com/page2' ];
         $_REQUEST = $_POST;
         \Gm2\Gm2_Abandoned_Carts::gm2_ac_mark_active();
@@ -152,7 +152,7 @@ class AbandonedCartsTest extends WP_UnitTestCase {
         $this->assertNull($row['abandoned_at']);
         $this->assertNotEmpty($row['session_start']);
         $this->assertSame(1, $row['revisit_count']);
-        $this->assertSame('https://example.com/page1', $row['exit_url']);
+        $this->assertSame('', $row['exit_url']);
 
         // Abandon without explicit URL; session value should persist
         $_POST = [ 'nonce' => 'n' ];
