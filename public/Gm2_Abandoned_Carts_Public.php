@@ -66,7 +66,14 @@ class Gm2_Abandoned_Carts_Public {
             GM2_VERSION,
             true
         );
-        $inactivity_ms = absint(apply_filters('gm2_ac_inactivity_ms', 5 * MINUTE_IN_SECONDS * 1000));
+        /**
+         * Filters the inactivity timeout (in milliseconds) before a cart is marked abandoned.
+         *
+         * Returning `0` disables inactivity tracking entirely.
+         *
+         * @param int|null $milliseconds Time in milliseconds. Default 5 minutes.
+         */
+        $inactivity_ms = apply_filters('gm2_ac_inactivity_ms', 5 * MINUTE_IN_SECONDS * 1000);
         wp_localize_script(
             'gm2-ac-activity',
             'gm2AcActivity',
