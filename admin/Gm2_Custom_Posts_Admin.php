@@ -1535,10 +1535,22 @@ class Gm2_Custom_Posts_Admin {
             if (!is_array($groups)) {
                 $groups = [];
             }
+            $pts  = get_post_types([ 'public' => true ], 'objects');
+            $taxs = get_taxonomies([ 'public' => true ], 'objects');
+            $post_types = [];
+            foreach ($pts as $slug => $pt_obj) {
+                $post_types[$slug] = $pt_obj->labels->singular_name ?? $slug;
+            }
+            $taxonomies = [];
+            foreach ($taxs as $slug => $tax_obj) {
+                $taxonomies[$slug] = $tax_obj->labels->singular_name ?? $slug;
+            }
             wp_localize_script('gm2-fg-wizard', 'gm2FGWizard', [
-                'nonce'  => wp_create_nonce('gm2_save_field_group'),
-                'ajax'   => admin_url('admin-ajax.php'),
-                'groups' => $groups,
+                'nonce'      => wp_create_nonce('gm2_save_field_group'),
+                'ajax'       => admin_url('admin-ajax.php'),
+                'groups'     => $groups,
+                'postTypes'  => $post_types,
+                'taxonomies' => $taxonomies,
             ]);
         }
 

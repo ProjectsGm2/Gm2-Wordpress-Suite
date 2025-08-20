@@ -1,7 +1,7 @@
 (function(wp){
     const { createElement: el, useState } = wp.element;
     const { render } = wp.element;
-    const { Button, TextControl, SelectControl, PanelBody, Panel } = wp.components;
+    const { Button, TextControl, SelectControl, FormTokenField, PanelBody, Panel } = wp.components;
     const { dispatch } = wp.data;
 
     const StepOne = ({ data, setData, existing, loadGroup }) => {
@@ -9,6 +9,16 @@
         Object.keys(existing).forEach(sl => {
             options.push({ label: existing[sl].title || sl, value: sl });
         });
+        const wizard = window.gm2FGWizard || {};
+        const scopeOptions = [];
+        if (wizard.postTypes && Object.keys(wizard.postTypes).length) {
+            scopeOptions.push({ label: 'Post Types', value: 'post_type' });
+        }
+        if (wizard.taxonomies && Object.keys(wizard.taxonomies).length) {
+            scopeOptions.push({ label: 'Taxonomies', value: 'taxonomy' });
+        }
+        const source = data.scope === 'taxonomy' ? wizard.taxonomies : wizard.postTypes;
+        const suggestions = Object.keys(source || {});
         return el('div', {},
             options.length > 1 && el(SelectControl, {
                 label: 'Existing Groups',
@@ -26,15 +36,19 @@
                 value: data.title,
                 onChange: v => setData({ ...data, title: v })
             }),
-            el(TextControl, {
+            el(SelectControl, {
                 label: 'Scope',
                 value: data.scope,
-                onChange: v => setData({ ...data, scope: v })
+                options: scopeOptions,
+                onChange: v => setData({ ...data, scope: v, objects: [] }),
+                help: 'Scope determines the type of content (post types or taxonomies) this field group attaches to.'
             }),
-            el(TextControl, {
-                label: 'Objects (comma separated)',
+            el(FormTokenField, {
+                label: 'Objects',
                 value: data.objects,
-                onChange: v => setData({ ...data, objects: v })
+                suggestions: suggestions,
+                onChange: tokens => setData({ ...data, objects: tokens }),
+                help: 'Select the specific ' + (data.scope === 'taxonomy' ? 'taxonomies' : 'post types') + ' where this field group should appear.'
             })
         );
     };
@@ -145,14 +159,14 @@
     const Wizard = () => {
         const existing = (window.gm2FGWizard && window.gm2FGWizard.groups) || {};
         const [ step, setStep ] = useState(1);
-        const [ data, setData ] = useState({ slug: '', title: '', scope: 'post_type', objects: '', fields: [], location: [] });
+        const [ data, setData ] = useState({ slug: '', title: '', scope: 'post_type', objects: [], fields: [], location: [] });
 
         const next = () => setStep(step + 1);
         const back = () => setStep(step - 1);
 
         const loadGroup = (slug) => {
             if(!slug){
-                setData({ slug: '', title: '', scope: 'post_type', objects: '', fields: [], location: [] });
+                setData({ slug: '', title: '', scope: 'post_type', objects: [], fields: [], location: [] });
                 return;
             }
             const group = existing[slug] || {};
@@ -161,7 +175,7 @@
                 label: group.fields[key].label || '',
                 type: group.fields[key].type || 'text'
             }));
-            const objects = (group.objects || []).join(',');
+            const objects = group.objects || [];
             setData({ slug: slug, title: group.title || '', scope: group.scope || 'post_type', objects, fields, location: group.location || [] });
         };
 
@@ -179,8 +193,7 @@
             payload.append('slug', data.slug);
             payload.append('title', data.title);
             payload.append('scope', data.scope);
-            const objs = data.objects.split(',').map(o => o.trim()).filter(o => o);
-            payload.append('objects', JSON.stringify(objs));
+            payload.append('objects', JSON.stringify(data.objects));
             payload.append('fields', JSON.stringify(data.fields));
             payload.append('location', JSON.stringify(data.location));
             fetch(window.gm2FGWizard.ajax, {
