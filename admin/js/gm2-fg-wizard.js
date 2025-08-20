@@ -1,5 +1,5 @@
 (function(wp){
-    const { createElement: el, useState } = wp.element;
+    const { createElement: el, useState, useEffect } = wp.element;
     const { render } = wp.element;
     const { Button, TextControl, SelectControl, FormTokenField, PanelBody, Panel, Card, CardBody, Sortable } = wp.components;
     const { dispatch } = wp.data;
@@ -155,7 +155,19 @@
         );
     };
 
+
+    
     const LocationStep = ({ data, setData }) => {
+        const wizard = window.gm2FGWizard || {};
+        const paramOptions = [
+            { label: 'Post Type', value: 'post_type' },
+            { label: 'Taxonomy', value: 'taxonomy' },
+            { label: 'Template', value: 'template' }
+        ];
+        const operatorOptions = [
+            { label: '==', value: '==' },
+            { label: '!=', value: '!=' }
+        ];
         const addGroup = () => {
             setData({ ...data, location: [ ...data.location, { relation: 'AND', rules: [] } ] });
         };
@@ -166,7 +178,7 @@
         };
         const addRule = (gi) => {
             const copy = data.location.slice();
-            copy[gi].rules.push({ param: '', operator: '==', value: '' });
+            copy[gi].rules.push({ param: 'post_type', operator: '==', value: '' });
             setData({ ...data, location: copy });
         };
         const updateRule = (gi,ri,field,val) => {
@@ -184,35 +196,76 @@
             copy[gi].relation = v;
             setData({ ...data, location: copy });
         };
-        return el('div', {},
-            data.location.map((g,gi) => el('div', { key: gi },
-                el(SelectControl, {
-                    label: 'Group Relation',
-                    value: g.relation || 'AND',
-                    options: [ { label: 'AND', value: 'AND' }, { label: 'OR', value: 'OR' } ],
-                    onChange: v => updateGroupRel(gi,v)
-                }),
-                g.rules.map((r,ri) => el('div', { key: ri },
-                    el(TextControl, {
-                        label: 'Param',
-                        value: r.param,
-                        onChange: v => updateRule(gi,ri,'param',v)
-                    }),
+        const ValueControl = ({ rule, onChange }) => {
+            if(rule.param === 'post_type'){
+                const options = Object.keys(wizard.postTypes || {}).map(slug => ({ label: wizard.postTypes[slug], value: slug }));
+                return el(SelectControl, { label: 'Value', value: rule.value, options, onChange });
+            }
+            if(rule.param === 'taxonomy'){
+                const taxOptions = Object.keys(wizard.taxonomies || {}).map(slug => ({ label: wizard.taxonomies[slug], value: slug }));
+                const [ tax, term ] = (rule.value || ':').split(':');
+                const [ selectedTax, setSelectedTax ] = useState(tax);
+                const [ terms, setTerms ] = useState([]);
+                useEffect(() => {
+                    if(selectedTax){
+                        const restRoot = (window.wpApiSettings && window.wpApiSettings.root) || '/wp-json/';
+                        fetch(restRoot + 'wp/v2/' + selectedTax + '?per_page=100').then(r => r.json()).then(res => {
+                            setTerms(res.map(t => ({ label: t.name, value: t.slug })));
+                        });
+                    }
+                }, [selectedTax]);
+                return el('div', {},
                     el(SelectControl, {
-                        label: 'Operator',
-                        value: r.operator,
-                        options: [ { label: '==', value: '==' }, { label: '!=', value: '!=' } ],
-                        onChange: v => updateRule(gi,ri,'operator',v)
+                        label: 'Taxonomy',
+                        value: selectedTax,
+                        options: taxOptions,
+                        onChange: v => { setSelectedTax(v); onChange(v + ':'); }
                     }),
-                    el(TextControl, {
-                        label: 'Value',
-                        value: r.value,
-                        onChange: v => updateRule(gi,ri,'value',v)
+                    selectedTax && el(SelectControl, {
+                        label: 'Term',
+                        value: term,
+                        options: terms,
+                        onChange: v => onChange(selectedTax + ':' + v)
+                    })
+                );
+            }
+            return el(TextControl, { label: 'Value', value: rule.value, onChange });
+        };
+        return el('div', {},
+            el('p', { className: 'gm2-location-help' }, 'Each group is evaluated separately. Rules inside a group use the selected relation, and the field group is displayed when any group matches.'),
+            data.location.map((g,gi) => el(Card, { key: gi, className: 'gm2-location-group' },
+                el(CardBody, {},
+                    el(SelectControl, {
+                        label: 'Group Relation',
+                        value: g.relation || 'AND',
+                        options: [ { label: 'AND', value: 'AND' }, { label: 'OR', value: 'OR' } ],
+                        onChange: v => updateGroupRel(gi,v),
+                        help: 'Choose how rules in this group are combined.'
                     }),
-                    el(Button, { isLink: true, onClick: () => removeRule(gi,ri) }, 'Delete Rule')
-                )),
-                el(Button, { isLink: true, onClick: () => addRule(gi) }, 'Add Rule'),
-                el(Button, { isLink: true, onClick: () => removeGroup(gi) }, 'Remove Group')
+                    g.rules.map((r,ri) => el(Card, { key: ri, className: 'gm2-location-rule' },
+                        el(CardBody, {},
+                            el(SelectControl, {
+                                label: 'Parameter',
+                                value: r.param,
+                                options: paramOptions,
+                                onChange: v => updateRule(gi,ri,'param',v)
+                            }),
+                            el(SelectControl, {
+                                label: 'Operator',
+                                value: r.operator,
+                                options: operatorOptions,
+                                onChange: v => updateRule(gi,ri,'operator',v)
+                            }),
+                            el(ValueControl, {
+                                rule: r,
+                                onChange: v => updateRule(gi,ri,'value',v)
+                            }),
+                            el(Button, { isLink: true, onClick: () => removeRule(gi,ri) }, 'Delete Rule')
+                        )
+                    )),
+                    el(Button, { isSecondary: true, onClick: () => addRule(gi) }, 'Add Rule'),
+                    el(Button, { isDestructive: true, onClick: () => removeGroup(gi) }, 'Remove Group')
+                )
             )),
             el(Button, { isPrimary: true, onClick: addGroup }, 'Add Location Group')
         );
