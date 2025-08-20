@@ -152,6 +152,7 @@ class Gm2_Custom_Posts_Admin {
             'gm2_cpt_fields',
             [ $this, 'display_fields_page' ]
         );
+        remove_submenu_page('gm2-custom-posts', 'gm2_cpt_fields');
 
         add_submenu_page(
             'gm2-custom-posts',
@@ -179,6 +180,7 @@ class Gm2_Custom_Posts_Admin {
             'gm2_tax_args',
             [ $this, 'display_taxonomy_page' ]
         );
+        remove_submenu_page('gm2-custom-posts', 'gm2_tax_args');
 
         add_submenu_page(
             'gm2-custom-posts',
@@ -244,6 +246,23 @@ class Gm2_Custom_Posts_Admin {
         }
 
         $config = $this->get_config();
+
+        if (!$slug) {
+            $post_types = $config['post_types'];
+            if (!$post_types) {
+                wp_safe_redirect(admin_url('admin.php?page=gm2-custom-posts'));
+                exit;
+            }
+            echo '<div class="wrap"><h1>' . esc_html__( 'Select a Post Type', 'gm2-wordpress-suite' ) . '</h1><ul>';
+            foreach ($post_types as $pt_slug => $pt) {
+                $label = $pt['label'] ?? $pt_slug;
+                $url   = admin_url('admin.php?page=gm2_cpt_fields&cpt=' . $pt_slug);
+                echo '<li><a href="' . esc_url($url) . '">' . esc_html($label) . '</a></li>';
+            }
+            echo '</ul></div>';
+            return;
+        }
+
         $post_type = $config['post_types'][$slug] ?? null;
         if (!$post_type) {
             echo '<div class="wrap"><h1>' . esc_html__( 'Invalid post type.', 'gm2-wordpress-suite' ) . '</h1></div>';
@@ -330,8 +349,25 @@ class Gm2_Custom_Posts_Admin {
             wp_die(esc_html__( 'Permission denied', 'gm2-wordpress-suite' ));
         }
 
-        $slug = sanitize_key($_GET['tax'] ?? '');
+        $slug   = sanitize_key($_GET['tax'] ?? '');
         $config = $this->get_config();
+
+        if (!$slug) {
+            $taxonomies = $config['taxonomies'];
+            if (!$taxonomies) {
+                wp_safe_redirect(admin_url('admin.php?page=gm2-custom-posts'));
+                exit;
+            }
+            echo '<div class="wrap"><h1>' . esc_html__( 'Select a Taxonomy', 'gm2-wordpress-suite' ) . '</h1><ul>';
+            foreach ($taxonomies as $tax_slug => $tax) {
+                $label = $tax['label'] ?? $tax_slug;
+                $url   = admin_url('admin.php?page=gm2_tax_args&tax=' . $tax_slug);
+                echo '<li><a href="' . esc_url($url) . '">' . esc_html($label) . '</a></li>';
+            }
+            echo '</ul></div>';
+            return;
+        }
+
         $taxonomy = $config['taxonomies'][$slug] ?? null;
         if (!$taxonomy) {
             echo '<div class="wrap"><h1>' . esc_html__( 'Invalid taxonomy.', 'gm2-wordpress-suite' ) . '</h1></div>';
