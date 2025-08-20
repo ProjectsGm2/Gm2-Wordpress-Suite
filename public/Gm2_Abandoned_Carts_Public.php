@@ -99,12 +99,13 @@ class Gm2_Abandoned_Carts_Public {
 
         $token            = '';
         $session_entry_url = '';
+        $client_id        = isset($_POST['client_id']) ? sanitize_text_field(wp_unslash($_POST['client_id'])) : (isset($_COOKIE['gm2_ac_client_id']) ? sanitize_text_field(wp_unslash($_COOKIE['gm2_ac_client_id'])) : '');
         if (class_exists('WC_Session') && WC()->session) {
             $token            = WC()->session->get_customer_id();
             $session_entry_url = WC()->session->get('gm2_entry_url');
         }
 
-        if (empty($token)) {
+        if (empty($token) && empty($client_id)) {
             wp_send_json_error('no_cart');
         }
 
@@ -124,16 +125,27 @@ class Gm2_Abandoned_Carts_Public {
 
         global $wpdb;
         $table = $wpdb->prefix . 'wc_ac_carts';
-        $row   = $wpdb->get_row($wpdb->prepare("SELECT id, entry_url FROM $table WHERE cart_token = %s", $token));
+        if (!empty($client_id)) {
+            $row = $wpdb->get_row($wpdb->prepare("SELECT id, entry_url FROM $table WHERE client_id = %s", $client_id));
+            if (!$row && !empty($token)) {
+                $row = $wpdb->get_row($wpdb->prepare("SELECT id, entry_url FROM $table WHERE cart_token = %s", $token));
+            }
+        } else {
+            $row   = $wpdb->get_row($wpdb->prepare("SELECT id, entry_url FROM $table WHERE cart_token = %s", $token));
+        }
         if ($row) {
+            $update = [
+                'email'      => $email,
+                'phone'      => $phone,
+                'browser'    => $browser,
+                'user_agent' => $agent,
+            ];
+            if (!empty($client_id)) {
+                $update['client_id'] = $client_id;
+            }
             $wpdb->update(
                 $table,
-                [
-                    'email'      => $email,
-                    'phone'      => $phone,
-                    'browser'    => $browser,
-                    'user_agent' => $agent,
-                ],
+                $update,
                 [ 'id' => $row->id ]
             );
             if (empty($row->entry_url) && !empty($stored_entry)) {
@@ -186,7 +198,7 @@ class Gm2_Abandoned_Carts_Public {
                 }
             }
             $total = (float) $cart->get_cart_contents_total();
-            $wpdb->insert($table, [
+            $insert = [
                 'cart_token'    => $token,
                 'user_id'       => get_current_user_id(),
                 'cart_contents' => $contents,
@@ -200,7 +212,11 @@ class Gm2_Abandoned_Carts_Public {
                 'cart_total'    => $total,
                 'email'         => $email,
                 'phone'         => $phone,
-            ]);
+            ];
+            if (!empty($client_id)) {
+                $insert['client_id'] = $client_id;
+            }
+            $wpdb->insert($table, $insert);
         }
 
         wp_send_json_success();

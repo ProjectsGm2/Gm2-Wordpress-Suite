@@ -1,6 +1,7 @@
 (function () {
     const KEY = 'gm2AcTabCount';
     const ENTRY_KEY = 'gm2_entry_url';
+    const CLIENT_KEY = 'gm2_ac_client_id';
     const ajaxUrl = gm2AcActivity.ajax_url;
     const nonce = gm2AcActivity.nonce;
     const rawInactivity = gm2AcActivity.inactivity_ms;
@@ -9,8 +10,30 @@
     const url = window.location.href;
     let pendingTargetUrl;
 
+    function getClientId() {
+        let id;
+        try {
+            id = localStorage.getItem(CLIENT_KEY);
+            if (!id && typeof crypto !== 'undefined' && crypto.randomUUID) {
+                id = crypto.randomUUID();
+                localStorage.setItem(CLIENT_KEY, id);
+            }
+        } catch (e) {
+            if (!id && typeof crypto !== 'undefined' && crypto.randomUUID) {
+                id = crypto.randomUUID();
+            }
+        }
+        if (!id) {
+            id = String(Math.random());
+        }
+        document.cookie = CLIENT_KEY + '=' + id + '; path=/';
+        return id;
+    }
+
+    const clientId = getClientId();
+
     function send(action, targetUrl) {
-        const data = new URLSearchParams({ action, nonce, url: targetUrl || window.location.href });
+        const data = new URLSearchParams({ action, nonce, url: targetUrl || window.location.href, client_id: clientId });
 
         if (action === 'gm2_ac_mark_abandoned') {
             let beaconSent = false;
