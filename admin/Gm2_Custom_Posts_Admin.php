@@ -1531,6 +1531,13 @@ class Gm2_Custom_Posts_Admin {
                 file_exists($file) ? filemtime($file) : GM2_VERSION,
                 true
             );
+            $css = GM2_PLUGIN_DIR . 'admin/css/gm2-fg-wizard.css';
+            wp_enqueue_style(
+                'gm2-fg-wizard',
+                GM2_PLUGIN_URL . 'admin/css/gm2-fg-wizard.css',
+                [],
+                file_exists($css) ? filemtime($css) : GM2_VERSION
+            );
             $groups = get_option('gm2_field_groups', []);
             if (!is_array($groups)) {
                 $groups = [];

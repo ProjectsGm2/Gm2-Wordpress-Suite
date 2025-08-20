@@ -319,9 +319,22 @@
         const existing = (window.gm2FGWizard && window.gm2FGWizard.groups) || {};
         const [ step, setStep ] = useState(1);
         const [ data, setData ] = useState({ slug: '', title: '', scope: 'post_type', objects: [], fields: [], location: [] });
+        const [ saving, setSaving ] = useState(false);
+        const [ error, setError ] = useState('');
         const steps = [ 'Details', 'Fields', 'Location', 'Review' ];
 
-        const next = () => setStep(step + 1);
+        const next = () => {
+            if(step === 1 && !data.slug){
+                setError('Slug is required');
+                return;
+            }
+            if(step === 2 && data.fields.length === 0){
+                setError('At least one field is required');
+                return;
+            }
+            setError('');
+            setStep(step + 1);
+        };
         const back = () => setStep(step - 1);
         const goto = (s) => setStep(s);
 
@@ -348,6 +361,14 @@
         };
 
         const save = () => {
+            if(saving) return;
+            if(!data.slug){
+                setError('Slug is required');
+                setStep(1);
+                return;
+            }
+            setSaving(true);
+            setError('');
             const payload = new URLSearchParams();
             payload.append('action','gm2_save_field_group');
             payload.append('nonce', window.gm2FGWizard.nonce);
@@ -369,10 +390,13 @@
                         window.location.href = (window.gm2FGWizard && window.gm2FGWizard.listUrl) || 'admin.php?page=gm2-custom-posts';
                     }, 1500);
                 } else {
-                    dispatch('core/notices').createNotice('error', 'Error saving', { type: 'snackbar' });
+                    const msg = resp && resp.data && resp.data.message ? resp.data.message : 'Error saving';
+                    setError(msg);
                 }
             }).catch(() => {
-                dispatch('core/notices').createNotice('error', 'Error saving', { type: 'snackbar' });
+                setError('Error saving');
+            }).finally(() => {
+                setSaving(false);
             });
         };
 
@@ -384,10 +408,11 @@
                         el('progress', { max: steps.length, value: step })
                     ),
                     renderStep(),
+                    error && el('p', { className: 'gm2-fg-error' }, error),
                     el('div', { className: 'gm2-fg-wizard-buttons' }, [
-                        step > 1 && el(Button, { onClick: back }, 'Back'),
-                        step < steps.length && el(Button, { isPrimary: true, onClick: next }, 'Next'),
-                        step === steps.length && el(Button, { isPrimary: true, onClick: save }, 'Finish')
+                        step > 1 && el(Button, { onClick: back, disabled: saving }, 'Back'),
+                        step < steps.length && el(Button, { isPrimary: true, onClick: next, disabled: saving }, 'Next'),
+                        step === steps.length && el(Button, { isPrimary: true, onClick: save, isBusy: saving, disabled: saving }, 'Finish')
                     ])
                 )
             )

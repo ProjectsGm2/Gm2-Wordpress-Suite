@@ -1,0 +1,58 @@
+.gm2-fg-wizard {
+    font-family: inherit;
+    margin-top: 1rem;
+}
+
+.gm2-fg-stepper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 1rem;
+}
+
+.gm2-fg-stepper-label {
+    font-weight: 600;
+}
+
+.gm2-fg-stepper progress {
+    flex: 1 1 auto;
+    height: 8px;
+}
+
+.gm2-fg-wizard-buttons {
+    display: flex;
+    gap: 8px;
+    margin-top: 1rem;
+    justify-content: flex-end;
+}
+
+.gm2-fg-wizard-buttons .button {
+    margin-right: 0;
+}
+
+.gm2-fg-error {
+    color: #b32d2e;
+    margin-top: 0.5rem;
+}
+
+.gm2-field-item,
+.gm2-location-group {
+    margin-bottom: 1rem;
+}
+
+.gm2-fg-review-fields th,
+.gm2-fg-review-fields td {
+    padding: 4px 8px;
+}
+
+.gm2-location-help {
+    margin-bottom: 0.5rem;
+}
+
+@media (max-width: 782px) {
+    .gm2-fg-wizard-buttons {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
