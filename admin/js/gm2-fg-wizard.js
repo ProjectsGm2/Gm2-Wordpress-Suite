@@ -271,17 +271,59 @@
         );
     };
 
-    const ReviewStep = ({ data }) => el('div', {},
-        el('pre', { className: 'gm2-fg-review' }, JSON.stringify(data, null, 2))
-    );
+    const ReviewStep = ({ data, onEdit }) => {
+        const fieldsTable = data.fields.length ?
+            el('table', { className: 'gm2-fg-review-fields' },
+                el('thead', {},
+                    el('tr', {},
+                        el('th', {}, 'Label'),
+                        el('th', {}, 'Slug'),
+                        el('th', {}, 'Type')
+                    )
+                ),
+                el('tbody', {},
+                    data.fields.map((f,i) => el('tr', { key: i },
+                        el('td', {}, f.label),
+                        el('td', {}, f.slug),
+                        el('td', {}, f.type)
+                    ))
+                )
+            ) : el('p', {}, 'No fields defined.');
+
+        const locationSummary = data.location.length ?
+            data.location.map((g,gi) => el('div', { key: gi },
+                el('strong', {}, 'Group ' + (gi + 1) + ' (' + (g.relation || 'AND') + ')'),
+                el('ul', {},
+                    g.rules.map((r,ri) => el('li', { key: ri },
+                        r.param + ' ' + r.operator + ' ' + (Array.isArray(r.value) ? r.value.join(', ') : r.value)
+                    ))
+                )
+            )) : el('p', {}, 'No location rules.');
+
+        return el('div', {},
+            el('h3', {}, 'General ', el(Button, { isLink: true, onClick: () => onEdit(1) }, 'Edit')),
+            el('ul', {},
+                el('li', {}, 'Slug: ' + data.slug),
+                el('li', {}, 'Title: ' + data.title),
+                el('li', {}, 'Scope: ' + data.scope),
+                el('li', {}, 'Objects: ' + (data.objects.join(', ') || 'None'))
+            ),
+            el('h3', {}, 'Fields ', el(Button, { isLink: true, onClick: () => onEdit(2) }, 'Edit')),
+            fieldsTable,
+            el('h3', {}, 'Location Rules ', el(Button, { isLink: true, onClick: () => onEdit(3) }, 'Edit')),
+            locationSummary
+        );
+    };
 
     const Wizard = () => {
         const existing = (window.gm2FGWizard && window.gm2FGWizard.groups) || {};
         const [ step, setStep ] = useState(1);
         const [ data, setData ] = useState({ slug: '', title: '', scope: 'post_type', objects: [], fields: [], location: [] });
+        const steps = [ 'Details', 'Fields', 'Location', 'Review' ];
 
         const next = () => setStep(step + 1);
         const back = () => setStep(step - 1);
+        const goto = (s) => setStep(s);
 
         const loadGroup = (slug) => {
             if(!slug){
@@ -302,7 +344,7 @@
             if(step === 1) return el(StepOne, { data, setData, existing, loadGroup });
             if(step === 2) return el(FieldsStep, { data, setData });
             if(step === 3) return el(LocationStep, { data, setData });
-            return el(ReviewStep, { data });
+            return el(ReviewStep, { data, onEdit: goto });
         };
 
         const save = () => {
@@ -323,6 +365,9 @@
             }).then(r => r.json()).then(resp => {
                 if(resp && resp.success){
                     dispatch('core/notices').createNotice('success', 'Field group saved', { type: 'snackbar' });
+                    setTimeout(() => {
+                        window.location.href = (window.gm2FGWizard && window.gm2FGWizard.listUrl) || 'admin.php?page=gm2-custom-posts';
+                    }, 1500);
                 } else {
                     dispatch('core/notices').createNotice('error', 'Error saving', { type: 'snackbar' });
                 }
@@ -334,11 +379,15 @@
         return el('div', { className: 'gm2-fg-wizard' },
             el(Panel, {},
                 el(PanelBody, { title: 'Field Group Wizard', initialOpen: true },
+                    el('div', { className: 'gm2-fg-stepper' },
+                        el('div', { className: 'gm2-fg-stepper-label' }, 'Step ' + step + ' of ' + steps.length),
+                        el('progress', { max: steps.length, value: step })
+                    ),
                     renderStep(),
                     el('div', { className: 'gm2-fg-wizard-buttons' }, [
                         step > 1 && el(Button, { onClick: back }, 'Back'),
-                        step < 4 && el(Button, { isPrimary: true, onClick: next }, 'Next'),
-                        step === 4 && el(Button, { isPrimary: true, onClick: save }, 'Finish')
+                        step < steps.length && el(Button, { isPrimary: true, onClick: next }, 'Next'),
+                        step === steps.length && el(Button, { isPrimary: true, onClick: save }, 'Finish')
                     ])
                 )
             )
