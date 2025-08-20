@@ -4,7 +4,7 @@
     const { Button, TextControl, SelectControl, FormTokenField, PanelBody, Panel, Card, CardBody, Sortable } = wp.components;
     const { dispatch } = wp.data;
 
-    const StepOne = ({ data, setData, existing, loadGroup }) => {
+    const StepOne = ({ data, setData, existing, loadGroup, setExisting }) => {
         const options = [ { label: 'New', value: '' } ];
         Object.keys(existing).forEach(sl => {
             options.push({ label: existing[sl].title || sl, value: sl });
@@ -31,6 +31,59 @@
             }
             setData({ ...data, slug: v });
         };
+
+        const deleteGroup = () => {
+            if(!data.slug) return;
+            if(!window.confirm('Delete this group?')) return;
+            const payload = new URLSearchParams();
+            payload.append('action','gm2_delete_field_group');
+            payload.append('nonce', window.gm2FGWizard.nonce);
+            payload.append('slug', data.slug);
+            fetch(window.gm2FGWizard.ajax, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: payload.toString()
+            }).then(r => r.json()).then(resp => {
+                if(resp && resp.success){
+                    setExisting(resp.data.groups || {});
+                    loadGroup('');
+                    dispatch('core/notices').createNotice('success', 'Field group deleted');
+                } else {
+                    dispatch('core/notices').createNotice('error', 'Error deleting group');
+                }
+            }).catch(() => {
+                dispatch('core/notices').createNotice('error', 'Error deleting group');
+            });
+        };
+
+        const renameGroup = () => {
+            if(!data.slug) return;
+            const newSlug = window.prompt('Enter new slug', data.slug);
+            if(!newSlug || newSlug === data.slug) return;
+            const payload = new URLSearchParams();
+            payload.append('action','gm2_rename_field_group');
+            payload.append('nonce', window.gm2FGWizard.nonce);
+            payload.append('slug', data.slug);
+            payload.append('new_slug', newSlug);
+            fetch(window.gm2FGWizard.ajax, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: payload.toString()
+            }).then(r => r.json()).then(resp => {
+                if(resp && resp.success){
+                    setExisting(resp.data.groups || {});
+                    loadGroup(newSlug);
+                    dispatch('core/notices').createNotice('success', 'Field group renamed');
+                } else {
+                    dispatch('core/notices').createNotice('error', 'Error renaming group');
+                }
+            }).catch(() => {
+                dispatch('core/notices').createNotice('error', 'Error renaming group');
+            });
+        };
+
         return el('div', {},
             options.length > 1 && el(SelectControl, {
                 label: 'Existing Groups',
@@ -62,7 +115,11 @@
                 suggestions: suggestions,
                 onChange: tokens => setData({ ...data, objects: tokens }),
                 help: 'Select the specific ' + (data.scope === 'taxonomy' ? 'taxonomies' : 'post types') + ' where this field group should appear.'
-            })
+            }),
+            existing[data.slug] && el('div', { className: 'gm2-fg-group-actions' },
+                el(Button, { isDestructive: true, onClick: deleteGroup }, 'Delete Group'),
+                el(Button, { onClick: renameGroup }, 'Rename')
+            )
         );
     };
 
@@ -316,7 +373,7 @@
     };
 
     const Wizard = () => {
-        const existing = (window.gm2FGWizard && window.gm2FGWizard.groups) || {};
+        const [ existing, setExisting ] = useState((window.gm2FGWizard && window.gm2FGWizard.groups) || {});
         const [ step, setStep ] = useState(1);
         const [ data, setData ] = useState({ slug: '', title: '', scope: 'post_type', objects: [], fields: [], location: [] });
         const [ saving, setSaving ] = useState(false);
@@ -354,7 +411,7 @@
         };
 
         const renderStep = () => {
-            if(step === 1) return el(StepOne, { data, setData, existing, loadGroup });
+            if(step === 1) return el(StepOne, { data, setData, existing, loadGroup, setExisting });
             if(step === 2) return el(FieldsStep, { data, setData });
             if(step === 3) return el(LocationStep, { data, setData });
             return el(ReviewStep, { data, onEdit: goto });

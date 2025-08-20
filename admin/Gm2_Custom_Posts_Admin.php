@@ -22,6 +22,8 @@ class Gm2_Custom_Posts_Admin {
         add_action('wp_ajax_gm2_save_query', [ $this, 'ajax_save_query' ]);
         add_action('wp_ajax_gm2_save_cpt_model', [ $this, 'ajax_save_cpt_model' ]);
         add_action('wp_ajax_gm2_save_field_group', [ $this, 'ajax_save_field_group' ]);
+        add_action('wp_ajax_gm2_delete_field_group', [ $this, 'ajax_delete_field_group' ]);
+        add_action('wp_ajax_gm2_rename_field_group', [ $this, 'ajax_rename_field_group' ]);
         add_action('wp_ajax_gm2_regenerate_thumbnails', [ $this, 'ajax_regenerate_thumbnails' ]);
         add_action('enqueue_block_editor_assets', [ $this, 'enqueue_block_editor_assets' ]);
         add_action('restrict_manage_posts', [ $this, 'restrict_manage_posts' ]);
@@ -1909,6 +1911,53 @@ class Gm2_Custom_Posts_Admin {
         update_option('gm2_field_groups', $groups);
         wp_send_json_success([
             'group' => $groups[$slug],
+        ]);
+    }
+
+    public function ajax_delete_field_group() {
+        if (!$this->can_manage()) {
+            wp_send_json_error('permission');
+        }
+        $nonce = $_POST['nonce'] ?? '';
+        if (!wp_verify_nonce($nonce, 'gm2_save_field_group')) {
+            wp_send_json_error('nonce');
+        }
+        $slug = sanitize_key($_POST['slug'] ?? '');
+        if (!$slug) {
+            wp_send_json_error('data');
+        }
+        $groups = get_option('gm2_field_groups', []);
+        if (isset($groups[$slug])) {
+            unset($groups[$slug]);
+            update_option('gm2_field_groups', $groups);
+        }
+        wp_send_json_success([
+            'groups' => $groups,
+        ]);
+    }
+
+    public function ajax_rename_field_group() {
+        if (!$this->can_manage()) {
+            wp_send_json_error('permission');
+        }
+        $nonce = $_POST['nonce'] ?? '';
+        if (!wp_verify_nonce($nonce, 'gm2_save_field_group')) {
+            wp_send_json_error('nonce');
+        }
+        $slug     = sanitize_key($_POST['slug'] ?? '');
+        $new_slug = sanitize_key($_POST['new_slug'] ?? '');
+        if (!$slug || !$new_slug) {
+            wp_send_json_error('data');
+        }
+        $groups = get_option('gm2_field_groups', []);
+        if (!isset($groups[$slug]) || isset($groups[$new_slug])) {
+            wp_send_json_error('invalid');
+        }
+        $groups[$new_slug] = $groups[$slug];
+        unset($groups[$slug]);
+        update_option('gm2_field_groups', $groups);
+        wp_send_json_success([
+            'groups' => $groups,
         ]);
     }
 
