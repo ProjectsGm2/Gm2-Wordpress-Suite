@@ -35,31 +35,31 @@ class GroupedDB {
     public $data = [];
     public function __construct() {
         $this->data[$this->prefix.'wc_ac_carts'] = [
-            ['id'=>1,'ip_address'=>'1.1.1.1','cart_contents'=>'[]','created_at'=>'2024-01-01 00:00:00','revisit_count'=>1,'browsing_time'=>30,'email'=>'','phone'=>'','location'=>'','device'=>'','browser'=>'','entry_url'=>'','exit_url'=>'','cart_total'=>0,'abandoned_at'=>null],
-            ['id'=>2,'ip_address'=>'1.1.1.1','cart_contents'=>'[]','created_at'=>'2024-01-02 00:00:00','revisit_count'=>2,'browsing_time'=>40,'email'=>'','phone'=>'','location'=>'','device'=>'','browser'=>'','entry_url'=>'','exit_url'=>'','cart_total'=>0,'abandoned_at'=>null],
-            ['id'=>3,'ip_address'=>'2.2.2.2','cart_contents'=>'[]','created_at'=>'2024-01-03 00:00:00','revisit_count'=>1,'browsing_time'=>20,'email'=>'','phone'=>'','location'=>'','device'=>'','browser'=>'','entry_url'=>'','exit_url'=>'','cart_total'=>0,'abandoned_at'=>null],
+            ['id'=>1,'client_id'=>'c1','ip_address'=>'1.1.1.1','cart_contents'=>'[]','created_at'=>'2024-01-01 00:00:00','revisit_count'=>1,'browsing_time'=>30,'email'=>'','phone'=>'','location'=>'','device'=>'','browser'=>'','entry_url'=>'','exit_url'=>'','cart_total'=>0,'abandoned_at'=>null],
+            ['id'=>2,'client_id'=>'c1','ip_address'=>'2.2.2.2','cart_contents'=>'[]','created_at'=>'2024-01-02 00:00:00','revisit_count'=>2,'browsing_time'=>40,'email'=>'','phone'=>'','location'=>'','device'=>'','browser'=>'','entry_url'=>'','exit_url'=>'','cart_total'=>0,'abandoned_at'=>null],
+            ['id'=>3,'client_id'=>'','ip_address'=>'3.3.3.3','cart_contents'=>'[]','created_at'=>'2024-01-03 00:00:00','revisit_count'=>1,'browsing_time'=>20,'email'=>'','phone'=>'','location'=>'','device'=>'','browser'=>'','entry_url'=>'','exit_url'=>'','cart_total'=>0,'abandoned_at'=>null],
         ];
     }
     public function prepare($query, ...$args) { return $query; }
     public function esc_like($text) { return $text; }
     public function get_var($query) {
-        return 2; // distinct IPs
+        return 2; // two distinct client/ip groups
     }
     public function get_results($query) {
         $table = $this->data[$this->prefix.'wc_ac_carts'];
         $grouped = [];
         foreach ($table as $row) {
-            $ip = $row['ip_address'];
-            if (!isset($grouped[$ip])) {
-                $grouped[$ip] = $row;
-                $grouped[$ip]['total_revisit_count'] = $row['revisit_count'];
-                $grouped[$ip]['total_browsing_time'] = $row['browsing_time'];
+            $key = $row['client_id'] !== '' ? $row['client_id'] : $row['ip_address'];
+            if (!isset($grouped[$key])) {
+                $grouped[$key] = $row;
+                $grouped[$key]['total_revisit_count'] = $row['revisit_count'];
+                $grouped[$key]['total_browsing_time'] = $row['browsing_time'];
             } else {
-                if ($row['created_at'] > $grouped[$ip]['created_at']) {
-                    $grouped[$ip] = $row + ['total_revisit_count'=>$grouped[$ip]['total_revisit_count'] + $row['revisit_count'], 'total_browsing_time'=>$grouped[$ip]['total_browsing_time'] + $row['browsing_time']];
+                if ($row['created_at'] > $grouped[$key]['created_at']) {
+                    $grouped[$key] = $row + ['total_revisit_count'=>$grouped[$key]['total_revisit_count'] + $row['revisit_count'], 'total_browsing_time'=>$grouped[$key]['total_browsing_time'] + $row['browsing_time']];
                 } else {
-                    $grouped[$ip]['total_revisit_count'] += $row['revisit_count'];
-                    $grouped[$ip]['total_browsing_time'] += $row['browsing_time'];
+                    $grouped[$key]['total_revisit_count'] += $row['revisit_count'];
+                    $grouped[$key]['total_browsing_time'] += $row['browsing_time'];
                 }
             }
         }
@@ -79,7 +79,7 @@ final class GroupedQueryTest extends TestCase {
         $table->prepare_items();
         $this->assertCount(2, $table->items);
         $ips = array_map(fn($i)=>$i['ip_address'], $table->items);
-        $this->assertSame(['2.2.2.2','1.1.1.1'], $ips);
+        $this->assertSame(['3.3.3.3','2.2.2.2'], $ips);
         $revisits = array_column($table->items, 'revisit_count');
         $this->assertSame([1,3], $revisits);
     }

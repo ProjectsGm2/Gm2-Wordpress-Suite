@@ -131,17 +131,18 @@ class GM2_AC_Table extends \WP_List_Table {
         }
         $params = [];
         if ($search !== '') {
-            $where .= ' AND (email LIKE %s OR ip_address LIKE %s)';
+            $where .= ' AND (email LIKE %s OR client_id LIKE %s OR ip_address LIKE %s)';
             $like    = '%' . $wpdb->esc_like($search) . '%';
+            $params[] = $like;
             $params[] = $like;
             $params[] = $like;
         }
 
-        $total_sql  = "SELECT COUNT(DISTINCT ip_address) FROM $table $where";
+        $total_sql  = "SELECT COUNT(DISTINCT COALESCE(NULLIF(client_id,''), ip_address)) FROM $table $where";
         $total_items = $wpdb->get_var($wpdb->prepare($total_sql, ...$params));
 
         $offset   = ($paged - 1) * $per_page;
-        $data_sql = "SELECT t.id, t.ip_address, t.email, t.phone, t.location, t.device, t.browser, t.cart_contents, t.cart_total, t.entry_url, t.exit_url, t.abandoned_at, t.session_start, t.recovered_order_id, agg.total_revisit_count, agg.total_browsing_time FROM $table t INNER JOIN (SELECT ip_address, MAX(created_at) AS max_created_at, SUM(revisit_count) AS total_revisit_count, SUM(browsing_time) AS total_browsing_time FROM $table $where GROUP BY ip_address) agg ON t.ip_address = agg.ip_address AND t.created_at = agg.max_created_at ORDER BY t.created_at DESC LIMIT %d OFFSET %d";
+        $data_sql = "SELECT t.id, t.client_id, t.ip_address, t.email, t.phone, t.location, t.device, t.browser, t.cart_contents, t.cart_total, t.entry_url, t.exit_url, t.abandoned_at, t.session_start, t.recovered_order_id, agg.total_revisit_count, agg.total_browsing_time FROM $table t INNER JOIN (SELECT COALESCE(NULLIF(client_id,''), ip_address) AS lookup_id, MAX(created_at) AS max_created_at, SUM(revisit_count) AS total_revisit_count, SUM(browsing_time) AS total_browsing_time FROM $table $where GROUP BY lookup_id) agg ON COALESCE(NULLIF(t.client_id,''), t.ip_address) = agg.lookup_id AND t.created_at = agg.max_created_at ORDER BY t.created_at DESC LIMIT %d OFFSET %d";
         $params2  = array_merge($params, [ $per_page, $offset ]);
         $rows     = $wpdb->get_results($wpdb->prepare($data_sql, ...$params2));
 

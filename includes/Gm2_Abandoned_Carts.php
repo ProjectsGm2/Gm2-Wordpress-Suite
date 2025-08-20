@@ -718,8 +718,9 @@ class Gm2_Abandoned_Carts {
         if (!current_user_can('manage_options')) {
             return wp_send_json_error('no_permission');
         }
-        $ip      = isset($_POST['ip']) ? sanitize_text_field(wp_unslash($_POST['ip'])) : '';
-        $cart_id = isset($_POST['cart_id']) ? absint($_POST['cart_id']) : 0;
+        $ip        = isset($_POST['ip']) ? sanitize_text_field(wp_unslash($_POST['ip'])) : '';
+        $client_id = isset($_POST['client_id']) ? sanitize_text_field(wp_unslash($_POST['client_id'])) : '';
+        $cart_id   = isset($_POST['cart_id']) ? absint($_POST['cart_id']) : 0;
         global $wpdb;
         $activity_table = $wpdb->prefix . 'wc_ac_cart_activity';
         $visit_table    = $wpdb->prefix . 'wc_ac_visit_log';
@@ -729,6 +730,11 @@ class Gm2_Abandoned_Carts {
             $rows       = $wpdb->get_results($wpdb->prepare($sql, $cart_id));
             $visit_sql  = "SELECT entry_url, exit_url, visit_start, visit_end FROM $visit_table WHERE cart_id = %d ORDER BY visit_start DESC";
             $visit_rows = $wpdb->get_results($wpdb->prepare($visit_sql, $cart_id));
+        } elseif ($client_id !== '') {
+            $sql = "SELECT a.action, a.sku, a.quantity, a.changed_at FROM $activity_table a INNER JOIN $carts_table c ON a.cart_id = c.id WHERE c.client_id = %s ORDER BY a.changed_at DESC";
+            $rows = $wpdb->get_results($wpdb->prepare($sql, $client_id));
+            $visit_sql = "SELECT v.entry_url, v.exit_url, v.visit_start, v.visit_end FROM $visit_table v INNER JOIN $carts_table c ON v.cart_id = c.id WHERE c.client_id = %s ORDER BY v.visit_start DESC";
+            $visit_rows = $wpdb->get_results($wpdb->prepare($visit_sql, $client_id));
         } elseif ($ip !== '') {
             $sql = "SELECT a.action, a.sku, a.quantity, a.changed_at FROM $activity_table a INNER JOIN $carts_table c ON a.cart_id = c.id WHERE c.ip_address = %s ORDER BY a.changed_at DESC";
             $rows = $wpdb->get_results($wpdb->prepare($sql, $ip));
