@@ -81,6 +81,15 @@
         document.cookie = `${ENTRY_KEY}=${encodeURIComponent(value)}; path=/`;
     }
 
+    function clearEntryUrl() {
+        try {
+            localStorage.removeItem(ENTRY_KEY);
+        } catch (e) {
+            // localStorage might be unavailable; ignore errors.
+        }
+        document.cookie = `${ENTRY_KEY}=; path=/; expires=${new Date(0).toUTCString()}`;
+    }
+
     let memoryTabCount = 0;
 
     function incrementTabs() {
@@ -168,11 +177,13 @@
     window.addEventListener('beforeunload', () => {
         if (decrementTabs()) {
             send('gm2_ac_mark_abandoned', pendingTargetUrl);
+            clearEntryUrl();
         }
     });
     window.addEventListener('pagehide', () => {
         if (decrementTabs()) {
             send('gm2_ac_mark_abandoned', pendingTargetUrl);
+            clearEntryUrl();
         }
     }, { once: true });
 })();
