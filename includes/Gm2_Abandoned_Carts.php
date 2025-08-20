@@ -348,9 +348,7 @@ class Gm2_Abandoned_Carts {
             if (empty($row->entry_url)) {
                 $url_update['entry_url'] = $current_url;
             }
-            if (empty($row->exit_url)) {
-                $url_update['exit_url'] = $current_url;
-            }
+            // Do not set exit_url here; it will be populated when the cart is abandoned.
             if (!empty($url_update)) {
                 $wpdb->update($table, $url_update, ['id' => $row->id]);
             }
@@ -368,7 +366,8 @@ class Gm2_Abandoned_Carts {
                 'location'      => $location,
                 'device'        => $device,
                 'entry_url'     => $current_url,
-                'exit_url'      => $current_url,
+                // exit_url will be set when the cart is abandoned.
+                'exit_url'      => '',
                 'cart_total'    => $total,
                 'browsing_time' => 0,
                 'revisit_count' => 0,
@@ -516,10 +515,13 @@ class Gm2_Abandoned_Carts {
             if (!empty($location)) {
                 $update['location'] = $location;
             }
+
+            $new_session = false;
             if ($row->abandoned_at) {
                 $update['abandoned_at']  = null;
                 $update['session_start'] = current_time('mysql');
                 $update['revisit_count'] = (int) $row->revisit_count + 1;
+                $new_session             = true;
             } else {
                 $session_time = $row->session_start ? strtotime($row->session_start) : 0;
                 $threshold    = time() - $minutes * MINUTE_IN_SECONDS;
@@ -528,8 +530,16 @@ class Gm2_Abandoned_Carts {
                     if ($row->session_start) {
                         $update['revisit_count'] = (int) $row->revisit_count + 1;
                     }
+                    $new_session = true;
                 }
             }
+
+            if ($new_session) {
+                $update['entry_url'] = $url;
+                // exit_url will be populated upon abandonment of this new session.
+                $update['exit_url'] = '';
+            }
+
             if (!empty($update)) {
                 $wpdb->update($table, $update, ['id' => $row->id]);
             }
