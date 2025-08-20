@@ -1,7 +1,7 @@
 (function(wp){
     const { createElement: el, useState } = wp.element;
     const { render } = wp.element;
-    const { Button, TextControl, SelectControl, FormTokenField, PanelBody, Panel } = wp.components;
+    const { Button, TextControl, SelectControl, FormTokenField, PanelBody, Panel, Card, CardBody, Sortable } = wp.components;
     const { dispatch } = wp.data;
 
     const StepOne = ({ data, setData, existing, loadGroup }) => {
@@ -19,6 +19,18 @@
         }
         const source = data.scope === 'taxonomy' ? wizard.taxonomies : wizard.postTypes;
         const suggestions = Object.keys(source || {});
+        const [ slugError, setSlugError ] = useState('');
+        const onSlugChange = (v) => {
+            const duplicate = existing[v] && v !== data.slug;
+            if(!v){
+                setSlugError('Slug is required');
+            } else if(duplicate){
+                setSlugError('Slug must be unique');
+            } else {
+                setSlugError('');
+            }
+            setData({ ...data, slug: v });
+        };
         return el('div', {},
             options.length > 1 && el(SelectControl, {
                 label: 'Existing Groups',
@@ -29,7 +41,8 @@
             el(TextControl, {
                 label: 'Group Slug',
                 value: data.slug,
-                onChange: v => setData({ ...data, slug: v })
+                onChange: onSlugChange,
+                help: slugError
             }),
             el(TextControl, {
                 label: 'Title',
@@ -55,21 +68,72 @@
 
     const FieldsStep = ({ data, setData }) => {
         const [ field, setField ] = useState({ label: '', slug: '', type: 'text' });
+        const [ editIndex, setEditIndex ] = useState(null);
+        const [ error, setError ] = useState('');
+
+        const fieldTypes = [
+            { label: 'Text', value: 'text' },
+            { label: 'Textarea', value: 'textarea' },
+            { label: 'Select', value: 'select' },
+            { label: 'Number', value: 'number' }
+        ];
+
         const addField = () => {
-            if(!field.slug){ return; }
-            setData({ ...data, fields: [ ...data.fields, field ] });
+            if(!field.slug){
+                setError('Field slug is required');
+                dispatch('core/notices').createNotice('error', 'Field slug is required');
+                return;
+            }
+            if(data.fields.some((f,i) => f.slug === field.slug && i !== editIndex)){
+                setError('Field slug must be unique');
+                dispatch('core/notices').createNotice('error', 'Field slug must be unique');
+                return;
+            }
+            setError('');
+            const fields = data.fields.slice();
+            if(editIndex !== null){
+                fields[editIndex] = field;
+            } else {
+                fields.push(field);
+            }
+            setData({ ...data, fields });
             setField({ label: '', slug: '', type: 'text' });
+            setEditIndex(null);
         };
+
+        const editField = (i) => {
+            setField(data.fields[i]);
+            setEditIndex(i);
+        };
+
         const removeField = (i) => {
             const copy = data.fields.slice();
             copy.splice(i,1);
             setData({ ...data, fields: copy });
         };
+
+        const onSortEnd = ({ oldIndex, newIndex }) => {
+            const fields = data.fields.slice();
+            fields.splice(newIndex, 0, fields.splice(oldIndex,1)[0]);
+            setData({ ...data, fields });
+        };
+
         return el('div', {},
-            data.fields.map((f,i) => el('div', { key: i },
-                `${f.label} (${f.slug})`,
-                el(Button, { isLink: true, onClick: () => removeField(i) }, 'Delete')
-            )),
+            data.fields.length > 0 && el(PanelBody, { title: 'Fields', initialOpen: true },
+                el(Sortable, { onSortEnd },
+                    data.fields.map((f,i) => el(Sortable.Item, { key: f.slug || i },
+                        el(Card, { className: 'gm2-field-item' },
+                            el(CardBody, {},
+                                el('strong', {}, f.label || '(no label)'),
+                                el('div', {}, 'Slug: ' + f.slug),
+                                el('div', {}, 'Type: ' + f.type),
+                                el(Button, { isLink: true, onClick: () => editField(i) }, 'Edit'),
+                                el(Button, { isLink: true, onClick: () => removeField(i) }, 'Delete')
+                            )
+                        )
+                    ))
+                )
+            ),
             el(TextControl, {
                 label: 'Field Label',
                 value: field.label,
@@ -78,14 +142,16 @@
             el(TextControl, {
                 label: 'Field Slug',
                 value: field.slug,
-                onChange: v => setField({ ...field, slug: v })
+                onChange: v => setField({ ...field, slug: v }),
+                help: error
             }),
-            el(TextControl, {
+            el(SelectControl, {
                 label: 'Field Type',
                 value: field.type,
+                options: fieldTypes,
                 onChange: v => setField({ ...field, type: v })
             }),
-            el(Button, { isPrimary: true, onClick: addField }, 'Add Field')
+            el(Button, { isPrimary: true, onClick: addField }, editIndex !== null ? 'Update Field' : 'Add Field')
         );
     };
 
