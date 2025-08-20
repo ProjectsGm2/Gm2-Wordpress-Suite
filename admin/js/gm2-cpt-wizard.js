@@ -49,6 +49,7 @@
         const [ currentModel, setCurrentModel ] = useState('');
         const [ stepOneErrors, setStepOneErrors ] = useState({});
         const [ showNewButton, setShowNewButton ] = useState(false);
+        const [ saving, setSaving ] = useState(false);
         const errorMap = {
             permission: 'You do not have permission to save models.',
             nonce: 'Security check failed. Please refresh and try again.',
@@ -324,6 +325,7 @@
         };
 
         const save = () => {
+            setSaving(true);
             const payload = new URLSearchParams();
             payload.append('action','gm2_save_cpt_model');
             payload.append('nonce', window.gm2CPTWizard.nonce);
@@ -343,18 +345,19 @@
                     const model = { ...saved, taxonomies: data.taxonomies };
                     const updated = { ...existing, [slug]: model };
                     setExisting(updated);
-                    dispatch('core/notices').createNotice('success', 'Model saved', { isDismissible: true });
+                    dispatch('core/notices').createNotice('success', 'Model saved', { isDismissible: true, type: 'snackbar' });
                     loadModel('');
                     setStep(1);
                     setShowNewButton(true);
-                    // window.location.reload(); // Uncomment if a full page refresh is required
                 } else {
                     const code = resp && resp.data && (resp.data.code || resp.data) || '';
-                    const msg = resp && resp.data && resp.data.message ? resp.data.message : (errorMap[code] || 'Error saving');
-                    dispatch('core/notices').createNotice('error', msg, { isDismissible: true });
+                    const message = (resp && resp.data && resp.data.message) || errorMap[code] || 'Error saving';
+                    dispatch('core/notices').createNotice('error', message, { isDismissible: true, type: 'snackbar' });
                 }
+                setSaving(false);
             }).catch(() => {
-                dispatch('core/notices').createNotice('error', 'Error saving', { isDismissible: true });
+                dispatch('core/notices').createNotice('error', 'Error saving', { isDismissible: true, type: 'snackbar' });
+                setSaving(false);
             });
         };
 
@@ -362,7 +365,10 @@
             return el('div', { className: 'gm2-cpt-wizard' },
                 el(NoticeList, { notices: inlineNotices, onRemove: removeNotice }),
                 el(SnackbarList, { notices: snackbarNotices, onRemove: removeNotice }),
-                el(Button, { isPrimary: true, onClick: () => setShowNewButton(false) }, 'Create New Model')
+                el('div', { className: 'gm2-cpt-success-actions' },
+                    el(Button, { isPrimary: true, onClick: () => setShowNewButton(false) }, 'Create New Model'),
+                    el(Button, { onClick: () => window.location.reload() }, 'Reload Page')
+                )
             );
         }
         return el('div', { className: 'gm2-cpt-wizard' },
@@ -375,7 +381,7 @@
                     el('div', { className: 'gm2-cpt-wizard-buttons' }, [
                         step > 1 && el(Button, { onClick: back }, 'Back'),
                         step < steps.length && el(Button, { isPrimary: true, onClick: next }, 'Next'),
-                        step === steps.length && el(Button, { isPrimary: true, onClick: save }, 'Finish')
+                        step === steps.length && el(Button, { isPrimary: true, onClick: save, isBusy: saving, disabled: saving }, 'Finish')
                     ])
                 )
             )
