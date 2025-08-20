@@ -3,7 +3,9 @@
     const ENTRY_KEY = 'gm2_entry_url';
     const ajaxUrl = gm2AcActivity.ajax_url;
     const nonce = gm2AcActivity.nonce;
-    const inactivityMs = parseInt(gm2AcActivity.inactivity_ms, 10) || 5 * 60 * 1000;
+    const rawInactivity = gm2AcActivity.inactivity_ms;
+    const parsedInactivity = rawInactivity === null ? 0 : parseInt(rawInactivity, 10);
+    const inactivityMs = Number.isNaN(parsedInactivity) ? 5 * 60 * 1000 : parsedInactivity;
     const url = window.location.href;
     let pendingTargetUrl;
 
@@ -135,6 +137,9 @@
 
     let inactivityTimer;
     function resetInactivityTimer(shouldSend = true) {
+        if (inactivityMs <= 0) {
+            return;
+        }
         clearTimeout(inactivityTimer);
         if (shouldSend) {
             send('gm2_ac_mark_active');
@@ -146,7 +151,9 @@
             inactivityTimer.unref();
         }
     }
-    resetInactivityTimer();
+    if (inactivityMs > 0) {
+        resetInactivityTimer();
+    }
 
     document.body.addEventListener('added_to_cart', () => {
         resetInactivityTimer();
