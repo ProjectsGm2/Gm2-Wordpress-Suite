@@ -48,6 +48,12 @@
         const [ rawSlug, setRawSlug ] = useState('');
         const [ currentModel, setCurrentModel ] = useState('');
         const [ stepOneErrors, setStepOneErrors ] = useState({});
+        const [ showNewButton, setShowNewButton ] = useState(false);
+        const errorMap = {
+            permission: 'You do not have permission to save models.',
+            nonce: 'Security check failed. Please refresh and try again.',
+            data: 'Invalid data provided. Please check your inputs and try again.'
+        };
 
         const validateStepOne = () => {
             const errs = {};
@@ -333,16 +339,25 @@
                     const model = { ...saved, taxonomies: data.taxonomies };
                     const updated = { ...existing, [slug]: model };
                     setExisting(updated);
-                    loadModel(slug, updated);
-                    dispatch('core/notices').createNotice('success', 'Model saved', { type: 'snackbar' });
+                    dispatch('core/notices').createNotice('success', 'Model saved', { isDismissible: true });
+                    loadModel('');
+                    setStep(1);
+                    setShowNewButton(true);
                 } else {
-                    dispatch('core/notices').createNotice('error', 'Error saving', { type: 'snackbar' });
+                    const code = resp && resp.data && (resp.data.code || resp.data) || '';
+                    const msg = resp && resp.data && resp.data.message ? resp.data.message : (errorMap[code] || 'Error saving');
+                    dispatch('core/notices').createNotice('error', msg, { isDismissible: true });
                 }
             }).catch(() => {
-                dispatch('core/notices').createNotice('error', 'Error saving', { type: 'snackbar' });
+                dispatch('core/notices').createNotice('error', 'Error saving', { isDismissible: true });
             });
         };
 
+        if(showNewButton){
+            return el('div', { className: 'gm2-cpt-wizard' },
+                el(Button, { isPrimary: true, onClick: () => setShowNewButton(false) }, 'Create New Model')
+            );
+        }
         return el('div', { className: 'gm2-cpt-wizard' },
             el(Panel, {},
                 el(PanelBody, { title: 'CPT Wizard', initialOpen: true },
