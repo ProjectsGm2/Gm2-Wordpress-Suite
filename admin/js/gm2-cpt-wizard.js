@@ -1,8 +1,8 @@
 (function(wp){
     const { createElement: el, useState, useEffect } = wp.element;
     const { render } = wp.element;
-    const { Button, TextControl, SelectControl, PanelBody, Panel } = wp.components;
-    const { dispatch } = wp.data;
+    const { Button, TextControl, SelectControl, PanelBody, Panel, NoticeList, SnackbarList } = wp.components;
+    const { dispatch, useSelect } = wp.data;
 
     const slugify = (str) => str.toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '');
 
@@ -54,6 +54,10 @@
             nonce: 'Security check failed. Please refresh and try again.',
             data: 'Invalid data provided. Please check your inputs and try again.'
         };
+        const notices = useSelect( select => select('core/notices').getNotices(), [] );
+        const { removeNotice } = dispatch('core/notices');
+        const snackbarNotices = notices.filter(n => n.type === 'snackbar');
+        const inlineNotices = notices.filter(n => n.type !== 'snackbar');
 
         const validateStepOne = () => {
             const errs = {};
@@ -343,6 +347,7 @@
                     loadModel('');
                     setStep(1);
                     setShowNewButton(true);
+                    // window.location.reload(); // Uncomment if a full page refresh is required
                 } else {
                     const code = resp && resp.data && (resp.data.code || resp.data) || '';
                     const msg = resp && resp.data && resp.data.message ? resp.data.message : (errorMap[code] || 'Error saving');
@@ -355,10 +360,14 @@
 
         if(showNewButton){
             return el('div', { className: 'gm2-cpt-wizard' },
+                el(NoticeList, { notices: inlineNotices, onRemove: removeNotice }),
+                el(SnackbarList, { notices: snackbarNotices, onRemove: removeNotice }),
                 el(Button, { isPrimary: true, onClick: () => setShowNewButton(false) }, 'Create New Model')
             );
         }
         return el('div', { className: 'gm2-cpt-wizard' },
+            el(NoticeList, { notices: inlineNotices, onRemove: removeNotice }),
+            el(SnackbarList, { notices: snackbarNotices, onRemove: removeNotice }),
             el(Panel, {},
                 el(PanelBody, { title: 'CPT Wizard', initialOpen: true },
                     el(StepIndicator),
