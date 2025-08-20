@@ -1754,18 +1754,27 @@ class Gm2_Custom_Posts_Admin {
 
     public function ajax_save_cpt_model() {
         if (!$this->can_manage()) {
-            wp_send_json_error('permission');
+            wp_send_json_error([
+                'code'    => 'permission',
+                'message' => __( 'You do not have permission to save models.', 'gm2-wordpress-suite' ),
+            ]);
         }
         $nonce = $_POST['nonce'] ?? '';
         if (!wp_verify_nonce($nonce, 'gm2_save_cpt_model')) {
-            wp_send_json_error('nonce');
+            wp_send_json_error([
+                'code'    => 'nonce',
+                'message' => __( 'Security check failed. Please refresh and try again.', 'gm2-wordpress-suite' ),
+            ]);
         }
         $slug   = sanitize_key($_POST['slug'] ?? '');
         $label  = sanitize_text_field($_POST['label'] ?? '');
         $fields = json_decode(wp_unslash($_POST['fields'] ?? ''), true);
         $taxes  = json_decode(wp_unslash($_POST['taxonomies'] ?? ''), true);
         if (!$slug || !is_array($fields) || !is_array($taxes)) {
-            wp_send_json_error('data');
+            wp_send_json_error([
+                'code'    => 'data',
+                'message' => __( 'Invalid data provided.', 'gm2-wordpress-suite' ),
+            ]);
         }
         $config = $this->get_config();
         $sanitized_fields = $this->sanitize_fields_array($fields);
