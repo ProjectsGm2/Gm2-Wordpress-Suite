@@ -87,23 +87,27 @@
         return el('div', {},
             options.length > 1 && el(SelectControl, {
                 label: 'Existing Groups',
+                id: 'gm2-existing-groups',
                 value: data.slug && existing[data.slug] ? data.slug : '',
                 options: options,
                 onChange: v => loadGroup(v)
             }),
             el(TextControl, {
                 label: 'Group Slug',
+                id: 'gm2-group-slug',
                 value: data.slug,
                 onChange: onSlugChange,
                 help: slugError
             }),
             el(TextControl, {
                 label: 'Title',
+                id: 'gm2-group-title',
                 value: data.title,
                 onChange: v => setData({ ...data, title: v })
             }),
             el(SelectControl, {
                 label: 'Scope',
+                id: 'gm2-group-scope',
                 value: data.scope,
                 options: scopeOptions,
                 onChange: v => setData({ ...data, scope: v, objects: [] }),
@@ -111,6 +115,7 @@
             }),
             el(FormTokenField, {
                 label: 'Objects',
+                id: 'gm2-group-objects',
                 value: data.objects,
                 suggestions: suggestions,
                 onChange: tokens => setData({ ...data, objects: tokens }),
@@ -127,6 +132,7 @@
         const [ field, setField ] = useState({ label: '', slug: '', type: 'text' });
         const [ editIndex, setEditIndex ] = useState(null);
         const [ error, setError ] = useState('');
+        const [ fieldsOpen, setFieldsOpen ] = useState(true);
 
         const fieldTypes = [
             { label: 'Text', value: 'text' },
@@ -176,7 +182,7 @@
         };
 
         return el('div', {},
-            data.fields.length > 0 && el(PanelBody, { title: 'Fields', initialOpen: true },
+            data.fields.length > 0 && el(PanelBody, { title: 'Fields', opened: fieldsOpen, onToggle: () => setFieldsOpen(!fieldsOpen), 'aria-expanded': fieldsOpen, role: 'region' },
                 el(Sortable, { onSortEnd },
                     data.fields.map((f,i) => el(Sortable.Item, { key: f.slug || i },
                         el(Card, { className: 'gm2-field-item' },
@@ -193,17 +199,20 @@
             ),
             el(TextControl, {
                 label: 'Field Label',
+                id: 'gm2-field-label',
                 value: field.label,
                 onChange: v => setField({ ...field, label: v })
             }),
             el(TextControl, {
                 label: 'Field Slug',
+                id: 'gm2-field-slug',
                 value: field.slug,
                 onChange: v => setField({ ...field, slug: v }),
                 help: error
             }),
             el(SelectControl, {
                 label: 'Field Type',
+                id: 'gm2-field-type',
                 value: field.type,
                 options: fieldTypes,
                 onChange: v => setField({ ...field, type: v })
@@ -253,10 +262,10 @@
             copy[gi].relation = v;
             setData({ ...data, location: copy });
         };
-        const ValueControl = ({ rule, onChange }) => {
+        const ValueControl = ({ rule, onChange, idBase }) => {
             if(rule.param === 'post_type'){
                 const options = Object.keys(wizard.postTypes || {}).map(slug => ({ label: wizard.postTypes[slug], value: slug }));
-                return el(SelectControl, { label: 'Value', value: rule.value, options, onChange });
+                return el(SelectControl, { label: 'Value', id: idBase, value: rule.value, options, onChange });
             }
             if(rule.param === 'taxonomy'){
                 const taxOptions = Object.keys(wizard.taxonomies || {}).map(slug => ({ label: wizard.taxonomies[slug], value: slug }));
@@ -274,47 +283,53 @@
                 return el('div', {},
                     el(SelectControl, {
                         label: 'Taxonomy',
+                        id: idBase + '-taxonomy',
                         value: selectedTax,
                         options: taxOptions,
                         onChange: v => { setSelectedTax(v); onChange(v + ':'); }
                     }),
                     selectedTax && el(SelectControl, {
                         label: 'Term',
+                        id: idBase + '-term',
                         value: term,
                         options: terms,
                         onChange: v => onChange(selectedTax + ':' + v)
                     })
                 );
             }
-            return el(TextControl, { label: 'Value', value: rule.value, onChange });
+            return el(TextControl, { label: 'Value', id: idBase, value: rule.value, onChange });
         };
         return el('div', {},
             el('p', { className: 'gm2-location-help' }, 'Each group is evaluated separately. Rules inside a group use the selected relation, and the field group is displayed when any group matches.'),
-            data.location.map((g,gi) => el(Card, { key: gi, className: 'gm2-location-group' },
+            data.location.map((g,gi) => el(Card, { key: gi, className: 'gm2-location-group', role: 'group', 'aria-label': 'Location group ' + (gi + 1) },
                 el(CardBody, {},
                     el(SelectControl, {
                         label: 'Group Relation',
+                        id: 'gm2-group-relation-' + gi,
                         value: g.relation || 'AND',
                         options: [ { label: 'AND', value: 'AND' }, { label: 'OR', value: 'OR' } ],
                         onChange: v => updateGroupRel(gi,v),
                         help: 'Choose how rules in this group are combined.'
                     }),
-                    g.rules.map((r,ri) => el(Card, { key: ri, className: 'gm2-location-rule' },
+                    g.rules.map((r,ri) => el(Card, { key: ri, className: 'gm2-location-rule', role: 'group', 'aria-label': 'Rule ' + (ri + 1) },
                         el(CardBody, {},
                             el(SelectControl, {
                                 label: 'Parameter',
+                                id: 'gm2-rule-param-' + gi + '-' + ri,
                                 value: r.param,
                                 options: paramOptions,
                                 onChange: v => updateRule(gi,ri,'param',v)
                             }),
                             el(SelectControl, {
                                 label: 'Operator',
+                                id: 'gm2-rule-operator-' + gi + '-' + ri,
                                 value: r.operator,
                                 options: operatorOptions,
                                 onChange: v => updateRule(gi,ri,'operator',v)
                             }),
                             el(ValueControl, {
                                 rule: r,
+                                idBase: 'gm2-rule-value-' + gi + '-' + ri,
                                 onChange: v => updateRule(gi,ri,'value',v)
                             }),
                             el(Button, { isLink: true, onClick: () => removeRule(gi,ri) }, 'Delete Rule')
