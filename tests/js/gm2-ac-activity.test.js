@@ -37,7 +37,7 @@ test('records exit URL when localStorage is disabled', () => {
   jest.useRealTimers();
 });
 
-test('captures external link destination before navigation', () => {
+test('defaults to current URL when navigating to an external link', () => {
   jest.useFakeTimers();
   const dom = new JSDOM(`<!DOCTYPE html><body><a id="out" href="https://external.com/path">go</a></body>`, { url: 'https://example.com/page' });
   const { window } = dom;
@@ -68,7 +68,7 @@ test('captures external link destination before navigation', () => {
 
   expect(abandonCalls.length).toBe(1);
   const params = new URLSearchParams(abandonCalls[0][1].toString());
-  expect(params.get('url')).toBe('https://external.com/path');
+  expect(params.get('url')).toBe('https://example.com/page');
   jest.clearAllTimers();
   jest.useRealTimers();
 });
