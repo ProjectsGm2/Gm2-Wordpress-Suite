@@ -46,6 +46,8 @@ class Gm2_Abandoned_Carts_Admin {
                 'nonce'    => wp_create_nonce('gm2_ac_get_activity'),
                 'empty'    => __( 'No activity found.', 'gm2-wordpress-suite' ),
                 'error'    => __( 'Unable to load activity.', 'gm2-wordpress-suite' ),
+                'load_more'=> __( 'Load more', 'gm2-wordpress-suite' ),
+                'per_page' => 50,
             ]
         );
         wp_enqueue_style(
