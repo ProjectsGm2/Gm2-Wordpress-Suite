@@ -5,6 +5,7 @@ See [model-cli.md](model-cli.md) for managing custom post types, taxonomies and 
 This release adds several new SEO and AI options:
 
 - Added an index on the `timestamp` column of the `gm2_analytics_log` table for faster lookups. Existing installations upgrade automatically.
+- Added an `ip_address` index to the `wc_ac_carts` table to speed up grouping cart sessions by visitor.
 - Additional database indexes for frequently queried meta keys and custom tables,
   plus lazy metadata loading via `gm2_get_meta_value()`. See
   [caching.md](caching.md) for details on the caching strategy.
@@ -95,7 +96,7 @@ Enable the module from **Gm2 → Dashboard** to begin tracking cart sessions. Ac
 
 Select an Elementor popup under **Gm2 → Cart Settings** to ask shoppers for an email address or phone number before they leave. The plugin records contact details from that popup and from the checkout billing fields so each cart is linked to an email and/or phone when available.
 
-The **Gm2 → Abandoned Carts** screen groups records by IP address so multiple visits from the same shopper appear as a single row with combined browsing time and revisit counts. Click a row’s **Cart Activity Log** link to view the add/remove/quantity events pulled from the activity table.
+The **Gm2 → Abandoned Carts** screen groups records by IP address so multiple visits from the same shopper appear as a single row with combined browsing time and revisit counts. An index on `ip_address` in the carts table speeds up these lookups. Click a row’s **Cart Activity Log** link to view the add/remove/quantity events pulled from the activity table.
 
 The activity log loads entries 50 at a time through the `gm2_ac_get_activity` AJAX action. Pass `page` and `per_page` values to paginate through activity and visit records; the admin UI requests additional pages as you scroll.
 

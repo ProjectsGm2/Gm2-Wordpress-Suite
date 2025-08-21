@@ -4,8 +4,8 @@ The suite uses several techniques to reduce database load and speed up requests:
 
 - **Database indexes** – custom indexes are added to WordPress meta tables and
   to plugin tables such as `gm2_audit_log`, `wc_ac_carts` and
-  `wc_ac_email_queue`. These indexes target columns that are frequently queried
-  so lookups avoid full table scans.
+  `wc_ac_email_queue`. The `wc_ac_carts` table includes an `ip_address` index so
+  IP-based lookups avoid full table scans.
 - **Lazy metadata loading** – `gm2_get_meta_value()` now exposes the
   `gm2_lazy_load_meta_value` filter. When enabled for a field the function
   returns a lightweight `GM2_Lazy_Meta_Value` object that defers the actual
