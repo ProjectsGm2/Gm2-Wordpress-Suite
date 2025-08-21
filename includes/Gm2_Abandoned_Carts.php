@@ -763,12 +763,13 @@ class Gm2_Abandoned_Carts {
 
         $visit_data = [];
         if ($visit_rows) {
+            $dt_format = get_option('date_format') . ' ' . get_option('time_format');
             foreach ($visit_rows as $vrow) {
                 $visit_data[] = [
                     'entry_url'   => $vrow->entry_url,
                     'exit_url'    => $vrow->exit_url,
-                    'visit_start' => mysql2date(get_option('date_format') . ' ' . get_option('time_format'), $vrow->visit_start),
-                    'visit_end'   => $vrow->visit_end ? mysql2date(get_option('date_format') . ' ' . get_option('time_format'), $vrow->visit_end) : '',
+                    'visit_start' => mysql2date($dt_format, $vrow->visit_start),
+                    'visit_end'   => $vrow->visit_end ? mysql2date($dt_format, $vrow->visit_end) : '',
                 ];
             }
         }

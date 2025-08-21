@@ -196,6 +196,70 @@ test('resets inactivity timer on interaction', () => {
   jest.useRealTimers();
 });
 
+test('records entry and exit on revisit with timestamps', () => {
+  jest.useFakeTimers();
+  jest.setSystemTime(new Date('2024-01-01T00:00:00Z'));
+  const dom1 = new JSDOM(`<!DOCTYPE html><body></body>`, { url: 'https://example.com/first' });
+  const { window: win1 } = dom1;
+
+  const activeTimes = [];
+  const abandonTimes = [];
+  const fetchMock = jest.fn((url, opts) => {
+    const params = new URLSearchParams(opts.body.toString());
+    if (params.get('action') === 'gm2_ac_mark_active') {
+      activeTimes.push(Date.now());
+    }
+    return Promise.resolve({ ok: true });
+  });
+  win1.fetch = fetchMock;
+  global.fetch = fetchMock;
+  win1.navigator.sendBeacon = jest.fn((url, data) => {
+    abandonTimes.push(Date.now());
+    return true;
+  });
+
+  Object.assign(global, { window: win1, document: win1.document, navigator: win1.navigator });
+  global.gm2AcActivity = { ajax_url: '/ajax', nonce: 'nonce' };
+
+  jest.resetModules();
+  require('../../public/js/gm2-ac-activity.js');
+
+  expect(activeTimes.length).toBeGreaterThan(0);
+  const entry1 = activeTimes.shift();
+  activeTimes.length = 0;
+  expect(abandonTimes.length).toBe(0);
+
+  jest.setSystemTime(new Date('2024-01-01T00:05:00Z'));
+  win1.dispatchEvent(new win1.Event('pagehide'));
+  expect(abandonTimes.length).toBe(1);
+  const exit1 = abandonTimes.shift();
+
+  jest.setSystemTime(new Date('2024-01-01T00:06:00Z'));
+  const dom2 = new JSDOM(`<!DOCTYPE html><body></body>`, { url: 'https://example.com/second' });
+  const { window: win2 } = dom2;
+  win2.fetch = fetchMock;
+  win2.navigator.sendBeacon = win1.navigator.sendBeacon;
+  Object.assign(global, { window: win2, document: win2.document, navigator: win2.navigator });
+  global.gm2AcActivity = { ajax_url: '/ajax', nonce: 'nonce' };
+
+  jest.resetModules();
+  require('../../public/js/gm2-ac-activity.js');
+
+  expect(activeTimes.length).toBeGreaterThan(0);
+  const entry2 = activeTimes.shift();
+
+  jest.setSystemTime(new Date('2024-01-01T00:10:00Z'));
+  win2.dispatchEvent(new win2.Event('pagehide'));
+  expect(abandonTimes.length).toBe(1);
+  const exit2 = abandonTimes.shift();
+
+  expect(entry1).toBeLessThan(exit1);
+  expect(exit1).toBeLessThan(entry2);
+  expect(entry2).toBeLessThan(exit2);
+
+  jest.useRealTimers();
+});
+
 function setupJQuery(postImpl) {
   function createWrapper(elem) {
     return {
