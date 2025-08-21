@@ -256,8 +256,10 @@ class Gm2_Abandoned_Carts {
                 }
             }
         }
-        $request_uri = isset($_SERVER['REQUEST_URI']) ? esc_url_raw(wp_unslash($_SERVER['REQUEST_URI'])) : '/';
-        $current_url = home_url($request_uri);
+        $host        = isset($_SERVER['HTTP_HOST']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_HOST'])) : '';
+        $request_uri = isset($_SERVER['REQUEST_URI']) ? wp_unslash($_SERVER['REQUEST_URI']) : '/';
+        $scheme      = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https://' : 'http://';
+        $current_url = esc_url_raw($scheme . $host . $request_uri);
 
         $stored_entry  = '';
         $session_entry = $wc->session->get('gm2_entry_url');

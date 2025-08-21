@@ -117,8 +117,10 @@ class Gm2_Abandoned_Carts_Public {
             $stored_entry = esc_url_raw(wp_unslash($_COOKIE['gm2_entry_url']));
         }
 
-        $request_uri = isset($_SERVER['REQUEST_URI']) ? esc_url_raw(wp_unslash($_SERVER['REQUEST_URI'])) : '/';
-        $current_url = $stored_entry ?: home_url($request_uri);
+        $host        = isset($_SERVER['HTTP_HOST']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_HOST'])) : '';
+        $request_uri = isset($_SERVER['REQUEST_URI']) ? wp_unslash($_SERVER['REQUEST_URI']) : '/';
+        $scheme      = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https://' : 'http://';
+        $current_url = $stored_entry ?: esc_url_raw($scheme . $host . $request_uri);
 
         $agent   = $_SERVER['HTTP_USER_AGENT'] ?? '';
         $browser = Gm2_Abandoned_Carts::get_browser($agent);
