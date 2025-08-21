@@ -39,7 +39,8 @@ class Gm2_Abandoned_Carts {
             cart_total decimal(10,2) DEFAULT 0,
             PRIMARY KEY  (id),
             KEY cart_token (cart_token),
-            KEY client_id (client_id)
+            KEY client_id (client_id),
+            KEY ip_address (ip_address)
         ) $charset_collate;";
 
         $queue_sql = "CREATE TABLE $queue (

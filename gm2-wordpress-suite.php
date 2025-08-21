@@ -272,7 +272,7 @@ add_action('plugins_loaded', 'gm2_upgrade_analytics_log_index');
 function gm2_maybe_add_indexes() {
     global $wpdb;
 
-    if ((int) get_option('gm2_meta_indexes_version', 0) >= 1) {
+    if ((int) get_option('gm2_meta_indexes_version', 0) >= 2) {
         return;
     }
 
@@ -304,6 +304,10 @@ function gm2_maybe_add_indexes() {
             $wpdb->query( "ALTER TABLE $carts ADD INDEX $index ($cols)" );
         }
     }
+    $exists = $wpdb->get_results( "SHOW INDEX FROM $carts WHERE Key_name = 'ip_address'" );
+    if (empty($exists)) {
+        $wpdb->query( "ALTER TABLE $carts ADD INDEX ip_address (ip_address)" );
+    }
 
     $queue = $wpdb->prefix . 'wc_ac_email_queue';
     $exists = $wpdb->get_results( "SHOW INDEX FROM $queue WHERE Key_name = 'gm2_send_at'" );
@@ -311,7 +315,7 @@ function gm2_maybe_add_indexes() {
         $wpdb->query( "ALTER TABLE $queue ADD INDEX gm2_send_at (send_at, sent)" );
     }
 
-    update_option('gm2_meta_indexes_version', 1);
+    update_option('gm2_meta_indexes_version', 2);
 }
 
 add_action('plugins_loaded', 'gm2_maybe_add_indexes');
