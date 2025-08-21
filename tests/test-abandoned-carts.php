@@ -7,7 +7,12 @@ namespace Gm2 {
     function wp_send_json_error($data = null) { return ['success'=>false,'data'=>$data]; }
     function error_log($message) { $GLOBALS['gm2_error_log'][] = $message; }
     function do_action($tag, ...$args) {}
-    function current_time($type) { return gmdate('Y-m-d H:i:s'); }
+    function current_time($type) {
+        if ('timestamp' === $type) {
+            return time();
+        }
+        return gmdate('Y-m-d H:i:s');
+    }
     function current_user_can($cap = '') { return $GLOBALS['gm2_is_admin'] ?? false; }
     function esc_url_raw($url) { return $url; }
     function sanitize_text_field($str) { return $str; }
@@ -307,11 +312,11 @@ class AbandonedCartsTest extends WP_UnitTestCase {
 
     public function test_mark_active_refreshes_session_start_for_pending_cart() {
         $table = $GLOBALS['wpdb']->prefix . 'wc_ac_carts';
-        $old_time = gmdate('Y-m-d H:i:s', time() - 10 * 60);
+        $old_time = gmdate('Y-m-d H:i:s', \Gm2\current_time('timestamp') - 10 * 60);
         $GLOBALS['wpdb']->data[$table][0]['session_start'] = $old_time;
         $GLOBALS['wpdb']->data[$table][0]['abandoned_at'] = null;
 
-        $threshold = time() - 5 * 60;
+        $threshold = \Gm2\current_time('timestamp') - 5 * 60;
         $status_before = strtotime($old_time) <= $threshold ? 'Pending Abandonment' : 'Active';
         $this->assertSame('Pending Abandonment', $status_before);
 
@@ -323,7 +328,7 @@ class AbandonedCartsTest extends WP_UnitTestCase {
         $this->assertGreaterThan(strtotime($old_time), strtotime($row['session_start']));
         $this->assertNull($row['abandoned_at']);
 
-        $threshold_after = time() - 5 * 60;
+        $threshold_after = \Gm2\current_time('timestamp') - 5 * 60;
         $status_after = strtotime($row['session_start']) <= $threshold_after ? 'Pending Abandonment' : 'Active';
         $this->assertSame('Active', $status_after);
     }
