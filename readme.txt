@@ -314,7 +314,7 @@ Enable this module from **Gm2 → Dashboard**. The first time it runs the plugin
 
 The **Gm2 → Abandoned Carts** screen groups entries by IP address so multiple visits from the same shopper appear as a single row showing the latest cart value along with total browsing time and revisits. Click a row’s **Cart Activity Log** link to view the add/remove/quantity events recorded for that IP.
 
-Developers can customize the inactivity window with the `gm2_ac_mark_abandoned_interval` filter and send recovery emails by hooking into `gm2_ac_send_message` when the hourly `gm2_ac_process_queue` task runs.
+Developers can customize the inactivity window with the `gm2_ac_mark_abandoned_interval` filter and send recovery emails by hooking into `gm2_ac_send_message` when the hourly `gm2_ac_process_queue` task runs. A default handler, `gm2_ac_send_default_email`, sends a simple WooCommerce email via `wp_mail`. Disable it with `remove_action( 'gm2_ac_send_message', 'Gm2\\gm2_ac_send_default_email' )` or customize the message with the `gm2_ac_default_email_subject` and `gm2_ac_default_email_body` filters.
 
 == Redirects ==
 Create 301 or 302 redirects from the **SEO → Redirects** tab. The plugin logs

@@ -34,3 +34,30 @@ class Gm2_Abandoned_Carts_Messaging {
         }
     }
 }
+
+function gm2_ac_send_default_email($row) {
+    global $wpdb;
+    $carts_table = $wpdb->prefix . 'wc_ac_carts';
+    $cart = $wpdb->get_row($wpdb->prepare("SELECT cart_token, email, cart_contents FROM $carts_table WHERE id = %d", $row->cart_id));
+    if (!$cart || empty($cart->email)) {
+        return;
+    }
+
+    $subject = __('We saved your cart for you', 'gm2-wordpress-suite');
+    $subject = apply_filters('gm2_ac_default_email_subject', $subject, $cart, $row);
+
+    $recover_url = wc_get_cart_url();
+    $content = sprintf(__('It looks like you left some items in your cart. <a href="%s">Return to your cart</a> to complete your order.', 'gm2-wordpress-suite'), esc_url($recover_url));
+    $content = apply_filters('gm2_ac_default_email_body', $content, $cart, $row);
+
+    ob_start();
+    do_action('woocommerce_email_header', $subject, null);
+    echo wpautop($content);
+    do_action('woocommerce_email_footer', null);
+    $message = ob_get_clean();
+
+    $headers = ['Content-Type: text/html; charset=UTF-8'];
+    wp_mail($cart->email, $subject, $message, $headers);
+}
+
+add_action('gm2_ac_send_message', __NAMESPACE__ . '\\gm2_ac_send_default_email');
