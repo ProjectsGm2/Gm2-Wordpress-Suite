@@ -582,7 +582,7 @@ class Gm2_Abandoned_Carts {
                 $new_session             = true;
             } else {
                 $session_time = $row->session_start ? strtotime($row->session_start) : 0;
-                $threshold    = time() - $minutes * MINUTE_IN_SECONDS;
+                $threshold    = current_time('timestamp') - $minutes * MINUTE_IN_SECONDS;
                 if (!$row->session_start || $session_time <= $threshold) {
                     $update['session_start'] = current_time('mysql');
                     if ($row->session_start) {
@@ -694,7 +694,7 @@ class Gm2_Abandoned_Carts {
                 $update['exit_url'] = $url;
             }
             if ($row->session_start) {
-                $elapsed = time() - strtotime($row->session_start);
+                $elapsed = current_time('timestamp') - strtotime($row->session_start);
                 if ($elapsed < 0) {
                     $elapsed = 0;
                 }
@@ -1048,7 +1048,7 @@ class Gm2_Abandoned_Carts {
         if ($minutes < 1) {
             $minutes = 1;
         }
-        $threshold = gmdate('Y-m-d H:i:s', time() - $minutes * MINUTE_IN_SECONDS);
+        $threshold = gmdate('Y-m-d H:i:s', current_time('timestamp') - $minutes * MINUTE_IN_SECONDS);
         global $wpdb;
         $table = $wpdb->prefix . 'wc_ac_carts';
         $rows = $wpdb->get_results($wpdb->prepare("SELECT id, session_start, browsing_time FROM $table WHERE abandoned_at IS NULL AND session_start IS NOT NULL AND session_start <= %s", $threshold));
@@ -1059,7 +1059,7 @@ class Gm2_Abandoned_Carts {
                     'session_start' => null,
                 ];
                 if ($row->session_start) {
-                    $elapsed = time() - strtotime($row->session_start);
+                    $elapsed = current_time('timestamp') - strtotime($row->session_start);
                     if ($elapsed < 0) {
                         $elapsed = 0;
                     }
