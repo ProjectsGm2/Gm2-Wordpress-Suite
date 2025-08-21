@@ -189,8 +189,10 @@
             return;
         }
         const href = anchor.href;
-        if (href && anchor.origin !== window.location.origin) {
+        if (href && anchor.origin === window.location.origin) {
             pendingTargetUrl = href;
+        } else {
+            pendingTargetUrl = undefined;
         }
     });
 
