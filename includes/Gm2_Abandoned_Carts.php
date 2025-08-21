@@ -139,10 +139,11 @@ class Gm2_Abandoned_Carts {
         if (!class_exists('WC') || !WC()->session) {
             return;
         }
-        $host        = isset($_SERVER['HTTP_HOST']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_HOST'])) : '';
-        $request_uri = isset($_SERVER['REQUEST_URI']) ? wp_unslash($_SERVER['REQUEST_URI']) : '/';
-        $scheme      = is_ssl() ? 'https://' : 'http://';
-        $current_url = esc_url_raw($scheme . $host . $request_uri);
+        $current_url = esc_url_raw(
+            home_url(
+                wp_unslash($_SERVER['REQUEST_URI'] ?? '/')
+            )
+        );
 
         WC()->session->set('gm2_ac_last_seen_url', $current_url);
     }
@@ -163,10 +164,11 @@ class Gm2_Abandoned_Carts {
         if (!empty($session_entry)) {
             return;
         }
-        $host        = isset($_SERVER['HTTP_HOST']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_HOST'])) : '';
-        $request_uri = isset($_SERVER['REQUEST_URI']) ? wp_unslash($_SERVER['REQUEST_URI']) : '/';
-        $scheme      = is_ssl() ? 'https://' : 'http://';
-        $current_url = esc_url_raw($scheme . $host . $request_uri);
+        $current_url = esc_url_raw(
+            home_url(
+                wp_unslash($_SERVER['REQUEST_URI'] ?? '/')
+            )
+        );
 
         WC()->session->set('gm2_entry_url', $current_url);
         if (isset($_COOKIE['gm2_entry_url'])) {
@@ -259,10 +261,11 @@ class Gm2_Abandoned_Carts {
                 }
             }
         }
-        $host        = isset($_SERVER['HTTP_HOST']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_HOST'])) : '';
-        $request_uri = isset($_SERVER['REQUEST_URI']) ? wp_unslash($_SERVER['REQUEST_URI']) : '/';
-        $scheme      = is_ssl() ? 'https://' : 'http://';
-        $current_url = esc_url_raw($scheme . $host . $request_uri);
+        $current_url = esc_url_raw(
+            home_url(
+                wp_unslash($_SERVER['REQUEST_URI'] ?? '/')
+            )
+        );
 
         $stored_entry  = '';
         $session_entry = $wc->session->get('gm2_entry_url');
