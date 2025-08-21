@@ -122,7 +122,7 @@ class Gm2_Abandoned_Carts_Public {
         $scheme      = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https://' : 'http://';
         $current_url = $stored_entry ?: esc_url_raw($scheme . $host . $request_uri);
 
-        $agent   = $_SERVER['HTTP_USER_AGENT'] ?? '';
+        $agent   = isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '';
         $browser = Gm2_Abandoned_Carts::get_browser($agent);
 
         global $wpdb;
@@ -158,48 +158,18 @@ class Gm2_Abandoned_Carts_Public {
                 );
             }
         } else {
-            $cart = class_exists('WC_Cart') ? WC()->cart : null;
-            if (!$cart || $cart->is_empty()) {
+            $snapshot   = Gm2_Abandoned_Carts::get_cart_snapshot($agent);
+            $cart_items = $snapshot['items'];
+            if (empty($cart_items)) {
                 wp_send_json_error('no_cart');
             }
-            $cart_items = [];
-            foreach ($cart->get_cart() as $item) {
-                $prod_id = isset($item['product_id']) ? (int) $item['product_id'] : 0;
-                $qty     = isset($item['quantity']) ? (int) $item['quantity'] : 1;
-                $product = isset($item['data']) && is_object($item['data']) ? $item['data'] : wc_get_product($prod_id);
-                $name    = $product ? $product->get_name() : 'Product #' . $prod_id;
-                $price   = $product ? (float) $product->get_price() : 0;
-                $cart_items[] = [
-                    'id'    => $prod_id,
-                    'name'  => $name,
-                    'qty'   => $qty,
-                    'price' => $price,
-                ];
-            }
             $contents = wp_json_encode($cart_items);
+            $total    = $snapshot['total'];
+            $device   = $snapshot['device'];
             $ip_info  = Gm2_Abandoned_Carts::get_ip_and_location();
             $ip       = $ip_info['ip'];
             $location = $ip_info['location'];
-            $device = 'Desktop';
-            if (file_exists(GM2_PLUGIN_DIR . 'includes/MobileDetect.php')) {
-                require_once GM2_PLUGIN_DIR . 'includes/MobileDetect.php';
-                if (class_exists('Detection\\MobileDetect')) {
-                    $detect = new \Detection\MobileDetect();
-                } elseif (class_exists('Mobile_Detect')) {
-                    $detect = new \Mobile_Detect();
-                } else {
-                    $detect = null;
-                }
-                if ($detect) {
-                    $detect->setUserAgent($agent);
-                    if ($detect->isTablet()) {
-                        $device = 'Tablet';
-                    } elseif ($detect->isMobile()) {
-                        $device = 'Mobile';
-                    }
-                }
-            }
-            $total = (float) $cart->get_cart_contents_total();
+
             $insert = [
                 'cart_token'    => $token,
                 'user_id'       => get_current_user_id(),

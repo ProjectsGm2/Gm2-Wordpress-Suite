@@ -209,25 +209,19 @@ class Gm2_Abandoned_Carts {
         if ($cart->is_empty()) {
             return;
         }
-        $cart_items = [];
-        $cart_map   = [];
-        foreach ($cart->get_cart() as $item) {
-            $prod_id = isset($item['product_id']) ? (int) $item['product_id'] : 0;
-            $qty     = isset($item['quantity']) ? (int) $item['quantity'] : 1;
-            $product = isset($item['data']) && is_object($item['data']) ? $item['data'] : wc_get_product($prod_id);
-            $name    = $product ? $product->get_name() : 'Product #' . $prod_id;
-            $price   = $product ? (float) $product->get_price() : 0;
-            $sku     = $product ? $product->get_sku() : '';
-            $cart_items[] = [
-                'id'    => $prod_id,
-                'name'  => $name,
-                'qty'   => $qty,
-                'price' => $price,
-                'sku'   => $sku,
-            ];
-            $cart_map[$prod_id] = [
-                'qty' => $qty,
-                'sku' => $sku,
+        $agent      = isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '';
+        $snapshot   = self::build_cart_snapshot($agent);
+        $cart_items = $snapshot['items'];
+        if (empty($cart_items)) {
+            return;
+        }
+        $device   = $snapshot['device'];
+        $total    = $snapshot['total'];
+        $cart_map = [];
+        foreach ($cart_items as $item) {
+            $cart_map[$item['id']] = [
+                'qty' => $item['qty'],
+                'sku' => $item['sku'] ?? '',
             ];
         }
         $contents   = wp_json_encode($cart_items);
@@ -238,30 +232,10 @@ class Gm2_Abandoned_Carts {
         }
         $token      = $wc->session->get_customer_id();
         $client_id  = isset($_POST['client_id']) ? sanitize_text_field(wp_unslash($_POST['client_id'])) : (isset($_COOKIE['gm2_ac_client_id']) ? sanitize_text_field(wp_unslash($_COOKIE['gm2_ac_client_id'])) : '');
-        $agent      = isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '';
         $browser    = self::get_browser($agent);
         $ip_info    = self::get_ip_and_location();
         $ip         = $ip_info['ip'];
         $location   = $ip_info['location'];
-        $device = 'Desktop';
-        if (file_exists(GM2_PLUGIN_DIR . 'includes/MobileDetect.php')) {
-            require_once GM2_PLUGIN_DIR . 'includes/MobileDetect.php';
-            if (class_exists('Detection\\MobileDetect')) {
-                $detect = new \Detection\MobileDetect();
-            } elseif (class_exists('Mobile_Detect')) {
-                $detect = new \Mobile_Detect();
-            } else {
-                $detect = null;
-            }
-            if ($detect) {
-                $detect->setUserAgent($agent);
-                if ($detect->isTablet()) {
-                    $device = 'Tablet';
-                } elseif ($detect->isMobile()) {
-                    $device = 'Mobile';
-                }
-            }
-        }
         $current_url = esc_url_raw(
             home_url(
                 wp_unslash($_SERVER['REQUEST_URI'] ?? '/')
@@ -279,7 +253,6 @@ class Gm2_Abandoned_Carts {
         if (!empty($stored_entry)) {
             $current_url = $stored_entry;
         }
-        $total      = (float) $cart->get_cart_contents_total();
         global $wpdb;
         $table = $wpdb->prefix . 'wc_ac_carts';
         if (!empty($client_id)) {
@@ -456,6 +429,92 @@ class Gm2_Abandoned_Carts {
         update_option('gm2_ac_failure_count', $counts);
     }
 
+    /**
+     * Build a snapshot of the current cart.
+     *
+     * Returns cart line items, total, and detected device type. The snapshot
+     * is safe to call even when WooCommerce or MobileDetect are unavailable,
+     * and it gracefully handles empty carts.
+     *
+     * @param string $agent Optional user agent string.
+     *
+     * @return array{items:array,total:float,device:string}
+     */
+    private static function build_cart_snapshot($agent = '') {
+        $cart_items = [];
+        $total      = 0.0;
+        $device     = 'Desktop';
+
+        // Sanitize the provided user agent or pull from the current request.
+        if ($agent === '' && isset($_SERVER['HTTP_USER_AGENT'])) {
+            $agent = sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT']));
+        } else {
+            $agent = sanitize_text_field($agent);
+        }
+
+        // Gather cart items and totals if WooCommerce is available.
+        if (function_exists('WC')) {
+            $wc   = WC();
+            $cart = ($wc && isset($wc->cart)) ? $wc->cart : null;
+            if ($cart && !$cart->is_empty()) {
+                foreach ($cart->get_cart() as $item) {
+                    $prod_id = isset($item['product_id']) ? (int) $item['product_id'] : 0;
+                    $qty     = isset($item['quantity']) ? (int) $item['quantity'] : 1;
+                    $product = isset($item['data']) && is_object($item['data'])
+                        ? $item['data']
+                        : (function_exists('wc_get_product') ? wc_get_product($prod_id) : null);
+                    $name  = $product ? $product->get_name() : 'Product #' . $prod_id;
+                    $price = $product ? (float) $product->get_price() : 0;
+                    $sku   = $product ? $product->get_sku() : '';
+                    $cart_items[] = [
+                        'id'    => $prod_id,
+                        'name'  => $name,
+                        'qty'   => $qty,
+                        'price' => $price,
+                        'sku'   => $sku,
+                    ];
+                }
+                $total = (float) $cart->get_cart_contents_total();
+            }
+        }
+
+        // Determine device type if MobileDetect is available.
+        if (file_exists(GM2_PLUGIN_DIR . 'includes/MobileDetect.php')) {
+            require_once GM2_PLUGIN_DIR . 'includes/MobileDetect.php';
+            if (class_exists('Detection\\MobileDetect')) {
+                $detect = new \Detection\MobileDetect();
+            } elseif (class_exists('Mobile_Detect')) {
+                $detect = new \Mobile_Detect();
+            } else {
+                $detect = null;
+            }
+            if ($detect) {
+                $detect->setUserAgent($agent);
+                if ($detect->isTablet()) {
+                    $device = 'Tablet';
+                } elseif ($detect->isMobile()) {
+                    $device = 'Mobile';
+                }
+            }
+        }
+
+        return [
+            'items'  => $cart_items,
+            'total'  => $total,
+            'device' => $device,
+        ];
+    }
+
+    /**
+     * Public wrapper for cart snapshots.
+     *
+     * @param string $agent Optional user agent string.
+     * @return array{items:array,total:float,device:string}
+     */
+    public static function get_cart_snapshot($agent = '') {
+        return self::build_cart_snapshot($agent);
+    }
+
     public static function gm2_ac_mark_active() {
         // Developers can return false to include admin sessions for testing.
         $skip_admin = apply_filters('gm2_ac_skip_admin', true);
@@ -495,54 +554,17 @@ class Gm2_Abandoned_Carts {
         }
 
         // Build a snapshot of the current cart and visitor details.
-        $cart_items = [];
-        $total      = 0;
-        $wc         = function_exists('WC') ? WC() : null;
-        $cart       = ($wc && isset($wc->cart)) ? $wc->cart : null;
-        if ($cart && !$cart->is_empty()) {
-            foreach ($cart->get_cart() as $item) {
-                $prod_id = isset($item['product_id']) ? (int) $item['product_id'] : 0;
-                $qty     = isset($item['quantity']) ? (int) $item['quantity'] : 1;
-                $product = isset($item['data']) && is_object($item['data']) ? $item['data'] : (function_exists('wc_get_product') ? wc_get_product($prod_id) : null);
-                $name    = $product ? $product->get_name() : 'Product #' . $prod_id;
-                $price   = $product ? (float) $product->get_price() : 0;
-                $sku     = $product ? $product->get_sku() : '';
-                $cart_items[] = [
-                    'id'    => $prod_id,
-                    'name'  => $name,
-                    'qty'   => $qty,
-                    'price' => $price,
-                    'sku'   => $sku,
-                ];
-            }
-            $total = (float) $cart->get_cart_contents_total();
-        }
-        $contents = wp_json_encode($cart_items);
+        $agent     = isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '';
+        $snapshot  = self::build_cart_snapshot($agent);
+        $cart_items = $snapshot['items'];
+        $total      = $snapshot['total'];
+        $device     = $snapshot['device'];
+        $contents   = wp_json_encode($cart_items);
 
-        $agent    = isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '';
         $browser  = self::get_browser($agent);
         $ip_info  = self::get_ip_and_location();
         $ip       = $ip_info['ip'];
         $location = $ip_info['location'];
-        $device   = 'Desktop';
-        if (file_exists(GM2_PLUGIN_DIR . 'includes/MobileDetect.php')) {
-            require_once GM2_PLUGIN_DIR . 'includes/MobileDetect.php';
-            if (class_exists('Detection\\MobileDetect')) {
-                $detect = new \Detection\MobileDetect();
-            } elseif (class_exists('Mobile_Detect')) {
-                $detect = new \Mobile_Detect();
-            } else {
-                $detect = null;
-            }
-            if ($detect) {
-                $detect->setUserAgent($agent);
-                if ($detect->isTablet()) {
-                    $device = 'Tablet';
-                } elseif ($detect->isMobile()) {
-                    $device = 'Mobile';
-                }
-            }
-        }
 
         global $wpdb;
         $table = $wpdb->prefix . 'wc_ac_carts';
