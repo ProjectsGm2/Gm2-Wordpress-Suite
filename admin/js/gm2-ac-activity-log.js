@@ -33,7 +33,10 @@ jQuery(function($){
             if(hasVisits){
                 html += '<ul class="gm2-ac-activity-log gm2-ac-visit-log">';
                 response.data.visits.forEach(function(visit){
-                    html += '<li><strong>'+visit.visit_start+'</strong> '+visit.entry_url+' \u2192 '+visit.exit_url+'</li>';
+                    html += '<li>Entry @ <strong>'+visit.visit_start+'</strong> \u2192 '+visit.entry_url+'</li>';
+                    if(visit.visit_end){
+                        html += '<li>Exit @ <strong>'+visit.visit_end+'</strong> \u2192 '+visit.exit_url+'</li>';
+                    }
                 });
                 html += '</ul>';
             }
