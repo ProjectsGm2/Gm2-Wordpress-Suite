@@ -13,6 +13,7 @@ class Gm2_Abandoned_Carts_Admin {
         add_action('admin_enqueue_scripts', [ $this, 'enqueue_scripts' ]);
         add_action('wp_ajax_gm2_ac_get_carts', [ $this, 'ajax_get_carts' ]);
         add_action('wp_ajax_gm2_ac_process', [ $this, 'ajax_process' ]);
+        add_action('wp_ajax_gm2_ac_refresh_summary', [ $this, 'ajax_refresh_summary' ]);
         add_action('admin_notices', [ $this, 'maybe_show_failures_notice' ]);
     }
 
@@ -73,6 +74,7 @@ class Gm2_Abandoned_Carts_Admin {
                 'ajax_url' => admin_url('admin-ajax.php'),
                 'nonce'    => wp_create_nonce('gm2_ac_get_carts'),
                 'process_nonce' => wp_create_nonce('gm2_ac_process'),
+                'summary_nonce' => wp_create_nonce('gm2_ac_refresh_summary'),
                 'paged'    => $paged,
                 's'        => $search,
             ]
@@ -101,6 +103,17 @@ class Gm2_Abandoned_Carts_Admin {
         if (!empty($_GET['logs_reset'])) {
             echo '<div class="updated notice"><p>' . esc_html__('Logs reset.', 'gm2-wordpress-suite') . '</p></div>';
         }
+
+        $summary = $this->get_summary_data();
+        echo '<div id="gm2-ac-summary" class="gm2-ac-summary">';
+        echo '<p><strong>' . esc_html__('Total Carts', 'gm2-wordpress-suite') . ':</strong> <span id="gm2-ac-total">' . intval($summary['total']) . '</span></p>';
+        echo '<p><strong>' . esc_html__('Pending', 'gm2-wordpress-suite') . ':</strong> <span id="gm2-ac-pending">' . intval($summary['pending']) . '</span></p>';
+        echo '<p><strong>' . esc_html__('Abandoned', 'gm2-wordpress-suite') . ':</strong> <span id="gm2-ac-abandoned">' . intval($summary['abandoned']) . '</span></p>';
+        echo '<p><strong>' . esc_html__('Recovered', 'gm2-wordpress-suite') . ':</strong> <span id="gm2-ac-recovered">' . intval($summary['recovered']) . '</span></p>';
+        echo '<p><strong>' . esc_html__('Potential Revenue', 'gm2-wordpress-suite') . ':</strong> <span id="gm2-ac-potential">' . esc_html(wc_price($summary['potential_revenue'])) . '</span></p>';
+        echo '<p><strong>' . esc_html__('Recovered Revenue', 'gm2-wordpress-suite') . ':</strong> <span id="gm2-ac-recovered-revenue">' . esc_html(wc_price($summary['recovered_revenue'])) . '</span></p>';
+        echo '</div>';
+        echo '<button type="button" class="button" id="gm2-ac-refresh-summary">' . esc_html__( 'Refresh Summary', 'gm2-wordpress-suite' ) . '</button>';
 
         $args = [
             'page'   => 'gm2-abandoned-carts',
@@ -197,12 +210,56 @@ class Gm2_Abandoned_Carts_Admin {
         wp_send_json_success([ 'rows' => $rows ]);
     }
 
+    private function get_summary_data() {
+        $summary = get_transient('gm2_ac_summary');
+        if ($summary !== false) {
+            return $summary;
+        }
+        global $wpdb;
+        $table = $wpdb->prefix . 'wc_ac_carts';
+        $row = $wpdb->get_row("SELECT COUNT(*) AS total, SUM(abandoned_at IS NULL AND recovered_order_id IS NULL) AS pending, SUM(abandoned_at IS NOT NULL) AS abandoned, SUM(cart_total) AS potential_revenue FROM $table", ARRAY_A);
+        $rec_table = $wpdb->prefix . 'wc_ac_recovered';
+        $row2 = $wpdb->get_row("SELECT COUNT(*) AS recovered, SUM(cart_total) AS recovered_revenue FROM $rec_table", ARRAY_A);
+        $summary = [
+            'total' => (int) $row['total'] + (int) $row2['recovered'],
+            'pending' => (int) $row['pending'],
+            'abandoned' => (int) $row['abandoned'],
+            'recovered' => (int) $row2['recovered'],
+            'potential_revenue' => (float) $row['potential_revenue'],
+            'recovered_revenue' => (float) $row2['recovered_revenue'],
+        ];
+        set_transient('gm2_ac_summary', $summary, 5 * MINUTE_IN_SECONDS);
+        return $summary;
+    }
+
+    public function refresh_summary() {
+        delete_transient('gm2_ac_summary');
+        return $this->get_summary_data();
+    }
+
+    public function ajax_refresh_summary() {
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error();
+        }
+        check_ajax_referer('gm2_ac_refresh_summary', 'nonce');
+        $data = $this->refresh_summary();
+        $data['potential_revenue'] = wc_price($data['potential_revenue']);
+        $data['recovered_revenue'] = wc_price($data['recovered_revenue']);
+        wp_send_json_success($data);
+    }
+
+    public static function refresh_summary_cron() {
+        $admin = new self();
+        $admin->refresh_summary();
+    }
+
     public function ajax_process() {
         if (!current_user_can('manage_options')) {
             wp_send_json_error();
         }
         check_ajax_referer('gm2_ac_process', 'nonce');
         Gm2_Abandoned_Carts::cron_mark_abandoned();
+        $this->refresh_summary();
         wp_send_json_success();
     }
 
@@ -241,3 +298,5 @@ class Gm2_Abandoned_Carts_Admin {
         exit;
     }
 }
+
+add_action('gm2_ac_mark_abandoned_cron', [Gm2_Abandoned_Carts_Admin::class, 'refresh_summary_cron']);
