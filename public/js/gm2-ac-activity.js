@@ -32,8 +32,8 @@
 
     const clientId = getClientId();
 
-    function send(action, targetUrl) {
-        const data = new URLSearchParams({ action, nonce, url: targetUrl || window.location.href, client_id: clientId });
+    function send(action) {
+        const data = new URLSearchParams({ action, nonce, url: window.location.href, client_id: clientId });
 
         if (action === 'gm2_ac_mark_abandoned') {
             let beaconSent = false;
@@ -208,14 +208,18 @@
     });
     window.addEventListener('beforeunload', () => {
         if (decrementTabs()) {
-            send('gm2_ac_mark_abandoned', pendingTargetUrl);
-            clearEntryUrl();
+            if (typeof pendingTargetUrl === 'undefined') {
+                send('gm2_ac_mark_abandoned');
+                clearEntryUrl();
+            }
         }
     });
     window.addEventListener('pagehide', () => {
         if (decrementTabs()) {
-            send('gm2_ac_mark_abandoned', pendingTargetUrl);
-            clearEntryUrl();
+            if (typeof pendingTargetUrl === 'undefined') {
+                send('gm2_ac_mark_abandoned');
+                clearEntryUrl();
+            }
         }
     }, { once: true });
 })();

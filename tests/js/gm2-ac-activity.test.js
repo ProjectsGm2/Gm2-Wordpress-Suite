@@ -48,6 +48,7 @@ test('defaults to current URL when navigating to an external link', () => {
   window.navigator.sendBeacon = jest.fn().mockReturnValue(true);
 
   Object.assign(global, { window, document: window.document, navigator: window.navigator });
+  global.localStorage = window.localStorage;
   global.gm2AcActivity = { ajax_url: '/ajax', nonce: 'nonce' };
 
   jest.resetModules();
@@ -73,6 +74,41 @@ test('defaults to current URL when navigating to an external link', () => {
   jest.useRealTimers();
 });
 
+test('does not mark abandoned or clear entry when navigating within site', () => {
+  jest.useFakeTimers();
+  const dom = new JSDOM(`<!DOCTYPE html><body><a id="in" href="https://example.com/next">next</a></body>`, { url: 'https://example.com/page' });
+  const { window } = dom;
+
+  const fetchMock = jest.fn().mockResolvedValue({ ok: true });
+  window.fetch = fetchMock;
+  global.fetch = fetchMock;
+  window.navigator.sendBeacon = jest.fn().mockReturnValue(true);
+
+  Object.assign(global, { window, document: window.document, navigator: window.navigator });
+  global.localStorage = window.localStorage;
+  global.gm2AcActivity = { ajax_url: '/ajax', nonce: 'nonce' };
+
+  jest.resetModules();
+  require('../../public/js/gm2-ac-activity.js');
+
+  const initialEntry = window.localStorage.getItem('gm2_entry_url');
+  const link = window.document.getElementById('in');
+  link.addEventListener('click', (e) => e.preventDefault());
+  link.dispatchEvent(new window.MouseEvent('click', { bubbles: true, cancelable: true }));
+
+  window.dispatchEvent(new window.Event('beforeunload'));
+
+  const abandonCalls = window.navigator.sendBeacon.mock.calls.filter((c) => {
+    const params = new URLSearchParams(c[1].toString());
+    return params.get('action') === 'gm2_ac_mark_abandoned';
+  });
+
+  expect(abandonCalls.length).toBe(0);
+  expect(window.localStorage.getItem('gm2_entry_url')).toBe(initialEntry);
+  jest.clearAllTimers();
+  jest.useRealTimers();
+});
+
 test('revives cart on visibilitychange visible', () => {
   jest.useFakeTimers();
   const dom = new JSDOM(`<!DOCTYPE html><body></body>`, { url: 'https://example.com/page' });
@@ -84,6 +120,7 @@ test('revives cart on visibilitychange visible', () => {
   window.navigator.sendBeacon = jest.fn().mockReturnValue(true);
 
   Object.assign(global, { window, document: window.document, navigator: window.navigator });
+  global.localStorage = window.localStorage;
   global.gm2AcActivity = { ajax_url: '/ajax', nonce: 'nonce' };
 
   jest.resetModules();
@@ -115,11 +152,14 @@ test('marks abandoned on beforeunload', () => {
   window.navigator.sendBeacon = jest.fn().mockReturnValue(true);
 
   Object.assign(global, { window, document: window.document, navigator: window.navigator });
+  global.localStorage = window.localStorage;
   global.gm2AcActivity = { ajax_url: '/ajax', nonce: 'nonce' };
 
   jest.resetModules();
   require('../../public/js/gm2-ac-activity.js');
 
+  const entry = window.localStorage.getItem('gm2_entry_url');
+  expect(entry).toBe('https://example.com/page');
   window.dispatchEvent(new window.Event('beforeunload'));
 
   const abandonCalls = window.navigator.sendBeacon.mock.calls.filter((c) => {
@@ -130,6 +170,7 @@ test('marks abandoned on beforeunload', () => {
   expect(abandonCalls.length).toBe(1);
   const params = new URLSearchParams(abandonCalls[0][1].toString());
   expect(params.get('url')).toBe('https://example.com/page');
+  expect(window.localStorage.getItem('gm2_entry_url')).toBe(null);
   jest.clearAllTimers();
   jest.useRealTimers();
 });
@@ -219,6 +260,7 @@ test('records entry and exit on revisit with timestamps', () => {
   });
 
   Object.assign(global, { window: win1, document: win1.document, navigator: win1.navigator });
+  global.localStorage = win1.localStorage;
   global.gm2AcActivity = { ajax_url: '/ajax', nonce: 'nonce' };
 
   jest.resetModules();
@@ -240,6 +282,7 @@ test('records entry and exit on revisit with timestamps', () => {
   win2.fetch = fetchMock;
   win2.navigator.sendBeacon = win1.navigator.sendBeacon;
   Object.assign(global, { window: win2, document: win2.document, navigator: win2.navigator });
+  global.localStorage = win2.localStorage;
   global.gm2AcActivity = { ajax_url: '/ajax', nonce: 'nonce' };
 
   jest.resetModules();
