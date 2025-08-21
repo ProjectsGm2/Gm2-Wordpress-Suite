@@ -97,6 +97,8 @@ Select an Elementor popup under **Gm2 → Cart Settings** to ask shoppers for an
 
 The **Gm2 → Abandoned Carts** screen groups records by IP address so multiple visits from the same shopper appear as a single row with combined browsing time and revisit counts. Click a row’s **Cart Activity Log** link to view the add/remove/quantity events pulled from the activity table.
 
+The activity log loads entries 50 at a time through the `gm2_ac_get_activity` AJAX action. Pass `page` and `per_page` values to paginate through activity and visit records; the admin UI requests additional pages as you scroll.
+
 Captured email and phone values appear in their own columns on this page, making it easy to follow up with shoppers who abandon their carts.
 
 Developers can adjust the inactivity window using the `gm2_ac_mark_abandoned_interval` filter and send custom recovery emails by hooking into `gm2_ac_send_message` when the hourly `gm2_ac_process_queue` task runs. A default handler, `gm2_ac_send_default_email`, sends a WooCommerce-styled message via `wp_mail`. Use `remove_action( 'gm2_ac_send_message', 'Gm2\\gm2_ac_send_default_email' )` to disable it and the `gm2_ac_default_email_subject` and `gm2_ac_default_email_body` filters to customize the content.

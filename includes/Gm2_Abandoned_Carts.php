@@ -718,6 +718,16 @@ class Gm2_Abandoned_Carts {
         return wp_send_json_success();
     }
 
+    /**
+     * Return cart activity and visit logs.
+     *
+     * Accepts paging arguments to limit the returned number of rows.
+     *
+     * @param int $_POST['page']     Optional page number starting from 1.
+     * @param int $_POST['per_page'] Optional number of items per page.
+     *
+     * @return void
+     */
     public static function gm2_ac_get_activity() {
         if (!check_ajax_referer('gm2_ac_get_activity', 'nonce', false)) {
             self::log_failure('nonce', __FUNCTION__ . ': invalid nonce');
@@ -729,25 +739,29 @@ class Gm2_Abandoned_Carts {
         $ip        = isset($_POST['ip']) ? sanitize_text_field(wp_unslash($_POST['ip'])) : '';
         $client_id = isset($_POST['client_id']) ? sanitize_text_field(wp_unslash($_POST['client_id'])) : '';
         $cart_id   = isset($_POST['cart_id']) ? absint($_POST['cart_id']) : 0;
+        $page      = isset($_POST['page']) ? max(1, absint($_POST['page'])) : 1;
+        $per_page  = isset($_POST['per_page']) ? max(1, absint($_POST['per_page'])) : 50;
+        $offset    = ($page - 1) * $per_page;
+
         global $wpdb;
         $activity_table = $wpdb->prefix . 'wc_ac_cart_activity';
         $visit_table    = $wpdb->prefix . 'wc_ac_visit_log';
         $carts_table    = $wpdb->prefix . 'wc_ac_carts';
         if ($cart_id) {
-            $sql        = "SELECT action, sku, quantity, changed_at FROM $activity_table WHERE cart_id = %d ORDER BY changed_at DESC";
-            $rows       = $wpdb->get_results($wpdb->prepare($sql, $cart_id));
-            $visit_sql  = "SELECT entry_url, exit_url, visit_start, visit_end FROM $visit_table WHERE cart_id = %d ORDER BY visit_start DESC";
-            $visit_rows = $wpdb->get_results($wpdb->prepare($visit_sql, $cart_id));
+            $sql        = "SELECT action, sku, quantity, changed_at FROM $activity_table WHERE cart_id = %d ORDER BY changed_at DESC LIMIT %d OFFSET %d";
+            $rows       = $wpdb->get_results($wpdb->prepare($sql, $cart_id, $per_page, $offset));
+            $visit_sql  = "SELECT entry_url, exit_url, visit_start, visit_end FROM $visit_table WHERE cart_id = %d ORDER BY visit_start DESC LIMIT %d OFFSET %d";
+            $visit_rows = $wpdb->get_results($wpdb->prepare($visit_sql, $cart_id, $per_page, $offset));
         } elseif ($client_id !== '') {
-            $sql = "SELECT a.action, a.sku, a.quantity, a.changed_at FROM $activity_table a INNER JOIN $carts_table c ON a.cart_id = c.id WHERE c.client_id = %s ORDER BY a.changed_at DESC";
-            $rows = $wpdb->get_results($wpdb->prepare($sql, $client_id));
-            $visit_sql = "SELECT v.entry_url, v.exit_url, v.visit_start, v.visit_end FROM $visit_table v INNER JOIN $carts_table c ON v.cart_id = c.id WHERE c.client_id = %s ORDER BY v.visit_start DESC";
-            $visit_rows = $wpdb->get_results($wpdb->prepare($visit_sql, $client_id));
+            $sql = "SELECT a.action, a.sku, a.quantity, a.changed_at FROM $activity_table a INNER JOIN $carts_table c ON a.cart_id = c.id WHERE c.client_id = %s ORDER BY a.changed_at DESC LIMIT %d OFFSET %d";
+            $rows = $wpdb->get_results($wpdb->prepare($sql, $client_id, $per_page, $offset));
+            $visit_sql = "SELECT v.entry_url, v.exit_url, v.visit_start, v.visit_end FROM $visit_table v INNER JOIN $carts_table c ON v.cart_id = c.id WHERE c.client_id = %s ORDER BY v.visit_start DESC LIMIT %d OFFSET %d";
+            $visit_rows = $wpdb->get_results($wpdb->prepare($visit_sql, $client_id, $per_page, $offset));
         } elseif ($ip !== '') {
-            $sql = "SELECT a.action, a.sku, a.quantity, a.changed_at FROM $activity_table a INNER JOIN $carts_table c ON a.cart_id = c.id WHERE c.ip_address = %s ORDER BY a.changed_at DESC";
-            $rows = $wpdb->get_results($wpdb->prepare($sql, $ip));
-            $visit_sql = "SELECT v.entry_url, v.exit_url, v.visit_start, v.visit_end FROM $visit_table v INNER JOIN $carts_table c ON v.cart_id = c.id WHERE c.ip_address = %s ORDER BY v.visit_start DESC";
-            $visit_rows = $wpdb->get_results($wpdb->prepare($visit_sql, $ip));
+            $sql = "SELECT a.action, a.sku, a.quantity, a.changed_at FROM $activity_table a INNER JOIN $carts_table c ON a.cart_id = c.id WHERE c.ip_address = %s ORDER BY a.changed_at DESC LIMIT %d OFFSET %d";
+            $rows = $wpdb->get_results($wpdb->prepare($sql, $ip, $per_page, $offset));
+            $visit_sql = "SELECT v.entry_url, v.exit_url, v.visit_start, v.visit_end FROM $visit_table v INNER JOIN $carts_table c ON v.cart_id = c.id WHERE c.ip_address = %s ORDER BY v.visit_start DESC LIMIT %d OFFSET %d";
+            $visit_rows = $wpdb->get_results($wpdb->prepare($visit_sql, $ip, $per_page, $offset));
         } else {
             $rows       = [];
             $visit_rows = [];
