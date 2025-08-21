@@ -27,6 +27,8 @@ namespace Gm2 {
     function get_option($option, $default = false) { return $GLOBALS['gm2_options'][$option] ?? $default; }
     function update_option($option, $value) { $GLOBALS['gm2_options'][$option] = $value; return true; }
     function is_ssl() { return false; }
+    function wp_doing_ajax() { return $GLOBALS['wp_doing_ajax'] ?? false; }
+    function wp_doing_cron() { return $GLOBALS['wp_doing_cron'] ?? false; }
 }
 
 namespace {
@@ -213,6 +215,26 @@ class AbandonedCartsTest extends WP_UnitTestCase {
         $this->assertSame('https://initial.com', $row['exit_url']);
         // session should hold the last seen url
         $this->assertSame('http://example.com/final', WC()->session->get('gm2_ac_last_seen_url'));
+    }
+
+    public function test_shutdown_skips_ajax_requests() {
+        $table = $GLOBALS['wpdb']->prefix . 'wc_ac_carts';
+        $ac    = new \Gm2\Gm2_Abandoned_Carts();
+        // simulate the last real page visit
+        WC()->session->set('gm2_ac_last_seen_url', 'http://example.com/real');
+        // ajax request should not override the last seen url
+        $_SERVER['HTTP_HOST'] = 'example.com';
+        $_SERVER['REQUEST_URI'] = '/wc-ajax?action=do';
+        $GLOBALS['wp_doing_ajax'] = true;
+        $ac->store_last_seen_url();
+        unset($GLOBALS['wp_doing_ajax']);
+        $this->assertSame('http://example.com/real', WC()->session->get('gm2_ac_last_seen_url'));
+        // abandon without explicit url uses session value
+        $_POST = [ 'nonce' => 'n' ];
+        $_REQUEST = $_POST;
+        \Gm2\Gm2_Abandoned_Carts::gm2_ac_mark_abandoned();
+        $row = $GLOBALS['wpdb']->data[$table][0];
+        $this->assertSame('http://example.com/real', $row['exit_url']);
     }
 
     public function test_entry_url_captured_without_js() {

@@ -125,6 +125,9 @@ class Gm2_Abandoned_Carts {
     }
 
     public function store_last_seen_url() {
+        if (wp_doing_ajax() || wp_doing_cron() || defined('REST_REQUEST')) {
+            return;
+        }
         $skip_admin = apply_filters('gm2_ac_skip_admin', true);
         if (
             $skip_admin &&
