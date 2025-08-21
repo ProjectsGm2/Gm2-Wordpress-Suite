@@ -934,6 +934,15 @@ class Gm2_Abandoned_Carts {
         }
         $ip = sanitize_text_field(wp_unslash($ip));
         $location = '';
+
+        if (!empty($ip)) {
+            $key      = 'gm2_ac_geo_' . md5($ip);
+            $cached   = get_transient($key);
+            if (false !== $cached) {
+                return [ 'ip' => $ip, 'location' => $cached ];
+            }
+        }
+
         if (class_exists('WC_Geolocation') && !empty($ip)) {
             $geo = \WC_Geolocation::geolocate_ip($ip, false, false);
             if (!empty($geo['country'])) {
@@ -974,6 +983,13 @@ class Gm2_Abandoned_Carts {
         if (empty($location)) {
             $location = 'Unknown';
         }
+
+        if (!empty($ip)) {
+            $key      = 'gm2_ac_geo_' . md5($ip);
+            $lifetime = (int) apply_filters('gm2_abandoned_carts_ip_cache_lifetime', DAY_IN_SECONDS);
+            set_transient($key, $location, $lifetime);
+        }
+
         return [ 'ip' => $ip, 'location' => $location ];
     }
 
