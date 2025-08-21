@@ -31,6 +31,37 @@ class IpLocationTest extends WP_UnitTestCase {
         $this->assertSame('Unknown', $result['location']);
     }
 
+    public function test_abandoned_carts_uses_cache() {
+        $ip = '9.8.7.6';
+        $_SERVER['REMOTE_ADDR'] = $ip;
+        delete_transient('gm2_ac_geo_' . md5($ip));
+
+        $success = function($pre, $args, $url) {
+            if (false !== strpos($url, 'ipapi.co')) {
+                return [
+                    'response' => ['code' => 200],
+                    'body'     => json_encode(['country' => 'CA', 'region_code' => 'ON']),
+                ];
+            }
+            return $pre;
+        };
+        add_filter('pre_http_request', $success, 10, 3);
+        $result = Gm2_Abandoned_Carts::get_ip_and_location();
+        remove_filter('pre_http_request', $success, 10);
+        $this->assertSame('CA-ON', $result['location']);
+
+        $failure = function($pre, $args, $url) {
+            if (false !== strpos($url, 'ipapi.co')) {
+                return new WP_Error('http_request_failed', 'fail');
+            }
+            return $pre;
+        };
+        add_filter('pre_http_request', $failure, 10, 3);
+        $result2 = Gm2_Abandoned_Carts::get_ip_and_location();
+        remove_filter('pre_http_request', $failure, 10);
+        $this->assertSame('CA-ON', $result2['location']);
+    }
+
     public function test_analytics_handles_non_200() {
         $admin = new Gm2_Analytics_Admin();
         $ip = '5.6.7.8';
