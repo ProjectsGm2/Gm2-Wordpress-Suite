@@ -12,6 +12,10 @@ bash bin/build-plugin.sh
 
 This script creates a `gm2-wordpress-suite.zip` file that includes the plugin and its bundled dependencies.
 
+## AI Providers
+
+The suite can generate content using multiple AI services. Select **ChatGPT**, **Gemma**, or **Llama** from the **Gm2 → AI Settings** page and enter the corresponding API key and optional endpoint. The chosen provider is used throughout the plugin for AI-powered features.
+
 ## Running Tests
 
 The PHPUnit tests rely on the official WordPress test suite. Before running the tests you must install the suite using the helper script provided in `bin`.
@@ -102,7 +106,7 @@ Generate the sitemap:
 wp gm2 sitemap generate
 ```
 
-Clear cached AI data and ChatGPT logs:
+Clear cached AI data and AI provider logs:
 
 ```bash
 wp gm2 ai clear
