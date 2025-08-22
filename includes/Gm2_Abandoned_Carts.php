@@ -69,6 +69,7 @@ class Gm2_Abandoned_Carts {
             cart_id bigint(20) unsigned NOT NULL,
             send_at datetime NOT NULL,
             sent tinyint(1) NOT NULL DEFAULT 0,
+            attempts int NOT NULL DEFAULT 0,
             message_type varchar(20) NOT NULL,
             PRIMARY KEY  (id),
             KEY cart_id (cart_id)
@@ -1013,6 +1014,11 @@ class Gm2_Abandoned_Carts {
         $rec_has_phone = $wpdb->get_var($wpdb->prepare("SHOW COLUMNS FROM $recovered_table LIKE %s", 'phone'));
         if (!$rec_has_phone) {
             $wpdb->query("ALTER TABLE $recovered_table ADD phone varchar(50) DEFAULT NULL AFTER email");
+        }
+
+        $has_attempts = $wpdb->get_var($wpdb->prepare("SHOW COLUMNS FROM $queue_table LIKE %s", 'attempts'));
+        if (!$has_attempts) {
+            $wpdb->query("ALTER TABLE $queue_table ADD attempts int NOT NULL DEFAULT 0 AFTER sent");
         }
     }
 
