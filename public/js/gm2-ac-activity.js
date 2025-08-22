@@ -7,6 +7,9 @@
     const rawInactivity = gm2AcActivity.inactivity_ms;
     const parsedInactivity = rawInactivity === null ? 0 : parseInt(rawInactivity, 10);
     const inactivityMs = Number.isNaN(parsedInactivity) ? 5 * 60 * 1000 : parsedInactivity;
+    const rawActiveInterval = gm2AcActivity.active_interval_ms;
+    const parsedActiveInterval = rawActiveInterval === null ? 0 : parseInt(rawActiveInterval, 10);
+    const activeIntervalMs = Number.isNaN(parsedActiveInterval) ? 30 * 1000 : parsedActiveInterval;
     const url = window.location.href;
     let pendingTargetUrl;
 
@@ -88,6 +91,29 @@
         }
     }
 
+    let lastActive = 0;
+    let activeTimer;
+
+    function markActive() {
+        const now = Date.now();
+        const elapsed = now - lastActive;
+        if (elapsed >= activeIntervalMs) {
+            lastActive = now;
+            send('gm2_ac_mark_active');
+        } else {
+            clearTimeout(activeTimer);
+            const delay = activeIntervalMs - elapsed;
+            activeTimer = setTimeout(() => {
+                lastActive = Date.now();
+                send('gm2_ac_mark_active');
+                activeTimer = undefined;
+            }, delay);
+            if (activeTimer && typeof activeTimer.unref === 'function') {
+                activeTimer.unref();
+            }
+        }
+    }
+
     function getEntryUrl() {
         try {
             return localStorage.getItem(ENTRY_KEY);
@@ -156,7 +182,7 @@
     if (!getEntryUrl()) {
         setEntryUrl(url);
     }
-    send('gm2_ac_mark_active');
+    markActive();
 
     let inactivityTimer;
     function resetInactivityTimer(shouldSend = true) {
@@ -165,7 +191,7 @@
         }
         clearTimeout(inactivityTimer);
         if (shouldSend) {
-            send('gm2_ac_mark_active');
+            markActive();
         }
         inactivityTimer = setTimeout(() => {
             send('gm2_ac_mark_abandoned');
@@ -202,7 +228,7 @@
 
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
-            send('gm2_ac_mark_active');
+            markActive();
             resetInactivityTimer(false);
         }
     });

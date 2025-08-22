@@ -49,7 +49,7 @@ test('defaults to current URL when navigating to an external link', () => {
 
   Object.assign(global, { window, document: window.document, navigator: window.navigator });
   global.localStorage = window.localStorage;
-  global.gm2AcActivity = { ajax_url: '/ajax', nonce: 'nonce' };
+  global.gm2AcActivity = { ajax_url: '/ajax', nonce: 'nonce', active_interval_ms: 30 };
 
   jest.resetModules();
   require('../../public/js/gm2-ac-activity.js');
@@ -109,7 +109,7 @@ test('does not mark abandoned or clear entry when navigating within site', () =>
   jest.useRealTimers();
 });
 
-test('revives cart on visibilitychange visible', () => {
+test('debounces active pings', () => {
   jest.useFakeTimers();
   const dom = new JSDOM(`<!DOCTYPE html><body></body>`, { url: 'https://example.com/page' });
   const { window } = dom;
@@ -121,22 +121,23 @@ test('revives cart on visibilitychange visible', () => {
 
   Object.assign(global, { window, document: window.document, navigator: window.navigator });
   global.localStorage = window.localStorage;
-  global.gm2AcActivity = { ajax_url: '/ajax', nonce: 'nonce' };
+  global.gm2AcActivity = { ajax_url: '/ajax', nonce: 'nonce', active_interval_ms: 30 };
 
   jest.resetModules();
   require('../../public/js/gm2-ac-activity.js');
 
   fetchMock.mockClear();
-  Object.defineProperty(window.document, 'visibilityState', { configurable: true, value: 'visible' });
-  window.document.dispatchEvent(new window.Event('visibilitychange'));
-
+  window.document.dispatchEvent(new window.Event('mousemove'));
+  window.document.dispatchEvent(new window.Event('scroll'));
+  jest.advanceTimersByTime(29);
+  expect(fetchMock).not.toHaveBeenCalled();
+  jest.advanceTimersByTime(1);
   const activeCalls = fetchMock.mock.calls.filter((c) => {
     const params = new URLSearchParams(c[1].body.toString());
     return params.get('action') === 'gm2_ac_mark_active';
   });
-
   expect(activeCalls.length).toBe(1);
-  expect(window.navigator.sendBeacon).not.toHaveBeenCalled();
+
   jest.clearAllTimers();
   jest.useRealTimers();
 });

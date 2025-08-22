@@ -102,6 +102,8 @@ The activity log loads entries 50 at a time through the `gm2_ac_get_activity` AJ
 
 Captured email and phone values appear in their own columns on this page, making it easy to follow up with shoppers who abandon their carts.
 
+Activity pings that mark carts as active are throttled to one request every 30 seconds by default. Adjust this interval with the `gm2_ac_active_interval_ms` filter if you need more or less frequent updates.
+
 Developers can adjust the inactivity window using the `gm2_ac_mark_abandoned_interval` filter and send custom recovery emails by hooking into `gm2_ac_send_message` when the hourly `gm2_ac_process_queue` task runs. A default handler, `gm2_ac_send_default_email`, sends a WooCommerce-styled message via `wp_mail`. Use `remove_action( 'gm2_ac_send_message', 'Gm2\\gm2_ac_send_default_email' )` to disable it and the `gm2_ac_default_email_subject` and `gm2_ac_default_email_body` filters to customize the content.
 
 Use the `gm2_ac_skip_admin` filter to include administrator sessions while testing abandoned cart features. It defaults to `true` so admin carts are ignored unless the filter returns `false`.
