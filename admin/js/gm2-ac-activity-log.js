@@ -47,11 +47,13 @@ jQuery(function($){
             }
             if((hasActivity && response.data.activity.length === gm2AcActivityLog.per_page) || (hasVisits && response.data.visits.length === gm2AcActivityLog.per_page)){
                 wrap.data('page', page + 1);
+                wrap.data('end', false);
                 if(!wrap.find('.gm2-ac-load-more').length){
                     wrap.append('<button class="gm2-ac-load-more">'+gm2AcActivityLog.load_more+'</button>');
                 }
             } else {
                 wrap.find('.gm2-ac-load-more').remove();
+                wrap.data('end', true);
             }
         }).fail(function(){
             if(page === 1){
@@ -74,18 +76,19 @@ jQuery(function($){
         var row = $('<tr class="gm2-ac-activity-row"><td colspan="'+colspan+'"><div class="gm2-ac-activity-wrap" style="max-height:300px;overflow:auto;"></div></td></tr>');
         tr.after(row);
         var wrap = row.find('.gm2-ac-activity-wrap');
-        wrap.data({ ip: btn.data('ip'), page: 1, loading: false });
+        wrap.data({ ip: btn.data('ip'), page: 1, loading: false, end: false });
         loadPage(wrap);
         btn.prop('disabled', false);
     });
     $(document).on('click', '.gm2-ac-load-more', function(e){
         e.preventDefault();
         var wrap = $(this).closest('.gm2-ac-activity-wrap');
+        wrap.data('end', false);
         loadPage(wrap);
     });
     $(document).on('scroll', '.gm2-ac-activity-wrap', function(){
         var wrap = $(this);
-        if(wrap.data('loading')){
+        if(wrap.data('loading') || wrap.data('end')){
             return;
         }
         if(this.scrollTop + wrap.innerHeight() + 20 >= this.scrollHeight){
