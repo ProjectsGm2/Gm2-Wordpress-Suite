@@ -6,6 +6,8 @@ if (!defined('ABSPATH')) {
 }
 
 class Gm2_Abandoned_Carts_Messaging {
+    const MAX_ATTEMPTS = 3;
+
     public function run() {
         add_action('gm2_ac_process_queue', [ $this, 'process_queue' ]);
     }
@@ -14,9 +16,10 @@ class Gm2_Abandoned_Carts_Messaging {
         global $wpdb;
         $table = $wpdb->prefix . 'wc_ac_email_queue';
         $wpdb->insert($table, [
-            'cart_id'    => $cart_id,
-            'send_at'    => gmdate('Y-m-d H:i:s', $send_at),
-            'sent'       => 0,
+            'cart_id'      => $cart_id,
+            'send_at'      => gmdate('Y-m-d H:i:s', $send_at),
+            'sent'         => 0,
+            'attempts'     => 0,
             'message_type' => 'email',
         ]);
         if (!wp_next_scheduled('gm2_ac_process_queue')) {
@@ -27,11 +30,34 @@ class Gm2_Abandoned_Carts_Messaging {
     public function process_queue() {
         global $wpdb;
         $table = $wpdb->prefix . 'wc_ac_email_queue';
-        $rows = $wpdb->get_results($wpdb->prepare("SELECT * FROM $table WHERE sent = 0 AND send_at <= %s", current_time('mysql')));
+        $max_attempts = apply_filters('gm2_ac_max_attempts', self::MAX_ATTEMPTS);
+        $rows = $wpdb->get_results($wpdb->prepare("SELECT * FROM $table WHERE sent = 0 AND attempts < %d AND send_at <= %s", $max_attempts, current_time('mysql')));
         foreach ($rows as $row) {
-            do_action('gm2_ac_send_message', $row);
-            $wpdb->update($table, ['sent' => 1], ['id' => $row->id]);
+            try {
+                do_action('gm2_ac_send_message', $row);
+                $wpdb->update($table, ['sent' => 1], ['id' => $row->id]);
+            } catch (\Throwable $e) {
+                $wpdb->query($wpdb->prepare("UPDATE $table SET attempts = attempts + 1 WHERE id = %d", $row->id));
+            }
         }
+    }
+
+    public function reprocess_failed_messages() {
+        global $wpdb;
+        $table = $wpdb->prefix . 'wc_ac_email_queue';
+        $max_attempts = apply_filters('gm2_ac_max_attempts', self::MAX_ATTEMPTS);
+        $rows = $wpdb->get_results($wpdb->prepare("SELECT * FROM $table WHERE sent = 0 AND attempts >= %d", $max_attempts));
+        $count = 0;
+        foreach ($rows as $row) {
+            try {
+                do_action('gm2_ac_send_message', $row);
+                $wpdb->update($table, ['sent' => 1], ['id' => $row->id]);
+                $count++;
+            } catch (\Throwable $e) {
+                $wpdb->query($wpdb->prepare("UPDATE $table SET attempts = attempts + 1 WHERE id = %d", $row->id));
+            }
+        }
+        return $count;
     }
 }
 

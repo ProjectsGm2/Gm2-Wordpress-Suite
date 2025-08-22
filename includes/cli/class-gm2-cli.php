@@ -73,7 +73,14 @@ class Gm2_CLI extends \WP_CLI_Command {
             return;
         }
 
-        \WP_CLI::error( 'Usage: wp gm2 ac <migrate|process>' );
+        if ( $sub === 'retry-failed' ) {
+            $messaging = new Gm2_Abandoned_Carts_Messaging();
+            $count = $messaging->reprocess_failed_messages();
+            \WP_CLI::success( sprintf( '%d failed messages reprocessed.', $count ) );
+            return;
+        }
+
+        \WP_CLI::error( 'Usage: wp gm2 ac <migrate|process|retry-failed>' );
     }
 
     /**

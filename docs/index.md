@@ -110,6 +110,8 @@ Use the `gm2_ac_skip_admin` filter to include administrator sessions while testi
 
 To finalize statuses on demand run `wp gm2 ac process` from the command line or click the **Process Pending Carts** button on the **Gm2 → Abandoned Carts** screen. Both trigger the same logic that WP‑Cron uses to mark inactive carts as abandoned.
 
+If messages fail to send after hitting their retry limit you can attempt them again with `wp gm2 ac retry-failed`.
+
 ## Exporting SEO Settings
 
 Use the **Export Settings** button on the SEO dashboard to download a `gm2-seo-settings.json` file containing all options that start with `gm2_`. The matching **Import Settings** form accepts the same JSON format and updates each option. The file is a simple key/value object:
