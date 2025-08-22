@@ -2,7 +2,6 @@
 
 namespace Gm2;
 
-use Gm2\AI\ChatGPTProvider as Gm2_ChatGPT;
 
 if (!defined('ABSPATH')) {
     exit;
@@ -2196,23 +2195,20 @@ class Gm2_SEO_Admin {
         }
         $title       = isset($_POST['gm2_seo_title']) ? sanitize_text_field($_POST['gm2_seo_title']) : '';
         $description = isset($_POST['gm2_seo_description']) ? sanitize_textarea_field($_POST['gm2_seo_description']) : '';
-        if ($description === '' && trim(get_option('gm2_chatgpt_api_key', '')) !== '') {
-            if ($post) {
-                $sanitized_content = wp_strip_all_tags($post->post_content);
-                $snippet_content   = $this->safe_truncate($sanitized_content, 400);
-                $prompt  = "Write a short SEO description for the following content:\n\n" . $snippet_content;
-                $context = gm2_get_business_context_prompt();
-                if ($context !== '') {
-                    $prompt = $context . "\n\n" . $prompt;
-                }
-                $chat    = new Gm2_ChatGPT();
-                $resp    = $chat->query($prompt);
-                if (!is_wp_error($resp) && $resp !== '') {
-                    $description = sanitize_textarea_field($resp);
-                } else {
-                    $msg = is_wp_error($resp) ? $resp->get_error_message() : __( 'Empty response from ChatGPT', 'gm2-wordpress-suite' );
-                    self::add_notice(sprintf( __( 'ChatGPT description error: %s', 'gm2-wordpress-suite' ), $msg ));
-                }
+        if ($description === '' && $post) {
+            $sanitized_content = wp_strip_all_tags($post->post_content);
+            $snippet_content   = $this->safe_truncate($sanitized_content, 400);
+            $prompt  = "Write a short SEO description for the following content:\n\n" . $snippet_content;
+            $context = gm2_get_business_context_prompt();
+            if ($context !== '') {
+                $prompt = $context . "\n\n" . $prompt;
+            }
+            $resp = gm2_ai_send_prompt($prompt);
+            if (!is_wp_error($resp) && $resp !== '') {
+                $description = sanitize_textarea_field($resp);
+            } else {
+                $msg = is_wp_error($resp) ? $resp->get_error_message() : __( 'Empty response from AI', 'gm2-wordpress-suite' );
+                self::add_notice(sprintf( __( 'AI description error: %s', 'gm2-wordpress-suite' ), $msg ));
             }
         }
         $noindex     = isset($_POST['gm2_noindex']) ? '1' : '0';
@@ -2922,20 +2918,17 @@ class Gm2_SEO_Admin {
         if ($alt === '') {
             $title = get_post($attachment_id)->post_title;
             $alt   = sanitize_text_field($title);
-            if (trim(get_option('gm2_chatgpt_api_key', '')) !== '') {
-                $prompt = "Provide a short descriptive alt text for an image titled: {$title}";
-                $context = gm2_get_business_context_prompt();
-                if ($context !== '') {
-                    $prompt = $context . "\n\n" . $prompt;
-                }
-                $chat   = new Gm2_ChatGPT();
-                $resp   = $chat->query($prompt);
-                if (!is_wp_error($resp) && $resp !== '') {
-                    $alt = sanitize_text_field($resp);
-                } else {
-                    $msg = is_wp_error($resp) ? $resp->get_error_message() : __( 'Empty response from ChatGPT', 'gm2-wordpress-suite' );
-                    self::add_notice( sprintf( __( 'ChatGPT alt text error: %s', 'gm2-wordpress-suite' ), $msg ) );
-                }
+            $prompt = "Provide a short descriptive alt text for an image titled: {$title}";
+            $context = gm2_get_business_context_prompt();
+            if ($context !== '') {
+                $prompt = $context . "\n\n" . $prompt;
+            }
+            $resp = gm2_ai_send_prompt($prompt);
+            if (!is_wp_error($resp) && $resp !== '') {
+                $alt = sanitize_text_field($resp);
+            } else {
+                $msg = is_wp_error($resp) ? $resp->get_error_message() : __( 'Empty response from AI', 'gm2-wordpress-suite' );
+                self::add_notice( sprintf( __( 'AI alt text error: %s', 'gm2-wordpress-suite' ), $msg ) );
             }
             update_post_meta($attachment_id, '_wp_attachment_image_alt', $alt);
         }
@@ -3500,12 +3493,12 @@ class Gm2_SEO_Admin {
     }
 
     /**
-     * Generate keyword ideas using ChatGPT when Keyword Planner is unavailable.
+     * Generate keyword ideas using the configured AI provider when Keyword Planner is unavailable.
      *
      * @param string $query Seed keyword or phrase.
      * @return array|\WP_Error
      */
-    private function chatgpt_keyword_ideas($query) {
+    private function ai_keyword_ideas($query) {
         $prompt = sprintf(
             'Provide a comma-separated list of short keyword ideas related to: %s',
             $query
@@ -3515,15 +3508,14 @@ class Gm2_SEO_Admin {
         if ($context !== '') {
             $prompt = $context . "\n\n" . $prompt;
         }
-        $chat = new Gm2_ChatGPT();
         try {
-            $resp = $chat->query($prompt);
+            $resp = gm2_ai_send_prompt($prompt);
         } catch (\Throwable $e) {
-            error_log('ChatGPT keyword ideas failed: ' . $e->getMessage());
-            return new \WP_Error('chatgpt_error', __('AI request failed', 'gm2-wordpress-suite'));
+            error_log('AI keyword ideas failed: ' . $e->getMessage());
+            return new \WP_Error('ai_error', __('AI request failed', 'gm2-wordpress-suite'));
         }
         if (is_wp_error($resp)) {
-            error_log('ChatGPT keyword ideas error: ' . $resp->get_error_message());
+            error_log('AI keyword ideas error: ' . $resp->get_error_message());
             return $resp;
         }
         $ideas = [];
@@ -3776,11 +3768,11 @@ class Gm2_SEO_Admin {
             $ideas   = $planner->generate_keyword_ideas($query);
             if (is_wp_error($ideas)) {
                 error_log('Keyword Planner error: ' . $ideas->get_error_message());
-                $ideas = $this->chatgpt_keyword_ideas($query);
+                $ideas = $this->ai_keyword_ideas($query);
                 $fallback = true;
             }
         } else {
-            $ideas = $this->chatgpt_keyword_ideas($query);
+            $ideas = $this->ai_keyword_ideas($query);
             $fallback = true;
         }
 
@@ -3853,8 +3845,7 @@ class Gm2_SEO_Admin {
                 $cats
             );
         
-        $chat   = new Gm2_ChatGPT();
-        $resp   = $chat->query($prompt);
+        $resp   = gm2_ai_send_prompt($prompt);
 
         if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('Content rules response: ' . $resp);
@@ -3976,7 +3967,7 @@ class Gm2_SEO_Admin {
             "You are an SEO content strategist. Use the business context provided above as the foundation for every suggestion and recommendation in this task. " .
             "All guidelines must be tailored to the business’s niche, audience, tone, product focus, and SEO objectives. Avoid general or one-size-fits-all advice—every suggestion must reflect the specific context of this business.\n\n" .
         
-            "This set of SEO guidelines and suggestions will be reused and prepended to future ChatGPT prompts %1\$s. " .
+            "This set of SEO guidelines and suggestions will be reused and prepended to future AI prompts %1\$s. " .
             "Therefore, ensure that every recommendation is reusable, highly relevant to the business context, and reduces the need to restate SEO strategy in future prompts targeting %1\$s.\n\n" .
         
             "Generate actionable SEO content guidelines and helpful best practices %1\$s in WordPress. Do not return strict rules—provide flexible, business-relevant suggestions that writers, strategists, and SEO tools can interpret and apply.\n\n" .
@@ -3995,8 +3986,7 @@ class Gm2_SEO_Admin {
             $cats
         );
 
-        $chat   = new Gm2_ChatGPT();
-        $resp   = $chat->query($prompt);
+        $resp   = gm2_ai_send_prompt($prompt);
 
         if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('Guideline rules response: ' . $resp);
@@ -4226,17 +4216,15 @@ class Gm2_SEO_Admin {
             Do NOT include explanation or formatting outside the JSON.
             TEXT;
 
-
-        $chat = new Gm2_ChatGPT();
         try {
-            $resp = $chat->query($prompt);
+            $resp = gm2_ai_send_prompt($prompt);
         } catch (\Throwable $e) {
-            error_log('AI Research ChatGPT query failed: ' . $e->getMessage());
+            error_log('AI Research query failed: ' . $e->getMessage());
             wp_send_json_error(__('AI request failed', 'gm2-wordpress-suite'));
         }
 
         if (is_wp_error($resp)) {
-            error_log('AI Research ChatGPT error: ' . $resp->get_error_message());
+            error_log('AI Research error: ' . $resp->get_error_message());
             wp_send_json_error(__('AI request failed', 'gm2-wordpress-suite'));
         }
 
@@ -4274,7 +4262,7 @@ class Gm2_SEO_Admin {
 
         if (!$seeds) {
             $query = $seo_title !== '' ? $seo_title : ($seo_description !== '' ? $seo_description : $title);
-            $ideas = $this->chatgpt_keyword_ideas($query);
+            $ideas = $this->ai_keyword_ideas($query);
             if (!is_wp_error($ideas)) {
                 $seeds = array_map(function($i) { return $i['text']; }, $ideas);
                 $chosen = $this->select_top_keywords($ideas);
@@ -4389,14 +4377,14 @@ class Gm2_SEO_Admin {
 
 
         try {
-            $resp2 = $chat->query($prompt2);
+            $resp2 = gm2_ai_send_prompt($prompt2);
         } catch (\Throwable $e) {
-            error_log('AI Research ChatGPT query failed: ' . $e->getMessage());
+            error_log('AI Research query failed: ' . $e->getMessage());
             wp_send_json_error(__('AI request failed', 'gm2-wordpress-suite'));
         }
 
         if (is_wp_error($resp2)) {
-            error_log('AI Research ChatGPT error: ' . $resp2->get_error_message());
+            error_log('AI Research error: ' . $resp2->get_error_message());
             wp_send_json_error(__('AI request failed', 'gm2-wordpress-suite'));
         }
 
@@ -4574,8 +4562,7 @@ class Gm2_SEO_Admin {
         Output ONLY the description text. Do not include labels, JSON, or commentary.
         TEXT;
 
-        $chat = new Gm2_ChatGPT();
-        $resp = $chat->query($prompt);
+        $resp = gm2_ai_send_prompt($prompt);
 
         if (is_wp_error($resp)) {
             error_log('Tax description request failed: ' . $resp->get_error_message());

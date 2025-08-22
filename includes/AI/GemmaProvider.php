@@ -24,13 +24,16 @@ class GemmaProvider implements ProviderInterface {
         $this->endpoint  = get_option('gm2_gemma_endpoint', $default_endpoint);
     }
 
-    public function query(string $prompt): string|WP_Error {
+    public function query(string $prompt, array $args = []): string|WP_Error {
         if (get_option('gm2_enable_gemma', '1') !== '1') {
             return new WP_Error('gemma_disabled', 'Gemma feature disabled');
         }
         if ($this->api_key === '') {
             return new WP_Error('no_api_key', 'Gemma API key not set');
         }
+
+        $temperature = isset($args['temperature']) ? floatval($args['temperature']) : $this->temperature;
+        $max_tokens  = isset($args['number-of-words']) ? intval($args['number-of-words']) : $this->max_tokens;
 
         $payload = [
             'contents' => [
@@ -41,11 +44,11 @@ class GemmaProvider implements ProviderInterface {
                 ],
             ],
             'generationConfig' => [
-                'temperature' => $this->temperature,
+                'temperature' => $temperature,
             ],
         ];
-        if ($this->max_tokens > 0) {
-            $payload['generationConfig']['maxOutputTokens'] = $this->max_tokens;
+        if ($max_tokens > 0) {
+            $payload['generationConfig']['maxOutputTokens'] = $max_tokens;
         }
 
         $args = [
