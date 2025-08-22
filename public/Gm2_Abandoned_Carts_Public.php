@@ -74,6 +74,12 @@ class Gm2_Abandoned_Carts_Public {
          * @param int|null $milliseconds Time in milliseconds. Default 5 minutes.
          */
         $inactivity_ms = apply_filters('gm2_ac_inactivity_ms', 5 * MINUTE_IN_SECONDS * 1000);
+        /**
+         * Filters the minimum interval (in milliseconds) between successive activity pings.
+         *
+         * @param int $milliseconds Time in milliseconds. Default 30 seconds.
+         */
+        $active_interval_ms = apply_filters('gm2_ac_active_interval_ms', 30 * 1000);
         wp_localize_script(
             'gm2-ac-activity',
             'gm2AcActivity',
@@ -81,6 +87,7 @@ class Gm2_Abandoned_Carts_Public {
                 'ajax_url'      => admin_url('admin-ajax.php'),
                 'nonce'         => wp_create_nonce('gm2_ac_activity'),
                 'inactivity_ms' => $inactivity_ms,
+                'active_interval_ms' => $active_interval_ms,
             ]
         );
     }
