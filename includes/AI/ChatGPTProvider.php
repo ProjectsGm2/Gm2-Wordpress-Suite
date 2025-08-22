@@ -1,11 +1,13 @@
 <?php
-namespace Gm2;
+namespace Gm2\AI;
+
+use WP_Error;
 
 if (!defined('ABSPATH')) {
     exit;
 }
 
-class Gm2_ChatGPT {
+class ChatGPTProvider implements ProviderInterface {
     private $api_key;
     private $model;
     private $temperature;
@@ -21,12 +23,12 @@ class Gm2_ChatGPT {
         $this->endpoint  = get_option('gm2_chatgpt_endpoint', 'https://api.openai.com/v1/chat/completions');
     }
 
-    public function query($prompt) {
+    public function query(string $prompt): string|WP_Error {
         if (get_option('gm2_enable_chatgpt', '1') !== '1') {
-            return new \WP_Error('chatgpt_disabled', 'ChatGPT feature disabled');
+            return new WP_Error('chatgpt_disabled', 'ChatGPT feature disabled');
         }
         if ($this->api_key === '') {
-            return new \WP_Error('no_api_key', 'ChatGPT API key not set');
+            return new WP_Error('no_api_key', 'ChatGPT API key not set');
         }
         $payload = [
             'model'     => $this->model,
@@ -66,7 +68,7 @@ class Gm2_ChatGPT {
                 }
                 $data    = json_decode($body, true);
                 $message = $data['error']['message'] ?? 'Non-200 response';
-                $result  = new \WP_Error('api_error', $message);
+                $result  = new WP_Error('api_error', $message);
             } else {
                 if ($body === '') {
                     $result = '';
@@ -77,7 +79,7 @@ class Gm2_ChatGPT {
             }
         }
 
-        if (get_option('gm2_enable_chatgpt_logging', '0') === '1') {
+        if (get_option('gm2_enable_chatgpt_logging', '0') === '1' && defined('GM2_CHATGPT_LOG_FILE')) {
             $log_resp = is_wp_error($result) ? $result->get_error_message() : $result;
             $entry = wp_json_encode([
                 'prompt'   => $prompt,

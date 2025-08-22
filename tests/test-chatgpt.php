@@ -1,5 +1,5 @@
 <?php
-use Gm2\Gm2_ChatGPT;
+use Gm2\AI\ChatGPTProvider as Gm2_ChatGPT;
 use Gm2\Gm2_Admin;
 
 class ChatGPTTest extends WP_UnitTestCase {
