@@ -135,13 +135,13 @@ class Gm2_Abandoned_Carts_Admin {
         }
 
         $summary = $this->get_summary_data();
-        echo '<div id="gm2-ac-summary" class="gm2-ac-summary">';
-        echo '<p><strong>' . esc_html__('Total Carts', 'gm2-wordpress-suite') . ':</strong> <span id="gm2-ac-total">' . intval($summary['total']) . '</span></p>';
-        echo '<p><strong>' . esc_html__('Pending', 'gm2-wordpress-suite') . ':</strong> <span id="gm2-ac-pending">' . intval($summary['pending']) . '</span></p>';
-        echo '<p><strong>' . esc_html__('Abandoned', 'gm2-wordpress-suite') . ':</strong> <span id="gm2-ac-abandoned">' . intval($summary['abandoned']) . '</span></p>';
-        echo '<p><strong>' . esc_html__('Recovered', 'gm2-wordpress-suite') . ':</strong> <span id="gm2-ac-recovered">' . intval($summary['recovered']) . '</span></p>';
-        echo '<p><strong>' . esc_html__('Potential Revenue', 'gm2-wordpress-suite') . ':</strong> <span id="gm2-ac-potential">' . esc_html(wc_price($summary['potential_revenue'])) . '</span></p>';
-        echo '<p><strong>' . esc_html__('Recovered Revenue', 'gm2-wordpress-suite') . ':</strong> <span id="gm2-ac-recovered-revenue">' . esc_html(wc_price($summary['recovered_revenue'])) . '</span></p>';
+        echo '<div id="gm2-ac-summary" class="gm2-ac-summary" role="status" aria-live="polite">';
+        echo '<p><strong>' . esc_html__('Total Carts', 'gm2-wordpress-suite') . ':</strong> <span id="gm2-ac-total"><span class="screen-reader-text">' . esc_html__('Total Carts', 'gm2-wordpress-suite') . ':</span><span class="count">' . intval($summary['total']) . '</span></span></p>';
+        echo '<p><strong>' . esc_html__('Pending', 'gm2-wordpress-suite') . ':</strong> <span id="gm2-ac-pending"><span class="screen-reader-text">' . esc_html__('Pending', 'gm2-wordpress-suite') . ':</span><span class="count">' . intval($summary['pending']) . '</span></span></p>';
+        echo '<p><strong>' . esc_html__('Abandoned', 'gm2-wordpress-suite') . ':</strong> <span id="gm2-ac-abandoned"><span class="screen-reader-text">' . esc_html__('Abandoned', 'gm2-wordpress-suite') . ':</span><span class="count">' . intval($summary['abandoned']) . '</span></span></p>';
+        echo '<p><strong>' . esc_html__('Recovered', 'gm2-wordpress-suite') . ':</strong> <span id="gm2-ac-recovered"><span class="screen-reader-text">' . esc_html__('Recovered', 'gm2-wordpress-suite') . ':</span><span class="count">' . intval($summary['recovered']) . '</span></span></p>';
+        echo '<p><strong>' . esc_html__('Potential Revenue', 'gm2-wordpress-suite') . ':</strong> <span id="gm2-ac-potential"><span class="screen-reader-text">' . esc_html__('Potential Revenue', 'gm2-wordpress-suite') . ':</span><span class="count">' . esc_html(wc_price($summary['potential_revenue'])) . '</span></span></p>';
+        echo '<p><strong>' . esc_html__('Recovered Revenue', 'gm2-wordpress-suite') . ':</strong> <span id="gm2-ac-recovered-revenue"><span class="screen-reader-text">' . esc_html__('Recovered Revenue', 'gm2-wordpress-suite') . ':</span><span class="count">' . esc_html(wc_price($summary['recovered_revenue'])) . '</span></span></p>';
         echo '</div>';
         echo '<button type="button" class="button" id="gm2-ac-refresh-summary">' . esc_html__( 'Refresh Summary', 'gm2-wordpress-suite' ) . '</button>';
 
