@@ -25,6 +25,8 @@ test('displays server error message and re-enables button', async () => {
 
   const $ = jquery(dom.window);
   Object.assign(global, { window: dom.window, document: dom.window.document, jQuery: $, $ });
+  global.gm2AI = { provider: 'chatgpt' };
+  dom.window.gm2AI = global.gm2AI;
   global.gm2ChatGPT = { ajax_url: '/fake', nonce: 'n', error: 'Error' };
   dom.window.gm2ChatGPT = global.gm2ChatGPT;
 
@@ -66,6 +68,8 @@ test('shows message when response is 0', async () => {
 
   const $ = jquery(dom.window);
   Object.assign(global, { window: dom.window, document: dom.window.document, jQuery: $, $ });
+  global.gm2AI = { provider: 'chatgpt' };
+  dom.window.gm2AI = global.gm2AI;
   global.gm2ChatGPT = { ajax_url: '/fake', nonce: 'n', error: 'Error' };
   dom.window.gm2ChatGPT = global.gm2ChatGPT;
 

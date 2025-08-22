@@ -8,11 +8,11 @@ License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 == Description ==
-A powerful suite of WordPress enhancements including admin tools, frontend optimizations, and ChatGPT-powered content generation.
+A powerful suite of WordPress enhancements including admin tools, frontend optimizations, and AI-powered content generation via ChatGPT, Gemma, or Llama.
 
 Key features include:
 * SEO tools with breadcrumbs, caching and structured data
-* ChatGPT-powered content generation and keyword research
+* AI-powered content generation and keyword research via ChatGPT, Gemma, or Llama
 * WooCommerce quantity discounts with a dedicated Elementor widget (requires WooCommerce)
 * Registration and login Elementor widget with optional Google login (requires WooCommerce and Site Kit)
 * Abandoned cart tracking grouped by IP with email/phone capture, a Cart Settings page for selecting an Elementor popup, browsing-time and revisit metrics, an activity log, and recovery emails
@@ -29,8 +29,7 @@ Key features include:
 2. Activate the plugin through the 'Plugins' screen in WordPress.
 3. Use the Gm2 Suite menu in the admin sidebar to configure settings. First
    visit **Gm2 → Google OAuth Setup** to enter your client ID and secret, then
-   open **Gm2 → ChatGPT** to provide your OpenAI API key and choose a model from
-   the dropdown.
+   open **Gm2 → AI Settings** to choose an AI provider (ChatGPT, Gemma, or Llama) and supply the corresponding API key and endpoint.
    Finally, use **SEO → Connect Google Account** to authorize your Google account. After connecting, you will be able to select your Analytics Measurement ID and Ads Customer ID from dropdown menus.
 4. The plugin relies on WordPress's built-in HTTP API and has no external
    dependencies.
@@ -56,7 +55,7 @@ archive with `bash bin/build-plugin.sh`. This command packages the plugin with
 all dependencies into `gm2-wordpress-suite.zip` for installation via the
 **Plugins → Add New** screen.
 == Setup Wizard ==
-After activation the **Gm2 Setup Wizard** (`index.php?page=gm2-setup-wizard`) opens once to walk through entering your ChatGPT API key, Google OAuth credentials, sitemap settings and which modules to enable. The wizard is optional and can be launched again from the **Gm2 Suite** dashboard at any time.
+After activation the **Gm2 Setup Wizard** (`index.php?page=gm2-setup-wizard`) opens once to walk through entering your AI provider API key, Google OAuth credentials, sitemap settings and which modules to enable. The wizard is optional and can be launched again from the **Gm2 Suite** dashboard at any time.
 
 
 == Feature Toggles ==
@@ -147,17 +146,17 @@ Configuration:
 Enter your compression API key and enable the service from the SEO &gt; Performance screen.
 When enabled, uploaded images are sent to the API and replaced with the optimized result.
 
-== ChatGPT ==
-Configure the integration from **Gm2 → ChatGPT** in your WordPress admin area. Enter your
-OpenAI API key and adjust these options:
+== AI Providers ==
+Select your preferred AI service from **Gm2 → AI Settings**. Choose between **ChatGPT**, **Gemma**, or **Llama** and enter the required API key and endpoint.
 
-* **Model** – select the model to use from a dropdown. Options are fetched from
-  OpenAI when possible (defaults to `gpt-3.5-turbo`).
+When **ChatGPT** is selected you can also configure:
+
+* **Model** – defaults to `gpt-3.5-turbo`.
 * **Temperature** – controls randomness of responses.
 * **Max Tokens** – optional limit on the length of completions.
 * **API Endpoint** – URL of the chat completions API.
 
-Use the **Test Prompt** box on the same page to send a message and verify your
+Use the **Test Prompt** box on the same page (available for ChatGPT) to send a message and verify your
 settings before generating content.
 
 == SEO Guidelines ==
@@ -209,7 +208,7 @@ Example JSON response:
 ```
 
 == SEO Context ==
-Open the **Context** tab under **SEO** to store detailed business information used in AI prompts. Answer each question and the plugin will append your responses to every ChatGPT request:
+Open the **Context** tab under **SEO** to store detailed business information used in AI prompts. Answer each question and the plugin will append your responses to every AI request:
 
 * **Business Model** – How does the company make money (product sales, services, subscriptions, ads, affiliate, hybrid)?
 * **Industry Category** – Which industry best describes your business? If e-commerce, list main product categories and any flagship items. For services or SaaS, outline your core offerings and modules.
@@ -229,7 +228,7 @@ Open the **Context** tab under **SEO** to store detailed business information us
 * **Custom Prompts** – Default instructions appended to AI requests.
 * **Business Context Prompt** – One-click builder that combines your answers into a single prompt summarizing the business.
 
-To build the prompt, ensure the ChatGPT feature is enabled and save your API key and model under **Gm2 → ChatGPT**. Then return to **SEO → Context** and click **Generate AI Prompt** below the Business Context Prompt field. The plugin merges all of your Context answers and sends them to ChatGPT. The response is inserted into the textarea so you can tweak it before saving.
+To build the prompt, ensure your chosen AI provider is enabled and the API key saved under **Gm2 → AI Settings**. Then return to **SEO → Context** and click **Generate AI Prompt** below the Business Context Prompt field. The plugin merges all of your Context answers and sends them to the selected provider. The response is inserted into the textarea so you can tweak it before saving.
 
 == SEO Settings ==
 The SEO meta box appears when editing posts, pages, any public custom post types and taxonomy terms. In the
