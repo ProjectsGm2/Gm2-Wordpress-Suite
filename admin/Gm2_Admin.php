@@ -885,8 +885,7 @@ class Gm2_Admin {
         }
 
         $prompt = sanitize_textarea_field($_POST['prompt'] ?? '');
-        $chat   = new Gm2_ChatGPT();
-        $resp   = $chat->query($prompt);
+        $resp   = gm2_ai_send_prompt($prompt);
 
         if (is_wp_error($resp)) {
             wp_send_json_error($resp->get_error_message());

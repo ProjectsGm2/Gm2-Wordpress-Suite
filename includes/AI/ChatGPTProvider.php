@@ -23,20 +23,25 @@ class ChatGPTProvider implements ProviderInterface {
         $this->endpoint  = get_option('gm2_chatgpt_endpoint', 'https://api.openai.com/v1/chat/completions');
     }
 
-    public function query(string $prompt): string|WP_Error {
+    public function query(string $prompt, array $args = []): string|WP_Error {
         if (get_option('gm2_enable_chatgpt', '1') !== '1') {
             return new WP_Error('chatgpt_disabled', 'ChatGPT feature disabled');
         }
         if ($this->api_key === '') {
             return new WP_Error('no_api_key', 'ChatGPT API key not set');
         }
+
+        $model       = $args['language-model'] ?? $this->model;
+        $temperature = isset($args['temperature']) ? floatval($args['temperature']) : $this->temperature;
+        $max_tokens  = isset($args['number-of-words']) ? intval($args['number-of-words']) : $this->max_tokens;
+
         $payload = [
-            'model'     => $this->model,
-            'messages'  => [ [ 'role' => 'user', 'content' => $prompt ] ],
-            'temperature' => $this->temperature,
+            'model'       => $model,
+            'messages'    => [ [ 'role' => 'user', 'content' => $prompt ] ],
+            'temperature' => $temperature,
         ];
-        if ($this->max_tokens > 0) {
-            $payload['max_tokens'] = $this->max_tokens;
+        if ($max_tokens > 0) {
+            $payload['max_tokens'] = $max_tokens;
         }
         $args = [
             'headers' => [

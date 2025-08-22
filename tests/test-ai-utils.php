@@ -3,6 +3,7 @@ use function Gm2\gm2_ai_send_prompt;
 
 class AiUtilsTest extends WP_UnitTestCase {
     public function test_gpt4_turbo_model_selected() {
+        update_option('gm2_ai_provider', 'chatgpt');
         update_option('gm2_chatgpt_api_key', 'key');
         $captured = null;
         $filter = function($pre, $args, $url) use (&$captured) {

@@ -83,71 +83,24 @@ namespace {
     }
 
     function gm2_ai_send_prompt($prompt, $args = []) {
-        $defaults = [
-            'language-model' => 'gpt-3.5-turbo',
-            'temperature'    => 1.0,
-            'number-of-words'=> 0,
+        $provider = get_option('gm2_ai_provider', 'chatgpt');
+        $map = [
+            'chatgpt' => '\\Gm2\\AI\\ChatGPTProvider',
+            'gemma'   => '\\Gm2\\AI\\GemmaProvider',
+            'llama'   => '\\Gm2\\AI\\LlamaProvider',
         ];
-        $args = wp_parse_args($args, $defaults);
+        $class = $map[$provider] ?? $map['chatgpt'];
 
-        $api_key = get_option('gm2_chatgpt_api_key', '');
-        if ($api_key === '') {
-            return new \WP_Error('no_api_key', 'ChatGPT API key not set');
-        }
-        $model = in_array($args['language-model'], ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo'], true) ? $args['language-model'] : 'gpt-3.5-turbo';
-        $temperature = floatval($args['temperature']);
-
-        $payload = [
-            'model'       => $model,
-            'messages'    => [ [ 'role' => 'user', 'content' => $prompt ] ],
-            'temperature' => $temperature,
-        ];
-        if ($args['number-of-words']) {
-            $payload['max_tokens'] = intval($args['number-of-words']);
+        if (!class_exists($class)) {
+            return new \WP_Error('invalid_provider', 'Invalid AI provider');
         }
 
-        $endpoint = get_option('gm2_chatgpt_endpoint', 'https://api.openai.com/v1/chat/completions');
-        $http_args = [
-            'headers' => [
-                'Authorization' => 'Bearer ' . $api_key,
-                'Content-Type'  => 'application/json',
-            ],
-            'body'    => wp_json_encode($payload),
-            'timeout' => 20,
-        ];
-
-        $response = wp_remote_post($endpoint, $http_args);
-
-        $result = null;
-        if (is_wp_error($response)) {
-            $result = $response;
-        } else {
-            $status = wp_remote_retrieve_response_code($response);
-            $body   = wp_remote_retrieve_body($response);
-            if ($status !== 200) {
-                $data    = json_decode($body, true);
-                $message = $data['error']['message'] ?? 'Non-200 response';
-                $result  = new \WP_Error('api_error', $message);
-            } else {
-                if ($body === '') {
-                    $result = '';
-                } else {
-                    $data = json_decode($body, true);
-                    $result = $data['choices'][0]['message']['content'] ?? '';
-                }
-            }
+        $instance = new $class();
+        if (!($instance instanceof \Gm2\AI\ProviderInterface)) {
+            return new \WP_Error('invalid_provider', 'Invalid AI provider');
         }
 
-        if (get_option('gm2_enable_chatgpt_logging', '0') === '1') {
-            $log_resp = is_wp_error($result) ? $result->get_error_message() : $result;
-            $entry = wp_json_encode([
-                'prompt'   => $prompt,
-                'response' => $log_resp,
-            ]);
-            error_log($entry . PHP_EOL, 3, GM2_CHATGPT_LOG_FILE);
-        }
-
-        return $result;
+        return $instance->query($prompt, $args);
     }
 
     /**
