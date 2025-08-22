@@ -36,23 +36,23 @@ jQuery(function($){
     });
 
     function refreshSummary(){
-        var $summary = $('#gm2-ac-summary');
+        var summary = document.getElementById('gm2-ac-summary');
         $.post(gm2AcLive.ajax_url, {
             action: 'gm2_ac_refresh_summary',
             nonce: gm2AcLive.summary_nonce
         }).done(function(response){
             if(response && response.success && response.data){
-                $('#gm2-ac-total').text(response.data.total);
-                $('#gm2-ac-pending').text(response.data.pending);
-                $('#gm2-ac-abandoned').text(response.data.abandoned);
-                $('#gm2-ac-recovered').text(response.data.recovered);
-                $('#gm2-ac-potential').text(response.data.potential_revenue);
-                $('#gm2-ac-recovered-revenue').text(response.data.recovered_revenue);
+                document.querySelector('#gm2-ac-total .count').textContent = response.data.total;
+                document.querySelector('#gm2-ac-pending .count').textContent = response.data.pending;
+                document.querySelector('#gm2-ac-abandoned .count').textContent = response.data.abandoned;
+                document.querySelector('#gm2-ac-recovered .count').textContent = response.data.recovered;
+                document.querySelector('#gm2-ac-potential .count').textContent = response.data.potential_revenue;
+                document.querySelector('#gm2-ac-recovered-revenue .count').textContent = response.data.recovered_revenue;
             }
         }).fail(function(){
             showError('Failed to refresh summary.');
         }).always(function(){
-            $summary.removeClass('loading');
+            summary.classList.remove('loading');
         });
     }
 
