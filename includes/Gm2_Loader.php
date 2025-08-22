@@ -90,7 +90,8 @@ class Gm2_Loader {
             // Ensure the abandonment cron is always scheduled when the module is active.
             Gm2_Abandoned_Carts::schedule_event();
 
-            $ac = new Gm2_Abandoned_Carts();
+            $logger = function_exists('wc_get_logger') ? wc_get_logger() : null;
+            $ac = new Gm2_Abandoned_Carts($logger);
             $ac->run();
 
             // Temporarily disable Recovery Email Queue.

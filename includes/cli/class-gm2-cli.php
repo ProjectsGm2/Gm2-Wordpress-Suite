@@ -60,7 +60,8 @@ class Gm2_CLI extends \WP_CLI_Command {
     public function ac( $args, $assoc_args ) {
         $sub = $args[0] ?? '';
         if ( $sub === 'migrate' ) {
-            $ac    = new Gm2_Abandoned_Carts();
+            $logger = function_exists('wc_get_logger') ? wc_get_logger() : null;
+            $ac    = new Gm2_Abandoned_Carts($logger);
             $count = $ac->migrate_recovered_carts();
             \WP_CLI::success( sprintf( '%d carts migrated.', $count ) );
             return;

@@ -163,7 +163,8 @@ function gm2_activate_plugin() {
 
     gm2_custom_tables_maybe_install();
 
-    $ac = new Gm2_Abandoned_Carts();
+    $logger = function_exists('wc_get_logger') ? wc_get_logger() : null;
+    $ac = new Gm2_Abandoned_Carts($logger);
     $ac->install();
 
     add_option('gm2_enable_tariff', '1');
@@ -173,6 +174,7 @@ function gm2_activate_plugin() {
     add_option('gm2_enable_chatgpt', '1');
     add_option('gm2_enable_analytics', '1');
     add_option('gm2_enable_chatgpt_logging', '0');
+    add_option('gm2_ac_enable_logging', '0');
     add_option('gm2_enable_custom_posts', '1');
     add_option('gm2_enable_block_templates', '0');
     add_option('gm2_enable_theme_integration', '0');
