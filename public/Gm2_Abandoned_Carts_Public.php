@@ -145,16 +145,24 @@ class Gm2_Abandoned_Carts_Public {
             if (!empty($client_id)) {
                 $update['client_id'] = $client_id;
             }
+            $format = [ '%s', '%s', '%s', '%s' ];
+            if (!empty($client_id)) {
+                $format[] = '%s';
+            }
             $wpdb->update(
                 $table,
                 $update,
-                [ 'id' => $row->id ]
+                [ 'id' => $row->id ],
+                $format,
+                [ '%d' ]
             );
             if (empty($row->entry_url) && !empty($stored_entry)) {
                 $wpdb->update(
                     $table,
                     [ 'entry_url' => $stored_entry ],
-                    [ 'id' => $row->id ]
+                    [ 'id' => $row->id ],
+                    [ '%s' ],
+                    [ '%d' ]
                 );
             }
         } else {
@@ -188,7 +196,25 @@ class Gm2_Abandoned_Carts_Public {
             if (!empty($client_id)) {
                 $insert['client_id'] = $client_id;
             }
-            $wpdb->insert($table, $insert);
+            $format = [
+                '%s', // cart_token
+                '%d', // user_id
+                '%s', // cart_contents
+                '%s', // created_at
+                '%s', // ip_address
+                '%s', // user_agent
+                '%s', // browser
+                '%s', // location
+                '%s', // device
+                '%s', // entry_url
+                '%f', // cart_total
+                '%s', // email
+                '%s', // phone
+            ];
+            if (!empty($client_id)) {
+                $format[] = '%s';
+            }
+            $wpdb->insert($table, $insert, $format);
         }
 
         wp_send_json_success();
