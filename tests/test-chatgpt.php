@@ -54,7 +54,7 @@ class ChatGPTTest extends WP_UnitTestCase {
     public function test_chatgpt_page_contains_field() {
         $admin = new Gm2_Admin();
         ob_start();
-        $admin->display_chatgpt_page();
+        $admin->display_ai_settings_page();
         $out = ob_get_clean();
         $this->assertStringContainsString('gm2_chatgpt_api_key', $out);
         $this->assertStringContainsString('gm2_chatgpt_model', $out);
@@ -66,7 +66,7 @@ class ChatGPTTest extends WP_UnitTestCase {
     public function test_chatgpt_page_model_dropdown() {
         $admin = new Gm2_Admin();
         ob_start();
-        $admin->display_chatgpt_page();
+        $admin->display_ai_settings_page();
         $out = ob_get_clean();
         $this->assertStringContainsString('<select id="gm2_chatgpt_model"', $out);
         $this->assertMatchesRegularExpression('/<select[^>]*id="gm2_chatgpt_model"[^>]*>.*<option/i', $out);
@@ -75,7 +75,7 @@ class ChatGPTTest extends WP_UnitTestCase {
     public function test_chatgpt_page_logging_checkbox() {
         $admin = new Gm2_Admin();
         ob_start();
-        $admin->display_chatgpt_page();
+        $admin->display_ai_settings_page();
         $out = ob_get_clean();
         $this->assertStringContainsString('gm2_enable_chatgpt_logging', $out);
         $this->assertStringContainsString('Enable Logging', $out);
@@ -86,11 +86,12 @@ class ChatGPTTest extends WP_UnitTestCase {
         $user = self::factory()->user->create(['role' => 'administrator']);
         wp_set_current_user($user);
 
-        $_POST['_wpnonce'] = wp_create_nonce('gm2_chatgpt_settings');
+        $_POST['_wpnonce'] = wp_create_nonce('gm2_ai_settings');
         $_POST['gm2_enable_chatgpt_logging'] = '1';
         $_POST['gm2_chatgpt_api_key'] = 'key';
+        $_POST['gm2_ai_provider'] = 'chatgpt';
 
-        $admin->handle_chatgpt_form();
+        $admin->handle_ai_settings_form();
 
         $this->assertSame('1', get_option('gm2_enable_chatgpt_logging'));
     }
@@ -104,7 +105,7 @@ class ChatGPTTest extends WP_UnitTestCase {
         ]) . "\n";
         file_put_contents(GM2_CHATGPT_LOG_FILE, $entry);
         ob_start();
-        $admin->display_chatgpt_page();
+        $admin->display_ai_settings_page();
         $out = ob_get_clean();
         @unlink(GM2_CHATGPT_LOG_FILE);
         update_option('gm2_enable_chatgpt_logging', '0');
@@ -127,7 +128,7 @@ class ChatGPTTest extends WP_UnitTestCase {
         update_option('gm2_enable_chatgpt_logging', '1');
         @unlink(GM2_CHATGPT_LOG_FILE);
         ob_start();
-        $admin->display_chatgpt_page();
+        $admin->display_ai_settings_page();
         $out = ob_get_clean();
         update_option('gm2_enable_chatgpt_logging', '0');
         $this->assertStringContainsString('No logs found.', $out);
@@ -139,7 +140,7 @@ class ChatGPTTest extends WP_UnitTestCase {
         $entry = json_encode(['prompt' => 'hi', 'response' => 'there']) . "\n";
         file_put_contents(GM2_CHATGPT_LOG_FILE, $entry);
         ob_start();
-        $admin->display_chatgpt_page();
+        $admin->display_ai_settings_page();
         $out = ob_get_clean();
         @unlink(GM2_CHATGPT_LOG_FILE);
         update_option('gm2_enable_chatgpt_logging', '0');
