@@ -15,6 +15,7 @@ class Gm2_Admin {
     private $cart_settings;
     private $oauth_enabled;
     private $chatgpt_enabled;
+    private $ai_provider;
 
     public function run() {
         $this->diagnostics = new Gm2_Diagnostics();
@@ -23,6 +24,7 @@ class Gm2_Admin {
         $this->site_health->run();
         $this->oauth_enabled   = get_option('gm2_enable_google_oauth', '1') === '1';
         $this->chatgpt_enabled = get_option('gm2_enable_chatgpt', '1') === '1';
+        $this->ai_provider     = get_option('gm2_ai_provider', 'chatgpt');
         add_action('admin_menu', [$this, 'add_admin_menu'], 9);
         if (get_option('gm2_enable_quantity_discounts', '1') === '1') {
             $this->quantity_discounts = new Gm2_Quantity_Discounts_Admin();
@@ -34,7 +36,7 @@ class Gm2_Admin {
         add_action('wp_ajax_gm2_add_tariff', [$this, 'ajax_add_tariff']);
         add_action('wp_ajax_nopriv_gm2_add_tariff', [$this, 'ajax_add_tariff']);
         if ($this->chatgpt_enabled) {
-            add_action('admin_post_gm2_chatgpt_settings', [$this, 'handle_chatgpt_form']);
+            add_action('admin_post_gm2_ai_settings', [$this, 'handle_ai_settings_form']);
             add_action('wp_ajax_gm2_chatgpt_prompt', [$this, 'ajax_chatgpt_prompt']);
             add_action('admin_post_gm2_reset_chatgpt_logs', [$this, 'handle_reset_chatgpt_logs']);
         }
@@ -424,11 +426,11 @@ class Gm2_Admin {
 
         if ($this->chatgpt_enabled) {
             add_menu_page(
-                esc_html__( 'Gm2 Ai', 'gm2-wordpress-suite' ),
-                esc_html__( 'Gm2 Ai', 'gm2-wordpress-suite' ),
+                esc_html__( 'AI Settings', 'gm2-wordpress-suite' ),
+                esc_html__( 'AI Settings', 'gm2-wordpress-suite' ),
                 'manage_options',
                 'gm2-ai',
-                [ $this, 'display_chatgpt_page' ],
+                [ $this, 'display_ai_settings_page' ],
                 'dashicons-admin-generic'
             );
         }
@@ -656,18 +658,13 @@ class Gm2_Admin {
         echo '</div>';
     }
 
-    public function display_chatgpt_page() {
+    public function display_ai_settings_page() {
         if (!current_user_can('manage_options')) {
             wp_die( esc_html__( 'Permission denied', 'gm2-wordpress-suite' ) );
         }
 
-        $key   = get_option('gm2_chatgpt_api_key', '');
-        $model = get_option('gm2_chatgpt_model', 'gpt-3.5-turbo');
-        $temperature = get_option('gm2_chatgpt_temperature', '1.0');
-        $max_tokens  = get_option('gm2_chatgpt_max_tokens', '');
-        $endpoint    = get_option('gm2_chatgpt_endpoint', 'https://api.openai.com/v1/chat/completions');
-        $logging     = get_option('gm2_enable_chatgpt_logging', '0');
-        $notice = '';
+        $provider = get_option('gm2_ai_provider', 'chatgpt');
+        $notice   = '';
         if (!empty($_GET['updated'])) {
             $notice = '<div class="updated notice"><p>' . esc_html__('Settings saved.', 'gm2-wordpress-suite') . '</p></div>';
         } elseif (!empty($_GET['logs_reset'])) {
@@ -675,12 +672,29 @@ class Gm2_Admin {
         }
 
         echo '<div class="wrap">';
-        echo '<h1>' . esc_html__( 'ChatGPT', 'gm2-wordpress-suite' ) . '</h1>';
+        echo '<h1>' . esc_html__( 'AI Settings', 'gm2-wordpress-suite' ) . '</h1>';
         echo $notice;
         echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
-        wp_nonce_field('gm2_chatgpt_settings');
-        echo '<input type="hidden" name="action" value="gm2_chatgpt_settings" />';
+        wp_nonce_field('gm2_ai_settings');
+        echo '<input type="hidden" name="action" value="gm2_ai_settings" />';
         echo '<table class="form-table"><tbody>';
+        echo '<tr><th scope="row"><label for="gm2_ai_provider">' . esc_html__( 'Provider', 'gm2-wordpress-suite' ) . '</label></th>';
+        echo '<td><select id="gm2_ai_provider" name="gm2_ai_provider">';
+        $providers = ['chatgpt' => 'ChatGPT', 'gemma' => 'Gemma', 'llama' => 'Llama'];
+        foreach ($providers as $slug => $label) {
+            $selected = selected($provider, $slug, false);
+            echo '<option value="' . esc_attr($slug) . '"' . $selected . '>' . esc_html($label) . '</option>';
+        }
+        echo '</select></td></tr>';
+        echo '</tbody></table>';
+
+        $key        = get_option('gm2_chatgpt_api_key', '');
+        $model      = get_option('gm2_chatgpt_model', 'gpt-3.5-turbo');
+        $temperature = get_option('gm2_chatgpt_temperature', '1.0');
+        $max_tokens = get_option('gm2_chatgpt_max_tokens', '');
+        $endpoint   = get_option('gm2_chatgpt_endpoint', 'https://api.openai.com/v1/chat/completions');
+        $logging    = get_option('gm2_enable_chatgpt_logging', '0');
+        echo '<div class="gm2-provider-settings" data-provider="chatgpt"><table class="form-table"><tbody>';
         echo '<tr><th scope="row"><label for="gm2_chatgpt_api_key">' . esc_html__( 'API Key', 'gm2-wordpress-suite' ) . '</label></th>';
         echo '<td><input type="password" id="gm2_chatgpt_api_key" name="gm2_chatgpt_api_key" value="' . esc_attr($key) . '" class="regular-text" />';
         echo ' <button type="button" class="button" id="gm2-chatgpt-toggle">' . esc_html__( 'Show', 'gm2-wordpress-suite' ) . '</button></td></tr>';
@@ -699,48 +713,69 @@ class Gm2_Admin {
         echo '<td><input type="text" id="gm2_chatgpt_endpoint" name="gm2_chatgpt_endpoint" value="' . esc_attr($endpoint) . '" class="regular-text" /></td></tr>';
         echo '<tr><th scope="row"><label for="gm2_enable_chatgpt_logging">' . esc_html__( 'Enable Logging', 'gm2-wordpress-suite' ) . '</label></th>';
         echo '<td><input type="checkbox" id="gm2_enable_chatgpt_logging" name="gm2_enable_chatgpt_logging" value="1"' . checked('1', $logging, false) . ' /></td></tr>';
-        echo '</tbody></table>';
+        echo '</tbody></table></div>';
+
+        $gemma_key      = get_option('gm2_gemma_api_key', '');
+        $gemma_endpoint = get_option('gm2_gemma_endpoint', '');
+        echo '<div class="gm2-provider-settings" data-provider="gemma"><table class="form-table"><tbody>';
+        echo '<tr><th scope="row"><label for="gm2_gemma_api_key">' . esc_html__( 'API Key', 'gm2-wordpress-suite' ) . '</label></th>';
+        echo '<td><input type="password" id="gm2_gemma_api_key" name="gm2_gemma_api_key" value="' . esc_attr($gemma_key) . '" class="regular-text" /></td></tr>';
+        echo '<tr><th scope="row"><label for="gm2_gemma_endpoint">' . esc_html__( 'API Endpoint', 'gm2-wordpress-suite' ) . '</label></th>';
+        echo '<td><input type="text" id="gm2_gemma_endpoint" name="gm2_gemma_endpoint" value="' . esc_attr($gemma_endpoint) . '" class="regular-text" /></td></tr>';
+        echo '</tbody></table></div>';
+
+        $llama_key      = get_option('gm2_llama_api_key', '');
+        $llama_endpoint = get_option('gm2_llama_endpoint', '');
+        echo '<div class="gm2-provider-settings" data-provider="llama"><table class="form-table"><tbody>';
+        echo '<tr><th scope="row"><label for="gm2_llama_api_key">' . esc_html__( 'API Key', 'gm2-wordpress-suite' ) . '</label></th>';
+        echo '<td><input type="password" id="gm2_llama_api_key" name="gm2_llama_api_key" value="' . esc_attr($llama_key) . '" class="regular-text" /></td></tr>';
+        echo '<tr><th scope="row"><label for="gm2_llama_endpoint">' . esc_html__( 'API Endpoint', 'gm2-wordpress-suite' ) . '</label></th>';
+        echo '<td><input type="text" id="gm2_llama_endpoint" name="gm2_llama_endpoint" value="' . esc_attr($llama_endpoint) . '" class="regular-text" /></td></tr>';
+        echo '</tbody></table></div>';
+
         submit_button();
         $show = esc_js( __( 'Show', 'gm2-wordpress-suite' ) );
         $hide = esc_js( __( 'Hide', 'gm2-wordpress-suite' ) );
-        echo "<script>document.addEventListener('DOMContentLoaded',function(){var i=document.getElementById('gm2_chatgpt_api_key');var b=document.getElementById('gm2-chatgpt-toggle');if(i&&b){var s='{$show}';var h='{$hide}';b.addEventListener('click',function(){if(i.type==='password'){i.type='text';b.textContent=h;}else{i.type='password';b.textContent=s;}});}});</script>";
+        echo "<script>document.addEventListener('DOMContentLoaded',function(){var sel=document.getElementById('gm2_ai_provider');var sections=document.querySelectorAll('.gm2-provider-settings');function upd(){sections.forEach(function(s){s.style.display=s.dataset.provider===sel.value?'block':'none';});}if(sel){sel.addEventListener('change',upd);upd();}var i=document.getElementById('gm2_chatgpt_api_key');var b=document.getElementById('gm2-chatgpt-toggle');if(i&&b){var s='{$show}';var h='{$hide}';b.addEventListener('click',function(){if(i.type==='password'){i.type='text';b.textContent=h;}else{i.type='password';b.textContent=s;}});}});</script>";
         echo '</form>';
 
-        echo '<h2>' . esc_html__( 'Test Prompt', 'gm2-wordpress-suite' ) . '</h2>';
-        echo '<form id="gm2-chatgpt-form">';
-        echo '<p><textarea id="gm2_chatgpt_prompt" rows="3" class="large-text"></textarea></p>';
-        echo '<p><button class="button">' . esc_html__( 'Send', 'gm2-wordpress-suite' ) . '</button></p>';
-        echo '</form>';
-        echo '<pre id="gm2-chatgpt-output"></pre>';
-        if (get_option('gm2_enable_chatgpt_logging', '0') === '1') {
-            echo '<h2>' . esc_html__( 'ChatGPT Logs', 'gm2-wordpress-suite' ) . '</h2>';
-            $entries = $this->parse_chatgpt_logs();
-            if (empty($entries)) {
-                echo '<p>' . esc_html__( 'No logs found.', 'gm2-wordpress-suite' ) . '</p>';
-            } else {
-                echo '<div class="gm2-chatgpt-logs">';
-                echo '<table class="widefat fixed gm2-chatgpt-table"><thead><tr><th>' . esc_html__( 'Prompt', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'Response', 'gm2-wordpress-suite' ) . '</th></tr></thead><tbody>';
-                foreach ($entries as $e) {
-                    echo '<tr class="gm2-log-entry">';
-                    echo '<td>';
-                    echo '<div class="gm2-log-toggle">' . esc_html__( 'Prompt sent', 'gm2-wordpress-suite' ) . '</div>';
-                    echo '<pre class="gm2-log-content">' . esc_html($e['prompt']) . '</pre>';
-                    echo '</td>';
-                    echo '<td>';
-                    echo '<div class="gm2-log-toggle">' . esc_html__( 'Response received', 'gm2-wordpress-suite' ) . '</div>';
-                    echo '<pre class="gm2-log-content">' . esc_html($e['response']) . '</pre>';
-                    echo '</td>';
-                    echo '</tr>';
+        if ($provider === 'chatgpt') {
+            echo '<h2>' . esc_html__( 'Test Prompt', 'gm2-wordpress-suite' ) . '</h2>';
+            echo '<form id="gm2-chatgpt-form">';
+            echo '<p><textarea id="gm2_chatgpt_prompt" rows="3" class="large-text"></textarea></p>';
+            echo '<p><button class="button">' . esc_html__( 'Send', 'gm2-wordpress-suite' ) . '</button></p>';
+            echo '</form>';
+            echo '<pre id="gm2-chatgpt-output"></pre>';
+            if (get_option('gm2_enable_chatgpt_logging', '0') === '1') {
+                echo '<h2>' . esc_html__( 'ChatGPT Logs', 'gm2-wordpress-suite' ) . '</h2>';
+                $entries = $this->parse_chatgpt_logs();
+                if (empty($entries)) {
+                    echo '<p>' . esc_html__( 'No logs found.', 'gm2-wordpress-suite' ) . '</p>';
+                } else {
+                    echo '<div class="gm2-chatgpt-logs">';
+                    echo '<table class="widefat fixed gm2-chatgpt-table"><thead><tr><th>' . esc_html__( 'Prompt', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'Response', 'gm2-wordpress-suite' ) . '</th></tr></thead><tbody>';
+                    foreach ($entries as $e) {
+                        echo '<tr class="gm2-log-entry">';
+                        echo '<td>';
+                        echo '<div class="gm2-log-toggle">' . esc_html__( 'Prompt sent', 'gm2-wordpress-suite' ) . '</div>';
+                        echo '<pre class="gm2-log-content">' . esc_html($e['prompt']) . '</pre>';
+                        echo '</td>';
+                        echo '<td>';
+                        echo '<div class="gm2-log-toggle">' . esc_html__( 'Response received', 'gm2-wordpress-suite' ) . '</div>';
+                        echo '<pre class="gm2-log-content">' . esc_html($e['response']) . '</pre>';
+                        echo '</td>';
+                        echo '</tr>';
+                    }
+                    echo '</tbody></table>';
+                    echo '</div>';
                 }
-                echo '</tbody></table>';
-                echo '</div>';
-            }
-            if (file_exists(GM2_CHATGPT_LOG_FILE)) {
-                echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
-                wp_nonce_field('gm2_reset_chatgpt_logs');
-                echo '<input type="hidden" name="action" value="gm2_reset_chatgpt_logs" />';
-                submit_button( esc_html__( 'Reset Logs', 'gm2-wordpress-suite' ), 'delete' );
-                echo '</form>';
+                if (file_exists(GM2_CHATGPT_LOG_FILE)) {
+                    echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
+                    wp_nonce_field('gm2_reset_chatgpt_logs');
+                    echo '<input type="hidden" name="action" value="gm2_reset_chatgpt_logs" />';
+                    submit_button( esc_html__( 'Reset Logs', 'gm2-wordpress-suite' ), 'delete' );
+                    echo '</form>';
+                }
             }
         }
         echo '</div>';
@@ -774,25 +809,44 @@ class Gm2_Admin {
         return $pairs;
     }
 
-    public function handle_chatgpt_form() {
+    public function handle_ai_settings_form() {
         if (!current_user_can('manage_options')) {
             wp_die( esc_html__( 'Permission denied', 'gm2-wordpress-suite' ) );
         }
 
-        check_admin_referer('gm2_chatgpt_settings');
-        $key = isset($_POST['gm2_chatgpt_api_key']) ? sanitize_text_field($_POST['gm2_chatgpt_api_key']) : '';
-        $model = isset($_POST['gm2_chatgpt_model']) ? sanitize_text_field($_POST['gm2_chatgpt_model']) : '';
-        $temperature = isset($_POST['gm2_chatgpt_temperature']) ? floatval($_POST['gm2_chatgpt_temperature']) : 1.0;
-        $max_tokens  = isset($_POST['gm2_chatgpt_max_tokens']) ? intval($_POST['gm2_chatgpt_max_tokens']) : 0;
-        $endpoint    = isset($_POST['gm2_chatgpt_endpoint']) ? esc_url_raw($_POST['gm2_chatgpt_endpoint']) : '';
-        $logging     = isset($_POST['gm2_enable_chatgpt_logging']) ? '1' : '0';
+        check_admin_referer('gm2_ai_settings');
+        $provider = isset($_POST['gm2_ai_provider']) ? sanitize_text_field($_POST['gm2_ai_provider']) : 'chatgpt';
+        $allowed  = ['chatgpt', 'gemma', 'llama'];
+        if (!in_array($provider, $allowed, true)) {
+            $provider = 'chatgpt';
+        }
+        update_option('gm2_ai_provider', $provider);
 
-        update_option('gm2_chatgpt_api_key', $key);
-        update_option('gm2_chatgpt_model', $model);
-        update_option('gm2_chatgpt_temperature', $temperature);
-        update_option('gm2_chatgpt_max_tokens', $max_tokens);
-        update_option('gm2_chatgpt_endpoint', $endpoint);
-        update_option('gm2_enable_chatgpt_logging', $logging);
+        if ($provider === 'chatgpt') {
+            $key = isset($_POST['gm2_chatgpt_api_key']) ? sanitize_text_field($_POST['gm2_chatgpt_api_key']) : '';
+            $model = isset($_POST['gm2_chatgpt_model']) ? sanitize_text_field($_POST['gm2_chatgpt_model']) : '';
+            $temperature = isset($_POST['gm2_chatgpt_temperature']) ? floatval($_POST['gm2_chatgpt_temperature']) : 1.0;
+            $max_tokens  = isset($_POST['gm2_chatgpt_max_tokens']) ? intval($_POST['gm2_chatgpt_max_tokens']) : 0;
+            $endpoint    = isset($_POST['gm2_chatgpt_endpoint']) ? esc_url_raw($_POST['gm2_chatgpt_endpoint']) : '';
+            $logging     = isset($_POST['gm2_enable_chatgpt_logging']) ? '1' : '0';
+
+            update_option('gm2_chatgpt_api_key', $key);
+            update_option('gm2_chatgpt_model', $model);
+            update_option('gm2_chatgpt_temperature', $temperature);
+            update_option('gm2_chatgpt_max_tokens', $max_tokens);
+            update_option('gm2_chatgpt_endpoint', $endpoint);
+            update_option('gm2_enable_chatgpt_logging', $logging);
+        } elseif ($provider === 'gemma') {
+            $gemma_key      = isset($_POST['gm2_gemma_api_key']) ? sanitize_text_field($_POST['gm2_gemma_api_key']) : '';
+            $gemma_endpoint = isset($_POST['gm2_gemma_endpoint']) ? esc_url_raw($_POST['gm2_gemma_endpoint']) : '';
+            update_option('gm2_gemma_api_key', $gemma_key);
+            update_option('gm2_gemma_endpoint', $gemma_endpoint);
+        } elseif ($provider === 'llama') {
+            $llama_key      = isset($_POST['gm2_llama_api_key']) ? sanitize_text_field($_POST['gm2_llama_api_key']) : '';
+            $llama_endpoint = isset($_POST['gm2_llama_endpoint']) ? esc_url_raw($_POST['gm2_llama_endpoint']) : '';
+            update_option('gm2_llama_api_key', $llama_key);
+            update_option('gm2_llama_endpoint', $llama_endpoint);
+        }
 
         wp_redirect(admin_url('admin.php?page=gm2-ai&updated=1'));
         if (defined('GM2_TESTING') && GM2_TESTING) {
