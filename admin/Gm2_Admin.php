@@ -464,7 +464,8 @@ class Gm2_Admin {
                 $carts_exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $carts_table));
                 $queue_exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $queue_table));
                 if (!$carts_exists || !$queue_exists) {
-                    $ac = new Gm2_Abandoned_Carts();
+                    $logger = function_exists('wc_get_logger') ? wc_get_logger() : null;
+                    $ac = new Gm2_Abandoned_Carts($logger);
                     $ac->install();
                 }
             }

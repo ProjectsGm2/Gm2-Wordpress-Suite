@@ -6,6 +6,27 @@ if (!defined('ABSPATH')) {
 }
 
 class Gm2_Abandoned_Carts {
+    /**
+     * Logger instance.
+     *
+     * @var object|null
+     */
+    private static $logger = null;
+
+    /**
+     * Optionally inject a PSR-3 compatible logger.
+     * Falls back to WooCommerce's logger when available.
+     *
+     * @param object|null $logger Logger implementing a log( level, message, context ) method.
+     */
+    public function __construct($logger = null) {
+        if ($logger && method_exists($logger, 'log')) {
+            self::$logger = $logger;
+        } elseif (function_exists('wc_get_logger')) {
+            self::$logger = wc_get_logger();
+        }
+    }
+
     public function install() {
         global $wpdb;
         $charset_collate = $wpdb->get_charset_collate();
@@ -460,11 +481,22 @@ class Gm2_Abandoned_Carts {
 
     private static function log_no_cart($action) {
         $message = sprintf('Gm2 Abandoned Carts: %s called without cart token.', $action);
-        self::log_failure('token', $message);
+        self::log_failure('token', $message, 'warning', [ 'action' => $action ]);
     }
-
-    private static function log_failure($type, $message) {
-        error_log($message);
+    private static function log_failure($type, $message, $level = 'error', array $context = []) {
+        if ($level === 'debug' && get_option('gm2_ac_enable_logging', '0') !== '1') {
+            return;
+        }
+        $logger = self::$logger;
+        if ($logger && method_exists($logger, 'log')) {
+            try {
+                $logger->log($level, $message, array_merge(['type' => $type], $context));
+            } catch (\Throwable $e) {
+                error_log($message);
+            }
+        } else {
+            error_log($message);
+        }
         do_action('gm2_ac_debug', $type, $message);
         $counts = get_option('gm2_ac_failure_count', []);
         if (!is_array($counts)) {
@@ -571,7 +603,7 @@ class Gm2_Abandoned_Carts {
             return wp_send_json_success();
         }
         if (!check_ajax_referer('gm2_ac_activity', 'nonce', false)) {
-            self::log_failure('nonce', __FUNCTION__ . ': invalid nonce');
+            self::log_failure('nonce', __FUNCTION__ . ': invalid nonce', 'warning', [ 'action' => __FUNCTION__ ]);
             return wp_send_json_error('invalid_nonce');
         }
 
@@ -721,7 +753,7 @@ class Gm2_Abandoned_Carts {
             return wp_send_json_success();
         }
         if (!check_ajax_referer('gm2_ac_activity', 'nonce', false)) {
-            self::log_failure('nonce', __FUNCTION__ . ': invalid nonce');
+            self::log_failure('nonce', __FUNCTION__ . ': invalid nonce', 'warning', [ 'action' => __FUNCTION__ ]);
             return wp_send_json_error('invalid_nonce');
         }
 
@@ -791,7 +823,7 @@ class Gm2_Abandoned_Carts {
      */
     public static function gm2_ac_get_activity() {
         if (!check_ajax_referer('gm2_ac_get_activity', 'nonce', false)) {
-            self::log_failure('nonce', __FUNCTION__ . ': invalid nonce');
+            self::log_failure('nonce', __FUNCTION__ . ': invalid nonce', 'warning', [ 'action' => __FUNCTION__ ]);
             return wp_send_json_error('invalid_nonce');
         }
         if (!current_user_can('manage_options')) {

@@ -77,6 +77,7 @@ $option_names = array(
     'gm2_enable_google_oauth',
     'gm2_enable_chatgpt',
     'gm2_enable_chatgpt_logging',
+    'gm2_ac_enable_logging',
     'gm2_enable_custom_posts',
     'gm2_pagespeed_api_key',
     'gm2_pagespeed_scores',

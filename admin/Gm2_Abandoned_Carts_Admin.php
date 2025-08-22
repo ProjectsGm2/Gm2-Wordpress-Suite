@@ -89,6 +89,36 @@ class Gm2_Abandoned_Carts_Admin {
         ]);
         echo '<div class="wrap"><h1>' . esc_html__('Abandoned Carts', 'gm2-wordpress-suite') . '</h1>';
 
+        $logging = get_option('gm2_ac_enable_logging', '0');
+        if (isset($_POST['gm2_ac_logging_nonce']) && wp_verify_nonce($_POST['gm2_ac_logging_nonce'], 'gm2_ac_logging_save')) {
+            $logging = isset($_POST['gm2_ac_enable_logging']) ? '1' : '0';
+            update_option('gm2_ac_enable_logging', $logging);
+            echo '<div class="updated notice"><p>' . esc_html__('Settings saved.', 'gm2-wordpress-suite') . '</p></div>';
+        }
+
+        echo '<h2>' . esc_html__('Logging', 'gm2-wordpress-suite') . '</h2>';
+        echo '<form method="post" style="margin-bottom:20px;">';
+        wp_nonce_field('gm2_ac_logging_save', 'gm2_ac_logging_nonce');
+        echo '<table class="form-table"><tbody>';
+        echo '<tr><th scope="row"><label for="gm2_ac_enable_logging">' . esc_html__('Enable Verbose Logging', 'gm2-wordpress-suite') . '</label></th>';
+        echo '<td><input type="checkbox" id="gm2_ac_enable_logging" name="gm2_ac_enable_logging" value="1"' . checked('1', $logging, false) . ' /></td></tr>';
+        echo '</tbody></table>';
+        submit_button();
+        echo '</form>';
+
+        if ($logging === '1') {
+            echo '<h2>' . esc_html__('Recent Logs', 'gm2-wordpress-suite') . '</h2>';
+            if (function_exists('wc_get_log_file_path')) {
+                $file = wc_get_log_file_path('gm2_abandoned_carts');
+                if (file_exists($file)) {
+                    $lines = array_slice(file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES), -100);
+                    echo '<pre class="gm2-ac-logs" style="background:#fff;border:1px solid #ccc;padding:10px;max-height:300px;overflow:auto;">' . esc_html(implode("\n", $lines)) . '</pre>';
+                } else {
+                    echo '<p>' . esc_html__('No logs found.', 'gm2-wordpress-suite') . '</p>';
+                }
+            }
+        }
+
         $minutes = absint(apply_filters('gm2_ac_mark_abandoned_interval', (int) get_option('gm2_ac_mark_abandoned_interval', 5)));
         if ($minutes < 1) {
             $minutes = 1;
