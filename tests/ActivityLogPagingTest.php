@@ -68,7 +68,7 @@ namespace {
             $this->data[$this->prefix.'wc_ac_cart_activity']=[];
             $this->data[$this->prefix.'wc_ac_visit_log']=[];
         }
-        public function insert($table,$row){ $this->data[$table][]=$row; }
+        public function insert($table,$row,$format=null){ $this->data[$table][]=$row; }
         public function prepare($sql,...$args){ $this->last_sql=$sql; $this->last_args=$args; return $sql; }
         public function get_results($sql){
             if(strpos($this->last_sql,'wc_ac_cart_activity')!==false){

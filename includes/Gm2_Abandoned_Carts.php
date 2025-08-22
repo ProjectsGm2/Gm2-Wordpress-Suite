@@ -185,7 +185,13 @@ class Gm2_Abandoned_Carts {
         $table = $wpdb->prefix . 'wc_ac_carts';
         $row   = $wpdb->get_row($wpdb->prepare("SELECT id, entry_url FROM $table WHERE cart_token = %s", $token));
         if ($row && empty($row->entry_url)) {
-            $wpdb->update($table, [ 'entry_url' => $current_url ], [ 'id' => $row->id ]);
+            $wpdb->update(
+                $table,
+                [ 'entry_url' => $current_url ],
+                [ 'id' => $row->id ],
+                [ '%s' ],
+                [ '%d' ]
+            );
         }
     }
 
@@ -337,38 +343,53 @@ class Gm2_Abandoned_Carts {
         }
 
         if ($row) {
-            $update = [
-                'cart_contents' => $contents,
-                'created_at'    => current_time('mysql'),
-                'ip_address'    => $ip,
-                'user_agent'    => $agent,
-                'browser'       => $browser,
-                'device'        => $device,
-                'cart_total'    => $total,
-            ];
+            $update = [];
+            $update_format = [];
+            $update['cart_contents'] = $contents;
+            $update_format[] = '%s';
+            $update['created_at'] = current_time('mysql');
+            $update_format[] = '%s';
+            $update['ip_address'] = $ip;
+            $update_format[] = '%s';
+            $update['user_agent'] = $agent;
+            $update_format[] = '%s';
+            $update['browser'] = $browser;
+            $update_format[] = '%s';
+            $update['device'] = $device;
+            $update_format[] = '%s';
+            $update['cart_total'] = $total;
+            $update_format[] = '%f';
             if (empty($row->location) && !empty($location)) {
                 $update['location'] = $location;
+                $update_format[] = '%s';
             }
             if ($row->abandoned_at) {
                 $update['abandoned_at']  = null;
+                $update_format[] = '%s';
                 $update['session_start'] = current_time('mysql');
+                $update_format[] = '%s';
                 $update['revisit_count'] = (int) $row->revisit_count + 1;
+                $update_format[] = '%d';
             } elseif (!$row->session_start) {
                 $update['session_start'] = current_time('mysql');
+                $update_format[] = '%s';
             }
             if (!empty($client_id)) {
                 $update['client_id'] = $client_id;
+                $update_format[] = '%s';
             }
             if (!empty($update)) {
-                $wpdb->update($table, $update, ['id' => $row->id]);
+                $wpdb->update($table, $update, ['id' => $row->id], $update_format, ['%d']);
             }
             $url_update = [];
+            $url_format = [];
             if (empty($row->entry_url)) {
                 $url_update['entry_url'] = $current_url;
+                $url_format[] = '%s';
             }
             // Do not set exit_url here; it will be populated when the cart is abandoned.
             if (!empty($url_update)) {
-                $wpdb->update($table, $url_update, ['id' => $row->id]);
+                $wpdb->update($table, $url_update, ['id' => $row->id], $url_format, ['%d']);
             }
             $cart_id = $row->id;
         } else {
@@ -393,7 +414,27 @@ class Gm2_Abandoned_Carts {
             if (!empty($client_id)) {
                 $insert['client_id'] = $client_id;
             }
-            $wpdb->insert($table, $insert);
+            $format = [
+                '%s', // cart_token
+                '%d', // user_id
+                '%s', // cart_contents
+                '%s', // created_at
+                '%s', // session_start
+                '%s', // ip_address
+                '%s', // user_agent
+                '%s', // browser
+                '%s', // location
+                '%s', // device
+                '%s', // entry_url
+                '%s', // exit_url
+                '%f', // cart_total
+                '%d', // browsing_time
+                '%d', // revisit_count
+            ];
+            if (!empty($client_id)) {
+                $format[] = '%s';
+            }
+            $wpdb->insert($table, $insert, $format);
             $cart_id = $wpdb->insert_id;
         }
 
@@ -401,14 +442,18 @@ class Gm2_Abandoned_Carts {
         if (!empty($changes) && !empty($cart_id)) {
             $activity_table = $wpdb->prefix . 'wc_ac_cart_activity';
             foreach ($changes as $change) {
-                $wpdb->insert($activity_table, [
-                    'cart_id'    => $cart_id,
-                    'action'     => $change['action'],
-                    'product_id' => $change['product_id'],
-                    'sku'        => $change['sku'],
-                    'quantity'   => $change['quantity'],
-                    'changed_at' => current_time('mysql'),
-                ]);
+                $wpdb->insert(
+                    $activity_table,
+                    [
+                        'cart_id'    => $cart_id,
+                        'action'     => $change['action'],
+                        'product_id' => $change['product_id'],
+                        'sku'        => $change['sku'],
+                        'quantity'   => $change['quantity'],
+                        'changed_at' => current_time('mysql'),
+                    ],
+                    [ '%d', '%s', '%d', '%s', '%d', '%s' ]
+                );
             }
         }
     }
@@ -582,49 +627,43 @@ class Gm2_Abandoned_Carts {
             $minutes = 1;
         }
         if ($row) {
-            $update = [
-                'cart_contents' => $contents,
-                'cart_total'    => $total,
-                'user_agent'    => $agent,
-                'browser'       => $browser,
-                'device'        => $device,
-            ];
-            if (!empty($ip)) {
-                $update['ip_address'] = $ip;
-            }
-            if (!empty($location)) {
-                $update['location'] = $location;
-            }
+            $update = [];
+            $update_format = [];
+            $update['cart_contents'] = $contents; $update_format[] = '%s';
+            $update['cart_total'] = $total; $update_format[] = '%f';
+            $update['user_agent'] = $agent; $update_format[] = '%s';
+            $update['browser'] = $browser; $update_format[] = '%s';
+            $update['device'] = $device; $update_format[] = '%s';
+            if (!empty($ip)) { $update['ip_address'] = $ip; $update_format[] = '%s'; }
+            if (!empty($location)) { $update['location'] = $location; $update_format[] = '%s'; }
 
             $new_session = false;
             if ($row->abandoned_at) {
-                $update['abandoned_at']  = null;
-                $update['session_start'] = current_time('mysql');
-                $update['revisit_count'] = (int) $row->revisit_count + 1;
-                $new_session             = true;
+                $update['abandoned_at'] = null; $update_format[] = '%s';
+                $update['session_start'] = current_time('mysql'); $update_format[] = '%s';
+                $update['revisit_count'] = (int) $row->revisit_count + 1; $update_format[] = '%d';
+                $new_session = true;
             } else {
                 $session_time = $row->session_start ? strtotime($row->session_start) : 0;
                 $threshold    = current_time('timestamp') - $minutes * MINUTE_IN_SECONDS;
                 if (!$row->session_start || $session_time <= $threshold) {
-                    $update['session_start'] = current_time('mysql');
+                    $update['session_start'] = current_time('mysql'); $update_format[] = '%s';
                     if ($row->session_start) {
-                        $update['revisit_count'] = (int) $row->revisit_count + 1;
+                        $update['revisit_count'] = (int) $row->revisit_count + 1; $update_format[] = '%d';
                     }
                     $new_session = true;
                 }
             }
 
             if ($new_session) {
-                $update['entry_url'] = $url;
+                $update['entry_url'] = $url; $update_format[] = '%s';
                 // exit_url will be populated upon abandonment of this new session.
-                $update['exit_url'] = '';
+                $update['exit_url'] = ''; $update_format[] = '%s';
             }
 
-            if (!empty($client_id)) {
-                $update['client_id'] = $client_id;
-            }
+            if (!empty($client_id)) { $update['client_id'] = $client_id; $update_format[] = '%s'; }
             if (!empty($update)) {
-                $wpdb->update($table, $update, ['id' => $row->id]);
+                $wpdb->update($table, $update, ['id' => $row->id], $update_format, ['%d']);
             }
         } else {
             $insert = [
@@ -645,21 +684,27 @@ class Gm2_Abandoned_Carts {
                 'browsing_time' => 0,
                 'revisit_count' => 0,
             ];
-            if (!empty($client_id)) {
-                $insert['client_id'] = $client_id;
-            }
-            $wpdb->insert($table, $insert);
+            if (!empty($client_id)) { $insert['client_id'] = $client_id; }
+            $format = [
+                '%s','%d','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%f','%d','%d'
+            ];
+            if (!empty($client_id)) { $format[] = '%s'; }
+            $wpdb->insert($table, $insert, $format);
             $cart_id     = $wpdb->insert_id;
             $new_session = true;
         }
 
         if ($new_session && $cart_id) {
             $visit_table = $wpdb->prefix . 'wc_ac_visit_log';
-            $wpdb->insert($visit_table, [
-                'cart_id'     => $cart_id,
-                'entry_url'   => $url,
-                'visit_start' => current_time('mysql'),
-            ]);
+            $wpdb->insert(
+                $visit_table,
+                [
+                    'cart_id'     => $cart_id,
+                    'entry_url'   => $url,
+                    'visit_start' => current_time('mysql'),
+                ],
+                [ '%d', '%s', '%s' ]
+            );
         }
 
         return wp_send_json_success();
@@ -708,33 +753,26 @@ class Gm2_Abandoned_Carts {
             $row = $wpdb->get_row($wpdb->prepare("SELECT id, session_start, browsing_time FROM $table WHERE cart_token = %s", $token));
         }
         if ($row) {
-            $update = [
-                'abandoned_at'  => current_time('mysql'),
-                'session_start' => null,
-            ];
-            if (!empty($url)) {
-                $update['exit_url'] = $url;
-            }
+            $update = [];
+            $update_format = [];
+            $update['abandoned_at'] = current_time('mysql'); $update_format[] = '%s';
+            $update['session_start'] = null; $update_format[] = '%s';
+            if (!empty($url)) { $update['exit_url'] = $url; $update_format[] = '%s'; }
             if ($row->session_start) {
                 $elapsed = current_time('timestamp') - strtotime($row->session_start);
-                if ($elapsed < 0) {
-                    $elapsed = 0;
-                }
-                $update['browsing_time'] = (int) $row->browsing_time + $elapsed;
+                if ($elapsed < 0) { $elapsed = 0; }
+                $update['browsing_time'] = (int) $row->browsing_time + $elapsed; $update_format[] = '%d';
             }
-            if (!empty($client_id)) {
-                $update['client_id'] = $client_id;
-            }
-            $wpdb->update($table, $update, [ 'id' => $row->id ]);
+            if (!empty($client_id)) { $update['client_id'] = $client_id; $update_format[] = '%s'; }
+            $wpdb->update($table, $update, [ 'id' => $row->id ], $update_format, [ '%d' ]);
 
             $log_table = $wpdb->prefix . 'wc_ac_visit_log';
             $log_row   = $wpdb->get_row($wpdb->prepare("SELECT id FROM $log_table WHERE cart_id = %d ORDER BY visit_start DESC LIMIT 1", $row->id));
             if ($log_row) {
                 $log_update = [ 'visit_end' => current_time('mysql') ];
-                if (!empty($url)) {
-                    $log_update['exit_url'] = $url;
-                }
-                $wpdb->update($log_table, $log_update, [ 'id' => $log_row->id ]);
+                $log_format = [ '%s' ];
+                if (!empty($url)) { $log_update['exit_url'] = $url; $log_format[] = '%s'; }
+                $wpdb->update($log_table, $log_update, [ 'id' => $log_row->id ], $log_format, [ '%d' ]);
             }
         }
 
@@ -848,7 +886,7 @@ class Gm2_Abandoned_Carts {
             }
             $recovered_table = $wpdb->prefix . 'wc_ac_recovered';
             $row['recovered_order_id'] = $order_id;
-            $wpdb->insert($recovered_table, $row);
+            $wpdb->insert($recovered_table, $row, self::build_format_from_data($row));
             $wpdb->delete($carts_table, [ 'id' => $row['id'] ]);
         }
     }
@@ -862,7 +900,7 @@ class Gm2_Abandoned_Carts {
         if ($rows) {
             foreach ($rows as $row) {
                 $data = (array) $row;
-                $wpdb->insert($recovered_table, $data);
+                $wpdb->insert($recovered_table, $data, self::build_format_from_data($data));
                 $wpdb->delete($carts_table, [ 'id' => $row->id ]);
                 $count++;
             }
@@ -944,6 +982,20 @@ class Gm2_Abandoned_Carts {
         if (!$rec_has_phone) {
             $wpdb->query("ALTER TABLE $recovered_table ADD phone varchar(50) DEFAULT NULL AFTER email");
         }
+    }
+
+    private static function build_format_from_data($data) {
+        $format = [];
+        foreach ($data as $value) {
+            if (is_int($value)) {
+                $format[] = '%d';
+            } elseif (is_float($value)) {
+                $format[] = '%f';
+            } else {
+                $format[] = '%s';
+            }
+        }
+        return $format;
     }
 
     public static function get_ip_and_location() {
@@ -1080,14 +1132,16 @@ class Gm2_Abandoned_Carts {
                     'abandoned_at' => current_time('mysql'),
                     'session_start' => null,
                 ];
+                $format = [ '%s', '%s' ];
                 if ($row->session_start) {
                     $elapsed = current_time('timestamp') - strtotime($row->session_start);
                     if ($elapsed < 0) {
                         $elapsed = 0;
                     }
                     $update['browsing_time'] = (int) $row->browsing_time + $elapsed;
+                    $format[] = '%d';
                 }
-                $wpdb->update($table, $update, ['id' => $row->id]);
+                $wpdb->update($table, $update, ['id' => $row->id], $format, ['%d']);
             }
         }
     }

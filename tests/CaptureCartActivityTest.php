@@ -119,12 +119,12 @@ class FakeDB {
         }
         return null;
     }
-    public function insert($table, $data) {
+    public function insert($table, $data, $format = null) {
         $data['id'] = count($this->data[$table]) + 1;
         $this->data[$table][] = $data;
         $this->insert_id = $data['id'];
     }
-    public function update($table, $data, $where) {
+    public function update($table, $data, $where, $format = null, $where_format = null) {
         foreach ($this->data[$table] as &$row) {
             $match = true; foreach ($where as $k=>$v) { if ($row[$k] !== $v) { $match=false; break; } }
             if ($match) { foreach ($data as $k=>$v) { $row[$k] = $v; } }

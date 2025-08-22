@@ -132,6 +132,9 @@ class AbandonedCartsTest extends WP_UnitTestCase {
         $_REQUEST = $_POST;
         \Gm2\Gm2_Abandoned_Carts::gm2_ac_mark_active();
 
+        $expected_format = ['%s','%f','%s','%s','%s','%s','%s','%s'];
+        $this->assertSame($expected_format, $GLOBALS['wpdb']->last_update_format);
+
         $table = $GLOBALS['wpdb']->prefix . 'wc_ac_carts';
         $row = $GLOBALS['wpdb']->data[$table][0];
         $this->assertNotEmpty($row['session_start']);
@@ -194,6 +197,9 @@ class AbandonedCartsTest extends WP_UnitTestCase {
         $_POST = [ 'nonce' => 'n', 'url' => 'https://example.com/start' ];
         $_REQUEST = $_POST;
         \Gm2\Gm2_Abandoned_Carts::gm2_ac_mark_active();
+
+        $expected_insert = ['%s','%d','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%f','%d','%d'];
+        $this->assertSame($expected_insert, $GLOBALS['wpdb']->last_insert_format);
 
         $this->assertCount(1, $GLOBALS['wpdb']->data[$table]);
         $row = $GLOBALS['wpdb']->data[$table][0];
@@ -404,7 +410,11 @@ class AbandonedCartFakeDB {
         return null;
     }
 
-    public function insert($table, $data) {
+    public $last_insert_format;
+    public $last_update_format;
+
+    public function insert($table, $data, $format = null) {
+        $this->last_insert_format = $format;
         $this->data[$table][] = $data;
     }
 
@@ -423,7 +433,8 @@ class AbandonedCartFakeDB {
         }
     }
 
-    public function update($table, $data, $where) {
+    public function update($table, $data, $where, $format = null, $where_format = null) {
+        $this->last_update_format = $format;
         foreach ($this->data[$table] as &$row) {
             if ($row['id'] === $where['id']) {
                 foreach ($data as $k => $v) {
