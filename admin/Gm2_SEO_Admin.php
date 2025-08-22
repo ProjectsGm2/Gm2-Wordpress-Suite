@@ -2,6 +2,8 @@
 
 namespace Gm2;
 
+use Gm2\AI\ChatGPTProvider as Gm2_ChatGPT;
+
 if (!defined('ABSPATH')) {
     exit;
 }

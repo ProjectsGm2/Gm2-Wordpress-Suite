@@ -8,6 +8,7 @@ spl_autoload_register(function ($class) {
         } else {
             $name = substr($class, 4);
         }
+        $name = str_replace('\\', '/', $name);
         foreach (['includes', 'admin', 'public'] as $dir) {
             $file = GM2_PLUGIN_DIR . $dir . '/' . $name . '.php';
             if (file_exists($file)) {
