@@ -62,4 +62,7 @@ jQuery(function($){
         fillTaxonomy($(this).data('slug'));
         $('html, body').animate({ scrollTop: $('#gm2-tax-form').offset().top }, 200);
     });
+    $('.gm2-delete-pt-form, .gm2-delete-tax-form').on('submit', function(){
+        return confirm(gm2CPTEdit.deleteConfirm);
+    });
 });
