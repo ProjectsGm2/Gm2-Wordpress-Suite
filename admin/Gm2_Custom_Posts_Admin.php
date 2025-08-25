@@ -32,6 +32,8 @@ class Gm2_Custom_Posts_Admin {
         add_action('bulk_edit_custom_box', [ $this, 'inline_edit_fields' ], 10, 2);
         add_action('quick_edit_custom_box', [ $this, 'inline_edit_fields' ], 10, 2);
         add_action('admin_post_gm2_save_field_caps', [ $this, 'save_field_caps' ]);
+        add_action('admin_post_gm2_edit_post_type', [ $this, 'handle_edit_post_type' ]);
+        add_action('admin_post_gm2_edit_taxonomy', [ $this, 'handle_edit_taxonomy' ]);
     }
 
     private function init_help() {
@@ -661,6 +663,155 @@ class Gm2_Custom_Posts_Admin {
         exit;
     }
 
+    public function handle_edit_post_type() {
+        if (!$this->can_manage()) {
+            wp_die(esc_html__( 'Permission denied', 'gm2-wordpress-suite' ));
+        }
+        $config = $this->get_config();
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            $slug = sanitize_key($_GET['slug'] ?? '');
+            if ($slug && isset($config['post_types'][$slug])) {
+                wp_send_json_success($config['post_types'][$slug]);
+            }
+            wp_send_json_error();
+        }
+        check_admin_referer('gm2_edit_post_type');
+        $slug      = sanitize_key($_POST['pt_slug'] ?? '');
+        $original  = sanitize_key($_POST['pt_original'] ?? $slug);
+        $label     = sanitize_text_field($_POST['pt_label'] ?? '');
+        $fields    = json_decode(wp_unslash($_POST['pt_fields'] ?? ''), true);
+        if (!is_array($fields)) {
+            $fields = [];
+        }
+        $fields = $this->sanitize_fields_array($fields);
+        $args_input = [];
+        $labels = json_decode(wp_unslash($_POST['pt_labels'] ?? ''), true);
+        if (is_array($labels)) {
+            $args_input[] = [ 'key' => 'labels', 'value' => $labels ];
+        }
+        $menu_icon = sanitize_text_field($_POST['pt_menu_icon'] ?? '');
+        if ($menu_icon !== '') {
+            $args_input[] = [ 'key' => 'menu_icon', 'value' => $menu_icon ];
+        }
+        $menu_position = isset($_POST['pt_menu_position']) ? sanitize_text_field($_POST['pt_menu_position']) : '';
+        if ($menu_position !== '') {
+            $args_input[] = [ 'key' => 'menu_position', 'value' => $menu_position ];
+        }
+        $supports = [];
+        if (!empty($_POST['pt_supports']) && is_array($_POST['pt_supports'])) {
+            $supports = array_filter(array_map('sanitize_key', (array) $_POST['pt_supports']));
+        }
+        if ($supports) {
+            $args_input[] = [ 'key' => 'supports', 'value' => $supports ];
+        }
+        if (!empty($_POST['pt_hierarchical'])) {
+            $args_input[] = [ 'key' => 'hierarchical', 'value' => true ];
+        }
+        foreach ([ 'public', 'publicly_queryable', 'show_ui', 'show_in_menu', 'show_in_nav_menus', 'show_in_admin_bar', 'exclude_from_search', 'has_archive' ] as $vis_key) {
+            if (!empty($_POST['pt_' . $vis_key])) {
+                $args_input[] = [ 'key' => $vis_key, 'value' => true ];
+            }
+        }
+        if (!empty($_POST['pt_show_in_rest'])) {
+            $args_input[] = [ 'key' => 'show_in_rest', 'value' => true ];
+        }
+        $rest_base = sanitize_key($_POST['pt_rest_base'] ?? '');
+        if ($rest_base !== '') {
+            $args_input[] = [ 'key' => 'rest_base', 'value' => $rest_base ];
+        }
+        $rest_controller = sanitize_text_field($_POST['pt_rest_controller_class'] ?? '');
+        if ($rest_controller !== '') {
+            $args_input[] = [ 'key' => 'rest_controller_class', 'value' => $rest_controller ];
+        }
+        $rewrite = [];
+        $rewrite_slug = sanitize_title_with_dashes($_POST['pt_rewrite_slug'] ?? '');
+        if ($rewrite_slug !== '') {
+            $rewrite['slug'] = $rewrite_slug;
+        }
+        foreach ( [ 'with_front', 'hierarchical', 'feeds', 'pages' ] as $r_key ) {
+            if (!empty($_POST['pt_rewrite_' . $r_key])) {
+                $rewrite[$r_key] = true;
+            }
+        }
+        if (!empty($rewrite)) {
+            $args_input[] = [ 'key' => 'rewrite', 'value' => $rewrite ];
+        }
+        if (!empty($_POST['pt_map_meta_cap'])) {
+            $args_input[] = [ 'key' => 'map_meta_cap', 'value' => true ];
+        }
+        $cap_type_raw = sanitize_text_field($_POST['pt_capability_type'] ?? '');
+        if ($cap_type_raw !== '') {
+            $parts = array_filter(array_map('sanitize_key', array_map('trim', explode(',', $cap_type_raw))));
+            $cap_type = count($parts) > 1 ? array_slice($parts, 0, 2) : ($parts[0] ?? '');
+            if ($cap_type !== '') {
+                $args_input[] = [ 'key' => 'capability_type', 'value' => $cap_type ];
+            }
+        }
+        $caps = json_decode(wp_unslash($_POST['pt_capabilities'] ?? ''), true);
+        if (is_array($caps)) {
+            $args_input[] = [ 'key' => 'capabilities', 'value' => $caps ];
+        }
+        $template = json_decode(wp_unslash($_POST['pt_template'] ?? ''), true);
+        if (is_array($template)) {
+            $args_input[] = [ 'key' => 'template', 'value' => $template ];
+        }
+        $template_lock = sanitize_key($_POST['pt_template_lock'] ?? '');
+        if (in_array($template_lock, [ 'all', 'insert' ], true)) {
+            $args_input[] = [ 'key' => 'template_lock', 'value' => $template_lock ];
+        }
+        $args = $this->sanitize_args_array($args_input);
+        if ($original && $original !== $slug) {
+            unset($config['post_types'][$original]);
+        }
+        if ($slug) {
+            $config['post_types'][$slug] = [
+                'label'  => $label ?: ucfirst($slug),
+                'fields' => $fields,
+                'args'   => $args,
+            ];
+            update_option('gm2_custom_posts_config', $config);
+        }
+        wp_safe_redirect(admin_url('admin.php?page=gm2-custom-posts&gm2_pt_saved=1'));
+        exit;
+    }
+
+    public function handle_edit_taxonomy() {
+        if (!$this->can_manage()) {
+            wp_die(esc_html__( 'Permission denied', 'gm2-wordpress-suite' ));
+        }
+        $config = $this->get_config();
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            $slug = sanitize_key($_GET['slug'] ?? '');
+            if ($slug && isset($config['taxonomies'][$slug])) {
+                wp_send_json_success($config['taxonomies'][$slug]);
+            }
+            wp_send_json_error();
+        }
+        check_admin_referer('gm2_edit_taxonomy');
+        $slug       = sanitize_key($_POST['tax_slug'] ?? '');
+        $original   = sanitize_key($_POST['tax_original'] ?? $slug);
+        $label      = sanitize_text_field($_POST['tax_label'] ?? '');
+        $post_types = array_filter(array_map('sanitize_key', explode(',', $_POST['tax_post_types'] ?? '')));
+        $args       = json_decode(wp_unslash($_POST['tax_args'] ?? ''), true);
+        if (!is_array($args)) {
+            $args = [];
+        }
+        $args = $this->sanitize_args_array($args);
+        if ($original && $original !== $slug) {
+            unset($config['taxonomies'][$original]);
+        }
+        if ($slug) {
+            $config['taxonomies'][$slug] = [
+                'label'      => $label ?: ucfirst($slug),
+                'post_types' => $post_types,
+                'args'       => $args,
+            ];
+            update_option('gm2_custom_posts_config', $config);
+        }
+        wp_safe_redirect(admin_url('admin.php?page=gm2-custom-posts&gm2_tax_saved=1'));
+        exit;
+    }
+
     public function display_page() {
         if ($this->is_locked()) {
             $this->display_locked_page(esc_html__( 'Gm2 Custom Posts', 'gm2-wordpress-suite' ));
@@ -671,6 +822,12 @@ class Gm2_Custom_Posts_Admin {
         }
 
         $config = $this->get_config();
+        if (!empty($_GET['gm2_pt_saved'])) {
+            echo '<div class="notice notice-success"><p>' . esc_html__( 'Post type saved.', 'gm2-wordpress-suite' ) . '</p></div>';
+        }
+        if (!empty($_GET['gm2_tax_saved'])) {
+            echo '<div class="notice notice-success"><p>' . esc_html__( 'Taxonomy saved.', 'gm2-wordpress-suite' ) . '</p></div>';
+        }
 
         if (isset($_POST['gm2_add_post_type']) && check_admin_referer('gm2_add_post_type')) {
             $slug   = sanitize_key($_POST['pt_slug'] ?? '');
@@ -798,7 +955,7 @@ class Gm2_Custom_Posts_Admin {
             echo '<ul>';
             foreach ($config['post_types'] as $slug => $pt) {
                 $link = admin_url('admin.php?page=gm2_cpt_fields&cpt=' . $slug);
-                echo '<li><a href="' . esc_url($link) . '">' . esc_html($slug . ' - ' . ($pt['label'] ?? $slug)) . '</a></li>';
+                echo '<li><a href="' . esc_url($link) . '">' . esc_html($slug . ' - ' . ($pt['label'] ?? $slug)) . '</a> <a href="#" class="gm2-edit-pt" data-slug="' . esc_attr($slug) . '">' . esc_html__( 'Edit', 'gm2-wordpress-suite' ) . '</a></li>';
             }
             echo '</ul>';
         } else {
@@ -810,7 +967,7 @@ class Gm2_Custom_Posts_Admin {
             echo '<ul>';
             foreach ($config['taxonomies'] as $slug => $tax) {
                 $link = admin_url('admin.php?page=gm2_tax_args&tax=' . $slug);
-                echo '<li><a href="' . esc_url($link) . '">' . esc_html($slug . ' - ' . ($tax['label'] ?? $slug)) . '</a></li>';
+                echo '<li><a href="' . esc_url($link) . '">' . esc_html($slug . ' - ' . ($tax['label'] ?? $slug)) . '</a> <a href="#" class="gm2-edit-tax" data-slug="' . esc_attr($slug) . '">' . esc_html__( 'Edit', 'gm2-wordpress-suite' ) . '</a></li>';
             }
             echo '</ul>';
         } else {
@@ -820,8 +977,10 @@ class Gm2_Custom_Posts_Admin {
         echo '<hr />';
 
         echo '<h2>' . esc_html__( 'Add / Edit Post Type', 'gm2-wordpress-suite' ) . '</h2>';
-        echo '<form method="post">';
-        wp_nonce_field('gm2_add_post_type');
+        echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" id="gm2-post-type-form">';
+        wp_nonce_field('gm2_edit_post_type');
+        echo '<input type="hidden" name="action" value="gm2_edit_post_type" />';
+        echo '<input type="hidden" name="pt_original" id="gm2-pt-original" />';
         echo '<p><label>' . esc_html__( 'Slug', 'gm2-wordpress-suite' ) . '<br />';
         echo '<input type="text" name="pt_slug" class="regular-text" /></label></p>';
         echo '<p><label>' . esc_html__( 'Label', 'gm2-wordpress-suite' ) . '<br />';
@@ -876,12 +1035,14 @@ class Gm2_Custom_Posts_Admin {
         echo '</fieldset>';
         echo '<p><label>' . esc_html__( 'Fields (JSON)', 'gm2-wordpress-suite' ) . '<br />';
         echo '<textarea name="pt_fields" class="large-text code" rows="5" placeholder="{\n  \"field_key\": {\n    \"label\": \"Field Label\",\n    \"type\": \"text\"\n  }\n}"></textarea></label></p>';
-        echo '<p><input type="submit" name="gm2_add_post_type" class="button button-primary" value="' . esc_attr__( 'Save Post Type', 'gm2-wordpress-suite' ) . '" /></p>';
+        echo '<p><input type="submit" class="button button-primary" value="' . esc_attr__( 'Save Post Type', 'gm2-wordpress-suite' ) . '" /></p>';
         echo '</form>';
 
         echo '<h2>' . esc_html__( 'Add / Edit Taxonomy', 'gm2-wordpress-suite' ) . '</h2>';
-        echo '<form method="post">';
-        wp_nonce_field('gm2_add_taxonomy');
+        echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" id="gm2-tax-form">';
+        wp_nonce_field('gm2_edit_taxonomy');
+        echo '<input type="hidden" name="action" value="gm2_edit_taxonomy" />';
+        echo '<input type="hidden" name="tax_original" id="gm2-tax-original" />';
         echo '<p><label>' . esc_html__( 'Slug', 'gm2-wordpress-suite' ) . '<br />';
         echo '<input type="text" name="tax_slug" class="regular-text" /></label></p>';
         echo '<p><label>' . esc_html__( 'Label', 'gm2-wordpress-suite' ) . '<br />';
@@ -890,7 +1051,7 @@ class Gm2_Custom_Posts_Admin {
         echo '<input type="text" name="tax_post_types" class="regular-text" /></label></p>';
         echo '<p><label>' . esc_html__( 'Args (JSON)', 'gm2-wordpress-suite' ) . '<br />';
         echo '<textarea name="tax_args" class="large-text code" rows="5"></textarea></label></p>';
-        echo '<p><input type="submit" name="gm2_add_taxonomy" class="button button-primary" value="' . esc_attr__( 'Save Taxonomy', 'gm2-wordpress-suite' ) . '" /></p>';
+        echo '<p><input type="submit" class="button button-primary" value="' . esc_attr__( 'Save Taxonomy', 'gm2-wordpress-suite' ) . '" /></p>';
         echo '</form>';
 
         echo '<hr />';
@@ -1399,6 +1560,21 @@ class Gm2_Custom_Posts_Admin {
             );
             wp_localize_script('gm2-thumbnails', 'gm2Thumbs', [
                 'nonce' => wp_create_nonce('gm2_regenerate_thumbs'),
+            ]);
+
+            $overview_js = GM2_PLUGIN_DIR . 'admin/js/gm2-cpt-overview.js';
+            wp_enqueue_script(
+                'gm2-cpt-overview',
+                GM2_PLUGIN_URL . 'admin/js/gm2-cpt-overview.js',
+                [ 'jquery' ],
+                file_exists($overview_js) ? filemtime($overview_js) : GM2_VERSION,
+                true
+            );
+            wp_localize_script('gm2-cpt-overview', 'gm2CPTEdit', [
+                'nonce'    => wp_create_nonce('gm2_edit_post_type'),
+                'taxNonce' => wp_create_nonce('gm2_edit_taxonomy'),
+                'ptUrl'    => admin_url('admin-post.php?action=gm2_edit_post_type'),
+                'taxUrl'   => admin_url('admin-post.php?action=gm2_edit_taxonomy'),
             ]);
             return;
         }
