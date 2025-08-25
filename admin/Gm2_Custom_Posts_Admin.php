@@ -34,6 +34,8 @@ class Gm2_Custom_Posts_Admin {
         add_action('admin_post_gm2_save_field_caps', [ $this, 'save_field_caps' ]);
         add_action('admin_post_gm2_edit_post_type', [ $this, 'handle_edit_post_type' ]);
         add_action('admin_post_gm2_edit_taxonomy', [ $this, 'handle_edit_taxonomy' ]);
+        add_action('admin_post_gm2_delete_post_type', [ $this, 'handle_delete_post_type' ]);
+        add_action('admin_post_gm2_delete_taxonomy', [ $this, 'handle_delete_taxonomy' ]);
     }
 
     private function init_help() {
@@ -812,6 +814,54 @@ class Gm2_Custom_Posts_Admin {
         exit;
     }
 
+    public function handle_delete_post_type() {
+        if (!$this->can_manage()) {
+            wp_die(esc_html__( 'Permission denied', 'gm2-wordpress-suite' ));
+        }
+        $slug = sanitize_key($_POST['slug'] ?? '');
+        if (!$slug) {
+            wp_safe_redirect(admin_url('admin.php?page=gm2-custom-posts&gm2_pt_deleted=0'));
+            exit;
+        }
+        check_admin_referer('gm2_delete_post_type_' . $slug);
+        $config = $this->get_config();
+        if (isset($config['post_types'][$slug])) {
+            unset($config['post_types'][$slug]);
+            update_option('gm2_custom_posts_config', $config);
+            if (post_type_exists($slug)) {
+                unregister_post_type($slug);
+            }
+            wp_safe_redirect(admin_url('admin.php?page=gm2-custom-posts&gm2_pt_deleted=1'));
+            exit;
+        }
+        wp_safe_redirect(admin_url('admin.php?page=gm2-custom-posts&gm2_pt_deleted=0'));
+        exit;
+    }
+
+    public function handle_delete_taxonomy() {
+        if (!$this->can_manage()) {
+            wp_die(esc_html__( 'Permission denied', 'gm2-wordpress-suite' ));
+        }
+        $slug = sanitize_key($_POST['slug'] ?? '');
+        if (!$slug) {
+            wp_safe_redirect(admin_url('admin.php?page=gm2-custom-posts&gm2_tax_deleted=0'));
+            exit;
+        }
+        check_admin_referer('gm2_delete_taxonomy_' . $slug);
+        $config = $this->get_config();
+        if (isset($config['taxonomies'][$slug])) {
+            unset($config['taxonomies'][$slug]);
+            update_option('gm2_custom_posts_config', $config);
+            if (taxonomy_exists($slug)) {
+                unregister_taxonomy($slug);
+            }
+            wp_safe_redirect(admin_url('admin.php?page=gm2-custom-posts&gm2_tax_deleted=1'));
+            exit;
+        }
+        wp_safe_redirect(admin_url('admin.php?page=gm2-custom-posts&gm2_tax_deleted=0'));
+        exit;
+    }
+
     public function display_page() {
         if ($this->is_locked()) {
             $this->display_locked_page(esc_html__( 'Gm2 Custom Posts', 'gm2-wordpress-suite' ));
@@ -827,6 +877,20 @@ class Gm2_Custom_Posts_Admin {
         }
         if (!empty($_GET['gm2_tax_saved'])) {
             echo '<div class="notice notice-success"><p>' . esc_html__( 'Taxonomy saved.', 'gm2-wordpress-suite' ) . '</p></div>';
+        }
+        if (isset($_GET['gm2_pt_deleted'])) {
+            if ($_GET['gm2_pt_deleted'] === '1') {
+                echo '<div class="notice notice-success"><p>' . esc_html__( 'Post type deleted.', 'gm2-wordpress-suite' ) . '</p></div>';
+            } else {
+                echo '<div class="notice notice-error"><p>' . esc_html__( 'Failed to delete post type.', 'gm2-wordpress-suite' ) . '</p></div>';
+            }
+        }
+        if (isset($_GET['gm2_tax_deleted'])) {
+            if ($_GET['gm2_tax_deleted'] === '1') {
+                echo '<div class="notice notice-success"><p>' . esc_html__( 'Taxonomy deleted.', 'gm2-wordpress-suite' ) . '</p></div>';
+            } else {
+                echo '<div class="notice notice-error"><p>' . esc_html__( 'Failed to delete taxonomy.', 'gm2-wordpress-suite' ) . '</p></div>';
+            }
         }
 
         if (isset($_POST['gm2_add_post_type']) && check_admin_referer('gm2_add_post_type')) {
@@ -955,7 +1019,13 @@ class Gm2_Custom_Posts_Admin {
             echo '<ul>';
             foreach ($config['post_types'] as $slug => $pt) {
                 $link = admin_url('admin.php?page=gm2_cpt_fields&cpt=' . $slug);
-                echo '<li><a href="' . esc_url($link) . '">' . esc_html($slug . ' - ' . ($pt['label'] ?? $slug)) . '</a> <a href="#" class="gm2-edit-pt" data-slug="' . esc_attr($slug) . '">' . esc_html__( 'Edit', 'gm2-wordpress-suite' ) . '</a></li>';
+                echo '<li><a href="' . esc_url($link) . '">' . esc_html($slug . ' - ' . ($pt['label'] ?? $slug)) . '</a> <a href="#" class="gm2-edit-pt" data-slug="' . esc_attr($slug) . '">' . esc_html__( 'Edit', 'gm2-wordpress-suite' ) . '</a> ';
+                echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="gm2-delete-pt-form" style="display:inline;">';
+                echo '<input type="hidden" name="action" value="gm2_delete_post_type" />';
+                echo '<input type="hidden" name="slug" value="' . esc_attr($slug) . '" />';
+                wp_nonce_field('gm2_delete_post_type_' . $slug);
+                echo '<button type="submit" class="button-link delete-link">' . esc_html__( 'Delete', 'gm2-wordpress-suite' ) . '</button>';
+                echo '</form></li>';
             }
             echo '</ul>';
         } else {
@@ -967,7 +1037,13 @@ class Gm2_Custom_Posts_Admin {
             echo '<ul>';
             foreach ($config['taxonomies'] as $slug => $tax) {
                 $link = admin_url('admin.php?page=gm2_tax_args&tax=' . $slug);
-                echo '<li><a href="' . esc_url($link) . '">' . esc_html($slug . ' - ' . ($tax['label'] ?? $slug)) . '</a> <a href="#" class="gm2-edit-tax" data-slug="' . esc_attr($slug) . '">' . esc_html__( 'Edit', 'gm2-wordpress-suite' ) . '</a></li>';
+                echo '<li><a href="' . esc_url($link) . '">' . esc_html($slug . ' - ' . ($tax['label'] ?? $slug)) . '</a> <a href="#" class="gm2-edit-tax" data-slug="' . esc_attr($slug) . '">' . esc_html__( 'Edit', 'gm2-wordpress-suite' ) . '</a> ';
+                echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="gm2-delete-tax-form" style="display:inline;">';
+                echo '<input type="hidden" name="action" value="gm2_delete_taxonomy" />';
+                echo '<input type="hidden" name="slug" value="' . esc_attr($slug) . '" />';
+                wp_nonce_field('gm2_delete_taxonomy_' . $slug);
+                echo '<button type="submit" class="button-link delete-link">' . esc_html__( 'Delete', 'gm2-wordpress-suite' ) . '</button>';
+                echo '</form></li>';
             }
             echo '</ul>';
         } else {
@@ -1575,6 +1651,7 @@ class Gm2_Custom_Posts_Admin {
                 'taxNonce' => wp_create_nonce('gm2_edit_taxonomy'),
                 'ptUrl'    => admin_url('admin-post.php?action=gm2_edit_post_type'),
                 'taxUrl'   => admin_url('admin-post.php?action=gm2_edit_taxonomy'),
+                'deleteConfirm' => esc_html__( 'Are you sure you want to delete this item?', 'gm2-wordpress-suite' ),
             ]);
             return;
         }
