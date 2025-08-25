@@ -115,6 +115,7 @@ class Gm2_Abandoned_Carts {
         $visit_sql = "CREATE TABLE $visit_log (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
             cart_id bigint(20) unsigned NOT NULL,
+            ip_address varchar(45) DEFAULT NULL,
             entry_url text NOT NULL,
             exit_url text DEFAULT NULL,
             visit_start datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -733,10 +734,11 @@ class Gm2_Abandoned_Carts {
                 $visit_table,
                 [
                     'cart_id'     => $cart_id,
+                    'ip_address'  => $ip,
                     'entry_url'   => $url,
                     'visit_start' => current_time('mysql'),
                 ],
-                [ '%d', '%s', '%s' ]
+                [ '%d', '%s', '%s', '%s' ]
             );
         }
 
@@ -844,17 +846,17 @@ class Gm2_Abandoned_Carts {
         if ($cart_id) {
             $sql        = "SELECT action, sku, quantity, changed_at FROM $activity_table WHERE cart_id = %d ORDER BY changed_at DESC LIMIT %d OFFSET %d";
             $rows       = $wpdb->get_results($wpdb->prepare($sql, $cart_id, $per_page, $offset));
-            $visit_sql  = "SELECT entry_url, exit_url, visit_start, visit_end FROM $visit_table WHERE cart_id = %d ORDER BY visit_start DESC LIMIT %d OFFSET %d";
+            $visit_sql  = "SELECT ip_address, entry_url, exit_url, visit_start, visit_end FROM $visit_table WHERE cart_id = %d ORDER BY visit_start DESC LIMIT %d OFFSET %d";
             $visit_rows = $wpdb->get_results($wpdb->prepare($visit_sql, $cart_id, $per_page, $offset));
         } elseif ($client_id !== '') {
             $sql = "SELECT a.action, a.sku, a.quantity, a.changed_at FROM $activity_table a INNER JOIN $carts_table c ON a.cart_id = c.id WHERE c.client_id = %s ORDER BY a.changed_at DESC LIMIT %d OFFSET %d";
             $rows = $wpdb->get_results($wpdb->prepare($sql, $client_id, $per_page, $offset));
-            $visit_sql = "SELECT v.entry_url, v.exit_url, v.visit_start, v.visit_end FROM $visit_table v INNER JOIN $carts_table c ON v.cart_id = c.id WHERE c.client_id = %s ORDER BY v.visit_start DESC LIMIT %d OFFSET %d";
+            $visit_sql = "SELECT v.ip_address, v.entry_url, v.exit_url, v.visit_start, v.visit_end FROM $visit_table v INNER JOIN $carts_table c ON v.cart_id = c.id WHERE c.client_id = %s ORDER BY v.visit_start DESC LIMIT %d OFFSET %d";
             $visit_rows = $wpdb->get_results($wpdb->prepare($visit_sql, $client_id, $per_page, $offset));
         } elseif ($ip !== '') {
             $sql = "SELECT a.action, a.sku, a.quantity, a.changed_at FROM $activity_table a INNER JOIN $carts_table c ON a.cart_id = c.id WHERE c.ip_address = %s ORDER BY a.changed_at DESC LIMIT %d OFFSET %d";
             $rows = $wpdb->get_results($wpdb->prepare($sql, $ip, $per_page, $offset));
-            $visit_sql = "SELECT v.entry_url, v.exit_url, v.visit_start, v.visit_end FROM $visit_table v INNER JOIN $carts_table c ON v.cart_id = c.id WHERE c.ip_address = %s ORDER BY v.visit_start DESC LIMIT %d OFFSET %d";
+            $visit_sql = "SELECT v.ip_address, v.entry_url, v.exit_url, v.visit_start, v.visit_end FROM $visit_table v WHERE v.ip_address = %s ORDER BY v.visit_start DESC LIMIT %d OFFSET %d";
             $visit_rows = $wpdb->get_results($wpdb->prepare($visit_sql, $ip, $per_page, $offset));
         } else {
             $rows       = [];
@@ -877,6 +879,7 @@ class Gm2_Abandoned_Carts {
             $dt_format = get_option('date_format') . ' ' . get_option('time_format');
             foreach ($visit_rows as $vrow) {
                 $visit_data[] = [
+                    'ip_address'  => $vrow->ip_address,
                     'entry_url'   => $vrow->entry_url,
                     'exit_url'    => $vrow->exit_url,
                     'visit_start' => mysql2date($dt_format, $vrow->visit_start),
@@ -947,36 +950,40 @@ class Gm2_Abandoned_Carts {
         $queue_table     = $wpdb->prefix . 'wc_ac_email_queue';
         $recovered_table = $wpdb->prefix . 'wc_ac_recovered';
         $activity_table  = $wpdb->prefix . 'wc_ac_cart_activity';
+        $visit_table     = $wpdb->prefix . 'wc_ac_visit_log';
         $carts_exists    = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $carts_table));
         $queue_exists    = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $queue_table));
         $recovered_exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $recovered_table));
         $activity_exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $activity_table));
+        $visit_exists    = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $visit_table));
         if (
             $carts_exists !== $carts_table ||
             $queue_exists !== $queue_table ||
             $recovered_exists !== $recovered_table ||
-            $activity_exists !== $activity_table
+            $activity_exists !== $activity_table ||
+            $visit_exists !== $visit_table
         ) {
             if (
                 $carts_exists === $carts_table &&
                 $queue_exists === $queue_table &&
                 $recovered_exists === $recovered_table &&
-                $activity_exists !== $activity_table
+                $activity_exists === $activity_table &&
+                $visit_exists !== $visit_table
             ) {
                 $charset_collate = $wpdb->get_charset_collate();
-                $activity_sql = "CREATE TABLE $activity_table (
+                $visit_sql = "CREATE TABLE $visit_table (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
             cart_id bigint(20) unsigned NOT NULL,
-            action varchar(20) NOT NULL,
-            product_id bigint(20) unsigned NOT NULL,
-            sku varchar(100) DEFAULT NULL,
-            quantity int NOT NULL DEFAULT 0,
-            changed_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            ip_address varchar(45) DEFAULT NULL,
+            entry_url text NOT NULL,
+            exit_url text DEFAULT NULL,
+            visit_start datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            visit_end datetime DEFAULT NULL,
             PRIMARY KEY  (id),
             KEY cart_id (cart_id)
         ) $charset_collate;";
                 require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-                dbDelta($activity_sql);
+                dbDelta($visit_sql);
             } else {
                 $this->install();
             }
@@ -1019,6 +1026,11 @@ class Gm2_Abandoned_Carts {
         $has_attempts = $wpdb->get_var($wpdb->prepare("SHOW COLUMNS FROM $queue_table LIKE %s", 'attempts'));
         if (!$has_attempts) {
             $wpdb->query("ALTER TABLE $queue_table ADD attempts int NOT NULL DEFAULT 0 AFTER sent");
+        }
+
+        $visit_has_ip = $wpdb->get_var($wpdb->prepare("SHOW COLUMNS FROM $visit_table LIKE %s", 'ip_address'));
+        if (!$visit_has_ip) {
+            $wpdb->query("ALTER TABLE $visit_table ADD ip_address varchar(45) DEFAULT NULL AFTER cart_id");
         }
     }
 

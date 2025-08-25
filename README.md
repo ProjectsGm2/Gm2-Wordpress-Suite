@@ -210,8 +210,10 @@ notification from reaching WordPress.
 The admin screen under **Gm2 → Abandoned Carts** displays a table of carts and
 their status—active or abandoned—showing the IP address, email, location, device,
 products, cart value, entry and exit URLs, browsing time, and revisit count.
-Recovery emails are planned to be queued and processed by WP&nbsp;Cron via the
-`gm2_ac_process_queue` action, but this feature is currently disabled.
+Opening a cart's activity log reveals a per-visit trail with the returning IP
+address, entry and exit pages, and timestamps for each session. Recovery emails
+are planned to be queued and processed by WP&nbsp;Cron via the `gm2_ac_process_queue`
+action, but this feature is currently disabled.
 
 
 

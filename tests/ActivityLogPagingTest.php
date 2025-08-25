@@ -40,6 +40,7 @@ namespace {
                 ]);
                 $wpdb->insert($wpdb->prefix.'wc_ac_visit_log',[
                     'cart_id'=>$cart_id,
+                    'ip_address'=>'127.0.0.'.$i,
                     'entry_url'=>'/p'.$i,
                     'exit_url'=>'/p'.$i.'b',
                     'visit_start'=>'2024-01-01 01:00:'.sprintf('%02d',$i),
@@ -55,6 +56,7 @@ namespace {
             $this->assertSame('SKU1', end($result['data']['activity'])['sku']);
             $this->assertCount(10, $result['data']['visits']);
             $this->assertSame('/p10', $result['data']['visits'][0]['entry_url']);
+            $this->assertSame('127.0.0.10', $result['data']['visits'][0]['ip_address']);
             $this->assertSame('/p1', end($result['data']['visits'])['entry_url']);
         }
     }

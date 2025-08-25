@@ -36,9 +36,9 @@ jQuery(function($){
                     visitList = $('<ul class="gm2-ac-activity-log gm2-ac-visit-log"></ul>').appendTo(wrap);
                 }
                 response.data.visits.forEach(function(visit){
-                    visitList.append('<li>Entry @ <strong>'+visit.visit_start+'</strong> \u2192 '+visit.entry_url+'</li>');
+                    visitList.append('<li>'+visit.ip_address+' Entry @ <strong>'+visit.visit_start+'</strong> \u2192 '+visit.entry_url+'</li>');
                     if(visit.visit_end){
-                        visitList.append('<li>Exit @ <strong>'+visit.visit_end+'</strong> \u2192 '+visit.exit_url+'</li>');
+                        visitList.append('<li>'+visit.ip_address+' Exit @ <strong>'+visit.visit_end+'</strong> \u2192 '+visit.exit_url+'</li>');
                     }
                 });
             }

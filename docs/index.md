@@ -96,7 +96,7 @@ Enable the module from **Gm2 → Dashboard** to begin tracking cart sessions. Ac
 
 Select an Elementor popup under **Gm2 → Cart Settings** to ask shoppers for an email address or phone number before they leave. The plugin records contact details from that popup and from the checkout billing fields so each cart is linked to an email and/or phone when available.
 
-The **Gm2 → Abandoned Carts** screen groups records by IP address so multiple visits from the same shopper appear as a single row with combined browsing time and revisit counts. An index on `ip_address` in the carts table speeds up these lookups. Click a row’s **Cart Activity Log** link to view the add/remove/quantity events pulled from the activity table.
+The **Gm2 → Abandoned Carts** screen groups records by IP address so multiple visits from the same shopper appear as a single row with combined browsing time and revisit counts. An index on `ip_address` in the carts table speeds up these lookups. Click a row’s **Cart Activity Log** link to view the add/remove/quantity events pulled from the activity table. Visit entries now record the returning IP address along with entry and exit URLs and timestamps for each session.
 
 The activity log loads entries 50 at a time through the `gm2_ac_get_activity` AJAX action. Pass `page` and `per_page` values to paginate through activity and visit records; the admin UI requests additional pages as you scroll.
 
