@@ -1,7 +1,7 @@
 jQuery(function($){
     if(typeof gm2CPTEdit === 'undefined'){ return; }
     function fillPostType(slug){
-        $.get(gm2CPTEdit.ptUrl, { slug: slug, _wpnonce: gm2CPTEdit.nonce }, function(resp){
+        $.get(gm2CPTEdit.ptUrl, { slug: slug, _wpnonce: gm2CPTEdit.ptNonce }, function(resp){
             if(!resp || !resp.success){ return; }
             var data = resp.data || {};
             var form = $('#gm2-post-type-form');

@@ -671,7 +671,11 @@ class Gm2_Custom_Posts_Admin {
         }
         $config = $this->get_config();
         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-            $slug = sanitize_key($_GET['slug'] ?? '');
+            $slug  = sanitize_key($_GET['slug'] ?? '');
+            $nonce = sanitize_text_field($_GET['_wpnonce'] ?? '');
+            if (!wp_verify_nonce($nonce, 'gm2_edit_post_type')) {
+                wp_send_json_error();
+            }
             if ($slug && isset($config['post_types'][$slug])) {
                 wp_send_json_success($config['post_types'][$slug]);
             }
@@ -783,7 +787,11 @@ class Gm2_Custom_Posts_Admin {
         }
         $config = $this->get_config();
         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-            $slug = sanitize_key($_GET['slug'] ?? '');
+            $slug  = sanitize_key($_GET['slug'] ?? '');
+            $nonce = sanitize_text_field($_GET['_wpnonce'] ?? '');
+            if (!wp_verify_nonce($nonce, 'gm2_edit_taxonomy')) {
+                wp_send_json_error();
+            }
             if ($slug && isset($config['taxonomies'][$slug])) {
                 wp_send_json_success($config['taxonomies'][$slug]);
             }
@@ -1647,7 +1655,7 @@ class Gm2_Custom_Posts_Admin {
                 true
             );
             wp_localize_script('gm2-cpt-overview', 'gm2CPTEdit', [
-                'nonce'    => wp_create_nonce('gm2_edit_post_type'),
+                'ptNonce'  => wp_create_nonce('gm2_edit_post_type'),
                 'taxNonce' => wp_create_nonce('gm2_edit_taxonomy'),
                 'ptUrl'    => admin_url('admin-post.php?action=gm2_edit_post_type'),
                 'taxUrl'   => admin_url('admin-post.php?action=gm2_edit_taxonomy'),
