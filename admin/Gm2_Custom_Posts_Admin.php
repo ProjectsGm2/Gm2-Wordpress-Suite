@@ -835,11 +835,13 @@ class Gm2_Custom_Posts_Admin {
         if (!$this->can_manage()) {
             wp_die(esc_html__( 'Permission denied', 'gm2-wordpress-suite' ));
         }
-        $slugs = $_POST['slug'] ?? [];
-        if (!is_array($slugs)) {
-            $slugs = $slugs ? [ $slugs ] : [];
+        $raw_slugs = $_POST['slug'] ?? [];
+        if (!is_array($raw_slugs)) {
+            $raw_slugs = $raw_slugs ? [ $raw_slugs ] : [];
         }
-        $slugs = array_map('sanitize_key', $slugs);
+        $max_input_vars = (int) ini_get('max_input_vars');
+        $too_many = $max_input_vars && count($raw_slugs) >= $max_input_vars;
+        $slugs = array_map('sanitize_key', $raw_slugs);
         $slugs = array_filter($slugs);
         $bulk_action = sanitize_text_field($_POST['gm2_bulk_action'] ?? '');
         if (!$slugs || (count($slugs) > 1 && $bulk_action !== 'delete')) {
@@ -847,7 +849,7 @@ class Gm2_Custom_Posts_Admin {
             exit;
         }
         if (count($slugs) > 1 || $bulk_action === 'delete') {
-            check_admin_referer('gm2_bulk_delete_post_type');
+            check_admin_referer('bulk-posts');
         } else {
             check_admin_referer('gm2_delete_post_type_' . $slugs[0]);
         }
@@ -865,7 +867,11 @@ class Gm2_Custom_Posts_Admin {
         if ($deleted) {
             update_option('gm2_custom_posts_config', $config);
         }
-        wp_safe_redirect(admin_url('admin.php?page=gm2-custom-posts&gm2_pt_deleted=' . ($deleted ? '1' : '0')));
+        $redirect = 'admin.php?page=gm2-custom-posts&gm2_pt_deleted=' . ($deleted ? '1' : '0');
+        if ($too_many) {
+            $redirect .= '&gm2_pt_too_many=1';
+        }
+        wp_safe_redirect(admin_url($redirect));
         exit;
     }
 
@@ -922,6 +928,10 @@ class Gm2_Custom_Posts_Admin {
             } else {
                 echo '<div class="notice notice-error"><p>' . esc_html__( 'Failed to delete taxonomy.', 'gm2-wordpress-suite' ) . '</p></div>';
             }
+        }
+
+        if (!empty($_GET['gm2_pt_too_many'])) {
+            echo '<div class="notice notice-warning"><p>' . esc_html__( 'Too many post types selected. Delete in smaller batches or increase max_input_vars in php.ini.', 'gm2-wordpress-suite' ) . '</p></div>';
         }
 
         if (isset($_POST['gm2_add_post_type']) && check_admin_referer('gm2_add_post_type')) {
@@ -1051,7 +1061,7 @@ class Gm2_Custom_Posts_Admin {
         $table->prepare_items();
         echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
         echo '<input type="hidden" name="action" value="gm2_delete_post_type" />';
-        wp_nonce_field('gm2_bulk_delete_post_type');
+        wp_nonce_field( 'bulk-posts', '_wpnonce', true, false );
         $table->display();
         echo '</form>';
 
