@@ -9,14 +9,16 @@ if (!defined('ABSPATH')) {
 
 class LocalLlamaProvider implements ProviderInterface {
     private string $binary;
+    private string $model;
 
     public function __construct() {
-        $this->binary = get_option('gm2_local_llama_binary', '/usr/local/bin/llama');
+        $this->binary = get_option('gm2_llama_binary_path', '/usr/local/bin/llama');
+        $this->model  = get_option('gm2_llama_model_path', '');
     }
 
     public function query(string $prompt, array $args = []): string|WP_Error {
         $binary = $args['binary'] ?? $this->binary;
-        $model  = $args['model'] ?? $args['model_path'] ?? '';
+        $model  = $args['model'] ?? $args['model_path'] ?? $this->model;
         if ($binary === '' || !file_exists($binary)) {
             return new WP_Error('binary_not_found', 'Llama binary not found');
         }
