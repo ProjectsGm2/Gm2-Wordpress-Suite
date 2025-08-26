@@ -106,6 +106,7 @@ class Gm2_Abandoned_Carts_Public {
 
         $token            = '';
         $session_entry_url = '';
+        $post_url         = isset($_POST['url']) ? esc_url_raw(wp_unslash($_POST['url'])) : '';
         $client_id        = isset($_POST['client_id']) ? sanitize_text_field(wp_unslash($_POST['client_id'])) : (isset($_COOKIE['gm2_ac_client_id']) ? sanitize_text_field(wp_unslash($_COOKIE['gm2_ac_client_id'])) : '');
         if (class_exists('WC_Session') && WC()->session) {
             $token            = WC()->session->get_customer_id();
@@ -123,6 +124,8 @@ class Gm2_Abandoned_Carts_Public {
             WC()->session->set('gm2_entry_url', null);
         } elseif (isset($_COOKIE['gm2_entry_url'])) {
             $stored_entry = esc_url_raw(wp_unslash($_COOKIE['gm2_entry_url']));
+        } elseif (!empty($post_url)) {
+            $stored_entry = $post_url;
         }
         if (empty($stored_entry)) {
             if (class_exists('WC_Session') && WC()->session) {

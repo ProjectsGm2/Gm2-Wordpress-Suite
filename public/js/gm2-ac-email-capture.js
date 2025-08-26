@@ -15,7 +15,8 @@ jQuery(function($){
             action: 'gm2_ac_contact_capture',
             nonce: gm2AcEmailCapture.nonce,
             email: emailVal,
-            phone: phoneVal
+            phone: phoneVal,
+            url: window.location.href
         });
     };
     $email.add($phone).on('change input', function(){
