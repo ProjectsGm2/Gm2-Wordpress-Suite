@@ -352,6 +352,15 @@ class Gm2_SEO_Admin {
 
         add_submenu_page(
             'gm2-seo',
+            esc_html__( 'Search Console', 'gm2-wordpress-suite' ),
+            esc_html__( 'Search Console', 'gm2-wordpress-suite' ),
+            'manage_options',
+            'gm2-search-console',
+            [$this, 'display_search_console_page']
+        );
+
+        add_submenu_page(
+            'gm2-seo',
             esc_html__( 'Robots.txt', 'gm2-wordpress-suite' ),
             esc_html__( 'Robots.txt', 'gm2-wordpress-suite' ),
             'manage_options',
@@ -412,6 +421,21 @@ class Gm2_SEO_Admin {
         ]);
         register_setting('gm2_seo_options', 'gm2_sc_query_limit', [
             'sanitize_callback' => 'absint',
+        ]);
+        register_setting('gm2_seo_options', 'gm2_sc_client_id', [
+            'sanitize_callback' => 'sanitize_text_field',
+        ]);
+        register_setting('gm2_seo_options', 'gm2_sc_client_secret', [
+            'sanitize_callback' => 'sanitize_text_field',
+        ]);
+        register_setting('gm2_seo_options', 'gm2_sc_refresh_token', [
+            'sanitize_callback' => 'sanitize_text_field',
+        ]);
+        register_setting('gm2_seo_options', 'gm2_sc_service_account_json', [
+            'sanitize_callback' => 'sanitize_text_field',
+        ]);
+        register_setting('gm2_seo_options', 'gm2_sc_auto', [
+            'sanitize_callback' => 'sanitize_text_field',
         ]);
         register_setting('gm2_seo_options', 'gm2_analytics_days', [
             'sanitize_callback' => 'absint',
@@ -6032,6 +6056,36 @@ class Gm2_SEO_Admin {
             return $data['data'];
         }
         return new \WP_Error('gm2_ai_error', is_array($data) && isset($data['data']) ? $data['data'] : 'error');
+    }
+
+    public function display_search_console_page() {
+        $notice = '';
+        if (isset($_POST['gm2_sc_nonce']) && wp_verify_nonce($_POST['gm2_sc_nonce'], 'gm2_sc_save')) {
+            $cid    = sanitize_text_field($_POST['gm2_sc_client_id'] ?? '');
+            $secret = sanitize_text_field($_POST['gm2_sc_client_secret'] ?? '');
+            $token  = sanitize_text_field($_POST['gm2_sc_refresh_token'] ?? '');
+            $json   = sanitize_text_field($_POST['gm2_sc_service_account_json'] ?? '');
+            $auto   = isset($_POST['gm2_sc_auto']) ? '1' : '0';
+            update_option('gm2_sc_client_id', $cid);
+            update_option('gm2_sc_client_secret', $secret);
+            update_option('gm2_sc_refresh_token', $token);
+            update_option('gm2_sc_service_account_json', $json);
+            update_option('gm2_sc_auto', $auto);
+            $notice = '<div class="updated notice"><p>' . esc_html__('Settings saved.', 'gm2-wordpress-suite') . '</p></div>';
+        }
+        echo '<div class="wrap"><h1>' . esc_html__('Search Console Settings', 'gm2-wordpress-suite') . '</h1>';
+        echo $notice;
+        echo '<form method="post">';
+        wp_nonce_field('gm2_sc_save', 'gm2_sc_nonce');
+        echo '<table class="form-table"><tbody>';
+        echo '<tr><th scope="row">' . esc_html__('Client ID', 'gm2-wordpress-suite') . '</th><td><input type="text" name="gm2_sc_client_id" value="' . esc_attr(get_option('gm2_sc_client_id', '')) . '" class="regular-text" /></td></tr>';
+        echo '<tr><th scope="row">' . esc_html__('Client Secret', 'gm2-wordpress-suite') . '</th><td><input type="text" name="gm2_sc_client_secret" value="' . esc_attr(get_option('gm2_sc_client_secret', '')) . '" class="regular-text" /></td></tr>';
+        echo '<tr><th scope="row">' . esc_html__('Refresh Token', 'gm2-wordpress-suite') . '</th><td><input type="text" name="gm2_sc_refresh_token" value="' . esc_attr(get_option('gm2_sc_refresh_token', '')) . '" class="regular-text" /></td></tr>';
+        echo '<tr><th scope="row">' . esc_html__('Service Account JSON', 'gm2-wordpress-suite') . '</th><td><input type="text" name="gm2_sc_service_account_json" value="' . esc_attr(get_option('gm2_sc_service_account_json', '')) . '" class="regular-text" /></td></tr>';
+        echo '<tr><th scope="row">' . esc_html__('Automatic Product Submissions', 'gm2-wordpress-suite') . '</th><td><label><input type="checkbox" name="gm2_sc_auto" value="1" ' . checked(get_option('gm2_sc_auto', '0'), '1', false) . '> ' . esc_html__('Enable', 'gm2-wordpress-suite') . '</label></td></tr>';
+        echo '</tbody></table>';
+        submit_button();
+        echo '</form></div>';
     }
 
     public function cron_process_ai_tax_queue() {
