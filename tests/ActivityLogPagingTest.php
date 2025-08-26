@@ -57,7 +57,10 @@ namespace {
             $this->assertCount(10, $result['data']['visits']);
             $this->assertSame('/p10', $result['data']['visits'][0]['entry_url']);
             $this->assertSame('127.0.0.10', $result['data']['visits'][0]['ip_address']);
-            $this->assertSame('/p1', end($result['data']['visits'])['entry_url']);
+            $this->assertTrue($result['data']['visits'][0]['is_revisit']);
+            $last_visit = end($result['data']['visits']);
+            $this->assertSame('/p1', $last_visit['entry_url']);
+            $this->assertFalse($last_visit['is_revisit']);
         }
     }
 
@@ -88,6 +91,15 @@ namespace {
                 return array_map(fn($r)=>(object)$r,$slice);
             }
             return [];
+        }
+        public function get_var($sql){
+            if(strpos($this->last_sql,'MIN(visit_start)')!==false){
+                $cart_id=$this->last_args[0];
+                $rows=array_filter($this->data[$this->prefix.'wc_ac_visit_log'], fn($r)=>$r['cart_id']==$cart_id);
+                usort($rows, fn($a,$b)=>strcmp($a['visit_start'],$b['visit_start']));
+                return $rows? $rows[0]['visit_start']: null;
+            }
+            return null;
         }
     }
 }

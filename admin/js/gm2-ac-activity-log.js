@@ -33,14 +33,16 @@ jQuery(function($){
             }
             if(hasVisits){
                 response.data.visits.forEach(function(visit){
+                    var entryLabel = visit.is_revisit ? 'Revisit Entry URL ' : 'Entry URL ';
                     events.push({
                         time: new Date(visit.visit_start),
-                        html: '<li>'+visit.ip_address+' Entry @ <strong>'+visit.visit_start+'</strong> \u2192 Revisit Entry URL '+visit.entry_url+'</li>'
+                        html: '<li>'+visit.ip_address+' Entry @ <strong>'+visit.visit_start+'</strong> \u2192 '+entryLabel+visit.entry_url+'</li>'
                     });
                     if(visit.visit_end){
+                        var exitLabel = visit.is_revisit ? 'Revisit Exit URL ' : 'Exit URL ';
                         events.push({
                             time: new Date(visit.visit_end),
-                            html: '<li>'+visit.ip_address+' Exit @ <strong>'+visit.visit_end+'</strong> \u2192 Revisit Exit URL '+visit.exit_url+'</li>'
+                            html: '<li>'+visit.ip_address+' Exit @ <strong>'+visit.visit_end+'</strong> \u2192 '+exitLabel+visit.exit_url+'</li>'
                         });
                     }
                 });
