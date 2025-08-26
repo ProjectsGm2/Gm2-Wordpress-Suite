@@ -306,6 +306,20 @@ class AbandonedCartsTest extends WP_UnitTestCase {
         $this->assertSame('http://example.com/landing', WC()->session->get('gm2_entry_url'));
     }
 
+    public function test_maybe_set_entry_url_skips_ajax_requests() {
+        $table = $GLOBALS['wpdb']->prefix . 'wc_ac_carts';
+        $ac    = new \Gm2\Gm2_Abandoned_Carts();
+        $row_before     = $GLOBALS['wpdb']->data[$table][0];
+        $session_before = WC()->session->get('gm2_entry_url');
+        $_SERVER['REQUEST_URI'] = '/?wc-ajax=get_refreshed_fragments';
+        $GLOBALS['wp_doing_ajax'] = true;
+        $ac->maybe_set_entry_url();
+        unset($GLOBALS['wp_doing_ajax']);
+        $row_after = $GLOBALS['wpdb']->data[$table][0];
+        $this->assertSame($session_before, WC()->session->get('gm2_entry_url'));
+        $this->assertSame($row_before['entry_url'] ?? null, $row_after['entry_url'] ?? null);
+    }
+
     public function test_capture_cart_entry_url_uses_full_request_uri() {
         $table = $GLOBALS['wpdb']->prefix . 'wc_ac_carts';
         $GLOBALS['wpdb']->data[$table] = [];
