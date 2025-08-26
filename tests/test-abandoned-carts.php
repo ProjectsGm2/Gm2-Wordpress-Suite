@@ -215,6 +215,32 @@ class AbandonedCartsTest extends WP_UnitTestCase {
         $this->assertSame('https://example.com/start', $row['exit_url']);
     }
 
+    public function test_admin_ajax_url_replaced_with_http_referer() {
+        $_SERVER['HTTP_REFERER'] = 'https://example.com/ref';
+        $_POST = [ 'nonce' => 'n', 'url' => 'https://example.com/wp-admin/admin-ajax.php' ];
+        $_REQUEST = $_POST;
+        \Gm2\Gm2_Abandoned_Carts::gm2_ac_mark_active();
+
+        $table = $GLOBALS['wpdb']->prefix . 'wc_ac_carts';
+        $row = $GLOBALS['wpdb']->data[$table][0];
+        $this->assertSame('https://example.com/ref', $row['entry_url']);
+        $this->assertSame('https://example.com/ref', WC()->session->get('gm2_ac_last_seen_url'));
+        unset($_SERVER['HTTP_REFERER']);
+    }
+
+    public function test_empty_url_falls_back_to_session() {
+        $table = $GLOBALS['wpdb']->prefix . 'wc_ac_carts';
+        WC()->session->set('gm2_ac_last_seen_url', 'https://example.com/stored');
+
+        $_POST = [ 'nonce' => 'n' ];
+        $_REQUEST = $_POST;
+        \Gm2\Gm2_Abandoned_Carts::gm2_ac_mark_active();
+
+        $row = $GLOBALS['wpdb']->data[$table][0];
+        $this->assertSame('https://example.com/stored', $row['entry_url']);
+        $this->assertSame('https://example.com/stored', WC()->session->get('gm2_ac_last_seen_url'));
+    }
+
     public function test_shutdown_caches_last_url() {
         $table = $GLOBALS['wpdb']->prefix . 'wc_ac_carts';
         $ac    = new \Gm2\Gm2_Abandoned_Carts();
