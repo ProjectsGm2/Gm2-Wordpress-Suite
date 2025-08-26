@@ -798,12 +798,36 @@ class Gm2_SEO_Public {
         if (empty($data['sku'])) {
             $data['sku'] = $product->get_sku();
         }
-        $data['offers']                 = $data['offers'] ?? [];
-        $data['offers']['@type']        = $data['offers']['@type'] ?? 'Offer';
-        $data['offers']['priceCurrency'] = $data['offers']['priceCurrency'] ?? get_woocommerce_currency();
-        $data['offers']['price']        = $data['offers']['price'] ?? $product->get_price();
-        $data['offers']['availability'] = $data['offers']['availability'] ?? ($product->is_in_stock() ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock');
-        $data['offers']['url']          = $data['offers']['url'] ?? get_permalink();
+        if ($product instanceof \WC_Product_Variable && $product->get_children()) {
+            $offers = [
+                '@type'         => 'AggregateOffer',
+                'priceCurrency' => get_woocommerce_currency(),
+                'lowPrice'      => $product->get_variation_price('min', false),
+                'highPrice'     => $product->get_variation_price('max', false),
+                'offerCount'    => count($product->get_children()),
+                'offers'        => [],
+            ];
+            foreach ($product->get_children() as $variation_id) {
+                $variation = wc_get_product($variation_id);
+                if (!$variation) {
+                    continue;
+                }
+                $offers['offers'][] = [
+                    '@type'        => 'Offer',
+                    'price'        => $variation->get_price(),
+                    'availability' => $variation->is_in_stock() ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+                    'url'          => get_permalink($variation->get_id()),
+                ];
+            }
+            $data['offers'] = $offers;
+        } else {
+            $data['offers']                 = $data['offers'] ?? [];
+            $data['offers']['@type']        = $data['offers']['@type'] ?? 'Offer';
+            $data['offers']['priceCurrency'] = $data['offers']['priceCurrency'] ?? get_woocommerce_currency();
+            $data['offers']['price']        = $data['offers']['price'] ?? $product->get_price();
+            $data['offers']['availability'] = $data['offers']['availability'] ?? ($product->is_in_stock() ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock');
+            $data['offers']['url']          = $data['offers']['url'] ?? get_permalink();
+        }
 
         $brand_meta = get_post_meta(get_the_ID(), '_gm2_schema_brand', true);
         if (isset($data['brand']) && isset($data['brand']['name']) && $data['brand']['name'] === '') {
@@ -812,6 +836,16 @@ class Gm2_SEO_Public {
         if ($brand_meta) {
             $data['brand'] = $data['brand'] ?? ['@type' => 'Brand'];
             $data['brand']['name'] = $brand_meta;
+        }
+        $avg_rating   = $product->get_average_rating();
+        $review_count = $product->get_review_count();
+        if ($avg_rating && $review_count) {
+            $data['aggregateRating'] = [
+                '@type'       => 'AggregateRating',
+                'ratingValue' => $avg_rating,
+                'reviewCount' => $review_count,
+                'bestRating'  => '5',
+            ];
         }
         echo '<script type="application/ld+json">' . wp_json_encode($data) . "</script>\n";
         $this->primary_schema_output = true;
