@@ -30,7 +30,8 @@ jQuery(function($){
             action: 'gm2_ac_contact_capture',
             nonce: gm2AcPopup.nonce,
             email: email,
-            phone: phone
+            phone: phone,
+            url: window.location.href
         });
     });
 });
