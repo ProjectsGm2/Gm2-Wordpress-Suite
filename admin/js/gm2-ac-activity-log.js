@@ -22,24 +22,36 @@ jQuery(function($){
             var hasActivity = response.success && response.data && response.data.activity && response.data.activity.length;
             var hasVisits = response.success && response.data && response.data.visits && response.data.visits.length;
             var activityList = wrap.find('ul.gm2-ac-activity-log');
-            var visitList = wrap.find('ul.gm2-ac-visit-log');
+            var events = [];
             if(hasActivity){
-                if(!activityList.length){
-                    activityList = $('<ul class="gm2-ac-activity-log"></ul>').appendTo(wrap);
-                }
                 response.data.activity.forEach(function(item){
-                    activityList.append('<li><strong>'+item.changed_at+'</strong> '+item.action+' '+item.sku+' x'+item.quantity+'</li>');
+                    events.push({
+                        time: new Date(item.changed_at),
+                        html: '<li><strong>'+item.changed_at+'</strong> '+item.action+' '+item.sku+' x'+item.quantity+'</li>'
+                    });
                 });
             }
             if(hasVisits){
-                if(!visitList.length){
-                    visitList = $('<ul class="gm2-ac-activity-log gm2-ac-visit-log"></ul>').appendTo(wrap);
-                }
                 response.data.visits.forEach(function(visit){
-                    visitList.append('<li>'+visit.ip_address+' Entry @ <strong>'+visit.visit_start+'</strong> \u2192 '+visit.entry_url+'</li>');
+                    events.push({
+                        time: new Date(visit.visit_start),
+                        html: '<li>'+visit.ip_address+' Entry @ <strong>'+visit.visit_start+'</strong> \u2192 Revisit Entry URL '+visit.entry_url+'</li>'
+                    });
                     if(visit.visit_end){
-                        visitList.append('<li>'+visit.ip_address+' Exit @ <strong>'+visit.visit_end+'</strong> \u2192 '+visit.exit_url+'</li>');
+                        events.push({
+                            time: new Date(visit.visit_end),
+                            html: '<li>'+visit.ip_address+' Exit @ <strong>'+visit.visit_end+'</strong> \u2192 Revisit Exit URL '+visit.exit_url+'</li>'
+                        });
                     }
+                });
+            }
+            if(events.length){
+                if(!activityList.length){
+                    activityList = $('<ul class="gm2-ac-activity-log"></ul>').appendTo(wrap);
+                }
+                events.sort(function(a, b){ return a.time - b.time; });
+                events.forEach(function(ev){
+                    activityList.append(ev.html);
                 });
             }
             if(page === 1 && !hasActivity && !hasVisits){
