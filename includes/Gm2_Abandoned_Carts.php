@@ -610,6 +610,15 @@ class Gm2_Abandoned_Carts {
         }
 
         $url       = esc_url_raw($_POST['url'] ?? '');
+        if (empty($url) || false !== strpos($url, '/admin-ajax.php')) {
+            $fallback = isset($_SERVER['HTTP_REFERER']) ? esc_url_raw(wp_unslash($_SERVER['HTTP_REFERER'])) : '';
+            if (empty($fallback) && class_exists('WC_Session') && WC()->session) {
+                $fallback = WC()->session->get('gm2_ac_last_seen_url');
+            }
+            if (!empty($fallback)) {
+                $url = $fallback;
+            }
+        }
         $client_id = isset($_POST['client_id']) ? sanitize_text_field(wp_unslash($_POST['client_id'])) : '';
         $token     = '';
         if (class_exists('WC_Session') && WC()->session) {
