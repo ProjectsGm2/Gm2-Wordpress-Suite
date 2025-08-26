@@ -117,17 +117,29 @@ class Gm2_Abandoned_Carts_Public {
         }
 
         $stored_entry = '';
+        $fallback_url = '';
         if (!empty($session_entry_url)) {
             $stored_entry = esc_url_raw($session_entry_url);
             WC()->session->set('gm2_entry_url', null);
         } elseif (isset($_COOKIE['gm2_entry_url'])) {
             $stored_entry = esc_url_raw(wp_unslash($_COOKIE['gm2_entry_url']));
         }
+        if (empty($stored_entry)) {
+            if (class_exists('WC_Session') && WC()->session) {
+                $fallback_url = WC()->session->get('gm2_ac_last_seen_url');
+            }
+            if (empty($fallback_url) && isset($_SERVER['HTTP_REFERER'])) {
+                $fallback_url = wp_unslash($_SERVER['HTTP_REFERER']);
+            }
+            if (!empty($fallback_url)) {
+                $stored_entry = esc_url_raw($fallback_url);
+            }
+        }
 
         $host        = isset($_SERVER['HTTP_HOST']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_HOST'])) : '';
         $request_uri = isset($_SERVER['REQUEST_URI']) ? wp_unslash($_SERVER['REQUEST_URI']) : '/';
         $scheme      = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https://' : 'http://';
-        $current_url = $stored_entry ?: esc_url_raw($scheme . $host . $request_uri);
+        $current_url = $stored_entry ?: esc_url_raw($fallback_url ?: ($scheme . $host . $request_uri));
 
         $agent   = isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '';
         $browser = Gm2_Abandoned_Carts::get_browser($agent);
