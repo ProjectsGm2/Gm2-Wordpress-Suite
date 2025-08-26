@@ -103,7 +103,7 @@ class Gm2_Abandoned_Carts {
         $activity_sql = "CREATE TABLE $activity (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
             cart_id bigint(20) unsigned NOT NULL,
-            action varchar(20) NOT NULL,
+            action varchar(20) NOT NULL COMMENT 'add, remove, quantity, revisit_entry, revisit_exit',
             product_id bigint(20) unsigned NOT NULL,
             sku varchar(100) DEFAULT NULL,
             quantity int NOT NULL DEFAULT 0,
@@ -749,6 +749,20 @@ class Gm2_Abandoned_Carts {
                 ],
                 [ '%d', '%s', '%s', '%s' ]
             );
+
+            $activity_table = $wpdb->prefix . 'wc_ac_cart_activity';
+            $wpdb->insert(
+                $activity_table,
+                [
+                    'cart_id'    => $cart_id,
+                    'action'     => 'revisit_entry',
+                    'product_id' => 0,
+                    'sku'        => $url,
+                    'quantity'   => 0,
+                    'changed_at' => current_time('mysql'),
+                ],
+                [ '%d', '%s', '%d', '%s', '%d', '%s' ]
+            );
         }
 
         return wp_send_json_success();
@@ -818,6 +832,22 @@ class Gm2_Abandoned_Carts {
                 if (!empty($url)) { $log_update['exit_url'] = $url; $log_format[] = '%s'; }
                 $wpdb->update($log_table, $log_update, [ 'id' => $log_row->id ], $log_format, [ '%d' ]);
             }
+
+            if (!empty($url)) {
+                $activity_table = $wpdb->prefix . 'wc_ac_cart_activity';
+                $wpdb->insert(
+                    $activity_table,
+                    [
+                        'cart_id'    => $row->id,
+                        'action'     => 'revisit_exit',
+                        'product_id' => 0,
+                        'sku'        => $url,
+                        'quantity'   => 0,
+                        'changed_at' => current_time('mysql'),
+                    ],
+                    [ '%d', '%s', '%d', '%s', '%d', '%s' ]
+                );
+            }
         }
 
         return wp_send_json_success();
@@ -878,21 +908,26 @@ class Gm2_Abandoned_Carts {
             $rows       = [];
             $visit_rows = [];
         }
-        $data = [];
+        $data      = [];
+        $dt_format = get_option('date_format') . ' ' . get_option('time_format');
         if ($rows) {
             foreach ($rows as $row) {
-                $data[] = [
+                $entry = [
                     'action'     => $row->action,
-                    'sku'        => $row->sku,
-                    'quantity'   => (int) $row->quantity,
-                    'changed_at' => mysql2date(get_option('date_format') . ' ' . get_option('time_format'), $row->changed_at),
+                    'changed_at' => mysql2date($dt_format, $row->changed_at),
                 ];
+                if ($row->action === 'revisit_entry' || $row->action === 'revisit_exit') {
+                    $entry['url'] = $row->sku;
+                } else {
+                    $entry['sku']      = $row->sku;
+                    $entry['quantity'] = (int) $row->quantity;
+                }
+                $data[] = $entry;
             }
         }
 
         $visit_data = [];
         if ($visit_rows) {
-            $dt_format = get_option('date_format') . ' ' . get_option('time_format');
             foreach ($visit_rows as $vrow) {
                 $visit_data[] = [
                     'ip_address'  => $vrow->ip_address,
@@ -1048,6 +1083,11 @@ class Gm2_Abandoned_Carts {
         $visit_has_ip = $wpdb->get_var($wpdb->prepare("SHOW COLUMNS FROM $visit_table LIKE %s", 'ip_address'));
         if (!$visit_has_ip) {
             $wpdb->query("ALTER TABLE $visit_table ADD ip_address varchar(45) DEFAULT NULL AFTER cart_id");
+        }
+
+        $action_col = $wpdb->get_row("SHOW FULL COLUMNS FROM $activity_table LIKE 'action'");
+        if (!$action_col || strpos((string) $action_col->Comment, 'revisit_entry') === false) {
+            $wpdb->query("ALTER TABLE $activity_table MODIFY action varchar(20) NOT NULL COMMENT 'add, remove, quantity, revisit_entry, revisit_exit'");
         }
     }
 

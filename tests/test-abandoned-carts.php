@@ -136,12 +136,18 @@ class AbandonedCartsTest extends WP_UnitTestCase {
         $this->assertSame($expected_format, $GLOBALS['wpdb']->last_update_format);
 
         $table = $GLOBALS['wpdb']->prefix . 'wc_ac_carts';
+        $activity_table = $GLOBALS['wpdb']->prefix . 'wc_ac_cart_activity';
         $row = $GLOBALS['wpdb']->data[$table][0];
         $this->assertNotEmpty($row['session_start']);
         $this->assertNull($row['abandoned_at']);
         $this->assertSame(0, $row['revisit_count']);
         // A fresh session should reset the recorded exit_url
         $this->assertSame('', $row['exit_url']);
+
+        $activity = $GLOBALS['wpdb']->data[$activity_table];
+        $this->assertCount(1, $activity);
+        $this->assertSame('revisit_entry', $activity[0]['action']);
+        $this->assertSame('https://example.com/page1', $activity[0]['sku']);
 
         // Abandon the cart and ensure exit_url reflects the last visited page
         $_POST = [ 'nonce' => 'n', 'url' => 'https://example.com/page1' ];
@@ -152,6 +158,11 @@ class AbandonedCartsTest extends WP_UnitTestCase {
         $this->assertNotNull($row['abandoned_at']);
         $this->assertNull($row['session_start']);
         $this->assertSame('https://example.com/page1', $row['exit_url']);
+
+        $activity = $GLOBALS['wpdb']->data[$activity_table];
+        $this->assertCount(2, $activity);
+        $this->assertSame('revisit_exit', $activity[1]['action']);
+        $this->assertSame('https://example.com/page1', $activity[1]['sku']);
 
         // Reactivate the cart; exit_url resets for the new session
         $_POST = [ 'nonce' => 'n', 'url' => 'https://example.com/page2' ];
@@ -164,6 +175,11 @@ class AbandonedCartsTest extends WP_UnitTestCase {
         $this->assertSame(1, $row['revisit_count']);
         $this->assertSame('', $row['exit_url']);
 
+        $activity = $GLOBALS['wpdb']->data[$activity_table];
+        $this->assertCount(3, $activity);
+        $this->assertSame('revisit_entry', $activity[2]['action']);
+        $this->assertSame('https://example.com/page2', $activity[2]['sku']);
+
         // Abandon without explicit URL; session value should persist
         $_POST = [ 'nonce' => 'n' ];
         $_REQUEST = $_POST;
@@ -172,6 +188,11 @@ class AbandonedCartsTest extends WP_UnitTestCase {
         $row = $GLOBALS['wpdb']->data[$table][0];
         $this->assertSame('https://example.com/page2', $row['exit_url']);
         $this->assertNull(WC()->session->get('gm2_ac_last_seen_url'));
+
+        $activity = $GLOBALS['wpdb']->data[$activity_table];
+        $this->assertCount(4, $activity);
+        $this->assertSame('revisit_exit', $activity[3]['action']);
+        $this->assertSame('https://example.com/page2', $activity[3]['sku']);
     }
 
     public function test_external_link_sets_exit_url() {
@@ -417,6 +438,10 @@ class AbandonedCartFakeDB {
         ];
         $recovered = $this->prefix . 'wc_ac_recovered';
         $this->data[$recovered] = [];
+        $activity = $this->prefix . 'wc_ac_cart_activity';
+        $this->data[$activity] = [];
+        $visits = $this->prefix . 'wc_ac_visit_log';
+        $this->data[$visits] = [];
     }
 
     public function prepare($query, $token) {

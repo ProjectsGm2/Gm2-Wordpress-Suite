@@ -311,7 +311,7 @@ After activating WooCommerce, open **Gm2 → Quantity Discounts** and click **Ad
 == Abandoned Carts ==
 Enable this module from **Gm2 → Dashboard**. The first time it runs the plugin creates four tables—`wp_wc_ac_carts`, `wp_wc_ac_email_queue`, `wp_wc_ac_recovered` and `wp_wc_ac_cart_activity`—to store cart sessions, queued messages, recovered orders and item‑level activity. A JavaScript snippet captures the shopper’s email on the checkout page, tracks browsing, and flags carts as abandoned when the last tab closes.
 
-The **Gm2 → Abandoned Carts** screen groups entries by IP address so multiple visits from the same shopper appear as a single row showing the latest cart value along with total browsing time and revisits. Click a row’s **Cart Activity Log** link to view the add/remove/quantity events recorded for that IP. Visit entries include the returning IP address plus entry and exit URLs with timestamps for each session.
+The **Gm2 → Abandoned Carts** screen groups entries by IP address so multiple visits from the same shopper appear as a single row showing the latest cart value along with total browsing time and revisits. Click a row’s **Cart Activity Log** link to view the add/remove/quantity events and revisit entry/exit actions recorded for that IP. Visit entries include the returning IP address plus entry and exit URLs with timestamps for each session.
 
 Activity pings that mark carts as active are throttled to one request every 30 seconds by default. Developers can adjust this interval with the `gm2_ac_active_interval_ms` filter.
 
