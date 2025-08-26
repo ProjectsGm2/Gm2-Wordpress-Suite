@@ -87,6 +87,7 @@ namespace {
         $map = [
             'chatgpt'     => '\\Gm2\\AI\\ChatGPTProvider',
             'gemma'       => '\\Gm2\\AI\\GemmaProvider',
+            'gemma_local' => '\\Gm2\\AI\\LocalGemmaProvider',
             'llama'       => '\\Gm2\\AI\\LlamaProvider',
             'llama_local' => '\\Gm2\\AI\\LocalLlamaProvider',
         ];
