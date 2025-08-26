@@ -683,6 +683,7 @@ class Gm2_Admin {
         $providers = [
             'chatgpt'     => 'ChatGPT',
             'gemma'       => 'Gemma',
+            'gemma_local' => 'Gemma (Local)',
             'llama'       => 'Llama',
             'llama_local' => 'Llama (Local)',
         ];
@@ -727,6 +728,18 @@ class Gm2_Admin {
         echo '<td><input type="password" id="gm2_gemma_api_key" name="gm2_gemma_api_key" value="' . esc_attr($gemma_key) . '" class="regular-text" /></td></tr>';
         echo '<tr><th scope="row"><label for="gm2_gemma_endpoint">' . esc_html__( 'API Endpoint', 'gm2-wordpress-suite' ) . '</label></th>';
         echo '<td><input type="text" id="gm2_gemma_endpoint" name="gm2_gemma_endpoint" value="' . esc_attr($gemma_endpoint) . '" class="regular-text" /></td></tr>';
+        echo '</tbody></table></div>';
+
+        $gemma_model  = get_option('gm2_gemma_model_path', '');
+        $gemma_binary = get_option('gm2_gemma_binary_path', '');
+        echo '<div class="gm2-provider-settings" data-provider="gemma_local">';
+        echo '<h2>' . esc_html__( 'Local Gemma', 'gm2-wordpress-suite' ) . '</h2>';
+        echo '<table class="form-table"><tbody>';
+        echo '<tr><th scope="row"><label for="gm2_gemma_model_path">' . esc_html__( 'Model Path', 'gm2-wordpress-suite' ) . '</label></th>';
+        echo '<td><input type="text" id="gm2_gemma_model_path" name="gm2_gemma_model_path" value="' . esc_attr($gemma_model) . '" class="regular-text" /></td></tr>';
+        echo '<tr><th scope="row"><label for="gm2_gemma_binary_path">' . esc_html__( 'Inference Binary Path', 'gm2-wordpress-suite' ) . '</label></th>';
+        echo '<td><input type="text" id="gm2_gemma_binary_path" name="gm2_gemma_binary_path" value="' . esc_attr($gemma_binary) . '" class="regular-text" /></td></tr>';
+        echo '<tr><th scope="row"></th><td><p class="description">' . esc_html__( 'Running Gemma locally requires substantial CPU/GPU and memory resources.', 'gm2-wordpress-suite' ) . '</p></td></tr>';
         echo '</tbody></table></div>';
 
         $llama_key      = get_option('gm2_llama_api_key', '');
@@ -833,7 +846,7 @@ class Gm2_Admin {
 
         check_admin_referer('gm2_ai_settings');
         $provider = isset($_POST['gm2_ai_provider']) ? sanitize_text_field($_POST['gm2_ai_provider']) : 'chatgpt';
-        $allowed  = ['chatgpt', 'gemma', 'llama', 'llama_local'];
+        $allowed  = ['chatgpt', 'gemma', 'gemma_local', 'llama', 'llama_local'];
         if (!in_array($provider, $allowed, true)) {
             $provider = 'chatgpt';
         }
@@ -858,6 +871,11 @@ class Gm2_Admin {
             $gemma_endpoint = isset($_POST['gm2_gemma_endpoint']) ? esc_url_raw($_POST['gm2_gemma_endpoint']) : '';
             update_option('gm2_gemma_api_key', $gemma_key);
             update_option('gm2_gemma_endpoint', $gemma_endpoint);
+        } elseif ($provider === 'gemma_local') {
+            $model_path  = isset($_POST['gm2_gemma_model_path']) ? sanitize_text_field($_POST['gm2_gemma_model_path']) : '';
+            $binary_path = isset($_POST['gm2_gemma_binary_path']) ? sanitize_text_field($_POST['gm2_gemma_binary_path']) : '';
+            update_option('gm2_gemma_model_path', $model_path);
+            update_option('gm2_gemma_binary_path', $binary_path);
         } elseif ($provider === 'llama') {
             $llama_key      = isset($_POST['gm2_llama_api_key']) ? sanitize_text_field($_POST['gm2_llama_api_key']) : '';
             $llama_endpoint = isset($_POST['gm2_llama_endpoint']) ? esc_url_raw($_POST['gm2_llama_endpoint']) : '';

@@ -1,6 +1,7 @@
 <?php
 use Gm2\AI\GemmaProvider as Gm2_Gemma;
 use Gm2\Gm2_Admin;
+use function Gm2\gm2_ai_send_prompt;
 
 class GemmaTest extends WP_UnitTestCase {
     public function test_query_returns_response() {
@@ -57,6 +58,9 @@ class GemmaTest extends WP_UnitTestCase {
         $out = ob_get_clean();
         $this->assertStringContainsString('gm2_gemma_api_key', $out);
         $this->assertStringContainsString('gm2_gemma_endpoint', $out);
+        $this->assertStringContainsString('gm2_gemma_model_path', $out);
+        $this->assertStringContainsString('gm2_gemma_binary_path', $out);
+        $this->assertStringContainsString('Gemma (Local)', $out);
     }
 
     public function test_form_saves_gemma_fields() {
@@ -70,6 +74,20 @@ class GemmaTest extends WP_UnitTestCase {
         $admin->handle_ai_settings_form();
         $this->assertSame('abc', get_option('gm2_gemma_api_key'));
         $this->assertSame('https://api.example.com', get_option('gm2_gemma_endpoint'));
+    }
+
+    public function test_form_allows_local_paths_without_api_key() {
+        $admin = new Gm2_Admin();
+        $user = self::factory()->user->create(['role' => 'administrator']);
+        wp_set_current_user($user);
+        $_POST['_wpnonce'] = wp_create_nonce('gm2_ai_settings');
+        $_POST['gm2_ai_provider'] = 'gemma_local';
+        $_POST['gm2_gemma_model_path'] = '/model';
+        $_POST['gm2_gemma_binary_path'] = '/binary';
+        $admin->handle_ai_settings_form();
+        $this->assertSame('/model', get_option('gm2_gemma_model_path'));
+        $this->assertSame('/binary', get_option('gm2_gemma_binary_path'));
+        $this->assertSame('', get_option('gm2_gemma_api_key'));
     }
 
     public function test_error_when_gemma_disabled() {
@@ -88,6 +106,15 @@ class GemmaTest extends WP_UnitTestCase {
         $res = $gemma->query('hi');
         $this->assertInstanceOf('WP_Error', $res);
         $this->assertSame('Gemma API key not set', $res->get_error_message());
+    }
+
+    public function test_gemma_local_provider_invoked() {
+        update_option('gm2_ai_provider', 'gemma_local');
+        update_option('gm2_gemma_binary_path', '/no/bin');
+        update_option('gm2_gemma_model_path', '/no/model');
+        $res = gm2_ai_send_prompt('hi');
+        $this->assertInstanceOf('WP_Error', $res);
+        $this->assertSame('binary_not_found', $res->get_error_code());
     }
 }
 
