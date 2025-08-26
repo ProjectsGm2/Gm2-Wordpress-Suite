@@ -714,5 +714,6 @@ if (defined('WP_CLI') && WP_CLI) {
     require_once GM2_PLUGIN_DIR . 'includes/cli/class-gm2-cli.php';
     require_once GM2_PLUGIN_DIR . 'includes/cli/class-gm2-migrate.php';
     require_once GM2_PLUGIN_DIR . 'includes/cli/class-gm2-model.php';
+    require_once GM2_PLUGIN_DIR . 'includes/cli/class-gm2-schema-audit.php';
 }
 
