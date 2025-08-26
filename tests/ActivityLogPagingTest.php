@@ -62,6 +62,25 @@ namespace {
             $this->assertSame('/p1', $last_visit['entry_url']);
             $this->assertFalse($last_visit['is_revisit']);
         }
+
+        public function test_includes_revisit_actions() {
+            global $wpdb;
+            $cart_id = 2;
+            $wpdb->insert($wpdb->prefix.'wc_ac_cart_activity',[
+                'cart_id'=>$cart_id,
+                'action'=>'revisit_entry',
+                'sku'=>'/start',
+                'quantity'=>0,
+                'changed_at'=>'2024-02-01 00:00:00'
+            ]);
+            $_POST = ['nonce'=>'n','cart_id'=>$cart_id];
+            \Gm2\Gm2_Abandoned_Carts::gm2_ac_get_activity();
+            $result = $GLOBALS['gm2_ajax_data'];
+            $this->assertTrue($result['success']);
+            $this->assertCount(1, $result['data']['activity']);
+            $this->assertSame('revisit_entry', $result['data']['activity'][0]['action']);
+            $this->assertSame('/start', $result['data']['activity'][0]['url']);
+        }
     }
 
     class FakeDB {
