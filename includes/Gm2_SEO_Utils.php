@@ -85,9 +85,10 @@ namespace {
     function gm2_ai_send_prompt($prompt, $args = []) {
         $provider = get_option('gm2_ai_provider', 'chatgpt');
         $map = [
-            'chatgpt' => '\\Gm2\\AI\\ChatGPTProvider',
-            'gemma'   => '\\Gm2\\AI\\GemmaProvider',
-            'llama'   => '\\Gm2\\AI\\LlamaProvider',
+            'chatgpt'     => '\\Gm2\\AI\\ChatGPTProvider',
+            'gemma'       => '\\Gm2\\AI\\GemmaProvider',
+            'llama'       => '\\Gm2\\AI\\LlamaProvider',
+            'llama_local' => '\\Gm2\\AI\\LocalLlamaProvider',
         ];
         $class = $map[$provider] ?? $map['chatgpt'];
 

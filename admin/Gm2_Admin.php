@@ -680,7 +680,12 @@ class Gm2_Admin {
         echo '<table class="form-table"><tbody>';
         echo '<tr><th scope="row"><label for="gm2_ai_provider">' . esc_html__( 'Provider', 'gm2-wordpress-suite' ) . '</label></th>';
         echo '<td><select id="gm2_ai_provider" name="gm2_ai_provider">';
-        $providers = ['chatgpt' => 'ChatGPT', 'gemma' => 'Gemma', 'llama' => 'Llama'];
+        $providers = [
+            'chatgpt'     => 'ChatGPT',
+            'gemma'       => 'Gemma',
+            'llama'       => 'Llama',
+            'llama_local' => 'Llama (Local)',
+        ];
         foreach ($providers as $slug => $label) {
             $selected = selected($provider, $slug, false);
             echo '<option value="' . esc_attr($slug) . '"' . $selected . '>' . esc_html($label) . '</option>';
@@ -726,15 +731,18 @@ class Gm2_Admin {
 
         $llama_key      = get_option('gm2_llama_api_key', '');
         $llama_endpoint = get_option('gm2_llama_endpoint', '');
-        $llama_model    = get_option('gm2_llama_model_path', '');
-        $llama_binary   = get_option('gm2_llama_binary_path', '');
-        echo '<div class="gm2-provider-settings" data-provider="llama">';
-        echo '<h2>' . esc_html__( 'Local Llama', 'gm2-wordpress-suite' ) . '</h2>';
-        echo '<table class="form-table"><tbody>';
+        echo '<div class="gm2-provider-settings" data-provider="llama"><table class="form-table"><tbody>';
         echo '<tr><th scope="row"><label for="gm2_llama_api_key">' . esc_html__( 'API Key', 'gm2-wordpress-suite' ) . '</label></th>';
         echo '<td><input type="password" id="gm2_llama_api_key" name="gm2_llama_api_key" value="' . esc_attr($llama_key) . '" class="regular-text" /></td></tr>';
         echo '<tr><th scope="row"><label for="gm2_llama_endpoint">' . esc_html__( 'API Endpoint', 'gm2-wordpress-suite' ) . '</label></th>';
         echo '<td><input type="text" id="gm2_llama_endpoint" name="gm2_llama_endpoint" value="' . esc_attr($llama_endpoint) . '" class="regular-text" /></td></tr>';
+        echo '</tbody></table></div>';
+
+        $llama_model  = get_option('gm2_llama_model_path', '');
+        $llama_binary = get_option('gm2_llama_binary_path', '');
+        echo '<div class="gm2-provider-settings" data-provider="llama_local">';
+        echo '<h2>' . esc_html__( 'Local Llama', 'gm2-wordpress-suite' ) . '</h2>';
+        echo '<table class="form-table"><tbody>';
         echo '<tr><th scope="row"><label for="gm2_llama_model_path">' . esc_html__( 'Model Path', 'gm2-wordpress-suite' ) . '</label></th>';
         echo '<td><input type="text" id="gm2_llama_model_path" name="gm2_llama_model_path" value="' . esc_attr($llama_model) . '" class="regular-text" /></td></tr>';
         echo '<tr><th scope="row"><label for="gm2_llama_binary_path">' . esc_html__( 'Inference Binary Path', 'gm2-wordpress-suite' ) . '</label></th>';
@@ -825,7 +833,7 @@ class Gm2_Admin {
 
         check_admin_referer('gm2_ai_settings');
         $provider = isset($_POST['gm2_ai_provider']) ? sanitize_text_field($_POST['gm2_ai_provider']) : 'chatgpt';
-        $allowed  = ['chatgpt', 'gemma', 'llama'];
+        $allowed  = ['chatgpt', 'gemma', 'llama', 'llama_local'];
         if (!in_array($provider, $allowed, true)) {
             $provider = 'chatgpt';
         }
@@ -853,16 +861,13 @@ class Gm2_Admin {
         } elseif ($provider === 'llama') {
             $llama_key      = isset($_POST['gm2_llama_api_key']) ? sanitize_text_field($_POST['gm2_llama_api_key']) : '';
             $llama_endpoint = isset($_POST['gm2_llama_endpoint']) ? esc_url_raw($_POST['gm2_llama_endpoint']) : '';
-            $model_path     = isset($_POST['gm2_llama_model_path']) ? sanitize_text_field($_POST['gm2_llama_model_path']) : '';
-            $binary_path    = isset($_POST['gm2_llama_binary_path']) ? sanitize_text_field($_POST['gm2_llama_binary_path']) : '';
             update_option('gm2_llama_api_key', $llama_key);
             update_option('gm2_llama_endpoint', $llama_endpoint);
+        } elseif ($provider === 'llama_local') {
+            $model_path  = isset($_POST['gm2_llama_model_path']) ? sanitize_text_field($_POST['gm2_llama_model_path']) : '';
+            $binary_path = isset($_POST['gm2_llama_binary_path']) ? sanitize_text_field($_POST['gm2_llama_binary_path']) : '';
             update_option('gm2_llama_model_path', $model_path);
             update_option('gm2_llama_binary_path', $binary_path);
-            // Skip API key validation when a local model is provided
-            if ($model_path !== '' && $llama_key === '') {
-                // local inference selected; API key not required
-            }
         }
 
         wp_redirect(admin_url('admin.php?page=gm2-ai&updated=1'));

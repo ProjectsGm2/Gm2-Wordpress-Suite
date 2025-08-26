@@ -1,6 +1,7 @@
 <?php
 use Gm2\AI\LlamaProvider as Gm2_Llama;
 use Gm2\Gm2_Admin;
+use function Gm2\gm2_ai_send_prompt;
 
 class LlamaTest extends WP_UnitTestCase {
     public function test_query_returns_response() {
@@ -61,6 +62,7 @@ class LlamaTest extends WP_UnitTestCase {
         $this->assertStringContainsString('gm2_llama_endpoint', $out);
         $this->assertStringContainsString('gm2_llama_model_path', $out);
         $this->assertStringContainsString('gm2_llama_binary_path', $out);
+        $this->assertStringContainsString('Llama (Local)', $out);
     }
 
     public function test_form_saves_llama_fields() {
@@ -71,13 +73,9 @@ class LlamaTest extends WP_UnitTestCase {
         $_POST['gm2_ai_provider'] = 'llama';
         $_POST['gm2_llama_api_key'] = 'abc';
         $_POST['gm2_llama_endpoint'] = 'https://api.example.com';
-        $_POST['gm2_llama_model_path'] = '/path/to/model';
-        $_POST['gm2_llama_binary_path'] = '/path/to/bin';
         $admin->handle_ai_settings_form();
         $this->assertSame('abc', get_option('gm2_llama_api_key'));
         $this->assertSame('https://api.example.com', get_option('gm2_llama_endpoint'));
-        $this->assertSame('/path/to/model', get_option('gm2_llama_model_path'));
-        $this->assertSame('/path/to/bin', get_option('gm2_llama_binary_path'));
     }
 
     public function test_form_allows_local_paths_without_api_key() {
@@ -85,9 +83,7 @@ class LlamaTest extends WP_UnitTestCase {
         $user = self::factory()->user->create(['role' => 'administrator']);
         wp_set_current_user($user);
         $_POST['_wpnonce'] = wp_create_nonce('gm2_ai_settings');
-        $_POST['gm2_ai_provider'] = 'llama';
-        $_POST['gm2_llama_api_key'] = '';
-        $_POST['gm2_llama_endpoint'] = '';
+        $_POST['gm2_ai_provider'] = 'llama_local';
         $_POST['gm2_llama_model_path'] = '/model';
         $_POST['gm2_llama_binary_path'] = '/binary';
         $admin->handle_ai_settings_form();
@@ -112,6 +108,15 @@ class LlamaTest extends WP_UnitTestCase {
         $res = $llama->query('hi');
         $this->assertInstanceOf('WP_Error', $res);
         $this->assertSame('Llama API key not set', $res->get_error_message());
+    }
+
+    public function test_llama_local_provider_invoked() {
+        update_option('gm2_ai_provider', 'llama_local');
+        update_option('gm2_llama_binary_path', '/no/bin');
+        update_option('gm2_llama_model_path', '/no/model');
+        $res = gm2_ai_send_prompt('hi');
+        $this->assertInstanceOf('WP_Error', $res);
+        $this->assertSame('binary_not_found', $res->get_error_code());
     }
 }
 
