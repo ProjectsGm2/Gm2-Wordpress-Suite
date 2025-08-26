@@ -726,11 +726,20 @@ class Gm2_Admin {
 
         $llama_key      = get_option('gm2_llama_api_key', '');
         $llama_endpoint = get_option('gm2_llama_endpoint', '');
-        echo '<div class="gm2-provider-settings" data-provider="llama"><table class="form-table"><tbody>';
+        $llama_model    = get_option('gm2_llama_model_path', '');
+        $llama_binary   = get_option('gm2_llama_binary_path', '');
+        echo '<div class="gm2-provider-settings" data-provider="llama">';
+        echo '<h2>' . esc_html__( 'Local Llama', 'gm2-wordpress-suite' ) . '</h2>';
+        echo '<table class="form-table"><tbody>';
         echo '<tr><th scope="row"><label for="gm2_llama_api_key">' . esc_html__( 'API Key', 'gm2-wordpress-suite' ) . '</label></th>';
         echo '<td><input type="password" id="gm2_llama_api_key" name="gm2_llama_api_key" value="' . esc_attr($llama_key) . '" class="regular-text" /></td></tr>';
         echo '<tr><th scope="row"><label for="gm2_llama_endpoint">' . esc_html__( 'API Endpoint', 'gm2-wordpress-suite' ) . '</label></th>';
         echo '<td><input type="text" id="gm2_llama_endpoint" name="gm2_llama_endpoint" value="' . esc_attr($llama_endpoint) . '" class="regular-text" /></td></tr>';
+        echo '<tr><th scope="row"><label for="gm2_llama_model_path">' . esc_html__( 'Model Path', 'gm2-wordpress-suite' ) . '</label></th>';
+        echo '<td><input type="text" id="gm2_llama_model_path" name="gm2_llama_model_path" value="' . esc_attr($llama_model) . '" class="regular-text" /></td></tr>';
+        echo '<tr><th scope="row"><label for="gm2_llama_binary_path">' . esc_html__( 'Inference Binary Path', 'gm2-wordpress-suite' ) . '</label></th>';
+        echo '<td><input type="text" id="gm2_llama_binary_path" name="gm2_llama_binary_path" value="' . esc_attr($llama_binary) . '" class="regular-text" /></td></tr>';
+        echo '<tr><th scope="row"></th><td><p class="description">' . esc_html__( 'Running Llama locally requires substantial CPU/GPU and memory resources.', 'gm2-wordpress-suite' ) . '</p></td></tr>';
         echo '</tbody></table></div>';
 
         submit_button();
@@ -844,8 +853,16 @@ class Gm2_Admin {
         } elseif ($provider === 'llama') {
             $llama_key      = isset($_POST['gm2_llama_api_key']) ? sanitize_text_field($_POST['gm2_llama_api_key']) : '';
             $llama_endpoint = isset($_POST['gm2_llama_endpoint']) ? esc_url_raw($_POST['gm2_llama_endpoint']) : '';
+            $model_path     = isset($_POST['gm2_llama_model_path']) ? sanitize_text_field($_POST['gm2_llama_model_path']) : '';
+            $binary_path    = isset($_POST['gm2_llama_binary_path']) ? sanitize_text_field($_POST['gm2_llama_binary_path']) : '';
             update_option('gm2_llama_api_key', $llama_key);
             update_option('gm2_llama_endpoint', $llama_endpoint);
+            update_option('gm2_llama_model_path', $model_path);
+            update_option('gm2_llama_binary_path', $binary_path);
+            // Skip API key validation when a local model is provided
+            if ($model_path !== '' && $llama_key === '') {
+                // local inference selected; API key not required
+            }
         }
 
         wp_redirect(admin_url('admin.php?page=gm2-ai&updated=1'));

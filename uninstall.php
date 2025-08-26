@@ -21,7 +21,7 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 // gm2_compression_api_key, gm2_compression_api_url, gm2_minify_html, gm2_minify_css,
 // gm2_minify_js, gm2_chatgpt_api_key, gm2_chatgpt_model, gm2_chatgpt_temperature,
 // gm2_chatgpt_max_tokens, gm2_chatgpt_endpoint, gm2_gemma_api_key, gm2_gemma_endpoint,
-// gm2_llama_api_key, gm2_llama_endpoint, gm2_pagespeed_api_key, gm2_pagespeed_scores,
+// gm2_llama_api_key, gm2_llama_endpoint, gm2_llama_model_path, gm2_llama_binary_path, gm2_pagespeed_api_key, gm2_pagespeed_scores,
 // gm2_bulk_ai_page_size, gm2_bulk_ai_status, gm2_bulk_ai_post_type, gm2_bulk_ai_term.
 $option_names = array(
     'gm2_suite_settings',
@@ -74,6 +74,8 @@ $option_names = array(
     'gm2_gemma_endpoint',
     'gm2_llama_api_key',
     'gm2_llama_endpoint',
+    'gm2_llama_model_path',
+    'gm2_llama_binary_path',
     'gm2_min_internal_links',
     'gm2_min_external_links',
     'gm2_enable_tariff',
