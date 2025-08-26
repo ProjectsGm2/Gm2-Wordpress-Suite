@@ -1061,7 +1061,7 @@ class Gm2_Custom_Posts_Admin {
         $table->prepare_items();
         echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
         echo '<input type="hidden" name="action" value="gm2_delete_post_type" />';
-        wp_nonce_field( 'bulk-posts', '_wpnonce', true, false );
+        wp_nonce_field( 'bulk-posts' );
         $table->display();
         echo '</form>';
 
