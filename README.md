@@ -16,6 +16,25 @@ This script creates a `gm2-wordpress-suite.zip` file that includes the plugin an
 
 The suite can generate content using multiple AI services. Select **ChatGPT**, **Gemma**, or **Llama** from the **Gm2 → AI Settings** page and enter the corresponding API key and optional endpoint. The chosen provider is used throughout the plugin for AI-powered features.
 
+### Running Gemma Locally
+
+The plugin can invoke a local Gemma binary instead of a remote API.
+
+**Requirements**
+
+- The Gemma inference binary installed on the server (defaults to `/usr/local/bin/gemma`).
+- A downloaded Gemma model file accessible to PHP.
+
+**Configuration**
+
+1. Open **Gm2 → AI Settings** and choose **Gemma (Local)**.
+2. Provide the full paths to the model and inference binary.
+3. Save the settings.
+
+**Performance considerations**
+
+Running Gemma locally is CPU/GPU and memory intensive. Each request executes the binary and blocks until it finishes, so low-powered or shared hosts may experience slowdowns. Use dedicated hardware or offload heavy tasks to background jobs if possible.
+
 ## Running Tests
 
 The PHPUnit tests rely on the official WordPress test suite. Before running the tests you must install the suite using the helper script provided in `bin`.
