@@ -8,6 +8,8 @@ class ScriptAttributesTest extends WP_UnitTestCase {
         wp_deregister_script('gm2-foo');
         wp_dequeue_script('gm2-bar');
         wp_deregister_script('gm2-bar');
+        wp_dequeue_script('gm2-baz');
+        wp_deregister_script('gm2-baz');
         wp_scripts()->done = [];
         delete_option('gm2_script_attributes');
         parent::tearDown();
@@ -89,5 +91,53 @@ class ScriptAttributesTest extends WP_UnitTestCase {
         $this->assertStringContainsString('async', $barTag);
         $this->assertStringNotContainsString('async', $fooTag);
         $this->assertStringNotContainsString('defer', $fooTag);
+    }
+
+    public function test_blocking_dependency_propagates_through_chain() {
+        update_option('gm2_script_attributes', [
+            'gm2-foo' => 'async',
+            'gm2-bar' => 'defer',
+            'gm2-baz' => 'blocking',
+        ]);
+        wp_register_script('gm2-baz', 'https://example.com/baz.js', [], null);
+        wp_register_script('gm2-bar', 'https://example.com/bar.js', ['gm2-baz'], null);
+        wp_register_script('gm2-foo', 'https://example.com/foo.js', ['gm2-bar'], null);
+        wp_enqueue_script('gm2-foo');
+        $html   = $this->get_output('gm2-foo');
+        $bazTag = $this->extract_tag($html, 'gm2-baz');
+        $barTag = $this->extract_tag($html, 'gm2-bar');
+        $fooTag = $this->extract_tag($html, 'gm2-foo');
+        $this->assertStringNotContainsString('async', $bazTag);
+        $this->assertStringNotContainsString('defer', $bazTag);
+        $this->assertStringNotContainsString('async', $barTag);
+        $this->assertStringNotContainsString('defer', $barTag);
+        $this->assertStringNotContainsString('async', $fooTag);
+        $this->assertStringNotContainsString('defer', $fooTag);
+    }
+
+    public function test_dependency_without_attribute_omits_async() {
+        update_option('gm2_script_attributes', [ 'gm2-foo' => 'async' ]);
+        wp_register_script('gm2-bar', 'https://example.com/bar.js', [], null);
+        wp_register_script('gm2-foo', 'https://example.com/foo.js', ['gm2-bar'], null);
+        wp_enqueue_script('gm2-foo');
+        $html   = $this->get_output('gm2-foo');
+        $barTag = $this->extract_tag($html, 'gm2-bar');
+        $fooTag = $this->extract_tag($html, 'gm2-foo');
+        $this->assertStringNotContainsString('async', $barTag);
+        $this->assertStringNotContainsString('defer', $barTag);
+        $this->assertStringNotContainsString('async', $fooTag);
+        $this->assertStringNotContainsString('defer', $fooTag);
+    }
+
+    public function test_markup_is_valid_and_no_document_write() {
+        update_option('gm2_script_attributes', [ 'gm2-foo' => 'defer' ]);
+        wp_register_script('gm2-foo', 'https://example.com/foo.js', [], null);
+        wp_enqueue_script('gm2-foo');
+        $html = $this->get_output('gm2-foo');
+        $this->assertStringNotContainsString('document.write', $html);
+        libxml_use_internal_errors(true);
+        $dom = new DOMDocument();
+        $dom->loadHTML('<html><head>' . $html . '</head></html>');
+        $this->assertNotNull($dom->getElementById('gm2-foo-js'));
     }
 }
