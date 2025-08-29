@@ -201,6 +201,7 @@ function gm2_activate_plugin() {
     add_option('gm2_setup_complete', '0');
     add_option('gm2_do_activation_redirect', '1');
     add_option('gm2_remote_mirror_vendors', []);
+    add_option('gm2_remote_mirror_custom_urls', []);
 
     global $wpdb;
     $table_name = $wpdb->prefix . 'gm2_analytics_log';
