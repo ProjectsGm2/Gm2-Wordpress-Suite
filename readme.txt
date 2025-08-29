@@ -3,7 +3,7 @@ Contributors: gm2team
 Tags: admin, tools, suite, performance
 Requires at least: 6.0
 Tested up to: 6.5
-Stable tag: 1.6.18
+Stable tag: 1.6.19
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -25,6 +25,7 @@ Key features include:
 * Real-time Google Merchant Centre data via REST endpoint
 * Cache Audit screen checks caching headers and flags assets needing attention
 * Optional Pretty Versioned URLs convert `file.css?ver=123` into `file.v123.css` with Apache and Nginx rewrite rules
+* Remote mirror for vendor scripts like Facebook Pixel and gtag with SRI hashes and a daily refresh
 
 == Installation ==
 1. Upload the plugin files to the `/wp-content/plugins/gm2-wordpress-suite` directory.
@@ -142,6 +143,13 @@ screen. To enable these options:
 
 For full page caching, hook into the `gm2_set_cache_headers` action
 to configure headers or integrate your preferred caching plugin.
+
+== Remote Mirror ==
+Enable local copies of tracking scripts from **SEO → Performance → Remote Mirror**.
+Check **Facebook Pixel** or **Google gtag** to mirror those vendors. You can also
+enter custom script URLs—such as your own CDN—one per line to mirror additional
+files. Each mirrored script lists its SHA-256 hash for optional SRI attributes, and
+the cache refreshes daily via WP-Cron.
 
 == Keyword Research ==
 After configuring credentials in **Gm2 → Google OAuth Setup**, connect your Google account from **SEO → Connect Google Account**. The plugin automatically fetches your available Analytics Measurement IDs and Ads Customer IDs so you can select them from dropdown menus. Use the **Keyword Research** tab or the AI SEO workflow to generate ideas via the Google Keyword Planner. To fetch keywords you must enter a Google Ads developer token, connect a Google account with Ads access, and select a valid Ads customer ID (without dashes, e.g., `1234567890`). Missing or invalid credentials will result in empty or failed searches. If your developer token belongs to a manager account, provide the optional Login Customer ID so the value is sent with each request.
@@ -380,6 +388,8 @@ the last 100 missing URLs to help you create new redirects.
 * **Real-time character counts** – display running totals in the SEO meta box.
 
 == Changelog ==
+= 1.6.19 =
+* Added Remote Mirror for Facebook Pixel and gtag with vendor checkboxes, SHA-256 hash display and daily cache refresh.
 = 1.6.18 =
 * SEO context options are cached per request so repeated calls avoid extra database queries.
 = 1.6.17 =

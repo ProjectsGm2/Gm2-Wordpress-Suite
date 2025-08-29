@@ -116,6 +116,13 @@ To skip this behavior for a specific handle, pass `['no_auto_version' => true]`
 as the final argument when calling `wp_register_style()` or
 `wp_register_script()`. The original `ver` value will then be preserved.
 
+## Remote Script Mirroring
+
+The **Remote Mirror** feature caches third-party tracking scripts locally and rewrites
+their URLs on the front end. Enable vendors like Facebook Pixel or Google gtag with
+simple checkboxes, view the SHA-256 hash for each mirrored file to use in SRI
+attributes, and rely on the built-in daily refresh to keep copies current.
+
 ## Sitemap Path Option
 
 The plugin stores the generated XML sitemap at `sitemap.xml` in the WordPress
