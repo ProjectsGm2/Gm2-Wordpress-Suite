@@ -116,6 +116,24 @@ To skip this behavior for a specific handle, pass `['no_auto_version' => true]`
 as the final argument when calling `wp_register_style()` or
 `wp_register_script()`. The original `ver` value will then be preserved.
 
+## Script Attributes
+
+Control how front-end scripts load by assigning **Blocking**, **Defer**, or
+**Async** attributes per handle. Handles default to `defer`, but the plugin
+walks WordPress dependencies: a handle becomes blocking if any dependency is
+blocking, and it loses its attribute when a dependency is marked `async` or
+otherwise non-deferred.
+
+Use the presets on **SEO → Performance → Script Loading**:
+
+* **Defer all third-party** – marks WordPress core handles as blocking and
+  defers everything else.
+* **Conservative** – only sets core handles to blocking, letting other scripts
+  fall back to the default `defer`.
+
+Scripts that call `document.write` or expect synchronous execution should stay
+blocking. Deferring these scripts can break page output or tracking snippets.
+
 ## Remote Script Mirroring
 
 The **Remote Mirror** feature caches third-party tracking scripts locally and rewrites

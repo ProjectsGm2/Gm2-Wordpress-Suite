@@ -26,6 +26,7 @@ Key features include:
 * Cache Audit screen checks caching headers and flags assets needing attention
 * Optional Pretty Versioned URLs convert `file.css?ver=123` into `file.v123.css` with Apache and Nginx rewrite rules
 * Remote mirror for vendor scripts like Facebook Pixel and gtag with SRI hashes and a daily refresh
+* Script Attributes manager with dependency-aware “Defer all third-party” and “Conservative” presets
 
 == Installation ==
 1. Upload the plugin files to the `/wp-content/plugins/gm2-wordpress-suite` directory.
@@ -83,6 +84,23 @@ Filter by asset type, host or status, click **Re-scan** to run the scan again or
 individual sites from the Network Admin and audit each separately. Access requires
 `manage_options` (`manage_network` on multisite). Results, including the last run
 timestamp, are stored in the `gm2_cache_audit_results` option.
+
+== Script Attributes ==
+Control how front-end scripts load from **SEO → Performance → Script Loading**.
+Assign **Blocking**, **Defer**, or **Async** per handle. Handles default to
+`defer`, but the plugin evaluates dependencies so a handle becomes blocking if
+any dependency is blocking, and it drops its attribute when a dependency is
+`async` or otherwise non-deferred.
+
+Presets help configure common setups:
+
+* **Defer all third-party** – marks WordPress core handles as blocking and
+  defers everything else.
+* **Conservative** – only marks core handles as blocking; other scripts fall
+  back to the default `defer`.
+
+Scripts using `document.write` or requiring synchronous execution should remain
+blocking, since deferring them can break output or analytics tags.
 
 == Google integration ==
 These credentials must be copied from your Google accounts:
