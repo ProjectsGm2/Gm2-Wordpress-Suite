@@ -491,21 +491,23 @@ class Gm2_SEO_Public {
             $robots[] = 'max-video-preview:' . $data['max_video_preview'];
         }
         $keywords = '';
-        $fw = trim($data['focus_keywords']);
-        $lt = trim($data['long_tail_keywords']);
-        if ($fw !== '' || $lt !== '') {
-            $parts = [];
-            foreach ([$fw, $lt] as $list) {
-                if ($list !== '') {
-                    foreach (explode(',', $list) as $k) {
-                        $k = trim($k);
-                        if ($k !== '') {
-                            $parts[] = $k;
+        if (get_option('gm2_meta_keywords_enabled', '0') === '1') {
+            $fw = trim($data['focus_keywords']);
+            $lt = trim($data['long_tail_keywords']);
+            if ($fw !== '' || $lt !== '') {
+                $parts = [];
+                foreach ([$fw, $lt] as $list) {
+                    if ($list !== '') {
+                        foreach (explode(',', $list) as $k) {
+                            $k = trim($k);
+                            if ($k !== '') {
+                                $parts[] = $k;
+                            }
                         }
                     }
                 }
+                $keywords = implode(', ', array_unique($parts));
             }
-            $keywords = implode(', ', array_unique($parts));
         }
         $canonical   = $data['canonical'];
         $og_image_id = $data['og_image'];
