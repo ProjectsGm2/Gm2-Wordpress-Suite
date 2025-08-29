@@ -10,7 +10,7 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 // ChatGPT configuration. Taxonomy and post type specific
 // guideline options are removed further below.
 // Removed options: gm2_suite_settings, gm2_suite_version, gm2_content_rules,
-// gm2_ga_measurement_id, gm2_search_console_verification, gm2_gads_developer_token,
+// gm2_ga_measurement_id, gm2_search_console_verification, gm2_twitter_site, gm2_twitter_creator, gm2_gads_developer_token,
 // gm2_gads_client_id, gm2_gads_client_secret, gm2_gads_refresh_token, gm2_gads_customer_id,
 // gm2_gads_login_customer_id, gm2_gads_language, gm2_gads_geo_target, gm2_google_refresh_token,
 // gm2_google_access_token, gm2_google_expires_at, gm2_google_profile, gm2_redirects, gm2_404_logs,
@@ -31,6 +31,8 @@ $option_names = array(
     'gm2_guideline_rules',
     'gm2_ga_measurement_id',
     'gm2_search_console_verification',
+    'gm2_twitter_site',
+    'gm2_twitter_creator',
     'gm2_gads_developer_token',
     'gm2_gads_client_id',
     'gm2_gads_client_secret',

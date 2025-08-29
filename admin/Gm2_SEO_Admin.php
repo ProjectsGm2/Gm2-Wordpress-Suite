@@ -395,6 +395,12 @@ class Gm2_SEO_Admin {
         register_setting('gm2_seo_options', 'gm2_search_console_verification', [
             'sanitize_callback' => 'sanitize_text_field',
         ]);
+        register_setting('gm2_seo_options', 'gm2_twitter_site', [
+            'sanitize_callback' => 'sanitize_text_field',
+        ]);
+        register_setting('gm2_seo_options', 'gm2_twitter_creator', [
+            'sanitize_callback' => 'sanitize_text_field',
+        ]);
         register_setting('gm2_seo_options', 'gm2_gads_developer_token', [
             'sanitize_callback' => 'sanitize_text_field',
         ]);
@@ -555,6 +561,28 @@ class Gm2_SEO_Admin {
                 $value = get_option('gm2_ga_measurement_id', '');
                 echo '<input type="text" name="gm2_ga_measurement_id" value="' . esc_attr($value) . '" class="regular-text" />';
                 echo '<p class="description">Use <strong>SEO → Connect Google Account</strong> to fetch available IDs.</p>';
+            },
+            'gm2_seo',
+            'gm2_seo_main'
+        );
+
+        add_settings_field(
+            'gm2_twitter_site',
+            'Twitter Site',
+            function () {
+                $value = get_option('gm2_twitter_site', '');
+                echo '<input type="text" name="gm2_twitter_site" value="' . esc_attr($value) . '" class="regular-text" />';
+            },
+            'gm2_seo',
+            'gm2_seo_main'
+        );
+
+        add_settings_field(
+            'gm2_twitter_creator',
+            'Twitter Creator',
+            function () {
+                $value = get_option('gm2_twitter_creator', '');
+                echo '<input type="text" name="gm2_twitter_creator" value="' . esc_attr($value) . '" class="regular-text" />';
             },
             'gm2_seo',
             'gm2_seo_main'
@@ -2626,6 +2654,8 @@ class Gm2_SEO_Admin {
 
         $ga_id  = isset($_POST['gm2_ga_measurement_id']) ? sanitize_text_field($_POST['gm2_ga_measurement_id']) : '';
         $sc_ver = isset($_POST['gm2_search_console_verification']) ? sanitize_text_field($_POST['gm2_search_console_verification']) : '';
+        $tw_site = isset($_POST['gm2_twitter_site']) ? sanitize_text_field($_POST['gm2_twitter_site']) : '';
+        $tw_creator = isset($_POST['gm2_twitter_creator']) ? sanitize_text_field($_POST['gm2_twitter_creator']) : '';
         $token  = isset($_POST['gm2_gads_developer_token']) ? sanitize_text_field($_POST['gm2_gads_developer_token']) : '';
         $cust   = isset($_POST['gm2_gads_customer_id']) ? $this->sanitize_customer_id($_POST['gm2_gads_customer_id']) : '';
         $clean  = isset($_POST['gm2_clean_slugs']) ? '1' : '0';
@@ -2634,6 +2664,8 @@ class Gm2_SEO_Admin {
 
         update_option('gm2_ga_measurement_id', $ga_id);
         update_option('gm2_search_console_verification', $sc_ver);
+        update_option('gm2_twitter_site', $tw_site);
+        update_option('gm2_twitter_creator', $tw_creator);
         update_option('gm2_gads_developer_token', $token);
         update_option('gm2_gads_customer_id', $cust);
         update_option('gm2_clean_slugs', $clean);
