@@ -219,6 +219,7 @@ function gm2_activate_plugin() {
 
     gm2_maybe_add_indexes();
     \Gm2\Gm2_Cache_Headers_Apache::maybe_apply();
+    \Gm2\Gm2_Cache_Headers_Nginx::maybe_apply();
 }
 register_activation_hook(__FILE__, 'gm2_activate_plugin');
 

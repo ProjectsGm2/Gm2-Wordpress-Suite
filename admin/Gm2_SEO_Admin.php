@@ -50,6 +50,8 @@ class Gm2_SEO_Admin {
         add_action('admin_post_gm2_insert_cache_rules', [$this, 'handle_insert_cache_rules']);
         add_action('admin_post_gm2_remove_cache_rules', [$this, 'handle_remove_cache_rules']);
         add_action('admin_post_gm2_redirects', [$this, 'handle_redirects_form']);
+        add_action('admin_post_gm2_generate_nginx_cache', [$this, 'handle_generate_nginx_cache']);
+        add_action('admin_post_gm2_verify_nginx_cache', [$this, 'handle_verify_nginx_cache']);
         add_action('admin_post_gm2_content_rules', [$this, 'handle_content_rules_form']);
         add_action('admin_post_gm2_guideline_rules', [$this, 'handle_guideline_rules_form']);
         add_action('admin_post_gm2_general_settings', [$this, 'handle_general_settings_form']);
@@ -932,33 +934,69 @@ class Gm2_SEO_Admin {
                 echo '<div class="updated notice"><p>' . esc_html__('Settings saved.', 'gm2-wordpress-suite') . '</p></div>';
             }
 
+            if (!empty($_GET['nginx_cache_written'])) {
+                echo '<div class="updated notice"><p>' . esc_html__('Snippet saved.', 'gm2-wordpress-suite') . '</p></div>';
+            }
+            if (isset($_GET['nginx_cache_verified'])) {
+                if ($_GET['nginx_cache_verified']) {
+                    echo '<div class="updated notice"><p>' . esc_html__('Headers verified.', 'gm2-wordpress-suite') . '</p></div>';
+                } else {
+                    echo '<div class="error notice"><p>' . esc_html__('Headers not found.', 'gm2-wordpress-suite') . '</p></div>';
+                }
+            }
+
             echo '<h2>' . esc_html__('Cache Headers', 'gm2-wordpress-suite') . '</h2>';
-            if (Gm2_Cache_Headers_Apache::cdn_sets_cache_headers()) {
-                $status = esc_html__('CDN detected', 'gm2-wordpress-suite');
-            } elseif (Gm2_Cache_Headers_Apache::rules_exist()) {
-                $status = esc_html__('Written', 'gm2-wordpress-suite');
+            if (Gm2_Cache_Headers_Nginx::is_supported_server()) {
+                $file = Gm2_Cache_Headers_Nginx::get_file_path();
+                if (Gm2_Cache_Headers_Nginx::verify()) {
+                    $status = esc_html__('Verified', 'gm2-wordpress-suite');
+                } elseif (Gm2_Cache_Headers_Nginx::rules_exist()) {
+                    $status = esc_html__('Generated', 'gm2-wordpress-suite');
+                } else {
+                    $status = esc_html__('Not generated', 'gm2-wordpress-suite');
+                }
+                echo '<p>' . sprintf(esc_html__('Status: %s', 'gm2-wordpress-suite'), $status) . '</p>';
+                echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
+                wp_nonce_field('gm2_generate_nginx_cache');
+                echo '<input type="hidden" name="action" value="gm2_generate_nginx_cache" />';
+                submit_button(esc_html__('Save Snippet', 'gm2-wordpress-suite'));
+                echo '</form>';
+                echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
+                wp_nonce_field('gm2_verify_nginx_cache');
+                echo '<input type="hidden" name="action" value="gm2_verify_nginx_cache" />';
+                submit_button(esc_html__('Verify', 'gm2-wordpress-suite'), 'secondary');
+                echo '</form>';
+                echo '<p><strong>' . esc_html__('How to apply', 'gm2-wordpress-suite') . '</strong></p>';
+                echo '<ol>';
+                echo '<li>' . esc_html__('Save the snippet to generate the configuration file.', 'gm2-wordpress-suite') . '</li>';
+                echo '<li>' . esc_html__('Include the file in your Nginx server block:', 'gm2-wordpress-suite') . '<br><code>include ' . esc_html($file) . ';</code></li>';
+                echo '<li>' . esc_html__('Reload Nginx.', 'gm2-wordpress-suite') . '</li>';
+                echo '</ol>';
+                echo '<textarea readonly class="large-text code" rows="12">' . esc_textarea(Gm2_Cache_Headers_Nginx::$rules) . '</textarea>';
             } else {
-                $status = esc_html__('Not written', 'gm2-wordpress-suite');
+                if (Gm2_Cache_Headers_Apache::cdn_sets_cache_headers()) {
+                    $status = esc_html__('CDN detected', 'gm2-wordpress-suite');
+                } elseif (Gm2_Cache_Headers_Apache::rules_exist()) {
+                    $status = esc_html__('Written', 'gm2-wordpress-suite');
+                } else {
+                    $status = esc_html__('Not written', 'gm2-wordpress-suite');
+                }
+                echo '<p>' . sprintf(esc_html__('Status: %s', 'gm2-wordpress-suite'), $status) . '</p>';
+                echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
+                wp_nonce_field('gm2_insert_cache_rules');
+                echo '<input type="hidden" name="action" value="gm2_insert_cache_rules" />';
+                submit_button(esc_html__('Insert Cache Rules', 'gm2-wordpress-suite'));
+                echo '</form>';
+                echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
+                wp_nonce_field('gm2_remove_cache_rules');
+                echo '<input type="hidden" name="action" value="gm2_remove_cache_rules" />';
+                submit_button(esc_html__('Remove Rules', 'gm2-wordpress-suite'), 'delete');
+                echo '</form>';
+                if (!wp_is_writable(ABSPATH . '.htaccess')) {
+                    echo '<p>' . esc_html__('Add the following to your .htaccess file:', 'gm2-wordpress-suite') . '</p>';
+                    echo '<textarea readonly class="large-text code" rows="15">' . esc_textarea(Gm2_Cache_Headers_Apache::$rules) . '</textarea>';
+                }
             }
-            echo '<p>' . sprintf(esc_html__('Status: %s', 'gm2-wordpress-suite'), $status) . '</p>';
-            echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
-            wp_nonce_field('gm2_insert_cache_rules');
-            echo '<input type="hidden" name="action" value="gm2_insert_cache_rules" />';
-            submit_button(esc_html__('Insert Cache Rules', 'gm2-wordpress-suite'));
-            echo '</form>';
-
-            echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
-            wp_nonce_field('gm2_remove_cache_rules');
-            echo '<input type="hidden" name="action" value="gm2_remove_cache_rules" />';
-            submit_button(esc_html__('Remove Rules', 'gm2-wordpress-suite'), 'delete');
-            echo '</form>';
-
-            if (!wp_is_writable(ABSPATH . '.htaccess')) {
-                echo '<p>' . esc_html__('Add the following to your .htaccess file:', 'gm2-wordpress-suite') . '</p>';
-                echo '<textarea readonly class="large-text code" rows="15">' . esc_textarea(Gm2_Cache_Headers_Apache::$rules) . '</textarea>';
-            }
-
-            echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
             wp_nonce_field('gm2_performance_save', 'gm2_performance_nonce');
             echo '<input type="hidden" name="action" value="gm2_performance_settings" />';
             echo '<table class="form-table"><tbody>';
@@ -2743,6 +2781,27 @@ class Gm2_SEO_Admin {
         exit;
     }
 
+
+    public function handle_generate_nginx_cache() {
+        if (!current_user_can('manage_options')) {
+            wp_die( esc_html__( 'Permission denied', 'gm2-wordpress-suite' ) );
+        }
+        check_admin_referer('gm2_generate_nginx_cache');
+        Gm2_Cache_Headers_Nginx::write_rules();
+        wp_redirect(admin_url('admin.php?page=gm2-seo&tab=performance&nginx_cache_written=1'));
+        exit;
+    }
+
+    public function handle_verify_nginx_cache() {
+        if (!current_user_can('manage_options')) {
+            wp_die( esc_html__( 'Permission denied', 'gm2-wordpress-suite' ) );
+        }
+        check_admin_referer('gm2_verify_nginx_cache');
+        $verified = Gm2_Cache_Headers_Nginx::verify();
+        $flag = $verified ? '1' : '0';
+        wp_redirect(admin_url('admin.php?page=gm2-seo&tab=performance&nginx_cache_verified=' . $flag));
+        exit;
+    }
     public function handle_general_settings_form() {
         if (!current_user_can('manage_options')) {
             wp_die( esc_html__( 'Permission denied', 'gm2-wordpress-suite' ) );
