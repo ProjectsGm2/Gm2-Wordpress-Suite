@@ -9,6 +9,7 @@ class Gm2_Cache_Audit_Admin {
     public function run() {
         add_action('admin_menu', [ $this, 'add_menu' ]);
         add_action('admin_post_gm2_cache_audit_rescan', [ $this, 'handle_rescan' ]);
+        add_action('admin_post_gm2_cache_audit_export', [ $this, 'handle_export' ]);
     }
 
     public function add_menu() {
@@ -72,13 +73,6 @@ class Gm2_Cache_Audit_Admin {
     }
 
     public function display_page() {
-        if (isset($_GET['export']) && check_admin_referer('gm2_cache_audit_export')) {
-            $results = Gm2_Cache_Audit::get_results();
-            $assets  = $this->filter_assets($results['assets'] ?? []);
-            $this->export_csv($assets);
-            exit;
-        }
-
         $results = Gm2_Cache_Audit::get_results();
         $assets  = $this->filter_assets($results['assets'] ?? []);
         $home_host = parse_url(home_url(), PHP_URL_HOST);
@@ -111,7 +105,10 @@ class Gm2_Cache_Audit_Admin {
         submit_button(__('Filter', 'gm2-wordpress-suite'), 'secondary', '', false);
         echo '</form>';
 
-        $export_url = wp_nonce_url(admin_url('admin.php?page=gm2-cache-audit&export=1&type=' . $type . '&host=' . $host . '&status=' . $status), 'gm2_cache_audit_export');
+        $export_url = wp_nonce_url(
+            admin_url('admin-post.php?action=gm2_cache_audit_export&type=' . $type . '&host=' . $host . '&status=' . $status),
+            'gm2_cache_audit_export'
+        );
         echo '<a href="' . esc_url($export_url) . '" class="button">' . esc_html__('Export CSV', 'gm2-wordpress-suite') . '</a> ';
         echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" style="display:inline;">';
         wp_nonce_field('gm2_cache_audit_rescan');
@@ -163,9 +160,22 @@ class Gm2_Cache_Audit_Admin {
         echo '</div>';
     }
 
+    public function handle_export() {
+        if (!current_user_can('manage_options')) {
+            wp_die(__('Access denied.', 'gm2-wordpress-suite'));
+        }
+        check_admin_referer('gm2_cache_audit_export');
+        $results = Gm2_Cache_Audit::get_results();
+        $assets  = $this->filter_assets($results['assets'] ?? []);
+        $this->export_csv($assets);
+        exit;
+    }
+
     private function export_csv($assets) {
         header('Content-Type: text/csv');
         header('Content-Disposition: attachment; filename="gm2-cache-audit.csv"');
+        header('Pragma: no-cache');
+        header('Expires: 0');
         $out = fopen('php://output', 'w');
         fputcsv($out, ['URL','Type','TTL','Cache-Control','ETag','Last-Modified','Size KB','Status','Suggested Fix']);
         $home_host = parse_url(home_url(), PHP_URL_HOST);
