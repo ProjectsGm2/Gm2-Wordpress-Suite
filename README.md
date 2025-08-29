@@ -234,5 +234,22 @@ address, entry and exit pages, and timestamps for each session. Recovery emails
 are planned to be queued and processed by WP&nbsp;Cron via the `gm2_ac_process_queue`
 action, but this feature is currently disabled.
 
+## Cache Audit
+
+The **Cache Audit** screen under **SEO → Performance → Cache Audit** scans the
+homepage and all enqueued scripts and styles to analyze caching headers for
+scripts, styles, images, fonts and other resources. Each asset is requested via
+`HEAD` to record its TTL, `Cache-Control`, `ETag`, `Last-Modified` and size.
+Assets are flagged as **Needs Attention** when they lack a `Cache-Control`
+header, use a `max-age` under seven days, include a versioned URL without
+`immutable`, or omit both `ETag` and `Last-Modified` headers.
+
+Filter the table by asset type, host or status, click **Re-scan** to refresh
+results, or **Export CSV** to download `gm2-cache-audit.csv`. On multisite, a
+network admin can switch sites from a dropdown and audit each site
+individually. Access requires the `manage_options` capability (`manage_network`
+for multisite) and the last scan is stored in the
+`gm2_cache_audit_results` option with a `scanned_at` timestamp.
+
 
 
