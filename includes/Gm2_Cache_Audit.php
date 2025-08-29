@@ -6,6 +6,28 @@ if (!defined('ABSPATH')) {
 }
 
 class Gm2_Cache_Audit {
+
+    const OPTION_NAME = 'gm2_cache_audit_results';
+
+    public static function get_results() {
+        $results = get_option(self::OPTION_NAME, []);
+        return is_array($results) ? $results : [];
+    }
+
+    public static function save_results($results) {
+        update_option(self::OPTION_NAME, $results);
+    }
+
+    public static function clear_results() {
+        delete_option(self::OPTION_NAME);
+    }
+
+    public static function rescan() {
+        $results = static::scan();
+        static::save_results($results);
+        return $results;
+    }
+
     public static function scan() {
         $scripts = wp_scripts();
         $styles  = wp_styles();
