@@ -101,6 +101,7 @@ require_once GM2_PLUGIN_DIR . 'includes/Gm2_Workflow_Manager.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Audit_Log.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Ajax_Upload.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Search_Console.php';
+require_once GM2_PLUGIN_DIR . 'includes/Versioning_MTime.php';
 
 \Gm2\Gm2_REST_Visibility::init();
 \Gm2\Gm2_REST_Rate_Limiter::init();
@@ -109,6 +110,7 @@ require_once GM2_PLUGIN_DIR . 'includes/Gm2_Search_Console.php';
 \Gm2\Gm2_Webhooks::init();
 \Gm2\Gm2_Ajax_Upload::init();
 \Gm2\Gm2_Search_Console::init();
+\Gm2\Versioning_MTime::init();
 
 function gm2_add_weekly_schedule($schedules) {
     if (!isset($schedules['weekly'])) {

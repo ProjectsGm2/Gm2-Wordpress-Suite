@@ -104,6 +104,16 @@ The Makefile includes a `test` target which automatically checks for the test su
 make test DB_NAME=wp_test DB_USER=root DB_PASS=pass
 ```
 
+## Automatic Asset Versioning
+
+Local stylesheets and scripts loaded through WordPress are automatically
+versioned with their file modification time. This ensures browsers receive
+updated assets whenever a file changes.
+
+To skip this behavior for a specific handle, pass `['no_auto_version' => true]`
+as the final argument when calling `wp_register_style()` or
+`wp_register_script()`. The original `ver` value will then be preserved.
+
 ## Sitemap Path Option
 
 The plugin stores the generated XML sitemap at `sitemap.xml` in the WordPress
