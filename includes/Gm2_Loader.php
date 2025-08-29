@@ -55,6 +55,11 @@ class Gm2_Loader {
         if ($enable_seo) {
             $seo_admin = new Gm2_SEO_Admin();
             $seo_admin->run();
+
+            if (is_admin()) {
+                $cache_admin = new Gm2_Cache_Audit_Admin();
+                $cache_admin->run();
+            }
         }
 
         $public = new Gm2_Public();
