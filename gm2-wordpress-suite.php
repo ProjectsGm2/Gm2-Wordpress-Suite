@@ -62,6 +62,9 @@ if (file_exists($gm2_autoload)) {
 }
 require_once GM2_PLUGIN_DIR . 'includes/autoload.php';
 
+require_once GM2_PLUGIN_DIR . 'includes/Gm2_Remote_Mirror.php';
+\Gm2\Gm2_Remote_Mirror::init();
+
 // Include required files
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Loader.php';
 require_once GM2_PLUGIN_DIR . 'public/Gm2_SEO_Public.php';
