@@ -6,8 +6,9 @@ class RemoteMirrorTest extends WP_UnitTestCase {
 
     public function setUp(): void {
         parent::setUp();
-        $this->mirror = Gm2_Remote_Mirror::init();
         add_filter('pre_http_request', [$this, 'mock_http'], 10, 3);
+        update_option('gm2_remote_mirror_vendors', ['facebook' => 1]);
+        $this->mirror = Gm2_Remote_Mirror::init();
     }
 
     public function tearDown(): void {

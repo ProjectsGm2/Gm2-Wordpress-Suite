@@ -18,6 +18,12 @@ class Gm2_Remote_Mirror {
      */
     protected const OPTION_KEY = 'gm2_remote_mirror_vendors';
 
+    /**
+     * Option storing additional custom script URLs.
+     * @var string
+     */
+    protected const CUSTOM_URLS_OPTION = 'gm2_remote_mirror_custom_urls';
+
     /** @var bool Tracks if rewrite hooks are applied */
     protected $hooks_applied = false;
 
@@ -46,9 +52,16 @@ class Gm2_Remote_Mirror {
     public static function init(): self {
         if (self::$instance === null) {
             self::$instance = new self();
+
+            $custom = get_option(self::CUSTOM_URLS_OPTION, []);
+            if (is_array($custom) && !empty($custom)) {
+                self::$instance->register_vendor('custom', $custom);
+            }
+
             self::$instance->maybe_schedule_refresh();
             add_action('gm2_remote_mirror_refresh', [self::$instance, 'refresh_all']);
             add_action('update_option_' . self::OPTION_KEY, [self::$instance, 'on_option_update'], 10, 2);
+            add_action('update_option_' . self::CUSTOM_URLS_OPTION, [self::$instance, 'on_custom_urls_update'], 10, 2);
             self::$instance->maybe_apply_hooks();
         }
         return self::$instance;
@@ -72,7 +85,10 @@ class Gm2_Remote_Mirror {
         if (!is_array($options)) {
             $options = [];
         }
-        return !isset($options[$vendor]) || (bool) $options[$vendor];
+        if ($vendor === 'custom') {
+            return !empty($this->vendors['custom']['urls'] ?? []);
+        }
+        return !empty($options[$vendor]);
     }
 
     /**
@@ -123,6 +139,20 @@ class Gm2_Remote_Mirror {
     public function on_option_update($old_value, $value): void {
         $this->maybe_apply_hooks();
         // Refresh immediately on option change.
+        $this->refresh_all();
+    }
+
+    /**
+     * Handle custom URL option updates.
+     */
+    public function on_custom_urls_update($old_value, $value): void {
+        $urls = is_array($value) ? $value : [];
+        if (isset($this->vendors['custom'])) {
+            $this->vendors['custom']['urls'] = $urls;
+        } elseif (!empty($urls)) {
+            $this->register_vendor('custom', $urls);
+        }
+        $this->maybe_apply_hooks();
         $this->refresh_all();
     }
 

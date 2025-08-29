@@ -931,6 +931,15 @@ class Gm2_SEO_Admin {
             $pretty_versions = get_option('gm2_pretty_versioned_urls', '0');
             $ps_key    = get_option('gm2_pagespeed_api_key', '');
             $ps_scores = get_option('gm2_pagespeed_scores', []);
+
+            $rm_vendors = get_option('gm2_remote_mirror_vendors', []);
+            $rm_fb     = !empty($rm_vendors['facebook']);
+            $rm_google = !empty($rm_vendors['google']);
+            $rm_custom = get_option('gm2_remote_mirror_custom_urls', []);
+            if (!is_array($rm_custom)) {
+                $rm_custom = [];
+            }
+            $mirror = Gm2_Remote_Mirror::init();
             if (!empty($_GET['updated'])) {
                 echo '<div class="updated notice"><p>' . esc_html__('Settings saved.', 'gm2-wordpress-suite') . '</p></div>';
             }
@@ -998,6 +1007,7 @@ class Gm2_SEO_Admin {
                     echo '<textarea readonly class="large-text code" rows="15">' . esc_textarea(Gm2_Cache_Headers_Apache::$rules) . '</textarea>';
                 }
             }
+            echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
             wp_nonce_field('gm2_performance_save', 'gm2_performance_nonce');
             echo '<input type="hidden" name="action" value="gm2_performance_settings" />';
             echo '<table class="form-table"><tbody>';
@@ -1016,7 +1026,35 @@ class Gm2_SEO_Admin {
                 echo '<p>Mobile: ' . esc_html($ps_scores['mobile'] ?? '') . ' Desktop: ' . esc_html($ps_scores['desktop'] ?? '') . ' ' . esc_html($time) . '</p>';
             }
             echo '</td></tr>';
+
+            echo '<tr><th colspan="2"><h2>' . esc_html__( 'Remote Mirror', 'gm2-wordpress-suite' ) . '</h2></th></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Facebook Pixel', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_remote_mirror_vendors[facebook]" value="1" ' . checked($rm_fb, true, false) . '> ' . esc_html__( 'Enable', 'gm2-wordpress-suite' ) . '</label><p class="description"><a href="https://www.facebook.com/legal/terms/plain_text_terms" target="_blank">' . esc_html__( 'Terms of Service', 'gm2-wordpress-suite' ) . '</a></p></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Google gtag', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_remote_mirror_vendors[google]" value="1" ' . checked($rm_google, true, false) . '> ' . esc_html__( 'Enable', 'gm2-wordpress-suite' ) . '</label><p class="description"><a href="https://marketingplatform.google.com/about/analytics/terms/us/" target="_blank">' . esc_html__( 'Terms of Service', 'gm2-wordpress-suite' ) . '</a></p>';
+            if ($rm_google) {
+                echo '<div class="notice notice-warning inline"><p>' . esc_html__( 'Ensure Google terms permit mirroring gtag.js.', 'gm2-wordpress-suite' ) . '</p></div>';
+            }
+            echo '</td></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Custom Script URLs', 'gm2-wordpress-suite' ) . '</th><td><textarea name="gm2_remote_mirror_custom_urls" rows="5" class="large-text">' . esc_textarea(implode("\n", $rm_custom)) . '</textarea><p class="description">' . esc_html__( 'One URL per line.', 'gm2-wordpress-suite' ) . '</p></td></tr>';
+
             echo '</tbody></table>';
+            echo '<p class="description">' . esc_html__( 'SHA-256 hashes are shown for mirrored files. SRI may break after vendor updates.', 'gm2-wordpress-suite' ) . '</p>';
+            $registry = $mirror->get_registry();
+            if (!empty($registry)) {
+                echo '<table class="widefat striped"><thead><tr><th>' . esc_html__( 'Vendor', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'URL', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'SHA-256', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'Last Fetch', 'gm2-wordpress-suite' ) . '</th></tr></thead><tbody>';
+                foreach ($registry as $vendor => $data) {
+                    $enabled = ($vendor === 'custom') ? !empty($rm_custom) : !empty($rm_vendors[$vendor]);
+                    foreach ($data['urls'] as $url) {
+                        $filename = basename(parse_url($url, PHP_URL_PATH) ?? '');
+                        $path = $mirror->get_local_path($vendor, $filename);
+                        $hash = file_exists($path) ? hash_file('sha256', $path) : '';
+                        $time = file_exists($path) ? date_i18n(get_option('date_format') . ' ' . get_option('time_format'), filemtime($path)) : '';
+                        $label = $enabled ? $vendor : $vendor . ' (' . esc_html__( 'disabled', 'gm2-wordpress-suite' ) . ')';
+                        echo '<tr><td>' . esc_html($label) . '</td><td>' . esc_html($url) . '</td><td><code>' . esc_html($hash) . '</code></td><td>' . esc_html($time) . '</td></tr>';
+                    }
+                }
+                echo '</tbody></table>';
+            }
+
             submit_button( esc_html__( 'Save Settings', 'gm2-wordpress-suite' ) );
             echo ' <input type="submit" name="gm2_test_pagespeed" class="button" value="' . esc_attr__( 'Test Page Speed', 'gm2-wordpress-suite' ) . '" />';
             echo '</form>';
@@ -2750,6 +2788,25 @@ class Gm2_SEO_Admin {
         if ($pretty_versions === '1') {
             Gm2_Version_Route_Apache::maybe_apply();
         }
+
+        $vendor_opts = [
+            'facebook' => isset($_POST['gm2_remote_mirror_vendors']['facebook']) ? '1' : '0',
+            'google'   => isset($_POST['gm2_remote_mirror_vendors']['google']) ? '1' : '0',
+        ];
+        update_option('gm2_remote_mirror_vendors', $vendor_opts);
+
+        $custom_urls = [];
+        if (!empty($_POST['gm2_remote_mirror_custom_urls'])) {
+            $lines = explode("\n", (string) $_POST['gm2_remote_mirror_custom_urls']);
+            foreach ($lines as $line) {
+                $url = esc_url_raw(trim($line));
+                if ($url !== '') {
+                    $custom_urls[] = $url;
+                }
+            }
+        }
+        update_option('gm2_remote_mirror_custom_urls', $custom_urls);
+        Gm2_Remote_Mirror::init()->refresh_all();
 
         $ps_key = isset($_POST['gm2_pagespeed_api_key']) ? sanitize_text_field($_POST['gm2_pagespeed_api_key']) : '';
         update_option('gm2_pagespeed_api_key', $ps_key);
