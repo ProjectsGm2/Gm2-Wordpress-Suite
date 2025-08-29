@@ -218,6 +218,7 @@ function gm2_activate_plugin() {
     Gm2_Abandoned_Carts::schedule_event();
 
     gm2_maybe_add_indexes();
+    \Gm2\Gm2_Cache_Headers_Apache::maybe_apply();
 }
 register_activation_hook(__FILE__, 'gm2_activate_plugin');
 
