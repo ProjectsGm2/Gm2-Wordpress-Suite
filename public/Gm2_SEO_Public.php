@@ -514,6 +514,9 @@ class Gm2_SEO_Public {
         }
         $og_image_url = $og_image_id ? wp_get_attachment_url($og_image_id) : '';
         $og_image_url = apply_filters('gm2_og_image_url', $og_image_url, $og_image_id, $data);
+        $card        = $og_image_url ? 'summary_large_image' : 'summary';
+        $twitter_site    = trim(get_option('gm2_twitter_site', ''));
+        $twitter_creator = trim(get_option('gm2_twitter_creator', ''));
 
         // Output the canonical link tag first if it isn't already hooked.
         if (!has_action('wp_head', [$this, 'output_canonical_url'])) {
@@ -547,9 +550,15 @@ class Gm2_SEO_Public {
             $html .= '<meta name="twitter:image" content="' . esc_url($og_image_url) . '" />' . "\n";
         }
 
-        $html .= '<meta name="twitter:card" content="summary" />' . "\n";
+        $html .= '<meta name="twitter:card" content="' . esc_attr($card) . '" />' . "\n";
         $html .= '<meta name="twitter:title" content="' . esc_attr($title) . '" />' . "\n";
         $html .= '<meta name="twitter:description" content="' . esc_attr($description) . '" />' . "\n";
+        if ($twitter_site) {
+            $html .= '<meta name="twitter:site" content="' . esc_attr($twitter_site) . '" />' . "\n";
+        }
+        if ($twitter_creator) {
+            $html .= '<meta name="twitter:creator" content="' . esc_attr($twitter_creator) . '" />' . "\n";
+        }
 
         echo apply_filters('gm2_meta_tags', $html, $data);
     }
