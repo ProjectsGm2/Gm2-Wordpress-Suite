@@ -1280,9 +1280,19 @@ class Gm2_SEO_Public {
     }
 
     public function filter_robots_txt($output, $public) {
+        if (get_option('gm2_sitemap_enabled', '1') === '1') {
+            $path = get_option('gm2_sitemap_path', ABSPATH . 'sitemap.xml');
+            $relative = '/' . ltrim(str_replace(ABSPATH, '', $path), '/');
+            $sitemap_url = home_url($relative);
+            $output = 'Sitemap: ' . $sitemap_url . "\n" . ltrim($output);
+        }
+
         $custom = get_option('gm2_robots_txt', '');
         if ($custom !== '') {
-            $output .= "\n" . $custom;
+            if ($output !== '' && substr($output, -1) !== "\n") {
+                $output .= "\n";
+            }
+            $output .= $custom;
         }
         return $output;
     }
