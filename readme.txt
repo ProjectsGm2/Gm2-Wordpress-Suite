@@ -24,6 +24,7 @@ Key features include:
 * Updated rows are briefly highlighted after applying suggestions
 * Real-time Google Merchant Centre data via REST endpoint
 * Cache Audit screen checks caching headers and flags assets needing attention
+* Optional Pretty Versioned URLs convert `file.css?ver=123` into `file.v123.css` with Apache and Nginx rewrite rules
 
 == Installation ==
 1. Upload the plugin files to the `/wp-content/plugins/gm2-wordpress-suite` directory.

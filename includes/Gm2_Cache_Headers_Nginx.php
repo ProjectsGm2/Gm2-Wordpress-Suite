@@ -6,7 +6,10 @@ if (!defined('ABSPATH')) {
 }
 
 class Gm2_Cache_Headers_Nginx {
-    public static $rules = <<<NGINX
+    public static $rules = <<<'NGINX'
+location ~* \.v[0-9]+\.(css|js)$ { try_files $uri $uri/ @stripver; }
+location @stripver { rewrite ^/(.+)\.v[0-9]+\.(css|js)$ /$1.$2 last; }
+
 location ~* \.(?:css|js)$ {
     expires 1y;
     add_header Cache-Control "public, max-age=31536000, immutable";

@@ -111,6 +111,9 @@ require_once GM2_PLUGIN_DIR . 'includes/Versioning_MTime.php';
 \Gm2\Gm2_Ajax_Upload::init();
 \Gm2\Gm2_Search_Console::init();
 \Gm2\Versioning_MTime::init();
+if (get_option('gm2_pretty_versioned_urls', '0') === '1') {
+    \Gm2\Gm2_Version_Route_Apache::maybe_apply();
+}
 
 function gm2_add_weekly_schedule($schedules) {
     if (!isset($schedules['weekly'])) {

@@ -928,6 +928,7 @@ class Gm2_SEO_Admin {
             $min_html  = get_option('gm2_minify_html', '0');
             $min_css   = get_option('gm2_minify_css', '0');
             $min_js    = get_option('gm2_minify_js', '0');
+            $pretty_versions = get_option('gm2_pretty_versioned_urls', '0');
             $ps_key    = get_option('gm2_pagespeed_api_key', '');
             $ps_scores = get_option('gm2_pagespeed_scores', []);
             if (!empty($_GET['updated'])) {
@@ -1008,6 +1009,7 @@ class Gm2_SEO_Admin {
             echo '<tr><th scope="row">' . esc_html__( 'Minify HTML', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_minify_html" value="1" ' . checked($min_html, '1', false) . '></label></td></tr>';
             echo '<tr><th scope="row">' . esc_html__( 'Minify CSS', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_minify_css" value="1" ' . checked($min_css, '1', false) . '></label></td></tr>';
             echo '<tr><th scope="row">' . esc_html__( 'Minify JS', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_minify_js" value="1" ' . checked($min_js, '1', false) . '></label></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Pretty Versioned URLs', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_pretty_versioned_urls" value="1" ' . checked($pretty_versions, '1', false) . '> ' . esc_html__( 'Transform file.css?ver=123 into file.v123.css', 'gm2-wordpress-suite' ) . '</label></td></tr>';
             echo '<tr><th scope="row">' . esc_html__( 'PageSpeed API Key', 'gm2-wordpress-suite' ) . '</th><td><input type="text" name="gm2_pagespeed_api_key" value="' . esc_attr($ps_key) . '" class="regular-text" />';
             if (!empty($ps_scores['mobile']) || !empty($ps_scores['desktop'])) {
                 $time = !empty($ps_scores['time']) ? date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $ps_scores['time']) : '';
@@ -2742,6 +2744,12 @@ class Gm2_SEO_Admin {
 
         $min_js = isset($_POST['gm2_minify_js']) ? '1' : '0';
         update_option('gm2_minify_js', $min_js);
+
+        $pretty_versions = isset($_POST['gm2_pretty_versioned_urls']) ? '1' : '0';
+        update_option('gm2_pretty_versioned_urls', $pretty_versions);
+        if ($pretty_versions === '1') {
+            Gm2_Version_Route_Apache::maybe_apply();
+        }
 
         $ps_key = isset($_POST['gm2_pagespeed_api_key']) ? sanitize_text_field($_POST['gm2_pagespeed_api_key']) : '';
         update_option('gm2_pagespeed_api_key', $ps_key);
