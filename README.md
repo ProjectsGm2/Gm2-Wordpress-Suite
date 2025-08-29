@@ -2,6 +2,8 @@
 
 This repository contains the development version of the Gm2 WordPress Suite plugin. For plugin installation steps and feature documentation see [readme.txt](readme.txt).
 
+The suite includes an optional **Pretty Versioned URLs** feature that rewrites `file.css?ver=123` to `file.v123.css` and supplies matching Apache and Nginx rules.
+
 ## Building the Plugin
 
 Generate a production-ready ZIP package with all dependencies using:

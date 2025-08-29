@@ -64,6 +64,18 @@ class Versioning_MTime {
         }
 
         $src = remove_query_arg('ver', $src);
+
+        if (get_option('gm2_pretty_versioned_urls', '0') === '1') {
+            $extra_query = wp_parse_url($src, PHP_URL_QUERY);
+            if (empty($extra_query)) {
+                $ext = pathinfo($src, PATHINFO_EXTENSION);
+                if (in_array($ext, ['css', 'js'], true)) {
+                    $src = preg_replace('#\\.' . $ext . '$#', '.v' . $mtime . '.' . $ext, $src);
+                    return $src;
+                }
+            }
+        }
+
         $src = add_query_arg('ver', (string) $mtime, $src);
         return $src;
     }
