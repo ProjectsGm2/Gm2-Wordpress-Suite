@@ -931,6 +931,7 @@ class Gm2_SEO_Admin {
             $pretty_versions = get_option('gm2_pretty_versioned_urls', '0');
             $ps_key    = get_option('gm2_pagespeed_api_key', '');
             $ps_scores = get_option('gm2_pagespeed_scores', []);
+            $script_attrs = get_option('gm2_script_attributes', []);
 
             $rm_vendors = get_option('gm2_remote_mirror_vendors', []);
             $rm_fb     = !empty($rm_vendors['facebook']);
@@ -1026,6 +1027,33 @@ class Gm2_SEO_Admin {
                 echo '<p>Mobile: ' . esc_html($ps_scores['mobile'] ?? '') . ' Desktop: ' . esc_html($ps_scores['desktop'] ?? '') . ' ' . esc_html($time) . '</p>';
             }
             echo '</td></tr>';
+
+            echo '<tr><th colspan="2"><h2>' . esc_html__( 'Script Loading', 'gm2-wordpress-suite' ) . '</h2></th></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Presets', 'gm2-wordpress-suite' ) . '</th><td><select name="gm2_script_attr_preset">';
+            echo '<option value="">' . esc_html__( '-- Select Preset --', 'gm2-wordpress-suite' ) . '</option>';
+            echo '<option value="defer_third">' . esc_html__( 'Defer all third-party', 'gm2-wordpress-suite' ) . '</option>';
+            echo '<option value="conservative">' . esc_html__( 'Conservative', 'gm2-wordpress-suite' ) . '</option>';
+            echo '</select> ';
+            echo '<button type="submit" class="button" name="gm2_script_attr_apply_preset" value="1">' . esc_html__( 'Apply', 'gm2-wordpress-suite' ) . '</button> ';
+            echo '<button type="submit" class="button" name="gm2_script_attr_reset" value="1">' . esc_html__( 'Reset to Defaults', 'gm2-wordpress-suite' ) . '</button>';
+            echo '</td></tr>';
+
+            echo '<tr><th scope="row">' . esc_html__( 'Per-handle Overrides', 'gm2-wordpress-suite' ) . '</th><td><table class="widefat striped"><thead><tr><th>' . esc_html__( 'Handle', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'Attribute', 'gm2-wordpress-suite' ) . '</th></tr></thead><tbody>';
+            foreach ($script_attrs as $handle => $attr) {
+                echo '<tr><td><input type="text" name="gm2_script_attr_handles[]" value="' . esc_attr($handle) . '" class="regular-text" /></td><td><select name="gm2_script_attr_values[]">';
+                echo '<option value="">' . esc_html__( 'Default', 'gm2-wordpress-suite' ) . '</option>';
+                echo '<option value="blocking" ' . selected($attr, 'blocking', false) . '>' . esc_html__( 'Blocking', 'gm2-wordpress-suite' ) . '</option>';
+                echo '<option value="defer" ' . selected($attr, 'defer', false) . '>' . esc_html__( 'Defer', 'gm2-wordpress-suite' ) . '</option>';
+                echo '<option value="async" ' . selected($attr, 'async', false) . '>' . esc_html__( 'Async', 'gm2-wordpress-suite' ) . '</option>';
+                echo '</select></td></tr>';
+            }
+            echo '<tr><td><input type="text" name="gm2_script_attr_handles[]" value="" class="regular-text" /></td><td><select name="gm2_script_attr_values[]">';
+            echo '<option value="">' . esc_html__( 'Default', 'gm2-wordpress-suite' ) . '</option>';
+            echo '<option value="blocking" selected="selected">' . esc_html__( 'Blocking', 'gm2-wordpress-suite' ) . '</option>';
+            echo '<option value="defer">' . esc_html__( 'Defer', 'gm2-wordpress-suite' ) . '</option>';
+            echo '<option value="async">' . esc_html__( 'Async', 'gm2-wordpress-suite' ) . '</option>';
+            echo '</select></td></tr>';
+            echo '</tbody></table><p class="description">' . esc_html__( 'Leave handle blank to ignore. Choose Default to remove override.', 'gm2-wordpress-suite' ) . '</p></td></tr>';
 
             echo '<tr><th colspan="2"><h2>' . esc_html__( 'Remote Mirror', 'gm2-wordpress-suite' ) . '</h2></th></tr>';
             echo '<tr><th scope="row">' . esc_html__( 'Facebook Pixel', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_remote_mirror_vendors[facebook]" value="1" ' . checked($rm_fb, true, false) . '> ' . esc_html__( 'Enable', 'gm2-wordpress-suite' ) . '</label><p class="description"><a href="https://www.facebook.com/legal/terms/plain_text_terms" target="_blank">' . esc_html__( 'Terms of Service', 'gm2-wordpress-suite' ) . '</a></p></td></tr>';
@@ -2807,6 +2835,46 @@ class Gm2_SEO_Admin {
         }
         update_option('gm2_remote_mirror_custom_urls', $custom_urls);
         Gm2_Remote_Mirror::init()->refresh_all();
+
+        $attributes = [];
+        if (isset($_POST['gm2_script_attr_reset'])) {
+            $attributes = [];
+        } elseif (isset($_POST['gm2_script_attr_apply_preset']) && !empty($_POST['gm2_script_attr_preset'])) {
+            $preset = sanitize_text_field($_POST['gm2_script_attr_preset']);
+            $scripts = wp_scripts();
+            $core   = [];
+            foreach ($scripts->registered as $handle => $dep) {
+                $src = $dep->src ?? '';
+                if ($src === '' || strpos($src, includes_url()) === 0 || strpos($src, '/wp-includes/') === 0) {
+                    $core[] = $handle;
+                }
+            }
+            if ($preset === 'defer_third') {
+                foreach ($scripts->registered as $handle => $dep) {
+                    if (in_array($handle, $core, true)) {
+                        $attributes[$handle] = 'blocking';
+                    } else {
+                        $attributes[$handle] = 'defer';
+                    }
+                }
+            } elseif ($preset === 'conservative') {
+                foreach ($core as $handle) {
+                    $attributes[$handle] = 'blocking';
+                }
+            }
+        } else {
+            $handles = $_POST['gm2_script_attr_handles'] ?? [];
+            $values  = $_POST['gm2_script_attr_values'] ?? [];
+            foreach ($handles as $i => $handle) {
+                $handle = sanitize_key($handle);
+                $val    = $values[$i] ?? '';
+                if ($handle === '' || !in_array($val, ['blocking', 'defer', 'async'], true)) {
+                    continue;
+                }
+                $attributes[$handle] = $val;
+            }
+        }
+        update_option('gm2_script_attributes', $attributes);
 
         $ps_key = isset($_POST['gm2_pagespeed_api_key']) ? sanitize_text_field($_POST['gm2_pagespeed_api_key']) : '';
         update_option('gm2_pagespeed_api_key', $ps_key);
