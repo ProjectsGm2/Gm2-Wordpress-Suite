@@ -215,6 +215,7 @@ class Gm2_SEO_Public {
         add_action('template_redirect', [$this, 'maybe_output_sitemap']);
         add_action('template_redirect', [$this, 'log_404_url'], 99);
         add_action('wp_head', [$this, 'output_canonical_url'], 5);
+        add_action('wp_head', [$this, 'output_hreflang_links'], 5);
         add_action('wp_head', [$this, 'output_meta_tags']);
         add_action('wp_head', [$this, 'output_search_console_meta']);
         add_action('wp_head', [$this, 'output_ga_tracking_code']);
@@ -1219,6 +1220,64 @@ class Gm2_SEO_Public {
 
     public function output_breadcrumbs() {
         echo $this->gm2_breadcrumbs_shortcode();
+    }
+
+    /**
+     * Output <link rel="alternate" hreflang="..."> tags for localized URLs.
+     *
+     * Attempts to gather translations from common plugins like WPML or
+     * Polylang. Developers can filter the final mapping via
+     * `gm2_hreflang_urls`.
+     */
+    public function output_hreflang_links() {
+        $urls    = [];
+        $post_id = get_queried_object_id();
+
+        // WPML integration.
+        if (function_exists('icl_object_id')) {
+            $languages = apply_filters('wpml_active_languages', null, 'skip_missing=0');
+            if (is_array($languages)) {
+                $permalink = $post_id ? get_permalink($post_id) : home_url('/');
+                foreach ($languages as $lang => $details) {
+                    $url = apply_filters('wpml_permalink', $permalink, $lang);
+                    if ($url) {
+                        $urls[$lang] = $url;
+                    }
+                }
+            }
+        } elseif (function_exists('pll_languages_list')) {
+            // Polylang integration.
+            $languages = pll_languages_list();
+            if ($languages) {
+                if ($post_id && function_exists('pll_get_post')) {
+                    foreach ($languages as $lang) {
+                        $tr_id = pll_get_post($post_id, $lang);
+                        if ($tr_id) {
+                            $urls[$lang] = get_permalink($tr_id);
+                        }
+                    }
+                } elseif (function_exists('pll_home_url')) {
+                    foreach ($languages as $lang) {
+                        $urls[$lang] = pll_home_url($lang);
+                    }
+                }
+            }
+        }
+
+        $urls = apply_filters('gm2_hreflang_urls', $urls, $post_id);
+        if (empty($urls)) {
+            return;
+        }
+
+        $html = '';
+        foreach ($urls as $lang => $url) {
+            if (!$lang || !$url) {
+                continue;
+            }
+            $html .= sprintf('<link rel="alternate" hreflang="%s" href="%s" />\n', esc_attr($lang), esc_url($url));
+        }
+
+        echo apply_filters('gm2_hreflang_links_html', $html, $urls, $post_id);
     }
 
     public function output_canonical_url() {
