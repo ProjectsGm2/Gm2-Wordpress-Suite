@@ -166,6 +166,10 @@ function gm2_activate_plugin() {
         wp_schedule_event(time(), 'daily', 'gm2_analytics_purge');
     }
 
+    if (!wp_next_scheduled('gm2_remote_mirror_refresh')) {
+        wp_schedule_event(time(), 'daily', 'gm2_remote_mirror_refresh');
+    }
+
     gm2_initialize_content_rules();
     gm2_initialize_guideline_rules();
     gm2_maybe_migrate_content_rules();
@@ -196,6 +200,7 @@ function gm2_activate_plugin() {
     add_option('gm2_ac_mark_abandoned_interval', 5);
     add_option('gm2_setup_complete', '0');
     add_option('gm2_do_activation_redirect', '1');
+    add_option('gm2_remote_mirror_vendors', []);
 
     global $wpdb;
     $table_name = $wpdb->prefix . 'gm2_analytics_log';
