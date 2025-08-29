@@ -221,6 +221,8 @@ class Gm2_SEO_Public {
         add_action('wp_head', [$this, 'output_custom_schema'], 20);
         add_action('wp_head', [$this, 'output_product_schema'], 20);
         add_action('wp_head', [$this, 'output_brand_schema'], 20);
+        add_action('wp_head', [$this, 'output_organization_schema'], 20);
+        add_action('wp_head', [$this, 'output_website_schema'], 20);
         add_action('wp_head', [$this, 'output_breadcrumb_schema'], 20);
         add_action('wp_head', [$this, 'output_review_schema'], 20);
         add_action('wp_head', [$this, 'output_article_schema'], 20);
@@ -946,6 +948,47 @@ class Gm2_SEO_Public {
 
         $data = $this->replace_placeholders($data, $this->get_term_context($term));
         echo '<script type="application/ld+json">' . wp_json_encode($data) . "</script>\n";
+    }
+
+    public function output_organization_schema() {
+        $name = trim(get_option('gm2_org_name', ''));
+        $logo = trim(get_option('gm2_org_logo', ''));
+        if ($name === '' || $logo === '') {
+            return;
+        }
+        $schema = [
+            '@context' => 'https://schema.org/',
+            '@type'    => 'Organization',
+            'name'     => $name,
+            'url'      => home_url('/'),
+            'logo'     => esc_url($logo),
+        ];
+        echo '<script type="application/ld+json">' . wp_json_encode($schema) . "</script>\n";
+    }
+
+    public function output_website_schema() {
+        $search = trim(get_option('gm2_site_search_url', ''));
+        if ($search === '' || strpos($search, '{search_term_string}') === false) {
+            return;
+        }
+        $schema = [
+            '@context' => 'https://schema.org/',
+            '@type'    => 'WebSite',
+            'url'      => home_url('/'),
+            'potentialAction' => [
+                '@type'       => 'SearchAction',
+                'target'      => esc_url($search),
+                'query-input' => 'required name=search_term_string',
+            ],
+        ];
+        $name = trim(get_option('gm2_org_name', ''));
+        if ($name === '') {
+            $name = get_bloginfo('name');
+        }
+        if ($name) {
+            $schema['name'] = $name;
+        }
+        echo '<script type="application/ld+json">' . wp_json_encode($schema) . "</script>\n";
     }
 
     public function output_webpage_schema() {
