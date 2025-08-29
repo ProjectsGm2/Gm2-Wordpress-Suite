@@ -537,6 +537,10 @@ class Gm2_SEO_Public {
         $html .= '<meta property="og:description" content="' . esc_attr($description) . '" />' . "\n";
         $html .= '<meta property="og:url" content="' . esc_url($url) . '" />' . "\n";
         $html .= '<meta property="og:type" content="' . esc_attr($type) . '" />' . "\n";
+        $site_name = get_bloginfo('name');
+        $locale    = str_replace('_', '-', get_locale());
+        $html     .= '<meta property="og:site_name" content="' . esc_attr($site_name) . '" />' . "\n";
+        $html     .= '<meta property="og:locale" content="' . esc_attr($locale) . '" />' . "\n";
 
         if ($og_image_url) {
             $html .= '<meta property="og:image" content="' . esc_url($og_image_url) . '" />' . "\n";
