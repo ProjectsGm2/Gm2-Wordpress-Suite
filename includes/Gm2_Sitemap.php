@@ -64,10 +64,15 @@ class Gm2_Sitemap {
                     'fields'         => 'ids',
                 ]);
                 foreach ($query->posts as $post_id) {
+                    $image    = get_the_post_thumbnail_url($post_id, 'full');
+                    $priority = apply_filters('gm2_sitemap_priority', '', $type, $post_id);
+
                     $urls[] = [
                         'loc'        => get_permalink($post_id),
                         'lastmod'    => get_post_modified_time('c', true, $post_id),
                         'changefreq' => $frequency,
+                        'image'      => $image,
+                        'priority'   => $priority,
                     ];
                 }
                 $paged++;
@@ -82,10 +87,13 @@ class Gm2_Sitemap {
             ]);
             if (!is_wp_error($terms)) {
                 foreach ($terms as $term) {
+                    $priority = apply_filters('gm2_sitemap_priority', '', $tax, $term->term_id);
+
                     $urls[] = [
                         'loc'        => get_term_link($term),
                         'lastmod'    => date('c'),
                         'changefreq' => $frequency,
+                        'priority'   => $priority,
                     ];
                 }
             }
@@ -102,12 +110,18 @@ class Gm2_Sitemap {
             $part_path = $dir . $base_name . '-' . $i . '.xml';
 
             $xml  = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-            $xml .= "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n";
+            $xml .= "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\" xmlns:image=\"http://www.google.com/schemas/sitemap-image/1.1\">\n";
             foreach ($set as $u) {
                 $xml .= "  <url>\n";
                 $xml .= "    <loc>" . esc_url($u['loc']) . "</loc>\n";
                 $xml .= "    <lastmod>{$u['lastmod']}</lastmod>\n";
                 $xml .= "    <changefreq>{$u['changefreq']}</changefreq>\n";
+                if (!empty($u['image'])) {
+                    $xml .= "    <image:image><image:loc>" . esc_url($u['image']) . "</image:loc></image:image>\n";
+                }
+                if (!empty($u['priority'])) {
+                    $xml .= "    <priority>" . esc_html($u['priority']) . "</priority>\n";
+                }
                 $xml .= "  </url>\n";
             }
             $xml .= "</urlset>\n";
