@@ -23,6 +23,7 @@ Key features include:
 * Row-level "Select all" checkboxes apply suggestions per post
 * Updated rows are briefly highlighted after applying suggestions
 * Real-time Google Merchant Centre data via REST endpoint
+* Cache Audit screen checks caching headers and flags assets needing attention
 
 == Installation ==
 1. Upload the plugin files to the `/wp-content/plugins/gm2-wordpress-suite` directory.
@@ -63,6 +64,23 @@ The main **Gm2 Suite** page lets administrators enable or disable major modules.
 Check or uncheck **Tariff**, **SEO**, **Quantity Discounts**, **Google OAuth Setup**,
 **ChatGPT**, or **Abandoned Carts** and click *Save* to hide their menus and functionality. All
 features are enabled by default.
+
+== Cache Audit ==
+Open **SEO → Performance → Cache Audit** to review caching headers for front-end assets.
+The page scans the homepage and enqueued scripts and styles, issuing `HEAD` requests
+to record TTL, `Cache-Control`, `ETag`, `Last-Modified` and size for scripts, styles,
+images, fonts and other resources. Assets are marked *Needs Attention* when they:
+
+* lack a `Cache-Control` header,
+* use a `max-age` under seven days,
+* include a version query without `immutable`, or
+* omit both `ETag` and `Last-Modified`.
+
+Filter by asset type, host or status, click **Re-scan** to run the scan again or
+**Export CSV** to download `gm2-cache-audit.csv`. Network administrators can select
+individual sites from the Network Admin and audit each separately. Access requires
+`manage_options` (`manage_network` on multisite). Results, including the last run
+timestamp, are stored in the `gm2_cache_audit_results` option.
 
 == Google integration ==
 These credentials must be copied from your Google accounts:
