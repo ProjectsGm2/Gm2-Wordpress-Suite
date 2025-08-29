@@ -401,6 +401,15 @@ class Gm2_SEO_Admin {
         register_setting('gm2_seo_options', 'gm2_twitter_creator', [
             'sanitize_callback' => 'sanitize_text_field',
         ]);
+        register_setting('gm2_seo_options', 'gm2_org_name', [
+            'sanitize_callback' => 'sanitize_text_field',
+        ]);
+        register_setting('gm2_seo_options', 'gm2_org_logo', [
+            'sanitize_callback' => 'esc_url_raw',
+        ]);
+        register_setting('gm2_seo_options', 'gm2_site_search_url', [
+            'sanitize_callback' => 'esc_url_raw',
+        ]);
         register_setting('gm2_seo_options', 'gm2_gads_developer_token', [
             'sanitize_callback' => 'sanitize_text_field',
         ]);
@@ -583,6 +592,40 @@ class Gm2_SEO_Admin {
             function () {
                 $value = get_option('gm2_twitter_creator', '');
                 echo '<input type="text" name="gm2_twitter_creator" value="' . esc_attr($value) . '" class="regular-text" />';
+            },
+            'gm2_seo',
+            'gm2_seo_main'
+        );
+
+        add_settings_field(
+            'gm2_org_name',
+            'Organization Name',
+            function () {
+                $value = get_option('gm2_org_name', '');
+                echo '<input type="text" name="gm2_org_name" value="' . esc_attr($value) . '" class="regular-text" />';
+            },
+            'gm2_seo',
+            'gm2_seo_main'
+        );
+
+        add_settings_field(
+            'gm2_org_logo',
+            'Organization Logo URL',
+            function () {
+                $value = get_option('gm2_org_logo', '');
+                echo '<input type="url" name="gm2_org_logo" value="' . esc_attr($value) . '" class="regular-text" />';
+            },
+            'gm2_seo',
+            'gm2_seo_main'
+        );
+
+        add_settings_field(
+            'gm2_site_search_url',
+            'Site Search URL',
+            function () {
+                $value = get_option('gm2_site_search_url', '');
+                echo '<input type="url" name="gm2_site_search_url" value="' . esc_attr($value) . '" class="regular-text" />';
+                echo '<p class="description">' . esc_html__( 'Include {search_term_string} in place of the query.', 'gm2-wordpress-suite' ) . '</p>';
             },
             'gm2_seo',
             'gm2_seo_main'
@@ -2661,6 +2704,9 @@ class Gm2_SEO_Admin {
         $sc_ver = isset($_POST['gm2_search_console_verification']) ? sanitize_text_field($_POST['gm2_search_console_verification']) : '';
         $tw_site = isset($_POST['gm2_twitter_site']) ? sanitize_text_field($_POST['gm2_twitter_site']) : '';
         $tw_creator = isset($_POST['gm2_twitter_creator']) ? sanitize_text_field($_POST['gm2_twitter_creator']) : '';
+        $org_name = isset($_POST['gm2_org_name']) ? sanitize_text_field($_POST['gm2_org_name']) : '';
+        $org_logo = isset($_POST['gm2_org_logo']) ? esc_url_raw($_POST['gm2_org_logo']) : '';
+        $search_url = isset($_POST['gm2_site_search_url']) ? esc_url_raw($_POST['gm2_site_search_url']) : '';
         $token  = isset($_POST['gm2_gads_developer_token']) ? sanitize_text_field($_POST['gm2_gads_developer_token']) : '';
         $cust   = isset($_POST['gm2_gads_customer_id']) ? $this->sanitize_customer_id($_POST['gm2_gads_customer_id']) : '';
         $clean  = isset($_POST['gm2_clean_slugs']) ? '1' : '0';
@@ -2671,6 +2717,9 @@ class Gm2_SEO_Admin {
         update_option('gm2_search_console_verification', $sc_ver);
         update_option('gm2_twitter_site', $tw_site);
         update_option('gm2_twitter_creator', $tw_creator);
+        update_option('gm2_org_name', $org_name);
+        update_option('gm2_org_logo', $org_logo);
+        update_option('gm2_site_search_url', $search_url);
         update_option('gm2_gads_developer_token', $token);
         update_option('gm2_gads_customer_id', $cust);
         update_option('gm2_clean_slugs', $clean);
