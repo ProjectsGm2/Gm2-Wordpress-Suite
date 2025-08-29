@@ -94,11 +94,15 @@ class Gm2_Remote_Mirror {
         if ($this->has_enabled_vendors()) {
             if (!$this->hooks_applied) {
                 add_filter('script_loader_src', [$this, 'rewrite'], 10, 2);
+                add_action('template_redirect', [$this, 'start_buffer']);
+                add_action('shutdown', [$this, 'end_buffer']);
                 $this->hooks_applied = true;
             }
         } else {
             if ($this->hooks_applied) {
                 remove_filter('script_loader_src', [$this, 'rewrite'], 10);
+                remove_action('template_redirect', [$this, 'start_buffer']);
+                remove_action('shutdown', [$this, 'end_buffer']);
                 $this->hooks_applied = false;
             }
         }
@@ -140,24 +144,77 @@ class Gm2_Remote_Mirror {
      * Rewrite script src to use locally cached versions when available.
      */
     public function rewrite(string $src, string $handle): string {
+        $src_host = parse_url($src, PHP_URL_HOST);
+        $src_path = (string) (parse_url($src, PHP_URL_PATH) ?? '');
         foreach ($this->vendors as $vendor => $data) {
             if (!$this->is_vendor_enabled($vendor)) {
                 continue;
             }
             foreach ($data['urls'] as $remote_url) {
-                if (strpos($src, $remote_url) === 0) {
-                    $filename = basename(parse_url($remote_url, PHP_URL_PATH) ?? '');
-                    $result   = $this->fetch_and_cache($remote_url, $vendor);
+                $remote_host = parse_url($remote_url, PHP_URL_HOST);
+                $remote_path = (string) (parse_url($remote_url, PHP_URL_PATH) ?? '');
+                if ($src_host === $remote_host && strpos($src_path, $remote_path) === 0) {
+                    $result = $this->fetch_and_cache($remote_url, $vendor);
                     if (is_wp_error($result)) {
                         return $src;
                     }
-                    $local = $this->get_local_url($vendor, $filename);
-                    $query = substr($src, strlen($remote_url));
-                    return $local . $query;
+                    $parts = parse_url($src);
+                    $query = isset($parts['query']) ? '?' . $parts['query'] : '';
+                    $frag  = isset($parts['fragment']) ? '#' . $parts['fragment'] : '';
+                    return $result['url'] . $query . $frag;
                 }
             }
         }
         return $src;
+    }
+
+    /**
+     * Start output buffering to capture hardcoded script tags.
+     */
+    public function start_buffer(): void {
+        ob_start();
+    }
+
+    /**
+     * Process the buffer and replace hardcoded vendor scripts.
+     */
+    public function end_buffer(): void {
+        $buffer = ob_get_clean();
+        if ($buffer === false) {
+            return;
+        }
+        echo $this->replace_hardcoded_scripts($buffer);
+    }
+
+    /**
+     * Replace hardcoded vendor script URLs in HTML.
+     */
+    protected function replace_hardcoded_scripts(string $html): string {
+        foreach ($this->vendors as $vendor => $data) {
+            if (!$this->is_vendor_enabled($vendor)) {
+                continue;
+            }
+            foreach ($data['urls'] as $remote_url) {
+                $pattern = '#<script([^>]+)src=["\'](' . preg_quote($remote_url, '#') . '[^"\']*)["\']([^>]*)></script>#i';
+                $html = preg_replace_callback(
+                    $pattern,
+                    function ($matches) use ($vendor, $remote_url) {
+                        $src = $matches[2];
+                        $result = $this->fetch_and_cache($remote_url, $vendor);
+                        if (is_wp_error($result)) {
+                            return $matches[0];
+                        }
+                        $parts = parse_url($src);
+                        $query = isset($parts['query']) ? '?' . $parts['query'] : '';
+                        $frag  = isset($parts['fragment']) ? '#' . $parts['fragment'] : '';
+                        $local = $result['url'] . $query . $frag;
+                        return '<script' . $matches[1] . 'src="' . $local . '"' . $matches[3] . '></script>';
+                    },
+                    $html
+                );
+            }
+        }
+        return $html;
     }
 
     /**
