@@ -103,6 +103,7 @@ require_once GM2_PLUGIN_DIR . 'includes/Gm2_Capability_Manager.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Workflow_Manager.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Audit_Log.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Ajax_Upload.php';
+require_once GM2_PLUGIN_DIR . 'includes/Gm2_Script_Attributes.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Search_Console.php';
 require_once GM2_PLUGIN_DIR . 'includes/Versioning_MTime.php';
 
@@ -112,6 +113,7 @@ require_once GM2_PLUGIN_DIR . 'includes/Versioning_MTime.php';
 \Gm2\Gm2_REST_Fields::init();
 \Gm2\Gm2_Webhooks::init();
 \Gm2\Gm2_Ajax_Upload::init();
+\Gm2\Gm2_Script_Attributes::init();
 \Gm2\Gm2_Search_Console::init();
 \Gm2\Versioning_MTime::init();
 if (get_option('gm2_pretty_versioned_urls', '0') === '1') {
