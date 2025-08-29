@@ -11,6 +11,7 @@ class Gm2_Cache_Audit_Admin {
         add_action('network_admin_menu', [ $this, 'add_network_menu' ]);
         add_action('admin_post_gm2_cache_audit_rescan', [ $this, 'handle_rescan' ]);
         add_action('admin_post_gm2_cache_audit_export', [ $this, 'handle_export' ]);
+        add_action('admin_enqueue_scripts', [ $this, 'enqueue_scripts' ]);
     }
 
     public function add_menu() {
@@ -40,6 +41,42 @@ class Gm2_Cache_Audit_Admin {
             'manage_network',
             'gm2-cache-audit',
             [ $this, 'display_page' ]
+        );
+    }
+
+    public function enqueue_scripts($hook) {
+        if (strpos($hook, 'gm2-cache-audit') === false) {
+            return;
+        }
+        wp_enqueue_script(
+            'gm2-cache-audit',
+            GM2_PLUGIN_URL . 'admin/js/gm2-cache-audit.js',
+            [ 'jquery' ],
+            file_exists(GM2_PLUGIN_DIR . 'admin/js/gm2-cache-audit.js') ? filemtime(GM2_PLUGIN_DIR . 'admin/js/gm2-cache-audit.js') : GM2_VERSION,
+            true
+        );
+        wp_localize_script(
+            'gm2-cache-audit',
+            'gm2CacheAudit',
+            [
+                'filter_url' => admin_url('admin-ajax.php?action=gm2_cache_audit_filter'),
+                'rescan_url' => admin_url('admin-ajax.php?action=gm2_cache_audit_rescan'),
+                'export_url' => admin_url('admin-ajax.php?action=gm2_cache_audit_export'),
+                'filter_nonce' => wp_create_nonce('gm2_cache_audit_filter'),
+                'rescan_nonce' => wp_create_nonce('gm2_cache_audit_rescan'),
+                'export_nonce' => wp_create_nonce('gm2_cache_audit_export'),
+                'strings' => [
+                    'filter' => __( 'Filter', 'gm2-wordpress-suite' ),
+                    'rescan' => __( 'Re-scan', 'gm2-wordpress-suite' ),
+                    'export' => __( 'Export CSV', 'gm2-wordpress-suite' ),
+                ],
+            ]
+        );
+        wp_enqueue_style(
+            'gm2-cache-audit',
+            GM2_PLUGIN_URL . 'admin/css/gm2-cache-audit.css',
+            [],
+            file_exists(GM2_PLUGIN_DIR . 'admin/css/gm2-cache-audit.css') ? filemtime(GM2_PLUGIN_DIR . 'admin/css/gm2-cache-audit.css') : GM2_VERSION
         );
     }
 
@@ -105,7 +142,7 @@ class Gm2_Cache_Audit_Admin {
     public function display_page() {
         $site_id = is_network_admin() ? (int) ($_GET['site_id'] ?? 0) : 0;
         $switched = false;
-        echo '<div class="wrap"><h1>' . esc_html__('Cache Audit', 'gm2-wordpress-suite') . '</h1>';
+        echo '<div class="wrap" id="gm2-cache-audit"><h1>' . esc_html__('Cache Audit', 'gm2-wordpress-suite') . '</h1>';
         if (is_network_admin()) {
             echo '<form method="get" style="margin-bottom:10px;">';
             echo '<input type="hidden" name="page" value="gm2-cache-audit" />';
