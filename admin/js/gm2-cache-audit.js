@@ -49,7 +49,7 @@ jQuery(function($){
                     $btn.prop('disabled', false);
                 }
             } else {
-                var msg = resp && resp.data ? resp.data : gm2CacheAudit.generic_error;
+                var msg = resp && resp.data && resp.data.message ? resp.data.message : gm2CacheAudit.generic_error;
                 showError($row, msg);
                 $btn.prop('disabled', false);
             }
@@ -103,7 +103,7 @@ jQuery(function($){
                         item.$row.find('.gm2-cache-select').remove();
                     }
                 } else {
-                    var msg = resp && resp.data ? resp.data : gm2CacheAudit.generic_error;
+                    var msg = resp && resp.data && resp.data.message ? resp.data.message : gm2CacheAudit.generic_error;
                     showError(item.$row, msg);
                     if (typeof wp !== 'undefined' && wp.a11y && wp.a11y.speak) {
                         wp.a11y.speak(gm2CacheAudit.bulk_halted.replace('%s', msg));

@@ -224,8 +224,31 @@ class Gm2_Cache_Audit {
         }
 
         if ($host_type !== 'third' && (in_array('short_max_age', $issues, true) || in_array('missing_cache_control', $issues, true))) {
-            \Gm2\Gm2_Cache_Headers_Apache::maybe_apply();
-            \Gm2\Gm2_Cache_Headers_Nginx::maybe_apply();
+            $apache = \Gm2\Gm2_Cache_Headers_Apache::maybe_apply();
+            $nginx  = \Gm2\Gm2_Cache_Headers_Nginx::maybe_apply();
+
+            $primary   = $apache['status'] !== 'unsupported' ? $apache : $nginx;
+            $server    = ($primary === $nginx) ? 'nginx' : 'apache';
+
+            if (in_array($primary['status'], ['unsupported', 'already_handled', 'not_writable'], true)) {
+                $msg = '';
+                if ($primary['status'] === 'unsupported') {
+                    $msg = __('Unsupported server environment.', 'gm2-wordpress-suite');
+                } elseif ($primary['status'] === 'already_handled') {
+                    $msg = __('Cache headers already handled by CDN or server.', 'gm2-wordpress-suite');
+                } elseif ($primary['status'] === 'not_writable') {
+                    if (isset($primary['file'])) {
+                        $msg = sprintf(__('Cannot write to %s. Please update manually.', 'gm2-wordpress-suite'), $primary['file']);
+                    } else {
+                        $file = ABSPATH . '.htaccess';
+                        $msg = sprintf(__('Cannot write to %s. Please update manually.', 'gm2-wordpress-suite'), $file);
+                    }
+                    if (isset($primary['rules'])) {
+                        $msg .= ' ' . sprintf(__('Rules: %s', 'gm2-wordpress-suite'), $primary['rules']);
+                    }
+                }
+                return new \WP_Error($primary['status'], $msg);
+            }
 
             $resp = wp_remote_head($url);
             $code = is_wp_error($resp) ? 0 : wp_remote_retrieve_response_code($resp);
@@ -242,7 +265,8 @@ class Gm2_Cache_Audit {
                 $ttl = strtotime($expires) - time();
             }
             if ($ttl === null || $ttl < 604800) {
-                return new \WP_Error('fix_failed', __('Failed to verify cache headers.', 'gm2-wordpress-suite'));
+                $msg = $server === 'nginx' ? __('Nginx config needs manual reload.', 'gm2-wordpress-suite') : __('Failed to verify cache headers.', 'gm2-wordpress-suite');
+                return new \WP_Error('fix_failed', $msg);
             }
             $updated['cache_control'] = $cache_control;
             $updated['expires']       = $expires;
