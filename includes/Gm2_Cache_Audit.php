@@ -45,12 +45,12 @@ class Gm2_Cache_Audit {
         if ($body) {
             if (preg_match_all('#<script[^>]+src=["\']([^"\']+)["\']#i', $body, $m)) {
                 foreach ($m[1] as $src) {
-                    $urls[self::abs_url($src)] = 'script';
+                    $urls[self::abs_url($src)] = [ 'type' => 'script', 'handle' => null ];
                 }
             }
             if (preg_match_all('#<link[^>]+rel=["\']stylesheet["\'][^>]*href=["\']([^"\']+)["\']#i', $body, $m)) {
                 foreach ($m[1] as $href) {
-                    $urls[self::abs_url($href)] = 'style';
+                    $urls[self::abs_url($href)] = [ 'type' => 'style', 'handle' => null ];
                 }
             }
             if (preg_match_all('#<link[^>]+rel=["\'](preload|preconnect)["\'][^>]*href=["\']([^"\']+)["\'][^>]*>#i', $body, $matches, PREG_SET_ORDER)) {
@@ -69,35 +69,37 @@ class Gm2_Cache_Audit {
                             $type = 'image';
                         }
                     }
-                    $urls[self::abs_url($href)] = $type;
+                    $urls[self::abs_url($href)] = [ 'type' => $type, 'handle' => null ];
                 }
             }
             if (preg_match_all('#<img[^>]+src=["\']([^"\']+)["\']#i', $body, $m)) {
                 foreach ($m[1] as $src) {
-                    $urls[self::abs_url($src)] = 'image';
+                    $urls[self::abs_url($src)] = [ 'type' => 'image', 'handle' => null ];
                 }
             }
         }
 
-        foreach ($scripts->registered as $data) {
+        foreach ($scripts->registered as $handle => $data) {
             if (!empty($data->src)) {
                 $url = self::abs_url($data->src);
                 if ($url) {
-                    $urls[$url] = 'script';
+                    $urls[$url] = [ 'type' => 'script', 'handle' => $handle ];
                 }
             }
         }
-        foreach ($styles->registered as $data) {
+        foreach ($styles->registered as $handle => $data) {
             if (!empty($data->src)) {
                 $url = self::abs_url($data->src);
                 if ($url) {
-                    $urls[$url] = 'style';
+                    $urls[$url] = [ 'type' => 'style', 'handle' => $handle ];
                 }
             }
         }
 
         $assets = [];
-        foreach ($urls as $url => $type) {
+        foreach ($urls as $url => $info) {
+            $type   = $info['type'];
+            $handle = $info['handle'];
             if (!$url || !preg_match('#^https?://#i', $url)) {
                 continue;
             }
@@ -138,6 +140,7 @@ class Gm2_Cache_Audit {
             $assets[] = [
                 'url'            => $url,
                 'type'           => $type,
+                'handle'         => $handle,
                 'cache_control'  => $cache_control,
                 'expires'        => $expires,
                 'etag'           => $etag,
@@ -157,8 +160,9 @@ class Gm2_Cache_Audit {
     }
 
     public static function apply_fix(array $asset) {
-        $url  = $asset['url'] ?? '';
-        $type = $asset['type'] ?? '';
+        $url    = $asset['url'] ?? '';
+        $type   = $asset['type'] ?? '';
+        $handle = $asset['handle'] ?? null;
         if (!$url || !$type) {
             return new \WP_Error('invalid_asset', __('Invalid asset.', 'gm2-wordpress-suite'));
         }
@@ -179,8 +183,9 @@ class Gm2_Cache_Audit {
             return new \WP_Error('asset_not_found', __('Asset not found.', 'gm2-wordpress-suite'));
         }
 
-        $stored = $results['assets'][$index];
-        $issues = $stored['issues'] ?? [];
+        $stored  = $results['assets'][$index];
+        $issues  = $stored['issues'] ?? [];
+        $handle  = $handle ?? ($stored['handle'] ?? null);
 
         $asset_host = parse_url($url, PHP_URL_HOST);
         $home_host  = parse_url(home_url(), PHP_URL_HOST);
@@ -220,6 +225,9 @@ class Gm2_Cache_Audit {
             if (get_option('gm2_pretty_versioned_urls') !== '1') {
                 return new \WP_Error('fix_failed', __('Failed to enable versioned URLs.', 'gm2-wordpress-suite'));
             }
+            if ($handle) {
+                $updated['url'] = \Gm2\Versioning_MTime::update_src($url, $handle);
+            }
             $updated['issues'] = array_diff($updated['issues'], ['missing_immutable']);
         }
 
@@ -227,15 +235,6 @@ class Gm2_Cache_Audit {
             $attrs = get_option('gm2_script_attributes', []);
             if (!is_array($attrs)) {
                 $attrs = [];
-            }
-            $handle = null;
-            $scripts = wp_scripts();
-            foreach ($scripts->registered as $h => $data) {
-                $src = static::abs_url($data->src ?? '');
-                if ($src === $url) {
-                    $handle = $h;
-                    break;
-                }
             }
             if (!$handle) {
                 return new \WP_Error('fix_failed', __('Script handle not found.', 'gm2-wordpress-suite'));

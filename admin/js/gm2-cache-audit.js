@@ -22,7 +22,8 @@ jQuery(function($){
         var data = {
             nonce: gm2CacheAudit.fix_nonce,
             url: $btn.data('url'),
-            asset_type: $btn.data('type')
+            asset_type: $btn.data('type'),
+            handle: $btn.data('handle')
         };
         $btn.prop('disabled', true);
         $.post(gm2CacheAudit.fix_url, data).done(function(resp){
@@ -48,6 +49,7 @@ jQuery(function($){
             items.push({
                 url: $(this).data('url'),
                 type: $(this).data('type'),
+                handle: $(this).data('handle'),
                 $row: $(this).closest('tr'),
                 $checkbox: $(this)
             });
@@ -69,7 +71,8 @@ jQuery(function($){
             var data = {
                 nonce: gm2CacheAudit.fix_nonce,
                 url: item.url,
-                asset_type: item.type
+                asset_type: item.type,
+                handle: item.handle
             };
             $.post(gm2CacheAudit.fix_url, data).done(function(resp){
                 if (resp && resp.success) {

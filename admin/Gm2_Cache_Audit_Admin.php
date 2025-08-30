@@ -259,7 +259,7 @@ class Gm2_Cache_Audit_Admin {
                 $size = $a['content_length'] ? round($a['content_length']/1024, 2) : '';
                 $url_trunc = esc_html(wp_html_excerpt($a['url'], 60, '&hellip;'));
                 echo '<tr>';
-                echo '<td><input type="checkbox" class="gm2-cache-select" data-url="' . esc_attr($a['url']) . '" data-type="' . esc_attr($a['type']) . '" /></td>';
+                echo '<td><input type="checkbox" class="gm2-cache-select" data-url="' . esc_attr($a['url']) . '" data-type="' . esc_attr($a['type']) . '" data-handle="' . esc_attr($a['handle'] ?? '') . '" /></td>';
                 echo '<td><a href="' . esc_url($a['url']) . '" target="_blank">' . $url_trunc . '</a></td>';
                 echo '<td>' . esc_html($a['type']) . '</td>';
                 echo '<td>' . esc_html($ttl) . '</td>';
@@ -269,7 +269,7 @@ class Gm2_Cache_Audit_Admin {
                 echo '<td>' . esc_html($size) . '</td>';
                 echo '<td class="gm2-cache-status">' . esc_html($status_label) . '</td>';
                 echo '<td class="gm2-cache-fix">' . esc_html($fix) . '</td>';
-                echo '<td><button type="button" class="button gm2-cache-fix-now" data-url="' . esc_attr($a['url']) . '" data-type="' . esc_attr($a['type']) . '">' . esc_html__('Fix Now', 'gm2-wordpress-suite') . '</button></td>';
+                echo '<td><button type="button" class="button gm2-cache-fix-now" data-url="' . esc_attr($a['url']) . '" data-type="' . esc_attr($a['type']) . '" data-handle="' . esc_attr($a['handle'] ?? '') . '">' . esc_html__('Fix Now', 'gm2-wordpress-suite') . '</button></td>';
                 echo '</tr>';
             }
         }
@@ -286,15 +286,17 @@ class Gm2_Cache_Audit_Admin {
             wp_send_json_error(__('Access denied.', 'gm2-wordpress-suite'));
         }
         check_ajax_referer('gm2_cache_audit_fix', 'nonce');
-        $url  = isset($_POST['url']) ? esc_url_raw(wp_unslash($_POST['url'])) : '';
-        $type = isset($_POST['asset_type']) ? sanitize_key(wp_unslash($_POST['asset_type'])) : '';
+        $url    = isset($_POST['url']) ? esc_url_raw(wp_unslash($_POST['url'])) : '';
+        $type   = isset($_POST['asset_type']) ? sanitize_key(wp_unslash($_POST['asset_type'])) : '';
+        $handle = isset($_POST['handle']) ? sanitize_key(wp_unslash($_POST['handle'])) : '';
         if (!$url || !$type) {
             wp_send_json_error(__('Invalid asset.', 'gm2-wordpress-suite'));
         }
 
         $asset = [
-            'url'  => $url,
-            'type' => $type,
+            'url'    => $url,
+            'type'   => $type,
+            'handle' => $handle ? $handle : null,
         ];
 
         $updated = Gm2_Cache_Audit::apply_fix($asset);
