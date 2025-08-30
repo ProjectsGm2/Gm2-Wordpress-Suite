@@ -228,7 +228,6 @@ class Gm2_Cache_Audit {
             $nginx  = \Gm2\Gm2_Cache_Headers_Nginx::maybe_apply();
 
             $primary   = $apache['status'] !== 'unsupported' ? $apache : $nginx;
-            $server    = ($primary === $nginx) ? 'nginx' : 'apache';
 
             if (in_array($primary['status'], ['unsupported', 'already_handled', 'not_writable'], true)) {
                 $msg = '';
@@ -264,14 +263,16 @@ class Gm2_Cache_Audit {
             } elseif ($expires) {
                 $ttl = strtotime($expires) - time();
             }
-            if ($ttl === null || $ttl < 604800) {
-                $msg = $server === 'nginx' ? __('Nginx config needs manual reload.', 'gm2-wordpress-suite') : __('Failed to verify cache headers.', 'gm2-wordpress-suite');
-                return new \WP_Error('fix_failed', $msg);
-            }
+
+            // Store the measured headers/TTL regardless of success so the UI can display them.
             $updated['cache_control'] = $cache_control;
             $updated['expires']       = $expires;
             $updated['ttl']           = $ttl;
-            $updated['issues']        = array_diff($updated['issues'], ['short_max_age', 'missing_cache_control']);
+
+            // Only clear related issues if the TTL verifies at a week or longer.
+            if ($ttl !== null && $ttl >= 604800) {
+                $updated['issues'] = array_diff($updated['issues'], ['short_max_age', 'missing_cache_control']);
+            }
         }
 
         if (in_array('missing_immutable', $issues, true)) {

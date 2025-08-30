@@ -328,10 +328,12 @@ class Gm2_Cache_Audit_Admin {
         $fix        = !empty($updated['needs_attention']) ? $this->suggested_fix($updated, $host_type) : '';
 
         wp_send_json_success([
-            'status' => $status,
-            'fix'    => $fix,
-            'url'    => $updated['url'] ?? $url,
-            'type'   => $updated['type'] ?? $type,
+            'status'          => $status,
+            'fix'             => $fix,
+            'url'             => $updated['url'] ?? $url,
+            'type'            => $updated['type'] ?? $type,
+            'ttl'             => $updated['ttl'] ?? null,
+            'needs_attention' => !empty($updated['needs_attention']),
         ]);
     }
 

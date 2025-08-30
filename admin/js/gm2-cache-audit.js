@@ -41,12 +41,19 @@ jQuery(function($){
             if (resp && resp.success && resp.data) {
                 $row.find('.gm2-cache-status').text(resp.data.status);
                 $row.find('.gm2-cache-fix').text(resp.data.fix);
-                if (!resp.data.fix) {
-                    $row.find('.gm2-cache-select').remove();
+                if (typeof resp.data.ttl !== 'undefined') {
+                    $row.find('td').eq(3).text(resp.data.ttl);
+                }
+                var $checkbox = $row.find('.gm2-cache-select');
+                if (resp.data.needs_attention) {
+                    if ($checkbox.length) {
+                        $checkbox.prop('checked', true);
+                    }
+                    $btn.prop('disabled', false);
+                } else {
+                    $checkbox.remove();
                     $btn.remove();
                     $('#gm2-cache-select-all').prop('checked', false);
-                } else {
-                    $btn.prop('disabled', false);
                 }
             } else {
                 var msg = resp && resp.data && resp.data.message ? resp.data.message : gm2CacheAudit.generic_error;
@@ -98,9 +105,14 @@ jQuery(function($){
                 if (resp && resp.success && resp.data) {
                     item.$row.find('.gm2-cache-status').text(resp.data.status);
                     item.$row.find('.gm2-cache-fix').text(resp.data.fix);
-                    if (!resp.data.fix) {
+                    if (typeof resp.data.ttl !== 'undefined') {
+                        item.$row.find('td').eq(3).text(resp.data.ttl);
+                    }
+                    if (resp.data.needs_attention) {
+                        item.$checkbox.prop('checked', true);
+                    } else {
                         item.$row.find('.gm2-cache-fix-now').remove();
-                        item.$row.find('.gm2-cache-select').remove();
+                        item.$checkbox.remove();
                     }
                 } else {
                     var msg = resp && resp.data && resp.data.message ? resp.data.message : gm2CacheAudit.generic_error;
@@ -118,7 +130,6 @@ jQuery(function($){
                 }
                 stopOnError = true;
             }).always(function(){
-                item.$checkbox.prop('checked', false);
                 processed++;
                 var percent = Math.round((processed / total) * 100);
                 $bar.css('width', percent + '%');
