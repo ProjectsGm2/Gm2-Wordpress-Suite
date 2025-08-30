@@ -170,6 +170,13 @@ class Gm2_Cache_Audit_Admin {
             echo '<div class="updated notice"><p>' . esc_html__('Scan complete.', 'gm2-wordpress-suite') . '</p></div>';
         }
 
+        echo '<div class="gm2-shell-panel notice notice-info" style="padding:15px;">';
+        echo '<p><strong>' . esc_html__('Quick cache checks', 'gm2-wordpress-suite') . '</strong></p>';
+        echo '<p><input type="text" class="large-text code" readonly value="curl -I https://example.com/wp-includes/js/jquery/jquery.min.js" /></p>';
+        echo '<p>' . esc_html__('Expect a Cache-Control header such as: max-age=31536000, public', 'gm2-wordpress-suite') . '</p>';
+        echo '<p>' . esc_html__('In DevTools, ensure "Disable cache" is unchecked, perform a hard reload, then confirm the file loads from disk cache on repeat view.', 'gm2-wordpress-suite') . '</p>';
+        echo '</div>';
+
         echo '<form method="get" style="margin-bottom:10px;">';
         echo '<input type="hidden" name="page" value="gm2-cache-audit" />';
         if ($site_id) {

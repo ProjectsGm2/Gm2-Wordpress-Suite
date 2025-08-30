@@ -288,6 +288,16 @@ individually. Access requires the `manage_options` capability (`manage_network`
 for multisite) and the last scan is stored in the
 `gm2_cache_audit_results` option with a `scanned_at` timestamp.
 
+A small panel on this screen offers quick copy-ready checks:
+
+```
+curl -I https://example.com/wp-includes/js/jquery/jquery.min.js
+```
+
+Verify the `Cache-Control` header matches expectations. For repeat-view testing,
+open your browser DevTools with **Disable cache** unchecked, perform a hard
+reload, and confirm the file loads from disk cache.
+
 ## SEO Performance CLI
 
 Run `wp seo-perf` commands to audit a site and manage caching headers.
