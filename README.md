@@ -134,6 +134,14 @@ Use the presets on **SEO → Performance → Script Loading**:
 Scripts that call `document.write` or expect synchronous execution should stay
 blocking. Deferring these scripts can break page output or tracking snippets.
 
+## Cache Headers
+
+On Apache or LiteSpeed the plugin automatically inserts long-lived caching
+rules into `.htaccess` using the `SEO_PLUGIN_CACHE_HEADERS` marker. Generated
+directives enable `Expires` and `Cache-Control` headers for common static assets
+like stylesheets, scripts, images and fonts. If the file is not writable the
+rules are returned so they can be added manually.
+
 ## Remote Script Mirroring
 
 The **Remote Mirror** feature caches third-party tracking scripts locally and rewrites
