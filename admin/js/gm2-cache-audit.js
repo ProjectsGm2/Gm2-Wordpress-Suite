@@ -3,6 +3,16 @@ jQuery(function($){
         return;
     }
 
+    function showError($row, msg){
+        if (typeof wp !== 'undefined' && wp.a11y && wp.a11y.speak) {
+            wp.a11y.speak(msg);
+        }
+        var $cell = $row.find('.gm2-cache-fix');
+        var $notice = $('<div class="gm2-cache-error notice notice-error inline"><p></p></div>');
+        $notice.find('p').text(msg);
+        $cell.append($notice);
+    }
+
     // Toggle all asset checkboxes.
     $(document).on('change', '#gm2-cache-select-all', function(){
         $('.gm2-cache-select').prop('checked', this.checked);
@@ -27,15 +37,18 @@ jQuery(function($){
         };
         $btn.prop('disabled', true);
         $.post(gm2CacheAudit.fix_url, data).done(function(resp){
+            var $row = $btn.closest('tr');
             if (resp && resp.success) {
-                var $row = $btn.closest('tr');
                 $row.find('.gm2-cache-status').text(resp.data.status);
                 $row.find('.gm2-cache-fix').text(resp.data.fix);
                 $btn.remove();
             } else {
+                var msg = resp && resp.data ? resp.data : gm2CacheAudit.generic_error;
+                showError($row, msg);
                 $btn.prop('disabled', false);
             }
         }).fail(function(){
+            showError($btn.closest('tr'), gm2CacheAudit.generic_error);
             $btn.prop('disabled', false);
         });
     });
@@ -59,12 +72,13 @@ jQuery(function($){
         }
         var total = items.length,
             processed = 0,
+            stopOnError = false,
             $progress = $('#gm2-fix-progress').show().removeClass('complete'),
             $bar = $progress.find('.gm2-progress-bar').width('0%'),
             $text = $progress.find('.gm2-progress-text').text('0%');
         $bulkBtn.prop('disabled', true);
         function processNext(){
-            if (!items.length) {
+            if (!items.length || stopOnError) {
                 return;
             }
             var item = items.shift();
@@ -79,14 +93,28 @@ jQuery(function($){
                     item.$row.find('.gm2-cache-status').text(resp.data.status);
                     item.$row.find('.gm2-cache-fix').text(resp.data.fix);
                     item.$row.find('.gm2-cache-fix-now').remove();
+                } else {
+                    var msg = resp && resp.data ? resp.data : gm2CacheAudit.generic_error;
+                    showError(item.$row, msg);
+                    if (typeof wp !== 'undefined' && wp.a11y && wp.a11y.speak) {
+                        wp.a11y.speak(gm2CacheAudit.bulk_halted.replace('%s', msg));
+                    }
+                    stopOnError = true;
                 }
+            }).fail(function(){
+                var msg = gm2CacheAudit.generic_error;
+                showError(item.$row, msg);
+                if (typeof wp !== 'undefined' && wp.a11y && wp.a11y.speak) {
+                    wp.a11y.speak(gm2CacheAudit.bulk_halted.replace('%s', msg));
+                }
+                stopOnError = true;
             }).always(function(){
                 item.$checkbox.prop('checked', false);
                 processed++;
                 var percent = Math.round((processed / total) * 100);
                 $bar.css('width', percent + '%');
                 $text.text(percent + '%');
-                if (processed >= total) {
+                if (processed >= total || stopOnError) {
                     $bulkBtn.prop('disabled', false);
                     $('#gm2-cache-select-all').prop('checked', false);
                     $progress.addClass('complete');

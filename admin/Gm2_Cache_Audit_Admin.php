@@ -68,6 +68,8 @@ class Gm2_Cache_Audit_Admin {
                 'rescan_nonce' => wp_create_nonce('gm2_cache_audit_rescan'),
                 'export_nonce' => wp_create_nonce('gm2_cache_audit_export'),
                 'fix_nonce'   => wp_create_nonce('gm2_cache_audit_fix'),
+                'generic_error' => __( 'An error occurred.', 'gm2-wordpress-suite' ),
+                'bulk_halted'   => __( 'Bulk fix halted: %s', 'gm2-wordpress-suite' ),
                 'strings' => [
                     'filter' => __( 'Filter', 'gm2-wordpress-suite' ),
                     'rescan' => __( 'Re-scan', 'gm2-wordpress-suite' ),
