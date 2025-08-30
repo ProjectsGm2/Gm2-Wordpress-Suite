@@ -3,7 +3,7 @@ Contributors: gm2team
 Tags: admin, tools, suite, performance
 Requires at least: 6.0
 Tested up to: 6.5
-Stable tag: 1.6.20
+Stable tag: 1.6.21
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -84,6 +84,15 @@ Filter by asset type, host or status, click **Re-scan** to run the scan again or
 individual sites from the Network Admin and audit each separately. Access requires
 `manage_options` (`manage_network` on multisite). Results, including the last run
 timestamp, are stored in the `gm2_cache_audit_results` option.
+
+The screen also includes a quick shell panel with copy-ready checks:
+
+```
+curl -I https://example.com/wp-includes/js/jquery/jquery.min.js
+```
+
+Verify the `Cache-Control` header and, for repeat-view testing, keep **Disable cache**
+unchecked in DevTools, hard reload the page and confirm the file loads from disk cache.
 
 == SEO Performance CLI ==
 Run `wp seo-perf` commands to audit your site and manage caching headers.
