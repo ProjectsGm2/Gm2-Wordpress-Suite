@@ -40,6 +40,7 @@ class AE_SEO_Critical_CSS {
 
         add_filter('style_loader_tag', [ $this, 'filter_style_tag' ], 10, 4);
         add_action('wp_head', [ $this, 'print_manual_css' ], 1);
+        \assert(1 === has_action('wp_head', [ $this, 'print_manual_css' ]));
     }
 
     /**
@@ -48,25 +49,35 @@ class AE_SEO_Critical_CSS {
      * @return void
      */
     public function print_manual_css() {
-        $map = AE_SEO_Render_Optimizer::get_option(self::OPTION_CSS_MAP, []);
-        if (!is_array($map)) {
+        if (AE_SEO_Render_Optimizer::get_option(self::OPTION_ENABLE, '0') !== '1') {
             return;
         }
 
-        $key = '';
-        if (is_front_page() || is_home()) {
-            $key = 'home';
-        } elseif (is_archive()) {
-            $key = 'archive';
-        } elseif (is_singular()) {
-            $key = 'single-' . get_post_type();
+        $map = AE_SEO_Render_Optimizer::get_option(self::OPTION_CSS_MAP, []);
+        if (!is_array($map) || empty($map)) {
+            return;
+        }
+
+        $strategy = AE_SEO_Render_Optimizer::get_option(self::OPTION_STRATEGY, 'per_home_archive_single');
+        $key      = '';
+
+        if ($strategy === 'per_url_cache') {
+            $key = md5(home_url(add_query_arg([])));
+        } else {
+            if (is_front_page() || is_home()) {
+                $key = 'home';
+            } elseif (is_archive()) {
+                $key = 'archive';
+            } elseif (is_singular()) {
+                $key = 'single-' . get_post_type();
+            }
         }
 
         if ($key === '' || empty($map[$key])) {
             return;
         }
 
-        echo '<style id="gm2-critical-css">' . $map[$key] . '</style>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+        echo '<style id="ae-seo-critical-css">' . $map[$key] . '</style>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
     }
 
     /**
