@@ -55,11 +55,14 @@ jQuery(function($){
         if (!items.length) {
             return;
         }
+        var total = items.length,
+            processed = 0,
+            $progress = $('#gm2-fix-progress').show().removeClass('complete'),
+            $bar = $progress.find('.gm2-progress-bar').width('0%'),
+            $text = $progress.find('.gm2-progress-text').text('0%');
         $bulkBtn.prop('disabled', true);
         function processNext(){
             if (!items.length) {
-                $bulkBtn.prop('disabled', false);
-                $('#gm2-cache-select-all').prop('checked', false);
                 return;
             }
             var item = items.shift();
@@ -76,7 +79,18 @@ jQuery(function($){
                 }
             }).always(function(){
                 item.$checkbox.prop('checked', false);
-                processNext();
+                processed++;
+                var percent = Math.round((processed / total) * 100);
+                $bar.css('width', percent + '%');
+                $text.text(percent + '%');
+                if (processed >= total) {
+                    $bulkBtn.prop('disabled', false);
+                    $('#gm2-cache-select-all').prop('checked', false);
+                    $progress.addClass('complete');
+                    setTimeout(function(){ $progress.fadeOut(); }, 1000);
+                } else {
+                    processNext();
+                }
             });
         }
         processNext();

@@ -1,3 +1,29 @@
 /* Styles for Cache Audit admin table */
 #gm2-cache-audit .spinner{ float:none; margin-top:4px; }
 #gm2-cache-audit .gm2-shell-panel{ margin:20px 0; }
+
+#gm2-fix-progress{
+    position:relative;
+    display:none;
+    height:20px;
+    margin-top:10px;
+    background:#e1e1e1;
+}
+#gm2-fix-progress .gm2-progress-bar{
+    background:#0073aa;
+    height:100%;
+    width:0;
+    transition:width .3s ease;
+}
+#gm2-fix-progress .gm2-progress-text{
+    position:absolute;
+    top:0;
+    left:50%;
+    transform:translateX(-50%);
+    font-size:12px;
+    line-height:20px;
+    color:#fff;
+}
+#gm2-fix-progress.complete .gm2-progress-bar{
+    background:#46b450;
+}
