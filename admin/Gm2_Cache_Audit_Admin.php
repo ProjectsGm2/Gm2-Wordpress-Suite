@@ -73,6 +73,8 @@ class Gm2_Cache_Audit_Admin {
                     'rescan' => __( 'Re-scan', 'gm2-wordpress-suite' ),
                     'export' => __( 'Export CSV', 'gm2-wordpress-suite' ),
                     'fix'    => __( 'Fix Now', 'gm2-wordpress-suite' ),
+                    'bulk_fix' => __( 'Bulk Fix', 'gm2-wordpress-suite' ),
+                    'select_all' => __( 'Select All', 'gm2-wordpress-suite' ),
                 ],
             ]
         );
@@ -223,7 +225,11 @@ class Gm2_Cache_Audit_Admin {
         submit_button(__('Re-scan', 'gm2-wordpress-suite'), 'secondary', '', false);
         echo '</form>';
 
+        // Bulk fix button.
+        echo '<button type="button" class="button gm2-cache-bulk-fix">' . esc_html__( 'Bulk Fix', 'gm2-wordpress-suite' ) . '</button>';
+
         echo '<table class="widefat striped"><thead><tr>';
+        echo '<th><label><input type="checkbox" id="gm2-cache-select-all" /> ' . esc_html__( 'Select All', 'gm2-wordpress-suite' ) . '</label></th>';
         $cols = [
             'url'   => __('URL', 'gm2-wordpress-suite'),
             'type'  => __('Type', 'gm2-wordpress-suite'),
@@ -241,7 +247,7 @@ class Gm2_Cache_Audit_Admin {
         }
         echo '</tr></thead><tbody>';
         if (empty($assets)) {
-            echo '<tr><td colspan="10">' . esc_html__('No results found.', 'gm2-wordpress-suite') . '</td></tr>';
+            echo '<tr><td colspan="11">' . esc_html__('No results found.', 'gm2-wordpress-suite') . '</td></tr>';
         } else {
             foreach ($assets as $a) {
                 $asset_host = parse_url($a['url'], PHP_URL_HOST);
@@ -252,6 +258,7 @@ class Gm2_Cache_Audit_Admin {
                 $size = $a['content_length'] ? round($a['content_length']/1024, 2) : '';
                 $url_trunc = esc_html(wp_html_excerpt($a['url'], 60, '&hellip;'));
                 echo '<tr>';
+                echo '<td><input type="checkbox" class="gm2-cache-select" data-url="' . esc_attr($a['url']) . '" data-type="' . esc_attr($a['type']) . '" /></td>';
                 echo '<td><a href="' . esc_url($a['url']) . '" target="_blank">' . $url_trunc . '</a></td>';
                 echo '<td>' . esc_html($a['type']) . '</td>';
                 echo '<td>' . esc_html($ttl) . '</td>';
@@ -297,6 +304,8 @@ class Gm2_Cache_Audit_Admin {
         wp_send_json_success([
             'status' => __('Good', 'gm2-wordpress-suite'),
             'fix'    => '',
+            'url'    => $url,
+            'type'   => $type,
         ]);
     }
 
