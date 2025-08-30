@@ -288,5 +288,61 @@ individually. Access requires the `manage_options` capability (`manage_network`
 for multisite) and the last scan is stored in the
 `gm2_cache_audit_results` option with a `scanned_at` timestamp.
 
+## SEO Performance CLI
+
+Run `wp seo-perf` commands to audit a site and manage caching headers.
+
+- `wp seo-perf audit` – Runs an AI-powered audit and prints JSON
+  recommendations.
+- `wp seo-perf apply-htaccess` – Writes cache headers into `.htaccess`.
+- `wp seo-perf generate-nginx` – Generates an Nginx include file with
+  caching rules.
+- `wp seo-perf clear-markers` – Removes `.htaccess` markers and the Nginx
+  file.
+
+### Usage
+
+```bash
+wp seo-perf audit > audit.json
+wp seo-perf apply-htaccess
+wp seo-perf generate-nginx
+wp seo-perf clear-markers
+```
+
+`audit` outputs a JSON object describing issues and recommendations, for
+example:
+
+```json
+{
+  "issues": ["Missing Cache-Control on images"],
+  "recommendations": ["Add long-lived headers for static assets"]
+}
+```
+
+All commands are multisite-aware. Pass `--url=<site>` to target a specific
+site.
+
+### Exit codes
+
+| Command | Code | Meaning |
+|---------|------|---------|
+| `audit` | 0 | Success |
+|         | 1 | AI utilities missing or underlying error code |
+| `apply-htaccess` | 0 | Success |
+|         | 1 | Unsupported server |
+|         | 2 | CDN already sets headers |
+|         | 3 | `.htaccess` not writable |
+|         | 4 | Unknown result |
+| `generate-nginx` | 0 | Success |
+|         | 1 | Unsupported server |
+|         | 2 | CDN already sets headers |
+|         | 3 | Directory not writable |
+|         | 4 | Unknown result |
+| `clear-markers` | 0 | Success |
+|                | 1 | Could not remove generated file |
+
+WP-CLI prints an error message and exits with the code above. Review the
+message to resolve permission or server issues before retrying.
+
 
 
