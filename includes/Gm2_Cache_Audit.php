@@ -168,24 +168,119 @@ class Gm2_Cache_Audit {
             return new \WP_Error('asset_not_found', __('Asset not found.', 'gm2-wordpress-suite'));
         }
 
-        $updated = null;
-        foreach ($results['assets'] as &$stored) {
+        $index  = null;
+        foreach ($results['assets'] as $i => $stored) {
             if ($stored['url'] === $url && $stored['type'] === $type) {
-                // Here we would apply real fixes such as adjusting TTL or adding async/defer attributes.
-                $stored['needs_attention'] = false;
-                $stored['issues'] = [];
-                $updated = $stored;
+                $index = $i;
                 break;
             }
         }
-        unset($stored);
-
-        if ($updated) {
-            static::save_results($results);
-            return $updated;
+        if ($index === null) {
+            return new \WP_Error('asset_not_found', __('Asset not found.', 'gm2-wordpress-suite'));
         }
 
-        return new \WP_Error('asset_not_found', __('Asset not found.', 'gm2-wordpress-suite'));
+        $stored = $results['assets'][$index];
+        $issues = $stored['issues'] ?? [];
+
+        $asset_host = parse_url($url, PHP_URL_HOST);
+        $home_host  = parse_url(home_url(), PHP_URL_HOST);
+        $host_type  = ($asset_host && $asset_host === $home_host) ? 'same' : 'third';
+
+        $updated = $stored;
+
+        if (in_array('short_max_age', $issues, true) || in_array('missing_cache_control', $issues, true)) {
+            \Gm2\Gm2_Cache_Headers_Apache::maybe_apply();
+            \Gm2\Gm2_Cache_Headers_Nginx::maybe_apply();
+
+            $resp = wp_remote_head($url);
+            $code = is_wp_error($resp) ? 0 : wp_remote_retrieve_response_code($resp);
+            if (is_wp_error($resp) || in_array($code, [403, 405], true)) {
+                $resp = wp_remote_get($url, ['headers' => ['Range' => 'bytes=0-0']]);
+            }
+            $headers = is_wp_error($resp) ? [] : wp_remote_retrieve_headers($resp);
+            $cache_control = $headers['cache-control'] ?? '';
+            $expires       = $headers['expires'] ?? '';
+            $ttl = null;
+            if ($cache_control && preg_match('/max-age=([0-9]+)/', $cache_control, $m)) {
+                $ttl = (int) $m[1];
+            } elseif ($expires) {
+                $ttl = strtotime($expires) - time();
+            }
+            if ($ttl === null || $ttl < 604800) {
+                return new \WP_Error('fix_failed', __('Failed to verify cache headers.', 'gm2-wordpress-suite'));
+            }
+            $updated['cache_control'] = $cache_control;
+            $updated['expires']       = $expires;
+            $updated['ttl']           = $ttl;
+            $updated['issues']        = array_diff($updated['issues'], ['short_max_age', 'missing_cache_control']);
+        }
+
+        if (in_array('missing_immutable', $issues, true)) {
+            update_option('gm2_pretty_versioned_urls', '1');
+            if (get_option('gm2_pretty_versioned_urls') !== '1') {
+                return new \WP_Error('fix_failed', __('Failed to enable versioned URLs.', 'gm2-wordpress-suite'));
+            }
+            $updated['issues'] = array_diff($updated['issues'], ['missing_immutable']);
+        }
+
+        if ($host_type === 'third' && $type === 'script') {
+            $attrs = get_option('gm2_script_attributes', []);
+            if (!is_array($attrs)) {
+                $attrs = [];
+            }
+            $handle = null;
+            $scripts = wp_scripts();
+            foreach ($scripts->registered as $h => $data) {
+                $src = static::abs_url($data->src ?? '');
+                if ($src === $url) {
+                    $handle = $h;
+                    break;
+                }
+            }
+            if (!$handle) {
+                return new \WP_Error('fix_failed', __('Script handle not found.', 'gm2-wordpress-suite'));
+            }
+            if (empty($attrs[$handle]) || ($attrs[$handle] !== 'async' && $attrs[$handle] !== 'defer')) {
+                $attrs[$handle] = 'defer';
+                update_option('gm2_script_attributes', $attrs);
+            }
+            $verify = get_option('gm2_script_attributes', []);
+            if (($verify[$handle] ?? '') !== 'defer' && ($verify[$handle] ?? '') !== 'async') {
+                return new \WP_Error('fix_failed', __('Failed to set script attribute.', 'gm2-wordpress-suite'));
+            }
+        }
+
+        if ($host_type === 'third' && $type !== 'script') {
+            $upload = wp_upload_dir();
+            $dir = trailingslashit($upload['basedir']) . 'gm2-cache-audit/';
+            wp_mkdir_p($dir);
+            $filename = wp_basename(parse_url($url, PHP_URL_PATH) ?? '');
+            if ($filename === '' || $filename === null) {
+                $filename = md5($url);
+            }
+            $tmp = download_url($url);
+            if (is_wp_error($tmp)) {
+                return new \WP_Error('fix_failed', __('Download failed.', 'gm2-wordpress-suite'));
+            }
+            $local_path = $dir . $filename;
+            if (!@rename($tmp, $local_path)) {
+                @unlink($tmp);
+                return new \WP_Error('fix_failed', __('Failed to store local copy.', 'gm2-wordpress-suite'));
+            }
+            $local_url = trailingslashit($upload['baseurl']) . 'gm2-cache-audit/' . $filename;
+            $map = get_option('gm2_cache_audit_local_map', []);
+            if (!is_array($map)) {
+                $map = [];
+            }
+            $map[$url] = $local_url;
+            update_option('gm2_cache_audit_local_map', $map);
+            $updated['url'] = $local_url;
+        }
+
+        $updated['needs_attention'] = !empty($updated['issues']);
+        $results['assets'][$index] = $updated;
+        static::save_results($results);
+        return $updated;
     }
 
     protected static function abs_url($url) {
