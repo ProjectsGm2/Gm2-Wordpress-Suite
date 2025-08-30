@@ -300,14 +300,14 @@ class Gm2_Cache_Audit_Admin {
     public function ajax_fix() {
         $cap = is_network_admin() ? 'manage_network' : 'manage_options';
         if (!current_user_can($cap)) {
-            wp_send_json_error(__('Access denied.', 'gm2-wordpress-suite'));
+            wp_send_json_error(['message' => __('Access denied.', 'gm2-wordpress-suite')]);
         }
         check_ajax_referer('gm2_cache_audit_fix', 'nonce');
         $url    = isset($_POST['url']) ? esc_url_raw(wp_unslash($_POST['url'])) : '';
         $type   = isset($_POST['asset_type']) ? sanitize_key(wp_unslash($_POST['asset_type'])) : '';
         $handle = isset($_POST['handle']) ? sanitize_key(wp_unslash($_POST['handle'])) : '';
         if (!$url || !$type) {
-            wp_send_json_error(__('Invalid asset.', 'gm2-wordpress-suite'));
+            wp_send_json_error(['message' => __('Invalid asset.', 'gm2-wordpress-suite')]);
         }
 
         $asset = [
@@ -318,7 +318,7 @@ class Gm2_Cache_Audit_Admin {
 
         $updated = Gm2_Cache_Audit::apply_fix($asset);
         if (is_wp_error($updated)) {
-            wp_send_json_error($updated->get_error_message());
+            wp_send_json_error(['message' => $updated->get_error_message()]);
         }
 
         $home_host = parse_url(home_url(), PHP_URL_HOST);
