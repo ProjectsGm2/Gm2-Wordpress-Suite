@@ -14,6 +14,18 @@ bash bin/build-plugin.sh
 
 This script creates a `gm2-wordpress-suite.zip` file that includes the plugin and its bundled dependencies.
 
+### Rebuilding Optimizer assets
+
+The Render Optimizer JavaScript is bundled with Rollup. After modifying files in `assets/src/optimizer`, regenerate the distributable scripts with:
+
+```bash
+npm run build
+# or
+make build
+```
+
+The generated files in `assets/dist` should be committed to version control.
+
 ## AI Providers
 
 The suite can generate content using multiple AI services. Select **ChatGPT**, **Gemma**, or **Llama** from the **Gm2 → AI Settings** page and enter the corresponding API key and optional endpoint. The chosen provider is used throughout the plugin for AI-powered features.
@@ -133,6 +145,19 @@ Use the presets on **SEO → Performance → Script Loading**:
 
 Scripts that call `document.write` or expect synchronous execution should stay
 blocking. Deferring these scripts can break page output or tracking snippets.
+
+## Render Optimizer
+
+The Render Optimizer groups several front-end performance features behind **SEO → Performance → Render Optimizer**. Enable modules individually to:
+
+* Inline critical CSS and preload full stylesheets.
+* Defer or async scripts with dependency awareness and allow/deny lists.
+* Serve modern and legacy JavaScript bundles using `type="module"`/`nomodule`.
+* Combine and minify local CSS and JS assets.
+
+The optimizer automatically disables its features when popular optimization plugins like WP&nbsp;Rocket, Autoptimize or Perfmatters are active. Only one optimization plugin should run at a time.
+
+After adjusting the source files in `assets/src/optimizer`, rebuild the distributed scripts as noted in [Rebuilding Optimizer assets](#rebuilding-optimizer-assets).
 
 ## Cache Headers
 
