@@ -314,11 +314,17 @@ class Gm2_Cache_Audit_Admin {
             wp_send_json_error($updated->get_error_message());
         }
 
+        $home_host = parse_url(home_url(), PHP_URL_HOST);
+        $asset_host = parse_url($updated['url'] ?? $url, PHP_URL_HOST);
+        $host_type  = ($asset_host && $asset_host === $home_host) ? 'same' : 'third';
+        $status     = !empty($updated['needs_attention']) ? __('Needs Attention', 'gm2-wordpress-suite') : __('Good', 'gm2-wordpress-suite');
+        $fix        = !empty($updated['needs_attention']) ? $this->suggested_fix($updated, $host_type) : '';
+
         wp_send_json_success([
-            'status' => __('Good', 'gm2-wordpress-suite'),
-            'fix'    => '',
-            'url'    => $url,
-            'type'   => $type,
+            'status' => $status,
+            'fix'    => $fix,
+            'url'    => $updated['url'] ?? $url,
+            'type'   => $updated['type'] ?? $type,
         ]);
     }
 

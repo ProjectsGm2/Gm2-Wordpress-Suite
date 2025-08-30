@@ -38,7 +38,7 @@ jQuery(function($){
         $btn.prop('disabled', true);
         $.post(gm2CacheAudit.fix_url, data).done(function(resp){
             var $row = $btn.closest('tr');
-            if (resp && resp.success) {
+            if (resp && resp.success && resp.data) {
                 $row.find('.gm2-cache-status').text(resp.data.status);
                 $row.find('.gm2-cache-fix').text(resp.data.fix);
                 if (!resp.data.fix) {
@@ -95,7 +95,7 @@ jQuery(function($){
                 handle: item.handle
             };
             $.post(gm2CacheAudit.fix_url, data).done(function(resp){
-                if (resp && resp.success) {
+                if (resp && resp.success && resp.data) {
                     item.$row.find('.gm2-cache-status').text(resp.data.status);
                     item.$row.find('.gm2-cache-fix').text(resp.data.fix);
                     if (!resp.data.fix) {

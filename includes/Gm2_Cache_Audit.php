@@ -193,7 +193,25 @@ class Gm2_Cache_Audit {
 
         $updated = $stored;
 
-        if (in_array('short_max_age', $issues, true) || in_array('missing_cache_control', $issues, true)) {
+        if ($host_type === 'third' && $type === 'script') {
+            $attrs = get_option('gm2_script_attributes', []);
+            if (!is_array($attrs)) {
+                $attrs = [];
+            }
+            if (!$handle) {
+                return new \WP_Error('fix_failed', __('Script handle not found.', 'gm2-wordpress-suite'));
+            }
+            if (empty($attrs[$handle]) || ($attrs[$handle] !== 'async' && $attrs[$handle] !== 'defer')) {
+                $attrs[$handle] = 'defer';
+                update_option('gm2_script_attributes', $attrs);
+            }
+            $verify = get_option('gm2_script_attributes', []);
+            if (($verify[$handle] ?? '') !== 'defer' && ($verify[$handle] ?? '') !== 'async') {
+                return new \WP_Error('fix_failed', __('Failed to set script attribute.', 'gm2-wordpress-suite'));
+            }
+        }
+
+        if ($host_type !== 'third' && (in_array('short_max_age', $issues, true) || in_array('missing_cache_control', $issues, true))) {
             \Gm2\Gm2_Cache_Headers_Apache::maybe_apply();
             \Gm2\Gm2_Cache_Headers_Nginx::maybe_apply();
 
@@ -229,24 +247,6 @@ class Gm2_Cache_Audit {
                 $updated['url'] = \Gm2\Versioning_MTime::update_src($url, $handle);
             }
             $updated['issues'] = array_diff($updated['issues'], ['missing_immutable']);
-        }
-
-        if ($host_type === 'third' && $type === 'script') {
-            $attrs = get_option('gm2_script_attributes', []);
-            if (!is_array($attrs)) {
-                $attrs = [];
-            }
-            if (!$handle) {
-                return new \WP_Error('fix_failed', __('Script handle not found.', 'gm2-wordpress-suite'));
-            }
-            if (empty($attrs[$handle]) || ($attrs[$handle] !== 'async' && $attrs[$handle] !== 'defer')) {
-                $attrs[$handle] = 'defer';
-                update_option('gm2_script_attributes', $attrs);
-            }
-            $verify = get_option('gm2_script_attributes', []);
-            if (($verify[$handle] ?? '') !== 'defer' && ($verify[$handle] ?? '') !== 'async') {
-                return new \WP_Error('fix_failed', __('Failed to set script attribute.', 'gm2-wordpress-suite'));
-            }
         }
 
         if ($host_type === 'third' && $type !== 'script') {
