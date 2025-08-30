@@ -6,8 +6,9 @@
   "directories": {
     "test": "tests"
   },
-  "scripts": {
+    "scripts": {
     "test": "jest",
+    "prebuild:optimizer": "rm -f assets/dist/optimizer-legacy.js assets/dist/optimizer-modern.js assets/dist/optimizer.css",
     "build:optimizer": "rollup -c rollup.config.mjs",
     "build": "npm run build:optimizer"
   },

@@ -29,6 +29,7 @@ Key features include:
 * Automatically writes long-lived cache headers to `.htaccess` on Apache and LiteSpeed
 * Remote mirror for vendor scripts like Facebook Pixel and gtag with SRI hashes and a daily refresh
 * Script Attributes manager with dependency-aware “Defer all third-party” and “Conservative” presets
+* Render Optimizer for critical CSS, JS deferral, differential serving, and asset combination/minification
 
 == Installation ==
 1. Upload the plugin files to the `/wp-content/plugins/gm2-wordpress-suite` directory.
@@ -95,6 +96,16 @@ curl -I https://example.com/wp-includes/js/jquery/jquery.min.js
 
 Verify the `Cache-Control` header and, for repeat-view testing, keep **Disable cache**
 unchecked in DevTools, hard reload the page and confirm the file loads from disk cache.
+
+== Render Optimizer ==
+Enable performance modules from **SEO → Performance → Render Optimizer**. Available options include:
+
+* Critical CSS with allow/deny lists and optional manual overrides.
+* JavaScript deferral with dependency awareness plus allow and deny lists.
+* Differential serving of modern and legacy JavaScript bundles.
+* Combination and minification of local CSS and JS assets.
+
+If WP Rocket, Autoptimize, Perfmatters or other optimizer plugins are active, the subsystem automatically disables its features and displays a warning. Only one optimization plugin should run at a time.
 
 == SEO Performance CLI ==
 Run `wp seo-perf` commands to audit your site and manage caching headers.
