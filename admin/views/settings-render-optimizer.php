@@ -3,13 +3,13 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-$critical    = get_option('ae_seo_critical_css', '0');
+$critical    = get_option('ae_seo_ro_enable_critical_css', '0');
 $defer       = get_option('ae_seo_defer_js', '0');
 $diff        = get_option('ae_seo_diff_serving', '0');
 $combine     = get_option('ae_seo_combine_minify', '0');
-$manual_css  = get_option('gm2_critical_css_manual', '');
-$allow_css   = get_option('gm2_critical_css_allowlist', '');
-$deny_css    = get_option('gm2_critical_css_denylist', '');
+$manual_map  = get_option('ae_seo_ro_critical_css_map', []);
+$manual_css  = is_array($manual_map) ? ($manual_map['manual'] ?? '') : '';
+$exclusions  = get_option('ae_seo_ro_critical_css_exclusions', '');
 $allow_js    = get_option('gm2_defer_js_allowlist', '');
 $deny_js     = get_option('gm2_defer_js_denylist', '');
 $overrides   = get_option('gm2_defer_js_overrides', []);
@@ -24,7 +24,7 @@ echo '<input type="hidden" name="action" value="gm2_render_optimizer_settings" /
 
 echo '<table class="form-table"><tbody>';
 
-echo '<tr><th scope="row">' . esc_html__( 'Enable Critical CSS', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="ae_seo_critical_css" value="1" ' . checked($critical, '1', false) . ' /></td></tr>';
+echo '<tr><th scope="row">' . esc_html__( 'Enable Critical CSS', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="ae_seo_ro_enable_critical_css" value="1" ' . checked($critical, '1', false) . ' /></td></tr>';
 
 echo '<tr><th scope="row">' . esc_html__( 'Enable Defer JS', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="ae_seo_defer_js" value="1" ' . checked($defer, '1', false) . ' /></td></tr>';
 
@@ -34,11 +34,9 @@ echo '<tr><th scope="row">' . esc_html__( 'Enable Combine & Minify', 'gm2-wordpr
 
 echo '<tr><th colspan="2"><h2>' . esc_html__( 'Critical CSS', 'gm2-wordpress-suite' ) . '</h2></th></tr>';
 
-echo '<tr><th scope="row">' . esc_html__( 'Manual Critical CSS', 'gm2-wordpress-suite' ) . '</th><td><textarea name="gm2_critical_css_manual" rows="5" class="large-text code">' . esc_textarea($manual_css) . '</textarea></td></tr>';
+echo '<tr><th scope="row">' . esc_html__( 'Manual Critical CSS', 'gm2-wordpress-suite' ) . '</th><td><textarea name="ae_seo_ro_manual_css" rows="5" class="large-text code">' . esc_textarea($manual_css) . '</textarea></td></tr>';
 
-echo '<tr><th scope="row">' . esc_html__( 'Allowlist Handles', 'gm2-wordpress-suite' ) . '</th><td><input type="text" name="gm2_critical_css_allowlist" value="' . esc_attr($allow_css) . '" class="regular-text" /><p class="description">' . esc_html__( 'Comma-separated style handles to inline.', 'gm2-wordpress-suite' ) . '</p></td></tr>';
-
-echo '<tr><th scope="row">' . esc_html__( 'Denylist Handles', 'gm2-wordpress-suite' ) . '</th><td><input type="text" name="gm2_critical_css_denylist" value="' . esc_attr($deny_css) . '" class="regular-text" /><p class="description">' . esc_html__( 'Comma-separated style handles to skip.', 'gm2-wordpress-suite' ) . '</p></td></tr>';
+echo '<tr><th scope="row">' . esc_html__( 'Excluded Handles', 'gm2-wordpress-suite' ) . '</th><td><input type="text" name="ae_seo_ro_critical_css_exclusions" value="' . esc_attr($exclusions) . '" class="regular-text" /><p class="description">' . esc_html__( 'Comma-separated style handles to skip.', 'gm2-wordpress-suite' ) . '</p></td></tr>';
 
 echo '<tr><th colspan="2"><h2>' . esc_html__( 'Defer JavaScript', 'gm2-wordpress-suite' ) . '</h2></th></tr>';
 

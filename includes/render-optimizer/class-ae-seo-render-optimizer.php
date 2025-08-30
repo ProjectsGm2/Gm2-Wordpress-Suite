@@ -9,10 +9,24 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+require_once __DIR__ . '/class-ae-seo-critical-css.php';
+
 /**
  * Bootstraps render optimization features.
  */
 class AE_SEO_Render_Optimizer {
+    /**
+     * Option defaults.
+     *
+     * @var array
+     */
+    private $defaults = [
+        AE_SEO_Critical_CSS::OPTION_ENABLE       => '0',
+        AE_SEO_Critical_CSS::OPTION_STRATEGY     => 'per_home_archive_single',
+        AE_SEO_Critical_CSS::OPTION_CSS_MAP      => [],
+        AE_SEO_Critical_CSS::OPTION_ASYNC_METHOD => 'preload_onload',
+        AE_SEO_Critical_CSS::OPTION_EXCLUSIONS   => [],
+    ];
     /**
      * Names of detected conflicting plugins.
      *
@@ -24,7 +38,62 @@ class AE_SEO_Render_Optimizer {
      * Constructor.
      */
     public function __construct() {
+        $this->register_option_defaults();
         add_action('init', [ $this, 'maybe_bootstrap' ]);
+    }
+
+    /**
+     * Register default options if they do not exist.
+     *
+     * @return void
+     */
+    private function register_option_defaults() {
+        foreach ($this->defaults as $option => $value) {
+            add_option($option, $value);
+        }
+    }
+
+    /**
+     * Retrieve an option value.
+     *
+     * @param string $option  Option name.
+     * @param mixed  $default Default value.
+     * @return mixed
+     */
+    public static function get_option($option, $default = false) {
+        return get_option($option, $default);
+    }
+
+    /**
+     * Update an option value.
+     *
+     * @param string $option Option name.
+     * @param mixed  $value  Option value.
+     * @return bool
+     */
+    public static function update_option($option, $value) {
+        return update_option($option, $value);
+    }
+
+    /**
+     * Add an option value.
+     *
+     * @param string $option Option name.
+     * @param mixed  $value  Option value.
+     * @return bool
+     */
+    public static function add_option($option, $value) {
+        return add_option($option, $value);
+    }
+
+    /**
+     * Delete an option.
+     *
+     * @param string $option Option name.
+     * @return bool
+     */
+    public static function delete_option($option) {
+        return delete_option($option);
     }
 
     /**
@@ -87,15 +156,15 @@ class AE_SEO_Render_Optimizer {
      */
     private function disable_features() {
         $options = [
-            'ae_seo_critical_css',
+            AE_SEO_Critical_CSS::OPTION_ENABLE,
             'ae_seo_defer_js',
             'ae_seo_diff_serving',
             'ae_seo_combine_minify',
         ];
 
         foreach ($options as $option) {
-            if (get_option($option, '0') !== '0') {
-                update_option($option, '0');
+            if (self::get_option($option, '0') !== '0') {
+                self::update_option($option, '0');
             }
         }
     }
@@ -128,7 +197,7 @@ class AE_SEO_Render_Optimizer {
      * @return void
      */
     private function load_features() {
-        if (get_option('ae_seo_critical_css', '0') === '1') {
+        if (self::get_option(AE_SEO_Critical_CSS::OPTION_ENABLE, '0') === '1') {
             require_once __DIR__ . '/class-ae-seo-critical-css.php';
             new AE_SEO_Critical_CSS();
         }
