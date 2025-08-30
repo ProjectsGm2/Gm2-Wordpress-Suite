@@ -165,7 +165,7 @@ class Gm2_Cache_Audit {
             $scheme = is_ssl() ? 'https:' : 'http:';
             $url = $scheme . $url;
         } elseif (!preg_match('#^https?://#i', $url)) {
-            $url = wp_make_link_absolute($url, home_url('/'));
+            $url = \WP_Http::make_absolute_url($url, home_url('/'));
         }
         return $url;
     }
