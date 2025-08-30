@@ -49,12 +49,24 @@ class AE_SEO_Critical_CSS {
      */
     public function print_manual_css() {
         $map = AE_SEO_Render_Optimizer::get_option(self::OPTION_CSS_MAP, []);
-        $css = is_array($map) ? ($map['manual'] ?? '') : '';
-        if (empty($css)) {
+        if (!is_array($map)) {
             return;
         }
 
-        echo '<style id="gm2-critical-css">' . $css . '</style>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+        $key = '';
+        if (is_front_page() || is_home()) {
+            $key = 'home';
+        } elseif (is_archive()) {
+            $key = 'archive';
+        } elseif (is_singular()) {
+            $key = 'single-' . get_post_type();
+        }
+
+        if ($key === '' || empty($map[$key])) {
+            return;
+        }
+
+        echo '<style id="gm2-critical-css">' . $map[$key] . '</style>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
     }
 
     /**

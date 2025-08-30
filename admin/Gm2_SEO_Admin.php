@@ -244,7 +244,19 @@ class Gm2_SEO_Admin {
     }
 
     public function sanitize_css($value) {
-        return wp_strip_all_tags($value);
+        $value = wp_strip_all_tags($value);
+        $max   = 100000;
+        if (strlen($value) > $max) {
+            self::add_notice(
+                sprintf(
+                    /* translators: %d: maximum length */
+                    __( 'CSS length exceeds %d characters and has been truncated.', 'gm2-wordpress-suite' ),
+                    $max
+                )
+            );
+            $value = substr($value, 0, $max);
+        }
+        return $value;
     }
 
     public function sanitize_css_map($value) {
@@ -2865,49 +2877,21 @@ class Gm2_SEO_Admin {
         if (empty($_POST['gm2_render_optimizer_nonce']) || !wp_verify_nonce($_POST['gm2_render_optimizer_nonce'], 'gm2_render_optimizer_save')) {
             wp_die( esc_html__( 'Invalid nonce', 'gm2-wordpress-suite' ) );
         }
-
         $critical = isset($_POST['ae_seo_ro_enable_critical_css']) ? '1' : '0';
         update_option('ae_seo_ro_enable_critical_css', $critical);
 
-        $defer = isset($_POST['ae_seo_defer_js']) ? '1' : '0';
-        update_option('ae_seo_defer_js', $defer);
+        $strategy = isset($_POST['ae_seo_ro_critical_strategy']) ? sanitize_key($_POST['ae_seo_ro_critical_strategy']) : 'per_home_archive_single';
+        update_option('ae_seo_ro_critical_strategy', $strategy);
 
-        $diff = isset($_POST['ae_seo_diff_serving']) ? '1' : '0';
-        update_option('ae_seo_diff_serving', $diff);
+        $async = isset($_POST['ae_seo_ro_async_css_method']) ? sanitize_key($_POST['ae_seo_ro_async_css_method']) : 'preload_onload';
+        update_option('ae_seo_ro_async_css_method', $async);
 
-        $combine = isset($_POST['ae_seo_combine_minify']) ? '1' : '0';
-        update_option('ae_seo_combine_minify', $combine);
-
-        $map = get_option('ae_seo_ro_critical_css_map', []);
-        if (!is_array($map)) {
-            $map = [];
-        }
-        $map['manual'] = isset($_POST['ae_seo_ro_manual_css']) ? wp_strip_all_tags($_POST['ae_seo_ro_manual_css']) : '';
+        $map = $_POST['ae_seo_ro_critical_css_map'] ?? [];
+        $map = $this->sanitize_css_map($map);
         update_option('ae_seo_ro_critical_css_map', $map);
 
         $exclusions = isset($_POST['ae_seo_ro_critical_css_exclusions']) ? sanitize_text_field($_POST['ae_seo_ro_critical_css_exclusions']) : '';
         update_option('ae_seo_ro_critical_css_exclusions', $exclusions);
-
-        $allow_js = isset($_POST['gm2_defer_js_allowlist']) ? sanitize_text_field($_POST['gm2_defer_js_allowlist']) : '';
-        update_option('gm2_defer_js_allowlist', $allow_js);
-
-        $deny_js = isset($_POST['gm2_defer_js_denylist']) ? sanitize_text_field($_POST['gm2_defer_js_denylist']) : '';
-        update_option('gm2_defer_js_denylist', $deny_js);
-
-        $overrides = [];
-        $handles = $_POST['gm2_defer_js_handles'] ?? [];
-        $attrs   = $_POST['gm2_defer_js_attrs'] ?? [];
-        foreach ($handles as $i => $handle) {
-            $handle = sanitize_key($handle);
-            $attr   = $attrs[$i] ?? '';
-            if ($handle === '' || !in_array($attr, ['defer', 'async', 'blocking'], true)) {
-                continue;
-            }
-            if ($attr !== 'blocking') {
-                $overrides[$handle] = $attr;
-            }
-        }
-        update_option('gm2_defer_js_overrides', $overrides);
 
         wp_redirect(admin_url('admin.php?page=gm2-seo&tab=performance&subtab=render-optimizer&updated=1'));
         exit;
