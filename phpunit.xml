@@ -3,6 +3,10 @@
     <testsuites>
         <testsuite name="Plugin Test Suite">
             <directory suffix=".php">./tests</directory>
+            <exclude>./tests/test-cli</exclude>
+        </testsuite>
+        <testsuite name="CLI Test Suite">
+            <directory suffix=".php">./tests/test-cli</directory>
         </testsuite>
     </testsuites>
 </phpunit>
