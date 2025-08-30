@@ -227,6 +227,7 @@ class Gm2_Cache_Audit_Admin {
 
         // Bulk fix button.
         echo '<button type="button" class="button gm2-cache-bulk-fix">' . esc_html__( 'Bulk Fix', 'gm2-wordpress-suite' ) . '</button>';
+        echo '<div id="gm2-fix-progress"><div class="gm2-progress-bar"></div><span class="gm2-progress-text">0%</span></div>';
 
         echo '<table class="widefat striped"><thead><tr>';
         echo '<th><label><input type="checkbox" id="gm2-cache-select-all" /> ' . esc_html__( 'Select All', 'gm2-wordpress-suite' ) . '</label></th>';
