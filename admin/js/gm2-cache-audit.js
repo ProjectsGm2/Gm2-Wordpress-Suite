@@ -41,7 +41,13 @@ jQuery(function($){
             if (resp && resp.success) {
                 $row.find('.gm2-cache-status').text(resp.data.status);
                 $row.find('.gm2-cache-fix').text(resp.data.fix);
-                $btn.remove();
+                if (!resp.data.fix) {
+                    $row.find('.gm2-cache-select').remove();
+                    $btn.remove();
+                    $('#gm2-cache-select-all').prop('checked', false);
+                } else {
+                    $btn.prop('disabled', false);
+                }
             } else {
                 var msg = resp && resp.data ? resp.data : gm2CacheAudit.generic_error;
                 showError($row, msg);
@@ -92,7 +98,10 @@ jQuery(function($){
                 if (resp && resp.success) {
                     item.$row.find('.gm2-cache-status').text(resp.data.status);
                     item.$row.find('.gm2-cache-fix').text(resp.data.fix);
-                    item.$row.find('.gm2-cache-fix-now').remove();
+                    if (!resp.data.fix) {
+                        item.$row.find('.gm2-cache-fix-now').remove();
+                        item.$row.find('.gm2-cache-select').remove();
+                    }
                 } else {
                     var msg = resp && resp.data ? resp.data : gm2CacheAudit.generic_error;
                     showError(item.$row, msg);
