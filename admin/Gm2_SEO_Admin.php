@@ -50,6 +50,7 @@ class Gm2_SEO_Admin {
         add_action('admin_post_gm2_insert_cache_rules', [$this, 'handle_insert_cache_rules']);
         add_action('admin_post_gm2_remove_cache_rules', [$this, 'handle_remove_cache_rules']);
         add_action('admin_post_gm2_purge_critical_css', [$this, 'handle_purge_critical_css']);
+        add_action('admin_post_gm2_purge_optimizer_cache', [$this, 'handle_purge_optimizer_cache']);
         add_action('admin_post_gm2_redirects', [$this, 'handle_redirects_form']);
         add_action('admin_post_gm2_generate_nginx_cache', [$this, 'handle_generate_nginx_cache']);
         add_action('admin_post_gm2_verify_nginx_cache', [$this, 'handle_verify_nginx_cache']);
@@ -968,6 +969,9 @@ class Gm2_SEO_Admin {
             if (!empty($_GET['critical_css_purged'])) {
                 echo '<div class="updated notice"><p>' . esc_html__('Critical CSS purged.', 'gm2-wordpress-suite') . '</p></div>';
             }
+            if (!empty($_GET['optimizer_cache_purged'])) {
+                echo '<div class="updated notice"><p>' . esc_html__('Asset cache purged.', 'gm2-wordpress-suite') . '</p></div>';
+            }
             if (isset($_GET['nginx_cache_verified'])) {
                 if ($_GET['nginx_cache_verified']) {
                     echo '<div class="updated notice"><p>' . esc_html__('Headers verified.', 'gm2-wordpress-suite') . '</p></div>';
@@ -1116,6 +1120,12 @@ class Gm2_SEO_Admin {
             wp_nonce_field('gm2_purge_critical_css');
             echo '<input type="hidden" name="action" value="gm2_purge_critical_css" />';
             submit_button(esc_html__('Purge & Rebuild Critical CSS', 'gm2-wordpress-suite'), 'delete');
+            echo '</form>';
+
+            echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
+            wp_nonce_field('gm2_purge_optimizer_cache');
+            echo '<input type="hidden" name="action" value="gm2_purge_optimizer_cache" />';
+            submit_button(esc_html__('Purge Combined Assets', 'gm2-wordpress-suite'), 'delete');
             echo '</form>';
         } elseif ($active === 'keywords') {
             $enabled = trim(get_option('gm2_gads_developer_token', '')) !== '' &&
@@ -2941,6 +2951,18 @@ class Gm2_SEO_Admin {
         check_admin_referer('gm2_purge_critical_css');
         delete_option('gm2_critical_css_store');
         wp_redirect(admin_url('admin.php?page=gm2-seo&tab=performance&critical_css_purged=1'));
+        exit;
+    }
+
+    public function handle_purge_optimizer_cache() {
+        if (!current_user_can('manage_options')) {
+            wp_die( esc_html__( 'Permission denied', 'gm2-wordpress-suite' ) );
+        }
+        check_admin_referer('gm2_purge_optimizer_cache');
+        if (class_exists('\\AE_SEO_Combine_Minify')) {
+            \AE_SEO_Combine_Minify::purge_cache();
+        }
+        wp_redirect(admin_url('admin.php?page=gm2-seo&tab=performance&optimizer_cache_purged=1'));
         exit;
     }
 
