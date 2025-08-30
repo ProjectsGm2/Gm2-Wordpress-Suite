@@ -14,6 +14,13 @@ if (!defined('ABSPATH')) {
  */
 class AE_SEO_Render_Optimizer {
     /**
+     * Names of detected conflicting plugins.
+     *
+     * @var array
+     */
+    private $conflicts = [];
+
+    /**
      * Constructor.
      */
     public function __construct() {
@@ -27,6 +34,10 @@ class AE_SEO_Render_Optimizer {
      */
     public function maybe_bootstrap() {
         if ($this->should_skip() || $this->has_conflicts()) {
+            if (!empty($this->conflicts)) {
+                $this->disable_features();
+                add_action('admin_notices', [ $this, 'conflict_notice' ]);
+            }
             return;
         }
 
@@ -54,21 +65,61 @@ class AE_SEO_Render_Optimizer {
     private function has_conflicts() {
         include_once ABSPATH . 'wp-admin/includes/plugin.php';
 
-        $targets = [
-            'WP Rocket',
-            'Autoptimize',
-            'Perfmatters',
+        $plugins = [
+            'wp-rocket/wp-rocket.php'       => 'WP Rocket',
+            'autoptimize/autoptimize.php'   => 'Autoptimize',
+            'perfmatters/perfmatters.php'   => 'Perfmatters',
         ];
 
-        $plugins = get_plugins();
-        foreach ($plugins as $file => $data) {
-            $name = isset($data['Name']) ? $data['Name'] : '';
-            if (in_array($name, $targets, true) && is_plugin_active($file)) {
-                return true;
+        foreach ($plugins as $file => $name) {
+            if (is_plugin_active($file)) {
+                $this->conflicts[] = $name;
             }
         }
 
-        return false;
+        return !empty($this->conflicts);
+    }
+
+    /**
+     * Disable overlapping optimization features.
+     *
+     * @return void
+     */
+    private function disable_features() {
+        $options = [
+            'ae_seo_critical_css',
+            'ae_seo_defer_js',
+            'ae_seo_diff_serving',
+            'ae_seo_combine_minify',
+        ];
+
+        foreach ($options as $option) {
+            if (get_option($option, '0') !== '0') {
+                update_option($option, '0');
+            }
+        }
+    }
+
+    /**
+     * Display admin notice about detected conflicts.
+     *
+     * @return void
+     */
+    public function conflict_notice() {
+        if (!current_user_can('manage_options') || empty($this->conflicts)) {
+            return;
+        }
+
+        $names = implode(', ', $this->conflicts);
+        echo '<div class="notice notice-warning"><p>' .
+            esc_html(
+                sprintf(
+                    /* translators: list of conflicting plugin names */
+                    __('Render optimizer features disabled due to active plugin(s): %s.', 'gm2-wordpress-suite'),
+                    $names
+                )
+            ) .
+            '</p></div>';
     }
 
     /**
