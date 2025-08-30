@@ -34,6 +34,17 @@ class Gm2_SEO_Admin {
         return gm2_infer_brand_name($post_id);
     }
     public function run() {
+        add_option('ae_seo_critical_css', '0');
+        add_option('ae_seo_defer_js', '0');
+        add_option('ae_seo_diff_serving', '0');
+        add_option('ae_seo_combine_minify', '0');
+        add_option('gm2_critical_css_manual', '');
+        add_option('gm2_critical_css_allowlist', '');
+        add_option('gm2_critical_css_denylist', '');
+        add_option('gm2_defer_js_allowlist', '');
+        add_option('gm2_defer_js_denylist', '');
+        add_option('gm2_defer_js_overrides', []);
+
         add_action('admin_menu', [$this, 'add_settings_pages']);
         add_action('add_meta_boxes', [$this, 'register_meta_boxes']);
         add_action('wp_after_insert_post', [$this, 'save_post_meta'], 100, 2);
@@ -65,6 +76,7 @@ class Gm2_SEO_Admin {
         add_action('admin_post_gm2_reset_seo', [$this, 'handle_reset_seo']);
         add_action('admin_post_gm2_export_settings', [$this, 'handle_export_settings']);
         add_action('admin_post_gm2_import_settings', [$this, 'handle_import_settings']);
+        add_action('admin_post_gm2_render_optimizer_settings', [$this, 'handle_render_optimizer_form']);
 
         add_action('wp_ajax_gm2_check_rules', [$this, 'ajax_check_rules']);
         add_action('wp_ajax_gm2_keyword_ideas', [$this, 'ajax_keyword_ideas']);
@@ -935,198 +947,206 @@ class Gm2_SEO_Admin {
             submit_button( esc_html__( 'Clear 404 Logs', 'gm2-wordpress-suite' ), 'delete' );
             echo '</form>';
         } elseif ($active === 'performance') {
-            $auto_fill = get_option('gm2_auto_fill_alt', '0');
-            $clean_files = get_option('gm2_clean_image_filenames', '0');
-            $enable_comp = get_option('gm2_enable_compression', '0');
-            $api_key    = get_option('gm2_compression_api_key', '');
-            $api_url   = get_option('gm2_compression_api_url', 'https://api.example.com/compress');
-            $min_html  = get_option('gm2_minify_html', '0');
-            $min_css   = get_option('gm2_minify_css', '0');
-            $min_js    = get_option('gm2_minify_js', '0');
-            $pretty_versions = get_option('gm2_pretty_versioned_urls', '0');
-            $ps_key    = get_option('gm2_pagespeed_api_key', '');
-            $ps_scores = get_option('gm2_pagespeed_scores', []);
-            $script_attrs = get_option('gm2_script_attributes', []);
-            $critical_manual = get_option('gm2_critical_css_manual', '');
-            $critical_allow  = get_option('gm2_critical_css_allowlist', '');
-            $critical_deny   = get_option('gm2_critical_css_denylist', '');
+            $subtab = isset($_GET['subtab']) ? sanitize_key($_GET['subtab']) : '';
+            $perf_tabs = [
+                '' => esc_html__( 'General', 'gm2-wordpress-suite' ),
+                'render-optimizer' => esc_html__( 'Render Optimizer', 'gm2-wordpress-suite' ),
+            ];
+            echo '<h2 class="nav-tab-wrapper">';
+            foreach ($perf_tabs as $slug => $label) {
+                $url = admin_url('admin.php?page=gm2-seo&tab=performance' . ($slug ? '&subtab=' . $slug : ''));
+                $cls = ($subtab === $slug) ? ' nav-tab-active' : '';
+                echo '<a href="' . esc_url($url) . '" class="nav-tab' . $cls . '">' . esc_html($label) . '</a>';
+            }
+            echo '</h2>';
 
-            $rm_vendors = get_option('gm2_remote_mirror_vendors', []);
-            $rm_fb     = !empty($rm_vendors['facebook']);
-            $rm_google = !empty($rm_vendors['google']);
-            $rm_custom = get_option('gm2_remote_mirror_custom_urls', []);
-            if (!is_array($rm_custom)) {
-                $rm_custom = [];
-            }
-            $mirror = Gm2_Remote_Mirror::init();
-            if (!empty($_GET['updated'])) {
-                echo '<div class="updated notice"><p>' . esc_html__('Settings saved.', 'gm2-wordpress-suite') . '</p></div>';
-            }
-
-            if (!empty($_GET['nginx_cache_written'])) {
-                echo '<div class="updated notice"><p>' . esc_html__('Snippet saved.', 'gm2-wordpress-suite') . '</p></div>';
-            }
-            if (!empty($_GET['critical_css_purged'])) {
-                echo '<div class="updated notice"><p>' . esc_html__('Critical CSS purged.', 'gm2-wordpress-suite') . '</p></div>';
-            }
-            if (!empty($_GET['optimizer_cache_purged'])) {
-                echo '<div class="updated notice"><p>' . esc_html__('Asset cache purged.', 'gm2-wordpress-suite') . '</p></div>';
-            }
-            if (isset($_GET['nginx_cache_verified'])) {
-                if ($_GET['nginx_cache_verified']) {
-                    echo '<div class="updated notice"><p>' . esc_html__('Headers verified.', 'gm2-wordpress-suite') . '</p></div>';
-                } else {
-                    echo '<div class="error notice"><p>' . esc_html__('Headers not found.', 'gm2-wordpress-suite') . '</p></div>';
-                }
-            }
-
-            echo '<h2>' . esc_html__('Cache Headers', 'gm2-wordpress-suite') . '</h2>';
-            if (Gm2_Cache_Headers_Nginx::is_supported_server()) {
-                $file = Gm2_Cache_Headers_Nginx::get_file_path();
-                if (Gm2_Cache_Headers_Nginx::verify()) {
-                    $status = esc_html__('Verified', 'gm2-wordpress-suite');
-                } elseif (Gm2_Cache_Headers_Nginx::rules_exist()) {
-                    $status = esc_html__('Generated', 'gm2-wordpress-suite');
-                } else {
-                    $status = esc_html__('Not generated', 'gm2-wordpress-suite');
-                }
-                echo '<p>' . sprintf(esc_html__('Status: %s', 'gm2-wordpress-suite'), $status) . '</p>';
-                echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
-                wp_nonce_field('gm2_generate_nginx_cache');
-                echo '<input type="hidden" name="action" value="gm2_generate_nginx_cache" />';
-                submit_button(esc_html__('Save Snippet', 'gm2-wordpress-suite'));
-                echo '</form>';
-                echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
-                wp_nonce_field('gm2_verify_nginx_cache');
-                echo '<input type="hidden" name="action" value="gm2_verify_nginx_cache" />';
-                submit_button(esc_html__('Verify', 'gm2-wordpress-suite'), 'secondary');
-                echo '</form>';
-                echo '<p><strong>' . esc_html__('How to apply', 'gm2-wordpress-suite') . '</strong></p>';
-                echo '<ol>';
-                echo '<li>' . esc_html__('Save the snippet to generate the configuration file.', 'gm2-wordpress-suite') . '</li>';
-                echo '<li>' . esc_html__('Include the file in your Nginx server block:', 'gm2-wordpress-suite') . '<br><code>include ' . esc_html($file) . ';</code></li>';
-                echo '<li>' . esc_html__('Reload Nginx.', 'gm2-wordpress-suite') . '</li>';
-                echo '</ol>';
-                echo '<textarea readonly class="large-text code" rows="12">' . esc_textarea(Gm2_Cache_Headers_Nginx::$rules) . '</textarea>';
+            if ($subtab === 'render-optimizer') {
+                require GM2_PLUGIN_DIR . 'admin/views/settings-render-optimizer.php';
             } else {
-                if (Gm2_Cache_Headers_Apache::cdn_sets_cache_headers()) {
-                    $status = esc_html__('CDN detected', 'gm2-wordpress-suite');
-                } elseif (Gm2_Cache_Headers_Apache::rules_exist()) {
-                    $status = esc_html__('Written', 'gm2-wordpress-suite');
-                } else {
-                    $status = esc_html__('Not written', 'gm2-wordpress-suite');
+                $auto_fill = get_option('gm2_auto_fill_alt', '0');
+                $clean_files = get_option('gm2_clean_image_filenames', '0');
+                $enable_comp = get_option('gm2_enable_compression', '0');
+                $api_key    = get_option('gm2_compression_api_key', '');
+                $api_url   = get_option('gm2_compression_api_url', 'https://api.example.com/compress');
+                $min_html  = get_option('gm2_minify_html', '0');
+                $min_css   = get_option('gm2_minify_css', '0');
+                $min_js    = get_option('gm2_minify_js', '0');
+                $pretty_versions = get_option('gm2_pretty_versioned_urls', '0');
+                $ps_key    = get_option('gm2_pagespeed_api_key', '');
+                $ps_scores = get_option('gm2_pagespeed_scores', []);
+                $script_attrs = get_option('gm2_script_attributes', []);
+                $rm_vendors = get_option('gm2_remote_mirror_vendors', []);
+                $rm_fb     = !empty($rm_vendors['facebook']);
+                $rm_google = !empty($rm_vendors['google']);
+                $rm_custom = get_option('gm2_remote_mirror_custom_urls', []);
+                if (!is_array($rm_custom)) {
+                    $rm_custom = [];
                 }
-                echo '<p>' . sprintf(esc_html__('Status: %s', 'gm2-wordpress-suite'), $status) . '</p>';
-                echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
-                wp_nonce_field('gm2_insert_cache_rules');
-                echo '<input type="hidden" name="action" value="gm2_insert_cache_rules" />';
-                submit_button(esc_html__('Insert Cache Rules', 'gm2-wordpress-suite'));
-                echo '</form>';
-                echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
-                wp_nonce_field('gm2_remove_cache_rules');
-                echo '<input type="hidden" name="action" value="gm2_remove_cache_rules" />';
-                submit_button(esc_html__('Remove Rules', 'gm2-wordpress-suite'), 'delete');
-                echo '</form>';
-                if (!wp_is_writable(ABSPATH . '.htaccess')) {
-                    echo '<p>' . esc_html__('Add the following to your .htaccess file:', 'gm2-wordpress-suite') . '</p>';
-                    echo '<textarea readonly class="large-text code" rows="15">' . esc_textarea(Gm2_Cache_Headers_Apache::$rules) . '</textarea>';
+                $mirror = Gm2_Remote_Mirror::init();
+                if (!empty($_GET['updated'])) {
+                    echo '<div class="updated notice"><p>' . esc_html__('Settings saved.', 'gm2-wordpress-suite') . '</p></div>';
                 }
-            }
-            echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
-            wp_nonce_field('gm2_performance_save', 'gm2_performance_nonce');
-            echo '<input type="hidden" name="action" value="gm2_performance_settings" />';
-            echo '<table class="form-table"><tbody>';
-            echo '<tr><th scope="row">' . esc_html__( 'Auto-fill missing alt text', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_auto_fill_alt" value="1" ' . checked($auto_fill, '1', false) . '> ' . esc_html__( 'Use product title', 'gm2-wordpress-suite' ) . '</label></td></tr>';
-            echo '<tr><th scope="row">' . esc_html__( 'Clean Image Filenames', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_clean_image_filenames" value="1" ' . checked($clean_files, '1', false) . '> ' . esc_html__( 'Sanitize on upload', 'gm2-wordpress-suite' ) . '</label></td></tr>';
-            echo '<tr><th scope="row">' . esc_html__( 'Enable Image Compression', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="gm2_enable_compression" value="1" ' . checked($enable_comp, '1', false) . '></td></tr>';
-            echo '<tr><th scope="row">' . esc_html__( 'Compression API Key', 'gm2-wordpress-suite' ) . '</th><td><input type="text" name="gm2_compression_api_key" value="' . esc_attr($api_key) . '" class="regular-text" /></td></tr>';
-            echo '<tr><th scope="row">' . esc_html__( 'Compression API URL', 'gm2-wordpress-suite' ) . '</th><td><input type="text" name="gm2_compression_api_url" value="' . esc_attr($api_url) . '" class="regular-text" /></td></tr>';
-            echo '<tr><th scope="row">' . esc_html__( 'Minify HTML', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_minify_html" value="1" ' . checked($min_html, '1', false) . '></label></td></tr>';
-            echo '<tr><th scope="row">' . esc_html__( 'Minify CSS', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_minify_css" value="1" ' . checked($min_css, '1', false) . '></label></td></tr>';
-            echo '<tr><th scope="row">' . esc_html__( 'Minify JS', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_minify_js" value="1" ' . checked($min_js, '1', false) . '></label></td></tr>';
-            echo '<tr><th scope="row">' . esc_html__( 'Pretty Versioned URLs', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_pretty_versioned_urls" value="1" ' . checked($pretty_versions, '1', false) . '> ' . esc_html__( 'Transform file.css?ver=123 into file.v123.css', 'gm2-wordpress-suite' ) . '</label></td></tr>';
-            echo '<tr><th scope="row">' . esc_html__( 'PageSpeed API Key', 'gm2-wordpress-suite' ) . '</th><td><input type="text" name="gm2_pagespeed_api_key" value="' . esc_attr($ps_key) . '" class="regular-text" />';
-            if (!empty($ps_scores['mobile']) || !empty($ps_scores['desktop'])) {
-                $time = !empty($ps_scores['time']) ? date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $ps_scores['time']) : '';
-                echo '<p>Mobile: ' . esc_html($ps_scores['mobile'] ?? '') . ' Desktop: ' . esc_html($ps_scores['desktop'] ?? '') . ' ' . esc_html($time) . '</p>';
-            }
-            echo '</td></tr>';
 
-            echo '<tr><th colspan="2"><h2>' . esc_html__( 'Critical CSS', 'gm2-wordpress-suite' ) . '</h2></th></tr>';
-            echo '<tr><th scope="row">' . esc_html__( 'Manual Critical CSS', 'gm2-wordpress-suite' ) . '</th><td><textarea name="gm2_critical_css_manual" rows="5" class="large-text code">' . esc_textarea($critical_manual) . '</textarea></td></tr>';
-            echo '<tr><th scope="row">' . esc_html__( 'Allowlist Handles', 'gm2-wordpress-suite' ) . '</th><td><input type="text" name="gm2_critical_css_allowlist" value="' . esc_attr($critical_allow) . '" class="regular-text" /><p class="description">' . esc_html__( 'Comma-separated style handles to inline.', 'gm2-wordpress-suite' ) . '</p></td></tr>';
-            echo '<tr><th scope="row">' . esc_html__( 'Denylist Handles', 'gm2-wordpress-suite' ) . '</th><td><input type="text" name="gm2_critical_css_denylist" value="' . esc_attr($critical_deny) . '" class="regular-text" /><p class="description">' . esc_html__( 'Comma-separated style handles to skip.', 'gm2-wordpress-suite' ) . '</p></td></tr>';
-
-            echo '<tr><th colspan="2"><h2>' . esc_html__( 'Script Loading', 'gm2-wordpress-suite' ) . '</h2></th></tr>';
-            echo '<tr><th scope="row">' . esc_html__( 'Presets', 'gm2-wordpress-suite' ) . '</th><td><select name="gm2_script_attr_preset">';
-            echo '<option value="">' . esc_html__( '-- Select Preset --', 'gm2-wordpress-suite' ) . '</option>';
-            echo '<option value="defer_third">' . esc_html__( 'Defer all third-party', 'gm2-wordpress-suite' ) . '</option>';
-            echo '<option value="conservative">' . esc_html__( 'Conservative', 'gm2-wordpress-suite' ) . '</option>';
-            echo '</select> ';
-            echo '<button type="submit" class="button" name="gm2_script_attr_apply_preset" value="1">' . esc_html__( 'Apply', 'gm2-wordpress-suite' ) . '</button> ';
-            echo '<button type="submit" class="button" name="gm2_script_attr_reset" value="1">' . esc_html__( 'Reset to Defaults', 'gm2-wordpress-suite' ) . '</button>';
-            echo '</td></tr>';
-
-            echo '<tr><th scope="row">' . esc_html__( 'Per-handle Overrides', 'gm2-wordpress-suite' ) . '</th><td><table class="widefat striped"><thead><tr><th>' . esc_html__( 'Handle', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'Attribute', 'gm2-wordpress-suite' ) . '</th></tr></thead><tbody>';
-            foreach ($script_attrs as $handle => $attr) {
-                echo '<tr><td><input type="text" name="gm2_script_attr_handles[]" value="' . esc_attr($handle) . '" class="regular-text" /></td><td><select name="gm2_script_attr_values[]">';
-                echo '<option value="">' . esc_html__( 'Default', 'gm2-wordpress-suite' ) . '</option>';
-                echo '<option value="blocking" ' . selected($attr, 'blocking', false) . '>' . esc_html__( 'Blocking', 'gm2-wordpress-suite' ) . '</option>';
-                echo '<option value="defer" ' . selected($attr, 'defer', false) . '>' . esc_html__( 'Defer', 'gm2-wordpress-suite' ) . '</option>';
-                echo '<option value="async" ' . selected($attr, 'async', false) . '>' . esc_html__( 'Async', 'gm2-wordpress-suite' ) . '</option>';
-                echo '</select></td></tr>';
-            }
-            echo '<tr><td><input type="text" name="gm2_script_attr_handles[]" value="" class="regular-text" /></td><td><select name="gm2_script_attr_values[]">';
-            echo '<option value="">' . esc_html__( 'Default', 'gm2-wordpress-suite' ) . '</option>';
-            echo '<option value="blocking" selected="selected">' . esc_html__( 'Blocking', 'gm2-wordpress-suite' ) . '</option>';
-            echo '<option value="defer">' . esc_html__( 'Defer', 'gm2-wordpress-suite' ) . '</option>';
-            echo '<option value="async">' . esc_html__( 'Async', 'gm2-wordpress-suite' ) . '</option>';
-            echo '</select></td></tr>';
-            echo '</tbody></table><p class="description">' . esc_html__( 'Leave handle blank to ignore. Choose Default to remove override.', 'gm2-wordpress-suite' ) . '</p></td></tr>';
-
-            echo '<tr><th colspan="2"><h2>' . esc_html__( 'Remote Mirror', 'gm2-wordpress-suite' ) . '</h2></th></tr>';
-            echo '<tr><th scope="row">' . esc_html__( 'Facebook Pixel', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_remote_mirror_vendors[facebook]" value="1" ' . checked($rm_fb, true, false) . '> ' . esc_html__( 'Enable', 'gm2-wordpress-suite' ) . '</label><p class="description"><a href="https://www.facebook.com/legal/terms/plain_text_terms" target="_blank">' . esc_html__( 'Terms of Service', 'gm2-wordpress-suite' ) . '</a></p></td></tr>';
-            echo '<tr><th scope="row">' . esc_html__( 'Google gtag', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_remote_mirror_vendors[google]" value="1" ' . checked($rm_google, true, false) . '> ' . esc_html__( 'Enable', 'gm2-wordpress-suite' ) . '</label><p class="description"><a href="https://marketingplatform.google.com/about/analytics/terms/us/" target="_blank">' . esc_html__( 'Terms of Service', 'gm2-wordpress-suite' ) . '</a></p>';
-            if ($rm_google) {
-                echo '<div class="notice notice-warning inline"><p>' . esc_html__( 'Ensure Google terms permit mirroring gtag.js.', 'gm2-wordpress-suite' ) . '</p></div>';
-            }
-            echo '</td></tr>';
-            echo '<tr><th scope="row">' . esc_html__( 'Custom Script URLs', 'gm2-wordpress-suite' ) . '</th><td><textarea name="gm2_remote_mirror_custom_urls" rows="5" class="large-text">' . esc_textarea(implode("\n", $rm_custom)) . '</textarea><p class="description">' . esc_html__( 'One URL per line.', 'gm2-wordpress-suite' ) . '</p></td></tr>';
-
-            echo '</tbody></table>';
-            echo '<p class="description">' . esc_html__( 'SHA-256 hashes are shown for mirrored files. SRI may break after vendor updates.', 'gm2-wordpress-suite' ) . '</p>';
-            $registry = $mirror->get_registry();
-            if (!empty($registry)) {
-                echo '<table class="widefat striped"><thead><tr><th>' . esc_html__( 'Vendor', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'URL', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'SHA-256', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'Last Fetch', 'gm2-wordpress-suite' ) . '</th></tr></thead><tbody>';
-                foreach ($registry as $vendor => $data) {
-                    $enabled = ($vendor === 'custom') ? !empty($rm_custom) : !empty($rm_vendors[$vendor]);
-                    foreach ($data['urls'] as $url) {
-                        $filename = basename(parse_url($url, PHP_URL_PATH) ?? '');
-                        $path = $mirror->get_local_path($vendor, $filename);
-                        $hash = file_exists($path) ? hash_file('sha256', $path) : '';
-                        $time = file_exists($path) ? date_i18n(get_option('date_format') . ' ' . get_option('time_format'), filemtime($path)) : '';
-                        $label = $enabled ? $vendor : $vendor . ' (' . esc_html__( 'disabled', 'gm2-wordpress-suite' ) . ')';
-                        echo '<tr><td>' . esc_html($label) . '</td><td>' . esc_html($url) . '</td><td><code>' . esc_html($hash) . '</code></td><td>' . esc_html($time) . '</td></tr>';
+                if (!empty($_GET['nginx_cache_written'])) {
+                    echo '<div class="updated notice"><p>' . esc_html__('Snippet saved.', 'gm2-wordpress-suite') . '</p></div>';
+                }
+                if (!empty($_GET['critical_css_purged'])) {
+                    echo '<div class="updated notice"><p>' . esc_html__('Critical CSS purged.', 'gm2-wordpress-suite') . '</p></div>';
+                }
+                if (!empty($_GET['optimizer_cache_purged'])) {
+                    echo '<div class="updated notice"><p>' . esc_html__('Asset cache purged.', 'gm2-wordpress-suite') . '</p></div>';
+                }
+                if (isset($_GET['nginx_cache_verified'])) {
+                    if ($_GET['nginx_cache_verified']) {
+                        echo '<div class="updated notice"><p>' . esc_html__('Headers verified.', 'gm2-wordpress-suite') . '</p></div>';
+                    } else {
+                        echo '<div class="error notice"><p>' . esc_html__('Headers not found.', 'gm2-wordpress-suite') . '</p></div>';
                     }
                 }
+
+                echo '<h2>' . esc_html__('Cache Headers', 'gm2-wordpress-suite') . '</h2>';
+                if (Gm2_Cache_Headers_Nginx::is_supported_server()) {
+                    $file = Gm2_Cache_Headers_Nginx::get_file_path();
+                    if (Gm2_Cache_Headers_Nginx::verify()) {
+                        $status = esc_html__('Verified', 'gm2-wordpress-suite');
+                    } elseif (Gm2_Cache_Headers_Nginx::rules_exist()) {
+                        $status = esc_html__('Generated', 'gm2-wordpress-suite');
+                    } else {
+                        $status = esc_html__('Not generated', 'gm2-wordpress-suite');
+                    }
+                    echo '<p>' . sprintf(esc_html__('Status: %s', 'gm2-wordpress-suite'), $status) . '</p>';
+                    echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
+                    wp_nonce_field('gm2_generate_nginx_cache');
+                    echo '<input type="hidden" name="action" value="gm2_generate_nginx_cache" />';
+                    submit_button(esc_html__('Save Snippet', 'gm2-wordpress-suite'));
+                    echo '</form>';
+                    echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
+                    wp_nonce_field('gm2_verify_nginx_cache');
+                    echo '<input type="hidden" name="action" value="gm2_verify_nginx_cache" />';
+                    submit_button(esc_html__('Verify', 'gm2-wordpress-suite'), 'secondary');
+                    echo '</form>';
+                    echo '<p><strong>' . esc_html__('How to apply', 'gm2-wordpress-suite') . '</strong></p>';
+                    echo '<ol>';
+                    echo '<li>' . esc_html__('Save the snippet to generate the configuration file.', 'gm2-wordpress-suite') . '</li>';
+                    echo '<li>' . esc_html__('Include the file in your Nginx server block:', 'gm2-wordpress-suite') . '<br><code>include ' . esc_html($file) . ';</code></li>';
+                    echo '<li>' . esc_html__('Reload Nginx.', 'gm2-wordpress-suite') . '</li>';
+                    echo '</ol>';
+                    echo '<textarea readonly class="large-text code" rows="12">' . esc_textarea(Gm2_Cache_Headers_Nginx::$rules) . '</textarea>';
+                } else {
+                    if (Gm2_Cache_Headers_Apache::cdn_sets_cache_headers()) {
+                        $status = esc_html__('CDN detected', 'gm2-wordpress-suite');
+                    } elseif (Gm2_Cache_Headers_Apache::rules_exist()) {
+                        $status = esc_html__('Written', 'gm2-wordpress-suite');
+                    } else {
+                        $status = esc_html__('Not written', 'gm2-wordpress-suite');
+                    }
+                    echo '<p>' . sprintf(esc_html__('Status: %s', 'gm2-wordpress-suite'), $status) . '</p>';
+                    echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
+                    wp_nonce_field('gm2_insert_cache_rules');
+                    echo '<input type="hidden" name="action" value="gm2_insert_cache_rules" />';
+                    submit_button(esc_html__('Insert Cache Rules', 'gm2-wordpress-suite'));
+                    echo '</form>';
+                    echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
+                    wp_nonce_field('gm2_remove_cache_rules');
+                    echo '<input type="hidden" name="action" value="gm2_remove_cache_rules" />';
+                    submit_button(esc_html__('Remove Rules', 'gm2-wordpress-suite'), 'delete');
+                    echo '</form>';
+                    if (!wp_is_writable(ABSPATH . '.htaccess')) {
+                        echo '<p>' . esc_html__('Add the following to your .htaccess file:', 'gm2-wordpress-suite') . '</p>';
+                        echo '<textarea readonly class="large-text code" rows="15">' . esc_textarea(Gm2_Cache_Headers_Apache::$rules) . '</textarea>';
+                    }
+                }
+                echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
+                wp_nonce_field('gm2_performance_save', 'gm2_performance_nonce');
+                echo '<input type="hidden" name="action" value="gm2_performance_settings" />';
+                echo '<table class="form-table"><tbody>';
+                echo '<tr><th scope="row">' . esc_html__( 'Auto-fill missing alt text', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_auto_fill_alt" value="1" ' . checked($auto_fill, '1', false) . '> ' . esc_html__( 'Use product title', 'gm2-wordpress-suite' ) . '</label></td></tr>';
+                echo '<tr><th scope="row">' . esc_html__( 'Clean Image Filenames', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_clean_image_filenames" value="1" ' . checked($clean_files, '1', false) . '> ' . esc_html__( 'Sanitize on upload', 'gm2-wordpress-suite' ) . '</label></td></tr>';
+                echo '<tr><th scope="row">' . esc_html__( 'Enable Image Compression', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="gm2_enable_compression" value="1" ' . checked($enable_comp, '1', false) . '></td></tr>';
+                echo '<tr><th scope="row">' . esc_html__( 'Compression API Key', 'gm2-wordpress-suite' ) . '</th><td><input type="text" name="gm2_compression_api_key" value="' . esc_attr($api_key) . '" class="regular-text" /></td></tr>';
+                echo '<tr><th scope="row">' . esc_html__( 'Compression API URL', 'gm2-wordpress-suite' ) . '</th><td><input type="text" name="gm2_compression_api_url" value="' . esc_attr($api_url) . '" class="regular-text" /></td></tr>';
+                echo '<tr><th scope="row">' . esc_html__( 'Minify HTML', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_minify_html" value="1" ' . checked($min_html, '1', false) . '></label></td></tr>';
+                echo '<tr><th scope="row">' . esc_html__( 'Minify CSS', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_minify_css" value="1" ' . checked($min_css, '1', false) . '></label></td></tr>';
+                echo '<tr><th scope="row">' . esc_html__( 'Minify JS', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_minify_js" value="1" ' . checked($min_js, '1', false) . '></label></td></tr>';
+                echo '<tr><th scope="row">' . esc_html__( 'Pretty Versioned URLs', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_pretty_versioned_urls" value="1" ' . checked($pretty_versions, '1', false) . '> ' . esc_html__( 'Transform file.css?ver=123 into file.v123.css', 'gm2-wordpress-suite' ) . '</label></td></tr>';
+                echo '<tr><th scope="row">' . esc_html__( 'PageSpeed API Key', 'gm2-wordpress-suite' ) . '</th><td><input type="text" name="gm2_pagespeed_api_key" value="' . esc_attr($ps_key) . '" class="regular-text" />';
+                if (!empty($ps_scores['mobile']) || !empty($ps_scores['desktop'])) {
+                    $time = !empty($ps_scores['time']) ? date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $ps_scores['time']) : '';
+                    echo '<p>Mobile: ' . esc_html($ps_scores['mobile'] ?? '') . ' Desktop: ' . esc_html($ps_scores['desktop'] ?? '') . ' ' . esc_html($time) . '</p>';
+                }
+                echo '</td></tr>';
+
+                echo '<tr><th colspan="2"><h2>' . esc_html__( 'Script Loading', 'gm2-wordpress-suite' ) . '</h2></th></tr>';
+                echo '<tr><th scope="row">' . esc_html__( 'Presets', 'gm2-wordpress-suite' ) . '</th><td><select name="gm2_script_attr_preset">';
+                echo '<option value="">' . esc_html__( '-- Select Preset --', 'gm2-wordpress-suite' ) . '</option>';
+                echo '<option value="defer_third">' . esc_html__( 'Defer all third-party', 'gm2-wordpress-suite' ) . '</option>';
+                echo '<option value="conservative">' . esc_html__( 'Conservative', 'gm2-wordpress-suite' ) . '</option>';
+                echo '</select> ';
+                echo '<button type="submit" class="button" name="gm2_script_attr_apply_preset" value="1">' . esc_html__( 'Apply', 'gm2-wordpress-suite' ) . '</button> ';
+                echo '<button type="submit" class="button" name="gm2_script_attr_reset" value="1">' . esc_html__( 'Reset to Defaults', 'gm2-wordpress-suite' ) . '</button>';
+                echo '</td></tr>';
+
+                echo '<tr><th scope="row">' . esc_html__( 'Per-handle Overrides', 'gm2-wordpress-suite' ) . '</th><td><table class="widefat striped"><thead><tr><th>' . esc_html__( 'Handle', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'Attribute', 'gm2-wordpress-suite' ) . '</th></tr></thead><tbody>';
+                foreach ($script_attrs as $handle => $attr) {
+                    echo '<tr><td><input type="text" name="gm2_script_attr_handles[]" value="' . esc_attr($handle) . '" class="regular-text" /></td><td><select name="gm2_script_attr_values[]">';
+                    echo '<option value="">' . esc_html__( 'Default', 'gm2-wordpress-suite' ) . '</option>';
+                    echo '<option value="blocking" ' . selected($attr, 'blocking', false) . '>' . esc_html__( 'Blocking', 'gm2-wordpress-suite' ) . '</option>';
+                    echo '<option value="defer" ' . selected($attr, 'defer', false) . '>' . esc_html__( 'Defer', 'gm2-wordpress-suite' ) . '</option>';
+                    echo '<option value="async" ' . selected($attr, 'async', false) . '>' . esc_html__( 'Async', 'gm2-wordpress-suite' ) . '</option>';
+                    echo '</select></td></tr>';
+                }
+                echo '<tr><td><input type="text" name="gm2_script_attr_handles[]" value="" class="regular-text" /></td><td><select name="gm2_script_attr_values[]">';
+                echo '<option value="">' . esc_html__( 'Default', 'gm2-wordpress-suite' ) . '</option>';
+                echo '<option value="blocking" selected="selected">' . esc_html__( 'Blocking', 'gm2-wordpress-suite' ) . '</option>';
+                echo '<option value="defer">' . esc_html__( 'Defer', 'gm2-wordpress-suite' ) . '</option>';
+                echo '<option value="async">' . esc_html__( 'Async', 'gm2-wordpress-suite' ) . '</option>';
+                echo '</select></td></tr>';
+                echo '</tbody></table><p class="description">' . esc_html__( 'Leave handle blank to ignore. Choose Default to remove override.', 'gm2-wordpress-suite' ) . '</p></td></tr>';
+
+                echo '<tr><th colspan="2"><h2>' . esc_html__( 'Remote Mirror', 'gm2-wordpress-suite' ) . '</h2></th></tr>';
+                echo '<tr><th scope="row">' . esc_html__( 'Facebook Pixel', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_remote_mirror_vendors[facebook]" value="1" ' . checked($rm_fb, true, false) . '> ' . esc_html__( 'Enable', 'gm2-wordpress-suite' ) . '</label><p class="description"><a href="https://www.facebook.com/legal/terms/plain_text_terms" target="_blank">' . esc_html__( 'Terms of Service', 'gm2-wordpress-suite' ) . '</a></p></td></tr>';
+                echo '<tr><th scope="row">' . esc_html__( 'Google gtag', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="gm2_remote_mirror_vendors[google]" value="1" ' . checked($rm_google, true, false) . '> ' . esc_html__( 'Enable', 'gm2-wordpress-suite' ) . '</label><p class="description"><a href="https://marketingplatform.google.com/about/analytics/terms/us/" target="_blank">' . esc_html__( 'Terms of Service', 'gm2-wordpress-suite' ) . '</a></p>';
+                if ($rm_google) {
+                    echo '<div class="notice notice-warning inline"><p>' . esc_html__( 'Ensure Google terms permit mirroring gtag.js.', 'gm2-wordpress-suite' ) . '</p></div>';
+                }
+                echo '</td></tr>';
+                echo '<tr><th scope="row">' . esc_html__( 'Custom Script URLs', 'gm2-wordpress-suite' ) . '</th><td><textarea name="gm2_remote_mirror_custom_urls" rows="5" class="large-text">' . esc_textarea(implode("\n", $rm_custom)) . '</textarea><p class="description">' . esc_html__( 'One URL per line.', 'gm2-wordpress-suite' ) . '</p></td></tr>';
+
                 echo '</tbody></table>';
+                echo '<p class="description">' . esc_html__( 'SHA-256 hashes are shown for mirrored files. SRI may break after vendor updates.', 'gm2-wordpress-suite' ) . '</p>';
+                $registry = $mirror->get_registry();
+                if (!empty($registry)) {
+                    echo '<table class="widefat striped"><thead><tr><th>' . esc_html__( 'Vendor', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'URL', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'SHA-256', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'Last Fetch', 'gm2-wordpress-suite' ) . '</th></tr></thead><tbody>';
+                    foreach ($registry as $vendor => $data) {
+                        $enabled = ($vendor === 'custom') ? !empty($rm_custom) : !empty($rm_vendors[$vendor]);
+                        foreach ($data['urls'] as $url) {
+                            $filename = basename(parse_url($url, PHP_URL_PATH) ?? '');
+                            $path = $mirror->get_local_path($vendor, $filename);
+                            $hash = file_exists($path) ? hash_file('sha256', $path) : '';
+                            $time = file_exists($path) ? date_i18n(get_option('date_format') . ' ' . get_option('time_format'), filemtime($path)) : '';
+                            $label = $enabled ? $vendor : $vendor . ' (' . esc_html__( 'disabled', 'gm2-wordpress-suite' ) . ')';
+                            echo '<tr><td>' . esc_html($label) . '</td><td>' . esc_html($url) . '</td><td><code>' . esc_html($hash) . '</code></td><td>' . esc_html($time) . '</td></tr>';
+                        }
+                    }
+                    echo '</tbody></table>';
+                }
+
+                submit_button( esc_html__( 'Save Settings', 'gm2-wordpress-suite' ) );
+                echo ' <input type="submit" name="gm2_test_pagespeed" class="button" value="' . esc_attr__( 'Test Page Speed', 'gm2-wordpress-suite' ) . '" />';
+                echo '</form>';
+
+                echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
+                wp_nonce_field('gm2_purge_critical_css');
+                echo '<input type="hidden" name="action" value="gm2_purge_critical_css" />';
+                submit_button(esc_html__('Purge & Rebuild Critical CSS', 'gm2-wordpress-suite'), 'delete');
+                echo '</form>';
+
+                echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
+                wp_nonce_field('gm2_purge_optimizer_cache');
+                echo '<input type="hidden" name="action" value="gm2_purge_optimizer_cache" />';
+                submit_button(esc_html__('Purge Combined Assets', 'gm2-wordpress-suite'), 'delete');
+                echo '</form>';
             }
-
-            submit_button( esc_html__( 'Save Settings', 'gm2-wordpress-suite' ) );
-            echo ' <input type="submit" name="gm2_test_pagespeed" class="button" value="' . esc_attr__( 'Test Page Speed', 'gm2-wordpress-suite' ) . '" />';
-            echo '</form>';
-
-            echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
-            wp_nonce_field('gm2_purge_critical_css');
-            echo '<input type="hidden" name="action" value="gm2_purge_critical_css" />';
-            submit_button(esc_html__('Purge & Rebuild Critical CSS', 'gm2-wordpress-suite'), 'delete');
-            echo '</form>';
-
-            echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
-            wp_nonce_field('gm2_purge_optimizer_cache');
-            echo '<input type="hidden" name="action" value="gm2_purge_optimizer_cache" />';
-            submit_button(esc_html__('Purge Combined Assets', 'gm2-wordpress-suite'), 'delete');
-            echo '</form>';
         } elseif ($active === 'keywords') {
             $enabled = trim(get_option('gm2_gads_developer_token', '')) !== '' &&
                 trim(get_option('gm2_gads_customer_id', '')) !== '' &&
@@ -2817,6 +2837,61 @@ class Gm2_SEO_Admin {
             echo '<tr><td>' . esc_html($label) . '</td><td>' . esc_html($desc) . '</td><td><a href="' . esc_url($edit) . '">' . esc_html__('Edit', 'gm2-wordpress-suite') . '</a> | <a href="' . esc_url($del) . '" onclick="return confirm(\'' . esc_js(__('Delete this template?', 'gm2-wordpress-suite')) . '\');">' . esc_html__('Delete', 'gm2-wordpress-suite') . '</a></td></tr>';
         }
         echo '</tbody></table>';
+    }
+
+    public function handle_render_optimizer_form() {
+        if (!current_user_can('manage_options')) {
+            wp_die( esc_html__( 'Permission denied', 'gm2-wordpress-suite' ) );
+        }
+
+        if (empty($_POST['gm2_render_optimizer_nonce']) || !wp_verify_nonce($_POST['gm2_render_optimizer_nonce'], 'gm2_render_optimizer_save')) {
+            wp_die( esc_html__( 'Invalid nonce', 'gm2-wordpress-suite' ) );
+        }
+
+        $critical = isset($_POST['ae_seo_critical_css']) ? '1' : '0';
+        update_option('ae_seo_critical_css', $critical);
+
+        $defer = isset($_POST['ae_seo_defer_js']) ? '1' : '0';
+        update_option('ae_seo_defer_js', $defer);
+
+        $diff = isset($_POST['ae_seo_diff_serving']) ? '1' : '0';
+        update_option('ae_seo_diff_serving', $diff);
+
+        $combine = isset($_POST['ae_seo_combine_minify']) ? '1' : '0';
+        update_option('ae_seo_combine_minify', $combine);
+
+        $manual_css = isset($_POST['gm2_critical_css_manual']) ? wp_strip_all_tags($_POST['gm2_critical_css_manual']) : '';
+        update_option('gm2_critical_css_manual', $manual_css);
+
+        $allow_css = isset($_POST['gm2_critical_css_allowlist']) ? sanitize_text_field($_POST['gm2_critical_css_allowlist']) : '';
+        update_option('gm2_critical_css_allowlist', $allow_css);
+
+        $deny_css = isset($_POST['gm2_critical_css_denylist']) ? sanitize_text_field($_POST['gm2_critical_css_denylist']) : '';
+        update_option('gm2_critical_css_denylist', $deny_css);
+
+        $allow_js = isset($_POST['gm2_defer_js_allowlist']) ? sanitize_text_field($_POST['gm2_defer_js_allowlist']) : '';
+        update_option('gm2_defer_js_allowlist', $allow_js);
+
+        $deny_js = isset($_POST['gm2_defer_js_denylist']) ? sanitize_text_field($_POST['gm2_defer_js_denylist']) : '';
+        update_option('gm2_defer_js_denylist', $deny_js);
+
+        $overrides = [];
+        $handles = $_POST['gm2_defer_js_handles'] ?? [];
+        $attrs   = $_POST['gm2_defer_js_attrs'] ?? [];
+        foreach ($handles as $i => $handle) {
+            $handle = sanitize_key($handle);
+            $attr   = $attrs[$i] ?? '';
+            if ($handle === '' || !in_array($attr, ['defer', 'async', 'blocking'], true)) {
+                continue;
+            }
+            if ($attr !== 'blocking') {
+                $overrides[$handle] = $attr;
+            }
+        }
+        update_option('gm2_defer_js_overrides', $overrides);
+
+        wp_redirect(admin_url('admin.php?page=gm2-seo&tab=performance&subtab=render-optimizer&updated=1'));
+        exit;
     }
 
     public function handle_performance_form() {
