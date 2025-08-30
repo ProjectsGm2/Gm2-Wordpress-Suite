@@ -90,10 +90,25 @@ class AE_SEO_Critical_CSS {
      * @return string
      */
     public function filter_style_tag($html, $handle, $href, $media) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase -- WordPress filter signature.
+        if (is_feed() || is_404()) {
+            return $html;
+        }
+
         $exclusions = AE_SEO_Render_Optimizer::get_option(self::OPTION_EXCLUSIONS, '');
-        $deny  = array_filter(array_map('trim', is_array($exclusions) ? $exclusions : explode(',', $exclusions)));
+        $deny       = array_filter(array_map('trim', is_array($exclusions) ? $exclusions : explode(',', $exclusions)));
+
+        $patterns = ['editor', 'dashicons', 'admin-bar', 'woocommerce-inline'];
+        foreach ($patterns as $pattern) {
+            if (strpos($handle, $pattern) !== false) {
+                return $html;
+            }
+        }
 
         if (in_array($handle, $deny, true)) {
+            return $html;
+        }
+
+        if (strpos($html, 'rel="preload"') !== false || strpos($html, "rel='preload'") !== false || strpos($html, 'data-no-async') !== false) {
             return $html;
         }
 
@@ -104,12 +119,22 @@ class AE_SEO_Critical_CSS {
 
         $critical = $store[$handle];
         $style    = '<style>' . $critical . '</style>';
-        $preload  = sprintf(
-            '<link rel="preload" as="style" href="%s" onload="this.onload=null;this.rel=\'stylesheet\'">',
-            esc_url($href)
-        );
 
-        return $style . $preload;
+        $method = AE_SEO_Render_Optimizer::get_option(self::OPTION_ASYNC_METHOD, 'preload_onload');
+        if ($method === 'media_print') {
+            $async = sprintf(
+                '<link rel="stylesheet" href="%s" media="print" onload="this.media=\'all\'">',
+                esc_url($href)
+            );
+        } else {
+            $async = sprintf(
+                '<link rel="preload" as="style" href="%s" onload="this.onload=null;this.rel=\'stylesheet\'"><noscript><link rel="stylesheet" href="%s"></noscript>',
+                esc_url($href),
+                esc_url($href)
+            );
+        }
+
+        return $style . $async;
     }
 
     /**
@@ -118,7 +143,7 @@ class AE_SEO_Critical_CSS {
      * @return bool
      */
     private function is_excluded() {
-        if (is_admin() || is_user_logged_in() || is_feed() || is_preview() || wp_doing_cron()) {
+        if (is_admin() || is_user_logged_in() || is_admin_bar_showing() || is_feed() || is_preview() || wp_doing_cron()) {
             return true;
         }
 
