@@ -261,7 +261,11 @@ class Gm2_Cache_Audit_Admin {
                 $size = $a['content_length'] ? round($a['content_length']/1024, 2) : '';
                 $url_trunc = esc_html(wp_html_excerpt($a['url'], 60, '&hellip;'));
                 echo '<tr>';
-                echo '<td><input type="checkbox" class="gm2-cache-select" data-url="' . esc_attr($a['url']) . '" data-type="' . esc_attr($a['type']) . '" data-handle="' . esc_attr($a['handle'] ?? '') . '" /></td>';
+                if ($a['needs_attention'] && !empty($fix)) {
+                    echo '<td><input type="checkbox" class="gm2-cache-select" data-url="' . esc_attr($a['url']) . '" data-type="' . esc_attr($a['type']) . '" data-handle="' . esc_attr($a['handle'] ?? '') . '" /></td>';
+                } else {
+                    echo '<td></td>';
+                }
                 echo '<td><a href="' . esc_url($a['url']) . '" target="_blank">' . $url_trunc . '</a></td>';
                 echo '<td>' . esc_html($a['type']) . '</td>';
                 echo '<td>' . esc_html($ttl) . '</td>';
@@ -271,7 +275,11 @@ class Gm2_Cache_Audit_Admin {
                 echo '<td>' . esc_html($size) . '</td>';
                 echo '<td class="gm2-cache-status">' . esc_html($status_label) . '</td>';
                 echo '<td class="gm2-cache-fix">' . esc_html($fix) . '</td>';
-                echo '<td><button type="button" class="button gm2-cache-fix-now" data-url="' . esc_attr($a['url']) . '" data-type="' . esc_attr($a['type']) . '" data-handle="' . esc_attr($a['handle'] ?? '') . '">' . esc_html__('Fix Now', 'gm2-wordpress-suite') . '</button></td>';
+                if ($a['needs_attention'] && !empty($fix)) {
+                    echo '<td><button type="button" class="button gm2-cache-fix-now" data-url="' . esc_attr($a['url']) . '" data-type="' . esc_attr($a['type']) . '" data-handle="' . esc_attr($a['handle'] ?? '') . '">' . esc_html__('Fix Now', 'gm2-wordpress-suite') . '</button></td>';
+                } else {
+                    echo '<td></td>';
+                }
                 echo '</tr>';
             }
         }
