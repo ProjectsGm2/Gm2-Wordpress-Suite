@@ -14,6 +14,14 @@ if (!defined('ABSPATH')) {
  */
 class AE_SEO_Critical_CSS {
     /**
+     * Option names.
+     */
+    public const OPTION_ENABLE           = 'ae_seo_ro_enable_critical_css';
+    public const OPTION_STRATEGY         = 'ae_seo_ro_critical_strategy';
+    public const OPTION_CSS_MAP          = 'ae_seo_ro_critical_css_map';
+    public const OPTION_ASYNC_METHOD     = 'ae_seo_ro_async_css_method';
+    public const OPTION_EXCLUSIONS       = 'ae_seo_ro_critical_css_exclusions';
+    /**
      * Constructor.
      */
     public function __construct() {
@@ -40,7 +48,8 @@ class AE_SEO_Critical_CSS {
      * @return void
      */
     public function print_manual_css() {
-        $css = get_option('gm2_critical_css_manual', '');
+        $map = AE_SEO_Render_Optimizer::get_option(self::OPTION_CSS_MAP, []);
+        $css = is_array($map) ? ($map['manual'] ?? '') : '';
         if (empty($css)) {
             return;
         }
@@ -58,18 +67,14 @@ class AE_SEO_Critical_CSS {
      * @return string
      */
     public function filter_style_tag($html, $handle, $href, $media) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase -- WordPress filter signature.
-        $allow = array_filter(array_map('trim', explode(',', get_option('gm2_critical_css_allowlist', ''))));
-        $deny  = array_filter(array_map('trim', explode(',', get_option('gm2_critical_css_denylist', ''))));
-
-        if (!empty($allow) && !in_array($handle, $allow, true)) {
-            return $html;
-        }
+        $exclusions = AE_SEO_Render_Optimizer::get_option(self::OPTION_EXCLUSIONS, '');
+        $deny  = array_filter(array_map('trim', is_array($exclusions) ? $exclusions : explode(',', $exclusions)));
 
         if (in_array($handle, $deny, true)) {
             return $html;
         }
 
-        $store = get_option('gm2_critical_css_store', []);
+        $store = AE_SEO_Render_Optimizer::get_option(self::OPTION_CSS_MAP, []);
         if (empty($store[$handle])) {
             return $html;
         }
