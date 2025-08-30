@@ -3,7 +3,7 @@ Contributors: gm2team
 Tags: admin, tools, suite, performance
 Requires at least: 6.0
 Tested up to: 6.5
-Stable tag: 1.6.19
+Stable tag: 1.6.20
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -84,6 +84,46 @@ Filter by asset type, host or status, click **Re-scan** to run the scan again or
 individual sites from the Network Admin and audit each separately. Access requires
 `manage_options` (`manage_network` on multisite). Results, including the last run
 timestamp, are stored in the `gm2_cache_audit_results` option.
+
+== SEO Performance CLI ==
+Run `wp seo-perf` commands to audit your site and manage caching headers.
+
+* `wp seo-perf audit` – Runs an AI-powered audit and prints JSON
+  recommendations.
+* `wp seo-perf apply-htaccess` – Writes cache headers into `.htaccess`.
+* `wp seo-perf generate-nginx` – Generates an Nginx include file with caching
+  rules.
+* `wp seo-perf clear-markers` – Removes `.htaccess` markers and the Nginx file.
+
+Example:
+
+```
+wp seo-perf audit > report.json
+wp seo-perf apply-htaccess
+wp seo-perf generate-nginx
+wp seo-perf clear-markers
+```
+
+`audit` prints a JSON object such as:
+
+```
+{
+    "issues": ["Missing Cache-Control on images"],
+    "recommendations": ["Add long-lived headers for static assets"]
+}
+```
+
+All commands work in multisite. Use `--url=<site>` to target a specific site.
+
+Exit codes:
+
+* audit: `0` success, `1` missing AI utilities or an error code from AI
+* apply-htaccess: `0` success, `1` unsupported server, `2` CDN already sets headers, `3` `.htaccess` not writable, `4` unknown result
+* generate-nginx: `0` success, `1` unsupported server, `2` CDN already sets headers, `3` directory not writable, `4` unknown result
+* clear-markers: `0` success, `1` could not remove generated file
+
+A non-zero exit code indicates failure. Review the message to resolve
+permission or server issues before retrying.
 
 == Script Attributes ==
 Control how front-end scripts load from **SEO → Performance → Script Loading**.
@@ -406,6 +446,8 @@ the last 100 missing URLs to help you create new redirects.
 * **Real-time character counts** – display running totals in the SEO meta box.
 
 == Changelog ==
+= 1.6.20 =
+* Documented SEO Performance CLI commands and exit codes.
 = 1.6.19 =
 * Added Remote Mirror for Facebook Pixel and gtag with vendor checkboxes, SHA-256 hash display and daily cache refresh.
 = 1.6.18 =
