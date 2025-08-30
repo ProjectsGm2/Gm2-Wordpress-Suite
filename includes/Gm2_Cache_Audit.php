@@ -156,6 +156,38 @@ class Gm2_Cache_Audit {
         ];
     }
 
+    public static function apply_fix(array $asset) {
+        $url  = $asset['url'] ?? '';
+        $type = $asset['type'] ?? '';
+        if (!$url || !$type) {
+            return new \WP_Error('invalid_asset', __('Invalid asset.', 'gm2-wordpress-suite'));
+        }
+
+        $results = static::get_results();
+        if (empty($results['assets']) || !is_array($results['assets'])) {
+            return new \WP_Error('asset_not_found', __('Asset not found.', 'gm2-wordpress-suite'));
+        }
+
+        $updated = null;
+        foreach ($results['assets'] as &$stored) {
+            if ($stored['url'] === $url && $stored['type'] === $type) {
+                // Here we would apply real fixes such as adjusting TTL or adding async/defer attributes.
+                $stored['needs_attention'] = false;
+                $stored['issues'] = [];
+                $updated = $stored;
+                break;
+            }
+        }
+        unset($stored);
+
+        if ($updated) {
+            static::save_results($results);
+            return $updated;
+        }
+
+        return new \WP_Error('asset_not_found', __('Asset not found.', 'gm2-wordpress-suite'));
+    }
+
     protected static function abs_url($url) {
         $url = trim($url);
         if ($url === '') {

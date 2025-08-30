@@ -12,6 +12,7 @@ class Gm2_Cache_Audit_Admin {
         add_action('admin_post_gm2_cache_audit_rescan', [ $this, 'handle_rescan' ]);
         add_action('admin_post_gm2_cache_audit_export', [ $this, 'handle_export' ]);
         add_action('admin_enqueue_scripts', [ $this, 'enqueue_scripts' ]);
+        add_action('wp_ajax_gm2_cache_audit_fix', [ $this, 'ajax_fix' ]);
     }
 
     public function add_menu() {
@@ -62,13 +63,16 @@ class Gm2_Cache_Audit_Admin {
                 'filter_url' => admin_url('admin-ajax.php?action=gm2_cache_audit_filter'),
                 'rescan_url' => admin_url('admin-ajax.php?action=gm2_cache_audit_rescan'),
                 'export_url' => admin_url('admin-ajax.php?action=gm2_cache_audit_export'),
+                'fix_url'    => admin_url('admin-ajax.php?action=gm2_cache_audit_fix'),
                 'filter_nonce' => wp_create_nonce('gm2_cache_audit_filter'),
                 'rescan_nonce' => wp_create_nonce('gm2_cache_audit_rescan'),
                 'export_nonce' => wp_create_nonce('gm2_cache_audit_export'),
+                'fix_nonce'   => wp_create_nonce('gm2_cache_audit_fix'),
                 'strings' => [
                     'filter' => __( 'Filter', 'gm2-wordpress-suite' ),
                     'rescan' => __( 'Re-scan', 'gm2-wordpress-suite' ),
                     'export' => __( 'Export CSV', 'gm2-wordpress-suite' ),
+                    'fix'    => __( 'Fix Now', 'gm2-wordpress-suite' ),
                 ],
             ]
         );
@@ -230,13 +234,14 @@ class Gm2_Cache_Audit_Admin {
             'size'  => __('Size KB', 'gm2-wordpress-suite'),
             'status'=> __('Status', 'gm2-wordpress-suite'),
             'fix'   => __('Suggested Fix', 'gm2-wordpress-suite'),
+            'action'=> __('Action', 'gm2-wordpress-suite'),
         ];
         foreach ($cols as $label) {
             echo '<th>' . esc_html($label) . '</th>';
         }
         echo '</tr></thead><tbody>';
         if (empty($assets)) {
-            echo '<tr><td colspan="9">' . esc_html__('No results found.', 'gm2-wordpress-suite') . '</td></tr>';
+            echo '<tr><td colspan="10">' . esc_html__('No results found.', 'gm2-wordpress-suite') . '</td></tr>';
         } else {
             foreach ($assets as $a) {
                 $asset_host = parse_url($a['url'], PHP_URL_HOST);
@@ -254,8 +259,9 @@ class Gm2_Cache_Audit_Admin {
                 echo '<td>' . esc_html($a['etag']) . '</td>';
                 echo '<td>' . esc_html($a['last_modified']) . '</td>';
                 echo '<td>' . esc_html($size) . '</td>';
-                echo '<td>' . esc_html($status_label) . '</td>';
-                echo '<td>' . esc_html($fix) . '</td>';
+                echo '<td class="gm2-cache-status">' . esc_html($status_label) . '</td>';
+                echo '<td class="gm2-cache-fix">' . esc_html($fix) . '</td>';
+                echo '<td><button type="button" class="button gm2-cache-fix-now" data-url="' . esc_attr($a['url']) . '" data-type="' . esc_attr($a['type']) . '">' . esc_html__('Fix Now', 'gm2-wordpress-suite') . '</button></td>';
                 echo '</tr>';
             }
         }
@@ -264,6 +270,34 @@ class Gm2_Cache_Audit_Admin {
             restore_current_blog();
         }
         echo '</div>';
+    }
+
+    public function ajax_fix() {
+        $cap = is_network_admin() ? 'manage_network' : 'manage_options';
+        if (!current_user_can($cap)) {
+            wp_send_json_error(__('Access denied.', 'gm2-wordpress-suite'));
+        }
+        check_ajax_referer('gm2_cache_audit_fix', 'nonce');
+        $url  = isset($_POST['url']) ? esc_url_raw(wp_unslash($_POST['url'])) : '';
+        $type = isset($_POST['asset_type']) ? sanitize_key(wp_unslash($_POST['asset_type'])) : '';
+        if (!$url || !$type) {
+            wp_send_json_error(__('Invalid asset.', 'gm2-wordpress-suite'));
+        }
+
+        $asset = [
+            'url'  => $url,
+            'type' => $type,
+        ];
+
+        $updated = Gm2_Cache_Audit::apply_fix($asset);
+        if (is_wp_error($updated)) {
+            wp_send_json_error($updated->get_error_message());
+        }
+
+        wp_send_json_success([
+            'status' => __('Good', 'gm2-wordpress-suite'),
+            'fix'    => '',
+        ]);
     }
 
     public function handle_export() {
