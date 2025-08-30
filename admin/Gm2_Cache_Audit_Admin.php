@@ -134,6 +134,9 @@ class Gm2_Cache_Audit_Admin {
     private function suggested_fix($asset, $host_type) {
         if ($host_type === 'third') {
             if ($asset['type'] === 'script') {
+                if (empty($asset['handle'])) {
+                    return __('Manual defer/async', 'gm2-wordpress-suite');
+                }
                 return __('Defer/async', 'gm2-wordpress-suite');
             }
             return __('Self-host', 'gm2-wordpress-suite');
@@ -260,8 +263,12 @@ class Gm2_Cache_Audit_Admin {
                 $ttl = $a['ttl'] !== null ? intval($a['ttl']) : '';
                 $size = $a['content_length'] ? round($a['content_length']/1024, 2) : '';
                 $url_trunc = esc_html(wp_html_excerpt($a['url'], 60, '&hellip;'));
+                $can_fix = $a['needs_attention'] && !empty($fix);
+                if ($a['type'] === 'script' && $host_type === 'third' && empty($a['handle'])) {
+                    $can_fix = false;
+                }
                 echo '<tr>';
-                if ($a['needs_attention'] && !empty($fix)) {
+                if ($can_fix) {
                     echo '<td><input type="checkbox" class="gm2-cache-select" data-url="' . esc_attr($a['url']) . '" data-type="' . esc_attr($a['type']) . '" data-handle="' . esc_attr($a['handle'] ?? '') . '" /></td>';
                 } else {
                     echo '<td></td>';
@@ -275,7 +282,7 @@ class Gm2_Cache_Audit_Admin {
                 echo '<td>' . esc_html($size) . '</td>';
                 echo '<td class="gm2-cache-status">' . esc_html($status_label) . '</td>';
                 echo '<td class="gm2-cache-fix">' . esc_html($fix) . '</td>';
-                if ($a['needs_attention'] && !empty($fix)) {
+                if ($can_fix) {
                     echo '<td><button type="button" class="button gm2-cache-fix-now" data-url="' . esc_attr($a['url']) . '" data-type="' . esc_attr($a['type']) . '" data-handle="' . esc_attr($a['handle'] ?? '') . '">' . esc_html__('Fix Now', 'gm2-wordpress-suite') . '</button></td>';
                 } else {
                     echo '<td></td>';

@@ -186,6 +186,18 @@ class Gm2_Cache_Audit {
         $stored  = $results['assets'][$index];
         $issues  = $stored['issues'] ?? [];
         $handle  = $handle ?? ($stored['handle'] ?? null);
+        if (!$handle && $type === 'script') {
+            $scripts = wp_scripts();
+            foreach ($scripts->registered as $h => $data) {
+                if (!empty($data->src)) {
+                    $registered_url = self::abs_url($data->src);
+                    if ($registered_url === $url) {
+                        $handle = $h;
+                        break;
+                    }
+                }
+            }
+        }
 
         $asset_host = parse_url($url, PHP_URL_HOST);
         $home_host  = parse_url(home_url(), PHP_URL_HOST);
@@ -199,7 +211,7 @@ class Gm2_Cache_Audit {
                 $attrs = [];
             }
             if (!$handle) {
-                return new \WP_Error('fix_failed', __('Script handle not found.', 'gm2-wordpress-suite'));
+                return new \WP_Error('missing_handle', __('Script handle not found.', 'gm2-wordpress-suite'));
             }
             if (empty($attrs[$handle]) || ($attrs[$handle] !== 'async' && $attrs[$handle] !== 'defer')) {
                 $attrs[$handle] = 'defer';
@@ -276,6 +288,9 @@ class Gm2_Cache_Audit {
             $updated['url'] = $local_url;
         }
 
+        if ($handle) {
+            $updated['handle'] = $handle;
+        }
         $updated['needs_attention'] = !empty($updated['issues']);
         $results['assets'][$index] = $updated;
         static::save_results($results);
