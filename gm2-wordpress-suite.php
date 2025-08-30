@@ -105,6 +105,7 @@ require_once GM2_PLUGIN_DIR . 'includes/Gm2_Audit_Log.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Ajax_Upload.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Script_Attributes.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Search_Console.php';
+require_once GM2_PLUGIN_DIR . 'includes/render-optimizer/class-ae-seo-render-optimizer.php';
 require_once GM2_PLUGIN_DIR . 'includes/Versioning_MTime.php';
 
 \Gm2\Gm2_REST_Visibility::init();
