@@ -17,15 +17,91 @@ class AE_SEO_Critical_CSS {
      * Constructor.
      */
     public function __construct() {
-        add_action('wp_enqueue_scripts', [ $this, 'inject' ], 5);
+        add_action('wp_enqueue_scripts', [ $this, 'setup' ], 5);
     }
 
     /**
-     * Inject critical CSS.
+     * Set up hooks for critical CSS handling.
      *
      * @return void
      */
-    public function inject() {
-        // Placeholder for critical CSS logic.
+    public function setup() {
+        if ($this->is_excluded()) {
+            return;
+        }
+
+        add_filter('style_loader_tag', [ $this, 'filter_style_tag' ], 10, 4);
+        add_action('wp_head', [ $this, 'print_manual_css' ], 1);
+    }
+
+    /**
+     * Output manually supplied critical CSS.
+     *
+     * @return void
+     */
+    public function print_manual_css() {
+        $css = get_option('gm2_critical_css_manual', '');
+        if (empty($css)) {
+            return;
+        }
+
+        echo '<style id="gm2-critical-css">' . $css . '</style>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+    }
+
+    /**
+     * Replace style tags with critical CSS and preload full CSS.
+     *
+     * @param string $html   The original HTML tag.
+     * @param string $handle The style handle.
+     * @param string $href   The style href.
+     * @param string $media  The media attribute.
+     * @return string
+     */
+    public function filter_style_tag($html, $handle, $href, $media) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase -- WordPress filter signature.
+        $allow = array_filter(array_map('trim', explode(',', get_option('gm2_critical_css_allowlist', ''))));
+        $deny  = array_filter(array_map('trim', explode(',', get_option('gm2_critical_css_denylist', ''))));
+
+        if (!empty($allow) && !in_array($handle, $allow, true)) {
+            return $html;
+        }
+
+        if (in_array($handle, $deny, true)) {
+            return $html;
+        }
+
+        $store = get_option('gm2_critical_css_store', []);
+        if (empty($store[$handle])) {
+            return $html;
+        }
+
+        $critical = $store[$handle];
+        $style    = '<style>' . $critical . '</style>';
+        $preload  = sprintf(
+            '<link rel="preload" as="style" href="%s" onload="this.onload=null;this.rel=\'stylesheet\'">',
+            esc_url($href)
+        );
+
+        return $style . $preload;
+    }
+
+    /**
+     * Determine if current request should bypass critical CSS handling.
+     *
+     * @return bool
+     */
+    private function is_excluded() {
+        if (is_admin() || is_user_logged_in() || is_feed() || is_preview() || wp_doing_cron()) {
+            return true;
+        }
+
+        if (defined('REST_REQUEST') && REST_REQUEST) {
+            return true;
+        }
+
+        if (isset($GLOBALS['pagenow']) && $GLOBALS['pagenow'] === 'wp-login.php') {
+            return true;
+        }
+
+        return false;
     }
 }

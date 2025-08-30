@@ -49,6 +49,7 @@ class Gm2_SEO_Admin {
         add_action('admin_post_gm2_performance_settings', [$this, 'handle_performance_form']);
         add_action('admin_post_gm2_insert_cache_rules', [$this, 'handle_insert_cache_rules']);
         add_action('admin_post_gm2_remove_cache_rules', [$this, 'handle_remove_cache_rules']);
+        add_action('admin_post_gm2_purge_critical_css', [$this, 'handle_purge_critical_css']);
         add_action('admin_post_gm2_redirects', [$this, 'handle_redirects_form']);
         add_action('admin_post_gm2_generate_nginx_cache', [$this, 'handle_generate_nginx_cache']);
         add_action('admin_post_gm2_verify_nginx_cache', [$this, 'handle_verify_nginx_cache']);
@@ -226,6 +227,10 @@ class Gm2_SEO_Admin {
 
     public function sanitize_customer_id($value) {
         return preg_replace('/\D/', '', $value);
+    }
+
+    public function sanitize_css($value) {
+        return wp_strip_all_tags($value);
     }
 
     public function clean_slug($slug, $raw_title = '', $context = '') {
@@ -467,6 +472,15 @@ class Gm2_SEO_Admin {
         ]);
         register_setting('gm2_seo_options', 'gm2_slug_stopwords', [
             'sanitize_callback' => 'sanitize_textarea_field',
+        ]);
+        register_setting('gm2_seo_options', 'gm2_critical_css_manual', [
+            'sanitize_callback' => [ $this, 'sanitize_css' ],
+        ]);
+        register_setting('gm2_seo_options', 'gm2_critical_css_allowlist', [
+            'sanitize_callback' => 'sanitize_text_field',
+        ]);
+        register_setting('gm2_seo_options', 'gm2_critical_css_denylist', [
+            'sanitize_callback' => 'sanitize_text_field',
         ]);
         register_setting('gm2_seo_options', 'gm2_tax_desc_prompt', [
             'sanitize_callback' => 'sanitize_textarea_field',
@@ -932,6 +946,9 @@ class Gm2_SEO_Admin {
             $ps_key    = get_option('gm2_pagespeed_api_key', '');
             $ps_scores = get_option('gm2_pagespeed_scores', []);
             $script_attrs = get_option('gm2_script_attributes', []);
+            $critical_manual = get_option('gm2_critical_css_manual', '');
+            $critical_allow  = get_option('gm2_critical_css_allowlist', '');
+            $critical_deny   = get_option('gm2_critical_css_denylist', '');
 
             $rm_vendors = get_option('gm2_remote_mirror_vendors', []);
             $rm_fb     = !empty($rm_vendors['facebook']);
@@ -947,6 +964,9 @@ class Gm2_SEO_Admin {
 
             if (!empty($_GET['nginx_cache_written'])) {
                 echo '<div class="updated notice"><p>' . esc_html__('Snippet saved.', 'gm2-wordpress-suite') . '</p></div>';
+            }
+            if (!empty($_GET['critical_css_purged'])) {
+                echo '<div class="updated notice"><p>' . esc_html__('Critical CSS purged.', 'gm2-wordpress-suite') . '</p></div>';
             }
             if (isset($_GET['nginx_cache_verified'])) {
                 if ($_GET['nginx_cache_verified']) {
@@ -1028,6 +1048,11 @@ class Gm2_SEO_Admin {
             }
             echo '</td></tr>';
 
+            echo '<tr><th colspan="2"><h2>' . esc_html__( 'Critical CSS', 'gm2-wordpress-suite' ) . '</h2></th></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Manual Critical CSS', 'gm2-wordpress-suite' ) . '</th><td><textarea name="gm2_critical_css_manual" rows="5" class="large-text code">' . esc_textarea($critical_manual) . '</textarea></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Allowlist Handles', 'gm2-wordpress-suite' ) . '</th><td><input type="text" name="gm2_critical_css_allowlist" value="' . esc_attr($critical_allow) . '" class="regular-text" /><p class="description">' . esc_html__( 'Comma-separated style handles to inline.', 'gm2-wordpress-suite' ) . '</p></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Denylist Handles', 'gm2-wordpress-suite' ) . '</th><td><input type="text" name="gm2_critical_css_denylist" value="' . esc_attr($critical_deny) . '" class="regular-text" /><p class="description">' . esc_html__( 'Comma-separated style handles to skip.', 'gm2-wordpress-suite' ) . '</p></td></tr>';
+
             echo '<tr><th colspan="2"><h2>' . esc_html__( 'Script Loading', 'gm2-wordpress-suite' ) . '</h2></th></tr>';
             echo '<tr><th scope="row">' . esc_html__( 'Presets', 'gm2-wordpress-suite' ) . '</th><td><select name="gm2_script_attr_preset">';
             echo '<option value="">' . esc_html__( '-- Select Preset --', 'gm2-wordpress-suite' ) . '</option>';
@@ -1085,6 +1110,12 @@ class Gm2_SEO_Admin {
 
             submit_button( esc_html__( 'Save Settings', 'gm2-wordpress-suite' ) );
             echo ' <input type="submit" name="gm2_test_pagespeed" class="button" value="' . esc_attr__( 'Test Page Speed', 'gm2-wordpress-suite' ) . '" />';
+            echo '</form>';
+
+            echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
+            wp_nonce_field('gm2_purge_critical_css');
+            echo '<input type="hidden" name="action" value="gm2_purge_critical_css" />';
+            submit_button(esc_html__('Purge & Rebuild Critical CSS', 'gm2-wordpress-suite'), 'delete');
             echo '</form>';
         } elseif ($active === 'keywords') {
             $enabled = trim(get_option('gm2_gads_developer_token', '')) !== '' &&
@@ -2817,6 +2848,15 @@ class Gm2_SEO_Admin {
             Gm2_Version_Route_Apache::maybe_apply();
         }
 
+        $manual_css = isset($_POST['gm2_critical_css_manual']) ? wp_strip_all_tags($_POST['gm2_critical_css_manual']) : '';
+        update_option('gm2_critical_css_manual', $manual_css);
+
+        $allowlist = isset($_POST['gm2_critical_css_allowlist']) ? sanitize_text_field($_POST['gm2_critical_css_allowlist']) : '';
+        update_option('gm2_critical_css_allowlist', $allowlist);
+
+        $denylist = isset($_POST['gm2_critical_css_denylist']) ? sanitize_text_field($_POST['gm2_critical_css_denylist']) : '';
+        update_option('gm2_critical_css_denylist', $denylist);
+
         $vendor_opts = [
             'facebook' => isset($_POST['gm2_remote_mirror_vendors']['facebook']) ? '1' : '0',
             'google'   => isset($_POST['gm2_remote_mirror_vendors']['google']) ? '1' : '0',
@@ -2891,6 +2931,16 @@ class Gm2_SEO_Admin {
         }
 
         wp_redirect(admin_url('admin.php?page=gm2-seo&tab=performance&updated=1'));
+        exit;
+    }
+
+    public function handle_purge_critical_css() {
+        if (!current_user_can('manage_options')) {
+            wp_die( esc_html__( 'Permission denied', 'gm2-wordpress-suite' ) );
+        }
+        check_admin_referer('gm2_purge_critical_css');
+        delete_option('gm2_critical_css_store');
+        wp_redirect(admin_url('admin.php?page=gm2-seo&tab=performance&critical_css_purged=1'));
         exit;
     }
 
