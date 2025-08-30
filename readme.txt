@@ -25,6 +25,8 @@ Key features include:
 * Real-time Google Merchant Centre data via REST endpoint
 * Cache Audit screen checks caching headers and flags assets needing attention
 * Optional Pretty Versioned URLs convert `file.css?ver=123` into `file.v123.css` with Apache and Nginx rewrite rules
+* Auto versions local assets with file modification times to ensure browsers receive updates
+* Automatically writes long-lived cache headers to `.htaccess` on Apache and LiteSpeed
 * Remote mirror for vendor scripts like Facebook Pixel and gtag with SRI hashes and a daily refresh
 * Script Attributes manager with dependency-aware “Defer all third-party” and “Conservative” presets
 
