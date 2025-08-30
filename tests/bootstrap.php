@@ -3,6 +3,10 @@ $_tests_dir = getenv('WP_TESTS_DIR');
 if (!$_tests_dir) {
     $_tests_dir = '/tmp/wordpress-tests-lib';
 }
+$env_polyfills = getenv('WP_TESTS_PHPUNIT_POLYFILLS_PATH');
+if (!defined('WP_TESTS_PHPUNIT_POLYFILLS_PATH') && $env_polyfills && is_dir($env_polyfills)) {
+    define('WP_TESTS_PHPUNIT_POLYFILLS_PATH', $env_polyfills);
+}
 $polyfills_path = dirname(__DIR__) . '/vendor/yoast/phpunit-polyfills';
 if (!defined('WP_TESTS_PHPUNIT_POLYFILLS_PATH') && is_dir($polyfills_path)) {
     define('WP_TESTS_PHPUNIT_POLYFILLS_PATH', $polyfills_path);

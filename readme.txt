@@ -105,6 +105,18 @@ Enable performance modules from **SEO → Performance → Render Optimizer**. Av
 * Differential serving of modern and legacy JavaScript bundles.
 * Combination and minification of local CSS and JS assets.
 
+=== Critical CSS ===
+Inline above-the-fold styles and load full stylesheets asynchronously.
+
+* Strategies:
+  * `per_home_archive_single` – store snippets for the home page, archive templates and each post type.
+  * `per_url_cache` – hash the current URL for page-specific CSS.
+* Async methods:
+  * `preload_onload` – outputs a `<link rel="preload">` tag that swaps to `rel="stylesheet"` with a `<noscript>` fallback.
+  * `media_print` – starts with `media="print"` and switches to `all` on load.
+* Exclusions – provide handles to skip; editor, dashicons, admin-bar and WooCommerce inline styles are ignored automatically.
+* Purge workflow – click **Purge Critical CSS** on the Render Optimizer screen to clear stored snippets after theme or style changes.
+
 If WP Rocket, Autoptimize, Perfmatters or other optimizer plugins are active, the subsystem automatically disables its features and displays a warning. Only one optimization plugin should run at a time.
 
 == SEO Performance CLI ==

@@ -155,6 +155,28 @@ The Render Optimizer groups several front-end performance features behind **SEO 
 * Serve modern and legacy JavaScript bundles using `type="module"`/`nomodule`.
 * Combine and minify local CSS and JS assets.
 
+### Critical CSS
+
+Inline above-the-fold styles and load remaining CSS asynchronously.
+
+**Strategies**
+
+* `per_home_archive_single` – store snippets for the home page, archives and each post type.
+* `per_url_cache` – hash the current URL to map CSS per page.
+
+**Async methods**
+
+* `preload_onload` (default) outputs a `<link rel="preload">` tag that switches to `rel="stylesheet"` and includes a `<noscript>` fallback.
+* `media_print` loads stylesheets with `media="print"` and changes to `all` on load.
+
+**Exclusions**
+
+Provide handles or patterns to skip. Editor, dashicons, admin-bar and WooCommerce inline styles are ignored automatically.
+
+**Purge workflow**
+
+Use the **Purge Critical CSS** button on the Render Optimizer screen to clear stored snippets after changing themes or styles.
+
 The optimizer automatically disables its features when popular optimization plugins like WP&nbsp;Rocket, Autoptimize or Perfmatters are active. Only one optimization plugin should run at a time.
 
 After adjusting the source files in `assets/src/optimizer`, rebuild the distributed scripts as noted in [Rebuilding Optimizer assets](#rebuilding-optimizer-assets).
