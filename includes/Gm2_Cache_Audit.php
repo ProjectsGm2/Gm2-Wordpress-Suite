@@ -298,7 +298,15 @@ class Gm2_Cache_Audit {
                 $updated['needs_attention'] = !empty($updated['issues']);
                 $results['assets'][$index]  = $updated;
                 static::save_results($results);
-                return new \WP_Error('ttl_unverified', __('Cache headers unchanged; verify server rules.', 'gm2-wordpress-suite'));
+                return new \WP_Error(
+                    'ttl_unverified',
+                    __('Cache headers unchanged; verify server rules.', 'gm2-wordpress-suite'),
+                    [
+                        'ttl'          => $ttl,
+                        'cache_control'=> $cache_control,
+                        'expires'      => $expires,
+                    ]
+                );
             }
 
             // Only clear related issues if the TTL verifies at a week or longer.
@@ -411,7 +419,15 @@ class Gm2_Cache_Audit {
                     $updated['needs_attention'] = !empty($updated['issues']);
                     $results['assets'][$index]  = $updated;
                     static::save_results($results);
-                    return new \WP_Error('ttl_unverified', __('Cache headers unchanged; verify server rules.', 'gm2-wordpress-suite'));
+                    return new \WP_Error(
+                        'ttl_unverified',
+                        __('Cache headers unchanged; verify server rules.', 'gm2-wordpress-suite'),
+                        [
+                            'ttl'           => $ttl,
+                            'cache_control' => $cache_control,
+                            'expires'       => $expires,
+                        ]
+                    );
                 }
 
                 $updated['issues'] = array_diff($updated['issues'], ['short_max_age', 'missing_cache_control']);
