@@ -45,6 +45,8 @@ class Gm2_SEO_Admin {
         add_option('gm2_defer_js_allowlist', '');
         add_option('gm2_defer_js_denylist', '');
         add_option('gm2_defer_js_overrides', []);
+        add_option('ae_seo_ro_defer_allow_domains', '');
+        add_option('ae_seo_ro_defer_deny_domains', '');
 
         add_action('admin_menu', [$this, 'add_settings_pages']);
         add_action('add_meta_boxes', [$this, 'register_meta_boxes']);
@@ -2892,6 +2894,12 @@ class Gm2_SEO_Admin {
 
         $exclusions = isset($_POST['ae_seo_ro_critical_css_exclusions']) ? sanitize_text_field($_POST['ae_seo_ro_critical_css_exclusions']) : '';
         update_option('ae_seo_ro_critical_css_exclusions', $exclusions);
+
+        $allow_domains = isset($_POST['ae_seo_ro_defer_allow_domains']) ? sanitize_text_field($_POST['ae_seo_ro_defer_allow_domains']) : '';
+        update_option('ae_seo_ro_defer_allow_domains', $allow_domains);
+
+        $deny_domains = isset($_POST['ae_seo_ro_defer_deny_domains']) ? sanitize_text_field($_POST['ae_seo_ro_defer_deny_domains']) : '';
+        update_option('ae_seo_ro_defer_deny_domains', $deny_domains);
 
         wp_redirect(admin_url('admin.php?page=gm2-seo&tab=performance&subtab=render-optimizer&updated=1'));
         exit;
