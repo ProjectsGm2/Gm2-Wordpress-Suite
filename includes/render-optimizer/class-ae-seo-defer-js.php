@@ -35,6 +35,13 @@ class AE_SEO_Defer_JS {
     private array $existing = [];
 
     /**
+     * Handles referenced by inline scripts.
+     *
+     * @var array
+     */
+    private array $inline_block = [];
+
+    /**
      * Constructor.
      */
     public function __construct() {
@@ -44,6 +51,7 @@ class AE_SEO_Defer_JS {
         add_option('gm2_defer_js_overrides', []);
         add_option('ae_seo_ro_defer_allow_domains', '');
         add_option('ae_seo_ro_defer_deny_domains', '');
+        add_option('ae_seo_ro_defer_respect_in_footer', '0');
 
         add_action('wp_enqueue_scripts', [ $this, 'setup' ], 5);
     }
@@ -75,6 +83,7 @@ class AE_SEO_Defer_JS {
 
         $allow_domains = array_filter(array_map('trim', explode(',', get_option('ae_seo_ro_defer_allow_domains', ''))));
         $deny_domains  = array_filter(array_map('trim', explode(',', get_option('ae_seo_ro_defer_deny_domains', ''))));
+        $respect_footer = get_option('ae_seo_ro_defer_respect_in_footer', '0') === '1';
 
         $host = wp_parse_url($src, PHP_URL_HOST);
         $path = wp_parse_url($src, PHP_URL_PATH);
@@ -100,6 +109,17 @@ class AE_SEO_Defer_JS {
             return str_replace('<script ', '<script async defer ', $tag);
         }
 
+        if ($respect_footer) {
+            global $wp_scripts;
+            if (!$wp_scripts instanceof \WP_Scripts) {
+                $wp_scripts = wp_scripts();
+            }
+            $group = $wp_scripts->get_data($handle, 'group');
+            if ((int) $group === 1 && !in_array($handle, $allow, true)) {
+                return $tag;
+            }
+        }
+
         if (!empty($allow) && !in_array($handle, $allow, true)) {
             return $this->remove_attr($tag);
         }
@@ -115,6 +135,12 @@ class AE_SEO_Defer_JS {
         }
 
         $this->overrides = get_option('gm2_defer_js_overrides', []);
+        if ($respect_footer) {
+            $this->build_inline_map();
+            foreach ($this->inline_block as $block_handle => $_) {
+                $this->overrides[$block_handle] = 'blocking';
+            }
+        }
         $this->resolved  = [];
 
         $attr = $this->determine_attribute($handle);
@@ -144,6 +170,46 @@ class AE_SEO_Defer_JS {
     }
 
     /**
+     * Build map of handles referenced by inline scripts in footer queues.
+     *
+     * @return void
+     */
+    private function build_inline_map(): void {
+        if (!empty($this->inline_block)) {
+            return;
+        }
+
+        global $wp_scripts;
+        if (!$wp_scripts instanceof \WP_Scripts) {
+            $wp_scripts = wp_scripts();
+        }
+
+        $handles = array_unique(array_merge((array) $wp_scripts->in_footer, (array) $wp_scripts->print_inline_script));
+        if (empty($handles)) {
+            return;
+        }
+
+        $registered_handles = array_keys($wp_scripts->registered);
+
+        foreach ($handles as $h) {
+            $data   = $wp_scripts->get_data($h, 'data');
+            $before = (array) $wp_scripts->get_data($h, 'before');
+            $after  = (array) $wp_scripts->get_data($h, 'after');
+            $codes  = array_merge($before, $after);
+            if ($data) {
+                $codes[] = $data;
+            }
+            foreach ($codes as $code) {
+                foreach ($registered_handles as $handle) {
+                    if (strpos($code, $handle) !== false) {
+                        $this->inline_block[$handle] = true;
+                    }
+                }
+            }
+        }
+    }
+
+    /**
      * Determine attribute for a handle considering dependencies.
      *
      * @param string $handle Script handle.
@@ -152,6 +218,10 @@ class AE_SEO_Defer_JS {
     private function determine_attribute(string $handle): string {
         if (isset($this->resolved[$handle])) {
             return $this->resolved[$handle];
+        }
+
+        if (isset($this->inline_block[$handle])) {
+            return $this->resolved[$handle] = 'blocking';
         }
 
         if (isset($this->existing[$handle])) {

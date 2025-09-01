@@ -23,6 +23,7 @@ class DeferJsTest extends WP_UnitTestCase {
         delete_option('gm2_defer_js_overrides');
         delete_option('ae_seo_ro_defer_allow_domains');
         delete_option('ae_seo_ro_defer_deny_domains');
+        delete_option('ae_seo_ro_defer_respect_in_footer');
         delete_option('gm2_script_attributes');
         parent::tearDown();
     }
@@ -88,6 +89,27 @@ class DeferJsTest extends WP_UnitTestCase {
         $html   = $this->get_output('gm2-foo');
         $fooTag = $this->extract_tag($html, 'gm2-foo');
         $this->assertStringNotContainsString('async', $fooTag);
+        $this->assertStringNotContainsString('defer', $fooTag);
+    }
+
+    public function test_footer_group_without_allowlist_remains_unchanged_when_respected() {
+        update_option('ae_seo_ro_defer_respect_in_footer', '1');
+        wp_register_script('gm2-foo', 'https://example.com/foo.js', [], null, true);
+        wp_enqueue_script('gm2-foo');
+        $html   = $this->get_output('gm2-foo');
+        $fooTag = $this->extract_tag($html, 'gm2-foo');
+        $this->assertStringNotContainsString('defer', $fooTag);
+    }
+
+    public function test_inline_reference_marks_handle_blocking() {
+        update_option('ae_seo_ro_defer_respect_in_footer', '1');
+        wp_register_script('gm2-foo', 'https://example.com/foo.js', [], null);
+        wp_register_script('gm2-bar', 'https://example.com/bar.js', [], null, true);
+        wp_add_inline_script('gm2-bar', "console.log('gm2-foo');");
+        wp_enqueue_script('gm2-foo');
+        wp_enqueue_script('gm2-bar');
+        $html   = $this->get_output('gm2-bar');
+        $fooTag = $this->extract_tag($html, 'gm2-foo');
         $this->assertStringNotContainsString('defer', $fooTag);
     }
 }
