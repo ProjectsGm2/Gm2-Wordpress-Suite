@@ -60,8 +60,9 @@ jQuery(function($){
                 showError($row, msg);
                 $btn.prop('disabled', false);
             }
-        }).fail(function(){
-            showError($btn.closest('tr'), gm2CacheAudit.generic_error);
+        }).fail(function(resp){
+            var msg = resp && resp.responseJSON && resp.responseJSON.data && resp.responseJSON.data.message ? resp.responseJSON.data.message : gm2CacheAudit.generic_error;
+            showError($btn.closest('tr'), msg);
             $btn.prop('disabled', false);
         });
     });
@@ -122,8 +123,8 @@ jQuery(function($){
                     }
                     stopOnError = true;
                 }
-            }).fail(function(){
-                var msg = gm2CacheAudit.generic_error;
+            }).fail(function(resp){
+                var msg = resp && resp.responseJSON && resp.responseJSON.data && resp.responseJSON.data.message ? resp.responseJSON.data.message : gm2CacheAudit.generic_error;
                 showError(item.$row, msg);
                 if (typeof wp !== 'undefined' && wp.a11y && wp.a11y.speak) {
                     wp.a11y.speak(gm2CacheAudit.bulk_halted.replace('%s', msg));
