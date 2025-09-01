@@ -8,8 +8,12 @@ $strategy   = get_option('ae_seo_ro_critical_strategy', 'per_home_archive_single
 $async      = get_option('ae_seo_ro_async_css_method', 'preload_onload');
 $css_map    = get_option('ae_seo_ro_critical_css_map', []);
 $exclusions = get_option('ae_seo_ro_critical_css_exclusions', '');
+$enable_defer_js = get_option('ae_seo_ro_enable_defer_js', get_option('ae_seo_defer_js', '0'));
+$allow_handles = get_option('gm2_defer_js_allowlist', '');
+$deny_handles  = get_option('gm2_defer_js_denylist', '');
 $allow_domains = get_option('ae_seo_ro_defer_allow_domains', '');
 $deny_domains  = get_option('ae_seo_ro_defer_deny_domains', '');
+$respect_footer = get_option('ae_seo_ro_defer_respect_in_footer', '0');
 $preserve_jquery = get_option('ae_seo_ro_defer_preserve_jquery', '1');
 $post_types = get_post_types(['public' => true], 'objects');
 
@@ -44,9 +48,17 @@ foreach ($post_types as $type) {
 
 echo '<tr><th scope="row">' . esc_html__( 'Excluded Handles', 'gm2-wordpress-suite' ) . '</th><td><input type="text" name="ae_seo_ro_critical_css_exclusions" value="' . esc_attr($exclusions) . '" class="regular-text" /><p class="description">' . esc_html__( 'Comma-separated style handles to skip.', 'gm2-wordpress-suite' ) . '</p></td></tr>';
 
+echo '<tr><th scope="row">' . esc_html__( 'Enable Defer JS', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="ae_seo_ro_enable_defer_js" value="1" ' . checked($enable_defer_js, '1', false) . ' /></td></tr>';
+
+echo '<tr><th scope="row">' . esc_html__( 'Handle Allowlist', 'gm2-wordpress-suite' ) . '</th><td><input type="text" name="gm2_defer_js_allowlist" value="' . esc_attr($allow_handles) . '" class="regular-text" /><p class="description">' . esc_html__( 'Comma-separated script handles to always defer.', 'gm2-wordpress-suite' ) . '</p></td></tr>';
+
+echo '<tr><th scope="row">' . esc_html__( 'Handle Denylist', 'gm2-wordpress-suite' ) . '</th><td><input type="text" name="gm2_defer_js_denylist" value="' . esc_attr($deny_handles) . '" class="regular-text" /><p class="description">' . esc_html__( 'Comma-separated script handles to exclude.', 'gm2-wordpress-suite' ) . '</p></td></tr>';
+
 echo '<tr><th scope="row">' . esc_html__( 'Allow Domains', 'gm2-wordpress-suite' ) . '</th><td><input type="text" name="ae_seo_ro_defer_allow_domains" value="' . esc_attr($allow_domains) . '" class="regular-text" /><p class="description">' . esc_html__( 'Comma-separated hostnames to always async/defer.', 'gm2-wordpress-suite' ) . '</p></td></tr>';
 
 echo '<tr><th scope="row">' . esc_html__( 'Deny Domains', 'gm2-wordpress-suite' ) . '</th><td><input type="text" name="ae_seo_ro_defer_deny_domains" value="' . esc_attr($deny_domains) . '" class="regular-text" /><p class="description">' . esc_html__( 'Comma-separated hostnames to exclude from defer.', 'gm2-wordpress-suite' ) . '</p></td></tr>';
+
+echo '<tr><th scope="row">' . esc_html__( 'Respect in footer', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="ae_seo_ro_defer_respect_in_footer" value="1" ' . checked($respect_footer, '1', false) . ' /><p class="description">' . esc_html__( 'Skip moving footer scripts earlier unless allowlisted.', 'gm2-wordpress-suite' ) . '</p></td></tr>';
 
 echo '<tr><th scope="row">' . esc_html__( 'Preserve jQuery', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="ae_seo_ro_defer_preserve_jquery" value="1" ' . checked($preserve_jquery, '1', false) . ' /><p class="description">' . esc_html__( 'Detect early inline jQuery usage and keep jQuery blocking.', 'gm2-wordpress-suite' ) . '</p></td></tr>';
 
@@ -61,4 +73,10 @@ echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">
 wp_nonce_field('gm2_purge_critical_css');
 echo '<input type="hidden" name="action" value="gm2_purge_critical_css" />';
 submit_button(esc_html__( 'Purge & Rebuild Critical CSS', 'gm2-wordpress-suite' ), 'delete');
+echo '</form>';
+
+echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
+wp_nonce_field('gm2_purge_js_map');
+echo '<input type="hidden" name="action" value="gm2_purge_js_map" />';
+submit_button(esc_html__( 'Purge & Rebuild JS Map', 'gm2-wordpress-suite' ), 'delete');
 echo '</form>';
