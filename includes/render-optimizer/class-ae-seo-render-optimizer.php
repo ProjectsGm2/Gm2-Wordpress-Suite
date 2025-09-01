@@ -27,9 +27,11 @@ class AE_SEO_Render_Optimizer {
         AE_SEO_Critical_CSS::OPTION_ASYNC_METHOD => 'preload_onload',
         AE_SEO_Critical_CSS::OPTION_EXCLUSIONS   => [],
         'ae_seo_ro_enable_defer_js'              => '0',
+        'ae_seo_ro_defer_allow_handles'          => '',
+        'ae_seo_ro_defer_deny_handles'           => '',
         'ae_seo_ro_defer_allow_domains'          => '',
         'ae_seo_ro_defer_deny_domains'           => '',
-        'ae_seo_ro_defer_respect_in_footer'      => '0',
+        'ae_seo_ro_defer_respect_in_footer'      => '1',
         'ae_seo_ro_defer_preserve_jquery'        => '1',
     ];
     /**
@@ -112,6 +114,15 @@ class AE_SEO_Render_Optimizer {
                 $this->disable_features();
                 add_action('admin_notices', [ $this, 'conflict_notice' ]);
             }
+            return;
+        }
+
+        if (
+            self::get_option(AE_SEO_Critical_CSS::OPTION_ENABLE, '0') !== '1' &&
+            get_option('ae_seo_ro_enable_defer_js', '0') !== '1' &&
+            get_option('ae_seo_diff_serving', '0') !== '1' &&
+            get_option('ae_seo_combine_minify', '0') !== '1'
+        ) {
             return;
         }
 
