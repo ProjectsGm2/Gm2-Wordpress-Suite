@@ -102,7 +102,7 @@ Enable performance modules from **SEO → Performance → Render Optimizer**. Av
 
 * Critical CSS with allow/deny lists and optional manual overrides.
 * JavaScript deferral with an enable toggle, handle and domain allow/deny lists, a "Respect in footer" option, and automatic inline dependency and jQuery detection.
-* Differential serving of modern and legacy JavaScript bundles.
+* Differential serving of modern and legacy JavaScript bundles using `<script type="module" crossorigin="anonymous">` and `<script nomodule crossorigin="anonymous">`. This feature is enabled by default via `ae_seo_ro_enable_diff_serving`, and module scripts stay blocking when deferral is active.
 * Combination and minification of local CSS and JS assets.
 
 === Critical CSS ===
@@ -121,6 +121,8 @@ Toggle script deferral on or off and maintain allow and deny lists for specific 
 
 === Purge and acceptance testing ===
 Use **Purge Critical CSS** and **Purge JS Map** on the Render Optimizer screen after changing themes or deferral settings. Clear any page, server or CDN caches and acceptance-test the site: load key pages, check the browser console and verify forms, logins and checkout flows work.
+
+For differential serving, open the site in a modern browser and confirm only `optimizer-modern.js` runs. Repeat in an older or emulated legacy browser to ensure just `optimizer-legacy.js` executes.
 
 If WP Rocket, Autoptimize, Perfmatters or other optimizer plugins are active, the subsystem automatically disables its features and displays a warning. Only one optimization plugin should run at a time.
 
