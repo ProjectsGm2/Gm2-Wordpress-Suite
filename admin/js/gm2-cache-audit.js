@@ -55,7 +55,6 @@ jQuery(function($){
             var $row = $btn.closest('tr');
             if (resp && resp.success && resp.data) {
                 $row.find('.gm2-cache-status').text(resp.data.status);
-                $row.find('.gm2-cache-fix').text(resp.data.fix);
                 if (typeof resp.data.ttl !== 'undefined') {
                     $row.find('td').eq(3).text(resp.data.ttl);
                 }
@@ -64,8 +63,11 @@ jQuery(function($){
                     if ($checkbox.length) {
                         $checkbox.prop('checked', true);
                     }
+                    // Show remaining suggested fix for manual resolution.
+                    $row.find('.gm2-cache-fix').text(resp.data.fix);
                     $btn.prop('disabled', false);
                 } else {
+                    $row.find('.gm2-cache-fix').text(resp.data.fix);
                     $checkbox.remove();
                     $btn.remove();
                     $('#gm2-cache-select-all').prop('checked', false);
@@ -120,13 +122,14 @@ jQuery(function($){
             $.post(gm2CacheAudit.fix_url, data).done(function(resp){
                 if (resp && resp.success && resp.data) {
                     item.$row.find('.gm2-cache-status').text(resp.data.status);
-                    item.$row.find('.gm2-cache-fix').text(resp.data.fix);
                     if (typeof resp.data.ttl !== 'undefined') {
                         item.$row.find('td').eq(3).text(resp.data.ttl);
                     }
                     if (resp.data.needs_attention) {
+                        item.$row.find('.gm2-cache-fix').text(resp.data.fix);
                         item.$checkbox.prop('checked', true);
                     } else {
+                        item.$row.find('.gm2-cache-fix').text(resp.data.fix);
                         item.$row.find('.gm2-cache-fix-now').remove();
                         item.$checkbox.remove();
                     }

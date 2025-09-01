@@ -295,18 +295,11 @@ class Gm2_Cache_Audit {
             $updated['ttl']           = $ttl;
 
             if ($ttl === null || $ttl < 604800) {
-                $updated['needs_attention'] = !empty($updated['issues']);
+                // TTL remains too short; keep existing issues and flag for manual attention.
+                $updated['needs_attention'] = true;
                 $results['assets'][$index]  = $updated;
                 static::save_results($results);
-                return new \WP_Error(
-                    'ttl_unverified',
-                    __('Cache headers unchanged; verify server rules.', 'gm2-wordpress-suite'),
-                    [
-                        'ttl'          => $ttl,
-                        'cache_control'=> $cache_control,
-                        'expires'      => $expires,
-                    ]
-                );
+                return $updated;
             }
 
             // Only clear related issues if the TTL verifies at a week or longer.
@@ -416,18 +409,11 @@ class Gm2_Cache_Audit {
                 $updated['ttl']           = $ttl;
 
                 if ($ttl === null || $ttl < 604800) {
-                    $updated['needs_attention'] = !empty($updated['issues']);
+                    // TTL remains too short; keep existing issues and flag for manual attention.
+                    $updated['needs_attention'] = true;
                     $results['assets'][$index]  = $updated;
                     static::save_results($results);
-                    return new \WP_Error(
-                        'ttl_unverified',
-                        __('Cache headers unchanged; verify server rules.', 'gm2-wordpress-suite'),
-                        [
-                            'ttl'           => $ttl,
-                            'cache_control' => $cache_control,
-                            'expires'       => $expires,
-                        ]
-                    );
+                    return $updated;
                 }
 
                 $updated['issues'] = array_diff($updated['issues'], ['short_max_age', 'missing_cache_control']);
