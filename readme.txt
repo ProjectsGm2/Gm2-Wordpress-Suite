@@ -29,7 +29,7 @@ Key features include:
 * Automatically writes long-lived cache headers to `.htaccess` on Apache and LiteSpeed
 * Remote mirror for vendor scripts like Facebook Pixel and gtag with SRI hashes and a daily refresh
 * Script Attributes manager with dependency-aware “Defer all third-party” and “Conservative” presets
-* Render Optimizer for critical CSS, JS deferral, differential serving, and asset combination/minification
+* Render Optimizer for critical CSS, JS deferral with handle/domain allow and deny lists plus inline dependency and jQuery auto-detection, differential serving, and asset combination/minification
 
 == Installation ==
 1. Upload the plugin files to the `/wp-content/plugins/gm2-wordpress-suite` directory.
@@ -101,7 +101,7 @@ unchecked in DevTools, hard reload the page and confirm the file loads from disk
 Enable performance modules from **SEO → Performance → Render Optimizer**. Available options include:
 
 * Critical CSS with allow/deny lists and optional manual overrides.
-* JavaScript deferral with dependency awareness plus allow and deny lists.
+* JavaScript deferral with an enable toggle, handle and domain allow/deny lists, a "Respect in footer" option, and automatic inline dependency and jQuery detection.
 * Differential serving of modern and legacy JavaScript bundles.
 * Combination and minification of local CSS and JS assets.
 
@@ -114,8 +114,13 @@ Inline above-the-fold styles and load full stylesheets asynchronously.
 * Async methods:
   * `preload_onload` – outputs a `<link rel="preload">` tag that swaps to `rel="stylesheet"` with a `<noscript>` fallback.
   * `media_print` – starts with `media="print"` and switches to `all` on load.
-* Exclusions – provide handles to skip; editor, dashicons, admin-bar and WooCommerce inline styles are ignored automatically.
-* Purge workflow – click **Purge Critical CSS** on the Render Optimizer screen to clear stored snippets after theme or style changes.
+  * Exclusions – provide handles to skip; editor, dashicons, admin-bar and WooCommerce inline styles are ignored automatically.
+
+=== JavaScript Deferral ===
+Toggle script deferral on or off and maintain allow and deny lists for specific handles and hostnames. Example analytics domains include `www.googletagmanager.com` and `www.google.com/recaptcha`. The **Respect in footer** setting keeps footer scripts in place unless allowlisted. Inline blocks are scanned to detect dependencies automatically and jQuery stays blocking when early inline usage is detected.
+
+=== Purge and acceptance testing ===
+Use **Purge Critical CSS** and **Purge JS Map** on the Render Optimizer screen after changing themes or deferral settings. Clear any page, server or CDN caches and acceptance-test the site: load key pages, check the browser console and verify forms, logins and checkout flows work.
 
 If WP Rocket, Autoptimize, Perfmatters or other optimizer plugins are active, the subsystem automatically disables its features and displays a warning. Only one optimization plugin should run at a time.
 
