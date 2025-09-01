@@ -36,6 +36,7 @@ class Gm2_SEO_Admin {
     public function run() {
         add_option('ae_seo_ro_enable_critical_css', '0');
         add_option('ae_seo_ro_enable_defer_js', '0');
+        add_option('ae_seo_ro_enable_diff_serving', '1');
         add_option('ae_seo_defer_js', '0');
         add_option('ae_seo_diff_serving', '0');
         add_option('ae_seo_combine_minify', '0');
