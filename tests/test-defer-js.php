@@ -15,6 +15,10 @@ class DeferJsTest extends WP_UnitTestCase {
         wp_deregister_script('gm2-bar');
         wp_dequeue_script('gm2-baz');
         wp_deregister_script('gm2-baz');
+        wp_dequeue_script('gm2-module');
+        wp_deregister_script('gm2-module');
+        wp_dequeue_script('gm2-nomodule');
+        wp_deregister_script('gm2-nomodule');
         wp_scripts()->done = [];
 
         delete_option('gm2_defer_js_enabled');
@@ -192,6 +196,35 @@ class DeferJsTest extends WP_UnitTestCase {
         wp_deregister_script('jquery');
         $tag = $this->extract_tag($html, 'jquery');
         $this->assertStringContainsString('defer', $tag);
+    }
+
+    public function test_module_and_nomodule_tags_unchanged() {
+        wp_register_script('gm2-module', 'https://example.com/module.js', [], null);
+        wp_script_add_data('gm2-module', 'type', 'module');
+        wp_register_script('gm2-nomodule', 'https://example.com/nomodule.js', [], null);
+        wp_script_add_data('gm2-nomodule', 'nomodule', true);
+        wp_enqueue_script('gm2-module');
+        wp_enqueue_script('gm2-nomodule');
+        $html        = $this->get_output('gm2-nomodule');
+        $module_tag  = $this->extract_tag($html, 'gm2-module');
+        $nomoduleTag = $this->extract_tag($html, 'gm2-nomodule');
+        $this->assertStringContainsString('type="module"', $module_tag);
+        $this->assertStringNotContainsString('defer', $module_tag);
+        $this->assertStringContainsString('nomodule', $nomoduleTag);
+        $this->assertStringNotContainsString('defer', $nomoduleTag);
+    }
+
+    public function test_module_dependency_is_ignored() {
+        wp_register_script('gm2-module', 'https://example.com/module.js', [], null);
+        wp_script_add_data('gm2-module', 'type', 'module');
+        wp_register_script('gm2-foo', 'https://example.com/foo.js', ['gm2-module'], null);
+        wp_enqueue_script('gm2-module');
+        wp_enqueue_script('gm2-foo');
+        $html    = $this->get_output('gm2-foo');
+        $foo_tag = $this->extract_tag($html, 'gm2-foo');
+        $mod_tag = $this->extract_tag($html, 'gm2-module');
+        $this->assertStringContainsString('defer', $foo_tag);
+        $this->assertStringNotContainsString('defer', $mod_tag);
     }
 }
 
