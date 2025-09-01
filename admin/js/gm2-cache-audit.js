@@ -3,7 +3,22 @@ jQuery(function($){
         return;
     }
 
-    function showError($row, msg){
+    function showError($row, msg, data){
+        var details = [];
+        if (data) {
+            if (typeof data.ttl !== 'undefined') {
+                details.push('TTL: ' + data.ttl);
+            }
+            if (data.cache_control) {
+                details.push('Cache-Control: ' + data.cache_control);
+            }
+            if (data.expires) {
+                details.push('Expires: ' + data.expires);
+            }
+        }
+        if (details.length) {
+            msg += ' (' + details.join(', ') + ')';
+        }
         if (typeof wp !== 'undefined' && wp.a11y && wp.a11y.speak) {
             wp.a11y.speak(msg);
         }
@@ -57,7 +72,7 @@ jQuery(function($){
                 }
             } else {
                 var msg = resp && resp.data && resp.data.message ? resp.data.message : gm2CacheAudit.generic_error;
-                showError($row, msg);
+                showError($row, msg, resp && resp.data);
                 $btn.prop('disabled', false);
             }
         }).fail(function(resp){
@@ -117,7 +132,7 @@ jQuery(function($){
                     }
                 } else {
                     var msg = resp && resp.data && resp.data.message ? resp.data.message : gm2CacheAudit.generic_error;
-                    showError(item.$row, msg);
+                    showError(item.$row, msg, resp && resp.data);
                     if (typeof wp !== 'undefined' && wp.a11y && wp.a11y.speak) {
                         wp.a11y.speak(gm2CacheAudit.bulk_halted.replace('%s', msg));
                     }
