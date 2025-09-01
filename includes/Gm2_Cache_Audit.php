@@ -294,10 +294,15 @@ class Gm2_Cache_Audit {
             $updated['expires']       = $expires;
             $updated['ttl']           = $ttl;
 
-            // Only clear related issues if the TTL verifies at a week or longer.
-            if ($ttl !== null && $ttl >= 604800) {
-                $updated['issues'] = array_diff($updated['issues'], ['short_max_age', 'missing_cache_control']);
+            if ($ttl === null || $ttl < 604800) {
+                $updated['needs_attention'] = !empty($updated['issues']);
+                $results['assets'][$index]  = $updated;
+                static::save_results($results);
+                return new \WP_Error('ttl_unverified', __('Cache headers unchanged; verify server rules.', 'gm2-wordpress-suite'));
             }
+
+            // Only clear related issues if the TTL verifies at a week or longer.
+            $updated['issues'] = array_diff($updated['issues'], ['short_max_age', 'missing_cache_control']);
         }
 
         if (in_array('missing_immutable', $issues, true)) {
@@ -402,11 +407,14 @@ class Gm2_Cache_Audit {
                 $updated['expires']       = $expires;
                 $updated['ttl']           = $ttl;
 
-                if ($ttl !== null && $ttl >= 604800) {
-                    $updated['issues'] = array_diff($updated['issues'], ['short_max_age', 'missing_cache_control']);
-                } else {
-                    return new \WP_Error('fix_failed', __('Failed to apply cache headers.', 'gm2-wordpress-suite'));
+                if ($ttl === null || $ttl < 604800) {
+                    $updated['needs_attention'] = !empty($updated['issues']);
+                    $results['assets'][$index]  = $updated;
+                    static::save_results($results);
+                    return new \WP_Error('ttl_unverified', __('Cache headers unchanged; verify server rules.', 'gm2-wordpress-suite'));
                 }
+
+                $updated['issues'] = array_diff($updated['issues'], ['short_max_age', 'missing_cache_control']);
             }
         }
 
