@@ -26,8 +26,10 @@ class AE_SEO_Render_Optimizer {
         AE_SEO_Critical_CSS::OPTION_CSS_MAP      => [],
         AE_SEO_Critical_CSS::OPTION_ASYNC_METHOD => 'preload_onload',
         AE_SEO_Critical_CSS::OPTION_EXCLUSIONS   => [],
+        'ae_seo_ro_enable_defer_js'              => '0',
         'ae_seo_ro_defer_allow_domains'          => '',
         'ae_seo_ro_defer_deny_domains'           => '',
+        'ae_seo_ro_defer_respect_in_footer'      => '0',
         'ae_seo_ro_defer_preserve_jquery'        => '1',
     ];
     /**
@@ -160,7 +162,7 @@ class AE_SEO_Render_Optimizer {
     private function disable_features() {
         $options = [
             AE_SEO_Critical_CSS::OPTION_ENABLE,
-            'ae_seo_defer_js',
+            'ae_seo_ro_enable_defer_js',
             'ae_seo_diff_serving',
             'ae_seo_combine_minify',
         ];
@@ -205,7 +207,7 @@ class AE_SEO_Render_Optimizer {
             new AE_SEO_Critical_CSS();
         }
 
-        if (get_option('ae_seo_defer_js', '0') === '1') {
+        if (get_option('ae_seo_ro_enable_defer_js', '0') === '1') {
             require_once __DIR__ . '/class-ae-seo-defer-js.php';
             new AE_SEO_Defer_JS();
         }

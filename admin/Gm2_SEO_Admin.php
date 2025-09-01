@@ -35,6 +35,7 @@ class Gm2_SEO_Admin {
     }
     public function run() {
         add_option('ae_seo_ro_enable_critical_css', '0');
+        add_option('ae_seo_ro_enable_defer_js', '0');
         add_option('ae_seo_defer_js', '0');
         add_option('ae_seo_diff_serving', '0');
         add_option('ae_seo_combine_minify', '0');
@@ -47,6 +48,7 @@ class Gm2_SEO_Admin {
         add_option('gm2_defer_js_overrides', []);
         add_option('ae_seo_ro_defer_allow_domains', '');
         add_option('ae_seo_ro_defer_deny_domains', '');
+        add_option('ae_seo_ro_defer_respect_in_footer', '0');
         add_option('ae_seo_ro_defer_preserve_jquery', '1');
 
         add_action('admin_menu', [$this, 'add_settings_pages']);
@@ -65,6 +67,7 @@ class Gm2_SEO_Admin {
         add_action('admin_post_gm2_insert_cache_rules', [$this, 'handle_insert_cache_rules']);
         add_action('admin_post_gm2_remove_cache_rules', [$this, 'handle_remove_cache_rules']);
         add_action('admin_post_gm2_purge_critical_css', [$this, 'handle_purge_critical_css']);
+        add_action('admin_post_gm2_purge_js_map', [$this, 'handle_purge_js_map']);
         add_action('admin_post_gm2_purge_optimizer_cache', [$this, 'handle_purge_optimizer_cache']);
         add_action('admin_post_gm2_redirects', [$this, 'handle_redirects_form']);
         add_action('admin_post_gm2_generate_nginx_cache', [$this, 'handle_generate_nginx_cache']);
@@ -2896,11 +2899,24 @@ class Gm2_SEO_Admin {
         $exclusions = isset($_POST['ae_seo_ro_critical_css_exclusions']) ? sanitize_text_field($_POST['ae_seo_ro_critical_css_exclusions']) : '';
         update_option('ae_seo_ro_critical_css_exclusions', $exclusions);
 
+        $defer_js = isset($_POST['ae_seo_ro_enable_defer_js']) ? '1' : '0';
+        update_option('ae_seo_ro_enable_defer_js', $defer_js);
+        update_option('ae_seo_defer_js', $defer_js);
+
+        $allow_handles = isset($_POST['gm2_defer_js_allowlist']) ? sanitize_text_field($_POST['gm2_defer_js_allowlist']) : '';
+        update_option('gm2_defer_js_allowlist', $allow_handles);
+
+        $deny_handles = isset($_POST['gm2_defer_js_denylist']) ? sanitize_text_field($_POST['gm2_defer_js_denylist']) : '';
+        update_option('gm2_defer_js_denylist', $deny_handles);
+
         $allow_domains = isset($_POST['ae_seo_ro_defer_allow_domains']) ? sanitize_text_field($_POST['ae_seo_ro_defer_allow_domains']) : '';
         update_option('ae_seo_ro_defer_allow_domains', $allow_domains);
 
         $deny_domains = isset($_POST['ae_seo_ro_defer_deny_domains']) ? sanitize_text_field($_POST['ae_seo_ro_defer_deny_domains']) : '';
         update_option('ae_seo_ro_defer_deny_domains', $deny_domains);
+
+        $respect = isset($_POST['ae_seo_ro_defer_respect_in_footer']) ? '1' : '0';
+        update_option('ae_seo_ro_defer_respect_in_footer', $respect);
 
         $preserve = isset($_POST['ae_seo_ro_defer_preserve_jquery']) ? '1' : '0';
         update_option('ae_seo_ro_defer_preserve_jquery', $preserve);
@@ -3042,6 +3058,17 @@ class Gm2_SEO_Admin {
         check_admin_referer('gm2_purge_critical_css');
         delete_option('ae_seo_ro_critical_css_map');
         wp_redirect(admin_url('admin.php?page=gm2-seo&tab=performance&critical_css_purged=1'));
+        exit;
+    }
+
+    public function handle_purge_js_map() {
+        if (!current_user_can('manage_options')) {
+            wp_die( esc_html__( 'Permission denied', 'gm2-wordpress-suite' ) );
+        }
+        check_admin_referer('gm2_purge_js_map');
+        delete_transient('gm2_defer_js_map');
+        delete_transient('gm2_defer_js_dependencies');
+        wp_redirect(admin_url('admin.php?page=gm2-seo&tab=performance&js_map_purged=1'));
         exit;
     }
 
