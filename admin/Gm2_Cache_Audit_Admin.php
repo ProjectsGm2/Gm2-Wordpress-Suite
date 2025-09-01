@@ -47,39 +47,45 @@ class Gm2_Cache_Audit_Admin {
 
     public function enqueue_scripts($hook) {
         if (strpos($hook, 'gm2-cache-audit') === false) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('Gm2 Cache Audit enqueue_scripts skipped for hook: ' . $hook);
+            }
             return;
         }
-        wp_enqueue_script(
-            'gm2-cache-audit',
-            GM2_PLUGIN_URL . 'admin/js/gm2-cache-audit.js',
-            [ 'jquery' ],
-            file_exists(GM2_PLUGIN_DIR . 'admin/js/gm2-cache-audit.js') ? filemtime(GM2_PLUGIN_DIR . 'admin/js/gm2-cache-audit.js') : GM2_VERSION,
-            true
-        );
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('Gm2 Cache Audit enqueue_scripts running for hook: ' . $hook);
+        }
+        $handle = 'gm2-cache-audit';
+        $src    = GM2_PLUGIN_URL . 'admin/js/gm2-cache-audit.js';
+        $deps   = [ 'jquery' ];
+        $ver    = file_exists(GM2_PLUGIN_DIR . 'admin/js/gm2-cache-audit.js') ? filemtime(GM2_PLUGIN_DIR . 'admin/js/gm2-cache-audit.js') : GM2_VERSION;
+
+        wp_register_script($handle, $src, $deps, $ver, true);
         wp_localize_script(
-            'gm2-cache-audit',
+            $handle,
             'gm2CacheAudit',
             [
-                'filter_url' => admin_url('admin-ajax.php?action=gm2_cache_audit_filter'),
-                'rescan_url' => admin_url('admin-ajax.php?action=gm2_cache_audit_rescan'),
-                'export_url' => admin_url('admin-ajax.php?action=gm2_cache_audit_export'),
-                'fix_url'    => admin_url('admin-ajax.php?action=gm2_cache_audit_fix'),
+                'filter_url'   => admin_url('admin-ajax.php?action=gm2_cache_audit_filter'),
+                'rescan_url'   => admin_url('admin-ajax.php?action=gm2_cache_audit_rescan'),
+                'export_url'   => admin_url('admin-ajax.php?action=gm2_cache_audit_export'),
+                'fix_url'      => admin_url('admin-ajax.php?action=gm2_cache_audit_fix'),
                 'filter_nonce' => wp_create_nonce('gm2_cache_audit_filter'),
                 'rescan_nonce' => wp_create_nonce('gm2_cache_audit_rescan'),
                 'export_nonce' => wp_create_nonce('gm2_cache_audit_export'),
-                'fix_nonce'   => wp_create_nonce('gm2_cache_audit_fix'),
+                'fix_nonce'    => wp_create_nonce('gm2_cache_audit_fix'),
                 'generic_error' => __( 'An error occurred.', 'gm2-wordpress-suite' ),
                 'bulk_halted'   => __( 'Bulk fix halted: %s', 'gm2-wordpress-suite' ),
                 'strings' => [
-                    'filter' => __( 'Filter', 'gm2-wordpress-suite' ),
-                    'rescan' => __( 'Re-scan', 'gm2-wordpress-suite' ),
-                    'export' => __( 'Export CSV', 'gm2-wordpress-suite' ),
-                    'fix'    => __( 'Fix Now', 'gm2-wordpress-suite' ),
-                    'bulk_fix' => __( 'Bulk Fix', 'gm2-wordpress-suite' ),
+                    'filter'     => __( 'Filter', 'gm2-wordpress-suite' ),
+                    'rescan'     => __( 'Re-scan', 'gm2-wordpress-suite' ),
+                    'export'     => __( 'Export CSV', 'gm2-wordpress-suite' ),
+                    'fix'        => __( 'Fix Now', 'gm2-wordpress-suite' ),
+                    'bulk_fix'   => __( 'Bulk Fix', 'gm2-wordpress-suite' ),
                     'select_all' => __( 'Select All', 'gm2-wordpress-suite' ),
                 ],
             ]
         );
+        wp_enqueue_script($handle);
         wp_enqueue_style(
             'gm2-cache-audit',
             GM2_PLUGIN_URL . 'admin/css/gm2-cache-audit.css',
