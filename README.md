@@ -152,7 +152,7 @@ The Render Optimizer groups several front-end performance features behind **SEO 
 
 * Inline critical CSS and preload full stylesheets.
 * Defer or async scripts with an enable toggle plus handle and domain allow/deny lists.
-* Serve modern and legacy JavaScript bundles using `type="module"`/`nomodule`.
+* Serve modern and legacy JavaScript bundles using `<script type="module" crossorigin="anonymous">` and `<script nomodule crossorigin="anonymous">`. Differential serving is enabled by default (`ae_seo_ro_enable_diff_serving`), and module scripts remain blocking even when JS deferral is active.
 * Combine and minify local CSS and JS assets.
 
 ### Critical CSS
@@ -180,6 +180,8 @@ Toggle script deferral on or off and maintain allow and deny lists for specific 
 **Purge workflow**
 
 Use the **Purge Critical CSS** and **Purge JS Map** buttons on the Render Optimizer screen to rebuild caches after changing themes or script settings. After purging, clear any page, opcode or CDN caches and acceptance-test the site: load key pages, check the browser console and verify forms, logins and checkout flows work as expected.
+
+To confirm differential serving, open the site in a modern browser and ensure only the `optimizer-modern.js` module bundle executes. Test again in an older or emulated legacy browser and verify only `optimizer-legacy.js` runs.
 
 The optimizer automatically disables its features when popular optimization plugins like WP&nbsp;Rocket, Autoptimize or Perfmatters are active. Only one optimization plugin should run at a time.
 
