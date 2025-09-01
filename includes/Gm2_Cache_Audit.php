@@ -336,6 +336,78 @@ class Gm2_Cache_Audit {
             $map[$url] = $local_url;
             update_option('gm2_cache_audit_local_map', $map);
             $updated['url'] = $local_url;
+
+            $resp = wp_remote_head($local_url);
+            $code = is_wp_error($resp) ? 0 : wp_remote_retrieve_response_code($resp);
+            if (is_wp_error($resp) || in_array($code, [403, 405], true)) {
+                $resp = wp_remote_get($local_url, ['headers' => ['Range' => 'bytes=0-0']]);
+            }
+            $headers = is_wp_error($resp) ? [] : wp_remote_retrieve_headers($resp);
+            $cache_control = $headers['cache-control'] ?? '';
+            $expires       = $headers['expires'] ?? '';
+            $ttl = null;
+            if ($cache_control && preg_match('/max-age=([0-9]+)/', $cache_control, $m)) {
+                $ttl = (int) $m[1];
+            } elseif ($expires) {
+                $ttl = strtotime($expires) - time();
+            }
+
+            $updated['cache_control'] = $cache_control;
+            $updated['expires']       = $expires;
+            $updated['ttl']           = $ttl;
+
+            if ($ttl !== null && $ttl >= 604800) {
+                $updated['issues'] = array_diff($updated['issues'], ['short_max_age', 'missing_cache_control']);
+            } else {
+                $apache = \Gm2\Gm2_Cache_Headers_Apache::maybe_apply();
+                $nginx  = \Gm2\Gm2_Cache_Headers_Nginx::maybe_apply();
+                $primary = $apache['status'] !== 'unsupported' ? $apache : $nginx;
+
+                if (in_array($primary['status'], ['unsupported', 'already_handled', 'not_writable'], true)) {
+                    $msg = '';
+                    if ($primary['status'] === 'unsupported') {
+                        $msg = __('Unsupported server environment.', 'gm2-wordpress-suite');
+                    } elseif ($primary['status'] === 'already_handled') {
+                        $msg = __('Cache headers already handled by CDN or server.', 'gm2-wordpress-suite');
+                    } elseif ($primary['status'] === 'not_writable') {
+                        if (isset($primary['file'])) {
+                            $msg = sprintf(__('Cannot write to %s. Please update manually.', 'gm2-wordpress-suite'), $primary['file']);
+                        } else {
+                            $file = ABSPATH . '.htaccess';
+                            $msg = sprintf(__('Cannot write to %s. Please update manually.', 'gm2-wordpress-suite'), $file);
+                        }
+                        if (isset($primary['rules'])) {
+                            $msg .= ' ' . sprintf(__('Rules: %s', 'gm2-wordpress-suite'), $primary['rules']);
+                        }
+                    }
+                    return new \WP_Error($primary['status'], $msg);
+                }
+
+                $resp = wp_remote_head($local_url);
+                $code = is_wp_error($resp) ? 0 : wp_remote_retrieve_response_code($resp);
+                if (is_wp_error($resp) || in_array($code, [403, 405], true)) {
+                    $resp = wp_remote_get($local_url, ['headers' => ['Range' => 'bytes=0-0']]);
+                }
+                $headers = is_wp_error($resp) ? [] : wp_remote_retrieve_headers($resp);
+                $cache_control = $headers['cache-control'] ?? '';
+                $expires       = $headers['expires'] ?? '';
+                $ttl = null;
+                if ($cache_control && preg_match('/max-age=([0-9]+)/', $cache_control, $m)) {
+                    $ttl = (int) $m[1];
+                } elseif ($expires) {
+                    $ttl = strtotime($expires) - time();
+                }
+
+                $updated['cache_control'] = $cache_control;
+                $updated['expires']       = $expires;
+                $updated['ttl']           = $ttl;
+
+                if ($ttl !== null && $ttl >= 604800) {
+                    $updated['issues'] = array_diff($updated['issues'], ['short_max_age', 'missing_cache_control']);
+                } else {
+                    return new \WP_Error('fix_failed', __('Failed to apply cache headers.', 'gm2-wordpress-suite'));
+                }
+            }
         }
 
         if ($handle) {
