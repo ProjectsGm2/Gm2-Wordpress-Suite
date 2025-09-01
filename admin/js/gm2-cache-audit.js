@@ -1,5 +1,6 @@
 jQuery(function($){
     if (typeof gm2CacheAudit === 'undefined') {
+        console.warn('gm2CacheAudit is undefined; cache audit script aborted.');
         return;
     }
 
