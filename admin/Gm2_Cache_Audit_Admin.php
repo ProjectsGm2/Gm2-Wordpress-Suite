@@ -311,7 +311,7 @@ class Gm2_Cache_Audit_Admin {
         check_ajax_referer('gm2_cache_audit_fix', 'nonce');
         $url    = isset($_POST['url']) ? esc_url_raw(wp_unslash($_POST['url'])) : '';
         $type   = isset($_POST['asset_type']) ? sanitize_key(wp_unslash($_POST['asset_type'])) : '';
-        $handle = isset($_POST['handle']) ? sanitize_key(wp_unslash($_POST['handle'])) : '';
+        $handle = isset($_POST['handle']) ? sanitize_text_field(wp_unslash($_POST['handle'])) : '';
         if (!$url || !$type) {
             wp_send_json_error(['message' => __('Invalid asset.', 'gm2-wordpress-suite')]);
         }
