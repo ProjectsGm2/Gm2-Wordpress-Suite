@@ -28,6 +28,7 @@ class AE_SEO_Render_Optimizer {
         AE_SEO_Critical_CSS::OPTION_EXCLUSIONS   => [],
         'ae_seo_ro_defer_allow_domains'          => '',
         'ae_seo_ro_defer_deny_domains'           => '',
+        'ae_seo_ro_defer_preserve_jquery'        => '1',
     ];
     /**
      * Names of detected conflicting plugins.

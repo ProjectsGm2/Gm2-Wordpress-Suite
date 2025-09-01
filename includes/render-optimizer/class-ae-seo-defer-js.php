@@ -52,8 +52,11 @@ class AE_SEO_Defer_JS {
         add_option('ae_seo_ro_defer_allow_domains', '');
         add_option('ae_seo_ro_defer_deny_domains', '');
         add_option('ae_seo_ro_defer_respect_in_footer', '0');
+        add_option('ae_seo_ro_defer_preserve_jquery', '1');
 
         add_action('wp_enqueue_scripts', [ $this, 'setup' ], 5);
+        add_action('wp_head', [ $this, 'start_head_buffer' ], 0);
+        add_action('wp_head', [ $this, 'end_head_buffer' ], PHP_INT_MAX);
     }
 
     /**
@@ -155,6 +158,91 @@ class AE_SEO_Defer_JS {
         }
 
         return $tag;
+    }
+
+    /**
+     * Begin buffering wp_head output for jQuery detection.
+     *
+     * @return void
+     */
+    public function start_head_buffer(): void {
+        if (get_option('ae_seo_ro_defer_preserve_jquery', '1') !== '1') {
+            return;
+        }
+
+        ob_start([ $this, 'process_head_buffer' ]);
+    }
+
+    /**
+     * End buffering and output processed wp_head content.
+     *
+     * @return void
+     */
+    public function end_head_buffer(): void {
+        if (get_option('ae_seo_ro_defer_preserve_jquery', '1') !== '1') {
+            return;
+        }
+
+        if (ob_get_length() !== false) {
+            ob_end_flush();
+        }
+    }
+
+    /**
+     * Inspect buffered head content for early jQuery usage.
+     *
+     * @param string $buffer Buffered head output.
+     * @return string
+     */
+    public function process_head_buffer(string $buffer): string {
+        $pattern = '#<script(?P<attr>[^>]*)>(?P<code>.*?)</script>#is';
+        $offset  = 0;
+        $needs_jquery = false;
+
+        while (preg_match($pattern, $buffer, $m, PREG_OFFSET_CAPTURE, $offset)) {
+            $tag    = $m[0][0];
+            $attr   = $m['attr'][0];
+            $code   = $m['code'][0];
+            $offset = $m[0][1] + strlen($tag);
+
+            if (stripos($attr, 'src=') !== false) {
+                if (stripos($attr, 'jquery') !== false) {
+                    break;
+                }
+                continue;
+            }
+
+            if (preg_match('/\\bjQuery\\b|\$\s*\(/', $code)) {
+                $needs_jquery = true;
+                break;
+            }
+        }
+
+        if ($needs_jquery) {
+            add_filter('option_gm2_defer_js_denylist', [ $this, 'add_jquery_denylist' ]);
+            $buffer = preg_replace_callback(
+                '/<script[^>]*src=["\'][^"\']*jquery[^"\']*["\'][^>]*>/',
+                function ($m) {
+                    return $this->remove_attr($m[0]);
+                },
+                $buffer
+            );
+        }
+
+        return $buffer;
+    }
+
+    /**
+     * Add jQuery handles to the denylist for the current request.
+     *
+     * @param string $value Existing denylist value.
+     * @return string
+     */
+    public function add_jquery_denylist($value): string {
+        $handles = [ 'jquery', 'jquery-core', 'jquery-migrate' ];
+        $list    = array_filter(array_map('trim', explode(',', (string) $value)));
+        $list    = array_unique(array_merge($list, $handles));
+        return implode(',', $list);
     }
 
     /**
