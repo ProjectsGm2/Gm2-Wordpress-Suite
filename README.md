@@ -151,7 +151,7 @@ blocking. Deferring these scripts can break page output or tracking snippets.
 The Render Optimizer groups several front-end performance features behind **SEO → Performance → Render Optimizer**. Enable modules individually to:
 
 * Inline critical CSS and preload full stylesheets.
-* Defer or async scripts with dependency awareness and allow/deny lists.
+* Defer or async scripts with an enable toggle plus handle and domain allow/deny lists.
 * Serve modern and legacy JavaScript bundles using `type="module"`/`nomodule`.
 * Combine and minify local CSS and JS assets.
 
@@ -173,9 +173,13 @@ Inline above-the-fold styles and load remaining CSS asynchronously.
 
 Provide handles or patterns to skip. Editor, dashicons, admin-bar and WooCommerce inline styles are ignored automatically.
 
+### JavaScript Deferral
+
+Toggle script deferral on or off and maintain allow and deny lists for specific handles and hostnames. List analytics domains like `www.googletagmanager.com` or `www.google.com/recaptcha` to always load asynchronously. The **Respect in footer** option keeps footer scripts at the bottom unless allowlisted. Inline blocks are parsed to detect dependencies automatically and jQuery remains blocking when early inline usage is detected.
+
 **Purge workflow**
 
-Use the **Purge Critical CSS** button on the Render Optimizer screen to clear stored snippets after changing themes or styles.
+Use the **Purge Critical CSS** and **Purge JS Map** buttons on the Render Optimizer screen to rebuild caches after changing themes or script settings. After purging, clear any page, opcode or CDN caches and acceptance-test the site: load key pages, check the browser console and verify forms, logins and checkout flows work as expected.
 
 The optimizer automatically disables its features when popular optimization plugins like WP&nbsp;Rocket, Autoptimize or Perfmatters are active. Only one optimization plugin should run at a time.
 
