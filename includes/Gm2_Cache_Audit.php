@@ -9,6 +9,31 @@ class Gm2_Cache_Audit {
 
     const OPTION_NAME = 'gm2_cache_audit_results';
 
+    public static function init() {
+        add_filter('script_loader_src', [self::class, 'replace_mapped_url']);
+        add_filter('style_loader_src', [self::class, 'replace_mapped_url']);
+        add_filter('wp_get_attachment_url', [self::class, 'replace_mapped_url']);
+        add_action('template_redirect', [self::class, 'buffer_output'], 0);
+    }
+
+    public static function replace_mapped_url($url) {
+        $map = get_option('gm2_cache_audit_local_map', []);
+        if (!is_array($map) || empty($map)) {
+            return $url;
+        }
+        return $map[$url] ?? $url;
+    }
+
+    public static function buffer_output() {
+        $map = get_option('gm2_cache_audit_local_map', []);
+        if (!is_array($map) || empty($map)) {
+            return;
+        }
+        ob_start(function ($html) use ($map) {
+            return str_replace(array_keys($map), array_values($map), $html);
+        });
+    }
+
     public static function get_results() {
         $results = get_option(self::OPTION_NAME, []);
         return is_array($results) ? $results : [];
