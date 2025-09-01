@@ -1,6 +1,13 @@
 jQuery(function($){
     if (typeof gm2CacheAudit === 'undefined') {
+        var msg = 'Cache audit data is missing. Please reload the page.';
         console.warn('gm2CacheAudit is undefined; cache audit script aborted.');
+        var $notice = $('<div class="notice notice-error inline"><p></p></div>');
+        $notice.find('p').text(msg);
+        $('#gm2-cache-audit').prepend($notice);
+        if (typeof wp !== 'undefined' && wp.a11y && wp.a11y.speak) {
+            wp.a11y.speak(msg);
+        }
         return;
     }
 
