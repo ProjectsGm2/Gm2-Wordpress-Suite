@@ -26,6 +26,7 @@ class AE_SEO_Render_Optimizer {
         AE_SEO_Critical_CSS::OPTION_CSS_MAP      => [],
         AE_SEO_Critical_CSS::OPTION_ASYNC_METHOD => 'preload_onload',
         AE_SEO_Critical_CSS::OPTION_EXCLUSIONS   => [],
+        'ae_seo_ro_enable_diff_serving'          => '1',
         'ae_seo_ro_enable_defer_js'              => '0',
         'ae_seo_ro_defer_allow_handles'          => '',
         'ae_seo_ro_defer_deny_handles'           => '',

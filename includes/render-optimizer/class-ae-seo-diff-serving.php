@@ -32,8 +32,12 @@ class AE_SEO_Diff_Serving {
         $legacy = GM2_PLUGIN_URL . 'assets/dist/optimizer-legacy.js';
         $ver    = defined('GM2_VERSION') ? GM2_VERSION : false;
 
-        wp_enqueue_script('ae-seo-optimizer-modern', $modern, [], $ver, true);
-        wp_enqueue_script('ae-seo-optimizer-legacy', $legacy, [], $ver, true);
+        if (get_option('ae_seo_ro_enable_diff_serving', '1') === '1') {
+            wp_enqueue_script('ae-seo-optimizer-modern', $modern, [], $ver, true);
+            wp_enqueue_script('ae-seo-optimizer-legacy', $legacy, [], $ver, true);
+        } else {
+            wp_enqueue_script('ae-seo-optimizer-legacy', $legacy, [], $ver, true);
+        }
     }
 
     /**
@@ -46,10 +50,20 @@ class AE_SEO_Diff_Serving {
      * @return string
      */
     public function script_loader_tag($tag, $handle, $src) {
+        $enabled = get_option('ae_seo_ro_enable_diff_serving', '1') === '1';
+
         if ($handle === 'ae-seo-optimizer-modern') {
-            $tag = str_replace('<script ', '<script type="module" ', $tag);
+            if ($enabled) {
+                $tag = str_replace('<script ', '<script type="module" crossorigin="anonymous" ', $tag);
+            } else {
+                $tag = str_replace('<script ', '<script crossorigin="anonymous" ', $tag);
+            }
         } elseif ($handle === 'ae-seo-optimizer-legacy') {
-            $tag = str_replace('<script ', '<script nomodule ', $tag);
+            if ($enabled) {
+                $tag = str_replace('<script ', '<script nomodule crossorigin="anonymous" ', $tag);
+            } else {
+                $tag = str_replace('<script ', '<script crossorigin="anonymous" ', $tag);
+            }
         }
         return $tag;
     }
