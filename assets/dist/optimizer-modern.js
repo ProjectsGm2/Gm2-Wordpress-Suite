@@ -1,6 +1,1 @@
-function initOptimizer() {
-  // Placeholder for optimizer entry point.
-  console.log('Optimizer initialized');
-}
-
-export { initOptimizer };
+function i(){console.log("Optimizer initialized")}export{i as initOptimizer};
