@@ -81,6 +81,10 @@ class AE_SEO_Defer_JS {
      * @return string
      */
     public function filter($tag, $handle, $src) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase -- WordPress filter signature.
+        if ($this->is_module_handle($handle, $tag)) {
+            return $tag;
+        }
+
         $allow = array_filter(array_map('trim', explode(',', get_option('gm2_defer_js_allowlist', ''))));
         $deny  = array_filter(array_map('trim', explode(',', get_option('gm2_defer_js_denylist', ''))));
 
@@ -246,6 +250,34 @@ class AE_SEO_Defer_JS {
     }
 
     /**
+     * Determine if a handle should remain blocking due to module/nomodule usage.
+     *
+     * @param string $handle Script handle.
+     * @param string $tag    Optional script tag for attribute inspection.
+     * @return bool
+     */
+    private function is_module_handle(string $handle, string $tag = ''): bool {
+        $special = apply_filters('ae_seo_defer_js_blocking_handles', []);
+        if (in_array($handle, $special, true)) {
+            return true;
+        }
+
+        if ($tag !== '' && (stripos($tag, 'type="module"') !== false || stripos($tag, "type='module'") !== false || stripos($tag, ' nomodule') !== false)) {
+            return true;
+        }
+
+        global $wp_scripts;
+        if (!$wp_scripts instanceof \WP_Scripts) {
+            $wp_scripts = wp_scripts();
+        }
+
+        $type     = $wp_scripts->get_data($handle, 'type');
+        $nomodule = $wp_scripts->get_data($handle, 'nomodule');
+
+        return $type === 'module' || !empty($nomodule);
+    }
+
+    /**
      * Remove async/defer attributes from a tag.
      *
      * @param string $tag The original tag.
@@ -306,6 +338,10 @@ class AE_SEO_Defer_JS {
     private function determine_attribute(string $handle): string {
         if (isset($this->resolved[$handle])) {
             return $this->resolved[$handle];
+        }
+
+        if ($this->is_module_handle($handle)) {
+            return $this->resolved[$handle] = 'defer';
         }
 
         if (isset($this->inline_block[$handle])) {
