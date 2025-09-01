@@ -21,6 +21,8 @@ class DeferJsTest extends WP_UnitTestCase {
         delete_option('gm2_defer_js_allowlist');
         delete_option('gm2_defer_js_denylist');
         delete_option('gm2_defer_js_overrides');
+        delete_option('ae_seo_ro_defer_allow_domains');
+        delete_option('ae_seo_ro_defer_deny_domains');
         delete_option('gm2_script_attributes');
         parent::tearDown();
     }
@@ -66,6 +68,26 @@ class DeferJsTest extends WP_UnitTestCase {
         wp_enqueue_script('gm2-foo');
         $html   = $this->get_output('gm2-foo');
         $fooTag = $this->extract_tag($html, 'gm2-foo');
+        $this->assertStringNotContainsString('defer', $fooTag);
+    }
+
+    public function test_domain_allowlist_adds_async_defer() {
+        update_option('ae_seo_ro_defer_allow_domains', 'cdn.example.com');
+        wp_register_script('gm2-foo', 'https://cdn.example.com/foo.js', [], null);
+        wp_enqueue_script('gm2-foo');
+        $html   = $this->get_output('gm2-foo');
+        $fooTag = $this->extract_tag($html, 'gm2-foo');
+        $this->assertStringContainsString('async', $fooTag);
+        $this->assertStringContainsString('defer', $fooTag);
+    }
+
+    public function test_domain_denylist_leaves_tag() {
+        update_option('ae_seo_ro_defer_deny_domains', 'cdn.example.com');
+        wp_register_script('gm2-foo', 'https://cdn.example.com/foo.js', [], null);
+        wp_enqueue_script('gm2-foo');
+        $html   = $this->get_output('gm2-foo');
+        $fooTag = $this->extract_tag($html, 'gm2-foo');
+        $this->assertStringNotContainsString('async', $fooTag);
         $this->assertStringNotContainsString('defer', $fooTag);
     }
 }

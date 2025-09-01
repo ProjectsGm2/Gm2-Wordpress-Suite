@@ -42,6 +42,8 @@ class AE_SEO_Defer_JS {
         add_option('gm2_defer_js_allowlist', '');
         add_option('gm2_defer_js_denylist', '');
         add_option('gm2_defer_js_overrides', []);
+        add_option('ae_seo_ro_defer_allow_domains', '');
+        add_option('ae_seo_ro_defer_deny_domains', '');
 
         add_action('wp_enqueue_scripts', [ $this, 'setup' ], 5);
     }
@@ -70,6 +72,33 @@ class AE_SEO_Defer_JS {
     public function filter($tag, $handle, $src) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase -- WordPress filter signature.
         $allow = array_filter(array_map('trim', explode(',', get_option('gm2_defer_js_allowlist', ''))));
         $deny  = array_filter(array_map('trim', explode(',', get_option('gm2_defer_js_denylist', ''))));
+
+        $allow_domains = array_filter(array_map('trim', explode(',', get_option('ae_seo_ro_defer_allow_domains', ''))));
+        $deny_domains  = array_filter(array_map('trim', explode(',', get_option('ae_seo_ro_defer_deny_domains', ''))));
+
+        $host = wp_parse_url($src, PHP_URL_HOST);
+        $path = wp_parse_url($src, PHP_URL_PATH);
+        $analytics_hosts = [
+            'www.googletagmanager.com' => true,
+            'www.google-analytics.com' => true,
+            'www.google.com' => '/recaptcha',
+            'www.gstatic.com' => '/recaptcha',
+        ];
+
+        if ($host && in_array($host, $deny_domains, true)) {
+            return $tag;
+        }
+
+        $is_analytics = false;
+        if ($host && isset($analytics_hosts[$host])) {
+            $prefix = $analytics_hosts[$host];
+            $is_analytics = $prefix === true || ($path && strpos($path, $prefix) === 0);
+        }
+
+        if ($host && (in_array($host, $allow_domains, true) || $is_analytics)) {
+            $tag = $this->remove_attr($tag);
+            return str_replace('<script ', '<script async defer ', $tag);
+        }
 
         if (!empty($allow) && !in_array($handle, $allow, true)) {
             return $this->remove_attr($tag);
