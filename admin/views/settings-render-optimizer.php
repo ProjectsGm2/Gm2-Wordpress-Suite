@@ -10,6 +10,7 @@ $css_map    = get_option('ae_seo_ro_critical_css_map', []);
 $exclusions = get_option('ae_seo_ro_critical_css_exclusions', '');
 $allow_domains = get_option('ae_seo_ro_defer_allow_domains', '');
 $deny_domains  = get_option('ae_seo_ro_defer_deny_domains', '');
+$preserve_jquery = get_option('ae_seo_ro_defer_preserve_jquery', '1');
 $post_types = get_post_types(['public' => true], 'objects');
 
 echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
@@ -46,6 +47,8 @@ echo '<tr><th scope="row">' . esc_html__( 'Excluded Handles', 'gm2-wordpress-sui
 echo '<tr><th scope="row">' . esc_html__( 'Allow Domains', 'gm2-wordpress-suite' ) . '</th><td><input type="text" name="ae_seo_ro_defer_allow_domains" value="' . esc_attr($allow_domains) . '" class="regular-text" /><p class="description">' . esc_html__( 'Comma-separated hostnames to always async/defer.', 'gm2-wordpress-suite' ) . '</p></td></tr>';
 
 echo '<tr><th scope="row">' . esc_html__( 'Deny Domains', 'gm2-wordpress-suite' ) . '</th><td><input type="text" name="ae_seo_ro_defer_deny_domains" value="' . esc_attr($deny_domains) . '" class="regular-text" /><p class="description">' . esc_html__( 'Comma-separated hostnames to exclude from defer.', 'gm2-wordpress-suite' ) . '</p></td></tr>';
+
+echo '<tr><th scope="row">' . esc_html__( 'Preserve jQuery', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="ae_seo_ro_defer_preserve_jquery" value="1" ' . checked($preserve_jquery, '1', false) . ' /><p class="description">' . esc_html__( 'Detect early inline jQuery usage and keep jQuery blocking.', 'gm2-wordpress-suite' ) . '</p></td></tr>';
 
 echo '</tbody></table>';
 

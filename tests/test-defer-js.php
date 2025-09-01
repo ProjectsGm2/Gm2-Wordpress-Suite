@@ -24,6 +24,7 @@ class DeferJsTest extends WP_UnitTestCase {
         delete_option('ae_seo_ro_defer_allow_domains');
         delete_option('ae_seo_ro_defer_deny_domains');
         delete_option('ae_seo_ro_defer_respect_in_footer');
+        delete_option('ae_seo_ro_defer_preserve_jquery');
         delete_option('gm2_script_attributes');
         parent::tearDown();
     }
@@ -111,6 +112,39 @@ class DeferJsTest extends WP_UnitTestCase {
         $html   = $this->get_output('gm2-bar');
         $fooTag = $this->extract_tag($html, 'gm2-foo');
         $this->assertStringNotContainsString('defer', $fooTag);
+    }
+
+    public function test_head_inline_script_preserves_jquery() {
+        wp_deregister_script('jquery');
+        wp_register_script('jquery', 'https://example.com/jquery.js', [], null);
+        wp_enqueue_script('jquery');
+        $cb = function() { echo '<script>jQuery(function(){ console.log("hi"); });</script>'; };
+        add_action('wp_head', $cb, 1);
+        ob_start();
+        do_action('wp_head');
+        $html = ob_get_clean();
+        remove_action('wp_head', $cb, 1);
+        wp_dequeue_script('jquery');
+        wp_deregister_script('jquery');
+        $tag = $this->extract_tag($html, 'jquery');
+        $this->assertStringNotContainsString('defer', $tag);
+    }
+
+    public function test_detection_can_be_disabled() {
+        update_option('ae_seo_ro_defer_preserve_jquery', '0');
+        wp_deregister_script('jquery');
+        wp_register_script('jquery', 'https://example.com/jquery.js', [], null);
+        wp_enqueue_script('jquery');
+        $cb = function() { echo '<script>jQuery(function(){ console.log("hi"); });</script>'; };
+        add_action('wp_head', $cb, 1);
+        ob_start();
+        do_action('wp_head');
+        $html = ob_get_clean();
+        remove_action('wp_head', $cb, 1);
+        wp_dequeue_script('jquery');
+        wp_deregister_script('jquery');
+        $tag = $this->extract_tag($html, 'jquery');
+        $this->assertStringContainsString('defer', $tag);
     }
 }
 
