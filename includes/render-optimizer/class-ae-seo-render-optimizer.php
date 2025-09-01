@@ -121,7 +121,7 @@ class AE_SEO_Render_Optimizer {
         if (
             self::get_option(AE_SEO_Critical_CSS::OPTION_ENABLE, '0') !== '1' &&
             get_option('ae_seo_ro_enable_defer_js', '0') !== '1' &&
-            get_option('ae_seo_diff_serving', '0') !== '1' &&
+            get_option('ae_seo_ro_enable_diff_serving', '0') !== '1' &&
             get_option('ae_seo_combine_minify', '0') !== '1'
         ) {
             return;
@@ -175,7 +175,7 @@ class AE_SEO_Render_Optimizer {
         $options = [
             AE_SEO_Critical_CSS::OPTION_ENABLE,
             'ae_seo_ro_enable_defer_js',
-            'ae_seo_diff_serving',
+            'ae_seo_ro_enable_diff_serving',
             'ae_seo_combine_minify',
         ];
 
@@ -224,7 +224,7 @@ class AE_SEO_Render_Optimizer {
             new AE_SEO_Defer_JS();
         }
 
-        if (get_option('ae_seo_diff_serving', '0') === '1') {
+        if (get_option('ae_seo_ro_enable_diff_serving', '0') === '1') {
             require_once __DIR__ . '/class-ae-seo-diff-serving.php';
             new AE_SEO_Diff_Serving();
         }
