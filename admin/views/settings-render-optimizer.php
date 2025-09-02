@@ -15,6 +15,8 @@ $allow_domains = get_option('ae_seo_ro_defer_allow_domains', '');
 $deny_domains  = get_option('ae_seo_ro_defer_deny_domains', '');
 $respect_footer = get_option('ae_seo_ro_defer_respect_in_footer', '0');
 $preserve_jquery = get_option('ae_seo_ro_defer_preserve_jquery', '1');
+$combine_css = get_option('ae_seo_ro_enable_combine_css', '0');
+$combine_js  = get_option('ae_seo_ro_enable_combine_js', '0');
 $post_types = get_post_types(['public' => true], 'objects');
 
 echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
@@ -61,6 +63,12 @@ echo '<tr><th scope="row">' . esc_html__( 'Deny Domains', 'gm2-wordpress-suite' 
 echo '<tr><th scope="row">' . esc_html__( 'Respect in footer', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="ae_seo_ro_defer_respect_in_footer" value="1" ' . checked($respect_footer, '1', false) . ' /><p class="description">' . esc_html__( 'Skip moving footer scripts earlier unless allowlisted.', 'gm2-wordpress-suite' ) . '</p></td></tr>';
 
 echo '<tr><th scope="row">' . esc_html__( 'Preserve jQuery', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="ae_seo_ro_defer_preserve_jquery" value="1" ' . checked($preserve_jquery, '1', false) . ' /><p class="description">' . esc_html__( 'Detect early inline jQuery usage and keep jQuery blocking.', 'gm2-wordpress-suite' ) . '</p></td></tr>';
+
+echo '<tr><th scope="row">' . esc_html__( 'Combine CSS', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="ae_seo_ro_enable_combine_css" value="1" ' . checked($combine_css, '1', false) . ' /></td></tr>';
+
+echo '<tr><th scope="row">' . esc_html__( 'Combine JS', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="ae_seo_ro_enable_combine_js" value="1" ' . checked($combine_js, '1', false) . ' /></td></tr>';
+
+echo '<tr><td colspan="2"><p class="description">' . esc_html__( 'Combining assets may offer limited benefits and can cause compatibility issues under HTTP/2 or HTTP/3.', 'gm2-wordpress-suite' ) . '</p></td></tr>';
 
 echo '</tbody></table>';
 
