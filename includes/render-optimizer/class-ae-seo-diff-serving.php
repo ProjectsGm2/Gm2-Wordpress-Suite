@@ -26,13 +26,14 @@ class AE_SEO_Diff_Serving {
      * @return void
      */
     public function setup() {
-        add_filter('script_loader_tag', [ $this, 'script_loader_tag' ], 20, 3);
+        $modern  = GM2_PLUGIN_URL . 'assets/dist/optimizer-modern.js';
+        $legacy  = GM2_PLUGIN_URL . 'assets/dist/optimizer-legacy.js';
+        $ver     = defined('GM2_VERSION') ? GM2_VERSION : false;
+        $enabled = get_option('ae_seo_ro_enable_diff_serving', '1') === '1';
 
-        $modern = GM2_PLUGIN_URL . 'assets/dist/optimizer-modern.js';
-        $legacy = GM2_PLUGIN_URL . 'assets/dist/optimizer-legacy.js';
-        $ver    = defined('GM2_VERSION') ? GM2_VERSION : false;
+        if ($enabled) {
+            add_filter('script_loader_tag', [ $this, 'script_loader_tag' ], 20, 3);
 
-        if (get_option('ae_seo_ro_enable_diff_serving', '1') === '1') {
             wp_enqueue_script('ae-seo-optimizer-modern', $modern, [], $ver, true);
             wp_enqueue_script('ae-seo-optimizer-legacy', $legacy, [], $ver, true);
         } else {
@@ -50,20 +51,10 @@ class AE_SEO_Diff_Serving {
      * @return string
      */
     public function script_loader_tag($tag, $handle, $src) {
-        $enabled = get_option('ae_seo_ro_enable_diff_serving', '1') === '1';
-
         if ($handle === 'ae-seo-optimizer-modern') {
-            if ($enabled) {
-                $tag = str_replace('<script ', '<script type="module" crossorigin="anonymous" ', $tag);
-            } else {
-                $tag = str_replace('<script ', '<script crossorigin="anonymous" ', $tag);
-            }
+            $tag = str_replace('<script ', '<script type="module" crossorigin="anonymous" ', $tag);
         } elseif ($handle === 'ae-seo-optimizer-legacy') {
-            if ($enabled) {
-                $tag = str_replace('<script ', '<script nomodule crossorigin="anonymous" ', $tag);
-            } else {
-                $tag = str_replace('<script ', '<script crossorigin="anonymous" ', $tag);
-            }
+            $tag = str_replace('<script ', '<script nomodule crossorigin="anonymous" ', $tag);
         }
         return $tag;
     }
