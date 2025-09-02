@@ -880,11 +880,9 @@ class MobileDetect
         // https://sailfishos.org/
         'SailfishOS'        => 'Sailfish',
         // http://en.wikipedia.org/wiki/MeeGo
-        // @todo: research MeeGo in UAs
-        'MeeGoOS'           => 'MeeGo',
+        'MeeGoOS'           => 'MeeGo|NokiaN9',
         // http://en.wikipedia.org/wiki/Maemo
-        // @todo: research Maemo in UAs
-        'MaemoOS'           => 'Maemo',
+        'MaemoOS'           => 'Maemo|NokiaN900',
         'JavaOS'            => 'J2ME/|\bMIDP\b|\bCLDC\b', // '|Java/' produces bug #135
         'webOS'             => 'webOS|hpwOS',
         'badaOS'            => '\bBada\b',
