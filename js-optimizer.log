@@ -1,0 +1,3 @@
+[2025-09-02 23:28:46] Visit Woo product page: Woo cart/checkout scripts remain (wc-cart-fragments, wc-checkout)
+[2025-09-02 23:28:46] Visit standard blog post: Woo scripts dequeued (wc-cart-fragments, wc-checkout)
+[2025-09-02 23:28:46] Visit non-Elementor page: Elementor front-end bundles dequeued (elementor-frontend, elementor-pro-frontend)
