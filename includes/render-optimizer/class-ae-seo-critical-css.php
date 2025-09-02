@@ -49,7 +49,7 @@ class AE_SEO_Critical_CSS {
     }
 
     /**
-     * Output manually supplied critical CSS.
+     * Output manually supplied critical CSS keyed by page context.
      *
      * @return void
      */
@@ -86,7 +86,7 @@ class AE_SEO_Critical_CSS {
     }
 
     /**
-     * Replace style tags with critical CSS and preload full CSS.
+     * Convert style tags to asynchronously loaded link tags.
      *
      * @param string $html   The original HTML tag.
      * @param string $handle The style handle.
@@ -137,19 +137,6 @@ class AE_SEO_Critical_CSS {
             return $html;
         }
 
-        $store = AE_SEO_Render_Optimizer::get_option(self::OPTION_CSS_MAP, []);
-        if (empty($store[$handle])) {
-            AE_SEO_Optimizer_Diagnostics::add('critical_css', [
-                'handle' => $handle,
-                'bundle' => '',
-                'reason' => 'no_map',
-            ]);
-            return $html;
-        }
-
-        $critical = $store[$handle];
-        $style    = '<style>' . $critical . '</style>';
-
         $method = AE_SEO_Render_Optimizer::get_option(self::OPTION_ASYNC_METHOD, 'preload_onload');
         if ($method === 'media_print') {
             $async = sprintf(
@@ -169,7 +156,7 @@ class AE_SEO_Critical_CSS {
             'bundle' => $href,
             'reason' => 'processed',
         ]);
-        return $style . $async;
+        return $async;
     }
 
     /**

@@ -74,16 +74,12 @@ class CriticalCssTest extends WP_UnitTestCase {
     /**
      * @dataProvider themeProvider
      */
-    public function test_link_tags_convert_to_async_pattern(string $theme): void {
+    public function test_link_tags_convert_to_async_pattern_without_map_entry(string $theme): void {
         $this->maybe_install_theme($theme);
         switch_theme($theme);
 
         AE_SEO_Render_Optimizer::update_option(AE_SEO_Critical_CSS::OPTION_ENABLE, '1');
         AE_SEO_Render_Optimizer::update_option(AE_SEO_Critical_CSS::OPTION_ASYNC_METHOD, 'preload_onload');
-        AE_SEO_Render_Optimizer::update_option(
-            AE_SEO_Critical_CSS::OPTION_CSS_MAP,
-            [ 'dummy' => '.bar{color:blue;}' ]
-        );
 
         $critical = new AE_SEO_Critical_CSS();
         $critical->setup();
@@ -106,11 +102,6 @@ class CriticalCssTest extends WP_UnitTestCase {
         switch_theme($theme);
 
         AE_SEO_Render_Optimizer::update_option(AE_SEO_Critical_CSS::OPTION_ENABLE, '0');
-        AE_SEO_Render_Optimizer::update_option(
-            AE_SEO_Critical_CSS::OPTION_CSS_MAP,
-            [ 'dummy' => '.bar{color:blue;}' ]
-        );
-
         wp_enqueue_style('dummy', 'https://example.com/style.css');
 
         ob_start();
