@@ -14,7 +14,7 @@ class Gm2_Migrate_CLI extends \WP_CLI_Command {
      */
     public function install( $args, $assoc_args ) {
         \gm2_custom_tables_maybe_install();
-        \WP_CLI::success( 'Custom tables are up to date.' );
+        \WP_CLI::success( __( 'Custom tables are up to date.', 'gm2-wordpress-suite' ) );
     }
 
     /**
@@ -22,7 +22,7 @@ class Gm2_Migrate_CLI extends \WP_CLI_Command {
      */
     public function backfill( $args, $assoc_args ) {
         $count = \gm2_custom_tables_backfill();
-        \WP_CLI::success( sprintf( '%d rows backfilled.', $count ) );
+        \WP_CLI::success( sprintf( __( '%d rows backfilled.', 'gm2-wordpress-suite' ), $count ) );
     }
 }
 

@@ -16,14 +16,14 @@ class Gm2_CLI extends \WP_CLI_Command {
     public function sitemap( $args, $assoc_args ) {
         $sub = $args[0] ?? '';
         if ( $sub !== 'generate' ) {
-            \WP_CLI::error( 'Usage: wp gm2 sitemap generate' );
+            \WP_CLI::error( __( 'Usage: wp gm2 sitemap generate', 'gm2-wordpress-suite' ) );
         }
 
         $result = \gm2_generate_sitemap();
         if ( is_wp_error( $result ) ) {
             \WP_CLI::error( $result->get_error_message() );
         }
-        \WP_CLI::success( 'Sitemap generated.' );
+        \WP_CLI::success( __( 'Sitemap generated.', 'gm2-wordpress-suite' ) );
     }
 
     /**
@@ -36,17 +36,17 @@ class Gm2_CLI extends \WP_CLI_Command {
     public function ai( $args, $assoc_args ) {
         $sub = $args[0] ?? '';
         if ( $sub !== 'clear' ) {
-            \WP_CLI::error( 'Usage: wp gm2 ai clear' );
+            \WP_CLI::error( __( 'Usage: wp gm2 ai clear', 'gm2-wordpress-suite' ) );
         }
 
         if ( ! function_exists( '\gm2_ai_clear' ) ) {
-            \WP_CLI::error( 'gm2_ai_clear() function not found.' );
+            \WP_CLI::error( __( 'gm2_ai_clear() function not found.', 'gm2-wordpress-suite' ) );
         }
         $result = \gm2_ai_clear();
         if ( is_wp_error( $result ) ) {
             \WP_CLI::error( $result->get_error_message() );
         }
-        \WP_CLI::success( 'AI data cleared.' );
+        \WP_CLI::success( __( 'AI data cleared.', 'gm2-wordpress-suite' ) );
     }
 
     /**
@@ -63,24 +63,24 @@ class Gm2_CLI extends \WP_CLI_Command {
             $logger = function_exists('wc_get_logger') ? wc_get_logger() : null;
             $ac    = new Gm2_Abandoned_Carts($logger);
             $count = $ac->migrate_recovered_carts();
-            \WP_CLI::success( sprintf( '%d carts migrated.', $count ) );
+            \WP_CLI::success( sprintf( __( '%d carts migrated.', 'gm2-wordpress-suite' ), $count ) );
             return;
         }
 
         if ( $sub === 'process' ) {
             Gm2_Abandoned_Carts::cron_mark_abandoned();
-            \WP_CLI::success( 'Abandoned carts processed.' );
+            \WP_CLI::success( __( 'Abandoned carts processed.', 'gm2-wordpress-suite' ) );
             return;
         }
 
         if ( $sub === 'retry-failed' ) {
             $messaging = new Gm2_Abandoned_Carts_Messaging();
             $count = $messaging->reprocess_failed_messages();
-            \WP_CLI::success( sprintf( '%d failed messages reprocessed.', $count ) );
+            \WP_CLI::success( sprintf( __( '%d failed messages reprocessed.', 'gm2-wordpress-suite' ), $count ) );
             return;
         }
 
-        \WP_CLI::error( 'Usage: wp gm2 ac <migrate|process|retry-failed>' );
+        \WP_CLI::error( __( 'Usage: wp gm2 ac <migrate|process|retry-failed>', 'gm2-wordpress-suite' ) );
     }
 
     /**
@@ -104,7 +104,7 @@ class Gm2_CLI extends \WP_CLI_Command {
                     wp_mkdir_p( dirname( $path ) );
                 }
                 file_put_contents( $path, "{{ gm2_field('example') }}\n" );
-                \WP_CLI::success( 'Twig template created at ' . $path );
+                \WP_CLI::success( sprintf( __( 'Twig template created at %s', 'gm2-wordpress-suite' ), $path ) );
                 break;
             case 'blade':
                 $path = trailingslashit( $theme_dir ) . 'resources/views/' . $slug . '.blade.php';
@@ -112,7 +112,7 @@ class Gm2_CLI extends \WP_CLI_Command {
                     wp_mkdir_p( dirname( $path ) );
                 }
                 file_put_contents( $path, "{{ gm2_field('example') }}\n" );
-                \WP_CLI::success( 'Blade template created at ' . $path );
+                \WP_CLI::success( sprintf( __( 'Blade template created at %s', 'gm2-wordpress-suite' ), $path ) );
                 break;
             case 'theme-json':
             case 'theme':
@@ -120,23 +120,23 @@ class Gm2_CLI extends \WP_CLI_Command {
                 if ( ! file_exists( $path ) ) {
                     $contents = json_encode( [ '$schema' => 'https://schemas.wp.org/wp/6.4/theme.json' ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES );
                     file_put_contents( $path, $contents );
-                    \WP_CLI::success( 'theme.json created at ' . $path );
+                    \WP_CLI::success( sprintf( __( 'theme.json created at %s', 'gm2-wordpress-suite' ), $path ) );
                 } else {
-                    \WP_CLI::success( 'theme.json already exists at ' . $path );
+                    \WP_CLI::success( sprintf( __( 'theme.json already exists at %s', 'gm2-wordpress-suite' ), $path ) );
                 }
                 $label = ucwords( str_replace( '-', ' ', $slug ) );
                 $sample = [
                     'customTemplates' => [
-                        [ 'name' => 'single-' . $slug, 'title' => 'Single ' . $label ],
-                        [ 'name' => 'archive-' . $slug, 'title' => 'Archive ' . $label ],
+                        [ 'name' => 'single-' . $slug, 'title' => sprintf( __( 'Single %s', 'gm2-wordpress-suite' ), $label ) ],
+                        [ 'name' => 'archive-' . $slug, 'title' => sprintf( __( 'Archive %s', 'gm2-wordpress-suite' ), $label ) ],
                     ],
                     'patterns' => [ 'gm2/' . $slug ],
                 ];
-                \WP_CLI::line( 'Hint: add the following to theme.json to reference custom templates and patterns:' );
+                \WP_CLI::line( __( 'Hint: add the following to theme.json to reference custom templates and patterns:', 'gm2-wordpress-suite' ) );
                 \WP_CLI::line( json_encode( $sample, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ) );
                 break;
             default:
-                \WP_CLI::error( 'Usage: wp gm2 scaffold <twig|blade|theme-json> <slug>' );
+                \WP_CLI::error( __( 'Usage: wp gm2 scaffold <twig|blade|theme-json> <slug>', 'gm2-wordpress-suite' ) );
         }
     }
 }
