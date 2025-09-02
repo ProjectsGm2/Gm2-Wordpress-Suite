@@ -490,14 +490,11 @@ class MobileDetect
      * @var array
      */
     protected static array $tabletDevices = [
-        // @todo: check for mobile friendly emails topic.
         'iPad'              => 'iPad|iPad.*Mobile',
         // Removed |^.*Android.*Nexus(?!(?:Mobile).)*$
         // @see #442
-        // @todo Merge NexusTablet into GoogleTablet.
-        'NexusTablet'       => 'Android.*Nexus[\s]+(7|9|10)',
-        // https://en.wikipedia.org/wiki/Pixel_C
-        'GoogleTablet'           => 'Android.*Pixel C',
+        // Google tablets: Pixel C and Nexus series (7, 9, 10)
+        'GoogleTablet'      => 'Android.*(Pixel C|Nexus[\s]+(?:7|9|10))',
         'SamsungTablet'     => [
             'SM-X926B|SM-X620|SM-X526B|SM-X520|SM-X626B|SM-X920|SM-X820|SM-X826B|SM-P625|SM-P620|SM-X306B|SM-T730|SM-T976B|SM-T875|SM-T575|SM-T545',
             'SM-X210R|SM-X216R|SM-X356B|SM-T860X|SM-T636B|SM-T509|SM-T503|SM-T720X|SM-T570|SM-T540|SM-T510X|SM-T830X|SM-T820X|SM-T710X|SM-T810X|SM-T365|SM-T550X|SM-T116',
