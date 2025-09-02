@@ -84,3 +84,22 @@ $cache_nonce    = wp_create_nonce('gm2_purge_optimizer_cache');
 echo '<p><button type="button" class="button gm2-purge-critical-css" data-nonce="' . esc_attr($critical_nonce) . '">' . esc_html__( 'Purge & Rebuild Critical CSS', 'gm2-wordpress-suite' ) . '</button></p>';
 echo '<p><button type="button" class="button gm2-purge-js-map" data-nonce="' . esc_attr($js_nonce) . '">' . esc_html__( 'Purge & Rebuild JS Map', 'gm2-wordpress-suite' ) . '</button></p>';
 echo '<p><button type="button" class="button gm2-purge-optimizer-cache" data-nonce="' . esc_attr($cache_nonce) . '">' . esc_html__( 'Purge Combined Assets', 'gm2-wordpress-suite' ) . '</button></p>';
+
+$diag_nonce = wp_create_nonce('gm2_clear_optimizer_diagnostics');
+$logs = class_exists('AE_SEO_Optimizer_Diagnostics') ? AE_SEO_Optimizer_Diagnostics::get() : [];
+echo '<h2>' . esc_html__( 'Optimizer Diagnostics', 'gm2-wordpress-suite' ) . '</h2>';
+echo '<table class="widefat"><thead><tr><th>' . esc_html__( 'Type', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'Handle', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'Bundle', 'gm2-wordpress-suite' ) . '</th><th>' . esc_html__( 'Reason', 'gm2-wordpress-suite' ) . '</th></tr></thead><tbody>';
+if (!empty($logs)) {
+    foreach ($logs as $type => $entries) {
+        foreach ($entries as $entry) {
+            $handle = esc_html($entry['handle'] ?? '');
+            $bundle = esc_html($entry['bundle'] ?? '');
+            $reason = esc_html($entry['reason'] ?? '');
+            echo '<tr><td>' . esc_html($type) . '</td><td>' . $handle . '</td><td>' . $bundle . '</td><td>' . $reason . '</td></tr>';
+        }
+    }
+} else {
+    echo '<tr><td colspan="4">' . esc_html__( 'No diagnostics logged.', 'gm2-wordpress-suite' ) . '</td></tr>';
+}
+echo '</tbody></table>';
+echo '<p><button type="button" class="button gm2-clear-optimizer-diagnostics" data-nonce="' . esc_attr($diag_nonce) . '">' . esc_html__( 'Clear Diagnostics', 'gm2-wordpress-suite' ) . '</button></p>';

@@ -129,4 +129,5 @@ jQuery(function($){
     gm2HandlePurge('.gm2-purge-critical-css', 'gm2_purge_critical_css');
     gm2HandlePurge('.gm2-purge-js-map', 'gm2_purge_js_map');
     gm2HandlePurge('.gm2-purge-optimizer-cache', 'gm2_purge_optimizer_cache');
+    gm2HandlePurge('.gm2-clear-optimizer-diagnostics', 'gm2_clear_optimizer_diagnostics');
 });

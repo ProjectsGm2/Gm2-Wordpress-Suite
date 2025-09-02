@@ -90,6 +90,7 @@ class Gm2_SEO_Admin {
         add_action('wp_ajax_gm2_purge_critical_css', [$this, 'ajax_purge_critical_css']);
         add_action('wp_ajax_gm2_purge_js_map', [$this, 'ajax_purge_js_map']);
         add_action('wp_ajax_gm2_purge_optimizer_cache', [$this, 'ajax_purge_optimizer_cache']);
+        add_action('wp_ajax_gm2_clear_optimizer_diagnostics', [$this, 'ajax_clear_optimizer_diagnostics']);
 
         add_action('wp_ajax_gm2_check_rules', [$this, 'ajax_check_rules']);
         add_action('wp_ajax_gm2_keyword_ideas', [$this, 'ajax_keyword_ideas']);
@@ -3134,6 +3135,17 @@ class Gm2_SEO_Admin {
             \AE_SEO_Combine_Minify::purge_cache();
         }
         wp_send_json_success(['message' => esc_html__( 'Optimizer cache purged.', 'gm2-wordpress-suite' )]);
+    }
+
+    public function ajax_clear_optimizer_diagnostics() {
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(['message' => esc_html__( 'Permission denied', 'gm2-wordpress-suite' )], 403);
+        }
+        check_ajax_referer('gm2_clear_optimizer_diagnostics', 'nonce');
+        if (class_exists('\\AE_SEO_Optimizer_Diagnostics')) {
+            \AE_SEO_Optimizer_Diagnostics::clear();
+        }
+        wp_send_json_success(['message' => esc_html__( 'Diagnostics cleared.', 'gm2-wordpress-suite' )]);
     }
 
     public function handle_insert_cache_rules() {

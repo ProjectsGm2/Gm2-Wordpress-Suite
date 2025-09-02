@@ -73,39 +73,105 @@ class AE_SEO_Combine_Minify {
         foreach ($handles as $h) {
             $obj = $wp_styles->registered[$h] ?? null;
             if (!$obj) {
+                AE_SEO_Optimizer_Diagnostics::add('combine_css', [
+                    'handle' => $h,
+                    'bundle' => '',
+                    'reason' => 'not_registered',
+                ]);
                 continue;
             }
             if ($this->is_excluded($h, $obj->src)) {
+                AE_SEO_Optimizer_Diagnostics::add('combine_css', [
+                    'handle' => $h,
+                    'bundle' => '',
+                    'reason' => 'excluded',
+                ]);
                 continue;
             }
             if (!empty($obj->extra['integrity']) || !empty($obj->extra['crossorigin'])) {
+                AE_SEO_Optimizer_Diagnostics::add('combine_css', [
+                    'handle' => $h,
+                    'bundle' => '',
+                    'reason' => 'integrity',
+                ]);
                 continue;
             }
             if ($this->is_local($obj->src)) {
                 $path = $this->local_path($obj->src);
                 if (!file_exists($path)) {
+                    AE_SEO_Optimizer_Diagnostics::add('combine_css', [
+                        'handle' => $h,
+                        'bundle' => '',
+                        'reason' => 'missing',
+                    ]);
                     continue;
                 }
                 $size = filesize($path);
-                if ($size === false || $size > $file_limit) {
+                if ($size === false) {
+                    AE_SEO_Optimizer_Diagnostics::add('combine_css', [
+                        'handle' => $h,
+                        'bundle' => '',
+                        'reason' => 'filesize',
+                    ]);
+                    continue;
+                }
+                if ($size > $file_limit) {
+                    AE_SEO_Optimizer_Diagnostics::add('combine_css', [
+                        'handle' => $h,
+                        'bundle' => '',
+                        'reason' => 'file_limit',
+                    ]);
                     continue;
                 }
                 if ($total + $size > $bundle_cap) {
+                    AE_SEO_Optimizer_Diagnostics::add('combine_css', [
+                        'handle' => $h,
+                        'bundle' => '',
+                        'reason' => 'bundle_cap',
+                    ]);
                     continue;
                 }
                 $total   += $size;
                 $local[] = $h;
                 $media[] = $obj->args ? $obj->args : 'all';
+            } else {
+                AE_SEO_Optimizer_Diagnostics::add('combine_css', [
+                    'handle' => $h,
+                    'bundle' => '',
+                    'reason' => 'external',
+                ]);
             }
         }
 
         if (count($local) < 2) {
+            foreach ($local as $h) {
+                AE_SEO_Optimizer_Diagnostics::add('combine_css', [
+                    'handle' => $h,
+                    'bundle' => '',
+                    'reason' => 'not_enough_files',
+                ]);
+            }
             return $handles;
         }
 
         $src = $this->build_combined_file($local, 'css');
         if (!$src) {
+            foreach ($local as $h) {
+                AE_SEO_Optimizer_Diagnostics::add('combine_css', [
+                    'handle' => $h,
+                    'bundle' => '',
+                    'reason' => 'build_failed',
+                ]);
+            }
             return $handles;
+        }
+
+        foreach ($local as $h) {
+            AE_SEO_Optimizer_Diagnostics::add('combine_css', [
+                'handle' => $h,
+                'bundle' => $src,
+                'reason' => 'combined',
+            ]);
         }
 
         $unique_media = array_unique(array_map(function ($m) {
@@ -153,9 +219,19 @@ class AE_SEO_Combine_Minify {
         foreach ($handles as $h) {
             $obj = $wp_scripts->registered[$h] ?? null;
             if (!$obj) {
+                AE_SEO_Optimizer_Diagnostics::add('combine_js', [
+                    'handle' => $h,
+                    'bundle' => '',
+                    'reason' => 'not_registered',
+                ]);
                 continue;
             }
             if ($this->is_excluded($h, $obj->src)) {
+                AE_SEO_Optimizer_Diagnostics::add('combine_js', [
+                    'handle' => $h,
+                    'bundle' => '',
+                    'reason' => 'excluded',
+                ]);
                 continue;
             }
             $current_group = $wp_scripts->groups[$h] ?? 0;
@@ -163,32 +239,88 @@ class AE_SEO_Combine_Minify {
                 $group = $current_group;
             }
             if ($current_group !== $group) {
+                AE_SEO_Optimizer_Diagnostics::add('combine_js', [
+                    'handle' => $h,
+                    'bundle' => '',
+                    'reason' => 'group_mismatch',
+                ]);
                 continue;
             }
             if ($this->is_local($obj->src)) {
                 $path = $this->local_path($obj->src);
                 if (!file_exists($path)) {
+                    AE_SEO_Optimizer_Diagnostics::add('combine_js', [
+                        'handle' => $h,
+                        'bundle' => '',
+                        'reason' => 'missing',
+                    ]);
                     continue;
                 }
                 $size = filesize($path);
-                if ($size === false || $size > $file_limit) {
+                if ($size === false) {
+                    AE_SEO_Optimizer_Diagnostics::add('combine_js', [
+                        'handle' => $h,
+                        'bundle' => '',
+                        'reason' => 'filesize',
+                    ]);
+                    continue;
+                }
+                if ($size > $file_limit) {
+                    AE_SEO_Optimizer_Diagnostics::add('combine_js', [
+                        'handle' => $h,
+                        'bundle' => '',
+                        'reason' => 'file_limit',
+                    ]);
                     continue;
                 }
                 if ($total + $size > $bundle_cap) {
+                    AE_SEO_Optimizer_Diagnostics::add('combine_js', [
+                        'handle' => $h,
+                        'bundle' => '',
+                        'reason' => 'bundle_cap',
+                    ]);
                     continue;
                 }
                 $total   += $size;
                 $local[] = $h;
+            } else {
+                AE_SEO_Optimizer_Diagnostics::add('combine_js', [
+                    'handle' => $h,
+                    'bundle' => '',
+                    'reason' => 'external',
+                ]);
             }
         }
 
         if (count($local) < 2) {
+            foreach ($local as $h) {
+                AE_SEO_Optimizer_Diagnostics::add('combine_js', [
+                    'handle' => $h,
+                    'bundle' => '',
+                    'reason' => 'not_enough_files',
+                ]);
+            }
             return $handles;
         }
 
         $src = $this->build_combined_file($local, 'js');
         if (!$src) {
+            foreach ($local as $h) {
+                AE_SEO_Optimizer_Diagnostics::add('combine_js', [
+                    'handle' => $h,
+                    'bundle' => '',
+                    'reason' => 'build_failed',
+                ]);
+            }
             return $handles;
+        }
+
+        foreach ($local as $h) {
+            AE_SEO_Optimizer_Diagnostics::add('combine_js', [
+                'handle' => $h,
+                'bundle' => $src,
+                'reason' => 'combined',
+            ]);
         }
 
         $handle   = 'ae-seo-combined-js';

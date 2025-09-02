@@ -35,6 +35,11 @@ class AE_SEO_Critical_CSS {
      */
     public function setup() {
         if ($this->is_excluded()) {
+            AE_SEO_Optimizer_Diagnostics::add('critical_css', [
+                'handle' => '',
+                'bundle' => '',
+                'reason' => 'request_excluded',
+            ]);
             return;
         }
 
@@ -91,6 +96,11 @@ class AE_SEO_Critical_CSS {
      */
     public function filter_style_tag($html, $handle, $href, $media) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase -- WordPress filter signature.
         if (is_feed() || is_404()) {
+            AE_SEO_Optimizer_Diagnostics::add('critical_css', [
+                'handle' => $handle,
+                'bundle' => '',
+                'reason' => 'feed_or_404',
+            ]);
             return $html;
         }
 
@@ -100,20 +110,40 @@ class AE_SEO_Critical_CSS {
         $patterns = ['editor', 'dashicons', 'admin-bar', 'woocommerce-inline'];
         foreach ($patterns as $pattern) {
             if (strpos($handle, $pattern) !== false) {
+                AE_SEO_Optimizer_Diagnostics::add('critical_css', [
+                    'handle' => $handle,
+                    'bundle' => '',
+                    'reason' => 'pattern',
+                ]);
                 return $html;
             }
         }
 
         if (in_array($handle, $deny, true)) {
+            AE_SEO_Optimizer_Diagnostics::add('critical_css', [
+                'handle' => $handle,
+                'bundle' => '',
+                'reason' => 'denylist',
+            ]);
             return $html;
         }
 
         if (strpos($html, 'rel="preload"') !== false || strpos($html, "rel='preload'") !== false || strpos($html, 'data-no-async') !== false) {
+            AE_SEO_Optimizer_Diagnostics::add('critical_css', [
+                'handle' => $handle,
+                'bundle' => '',
+                'reason' => 'preload_or_noasync',
+            ]);
             return $html;
         }
 
         $store = AE_SEO_Render_Optimizer::get_option(self::OPTION_CSS_MAP, []);
         if (empty($store[$handle])) {
+            AE_SEO_Optimizer_Diagnostics::add('critical_css', [
+                'handle' => $handle,
+                'bundle' => '',
+                'reason' => 'no_map',
+            ]);
             return $html;
         }
 
@@ -134,6 +164,11 @@ class AE_SEO_Critical_CSS {
             );
         }
 
+        AE_SEO_Optimizer_Diagnostics::add('critical_css', [
+            'handle' => $handle,
+            'bundle' => $href,
+            'reason' => 'processed',
+        ]);
         return $style . $async;
     }
 
