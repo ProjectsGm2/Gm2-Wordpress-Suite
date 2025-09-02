@@ -27,5 +27,32 @@ class RenderOptimizerConflictsTest extends WP_UnitTestCase {
         rmdir($tempDir . '/wp-admin');
         rmdir($tempDir);
     }
+
+    public function test_login_url_skips_loading_features() {
+        $originalPagenow = $GLOBALS['pagenow'] ?? null;
+        $GLOBALS['pagenow'] = 'wp-login.php';
+
+        AE_SEO_Render_Optimizer::update_option(AE_SEO_Critical_CSS::OPTION_ENABLE, '1');
+
+        $optimizer = new class extends AE_SEO_Render_Optimizer {
+            public $loaded = false;
+            public function __construct() {}
+            protected function load_features() {
+                $this->loaded = true;
+            }
+        };
+
+        $optimizer->maybe_bootstrap();
+
+        $this->assertFalse($optimizer->loaded);
+
+        AE_SEO_Render_Optimizer::delete_option(AE_SEO_Critical_CSS::OPTION_ENABLE);
+
+        if ($originalPagenow === null) {
+            unset($GLOBALS['pagenow']);
+        } else {
+            $GLOBALS['pagenow'] = $originalPagenow;
+        }
+    }
 }
 
