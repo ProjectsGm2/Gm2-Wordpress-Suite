@@ -71,8 +71,8 @@ jQuery(function($){
         a.href = url;
         return a.hostname && a.hostname !== window.location.hostname;
     }
-    if(typeof wpLink !== 'undefined'){
-        var $relField = $('<p class="gm2-link-rel"><label>Rel <select id="gm2-link-rel"><option value="">None</option><option value="nofollow">nofollow</option><option value="sponsored">sponsored</option><option value="nofollow sponsored">nofollow &amp; sponsored</option></select></label></p>');
+        if(typeof wpLink !== 'undefined'){
+            var $relField = $('<p class="gm2-link-rel"><label>Rel <select id="gm2-link-rel"><option value="">None</option><option value="nofollow">nofollow</option><option value="sponsored">sponsored</option><option value="nofollow sponsored">nofollow &amp; sponsored</option></select></label></p>');
         $('#wp-link .link-target').after($relField);
         var openOrig = wpLink.open;
         wpLink.open = function(editorId){
@@ -100,4 +100,33 @@ jQuery(function($){
             updateOrig.call(wpLink);
         };
     }
+
+    function gm2ShowNotice(message, type){
+        var $notice = $('<div class="notice notice-'+type+' is-dismissible gm2-optimizer-notice"><p>'+message+'</p></div>');
+        $('.gm2-optimizer-notice').remove();
+        $('.wrap').first().prepend($notice);
+    }
+
+    function gm2HandlePurge(selector, action){
+        $(document).on('click', selector, function(e){
+            e.preventDefault();
+            var $btn = $(this);
+            wp.ajax.post(action, { nonce: $btn.data('nonce') })
+                .done(function(response){
+                    var msg = response && response.data && response.data.message ? response.data.message : 'Done.';
+                    gm2ShowNotice(msg, 'success');
+                })
+                .fail(function(response){
+                    var msg = 'Error';
+                    if(response && response.responseJSON && response.responseJSON.data && response.responseJSON.data.message){
+                        msg = response.responseJSON.data.message;
+                    }
+                    gm2ShowNotice(msg, 'error');
+                });
+        });
+    }
+
+    gm2HandlePurge('.gm2-purge-critical-css', 'gm2_purge_critical_css');
+    gm2HandlePurge('.gm2-purge-js-map', 'gm2_purge_js_map');
+    gm2HandlePurge('.gm2-purge-optimizer-cache', 'gm2_purge_optimizer_cache');
 });

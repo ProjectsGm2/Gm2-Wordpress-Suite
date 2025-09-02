@@ -77,14 +77,10 @@ echo '<p class="description"><a href="#">' . esc_html__( 'Learn how to auto-gene
 submit_button( esc_html__( 'Save Settings', 'gm2-wordpress-suite' ) );
 echo '</form>';
 
-echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
-wp_nonce_field('gm2_purge_critical_css');
-echo '<input type="hidden" name="action" value="gm2_purge_critical_css" />';
-submit_button(esc_html__( 'Purge & Rebuild Critical CSS', 'gm2-wordpress-suite' ), 'delete');
-echo '</form>';
+$critical_nonce = wp_create_nonce('gm2_purge_critical_css');
+$js_nonce       = wp_create_nonce('gm2_purge_js_map');
+$cache_nonce    = wp_create_nonce('gm2_purge_optimizer_cache');
 
-echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
-wp_nonce_field('gm2_purge_js_map');
-echo '<input type="hidden" name="action" value="gm2_purge_js_map" />';
-submit_button(esc_html__( 'Purge & Rebuild JS Map', 'gm2-wordpress-suite' ), 'delete');
-echo '</form>';
+echo '<p><button type="button" class="button gm2-purge-critical-css" data-nonce="' . esc_attr($critical_nonce) . '">' . esc_html__( 'Purge & Rebuild Critical CSS', 'gm2-wordpress-suite' ) . '</button></p>';
+echo '<p><button type="button" class="button gm2-purge-js-map" data-nonce="' . esc_attr($js_nonce) . '">' . esc_html__( 'Purge & Rebuild JS Map', 'gm2-wordpress-suite' ) . '</button></p>';
+echo '<p><button type="button" class="button gm2-purge-optimizer-cache" data-nonce="' . esc_attr($cache_nonce) . '">' . esc_html__( 'Purge Combined Assets', 'gm2-wordpress-suite' ) . '</button></p>';
