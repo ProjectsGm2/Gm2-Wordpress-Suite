@@ -1649,7 +1649,6 @@ class MobileDetect
 
     /**
      * Prepare the version number.
-     * @todo Remove the error suppression from str_replace() call.
      *
      * @param string $ver The string version, like "2.6.21.2152";
      * @return float
@@ -1659,8 +1658,18 @@ class MobileDetect
         $ver = str_replace(['_', ' ', '/'], '.', $ver);
         $arrVer = explode('.', $ver, 2);
 
+        if (!is_numeric($arrVer[0])) {
+            return 0.0;
+        }
+
         if (isset($arrVer[1])) {
-            $arrVer[1] = @str_replace('.', '', $arrVer[1]); // @todo: treat strings versions.
+            $arrVer[1] = str_replace('.', '', $arrVer[1]);
+            $arrVer[1] = preg_replace('/[^0-9]/', '', $arrVer[1]);
+            if ($arrVer[1] === '') {
+                return (float) $arrVer[0];
+            }
+        } else {
+            return (float) $arrVer[0];
         }
 
         return (float) implode('.', $arrVer);
