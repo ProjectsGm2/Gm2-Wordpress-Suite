@@ -30,6 +30,7 @@ Key features include:
 * Remote mirror for vendor scripts like Facebook Pixel and gtag with SRI hashes and a daily refresh
 * Script Attributes manager with dependency-aware “Defer all third-party” and “Conservative” presets
 * Render Optimizer for critical CSS, JS deferral with handle/domain allow and deny lists plus inline dependency and jQuery auto-detection, differential serving, and optional asset combination/minification with size limits and purge controls
+* JavaScript Manager powered by AE_SEO_JS_Detector and AE_SEO_JS_Controller for optional per-page auto-dequeue (beta), lazy loading, script replacements, handle allow/deny lists, and a Script Usage admin page for acceptance scenarios
 
 == Installation ==
 1. Upload the plugin files to the `/wp-content/plugins/gm2-wordpress-suite` directory.
@@ -149,6 +150,14 @@ The optimizer behavior can be customized with two filters:
 The diagnostics table lists optimizer decisions with columns for type, handle, bundle and reason. Use it to understand why assets were bundled, deferred or skipped. Output is escaped, and the **Clear Diagnostics** button—also restricted to `manage_options`—wipes the log so a fresh page load repopulates it.
 
 If WP Rocket, Autoptimize, Perfmatters or other optimizer plugins are active, the subsystem automatically disables its features and displays a warning. Only one optimization plugin should run at a time.
+
+== JavaScript Manager ==
+
+AE_SEO_JS_Detector builds a map of registered scripts and caches the page type, widgets and handles used on each request. AE_SEO_JS_Controller consults that context to dequeue handles that were not previously seen for the current URL.
+
+Open **SEO → Performance → JavaScript** to enable the manager, lazy loading, script replacements, debug logging and an optional safe-mode query parameter. The screen also provides handle allow and deny lists and a per-page auto-dequeue option that is still in beta.
+
+Visit **SEO → Script Usage** to review discovered handles and mark which page templates must always enqueue them. Use this page to define acceptance scenarios before enabling auto-dequeue on production—critical scripts can otherwise be removed.
 
 == SEO Performance CLI ==
 Run `wp seo-perf` commands to audit your site and manage caching headers.
