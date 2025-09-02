@@ -161,10 +161,17 @@ class AE_SEO_Render_Optimizer {
     /**
      * Check for conflicting optimization plugins.
      *
+     * Gracefully returns false if the core `is_plugin_active()` helper is
+     * unavailable to avoid calling an undefined function.
+     *
      * @return bool
      */
     private function has_conflicts() {
         include_once ABSPATH . 'wp-admin/includes/plugin.php';
+
+        if (!function_exists('is_plugin_active')) {
+            return false;
+        }
 
         $plugins = [
             'wp-rocket/wp-rocket.php'       => 'WP Rocket',

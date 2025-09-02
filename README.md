@@ -187,7 +187,7 @@ Use the **Purge Critical CSS** and **Purge JS Map** buttons on the Render Optimi
 
 To confirm differential serving, open the site in a modern browser and ensure only the `optimizer-modern.js` module bundle executes. Test again in an older or emulated legacy browser and verify only `optimizer-legacy.js` runs.
 
-The optimizer automatically disables its features when popular optimization plugins like WP&nbsp;Rocket, Autoptimize or Perfmatters are active. Only one optimization plugin should run at a time.
+The optimizer automatically disables its features when popular optimization plugins like WP&nbsp;Rocket, Autoptimize or Perfmatters are active. If WordPress's `is_plugin_active()` helper isn't available, the conflict check is skipped to avoid errors. Only one optimization plugin should run at a time.
 
 After adjusting the source files in `assets/src/optimizer`, rebuild the distributed scripts as noted in [Rebuilding Optimizer assets](#rebuilding-optimizer-assets).
 
