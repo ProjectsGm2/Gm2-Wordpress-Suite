@@ -448,8 +448,7 @@ class MobileDetect
         // http://www.micromaxinfo.com/mobiles/smartphones
         // Added because the codes might conflict with Acer Tablets.
         'Micromax'  => 'Micromax.*\b(A210|A92|A88|A72|A111|A110Q|A115|A116|A110|A90S|A26|A51|A35|A54|A25|A27|A89|A68|A65|A57|A90)\b',
-        // @todo Complete the regex.
-        'Palm'  => 'PalmSource|Palm', // avantgo|blazer|elaine|hiptop|plucker|xiino ;
+        'Palm'  => 'PalmSource|PalmOS|Palm|PalmOne|webOS|AvantGo|Blazer|Elaine|Hiptop|Plucker|Xiino|Treo|Pre|Pixi|Centro|Tungsten',
         // Just for fun ;)
         'Vertu' => 'Vertu|Vertu.*Ltd|Vertu.*Ascent|Vertu.*Ayxta|Vertu.*Constellation(F|Quest)?|Vertu.*Monika|Vertu.*Signature',
         // http://www.pantech.co.kr/en/prod/prodList.do?gbrand=VEGA (PANTECH)
