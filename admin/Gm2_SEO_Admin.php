@@ -56,6 +56,10 @@ class Gm2_SEO_Admin {
         add_option('ae_js_lazy_load', '0');
         add_option('ae_js_replacements', '0');
         add_option('ae_js_debug_log', '0');
+        add_option('ae_js_auto_dequeue', '0');
+        add_option('ae_js_respect_safe_mode', '0');
+        add_option('ae_js_dequeue_allowlist', []);
+        add_option('ae_js_dequeue_denylist', []);
 
         add_action('admin_menu', [$this, 'add_settings_pages']);
         add_action('add_meta_boxes', [$this, 'register_meta_boxes']);
@@ -284,6 +288,20 @@ class Gm2_SEO_Admin {
         $sanitized = [];
         foreach ($value as $key => $css) {
             $sanitized[sanitize_key($key)] = $this->sanitize_css($css);
+        }
+        return $sanitized;
+    }
+
+    public function sanitize_handle_array($value) {
+        if (!is_array($value)) {
+            return [];
+        }
+        $sanitized = [];
+        foreach ($value as $handle) {
+            $handle = sanitize_key($handle);
+            if ($handle !== '') {
+                $sanitized[] = $handle;
+            }
         }
         return $sanitized;
     }
@@ -554,6 +572,18 @@ class Gm2_SEO_Admin {
         ]);
         register_setting('gm2_seo_options', 'ae_js_debug_log', [
             'sanitize_callback' => 'sanitize_text_field',
+        ]);
+        register_setting('gm2_seo_options', 'ae_js_auto_dequeue', [
+            'sanitize_callback' => 'sanitize_text_field',
+        ]);
+        register_setting('gm2_seo_options', 'ae_js_respect_safe_mode', [
+            'sanitize_callback' => 'sanitize_text_field',
+        ]);
+        register_setting('gm2_seo_options', 'ae_js_dequeue_allowlist', [
+            'sanitize_callback' => [ $this, 'sanitize_handle_array' ],
+        ]);
+        register_setting('gm2_seo_options', 'ae_js_dequeue_denylist', [
+            'sanitize_callback' => [ $this, 'sanitize_handle_array' ],
         ]);
         register_setting('gm2_seo_options', 'gm2_tax_desc_prompt', [
             'sanitize_callback' => 'sanitize_textarea_field',
@@ -2978,6 +3008,18 @@ class Gm2_SEO_Admin {
 
         $debug = isset($_POST['ae_js_debug_log']) ? '1' : '0';
         update_option('ae_js_debug_log', $debug);
+
+        $auto = isset($_POST['ae_js_auto_dequeue']) ? '1' : '0';
+        update_option('ae_js_auto_dequeue', $auto);
+
+        $safe = isset($_POST['ae_js_respect_safe_mode']) ? '1' : '0';
+        update_option('ae_js_respect_safe_mode', $safe);
+
+        $allow = isset($_POST['ae_js_dequeue_allowlist']) ? $this->sanitize_handle_array((array) $_POST['ae_js_dequeue_allowlist']) : [];
+        update_option('ae_js_dequeue_allowlist', $allow);
+
+        $deny = isset($_POST['ae_js_dequeue_denylist']) ? $this->sanitize_handle_array((array) $_POST['ae_js_dequeue_denylist']) : [];
+        update_option('ae_js_dequeue_denylist', $deny);
 
         wp_redirect(admin_url('admin.php?page=gm2-seo&tab=performance&subtab=javascript&updated=1'));
         exit;
