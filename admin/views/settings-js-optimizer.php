@@ -9,6 +9,7 @@ $replace     = get_option('ae_js_replacements', '0');
 $debug       = get_option('ae_js_debug_log', '0');
 $auto        = get_option('ae_js_auto_dequeue', '0');
 $safe_mode   = get_option('ae_js_respect_safe_mode', '0');
+$nomodule    = get_option('ae_js_nomodule_legacy', '0');
 $allow       = get_option('ae_js_dequeue_allowlist', []);
 $deny        = get_option('ae_js_dequeue_denylist', []);
 if (!is_array($allow)) {
@@ -31,6 +32,7 @@ echo '<tr><th scope="row">' . esc_html__( 'Enable Replacements', 'gm2-wordpress-
 echo '<tr><th scope="row">' . esc_html__( 'Debug Log', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="ae_js_debug_log" value="1" ' . checked($debug, '1', false) . ' /></td></tr>';
 echo '<tr><th scope="row">' . esc_html__( 'Enable Per-Page Auto-Dequeue (Beta)', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="ae_js_auto_dequeue" value="1" ' . checked($auto, '1', false) . ' /></td></tr>';
 echo '<tr><th scope="row">' . esc_html__( 'Respect Safe Mode param', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="ae_js_respect_safe_mode" value="1" ' . checked($safe_mode, '1', false) . ' /></td></tr>';
+echo '<tr><th scope="row">' . esc_html__( 'Send Legacy (nomodule) Bundle', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="ae_js_nomodule_legacy" value="1" ' . checked($nomodule, '1', false) . ' /><p class="description">' . esc_html__( 'Include an ES5 bundle for older browsers.', 'gm2-wordpress-suite' ) . '</p></td></tr>';
 echo '<tr><th scope="row">' . esc_html__( 'Handle Allowlist', 'gm2-wordpress-suite' ) . '</th><td><select name="ae_js_dequeue_allowlist[]" multiple size="10" style="min-width:200px;">';
 foreach ($registered as $handle) {
     echo '<option value="' . esc_attr($handle) . '" ' . selected(in_array($handle, $allow, true), true, false) . '>' . esc_html($handle) . '</option>';

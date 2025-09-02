@@ -58,6 +58,7 @@ class Gm2_SEO_Admin {
         add_option('ae_js_debug_log', '0');
         add_option('ae_js_auto_dequeue', '0');
         add_option('ae_js_respect_safe_mode', '0');
+        add_option('ae_js_nomodule_legacy', '0');
         add_option('ae_js_dequeue_allowlist', []);
         add_option('ae_js_dequeue_denylist', []);
 
@@ -3014,6 +3015,9 @@ class Gm2_SEO_Admin {
 
         $safe = isset($_POST['ae_js_respect_safe_mode']) ? '1' : '0';
         update_option('ae_js_respect_safe_mode', $safe);
+
+        $nomodule = isset($_POST['ae_js_nomodule_legacy']) ? '1' : '0';
+        update_option('ae_js_nomodule_legacy', $nomodule);
 
         $allow = isset($_POST['ae_js_dequeue_allowlist']) ? $this->sanitize_handle_array((array) $_POST['ae_js_dequeue_allowlist']) : [];
         update_option('ae_js_dequeue_allowlist', $allow);

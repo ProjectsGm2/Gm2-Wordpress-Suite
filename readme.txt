@@ -103,7 +103,7 @@ Enable performance modules from **SEO → Performance → Render Optimizer**. Av
 
 * Critical CSS with allow/deny lists and optional manual overrides.
 * JavaScript deferral with an enable toggle, handle and domain allow/deny lists, a "Respect in footer" option, and automatic inline dependency and jQuery detection.
-* Differential serving of modern and legacy JavaScript bundles using `<script type="module" crossorigin="anonymous">` and `<script nomodule crossorigin="anonymous">`. This feature is enabled by default via `ae_seo_ro_enable_diff_serving`, and module scripts stay blocking when deferral is active.
+* Differential serving of modern and legacy JavaScript bundles using `<script type="module" crossorigin="anonymous">` and `<script nomodule crossorigin="anonymous">`. This feature is enabled by default via `ae_seo_ro_enable_diff_serving`, and module scripts stay blocking when deferral is active. The legacy bundle can be toggled via the "Send Legacy (nomodule) Bundle" setting (`ae_js_nomodule_legacy`).
 * Combination and minification of local CSS and JS assets with per-type toggles, size caps and exclusion lists.
 
 === Critical CSS ===

@@ -33,7 +33,7 @@ class AE_SEO_Main_Diff_Serving {
         // Register scripts.
         wp_register_script('ae-main-modern', $base . 'ae-main.modern.js', [], $ver, true);
 
-        $load_legacy = get_option('ae_js_nomodule_legacy', '1') === '1';
+        $load_legacy = get_option('ae_js_nomodule_legacy', '0') === '1';
         if ($load_legacy) {
             wp_register_script('ae-main-legacy', $base . 'ae-main.legacy.js', [], $ver, true);
         }
