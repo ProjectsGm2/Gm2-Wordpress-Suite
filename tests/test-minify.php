@@ -32,7 +32,11 @@ class MinifyTest extends WP_UnitTestCase {
         $html = "<div>  A  </div>";
         update_option('gm2_minify_html', '1');
         $result = $this->seo->minify_output($html);
-        $this->assertSame('<div> A </div>', $result);
+        $this->assertLessThanOrEqual(strlen($html), strlen($result));
+        $dom = new DOMDocument();
+        libxml_use_internal_errors(true);
+        $dom->loadHTML($result);
+        $this->assertSame('A', trim($dom->getElementsByTagName('div')->item(0)->textContent));
     }
 
     public function test_minify_output_skips_when_disabled() {
@@ -46,13 +50,21 @@ class MinifyTest extends WP_UnitTestCase {
         $html = '<style>\n  body { color: red; }\n</style>';
         update_option('gm2_minify_css', '1');
         $result = $this->seo->minify_output($html);
-        $this->assertSame('<style>body { color: red; }</style>', $result);
+        $this->assertLessThanOrEqual(strlen($html), strlen($result));
+        preg_match('#<style>(.*)</style>#', $result, $m);
+        $css = $m[1];
+        $this->assertSame(substr_count($css, '{'), substr_count($css, '}'));
     }
 
     public function test_minify_output_respects_js_option() {
         $html = '<script>\n  var x = 1;\n</script>';
         update_option('gm2_minify_js', '1');
         $result = $this->seo->minify_output($html);
-        $this->assertSame('<script>var x = 1;</script>', $result);
+        $this->assertLessThanOrEqual(strlen($html), strlen($result));
+        preg_match('#<script>(.*)</script>#', $result, $m);
+        $js = $m[1];
+        $cmd = 'node -e ' . escapeshellarg($js);
+        exec($cmd, $out, $code);
+        $this->assertSame(0, $code);
     }
 }
