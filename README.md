@@ -152,7 +152,7 @@ The Render Optimizer groups several front-end performance features behind **SEO 
 
 * Inline critical CSS and preload full stylesheets.
 * Defer or async scripts with an enable toggle plus handle and domain allow/deny lists.
-* Serve modern and legacy JavaScript bundles using `<script type="module" crossorigin="anonymous">` and `<script nomodule crossorigin="anonymous">`. Differential serving is enabled by default (`ae_seo_ro_enable_diff_serving`), and module scripts remain blocking even when JS deferral is active.
+* Serve modern and legacy JavaScript bundles using `<script type="module" crossorigin="anonymous">` and `<script nomodule crossorigin="anonymous">`. Differential serving is enabled by default (`ae_seo_ro_enable_diff_serving`), and module scripts remain blocking even when JS deferral is active. The legacy ES5 bundle can be toggled via the "Send Legacy (nomodule) Bundle" setting (`ae_js_nomodule_legacy`).
 * Combine and minify local CSS and JS assets with per-type toggles, size caps and exclusion lists.
 
 ### Critical CSS
