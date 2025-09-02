@@ -25,17 +25,17 @@ class Gm2_Schema_Audit_CLI extends \WP_CLI_Command {
             $missing = $this->get_missing_fields( $id );
             if ( $missing ) {
                 $issues++;
-                \WP_CLI::line( sprintf( 'Product %d: %s', $id, get_permalink( $id ) ) );
+                \WP_CLI::line( sprintf( __( 'Product %1$d: %2$s', 'gm2-wordpress-suite' ), $id, get_permalink( $id ) ) );
                 foreach ( $missing as $field ) {
-                    \WP_CLI::line( sprintf( '  - Missing %s. %s', $field, $this->recommendation( $field ) ) );
+                    \WP_CLI::line( sprintf( __( '  - Missing %s. %s', 'gm2-wordpress-suite' ), $field, $this->recommendation( $field ) ) );
                 }
             }
         }
 
         if ( $issues ) {
-            \WP_CLI::warning( sprintf( '%d products have schema issues.', $issues ) );
+            \WP_CLI::warning( sprintf( __( '%d products have schema issues.', 'gm2-wordpress-suite' ), $issues ) );
         } else {
-            \WP_CLI::success( 'All products have required schema fields.' );
+            \WP_CLI::success( __( 'All products have required schema fields.', 'gm2-wordpress-suite' ) );
         }
     }
 
@@ -85,15 +85,15 @@ class Gm2_Schema_Audit_CLI extends \WP_CLI_Command {
     protected function recommendation( $field ) {
         switch ( $field ) {
             case 'name':
-                return 'Add a product title.';
+                return __( 'Add a product title.', 'gm2-wordpress-suite' );
             case 'price':
-                return 'Set a price in product metadata.';
+                return __( 'Set a price in product metadata.', 'gm2-wordpress-suite' );
             case 'availability':
-                return 'Specify stock status or quantity.';
+                return __( 'Specify stock status or quantity.', 'gm2-wordpress-suite' );
             case 'SKU':
-                return 'Assign a unique SKU.';
+                return __( 'Assign a unique SKU.', 'gm2-wordpress-suite' );
             case 'brand':
-                return 'Provide a brand name.';
+                return __( 'Provide a brand name.', 'gm2-wordpress-suite' );
             default:
                 return '';
         }

@@ -46,18 +46,18 @@ class AE_SEO_Critical_CLI extends \WP_CLI_Command {
         set_transient( 'ae_seo_ro_critical_job', $urls, 12 * HOUR_IN_SECONDS );
 
         if ( ! function_exists( 'shell_exec' ) ) {
-            \WP_CLI::error( 'shell_exec is not available.' );
+            \WP_CLI::error( __( 'shell_exec is not available.', 'gm2-wordpress-suite' ) );
         }
         $critical = shell_exec( 'which critical' );
         if ( empty( trim( $critical ) ) ) {
-            \WP_CLI::error( 'critical CLI not found. Install with `npm install -g critical`.' );
+            \WP_CLI::error( __( 'critical CLI not found. Install with `npm install -g critical`.', 'gm2-wordpress-suite' ) );
         }
 
         $css_map = get_option( 'ae_seo_ro_critical_css_map', [] );
         foreach ( $urls as $data ) {
             $url     = $data['url'];
             $context = $data['context'];
-            \WP_CLI::log( 'Processing ' . $url );
+            \WP_CLI::log( sprintf( __( 'Processing %s', 'gm2-wordpress-suite' ), $url ) );
             $cmd = 'critical ' . escapeshellarg( $url ) . ' --inline=false --minify';
             $css = shell_exec( $cmd );
             if ( ! isset( $css_map[ $context ] ) ) {
@@ -66,7 +66,7 @@ class AE_SEO_Critical_CLI extends \WP_CLI_Command {
             $css_map[ $context ][ md5( $url ) ] = $css;
         }
         update_option( 'ae_seo_ro_critical_css_map', $css_map );
-        \WP_CLI::success( 'Critical CSS build complete.' );
+        \WP_CLI::success( __( 'Critical CSS build complete.', 'gm2-wordpress-suite' ) );
     }
 }
 
