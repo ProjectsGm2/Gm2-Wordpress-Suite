@@ -21,19 +21,36 @@ class AE_SEO_JS_Manager {
     private array $map = [];
 
     /**
+     * Whether the JS manager should be disabled for this request.
+     *
+     * @var bool
+     */
+    private static bool $disabled = false;
+
+    /**
      * Bootstrap the manager.
      */
     public static function init(): void {
         if (isset($_GET['aejs']) && $_GET['aejs'] === 'off') {
-            return;
+            self::$disabled = true;
         }
         (new self())->run();
+    }
+
+    /**
+     * Determine if the manager is disabled for this request.
+     */
+    public static function is_disabled(): bool {
+        return self::$disabled;
     }
 
     /**
      * Load configuration and set up hooks.
      */
     public function run(): void {
+        if (self::is_disabled()) {
+            return;
+        }
         $this->map = $this->ae_seo_load_map();
         add_action('wp_enqueue_scripts', [ $this, 'ae_seo_enqueue_scripts' ], 0);
         add_filter('script_loader_tag', [ $this, 'ae_seo_script_loader_tag' ], 10, 3);
@@ -72,6 +89,9 @@ class AE_SEO_JS_Manager {
      * @return void
      */
     public function ae_seo_enqueue_scripts(): void {
+        if (self::is_disabled()) {
+            return;
+        }
         foreach ($this->map as $handle => $config) {
             $src = '';
             if (is_string($config)) {
@@ -105,6 +125,9 @@ class AE_SEO_JS_Manager {
      * @return string
      */
     public function ae_seo_script_loader_tag(string $tag, string $handle, string $src): string {
+        if (self::is_disabled()) {
+            return $tag;
+        }
         $lazy = false;
         if (isset($this->map[$handle]) && is_array($this->map[$handle])) {
             $lazy = !empty($this->map[$handle]['lazy']);
@@ -124,7 +147,7 @@ class AE_SEO_JS_Manager {
  * @param string $message Log message.
  */
 function ae_seo_js_log(string $message): void {
-    if (get_option('ae_js_debug_log', '0') !== '1') {
+    if (AE_SEO_JS_Manager::is_disabled() || get_option('ae_js_debug_log', '0') !== '1') {
         return;
     }
     $dir = WP_CONTENT_DIR . '/ae-seo/logs';
