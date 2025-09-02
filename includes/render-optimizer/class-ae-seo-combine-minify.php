@@ -65,6 +65,7 @@ class AE_SEO_Combine_Minify {
     public function combine_styles($handles) {
         global $wp_styles;
         $local       = [];
+        $media       = [];
         $total       = 0;
         $file_limit  = (int) get_option('ae_seo_ro_combine_file_kb', 60) * 1024;
         $bundle_cap  = (int) get_option('ae_seo_ro_combine_css_kb', 300) * 1024;
@@ -75,6 +76,9 @@ class AE_SEO_Combine_Minify {
                 continue;
             }
             if ($this->is_excluded($h, $obj->src)) {
+                continue;
+            }
+            if (!empty($obj->extra['integrity']) || !empty($obj->extra['crossorigin'])) {
                 continue;
             }
             if ($this->is_local($obj->src)) {
@@ -91,6 +95,7 @@ class AE_SEO_Combine_Minify {
                 }
                 $total   += $size;
                 $local[] = $h;
+                $media[] = $obj->args ? $obj->args : 'all';
             }
         }
 
@@ -103,8 +108,31 @@ class AE_SEO_Combine_Minify {
             return $handles;
         }
 
+        $unique_media = array_unique(array_map(function ($m) {
+            return $m ?: 'all';
+        }, $media));
+        $bundle_media = (count($unique_media) === 1) ? $unique_media[0] : 'all';
+
         $handle = 'ae-seo-combined-css';
-        wp_enqueue_style($handle, $src, [], null);
+        wp_enqueue_style($handle, $src, [], null, $bundle_media);
+
+        if (class_exists('AE_SEO_Render_Optimizer') && class_exists('AE_SEO_Critical_CSS')) {
+            $method = AE_SEO_Render_Optimizer::get_option(AE_SEO_Critical_CSS::OPTION_ASYNC_METHOD, 'preload_onload');
+            if ($method === 'preload_onload') {
+                add_filter('style_loader_tag', function ($html, $handle_tag, $href, $media_attr) use ($handle) {
+                    if ($handle_tag !== $handle) {
+                        return $html;
+                    }
+                    return sprintf(
+                        '<link rel="preload" as="style" href="%s" media="%s" onload="this.onload=null;this.rel=\'stylesheet\'"><noscript><link rel="stylesheet" href="%s" media="%s"></noscript>',
+                        esc_url($href),
+                        esc_attr($media_attr ?: 'all'),
+                        esc_url($href),
+                        esc_attr($media_attr ?: 'all')
+                    );
+                }, 10, 4);
+            }
+        }
         foreach ($local as $h) {
             wp_dequeue_style($h);
         }
