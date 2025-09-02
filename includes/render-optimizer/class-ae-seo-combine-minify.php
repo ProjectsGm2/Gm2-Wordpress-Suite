@@ -9,6 +9,12 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+// Load composer autoloader for third-party libraries.
+$autoload = dirname(__DIR__, 2) . '/vendor/autoload.php';
+if (file_exists($autoload)) {
+    require_once $autoload;
+}
+
 /**
  * Combines and minifies CSS/JS assets.
  */
@@ -170,10 +176,10 @@ class AE_SEO_Combine_Minify {
     }
 
     private function build_combined_file($handles, $type) {
-        $parts   = [];
-        $content = '';
+        $parts = [];
         if ($type === 'css') {
             global $wp_styles;
+            $minifier = new \MatthiasMullie\Minify\CSS();
             foreach ($handles as $h) {
                 $obj = $wp_styles->registered[$h];
                 $path = $this->local_path($obj->src);
@@ -181,11 +187,11 @@ class AE_SEO_Combine_Minify {
                     continue;
                 }
                 $parts[] = $path . '|' . filemtime($path);
-                $content .= file_get_contents($path) . "\n";
+                $minifier->add($path);
             }
-            $wrapped = '<style>' . $content . '</style>';
         } else {
             global $wp_scripts;
+            $minifier = new \MatthiasMullie\Minify\JS();
             foreach ($handles as $h) {
                 $obj = $wp_scripts->registered[$h];
                 $path = $this->local_path($obj->src);
@@ -193,36 +199,22 @@ class AE_SEO_Combine_Minify {
                     continue;
                 }
                 $parts[] = $path . '|' . filemtime($path);
-                $content .= file_get_contents($path) . ";\n";
+                $minifier->add($path);
             }
-            $wrapped = '<script>' . $content . '</script>';
         }
 
         if (empty($parts)) {
             return '';
         }
 
-        $key       = md5(implode(',', $parts));
-        $upload    = wp_upload_dir();
-        $dir       = trailingslashit($upload['basedir']) . 'ae-seo/optimizer/' . $key . '/';
-        $filename  = ($type === 'css') ? 'app.css' : 'app.js';
-        $file      = $dir . $filename;
+        $key      = md5(implode(',', $parts));
+        $upload   = wp_upload_dir();
+        $dir      = trailingslashit($upload['basedir']) . 'ae-seo/optimizer/' . $key . '/';
+        $filename = ($type === 'css') ? 'app.css' : 'app.js';
+        $file     = $dir . $filename;
         if (!file_exists($file)) {
             wp_mkdir_p($dir);
-            if ($type === 'css') {
-                add_filter('pre_option_gm2_minify_css', '__return_true');
-            } else {
-                add_filter('pre_option_gm2_minify_js', '__return_true');
-            }
-            $min = (new \Gm2\Gm2_SEO_Public())->minify_output($wrapped);
-            if ($type === 'css') {
-                remove_filter('pre_option_gm2_minify_css', '__return_true');
-            } else {
-                remove_filter('pre_option_gm2_minify_js', '__return_true');
-            }
-            $min = preg_replace('#^<' . $type . '>#', '', $min);
-            $min = preg_replace('#</' . $type . '>$#', '', $min);
-            file_put_contents($file, $min);
+            $minifier->minify($file);
         }
         return trailingslashit($upload['baseurl']) . 'ae-seo/optimizer/' . $key . '/' . $filename;
     }
