@@ -52,6 +52,10 @@ class Gm2_SEO_Admin {
         add_option('ae_seo_ro_defer_deny_domains', '');
         add_option('ae_seo_ro_defer_respect_in_footer', '0');
         add_option('ae_seo_ro_defer_preserve_jquery', '1');
+        add_option('ae_js_enable_manager', '0');
+        add_option('ae_js_lazy_load', '0');
+        add_option('ae_js_replacements', '0');
+        add_option('ae_js_debug_log', '0');
 
         add_action('admin_menu', [$this, 'add_settings_pages']);
         add_action('add_meta_boxes', [$this, 'register_meta_boxes']);
@@ -86,6 +90,7 @@ class Gm2_SEO_Admin {
         add_action('admin_post_gm2_export_settings', [$this, 'handle_export_settings']);
         add_action('admin_post_gm2_import_settings', [$this, 'handle_import_settings']);
         add_action('admin_post_gm2_render_optimizer_settings', [$this, 'handle_render_optimizer_form']);
+        add_action('admin_post_gm2_js_optimizer_settings', [$this, 'handle_js_optimizer_form']);
 
         add_action('wp_ajax_gm2_purge_critical_css', [$this, 'ajax_purge_critical_css']);
         add_action('wp_ajax_gm2_purge_js_map', [$this, 'ajax_purge_js_map']);
@@ -536,6 +541,18 @@ class Gm2_SEO_Admin {
             'sanitize_callback' => 'sanitize_key',
         ]);
         register_setting('gm2_seo_options', 'ae_seo_ro_critical_css_exclusions', [
+            'sanitize_callback' => 'sanitize_text_field',
+        ]);
+        register_setting('gm2_seo_options', 'ae_js_enable_manager', [
+            'sanitize_callback' => 'sanitize_text_field',
+        ]);
+        register_setting('gm2_seo_options', 'ae_js_lazy_load', [
+            'sanitize_callback' => 'sanitize_text_field',
+        ]);
+        register_setting('gm2_seo_options', 'ae_js_replacements', [
+            'sanitize_callback' => 'sanitize_text_field',
+        ]);
+        register_setting('gm2_seo_options', 'ae_js_debug_log', [
             'sanitize_callback' => 'sanitize_text_field',
         ]);
         register_setting('gm2_seo_options', 'gm2_tax_desc_prompt', [
@@ -994,6 +1011,7 @@ class Gm2_SEO_Admin {
             $perf_tabs = [
                 '' => esc_html__( 'General', 'gm2-wordpress-suite' ),
                 'render-optimizer' => esc_html__( 'Render Optimizer', 'gm2-wordpress-suite' ),
+                'javascript' => esc_html__( 'JavaScript', 'gm2-wordpress-suite' ),
             ];
             echo '<h2 class="nav-tab-wrapper">';
             foreach ($perf_tabs as $slug => $label) {
@@ -1005,6 +1023,8 @@ class Gm2_SEO_Admin {
 
             if ($subtab === 'render-optimizer') {
                 require GM2_PLUGIN_DIR . 'admin/views/settings-render-optimizer.php';
+            } elseif ($subtab === 'javascript') {
+                require GM2_PLUGIN_DIR . 'admin/views/settings-js-optimizer.php';
             } else {
                 $auto_fill = get_option('gm2_auto_fill_alt', '0');
                 $clean_files = get_option('gm2_clean_image_filenames', '0');
@@ -2935,6 +2955,31 @@ class Gm2_SEO_Admin {
         update_option('ae_seo_ro_enable_combine_js', $combine_js);
 
         wp_redirect(admin_url('admin.php?page=gm2-seo&tab=performance&subtab=render-optimizer&updated=1'));
+        exit;
+    }
+
+    public function handle_js_optimizer_form() {
+        if (!current_user_can('manage_options')) {
+            wp_die( esc_html__( 'Permission denied', 'gm2-wordpress-suite' ) );
+        }
+
+        if (empty($_POST['gm2_js_optimizer_nonce']) || !wp_verify_nonce($_POST['gm2_js_optimizer_nonce'], 'gm2_js_optimizer_save')) {
+            wp_die( esc_html__( 'Invalid nonce', 'gm2-wordpress-suite' ) );
+        }
+
+        $enable = isset($_POST['ae_js_enable_manager']) ? '1' : '0';
+        update_option('ae_js_enable_manager', $enable);
+
+        $lazy = isset($_POST['ae_js_lazy_load']) ? '1' : '0';
+        update_option('ae_js_lazy_load', $lazy);
+
+        $replacements = isset($_POST['ae_js_replacements']) ? '1' : '0';
+        update_option('ae_js_replacements', $replacements);
+
+        $debug = isset($_POST['ae_js_debug_log']) ? '1' : '0';
+        update_option('ae_js_debug_log', $debug);
+
+        wp_redirect(admin_url('admin.php?page=gm2-seo&tab=performance&subtab=javascript&updated=1'));
         exit;
     }
 
