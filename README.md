@@ -187,6 +187,21 @@ Use the **Purge Critical CSS** and **Purge JS Map** buttons on the Render Optimi
 
 To confirm differential serving, open the site in a modern browser and ensure only the `optimizer-modern.js` module bundle executes. Test again in an older or emulated legacy browser and verify only `optimizer-legacy.js` runs.
 
+### Runtime Filters
+
+The Render Optimizer can be toggled at runtime with two filters:
+
+* `ae_seo_ro_enable_for_logged_in` &mdash; return `true` to process optimizer features for logged-in users instead of skipping them. This allows administrators to see the front end exactly as visitors do.
+* `ae_seo_ro_skip_url` &mdash; receives the current URL and lets you bypass optimization on matching paths, such as preview pages.
+
+### AJAX Purge Buttons
+
+Four buttons on the Render Optimizer screen issue AJAX requests to clear caches: **Purge & Rebuild Critical CSS**, **Purge & Rebuild JS Map**, **Purge Combined Assets**, and **Clear Diagnostics**. Each action verifies the caller has the `manage_options` capability and returns an escaped confirmation message. Purging Critical CSS also resets the JS map and combined asset cache, while purging the JS map clears its dependencies. Purging combined assets flushes generated bundles and related maps, and clearing diagnostics removes any logged entries.
+
+### Optimizer Diagnostics Panel
+
+The diagnostic table lists request-level logs for optimizer decisions with columns for type, handle, bundle and reason. Use it to determine why a script or style was bundled, deferred or skipped. All output is escaped for safety, and the **Clear Diagnostics** button (also requiring `manage_options`) resets the log so a fresh page load repopulates it.
+
 The optimizer automatically disables its features when popular optimization plugins like WP&nbsp;Rocket, Autoptimize or Perfmatters are active. If WordPress's `is_plugin_active()` helper isn't available, the conflict check is skipped to avoid errors. Only one optimization plugin should run at a time.
 
 After adjusting the source files in `assets/src/optimizer`, rebuild the distributed scripts as noted in [Rebuilding Optimizer assets](#rebuilding-optimizer-assets).

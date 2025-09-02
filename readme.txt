@@ -127,6 +127,18 @@ Use **Purge Critical CSS** and **Purge JS Map** on the Render Optimizer screen a
 
 For differential serving, open the site in a modern browser and confirm only `optimizer-modern.js` runs. Repeat in an older or emulated legacy browser to ensure just `optimizer-legacy.js` executes.
 
+=== Runtime Filters ===
+The optimizer behavior can be customized with two filters:
+
+* `ae_seo_ro_enable_for_logged_in` – return `true` to run optimizer features for logged-in users instead of skipping them.
+* `ae_seo_ro_skip_url` – receives the current URL and allows bypassing optimization for matching paths.
+
+=== AJAX Purge Buttons ===
+**Purge & Rebuild Critical CSS**, **Purge & Rebuild JS Map**, **Purge Combined Assets**, and **Clear Diagnostics** buttons send AJAX requests to clear related caches. Each action requires the `manage_options` capability and replies with an escaped confirmation. Purging Critical CSS also resets the JS map and combined asset cache, purging the JS map clears its dependencies, purging combined assets flushes generated bundles and maps, and clearing diagnostics removes logged entries.
+
+=== Optimizer Diagnostics ===
+The diagnostics table lists optimizer decisions with columns for type, handle, bundle and reason. Use it to understand why assets were bundled, deferred or skipped. Output is escaped, and the **Clear Diagnostics** button—also restricted to `manage_options`—wipes the log so a fresh page load repopulates it.
+
 If WP Rocket, Autoptimize, Perfmatters or other optimizer plugins are active, the subsystem automatically disables its features and displays a warning. Only one optimization plugin should run at a time.
 
 == SEO Performance CLI ==
