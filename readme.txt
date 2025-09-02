@@ -29,7 +29,7 @@ Key features include:
 * Automatically writes long-lived cache headers to `.htaccess` on Apache and LiteSpeed
 * Remote mirror for vendor scripts like Facebook Pixel and gtag with SRI hashes and a daily refresh
 * Script Attributes manager with dependency-aware “Defer all third-party” and “Conservative” presets
-* Render Optimizer for critical CSS, JS deferral with handle/domain allow and deny lists plus inline dependency and jQuery auto-detection, differential serving, and asset combination/minification
+* Render Optimizer for critical CSS, JS deferral with handle/domain allow and deny lists plus inline dependency and jQuery auto-detection, differential serving, and optional asset combination/minification with size limits and purge controls
 
 == Installation ==
 1. Upload the plugin files to the `/wp-content/plugins/gm2-wordpress-suite` directory.
@@ -103,7 +103,7 @@ Enable performance modules from **SEO → Performance → Render Optimizer**. Av
 * Critical CSS with allow/deny lists and optional manual overrides.
 * JavaScript deferral with an enable toggle, handle and domain allow/deny lists, a "Respect in footer" option, and automatic inline dependency and jQuery detection.
 * Differential serving of modern and legacy JavaScript bundles using `<script type="module" crossorigin="anonymous">` and `<script nomodule crossorigin="anonymous">`. This feature is enabled by default via `ae_seo_ro_enable_diff_serving`, and module scripts stay blocking when deferral is active.
-* Combination and minification of local CSS and JS assets.
+* Combination and minification of local CSS and JS assets with per-type toggles, size caps and exclusion lists.
 
 === Critical CSS ===
 Inline above-the-fold styles and load full stylesheets asynchronously.
@@ -118,6 +118,9 @@ Inline above-the-fold styles and load full stylesheets asynchronously.
 
 === JavaScript Deferral ===
 Toggle script deferral on or off and maintain allow and deny lists for specific handles and hostnames. Example analytics domains include `www.googletagmanager.com` and `www.google.com/recaptcha`. The **Respect in footer** setting keeps footer scripts in place unless allowlisted. Inline blocks are scanned to detect dependencies automatically and jQuery stays blocking when early inline usage is detected.
+
+=== Combination and Minification ===
+Toggle CSS and JS combination separately. Local files under the per-file limit are merged until a bundle size cap is reached. Provide handle and domain exclusion lists or regex patterns to keep assets separate. Generated bundles live in `wp-content/uploads/ae-seo/optimizer/`, and a **Purge Combined Files** button deletes them. Combining assets can break scripts and yields little benefit on HTTP/2 or HTTP/3 servers.
 
 === Purge and acceptance testing ===
 Use **Purge Critical CSS** and **Purge JS Map** on the Render Optimizer screen after changing themes or deferral settings. Clear any page, server or CDN caches and acceptance-test the site: load key pages, check the browser console and verify forms, logins and checkout flows work.

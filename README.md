@@ -153,7 +153,7 @@ The Render Optimizer groups several front-end performance features behind **SEO 
 * Inline critical CSS and preload full stylesheets.
 * Defer or async scripts with an enable toggle plus handle and domain allow/deny lists.
 * Serve modern and legacy JavaScript bundles using `<script type="module" crossorigin="anonymous">` and `<script nomodule crossorigin="anonymous">`. Differential serving is enabled by default (`ae_seo_ro_enable_diff_serving`), and module scripts remain blocking even when JS deferral is active.
-* Combine and minify local CSS and JS assets.
+* Combine and minify local CSS and JS assets with per-type toggles, size caps and exclusion lists.
 
 ### Critical CSS
 
@@ -176,6 +176,10 @@ Provide handles or patterns to skip. Editor, dashicons, admin-bar and WooCommerc
 ### JavaScript Deferral
 
 Toggle script deferral on or off and maintain allow and deny lists for specific handles and hostnames. List analytics domains like `www.googletagmanager.com` or `www.google.com/recaptcha` to always load asynchronously. The **Respect in footer** option keeps footer scripts at the bottom unless allowlisted. Inline blocks are parsed to detect dependencies automatically and jQuery remains blocking when early inline usage is detected.
+
+### Combination and Minification
+
+Toggle CSS and JS combination independently. Local files under the per‑file size limit are merged until a bundle cap is reached, and handles, hostnames or regex patterns in the exclusion lists remain separate. Generated bundles are stored in `wp-content/uploads/ae-seo/optimizer/`, and a **Purge Combined Files** button removes them. Combining assets may cause compatibility issues and offers little benefit on HTTP/2 or HTTP/3 servers.
 
 **Purge workflow**
 
