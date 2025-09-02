@@ -103,7 +103,9 @@ class AE_SEO_JS_Manager {
             if ($src === '') {
                 continue;
             }
-            $allow = apply_filters('ae_seo/js/enqueue_decision', true, $handle, $src);
+            $ctx = AE_SEO_JS_Detector::get_current_context();
+            $ctx['src'] = $src;
+            $allow = apply_filters('ae_seo/js/enqueue_decision', true, $handle, $ctx);
             if (!$allow) {
                 ae_seo_js_log('skip ' . $handle);
                 continue;
