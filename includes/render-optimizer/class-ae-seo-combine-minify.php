@@ -29,6 +29,15 @@ class AE_SEO_Combine_Minify {
         if (is_admin() || $this->other_optimizers_active()) {
             return;
         }
+        // Skip combining during customizer, builder previews or when caching is disabled.
+        if (
+            isset($_GET['customize_changeset_uuid']) ||
+            isset($_GET['elementor-preview']) ||
+            isset($_GET['fl_builder']) ||
+            (defined('DONOTCACHEPAGE') && DONOTCACHEPAGE)
+        ) {
+            return;
+        }
         if (get_option('ae_seo_ro_enable_combine_css', '0') === '1') {
             add_filter('print_styles_array', [ $this, 'combine_styles' ], 20);
         }
@@ -49,13 +58,32 @@ class AE_SEO_Combine_Minify {
 
     public function combine_styles($handles) {
         global $wp_styles;
-        $local = [];
+        $local       = [];
+        $total       = 0;
+        $file_limit  = (int) get_option('ae_seo_ro_combine_file_kb', 60) * 1024;
+        $bundle_cap  = (int) get_option('ae_seo_ro_combine_css_kb', 300) * 1024;
+
         foreach ($handles as $h) {
             $obj = $wp_styles->registered[$h] ?? null;
             if (!$obj) {
                 continue;
             }
+            if ($this->is_excluded($h, $obj->src)) {
+                continue;
+            }
             if ($this->is_local($obj->src)) {
+                $path = $this->local_path($obj->src);
+                if (!file_exists($path)) {
+                    continue;
+                }
+                $size = filesize($path);
+                if ($size === false || $size > $file_limit) {
+                    continue;
+                }
+                if ($total + $size > $bundle_cap) {
+                    continue;
+                }
+                $total   += $size;
                 $local[] = $h;
             }
         }
@@ -82,13 +110,40 @@ class AE_SEO_Combine_Minify {
 
     public function combine_scripts($handles) {
         global $wp_scripts;
-        $local = [];
+        $local       = [];
+        $total       = 0;
+        $file_limit  = (int) get_option('ae_seo_ro_combine_file_kb', 60) * 1024;
+        $bundle_cap  = (int) get_option('ae_seo_ro_combine_js_kb', 300) * 1024;
+        $group       = null;
+
         foreach ($handles as $h) {
             $obj = $wp_scripts->registered[$h] ?? null;
             if (!$obj) {
                 continue;
             }
+            if ($this->is_excluded($h, $obj->src)) {
+                continue;
+            }
+            $current_group = $wp_scripts->groups[$h] ?? 0;
+            if ($group === null) {
+                $group = $current_group;
+            }
+            if ($current_group !== $group) {
+                continue;
+            }
             if ($this->is_local($obj->src)) {
+                $path = $this->local_path($obj->src);
+                if (!file_exists($path)) {
+                    continue;
+                }
+                $size = filesize($path);
+                if ($size === false || $size > $file_limit) {
+                    continue;
+                }
+                if ($total + $size > $bundle_cap) {
+                    continue;
+                }
+                $total   += $size;
                 $local[] = $h;
             }
         }
@@ -102,8 +157,8 @@ class AE_SEO_Combine_Minify {
             return $handles;
         }
 
-        $handle = 'ae-seo-combined-js';
-        $in_footer = isset($wp_scripts->groups[$local[0]]) && $wp_scripts->groups[$local[0]] > 0;
+        $handle   = 'ae-seo-combined-js';
+        $in_footer = $group !== null && $group > 0;
         wp_enqueue_script($handle, $src, [], null, $in_footer);
         foreach ($local as $h) {
             wp_dequeue_script($h);
@@ -169,6 +224,45 @@ class AE_SEO_Combine_Minify {
             file_put_contents($file, $min);
         }
         return content_url('cache/ae-seo/' . $key . '.' . $type);
+    }
+
+    private function get_list_option($option, $default = '') {
+        $value = get_option($option, $default);
+        if (is_array($value)) {
+            $list = $value;
+        } else {
+            $list = preg_split('/[\r\n,]+/', (string) $value);
+        }
+        return array_filter(array_map('trim', $list));
+    }
+
+    private function is_excluded($handle, $src) {
+        $handles = $this->get_list_option('ae_seo_ro_combine_exclude_handles', 'woocommerce*,elementor*');
+        foreach ($handles as $pattern) {
+            if (fnmatch($pattern, $handle)) {
+                return true;
+            }
+        }
+        $domains = $this->get_list_option('ae_seo_ro_combine_exclude_domains');
+        $host    = parse_url($src, PHP_URL_HOST);
+        if ($host) {
+            foreach ($domains as $pattern) {
+                if (fnmatch($pattern, $host)) {
+                    return true;
+                }
+            }
+        }
+        $regexes = $this->get_list_option('ae_seo_ro_combine_exclude_patterns');
+        foreach ($regexes as $regex) {
+            $regex = trim($regex);
+            if ($regex === '') {
+                continue;
+            }
+            if (@preg_match('#' . $regex . '#', $handle) || @preg_match('#' . $regex . '#', $src)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private function is_local($src) {
