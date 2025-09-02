@@ -114,7 +114,16 @@ Inline above-the-fold styles and load full stylesheets asynchronously.
 * Async methods:
   * `preload_onload` – outputs a `<link rel="preload">` tag that swaps to `rel="stylesheet"` with a `<noscript>` fallback.
   * `media_print` – starts with `media="print"` and switches to `all` on load.
-  * Exclusions – provide handles to skip; editor, dashicons, admin-bar and WooCommerce inline styles are ignored automatically.
+* Exclusions – provide handles to skip; editor, dashicons, admin-bar and WooCommerce inline styles are ignored automatically.
+
+=== Critical CSS CLI ===
+Generate critical CSS from the command line:
+
+`wp ae-seo critical:build`
+
+The command queues home, archive and recent single URLs in the `ae_seo_ro_critical_job` transient and invokes the Node `critical` package via `shell_exec`. Install it globally with `npm i -g critical`.
+
+Each run populates the `ae_seo_ro_critical_css_map` option and runs only from the CLI, never during front-end requests. If results become stale, clear the transient or delete the map—using **Purge Critical CSS** or WP-CLI—to rebuild.
 
 === JavaScript Deferral ===
 Toggle script deferral on or off and maintain allow and deny lists for specific handles and hostnames. Example analytics domains include `www.googletagmanager.com` and `www.google.com/recaptcha`. The **Respect in footer** setting keeps footer scripts in place unless allowlisted. Inline blocks are scanned to detect dependencies automatically and jQuery stays blocking when early inline usage is detected.

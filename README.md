@@ -173,6 +173,22 @@ Inline above-the-fold styles and load remaining CSS asynchronously.
 
 Provide handles or patterns to skip. Editor, dashicons, admin-bar and WooCommerce inline styles are ignored automatically.
 
+### Critical CSS CLI Build
+
+Generate and refresh critical CSS from the command line:
+
+```bash
+wp ae-seo critical:build
+```
+
+The command queues home, archive and recent single URLs in the `ae_seo_ro_critical_job` transient and invokes the Node `critical` package via `shell_exec`. Install the dependency globally with:
+
+```bash
+npm i -g critical
+```
+
+Each run populates the `ae_seo_ro_critical_css_map` option and never executes during front‑end requests. If snippets become outdated, clear the transient or delete the map—using the **Purge Critical CSS** button or WP‑CLI—to force a rebuild.
+
 ### JavaScript Deferral
 
 Toggle script deferral on or off and maintain allow and deny lists for specific handles and hostnames. List analytics domains like `www.googletagmanager.com` or `www.google.com/recaptcha` to always load asynchronously. The **Respect in footer** option keeps footer scripts at the bottom unless allowlisted. Inline blocks are parsed to detect dependencies automatically and jQuery remains blocking when early inline usage is detected.
