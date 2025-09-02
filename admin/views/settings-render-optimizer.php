@@ -94,7 +94,9 @@ if (!empty($logs)) {
         foreach ($entries as $entry) {
             $handle = esc_html($entry['handle'] ?? '');
             $bundle = esc_html($entry['bundle'] ?? '');
-            $reason = esc_html($entry['reason'] ?? '');
+            $code   = $entry['reason'] ?? '';
+            $label  = method_exists('AE_SEO_Optimizer_Diagnostics', 'reason_label') ? AE_SEO_Optimizer_Diagnostics::reason_label($code) : $code;
+            $reason = esc_html($label);
             echo '<tr><td>' . esc_html($type) . '</td><td>' . $handle . '</td><td>' . $bundle . '</td><td>' . $reason . '</td></tr>';
         }
     }
