@@ -113,6 +113,10 @@ class AE_SEO_Render_Optimizer {
      * @return void
      */
     public function maybe_bootstrap() {
+        if (true === apply_filters('ae_seo_ro_skip_url', false, home_url(add_query_arg([])))) {
+            return;
+        }
+
         if ($this->should_skip() || $this->has_conflicts()) {
             if (!empty($this->conflicts)) {
                 $this->disable_features();
@@ -140,7 +144,14 @@ class AE_SEO_Render_Optimizer {
      * @return bool
      */
     private function should_skip() {
-        if (is_admin() || is_user_logged_in() || wp_doing_ajax() || wp_doing_cron() || (defined('REST_REQUEST') && REST_REQUEST)) {
+        if (
+            is_admin() ||
+            (is_user_logged_in() && false === apply_filters('ae_seo_ro_enable_for_logged_in', false)) ||
+            wp_doing_ajax() ||
+            wp_doing_cron() ||
+            (defined('REST_REQUEST') && REST_REQUEST) ||
+            is_feed()
+        ) {
             return true;
         }
 
