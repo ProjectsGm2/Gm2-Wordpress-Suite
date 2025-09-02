@@ -39,7 +39,8 @@ class Gm2_SEO_Admin {
         add_option('ae_seo_ro_enable_diff_serving', '1');
         add_option('ae_seo_defer_js', '0');
         add_option('ae_seo_diff_serving', '0');
-        add_option('ae_seo_combine_minify', '0');
+        add_option('ae_seo_ro_enable_combine_css', '0');
+        add_option('ae_seo_ro_enable_combine_js', '0');
         add_option('ae_seo_ro_critical_strategy', 'per_home_archive_single');
         add_option('ae_seo_ro_critical_css_map', []);
         add_option('ae_seo_ro_async_css_method', 'preload_onload');
@@ -2921,6 +2922,12 @@ class Gm2_SEO_Admin {
 
         $preserve = isset($_POST['ae_seo_ro_defer_preserve_jquery']) ? '1' : '0';
         update_option('ae_seo_ro_defer_preserve_jquery', $preserve);
+
+        $combine_css = isset($_POST['ae_seo_ro_enable_combine_css']) ? '1' : '0';
+        update_option('ae_seo_ro_enable_combine_css', $combine_css);
+
+        $combine_js = isset($_POST['ae_seo_ro_enable_combine_js']) ? '1' : '0';
+        update_option('ae_seo_ro_enable_combine_js', $combine_js);
 
         wp_redirect(admin_url('admin.php?page=gm2-seo&tab=performance&subtab=render-optimizer&updated=1'));
         exit;

@@ -28,6 +28,8 @@ class AE_SEO_Render_Optimizer {
         AE_SEO_Critical_CSS::OPTION_EXCLUSIONS   => [],
         'ae_seo_ro_enable_diff_serving'          => '1',
         'ae_seo_ro_enable_defer_js'              => '0',
+        'ae_seo_ro_enable_combine_css'          => '0',
+        'ae_seo_ro_enable_combine_js'           => '0',
         'ae_seo_ro_defer_allow_handles'          => '',
         'ae_seo_ro_defer_deny_handles'           => '',
         'ae_seo_ro_defer_allow_domains'          => '',
@@ -122,7 +124,8 @@ class AE_SEO_Render_Optimizer {
             self::get_option(AE_SEO_Critical_CSS::OPTION_ENABLE, '0') !== '1' &&
             get_option('ae_seo_ro_enable_defer_js', '0') !== '1' &&
             get_option('ae_seo_ro_enable_diff_serving', '0') !== '1' &&
-            get_option('ae_seo_combine_minify', '0') !== '1'
+            get_option('ae_seo_ro_enable_combine_css', '0') !== '1' &&
+            get_option('ae_seo_ro_enable_combine_js', '0') !== '1'
         ) {
             return;
         }
@@ -176,7 +179,8 @@ class AE_SEO_Render_Optimizer {
             AE_SEO_Critical_CSS::OPTION_ENABLE,
             'ae_seo_ro_enable_defer_js',
             'ae_seo_ro_enable_diff_serving',
-            'ae_seo_combine_minify',
+            'ae_seo_ro_enable_combine_css',
+            'ae_seo_ro_enable_combine_js',
         ];
 
         foreach ($options as $option) {
@@ -229,7 +233,10 @@ class AE_SEO_Render_Optimizer {
             new AE_SEO_Diff_Serving();
         }
 
-        if (get_option('ae_seo_combine_minify', '0') === '1') {
+        if (
+            get_option('ae_seo_ro_enable_combine_css', '0') === '1' ||
+            get_option('ae_seo_ro_enable_combine_js', '0') === '1'
+        ) {
             require_once __DIR__ . '/class-ae-seo-combine-minify.php';
             new AE_SEO_Combine_Minify();
         }

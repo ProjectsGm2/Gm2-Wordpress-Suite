@@ -29,9 +29,12 @@ class AE_SEO_Combine_Minify {
         if (is_admin() || $this->other_optimizers_active()) {
             return;
         }
-
-        add_filter('print_styles_array', [ $this, 'combine_styles' ], 20);
-        add_filter('print_scripts_array', [ $this, 'combine_scripts' ], 20);
+        if (get_option('ae_seo_ro_enable_combine_css', '0') === '1') {
+            add_filter('print_styles_array', [ $this, 'combine_styles' ], 20);
+        }
+        if (get_option('ae_seo_ro_enable_combine_js', '0') === '1') {
+            add_filter('print_scripts_array', [ $this, 'combine_scripts' ], 20);
+        }
     }
 
     private function other_optimizers_active() {
