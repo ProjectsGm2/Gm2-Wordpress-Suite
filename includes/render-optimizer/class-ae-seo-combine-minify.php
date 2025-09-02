@@ -170,10 +170,7 @@ class AE_SEO_Combine_Minify {
     }
 
     private function build_combined_file($handles, $type) {
-        $dir = WP_CONTENT_DIR . '/cache/ae-seo/';
-        wp_mkdir_p($dir);
-
-        $parts = [];
+        $parts   = [];
         $content = '';
         if ($type === 'css') {
             global $wp_styles;
@@ -205,9 +202,13 @@ class AE_SEO_Combine_Minify {
             return '';
         }
 
-        $key = md5(implode(',', $parts));
-        $file = $dir . $key . '.' . $type;
+        $key       = md5(implode(',', $parts));
+        $upload    = wp_upload_dir();
+        $dir       = trailingslashit($upload['basedir']) . 'ae-seo/optimizer/' . $key . '/';
+        $filename  = ($type === 'css') ? 'app.css' : 'app.js';
+        $file      = $dir . $filename;
         if (!file_exists($file)) {
+            wp_mkdir_p($dir);
             if ($type === 'css') {
                 add_filter('pre_option_gm2_minify_css', '__return_true');
             } else {
@@ -223,7 +224,7 @@ class AE_SEO_Combine_Minify {
             $min = preg_replace('#</' . $type . '>$#', '', $min);
             file_put_contents($file, $min);
         }
-        return content_url('cache/ae-seo/' . $key . '.' . $type);
+        return trailingslashit($upload['baseurl']) . 'ae-seo/optimizer/' . $key . '/' . $filename;
     }
 
     private function get_list_option($option, $default = '') {
@@ -297,14 +298,18 @@ class AE_SEO_Combine_Minify {
     }
 
     public static function purge_cache() {
-        $dir = WP_CONTENT_DIR . '/cache/ae-seo/';
-        if (!is_dir($dir)) {
+        $upload = wp_upload_dir();
+        $base   = trailingslashit($upload['basedir']) . 'ae-seo/optimizer/';
+        if (!is_dir($base)) {
             return;
         }
-        foreach (glob($dir . '*') as $file) {
-            if (is_file($file)) {
-                @unlink($file);
+        foreach (glob($base . '*', GLOB_ONLYDIR) as $dir) {
+            foreach (glob($dir . '/*') as $file) {
+                if (is_file($file)) {
+                    @unlink($file);
+                }
             }
+            @rmdir($dir);
         }
     }
 }
