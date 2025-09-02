@@ -150,7 +150,8 @@ class AE_SEO_Render_Optimizer {
             wp_doing_ajax() ||
             wp_doing_cron() ||
             (defined('REST_REQUEST') && REST_REQUEST) ||
-            is_feed()
+            is_feed() ||
+            (isset($GLOBALS['pagenow']) && in_array($GLOBALS['pagenow'], [ 'wp-login.php', 'wp-register.php' ], true))
         ) {
             return true;
         }
