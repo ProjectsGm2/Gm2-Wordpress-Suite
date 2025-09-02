@@ -47,12 +47,21 @@ class AE_SEO_JS_Manager {
     private function ae_seo_load_map(): array {
         $path = dirname(__DIR__) . '/config/script-map.json';
         $map  = [];
-        if (file_exists($path)) {
-            $json = file_get_contents($path);
-            $data = json_decode($json, true);
+        if (!is_readable($path)) {
+            return apply_filters('ae_seo/js/replacements', $map);
+        }
+        $json = file_get_contents($path);
+        if ($json === false) {
+            ae_seo_js_log('Unable to read script-map.json');
+            return apply_filters('ae_seo/js/replacements', $map);
+        }
+        try {
+            $data = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
             if (is_array($data)) {
                 $map = $data;
             }
+        } catch (\JsonException $e) {
+            ae_seo_js_log('Invalid script-map.json: ' . $e->getMessage());
         }
         return apply_filters('ae_seo/js/replacements', $map);
     }
