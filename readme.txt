@@ -30,6 +30,7 @@ Key features include:
 * Remote mirror for vendor scripts like Facebook Pixel and gtag with SRI hashes and a daily refresh
 * Script Attributes manager with dependency-aware “Defer all third-party” and “Conservative” presets
 * Render Optimizer for critical CSS, JS deferral with handle/domain allow and deny lists plus inline dependency and jQuery auto-detection, differential serving, and optional asset combination/minification with size limits and purge controls
+* JavaScript Manager for lazy-loading, source replacements, per-page auto-dequeue with safe-mode override, and usage reports with per-handle allow/deny lists
 
 == Installation ==
 1. Upload the plugin files to the `/wp-content/plugins/gm2-wordpress-suite` directory.

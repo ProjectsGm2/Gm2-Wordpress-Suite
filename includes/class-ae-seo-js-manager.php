@@ -5,6 +5,9 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+require_once __DIR__ . '/class-ae-seo-js-detector.php';
+require_once __DIR__ . '/class-ae-seo-js-controller.php';
+
 if (class_exists(__NAMESPACE__ . '\\AE_SEO_JS_Manager')) {
     return;
 }
@@ -24,7 +27,10 @@ class AE_SEO_JS_Manager {
      * Bootstrap the manager.
      */
     public static function init(): void {
-        if (isset($_GET['aejs']) && $_GET['aejs'] === 'off') {
+        if (get_option('ae_js_enable_manager', '0') !== '1') {
+            return;
+        }
+        if (get_option('ae_js_respect_safe_mode', '1') === '1' && isset($_GET['aejs']) && $_GET['aejs'] === 'off') {
             return;
         }
         (new self())->run();
@@ -35,8 +41,16 @@ class AE_SEO_JS_Manager {
      */
     public function run(): void {
         $this->map = $this->ae_seo_load_map();
-        add_action('wp_enqueue_scripts', [ $this, 'ae_seo_enqueue_scripts' ], 0);
-        add_filter('script_loader_tag', [ $this, 'ae_seo_script_loader_tag' ], 10, 3);
+        if (get_option('ae_js_replacements', '0') === '1') {
+            add_action('wp_enqueue_scripts', [ $this, 'ae_seo_enqueue_scripts' ], 0);
+        }
+        if (get_option('ae_js_lazy_load', '0') === '1') {
+            add_filter('script_loader_tag', [ $this, 'ae_seo_script_loader_tag' ], 10, 3);
+        }
+        if (get_option('ae_js_auto_dequeue', '0') === '1') {
+            AE_SEO_JS_Detector::init();
+            AE_SEO_JS_Controller::init();
+        }
     }
 
     /**

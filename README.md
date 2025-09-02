@@ -4,6 +4,10 @@ This repository contains the development version of the Gm2 WordPress Suite plug
 
 The suite includes an optional **Pretty Versioned URLs** feature that rewrites `file.css?ver=123` to `file.v123.css` and supplies matching Apache and Nginx rules.
 
+## JavaScript Management
+
+The plugin ships with a JavaScript Manager that can lazy-load scripts, replace sources via a JSON map, and automatically dequeue unneeded assets on a per-page basis. The detector records script usage and page context, while a controller removes unnecessary handles with an optional `?aejs=off` safe-mode override. Administrators can review usage stats under **Performance → Script Usage** and configure per-handle allow/deny lists or template-specific allowances.
+
 ## Building the Plugin
 
 Generate a production-ready ZIP package with all dependencies using:

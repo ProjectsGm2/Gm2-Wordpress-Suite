@@ -56,6 +56,12 @@ class Gm2_SEO_Admin {
         add_option('ae_js_lazy_load', '0');
         add_option('ae_js_replacements', '0');
         add_option('ae_js_debug_log', '0');
+        add_option('ae_js_auto_dequeue', '0');
+        add_option('ae_js_respect_safe_mode', '1');
+        add_option('ae_js_allow_list', []);
+        add_option('ae_js_deny_list', []);
+        add_option('ae_js_script_usage', []);
+        add_option('ae_js_template_allow', []);
 
         add_action('admin_menu', [$this, 'add_settings_pages']);
         add_action('add_meta_boxes', [$this, 'register_meta_boxes']);
@@ -91,6 +97,7 @@ class Gm2_SEO_Admin {
         add_action('admin_post_gm2_import_settings', [$this, 'handle_import_settings']);
         add_action('admin_post_gm2_render_optimizer_settings', [$this, 'handle_render_optimizer_form']);
         add_action('admin_post_gm2_js_optimizer_settings', [$this, 'handle_js_optimizer_form']);
+        add_action('admin_post_gm2_js_usage_settings', [$this, 'handle_js_usage_form']);
 
         add_action('wp_ajax_gm2_purge_critical_css', [$this, 'ajax_purge_critical_css']);
         add_action('wp_ajax_gm2_purge_js_map', [$this, 'ajax_purge_js_map']);
@@ -1012,6 +1019,7 @@ class Gm2_SEO_Admin {
                 '' => esc_html__( 'General', 'gm2-wordpress-suite' ),
                 'render-optimizer' => esc_html__( 'Render Optimizer', 'gm2-wordpress-suite' ),
                 'javascript' => esc_html__( 'JavaScript', 'gm2-wordpress-suite' ),
+                'script-usage' => esc_html__( 'Script Usage', 'gm2-wordpress-suite' ),
             ];
             echo '<h2 class="nav-tab-wrapper">';
             foreach ($perf_tabs as $slug => $label) {
@@ -1025,6 +1033,8 @@ class Gm2_SEO_Admin {
                 require GM2_PLUGIN_DIR . 'admin/views/settings-render-optimizer.php';
             } elseif ($subtab === 'javascript') {
                 require GM2_PLUGIN_DIR . 'admin/views/settings-js-optimizer.php';
+            } elseif ($subtab === 'script-usage') {
+                require GM2_PLUGIN_DIR . 'admin/views/performance-script-usage.php';
             } else {
                 $auto_fill = get_option('gm2_auto_fill_alt', '0');
                 $clean_files = get_option('gm2_clean_image_filenames', '0');
@@ -2979,7 +2989,37 @@ class Gm2_SEO_Admin {
         $debug = isset($_POST['ae_js_debug_log']) ? '1' : '0';
         update_option('ae_js_debug_log', $debug);
 
+        $auto = isset($_POST['ae_js_auto_dequeue']) ? '1' : '0';
+        update_option('ae_js_auto_dequeue', $auto);
+
+        $respect = isset($_POST['ae_js_respect_safe_mode']) ? '1' : '0';
+        update_option('ae_js_respect_safe_mode', $respect);
+
+        $allow_list = isset($_POST['ae_js_allow_list']) && is_array($_POST['ae_js_allow_list']) ? array_map('sanitize_key', $_POST['ae_js_allow_list']) : [];
+        update_option('ae_js_allow_list', $allow_list);
+
+        $deny_list = isset($_POST['ae_js_deny_list']) && is_array($_POST['ae_js_deny_list']) ? array_map('sanitize_key', $_POST['ae_js_deny_list']) : [];
+        update_option('ae_js_deny_list', $deny_list);
+
         wp_redirect(admin_url('admin.php?page=gm2-seo&tab=performance&subtab=javascript&updated=1'));
+        exit;
+    }
+
+    public function handle_js_usage_form() {
+        if (!current_user_can('manage_options')) {
+            wp_die( esc_html__( 'Permission denied', 'gm2-wordpress-suite' ) );
+        }
+        if (empty($_POST['gm2_js_usage_nonce']) || !wp_verify_nonce($_POST['gm2_js_usage_nonce'], 'gm2_js_usage_save')) {
+            wp_die( esc_html__( 'Invalid nonce', 'gm2-wordpress-suite' ) );
+        }
+        $data = [];
+        if (isset($_POST['ae_js_template_allow']) && is_array($_POST['ae_js_template_allow'])) {
+            foreach ($_POST['ae_js_template_allow'] as $handle => $tpls) {
+                $data[sanitize_key($handle)] = array_map('sanitize_key', (array) $tpls);
+            }
+        }
+        update_option('ae_js_template_allow', $data);
+        wp_redirect(admin_url('admin.php?page=gm2-seo&tab=performance&subtab=script-usage&updated=1'));
         exit;
     }
 
