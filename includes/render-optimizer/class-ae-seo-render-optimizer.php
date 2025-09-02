@@ -10,6 +10,7 @@ if (!defined('ABSPATH')) {
 }
 
 require_once __DIR__ . '/class-ae-seo-critical-css.php';
+require_once __DIR__ . '/class-ae-seo-optimizer-diagnostics.php';
 
 /**
  * Bootstraps render optimization features.

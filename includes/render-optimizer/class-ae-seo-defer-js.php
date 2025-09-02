@@ -66,6 +66,11 @@ class AE_SEO_Defer_JS {
      */
     public function setup() {
         if (get_option('gm2_defer_js_enabled', '1') !== '1') {
+            AE_SEO_Optimizer_Diagnostics::add('defer_js', [
+                'handle' => '',
+                'bundle' => '',
+                'reason' => 'feature_disabled',
+            ]);
             return;
         }
 
@@ -82,6 +87,11 @@ class AE_SEO_Defer_JS {
      */
     public function filter($tag, $handle, $src) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase -- WordPress filter signature.
         if ($this->is_module_handle($handle, $tag)) {
+            AE_SEO_Optimizer_Diagnostics::add('defer_js', [
+                'handle' => $handle,
+                'bundle' => $src,
+                'reason' => 'module',
+            ]);
             return $tag;
         }
 
@@ -102,6 +112,11 @@ class AE_SEO_Defer_JS {
         ];
 
         if ($host && in_array($host, $deny_domains, true)) {
+            AE_SEO_Optimizer_Diagnostics::add('defer_js', [
+                'handle' => $handle,
+                'bundle' => $src,
+                'reason' => 'deny_domain',
+            ]);
             return $tag;
         }
 
@@ -113,6 +128,11 @@ class AE_SEO_Defer_JS {
 
         if ($host && (in_array($host, $allow_domains, true) || $is_analytics)) {
             $tag = $this->remove_attr($tag);
+            AE_SEO_Optimizer_Diagnostics::add('defer_js', [
+                'handle' => $handle,
+                'bundle' => $src,
+                'reason' => 'allow_domain',
+            ]);
             return str_replace('<script ', '<script async defer ', $tag);
         }
 
@@ -123,21 +143,41 @@ class AE_SEO_Defer_JS {
             }
             $group = $wp_scripts->get_data($handle, 'group');
             if ((int) $group === 1 && !in_array($handle, $allow, true)) {
+                AE_SEO_Optimizer_Diagnostics::add('defer_js', [
+                    'handle' => $handle,
+                    'bundle' => $src,
+                    'reason' => 'respect_footer',
+                ]);
                 return $tag;
             }
         }
 
         if (!empty($allow) && !in_array($handle, $allow, true)) {
+            AE_SEO_Optimizer_Diagnostics::add('defer_js', [
+                'handle' => $handle,
+                'bundle' => $src,
+                'reason' => 'not_allowlisted',
+            ]);
             return $this->remove_attr($tag);
         }
 
         if (in_array($handle, $deny, true)) {
+            AE_SEO_Optimizer_Diagnostics::add('defer_js', [
+                'handle' => $handle,
+                'bundle' => $src,
+                'reason' => 'denylist',
+            ]);
             return $this->remove_attr($tag);
         }
 
         $this->existing  = get_option('gm2_script_attributes', []);
         if (isset($this->existing[$handle])) {
             // Already handled by gm2_script_attributes.
+            AE_SEO_Optimizer_Diagnostics::add('defer_js', [
+                'handle' => $handle,
+                'bundle' => $src,
+                'reason' => 'existing_attribute',
+            ]);
             return $tag;
         }
 
@@ -151,6 +191,11 @@ class AE_SEO_Defer_JS {
         $this->resolved  = [];
 
         $attr = $this->determine_attribute($handle);
+        AE_SEO_Optimizer_Diagnostics::add('defer_js', [
+            'handle' => $handle,
+            'bundle' => $src,
+            'reason' => $attr,
+        ]);
 
         if ($attr === 'async' || $attr === 'defer') {
             $tag = $this->remove_attr($tag);
