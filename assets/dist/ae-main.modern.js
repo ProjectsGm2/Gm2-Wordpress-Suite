@@ -1,0 +1,1 @@
+function n(){return!("IntersectionObserver"in window)||!("fetch"in window)||!("Promise"in window)||!("classList"in document.createElement("div"))}function i(){var e=document.createElement("script");e.src="polyfills.js",document.head.appendChild(e)}n()&&i();export{n as needPolyfills};
