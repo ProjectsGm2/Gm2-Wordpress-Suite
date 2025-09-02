@@ -165,7 +165,15 @@ class AE_SEO_Critical_CSS {
      * @return bool
      */
     private function is_excluded() {
-        if (is_admin() || is_user_logged_in() || is_admin_bar_showing() || is_feed() || is_preview() || wp_doing_cron()) {
+        $enable_for_logged_in = apply_filters('ae_seo_ro_enable_for_logged_in', false);
+        if (
+            is_admin() ||
+            (is_user_logged_in() && !$enable_for_logged_in) ||
+            (is_admin_bar_showing() && !$enable_for_logged_in) ||
+            is_feed() ||
+            is_preview() ||
+            wp_doing_cron()
+        ) {
             return true;
         }
 
