@@ -1542,21 +1542,39 @@ class MobileDetect
      * the HTTP headers.
      *
      * This method will be used to check custom regexes against
-     * the User-Agent string.
+     * the User-Agent string and specific HTTP headers.
      *
-     * @param string $regex
-     * @param string $userAgent
+     * @param string      $regex       The regular expression to test.
+     * @param string      $userAgent   The user-agent string to match against.
+     * @param array|null  $httpHeaders Optional HTTP headers to search in. If not
+     *                                 provided the headers set on the instance or
+     *                                 extracted from the environment will be used.
+     *
      * @return bool
-     *
-     * @todo: search in the HTTP headers too.
      */
-    public function match(string $regex, string $userAgent): bool
+    public function match(string $regex, string $userAgent, ?array $httpHeaders = null): bool
     {
-        $match = (bool) preg_match(sprintf('#%s#is', $regex), $userAgent, $matches);
+        $pattern = sprintf('#%s#is', $regex);
+        $match   = (bool) preg_match($pattern, $userAgent, $matches);
+
+        // Search in HTTP headers only if no match was found in the User-Agent.
+        if (!$match) {
+            $headers = $httpHeaders ?? $this->getHttpHeaders();
+            foreach ($headers as $value) {
+                if (!is_string($value)) {
+                    continue;
+                }
+                if (preg_match($pattern, $value, $matches)) {
+                    $match = true;
+                    break;
+                }
+            }
+        }
+
         // If positive match is found, store the results for debug.
         if ($match) {
             $this->matchingRegex = $regex;
-            $this->matchesArray = $matches;
+            $this->matchesArray  = $matches;
         }
 
         return $match;
