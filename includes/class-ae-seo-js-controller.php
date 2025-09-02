@@ -18,6 +18,7 @@ class AE_SEO_JS_Controller {
      */
     public static function init(): void {
         add_action('wp_enqueue_scripts', [ __CLASS__, 'control_scripts' ], 999);
+        add_filter('ae_seo/js/enqueue_decision', [ __CLASS__, 'allow_override' ], 5, 3);
     }
 
     /**
@@ -50,6 +51,29 @@ class AE_SEO_JS_Controller {
                 ae_seo_js_log('dequeue ' . $handle . ' (' . $reason . ') ' . $url);
             }
         }
+    }
+
+    /**
+     * Always allow scripts based on saved overrides.
+     *
+     * @param bool   $allow   Current allow decision.
+     * @param string $handle  Script handle.
+     * @param array  $context Context data.
+     * @return bool
+     */
+    public static function allow_override(bool $allow, string $handle, array $context): bool {
+        if ($allow) {
+            return true;
+        }
+        $overrides = get_option('ae_js_overrides', []);
+        if (!isset($overrides[$handle]) || !is_array($overrides[$handle])) {
+            return $allow;
+        }
+        $page = $context['page_type'] ?? '';
+        if ($page !== '' && in_array($page, $overrides[$handle], true)) {
+            return true;
+        }
+        return $allow;
     }
 
     /**

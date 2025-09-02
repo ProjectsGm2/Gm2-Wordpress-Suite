@@ -59,6 +59,8 @@ class Gm2_Loader {
             if (is_admin()) {
                 $cache_admin = new Gm2_Cache_Audit_Admin();
                 $cache_admin->run();
+                $js_usage_admin = new Gm2_JS_Usage_Admin();
+                $js_usage_admin->run();
             }
         }
 
