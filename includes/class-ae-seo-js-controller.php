@@ -17,6 +17,9 @@ class AE_SEO_JS_Controller {
      * Bootstrap the controller.
      */
     public static function init(): void {
+        if (ae_seo_js_safe_mode()) {
+            return;
+        }
         add_action('wp_enqueue_scripts', [ __CLASS__, 'control_scripts' ], 999);
         add_action('wp_enqueue_scripts', [ __CLASS__, 'maybe_remove_jquery' ], 1000);
         add_filter('ae_seo/js/enqueue_decision', [ __CLASS__, 'allow_override' ], 5, 3);
@@ -81,6 +84,9 @@ class AE_SEO_JS_Controller {
      * Remove jQuery when no scripts depend on it.
      */
     public static function maybe_remove_jquery(): void {
+        if (ae_seo_js_safe_mode()) {
+            return;
+        }
         if (get_option('ae_js_jquery_on_demand', '0') !== '1') {
             return;
         }

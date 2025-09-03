@@ -49,3 +49,14 @@ if (!function_exists('ae_seo_register_asset')) {
         }
     }
 }
+
+if (!function_exists('ae_seo_js_safe_mode')) {
+    /**
+     * Determine if safe mode is enabled for JavaScript features.
+     *
+     * @return bool
+     */
+    function ae_seo_js_safe_mode(): bool {
+        return get_option('ae_js_respect_safe_mode') === '1' && (($_GET['aejs'] ?? '') === 'off');
+    }
+}
