@@ -408,6 +408,8 @@ AE_SEO_JS_Detector builds a transient map of registered scripts and records the 
 
 AE_SEO_JS_Lazy adds user-intent triggers and consent gating so modules load only when needed. New settings let you define scroll or input events that wake dormant modules, gate analytics behind consent or interaction, and toggle each module individually. Analytics stays idle until a visitor grants consent or interacts with the page, while reCAPTCHA loads only when a form field receives focus—typically in under 200&nbsp;ms.
 
+IDs for Google Analytics, Tag Manager and Facebook Pixel are stored in the unified options `ae_js_analytics_id`, `ae_js_gtm_id` and `ae_js_fb_id`.
+
 Settings live under **SEO → Performance → JavaScript** to enable the manager, lazy-loading, script replacements, debug logging and handle allow and deny lists. Enable **Respect Safe Mode param** to honour `?aejs=off` and temporarily disable the manager when troubleshooting. A **Load jQuery only when required** option removes jQuery when no enqueued scripts depend on it; pages using Elementor or other jQuery‑dependent assets still receive it automatically. Regex patterns in **Always include jQuery on these URLs** let you force jQuery on specific URLs.
 
 When **Debug Log** is enabled, script decisions are recorded in `wp-content/ae-seo/logs/js-optimizer.log`. Toggle **Log to console in dev** to echo the same messages in DevTools:

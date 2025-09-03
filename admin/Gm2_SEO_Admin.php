@@ -33,6 +33,33 @@ class Gm2_SEO_Admin {
     private function infer_brand_name(int $post_id): string {
         return gm2_infer_brand_name($post_id);
     }
+
+    private function migrate_js_option_names(): void {
+        $map = [
+            'ae_gtag_id'        => 'ae_js_analytics_id',
+            'ae_gtm_id'         => 'ae_js_gtm_id',
+            'ae_fbq_id'         => 'ae_js_fb_id',
+            'ae_lazy_recaptcha' => 'ae_js_lazy_recaptcha',
+        ];
+        foreach ($map as $old => $new) {
+            $value = get_option($old, null);
+            if ($value !== null) {
+                update_option($new, $value);
+                delete_option($old);
+            }
+        }
+        $legacy = [
+            get_option('ae_lazy_gtag', null),
+            get_option('ae_lazy_gtm', null),
+            get_option('ae_lazy_fbq', null),
+        ];
+        if (in_array('1', $legacy, true)) {
+            update_option('ae_js_lazy_analytics', '1');
+        }
+        foreach (['ae_lazy_gtag', 'ae_lazy_gtm', 'ae_lazy_fbq'] as $old) {
+            delete_option($old);
+        }
+    }
     public function run() {
         add_option('ae_seo_ro_enable_critical_css', '0');
         add_option('ae_seo_ro_enable_defer_js', '0');
@@ -71,6 +98,8 @@ class Gm2_SEO_Admin {
         add_option('ae_js_dequeue_denylist', []);
         add_option('ae_js_jquery_on_demand', '0');
         add_option('ae_js_jquery_url_allow', '');
+
+        $this->migrate_js_option_names();
 
         add_action('admin_menu', [$this, 'add_settings_pages']);
         add_action('add_meta_boxes', [$this, 'register_meta_boxes']);
