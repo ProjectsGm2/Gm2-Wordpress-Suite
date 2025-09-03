@@ -30,15 +30,15 @@ class AE_SEO_JS_Lazy {
         ae_seo_register_asset('ae-lazy', 'ae-lazy.js');
         $modules = [
             'recaptcha' => ae_seo_should_lazy('recaptcha'),
-            'gtag'      => ae_seo_should_lazy('gtag'),
-            'gtm'       => ae_seo_should_lazy('gtm'),
-            'fbq'       => ae_seo_should_lazy('fbq'),
+            'gtag'      => ae_seo_should_lazy('analytics'),
+            'gtm'       => ae_seo_should_lazy('analytics'),
+            'fbq'       => ae_seo_should_lazy('analytics'),
         ];
         $ids = [
             'recaptcha' => get_option('ae_recaptcha_site_key', ''),
-            'gtag'      => get_option('ae_gtag_id', ''),
-            'gtm'       => get_option('ae_gtm_id', ''),
-            'fbq'       => get_option('ae_fbq_id', ''),
+            'gtag'      => get_option('ae_js_analytics_id', ''),
+            'gtm'       => get_option('ae_js_gtm_id', ''),
+            'fbq'       => get_option('ae_js_fb_id', ''),
         ];
         $consent = [
             'key'   => 'aeConsent',
