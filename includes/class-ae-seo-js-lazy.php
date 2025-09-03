@@ -29,10 +29,10 @@ class AE_SEO_JS_Lazy {
         }
         ae_seo_register_asset('ae-lazy', 'ae-lazy.js');
         $modules = [
-            'recaptcha' => get_option('ae_lazy_recaptcha', '0') === '1',
-            'gtag'      => get_option('ae_lazy_gtag', '0') === '1',
-            'gtm'       => get_option('ae_lazy_gtm', '0') === '1',
-            'fbq'       => get_option('ae_lazy_fbq', '0') === '1',
+            'recaptcha' => ae_seo_should_lazy('recaptcha'),
+            'gtag'      => ae_seo_should_lazy('gtag'),
+            'gtm'       => ae_seo_should_lazy('gtm'),
+            'fbq'       => ae_seo_should_lazy('fbq'),
         ];
         $ids = [
             'recaptcha' => get_option('ae_recaptcha_site_key', ''),
