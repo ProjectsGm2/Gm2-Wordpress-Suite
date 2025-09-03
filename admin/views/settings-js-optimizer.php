@@ -3,15 +3,22 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-$enable      = get_option('ae_js_enable_manager', '0');
-$lazy        = get_option('ae_js_lazy_load', '0');
-$replace     = get_option('ae_js_replacements', '0');
-$debug       = get_option('ae_js_debug_log', '0');
-$auto        = get_option('ae_js_auto_dequeue', '0');
-$safe_mode   = get_option('ae_js_respect_safe_mode', '0');
-$nomodule    = get_option('ae_js_nomodule_legacy', '0');
-$allow       = get_option('ae_js_dequeue_allowlist', []);
-$deny        = get_option('ae_js_dequeue_denylist', []);
+$enable        = get_option('ae_js_enable_manager', '0');
+$lazy          = get_option('ae_js_lazy_load', '0');
+$lazy_recaptcha = get_option('ae_js_lazy_recaptcha', '0');
+$lazy_analytics = get_option('ae_js_lazy_analytics', '0');
+$analytics_id   = get_option('ae_js_analytics_id', '');
+$gtm_id         = get_option('ae_js_gtm_id', '');
+$fb_id          = get_option('ae_js_fb_id', '');
+$consent_key    = get_option('ae_js_consent_key', 'aeConsent');
+$consent_value  = get_option('ae_js_consent_value', 'allow_analytics');
+$replace       = get_option('ae_js_replacements', '0');
+$debug         = get_option('ae_js_debug_log', '0');
+$auto          = get_option('ae_js_auto_dequeue', '0');
+$safe_mode     = get_option('ae_js_respect_safe_mode', '0');
+$nomodule      = get_option('ae_js_nomodule_legacy', '0');
+$allow         = get_option('ae_js_dequeue_allowlist', []);
+$deny          = get_option('ae_js_dequeue_denylist', []);
 if (!is_array($allow)) {
     $allow = [];
 }
@@ -28,6 +35,13 @@ echo '<input type="hidden" name="action" value="gm2_js_optimizer_settings" />';
 echo '<table class="form-table"><tbody>';
 echo '<tr><th scope="row">' . esc_html__( 'Enable JS Manager', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="ae_js_enable_manager" value="1" ' . checked($enable, '1', false) . ' /></td></tr>';
 echo '<tr><th scope="row">' . esc_html__( 'Lazy Load Scripts', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="ae_js_lazy_load" value="1" ' . checked($lazy, '1', false) . ' /></td></tr>';
+echo '<tr><th scope="row">' . esc_html__( 'Lazy-load reCAPTCHA', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="ae_js_lazy_recaptcha" value="1" ' . checked($lazy_recaptcha, '1', false) . ' /></td></tr>';
+echo '<tr><th scope="row">' . esc_html__( 'Lazy-load Analytics/Tag Manager', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="ae_js_lazy_analytics" value="1" ' . checked($lazy_analytics, '1', false) . ' /></td></tr>';
+echo '<tr><th scope="row">' . esc_html__( 'Analytics Measurement ID', 'gm2-wordpress-suite' ) . '</th><td><input type="text" name="ae_js_analytics_id" value="' . esc_attr($analytics_id) . '" placeholder="G-XXXX" /></td></tr>';
+echo '<tr><th scope="row">' . esc_html__( 'GTM ID', 'gm2-wordpress-suite' ) . '</th><td><input type="text" name="ae_js_gtm_id" value="' . esc_attr($gtm_id) . '" placeholder="GTM-XXXX" /></td></tr>';
+echo '<tr><th scope="row">' . esc_html__( 'Facebook Pixel ID', 'gm2-wordpress-suite' ) . '</th><td><input type="text" name="ae_js_fb_id" value="' . esc_attr($fb_id) . '" /></td></tr>';
+echo '<tr><th scope="row">' . esc_html__( 'Consent Mode key', 'gm2-wordpress-suite' ) . '</th><td><input type="text" name="ae_js_consent_key" value="' . esc_attr($consent_key) . '" /></td></tr>';
+echo '<tr><th scope="row">' . esc_html__( 'Consent Mode value to watch', 'gm2-wordpress-suite' ) . '</th><td><input type="text" name="ae_js_consent_value" value="' . esc_attr($consent_value) . '" /><p class="description">' . esc_html__( 'Default value is allow_analytics', 'gm2-wordpress-suite' ) . '</p></td></tr>';
 echo '<tr><th scope="row">' . esc_html__( 'Enable Replacements', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="ae_js_replacements" value="1" ' . checked($replace, '1', false) . ' /></td></tr>';
 echo '<tr><th scope="row">' . esc_html__( 'Debug Log', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="ae_js_debug_log" value="1" ' . checked($debug, '1', false) . ' /></td></tr>';
 echo '<tr><th scope="row">' . esc_html__( 'Enable Per-Page Auto-Dequeue (Beta)', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="ae_js_auto_dequeue" value="1" ' . checked($auto, '1', false) . ' /></td></tr>';
