@@ -193,6 +193,25 @@ class AE_SEO_JS_Manager {
  * @param string $message Log message.
  */
 function ae_seo_js_log(string $message): void {
+    static $messages = [];
+    static $hooked   = false;
+
+    if (get_option('ae_js_console_log', '0') === '1') {
+        $messages[] = $message;
+        if (!$hooked) {
+            add_action(
+                'wp_footer',
+                function () use (&$messages) {
+                    if (empty($messages)) {
+                        return;
+                    }
+                    echo '<script>(function(){var msgs=' . wp_json_encode($messages) . ';msgs.forEach(function(msg){console.info("[AE-SEO]", msg);});})();</script>';
+                }
+            );
+            $hooked = true;
+        }
+    }
+
     if (AE_SEO_JS_Manager::is_disabled() || get_option('ae_js_debug_log', '0') !== '1') {
         return;
     }

@@ -63,6 +63,7 @@ class Gm2_SEO_Admin {
         add_option('ae_js_consent_value', 'allow_analytics');
         add_option('ae_js_replacements', '0');
         add_option('ae_js_debug_log', '0');
+        add_option('ae_js_console_log', '0');
         add_option('ae_js_auto_dequeue', '0');
         add_option('ae_js_respect_safe_mode', '0');
         add_option('ae_js_nomodule_legacy', '0');
@@ -602,6 +603,9 @@ class Gm2_SEO_Admin {
             'sanitize_callback' => 'sanitize_text_field',
         ]);
         register_setting('gm2_seo_options', 'ae_js_debug_log', [
+            'sanitize_callback' => 'sanitize_text_field',
+        ]);
+        register_setting('gm2_seo_options', 'ae_js_console_log', [
             'sanitize_callback' => 'sanitize_text_field',
         ]);
         register_setting('gm2_seo_options', 'ae_js_auto_dequeue', [
@@ -3066,6 +3070,9 @@ class Gm2_SEO_Admin {
 
         $debug = isset($_POST['ae_js_debug_log']) ? '1' : '0';
         update_option('ae_js_debug_log', $debug);
+
+        $console = isset($_POST['ae_js_console_log']) ? '1' : '0';
+        update_option('ae_js_console_log', $console);
 
         $auto = isset($_POST['ae_js_auto_dequeue']) ? '1' : '0';
         update_option('ae_js_auto_dequeue', $auto);
