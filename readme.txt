@@ -33,6 +33,8 @@ Key features include:
 * JavaScript Manager powered by AE_SEO_JS_Detector, AE_SEO_JS_Controller and AE_SEO_JS_Lazy for optional per-page auto-dequeue (beta), user-intent triggers, consent gating, per-module toggles, lazy loading, script replacements, handle allow/deny lists, a Script Usage admin page for acceptance scenarios, and performance gains such as idle analytics and sub-200 ms reCAPTCHA on form focus
 * Option to load jQuery only when required with URL-based overrides and debug logging; pages with Elementor or other jQuery-dependent assets still enqueue it
 * DOM replacements via the `ae_seo/js/replacements` filter and bundled `vanilla-helpers.js` helpers
+* Hashed build pipeline with `ae_seo_register_asset` helper and debug sourcemaps
+* Tools → Server Hints page with one-click `.htaccess` writer and diagnostic REST endpoint
 
 == Installation ==
 1. Upload the plugin files to the `/wp-content/plugins/gm2-wordpress-suite` directory.
@@ -65,7 +67,7 @@ archive with `bash bin/build-plugin.sh`. This command packages the plugin with
 all dependencies into `gm2-wordpress-suite.zip` for installation via the
 **Plugins → Add New** screen.
 
-Front‑end scripts are built with **esbuild** using page‑scoped entry points. Run `npm run build:assets` to produce modern ESM and optional legacy bundles alongside a `polyfills.js` loader that only runs when `needPolyfills()` detects missing browser features.
+Front‑end scripts are built with **esbuild** using page‑scoped entry points and a hashed build pipeline. Run `npm run build:assets` to produce modern ESM and optional legacy bundles with hash-mapped filenames alongside a `polyfills.js` loader. Enqueue the generated files with `ae_seo_register_asset` which reads the latest hash. When `SCRIPT_DEBUG` is enabled the build emits sourcemaps for easier debugging.
 == Setup Wizard ==
 After activation the **Gm2 Setup Wizard** (`index.php?page=gm2-setup-wizard`) opens once to walk through entering your AI provider API key, Google OAuth credentials, sitemap settings and which modules to enable. The wizard is optional and can be launched again from the **Gm2 Suite** dashboard at any time.
 
@@ -101,6 +103,11 @@ curl -I https://example.com/wp-includes/js/jquery/jquery.min.js
 
 Verify the `Cache-Control` header and, for repeat-view testing, keep **Disable cache**
 unchecked in DevTools, hard reload the page and confirm the file loads from disk cache.
+
+== Server Hints ==
+Open **Tools → Server Hints** to inspect how static assets are delivered. The page lists hashed files with their minification, compression and cache headers. A one-click button writes caching rules into `.htaccess` on Apache or LiteSpeed, and the same data is exposed via the `wp-json/ae-seo/v1/server-hints` diagnostic REST endpoint.
+
+**Acceptance check:** hashed files should be minified, compressed and return long-cache headers.
 
 == Render Optimizer ==
 Enable performance modules from **SEO → Performance → Render Optimizer**. Available options include:

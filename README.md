@@ -24,6 +24,12 @@ npm run build:assets
 
 This generates `assets/dist/ae-main.modern.js`, `ae-main.legacy.js`, page‑specific bundles like `contact.js`, `polyfills.js`, and a `vanilla-helpers.js` module. Modern browsers load only the ESM files; older browsers without module support receive the `nomodule` bundle and polyfills when `needPolyfills()` detects missing features. Commit the updated files in `assets/dist` to version control.
 
+### Hashed Asset Pipeline and Sourcemaps
+
+The build step appends a content hash to each filename so browsers can cache assets indefinitely. Enqueue files with `ae_seo_register_asset()` which resolves the current hash and registers the correct path. When `SCRIPT_DEBUG` is enabled the pipeline also emits sourcemaps to aid debugging.
+
+**Acceptance check:** hashed files must be minified, served compressed and return long‑cache headers such as `Cache-Control: public, max-age=31536000`.
+
 ### JavaScript Replacements
 
 When the **Enable Replacements** option is active (`ae_js_replacements`), front‑end scripts execute callbacks on matched elements. Use the `ae_seo/js/replacements` filter to return an associative array where keys are CSS selectors and values are callback names available on `window`. Each callback receives the matched element as its only argument. The plugin also ships a `vanilla-helpers.js` module with tiny DOM utilities for these callbacks.
@@ -461,6 +467,11 @@ site.
 
 WP-CLI prints an error message and exits with the code above. Review the
 message to resolve permission or server issues before retrying.
+
+
+## Server Hints and Diagnostics
+
+Open **Tools → Server Hints** to validate caching behaviour. The page lists hashed assets, reports whether they are minified and compressed and shows their cache headers. A one-click button writes caching rules into `.htaccess` on Apache or LiteSpeed. The same details are available from the `wp-json/ae-seo/v1/server-hints` diagnostic REST endpoint for automated tests.
 
 
 
