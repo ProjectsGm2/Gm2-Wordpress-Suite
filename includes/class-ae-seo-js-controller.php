@@ -14,12 +14,19 @@ if (class_exists(__NAMESPACE__ . '\\AE_SEO_JS_Controller')) {
  */
 class AE_SEO_JS_Controller {
     /**
+     * Handles that should always be allowed.
+     *
+     * @var array
+     */
+    private static $compat_handles = [];
+    /**
      * Bootstrap the controller.
      */
     public static function init(): void {
         if (ae_seo_js_safe_mode()) {
             return;
         }
+        self::$compat_handles = self::load_compat_handles();
         add_action('wp_enqueue_scripts', [ __CLASS__, 'control_scripts' ], 999);
         add_action('wp_enqueue_scripts', [ __CLASS__, 'maybe_remove_jquery' ], 1000);
         add_filter('ae_seo/js/enqueue_decision', [ __CLASS__, 'allow_override' ], 5, 3);
@@ -35,6 +42,7 @@ class AE_SEO_JS_Controller {
         }
         $context        = AE_SEO_JS_Detector::get_current_context();
         $context_scripts = $context['scripts'] ?? [];
+        $context_scripts = array_merge($context_scripts, self::$compat_handles);
         $url            = self::current_url();
 
         // Allow scripts required by detected blocks.
@@ -79,6 +87,35 @@ class AE_SEO_JS_Controller {
                 ae_seo_js_log('dequeue ' . $handle . ' (' . $reason . ') ' . $url);
             }
         }
+    }
+
+    /**
+     * Load default compatibility handles and apply admin overrides.
+     *
+     * @return array
+     */
+    private static function load_compat_handles(): array {
+        $file = dirname(__DIR__) . '/config/compat-defaults.php';
+        $map  = [];
+        if (file_exists($file)) {
+            $map = include $file;
+        }
+        if (!is_array($map)) {
+            $map = [];
+        }
+        $handles = [];
+        foreach ($map as $list) {
+            foreach ((array) $list as $handle) {
+                $handles[$handle] = true;
+            }
+        }
+        $overrides = get_option('ae_js_compat_overrides', []);
+        if (is_array($overrides)) {
+            foreach ($overrides as $disabled) {
+                unset($handles[$disabled]);
+            }
+        }
+        return array_keys($handles);
     }
 
     /**
