@@ -54,6 +54,13 @@ class Gm2_SEO_Admin {
         add_option('ae_seo_ro_defer_preserve_jquery', '1');
         add_option('ae_js_enable_manager', '0');
         add_option('ae_js_lazy_load', '0');
+        add_option('ae_js_lazy_recaptcha', '0');
+        add_option('ae_js_lazy_analytics', '0');
+        add_option('ae_js_analytics_id', '');
+        add_option('ae_js_gtm_id', '');
+        add_option('ae_js_fb_id', '');
+        add_option('ae_js_consent_key', 'aeConsent');
+        add_option('ae_js_consent_value', 'allow_analytics');
         add_option('ae_js_replacements', '0');
         add_option('ae_js_debug_log', '0');
         add_option('ae_js_auto_dequeue', '0');
@@ -566,6 +573,27 @@ class Gm2_SEO_Admin {
             'sanitize_callback' => 'sanitize_text_field',
         ]);
         register_setting('gm2_seo_options', 'ae_js_lazy_load', [
+            'sanitize_callback' => 'sanitize_text_field',
+        ]);
+        register_setting('gm2_seo_options', 'ae_js_lazy_recaptcha', [
+            'sanitize_callback' => 'sanitize_text_field',
+        ]);
+        register_setting('gm2_seo_options', 'ae_js_lazy_analytics', [
+            'sanitize_callback' => 'sanitize_text_field',
+        ]);
+        register_setting('gm2_seo_options', 'ae_js_analytics_id', [
+            'sanitize_callback' => 'sanitize_text_field',
+        ]);
+        register_setting('gm2_seo_options', 'ae_js_gtm_id', [
+            'sanitize_callback' => 'sanitize_text_field',
+        ]);
+        register_setting('gm2_seo_options', 'ae_js_fb_id', [
+            'sanitize_callback' => 'sanitize_text_field',
+        ]);
+        register_setting('gm2_seo_options', 'ae_js_consent_key', [
+            'sanitize_callback' => 'sanitize_text_field',
+        ]);
+        register_setting('gm2_seo_options', 'ae_js_consent_value', [
             'sanitize_callback' => 'sanitize_text_field',
         ]);
         register_setting('gm2_seo_options', 'ae_js_replacements', [
@@ -3003,6 +3031,27 @@ class Gm2_SEO_Admin {
 
         $lazy = isset($_POST['ae_js_lazy_load']) ? '1' : '0';
         update_option('ae_js_lazy_load', $lazy);
+
+        $lazy_recaptcha = isset($_POST['ae_js_lazy_recaptcha']) ? '1' : '0';
+        update_option('ae_js_lazy_recaptcha', $lazy_recaptcha);
+
+        $lazy_analytics = isset($_POST['ae_js_lazy_analytics']) ? '1' : '0';
+        update_option('ae_js_lazy_analytics', $lazy_analytics);
+
+        $analytics_id = isset($_POST['ae_js_analytics_id']) ? sanitize_text_field($_POST['ae_js_analytics_id']) : '';
+        update_option('ae_js_analytics_id', $analytics_id);
+
+        $gtm_id = isset($_POST['ae_js_gtm_id']) ? sanitize_text_field($_POST['ae_js_gtm_id']) : '';
+        update_option('ae_js_gtm_id', $gtm_id);
+
+        $fb_id = isset($_POST['ae_js_fb_id']) ? sanitize_text_field($_POST['ae_js_fb_id']) : '';
+        update_option('ae_js_fb_id', $fb_id);
+
+        $consent_key = isset($_POST['ae_js_consent_key']) ? sanitize_text_field($_POST['ae_js_consent_key']) : 'aeConsent';
+        update_option('ae_js_consent_key', $consent_key);
+
+        $consent_value = isset($_POST['ae_js_consent_value']) ? sanitize_text_field($_POST['ae_js_consent_value']) : 'allow_analytics';
+        update_option('ae_js_consent_value', $consent_value);
 
         $replacements = isset($_POST['ae_js_replacements']) ? '1' : '0';
         update_option('ae_js_replacements', $replacements);
