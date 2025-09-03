@@ -63,9 +63,21 @@ NGINX;
         return is_writable(ABSPATH);
     }
 
+    private function log_message(string $message): void {
+        $dir = WP_CONTENT_DIR . '/ae-seo/logs';
+        if (!is_dir($dir)) {
+            wp_mkdir_p($dir);
+        }
+        $file = $dir . '/js-optimizer.log';
+        $time = gmdate('Y-m-d H:i:s');
+        file_put_contents($file, '[' . $time . '] ' . $message . PHP_EOL, FILE_APPEND);
+    }
+
     public function render_page(): void {
-        $apache = $this->get_apache_snippet();
-        $nginx = $this->get_nginx_snippet();
+        $apache       = $this->get_apache_snippet();
+        $nginx        = $this->get_nginx_snippet();
+        $backup_glob  = ABSPATH . '.htaccess.ae-seo.bak.*';
+        $backups      = glob($backup_glob) ?: [];
 
         echo '<div class="wrap">';
         echo '<h1>' . esc_html__( 'AE Server Hints', 'gm2-wordpress-suite' ) . '</h1>';
@@ -93,13 +105,52 @@ NGINX;
         echo '});';
         echo '</script>';
 
+        if (is_apache() && isset($_POST['ae_seo_restore_htaccess']) && check_admin_referer('ae_seo_restore_htaccess')) {
+            if (!empty($backups)) {
+                rsort($backups);
+                $restore = $backups[0];
+                if (@copy($restore, ABSPATH . '.htaccess')) {
+                    @unlink($restore);
+                    echo '<div class="updated"><p>' . esc_html__( '.htaccess restored from backup.', 'gm2-wordpress-suite' ) . '</p></div>';
+                    $this->log_message('.htaccess restored from backup ' . basename($restore));
+                } else {
+                    echo '<div class="error"><p>' . esc_html__( 'Failed to restore .htaccess.', 'gm2-wordpress-suite' ) . '</p></div>';
+                    $this->log_message('Failed to restore .htaccess from backup ' . basename($restore));
+                }
+            } else {
+                echo '<div class="error"><p>' . esc_html__( 'Backup file not found.', 'gm2-wordpress-suite' ) . '</p></div>';
+                $this->log_message('No .htaccess backup found to restore');
+            }
+            $backups = glob($backup_glob) ?: [];
+        }
+
         if (is_apache() && isset($_POST['ae_seo_write_htaccess']) && check_admin_referer('ae_seo_write_htaccess')) {
             $file = ABSPATH . '.htaccess';
             if ($this->htaccess_writable()) {
-                file_put_contents($file, PHP_EOL . $apache . PHP_EOL, FILE_APPEND);
-                echo '<div class="updated"><p>' . esc_html__( '.htaccess updated.', 'gm2-wordpress-suite' ) . '</p></div>';
+                if (file_exists($file)) {
+                    $backup = $file . '.ae-seo.bak.' . time();
+                    if (@copy($file, $backup)) {
+                        foreach ($backups as $old) {
+                            if ($old !== $backup) {
+                                @unlink($old);
+                            }
+                        }
+                        $this->log_message('.htaccess backup created: ' . basename($backup));
+                        $backups = [ $backup ];
+                    } else {
+                        $this->log_message('Failed to create .htaccess backup');
+                    }
+                }
+                if (@file_put_contents($file, PHP_EOL . $apache . PHP_EOL, FILE_APPEND) !== false) {
+                    echo '<div class="updated"><p>' . esc_html__( '.htaccess updated.', 'gm2-wordpress-suite' ) . '</p></div>';
+                    $this->log_message('.htaccess updated with AE Server Hints');
+                } else {
+                    echo '<div class="error"><p>' . esc_html__( 'Unable to write .htaccess.', 'gm2-wordpress-suite' ) . '</p></div>';
+                    $this->log_message('Failed to write .htaccess');
+                }
             } else {
                 echo '<div class="error"><p>' . esc_html__( 'Unable to write .htaccess.', 'gm2-wordpress-suite' ) . '</p></div>';
+                $this->log_message('Unable to write .htaccess');
             }
         }
 
@@ -110,6 +161,12 @@ NGINX;
             wp_nonce_field('ae_seo_write_htaccess');
             echo '<p><input type="submit" name="ae_seo_write_htaccess" class="button button-primary" value="' . esc_attr__( 'Write .htaccess', 'gm2-wordpress-suite' ) . '"></p>';
             echo '</form>';
+            if (!empty($backups)) {
+                echo '<form method="post">';
+                wp_nonce_field('ae_seo_restore_htaccess');
+                echo '<p><input type="submit" name="ae_seo_restore_htaccess" class="button" value="' . esc_attr__( 'Revert last change', 'gm2-wordpress-suite' ) . '"></p>';
+                echo '</form>';
+            }
         }
 
         echo '<h2>' . esc_html__( 'Nginx', 'gm2-wordpress-suite' ) . '</h2>';
