@@ -9,6 +9,8 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+use Gm2\AE_SEO_JS_Manager;
+
 /**
  * Handle loading of modern/legacy bundles and polyfills.
  */
@@ -40,6 +42,7 @@ class AE_SEO_Main_Diff_Serving {
         if (ae_seo_needs_polyfills()) {
             ae_seo_register_asset('ae-polyfills', 'polyfills.js');
             wp_enqueue_script('ae-polyfills');
+            AE_SEO_JS_Manager::$polyfills++;
         }
 
         // Enqueue main scripts.

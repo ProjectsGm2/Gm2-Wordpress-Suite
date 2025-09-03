@@ -51,6 +51,7 @@ class AE_SEO_JS_Controller {
                     continue;
                 }
                 wp_dequeue_script($handle);
+                AE_SEO_JS_Manager::$dequeued++;
                 $reason = in_array($handle, $context_scripts, true) ? 'filter' : 'context';
                 ae_seo_js_log('dequeue ' . $handle . ' (' . $reason . ') ' . $url);
             }
@@ -117,6 +118,7 @@ class AE_SEO_JS_Controller {
         if (!$needs_jquery) {
             wp_dequeue_script('jquery');
             wp_dequeue_script('jquery-migrate');
+            AE_SEO_JS_Manager::$jquery++;
             ae_seo_js_log('dequeue jquery (no-deps) ' . $url);
         }
     }
