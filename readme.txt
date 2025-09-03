@@ -31,6 +31,7 @@ Key features include:
 * Script Attributes manager with dependency-aware “Defer all third-party” and “Conservative” presets
 * Render Optimizer for critical CSS, JS deferral with handle/domain allow and deny lists plus inline dependency and jQuery auto-detection, differential serving with page-scoped entry points so modern browsers load only the ESM bundle while legacy browsers get a `nomodule` file and polyfills, and optional asset combination/minification with size limits and purge controls
 * JavaScript Manager powered by AE_SEO_JS_Detector, AE_SEO_JS_Controller and AE_SEO_JS_Lazy for optional per-page auto-dequeue (beta), user-intent triggers, consent gating, per-module toggles, lazy loading, script replacements, handle allow/deny lists, a Script Usage admin page for acceptance scenarios, and performance gains such as idle analytics and sub-200 ms reCAPTCHA on form focus. Enable **Respect Safe Mode param** to disable the manager with `?aejs=off`, use **Log to console in dev** to print decisions in DevTools, and inspect `Server-Timing` metrics (`ae-dequeued`, `ae-lazy`, `ae-polyfills`, `ae-jquery`) for each request
+* Compatibility layer whitelists essential scripts for popular plugins (Elementor, WooCommerce, Contact Form 7, Rank Math, Yoast, reSmush.it, Site Kit, Complianz) and provides a **Compatibility** tab to opt out per handle; disabling a handle may break functionality and should be tested carefully
 * Option to load jQuery only when required with URL-based overrides and debug logging; pages with Elementor or other jQuery-dependent assets still enqueue it
 * DOM replacements via the `ae_seo/js/replacements` filter and bundled `vanilla-helpers.js` helpers
 * Hashed build pipeline with `ae_seo_register_asset` helper and debug sourcemaps
@@ -183,6 +184,8 @@ If WP Rocket, Autoptimize, Perfmatters or other optimizer plugins are active, th
 == JavaScript Manager ==
 
 AE_SEO_JS_Detector builds a map of registered scripts and caches the page type, widgets and handles used on each request. AE_SEO_JS_Controller consults that context to dequeue handles that were not previously seen for the current URL.
+
+A compatibility layer keeps essential handles for popular plugins like Elementor, WooCommerce, Contact Form 7, Rank Math, Yoast, reSmush.it, Site Kit and Complianz. The **Compatibility** tab lists these defaults and lets you opt out per handle; disabling a handle may break functionality and should be tested carefully.
 
 When blocks exist in the post content the detector parses them, detects providers for embeds and looks up related script handles from a block‑to‑script map. Developers can customize this map with the `ae_seo/js/block_scripts` filter. Return an array where keys are block names (optionally suffixed with `/provider`) and values are arrays of script handles to keep whitelisted.
 
