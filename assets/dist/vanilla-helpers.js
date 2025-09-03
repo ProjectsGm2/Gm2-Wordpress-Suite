@@ -1,1 +1,1 @@
-function o(t,e,n){t.addEventListener(e,n)}function s(t,e){return t.closest(e)}function r(t,e={}){return fetch(t,e)}function c(t){t.classList.toggle("is-open")}export{r as ajax,s as closest,o as on,c as slideToggle};
+function o(e,t,n){e.addEventListener(t,n)}function r(e,t){return e.closest(t)}function c(e,t){return t===void 0&&(t={}),fetch(e,t)}function i(e){e.classList.toggle("is-open")}export{c as ajax,r as closest,o as on,i as slideToggle};

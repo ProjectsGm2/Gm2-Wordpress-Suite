@@ -24,6 +24,10 @@ npm run build:assets
 
 This generates `assets/dist/ae-main.modern.js`, `ae-main.legacy.js`, page‑specific bundles like `contact.js`, and `polyfills.js`. Modern browsers load only the ESM files; older browsers without module support receive the `nomodule` bundle and polyfills when `needPolyfills()` detects missing features. Commit the updated files in `assets/dist` to version control.
 
+### JavaScript Replacements
+
+When the **Enable Replacements** option is active (`ae_js_replacements`), front‑end scripts execute callbacks on matched elements. Use the `ae_seo/js/replacements` filter to return an associative array where keys are CSS selectors and values are callback names available on `window`. Each callback receives the matched element as its only argument.
+
 ## AI Providers
 
 The suite can generate content using multiple AI services. Select **ChatGPT**, **Gemma**, or **Llama** from the **Gm2 → AI Settings** page and enter the corresponding API key and optional endpoint. The chosen provider is used throughout the plugin for AI-powered features.

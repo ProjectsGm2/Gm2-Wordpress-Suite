@@ -15,7 +15,11 @@ function loadPolyfills() {
   });
 }
 
-function main() {}
+import { initReplacements } from './replacements.js';
+
+function main() {
+  initReplacements(window.aeSEO && window.aeSEO.replacements);
+}
 
 if (needPolyfills()) {
   loadPolyfills().then(main);
