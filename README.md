@@ -404,7 +404,18 @@ reload, and confirm the file loads from disk cache.
 
 ## JavaScript Manager and Auto-Dequeue (Beta)
 
-AE_SEO_JS_Detector builds a transient map of registered scripts and records the page type, widgets and enqueued handles for each front-end request. AE_SEO_JS_Controller reads that context and dequeues scripts not seen for the current URL.
+AE_SEO_JS_Detector builds a transient map of registered scripts and records the page type, widgets and enqueued handles for each front-end request. When a post contains blocks, the detector walks the parsed structure, extracts block names and providers and maps them to related script handles. AE_SEO_JS_Controller reads that context and dequeues scripts not seen for the current URL.
+
+The block–to–script map is filterable via `ae_seo/js/block_scripts`, allowing custom modules to stay whitelisted. Return an array where the key is the block name (optionally suffixed with `/provider`) and the value is a list of handles to keep.
+
+Example: whitelist only the core `wp-embed` script and the plugin’s YouTube helper for the `core/embed` block:
+
+```php
+add_filter('ae_seo/js/block_scripts', function (array $map): array {
+    $map['core/embed/youtube'] = [ 'wp-embed', 'ae-youtube' ];
+    return $map;
+});
+```
 
 AE_SEO_JS_Lazy adds user-intent triggers and consent gating so modules load only when needed. New settings let you define scroll or input events that wake dormant modules, gate analytics behind consent or interaction, and toggle each module individually. Analytics stays idle until a visitor grants consent or interacts with the page, while reCAPTCHA loads only when a form field receives focus—typically in under 200&nbsp;ms.
 
