@@ -28,6 +28,34 @@ class AE_SEO_JS_Manager {
     private static bool $disabled = false;
 
     /**
+     * Count of scripts dequeued.
+     *
+     * @var int
+     */
+    public static int $dequeued = 0;
+
+    /**
+     * Count of handles marked for lazy loading.
+     *
+     * @var int
+     */
+    public static int $lazy = 0;
+
+    /**
+     * Count of polyfill loads.
+     *
+     * @var int
+     */
+    public static int $polyfills = 0;
+
+    /**
+     * Count of jQuery removals.
+     *
+     * @var int
+     */
+    public static int $jquery = 0;
+
+    /**
      * Bootstrap the manager.
      */
     public static function init(): void {
@@ -55,6 +83,7 @@ class AE_SEO_JS_Manager {
         $this->map = $this->ae_seo_load_map();
         add_action('wp_enqueue_scripts', [ $this, 'ae_seo_enqueue_scripts' ], 0);
         add_filter('script_loader_tag', [ $this, 'ae_seo_script_loader_tag' ], 10, 3);
+        add_action('send_headers', [ __CLASS__, 'send_server_timing' ], 999);
     }
 
     /**
@@ -181,9 +210,21 @@ class AE_SEO_JS_Manager {
         $lazy = apply_filters('ae_seo/js/should_lazy_load', $lazy, $handle, $src);
         if ($lazy) {
             $tag = str_replace('<script ', '<script data-aejs="lazy" ', $tag);
+            self::$lazy++;
             ae_seo_js_log('lazy ' . $handle);
         }
         return $tag;
+    }
+
+    /**
+     * Output server-timing header with script decision counters.
+     */
+    public static function send_server_timing(): void {
+        $d = self::$dequeued;
+        $l = self::$lazy;
+        $p = self::$polyfills;
+        $j = self::$jquery;
+        header('Server-Timing: ae-dequeued=' . $d . ', ae-lazy=' . $l . ', ae-polyfills=' . $p . ', ae-jquery=' . $j);
     }
 }
 
