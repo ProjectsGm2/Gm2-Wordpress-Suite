@@ -40,3 +40,11 @@ await build({
   target: ['es5'],
   ...shared
 });
+
+await build({
+  entryPoints: ['assets/src/ae-lazy.js'],
+  outfile: 'assets/dist/ae-lazy.js',
+  format: 'esm',
+  target: ['es2020'],
+  ...shared
+});
