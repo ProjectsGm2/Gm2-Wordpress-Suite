@@ -423,6 +423,14 @@ The manager also emits a `Server-Timing` header with `ae-dequeued`, `ae-lazy`, `
 
 The **SEO → Script Usage** page lists discovered script handles with counts per template so you can accept or override which templates require each script before relying on auto-dequeue.
 
+Run the internal smoke test to capture these metrics across representative pages:
+
+```bash
+wp ae-seo js:smoketest
+```
+
+Each request writes a line to `wp-content/ae-seo/logs/js-optimizer.log` recording `registered`, `enqueued`, `dequeued`, `lazy`, `jquery` and `polyfills` counts from the `Server-Timing` header and DOM analysis. Review the results under **Performance → JavaScript**, which summarizes the log and surfaces Lighthouse-style hints such as “Consider enabling lazy-load for Analytics,” “jQuery loaded but no dependents found,” and “Polyfills detected. Review need for legacy browser support.” These tools help uncover unnecessary or blocking scripts that may hinder performance.
+
 ## SEO Performance CLI
 
 Run `wp seo-perf` commands to audit a site and manage caching headers.
