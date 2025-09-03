@@ -1,11 +1,25 @@
-export default function(id){
-  if(!id||window.fbq){return;}
-  var n=window.fbq=function(){n.callMethod? n.callMethod.apply(n,arguments):n.queue.push(arguments);};
-  if(!window._fbq){window._fbq=n;}
-  n.push=n; n.loaded=!0; n.version='2.0'; n.queue=[];
-  var s=document.createElement('script');
-  s.async=true;
-  s.src='https://connect.facebook.net/en_US/fbevents.js';
-  document.head.appendChild(s);
-  n('init',id); n('track','PageView');
+export default function fbq(id) {
+  if (!id || window.fbq) {
+    return;
+  }
+  const n = function() {
+    n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
+  };
+  window.fbq = n;
+  if (!window._fbq) {
+    window._fbq = n;
+  }
+  n.push = n;
+  n.loaded = true;
+  n.version = '2.0';
+  n.queue = [];
+
+  const script = document.createElement('script');
+  script.async = true;
+  script.id = 'ae-fbq';
+  script.src = 'https://connect.facebook.net/en_US/fbevents.js';
+  document.head.appendChild(script);
+
+  n('init', id);
+  n('track', 'PageView');
 }
