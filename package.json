@@ -10,7 +10,7 @@
     "test": "jest",
     "prebuild:optimizer": "rm -f assets/dist/optimizer-legacy.js assets/dist/optimizer-modern.js assets/dist/optimizer.css",
     "build:optimizer": "rollup -c rollup.config.mjs",
-    "prebuild:assets": "rm -f assets/dist/ae-main.modern.js assets/dist/ae-main.legacy.js assets/dist/contact.js assets/dist/product.js assets/dist/blog.js assets/dist/polyfills.js assets/dist/ae-lazy.js",
+    "prebuild:assets": "rm -f assets/dist/ae-main.modern.js assets/dist/ae-main.legacy.js assets/dist/contact.js assets/dist/product.js assets/dist/blog.js assets/dist/polyfills.js assets/dist/ae-lazy.js && rm -rf assets/dist/modules",
     "build:assets": "node assets/build/build.mjs",
     "build": "npm run build:optimizer && npm run build:assets"
   },

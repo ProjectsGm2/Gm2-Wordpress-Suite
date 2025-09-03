@@ -1,0 +1,1 @@
+function a(e){if(!e||document.getElementById("ae-gtm"))return;window.dataLayer=window.dataLayer||[],window.dataLayer.push({"gtm.start":new Date().getTime(),event:"gtm.js"});let t=document.createElement("script");t.async=!0,t.id="ae-gtm",t.src="https://www.googletagmanager.com/gtm.js?id="+encodeURIComponent(e),document.head.appendChild(t)}export{a as default};

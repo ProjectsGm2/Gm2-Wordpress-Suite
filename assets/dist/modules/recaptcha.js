@@ -1,0 +1,1 @@
+function c(t){if(!t||document.getElementById("ae-recaptcha"))return;let e=document.createElement("script");e.id="ae-recaptcha",e.src="https://www.google.com/recaptcha/api.js?render="+encodeURIComponent(t),document.head.appendChild(e)}export{c as default};

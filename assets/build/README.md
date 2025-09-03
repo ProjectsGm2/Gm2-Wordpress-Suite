@@ -14,3 +14,5 @@ The build step generates the following files in `assets/dist/`:
 - `ae-main.legacy.js` – ES5 IIFE build. Enqueue only when the "Send Legacy (nomodule) Bundle" option (`ae_js_nomodule_legacy`) is enabled.
 - `contact.js`, `product.js`, `blog.js` – page‑specific bundles.
 - `polyfills.js` – loaded at runtime only when `needPolyfills()` detects missing browser features.
+- `ae-lazy.js` – on-demand loader for third-party scripts.
+- `modules/*.js` – individual modules loaded by `ae-lazy.js`.
