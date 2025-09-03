@@ -6,13 +6,21 @@ function needPolyfills() {
 }
 
 function loadPolyfills() {
-  var script = document.createElement('script');
-  script.src = 'polyfills.js';
-  document.head.appendChild(script);
+  return new Promise(function (resolve, reject) {
+    var script = document.createElement('script');
+    script.src = 'polyfills.js';
+    script.onload = resolve;
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
 }
 
+function main() {}
+
 if (needPolyfills()) {
-  loadPolyfills();
+  loadPolyfills().then(main);
+} else {
+  main();
 }
 
 export { needPolyfills };
