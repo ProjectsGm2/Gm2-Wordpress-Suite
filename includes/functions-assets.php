@@ -61,6 +61,30 @@ if (!function_exists('ae_seo_js_safe_mode')) {
     }
 }
 
+if (!function_exists('ae_seo_should_lazy')) {
+    /**
+     * Determine if a module should be lazy loaded.
+     *
+     * @param string $what Module identifier.
+     * @return bool
+     */
+    function ae_seo_should_lazy(string $what): bool {
+        if (ae_seo_js_safe_mode()) {
+            return false;
+        }
+
+        $lazy = get_option('ae_js_lazy_' . $what, '1') === '1';
+        /**
+         * Filter whether a module should be lazy loaded.
+         *
+         * @param bool   $lazy Whether the module should lazy load.
+         * @param string $what Module identifier.
+         */
+        $lazy = apply_filters('ae_seo/js/should_lazy_load', $lazy, $what, '');
+        return (bool) $lazy;
+    }
+}
+
 if (!function_exists('ae_seo_script_loader_tag')) {
     /**
      * Add module or nomodule attributes to AE scripts.
