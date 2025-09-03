@@ -60,3 +60,38 @@ if (!function_exists('ae_seo_js_safe_mode')) {
         return get_option('ae_js_respect_safe_mode') === '1' && (($_GET['aejs'] ?? '') === 'off');
     }
 }
+
+if (!function_exists('ae_seo_script_loader_tag')) {
+    /**
+     * Add module or nomodule attributes to AE scripts.
+     *
+     * @param string $tag    The original script tag.
+     * @param string $handle Script handle.
+     * @param string $src    Script source.
+     * @return string
+     */
+    function ae_seo_script_loader_tag(string $tag, string $handle, string $src): string {
+        if (ae_seo_js_safe_mode()) {
+            return $tag;
+        }
+
+        $send_modern = get_option('ae_js_send_modern', '1') === '1';
+        $send_legacy = get_option('ae_js_send_nomodule_legacy', '0') === '1';
+
+        if (!str_starts_with($handle, 'ae-')) {
+            return $tag;
+        }
+
+        if ($send_modern && str_contains($src, '.modern.')) {
+            return sprintf('<script type="module" src="%s" id="%s-js" defer></script>', $src, $handle);
+        }
+
+        if ($send_legacy && str_contains($src, '.legacy.')) {
+            return sprintf('<script nomodule src="%s" id="%s-js" defer></script>', $src, $handle);
+        }
+
+        return $tag;
+    }
+}
+
+add_filter('script_loader_tag', 'ae_seo_script_loader_tag', 10, 3);
