@@ -396,6 +396,8 @@ reload, and confirm the file loads from disk cache.
 
 AE_SEO_JS_Detector builds a transient map of registered scripts and records the page type, widgets and enqueued handles for each front-end request. AE_SEO_JS_Controller reads that context and dequeues scripts not seen for the current URL.
 
+AE_SEO_JS_Lazy adds user-intent triggers and consent gating so modules load only when needed. New settings let you define scroll or input events that wake dormant modules, gate analytics behind consent or interaction, and toggle each module individually. Analytics stays idle until a visitor grants consent or interacts with the page, while reCAPTCHA loads only when a form field receives focus—typically in under 200&nbsp;ms.
+
 Settings live under **SEO → Performance → JavaScript** to enable the manager, lazy-loading, script replacements, debug logging, handle allow and deny lists and an optional safe-mode query parameter. Per-page auto-dequeue remains in beta—test on staging and use the allowlist, denylist or `?aejs=off` parameter if a handle is removed incorrectly.
 
 The **SEO → Script Usage** page lists discovered script handles with counts per template so you can accept or override which templates require each script before relying on auto-dequeue.

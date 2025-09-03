@@ -30,7 +30,7 @@ Key features include:
 * Remote mirror for vendor scripts like Facebook Pixel and gtag with SRI hashes and a daily refresh
 * Script Attributes manager with dependency-aware “Defer all third-party” and “Conservative” presets
 * Render Optimizer for critical CSS, JS deferral with handle/domain allow and deny lists plus inline dependency and jQuery auto-detection, differential serving with page-scoped entry points so modern browsers load only the ESM bundle while legacy browsers get a `nomodule` file and polyfills, and optional asset combination/minification with size limits and purge controls
-* JavaScript Manager powered by AE_SEO_JS_Detector and AE_SEO_JS_Controller for optional per-page auto-dequeue (beta), lazy loading, script replacements, handle allow/deny lists, and a Script Usage admin page for acceptance scenarios
+* JavaScript Manager powered by AE_SEO_JS_Detector, AE_SEO_JS_Controller and AE_SEO_JS_Lazy for optional per-page auto-dequeue (beta), user-intent triggers, consent gating, per-module toggles, lazy loading, script replacements, handle allow/deny lists, a Script Usage admin page for acceptance scenarios, and performance gains such as idle analytics and sub-200 ms reCAPTCHA on form focus
 
 == Installation ==
 1. Upload the plugin files to the `/wp-content/plugins/gm2-wordpress-suite` directory.
@@ -158,6 +158,8 @@ If WP Rocket, Autoptimize, Perfmatters or other optimizer plugins are active, th
 == JavaScript Manager ==
 
 AE_SEO_JS_Detector builds a map of registered scripts and caches the page type, widgets and handles used on each request. AE_SEO_JS_Controller consults that context to dequeue handles that were not previously seen for the current URL.
+
+AE_SEO_JS_Lazy introduces user-intent triggers and consent gating so modules activate only when necessary. New per-module toggles let you specify scroll or input events that wake dormant scripts, gate analytics behind consent or interaction, and load reCAPTCHA only when a form field receives focus—usually in under 200 ms.
 
 Open **SEO → Performance → JavaScript** to enable the manager, lazy loading, script replacements, debug logging and an optional safe-mode query parameter. The screen also provides handle allow and deny lists and a per-page auto-dequeue option that is still in beta.
 
