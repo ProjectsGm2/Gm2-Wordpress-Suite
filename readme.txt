@@ -30,11 +30,12 @@ Key features include:
 * Remote mirror for vendor scripts like Facebook Pixel and gtag with SRI hashes and a daily refresh
 * Script Attributes manager with dependency-aware “Defer all third-party” and “Conservative” presets
 * Render Optimizer for critical CSS, JS deferral with handle/domain allow and deny lists plus inline dependency and jQuery auto-detection, differential serving with page-scoped entry points so modern browsers load only the ESM bundle while legacy browsers get a `nomodule` file and polyfills, and optional asset combination/minification with size limits and purge controls
-* JavaScript Manager powered by AE_SEO_JS_Detector, AE_SEO_JS_Controller and AE_SEO_JS_Lazy for optional per-page auto-dequeue (beta), user-intent triggers, consent gating, per-module toggles, lazy loading, script replacements, handle allow/deny lists, a Script Usage admin page for acceptance scenarios, and performance gains such as idle analytics and sub-200 ms reCAPTCHA on form focus
+* JavaScript Manager powered by AE_SEO_JS_Detector, AE_SEO_JS_Controller and AE_SEO_JS_Lazy for optional per-page auto-dequeue (beta), user-intent triggers, consent gating, per-module toggles, lazy loading, script replacements, handle allow/deny lists, a Script Usage admin page for acceptance scenarios, and performance gains such as idle analytics and sub-200 ms reCAPTCHA on form focus. Enable **Respect Safe Mode param** to disable the manager with `?aejs=off`, use **Log to console in dev** to print decisions in DevTools, and inspect `Server-Timing` metrics (`ae-dequeued`, `ae-lazy`, `ae-polyfills`, `ae-jquery`) for each request
 * Option to load jQuery only when required with URL-based overrides and debug logging; pages with Elementor or other jQuery-dependent assets still enqueue it
 * DOM replacements via the `ae_seo/js/replacements` filter and bundled `vanilla-helpers.js` helpers
 * Hashed build pipeline with `ae_seo_register_asset` helper and debug sourcemaps
-* Tools → Server Hints page with one-click `.htaccess` writer and diagnostic REST endpoint
+* Tools → Server Hints page with one-click `.htaccess` writer, backup/rollback button and diagnostic REST endpoint
+* `wp ae-seo js:audit` CLI command audits recent posts for script counts, dequeued handles, jQuery and module usage
 
 == Installation ==
 1. Upload the plugin files to the `/wp-content/plugins/gm2-wordpress-suite` directory.
@@ -105,9 +106,23 @@ Verify the `Cache-Control` header and, for repeat-view testing, keep **Disable c
 unchecked in DevTools, hard reload the page and confirm the file loads from disk cache.
 
 == Server Hints ==
-Open **Tools → Server Hints** to inspect how static assets are delivered. The page lists hashed files with their minification, compression and cache headers. A one-click button writes caching rules into `.htaccess` on Apache or LiteSpeed, and the same data is exposed via the `wp-json/ae-seo/v1/server-hints` diagnostic REST endpoint.
+Open **Tools → Server Hints** to inspect how static assets are delivered. The page lists hashed files with their minification, compression and cache headers. A one-click button writes caching rules into `.htaccess` on Apache or LiteSpeed and stores a timestamped backup with a **Revert last change** button; the same data is exposed via the `wp-json/ae-seo/v1/server-hints` diagnostic REST endpoint.
 
 **Acceptance check:** hashed files should be minified, compressed and return long-cache headers.
+
+== JavaScript Audit CLI ==
+Run `wp ae-seo js:audit --limit=10` to scan recent posts, pages and products.
+
+```
++-----------------------------+-------+-----------+--------+-----+
+| url                         | total | dequeued  | jquery | esm |
++-----------------------------+-------+-----------+--------+-----+
+| https://example.com/        | 5     | gmaps     | N      | Y   |
+| https://example.com/about/  | 4     |           | Y      | N   |
++-----------------------------+-------+-----------+--------+-----+
+```
+
+The table shows the number of `<script>` tags, any handles logged as dequeued, and whether jQuery or module scripts appeared.
 
 == Render Optimizer ==
 Enable performance modules from **SEO → Performance → Render Optimizer**. Available options include:

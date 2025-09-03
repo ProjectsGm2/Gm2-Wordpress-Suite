@@ -408,7 +408,16 @@ AE_SEO_JS_Detector builds a transient map of registered scripts and records the 
 
 AE_SEO_JS_Lazy adds user-intent triggers and consent gating so modules load only when needed. New settings let you define scroll or input events that wake dormant modules, gate analytics behind consent or interaction, and toggle each module individually. Analytics stays idle until a visitor grants consent or interacts with the page, while reCAPTCHA loads only when a form field receives focus—typically in under 200&nbsp;ms.
 
-Settings live under **SEO → Performance → JavaScript** to enable the manager, lazy-loading, script replacements, debug logging, handle allow and deny lists and an optional safe-mode query parameter. A **Load jQuery only when required** option removes jQuery when no enqueued scripts depend on it; pages using Elementor or other jQuery‑dependent assets still receive it automatically. Regex patterns in **Always include jQuery on these URLs** let you force jQuery on specific URLs. When **Debug Log** is enabled, script decisions are recorded in `wp-content/ae-seo/logs/js-optimizer.log`. Per-page auto-dequeue remains in beta—test on staging and use the allowlist, denylist or `?aejs=off` parameter if a handle is removed incorrectly.
+Settings live under **SEO → Performance → JavaScript** to enable the manager, lazy-loading, script replacements, debug logging and handle allow and deny lists. Enable **Respect Safe Mode param** to honour `?aejs=off` and temporarily disable the manager when troubleshooting. A **Load jQuery only when required** option removes jQuery when no enqueued scripts depend on it; pages using Elementor or other jQuery‑dependent assets still receive it automatically. Regex patterns in **Always include jQuery on these URLs** let you force jQuery on specific URLs.
+
+When **Debug Log** is enabled, script decisions are recorded in `wp-content/ae-seo/logs/js-optimizer.log`. Toggle **Log to console in dev** to echo the same messages in DevTools:
+
+```
+[AE-SEO] dequeued recaptcha
+[AE-SEO] lazy analytics
+```
+
+The manager also emits a `Server-Timing` header with `ae-dequeued`, `ae-lazy`, `ae-polyfills` and `ae-jquery` counters to gauge the impact of its decisions. Per-page auto-dequeue remains in beta—test on staging and use the allowlist, denylist or `?aejs=off` parameter if a handle is removed incorrectly.
 
 The **SEO → Script Usage** page lists discovered script handles with counts per template so you can accept or override which templates require each script before relying on auto-dequeue.
 
@@ -468,10 +477,24 @@ site.
 WP-CLI prints an error message and exits with the code above. Review the
 message to resolve permission or server issues before retrying.
 
+## JavaScript Audit CLI
+
+Run `wp ae-seo js:audit --limit=10` to scan recent posts, pages and products and report script usage.
+
+```
++-----------------------------+-------+-----------+--------+-----+
+| url                         | total | dequeued  | jquery | esm |
++-----------------------------+-------+-----------+--------+-----+
+| https://example.com/        | 5     | gmaps     | N      | Y   |
+| https://example.com/about/  | 4     |           | Y      | N   |
++-----------------------------+-------+-----------+--------+-----+
+```
+
+The table lists the number of `<script>` tags, any handles logged as dequeued, and whether jQuery or module scripts were detected.
 
 ## Server Hints and Diagnostics
 
-Open **Tools → Server Hints** to validate caching behaviour. The page lists hashed assets, reports whether they are minified and compressed and shows their cache headers. A one-click button writes caching rules into `.htaccess` on Apache or LiteSpeed. The same details are available from the `wp-json/ae-seo/v1/server-hints` diagnostic REST endpoint for automated tests.
+Open **Tools → Server Hints** to validate caching behaviour. The page lists hashed assets, reports whether they are minified and compressed and shows their cache headers. A one-click button writes caching rules into `.htaccess` on Apache or LiteSpeed, creating a timestamped backup with a **Revert last change** button. The same details are available from the `wp-json/ae-seo/v1/server-hints` diagnostic REST endpoint for automated tests.
 
 
 
