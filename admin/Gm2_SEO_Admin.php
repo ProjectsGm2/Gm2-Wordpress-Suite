@@ -3079,7 +3079,7 @@ class Gm2_SEO_Admin {
         $jquery_demand = isset($_POST['ae_js_jquery_on_demand']) ? '1' : '0';
         update_option('ae_js_jquery_on_demand', $jquery_demand);
 
-        $jquery_allow = isset($_POST['ae_js_jquery_url_allow']) ? sanitize_textarea_field($_POST['ae_js_jquery_url_allow']) : '';
+        $jquery_allow = isset($_POST['ae_js_jquery_url_allow']) ? trim(sanitize_textarea_field($_POST['ae_js_jquery_url_allow'])) : '';
         update_option('ae_js_jquery_url_allow', $jquery_allow);
 
         $allow = isset($_POST['ae_js_dequeue_allowlist']) ? $this->sanitize_handle_array((array) $_POST['ae_js_dequeue_allowlist']) : [];
