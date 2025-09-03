@@ -3,6 +3,52 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+$js_tab = isset($_GET['js-tab']) ? sanitize_key($_GET['js-tab']) : 'settings';
+if ($js_tab === 'compatibility') {
+    $file = GM2_PLUGIN_DIR . 'config/compat-defaults.php';
+    $map = [];
+    if (file_exists($file)) {
+        $map = include $file;
+    }
+    if (!is_array($map)) {
+        $map = [];
+    }
+    $overrides = get_option('ae_js_compat_overrides', []);
+    if (!is_array($overrides)) {
+        $overrides = [];
+    }
+    $names = [
+        'elementor'       => 'Elementor',
+        'woocommerce'     => 'WooCommerce',
+        'contact-form-7'  => 'Contact Form 7',
+        'seo-by-rank-math'=> 'SEO by Rank Math',
+    ];
+    $descriptions = [
+        'elementor' => esc_html__( 'Always allow Elementor frontend scripts to ensure page builder widgets render correctly. Disabling may break layouts or widgets.', 'gm2-wordpress-suite' ),
+        'woocommerce' => esc_html__( 'Allow core WooCommerce scripts for carts and checkout. Disabling may disrupt shopping functionality.', 'gm2-wordpress-suite' ),
+        'contact-form-7' => esc_html__( 'Keep Contact Form 7 scripts for form validation and submission. Disabling may prevent forms from working.', 'gm2-wordpress-suite' ),
+        'seo-by-rank-math' => esc_html__( 'Permit Rank Math scripts for SEO analysis features. Disabling may limit SEO functionality or cause errors.', 'gm2-wordpress-suite' ),
+    ];
+    echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
+    wp_nonce_field('gm2_js_compatibility_save', 'gm2_js_compatibility_nonce');
+    echo '<input type="hidden" name="action" value="gm2_js_compatibility_settings" />';
+    echo '<table class="form-table"><tbody>';
+    foreach ($map as $plugin => $handles) {
+        $allowed = empty(array_intersect((array) $handles, $overrides));
+        $label = $names[$plugin] ?? ucwords(str_replace('-', ' ', $plugin));
+        echo '<tr><th scope="row">' . esc_html($label) . '</th><td>';
+        echo '<label><input type="checkbox" name="ae_js_compat_plugins[]" value="' . esc_attr($plugin) . '" ' . checked($allowed, true, false) . ' /> ' . esc_html__( 'Allow by default', 'gm2-wordpress-suite' ) . '</label>';
+        if (!empty($descriptions[$plugin])) {
+            echo '<p class="description">' . esc_html($descriptions[$plugin]) . '</p>';
+        }
+        echo '</td></tr>';
+    }
+    echo '</tbody></table>';
+    submit_button( esc_html__( 'Save Compatibility', 'gm2-wordpress-suite' ) );
+    echo '</form>';
+    return;
+}
+
 $enable        = get_option('ae_js_enable_manager', '0');
 $lazy          = get_option('ae_js_lazy_load', '0');
 $lazy_recaptcha = get_option('ae_js_lazy_recaptcha', '0');

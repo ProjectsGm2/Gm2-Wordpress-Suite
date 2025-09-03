@@ -98,6 +98,7 @@ class Gm2_SEO_Admin {
         add_option('ae_js_dequeue_denylist', []);
         add_option('ae_js_jquery_on_demand', '0');
         add_option('ae_js_jquery_url_allow', '');
+        add_option('ae_js_compat_overrides', []);
 
         $this->migrate_js_option_names();
 
@@ -135,6 +136,7 @@ class Gm2_SEO_Admin {
         add_action('admin_post_gm2_import_settings', [$this, 'handle_import_settings']);
         add_action('admin_post_gm2_render_optimizer_settings', [$this, 'handle_render_optimizer_form']);
         add_action('admin_post_gm2_js_optimizer_settings', [$this, 'handle_js_optimizer_form']);
+        add_action('admin_post_gm2_js_compatibility_settings', [$this, 'handle_js_compatibility_form']);
 
         add_action('wp_ajax_gm2_purge_critical_css', [$this, 'ajax_purge_critical_css']);
         add_action('wp_ajax_gm2_purge_js_map', [$this, 'ajax_purge_js_map']);
@@ -1126,8 +1128,9 @@ class Gm2_SEO_Admin {
             } elseif ($subtab === 'javascript') {
                 $js_tab = isset($_GET['js-tab']) ? sanitize_key($_GET['js-tab']) : 'settings';
                 $js_tabs = [
-                    'settings' => esc_html__( 'Settings', 'gm2-wordpress-suite' ),
-                    'report'   => esc_html__( 'Performance Report', 'gm2-wordpress-suite' ),
+                    'settings'      => esc_html__( 'Settings', 'gm2-wordpress-suite' ),
+                    'compatibility' => esc_html__( 'Compatibility', 'gm2-wordpress-suite' ),
+                    'report'        => esc_html__( 'Performance Report', 'gm2-wordpress-suite' ),
                 ];
                 echo '<h3 class="nav-tab-wrapper" style="margin-top:20px;">';
                 foreach ($js_tabs as $slug => $label) {
@@ -3141,6 +3144,35 @@ class Gm2_SEO_Admin {
         update_option('ae_js_dequeue_denylist', $deny);
 
         wp_redirect(admin_url('admin.php?page=gm2-seo&tab=performance&subtab=javascript&updated=1'));
+        exit;
+    }
+
+    public function handle_js_compatibility_form() {
+        if (!current_user_can('manage_options')) {
+            wp_die( esc_html__( 'Permission denied', 'gm2-wordpress-suite' ) );
+        }
+        if (empty($_POST['gm2_js_compatibility_nonce']) || !wp_verify_nonce($_POST['gm2_js_compatibility_nonce'], 'gm2_js_compatibility_save')) {
+            wp_die( esc_html__( 'Invalid nonce', 'gm2-wordpress-suite' ) );
+        }
+        $selected = isset($_POST['ae_js_compat_plugins']) ? array_map('sanitize_key', (array) $_POST['ae_js_compat_plugins']) : [];
+        $file = GM2_PLUGIN_DIR . 'config/compat-defaults.php';
+        $map = [];
+        if (file_exists($file)) {
+            $map = include $file;
+        }
+        if (!is_array($map)) {
+            $map = [];
+        }
+        $overrides = [];
+        foreach ($map as $plugin => $handles) {
+            if (!in_array($plugin, $selected, true)) {
+                foreach ((array) $handles as $handle) {
+                    $overrides[] = sanitize_text_field($handle);
+                }
+            }
+        }
+        update_option('ae_js_compat_overrides', array_values(array_unique($overrides)));
+        wp_redirect(admin_url('admin.php?page=gm2-seo&tab=performance&subtab=javascript&js-tab=compatibility&updated=1'));
         exit;
     }
 
