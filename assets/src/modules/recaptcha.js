@@ -1,9 +1,10 @@
-export default function(siteKey){
-  if(document.getElementById('ae-recaptcha')){return;}
-  var s=document.createElement('script');
-  s.id='ae-recaptcha';
-  var src='https://www.google.com/recaptcha/api.js';
-  if(siteKey){src+='?render='+encodeURIComponent(siteKey);}
-  s.src=src;
-  document.head.appendChild(s);
+export default function recaptcha(siteKey) {
+  if (!siteKey || document.getElementById('ae-recaptcha')) {
+    return;
+  }
+  const script = document.createElement('script');
+  script.id = 'ae-recaptcha';
+  script.src = 'https://www.google.com/recaptcha/api.js?render=' +
+    encodeURIComponent(siteKey);
+  document.head.appendChild(script);
 }
