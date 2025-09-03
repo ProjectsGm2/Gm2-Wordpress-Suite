@@ -50,12 +50,15 @@ class AE_SEO_JS_Detector {
         if (is_admin()) {
             return;
         }
-        $url = self::current_url();
-        $key = 'aejs_ctx:' . md5($url);
-        $ctx = [
+        $url      = self::current_url();
+        $key      = 'aejs_ctx:' . md5($url);
+        $found    = self::discover_widgets();
+        $scripts  = array_merge(self::current_scripts(), $found['scripts']);
+        $ctx      = [
             'page_type' => self::determine_page_type(),
-            'widgets'   => self::discover_widgets(),
-            'scripts'   => self::current_scripts(),
+            'widgets'   => $found['widgets'],
+            'blocks'    => $found['blocks'],
+            'scripts'   => array_values(array_unique($scripts)),
         ];
         set_transient($key, $ctx, 30 * MINUTE_IN_SECONDS);
     }
@@ -103,6 +106,8 @@ class AE_SEO_JS_Detector {
      */
     private static function discover_widgets(): array {
         $widgets = [];
+        $blocks  = [];
+        $handles = [];
         $content = '';
         if (is_singular()) {
             $post = get_post();
@@ -128,18 +133,65 @@ class AE_SEO_JS_Detector {
                 }
             }
             if (function_exists('has_blocks') && has_blocks($content)) {
-                $blocks = parse_blocks($content);
-                foreach ($blocks as $block) {
-                    if (!empty($block['blockName'])) {
-                        $widgets[] = $block['blockName'];
+                $map    = self::block_scripts_map();
+                $parsed = parse_blocks($content);
+                $walker = function (array $list) use (&$walker, &$widgets, &$blocks, &$handles, $map): void {
+                    foreach ($list as $block) {
+                        if (empty($block['blockName'])) {
+                            continue;
+                        }
+                        $name     = $block['blockName'];
+                        $provider = '';
+                        if (isset($block['attrs']['providerNameSlug'])) {
+                            $provider = (string) $block['attrs']['providerNameSlug'];
+                        } elseif (isset($block['attrs']['url'])) {
+                            $url = (string) $block['attrs']['url'];
+                            if (strpos($url, 'youtube') !== false || strpos($url, 'youtu.be') !== false) {
+                                $provider = 'youtube';
+                            } elseif (strpos($url, 'vimeo.com') !== false) {
+                                $provider = 'vimeo';
+                            } elseif (strpos($url, 'google.com/maps') !== false || strpos($url, 'goo.gl/maps') !== false) {
+                                $provider = 'google-maps';
+                            }
+                        }
+                        $key = $provider !== '' ? $name . '/' . $provider : $name;
+                        if (isset($map[$key])) {
+                            $handles = array_merge($handles, (array) $map[$key]);
+                        } elseif (isset($map[$name])) {
+                            $handles = array_merge($handles, (array) $map[$name]);
+                        }
+                        $widgets[] = $name;
+                        $blocks[]  = [ 'name' => $name, 'provider' => $provider ];
+                        if (!empty($block['innerBlocks']) && is_array($block['innerBlocks'])) {
+                            $walker($block['innerBlocks']);
+                        }
                     }
-                }
+                };
+                $walker($parsed);
             }
             if (strpos($content, 'g-recaptcha') !== false || strpos($content, 'data-sitekey') !== false) {
                 $widgets[] = 'recaptcha';
             }
         }
-        return array_values(array_unique($widgets));
+        return [
+            'widgets' => array_values(array_unique($widgets)),
+            'blocks'  => $blocks,
+            'scripts' => array_values(array_unique($handles)),
+        ];
+    }
+
+    /**
+     * Default block script map.
+     *
+     * @return array
+     */
+    private static function block_scripts_map(): array {
+        $map = [
+            'core/embed/youtube'     => [ 'ae-youtube' ],
+            'core/embed/vimeo'       => [ 'ae-vimeo' ],
+            'core/embed/google-maps' => [ 'ae-google-maps' ],
+        ];
+        return apply_filters('ae_seo/js/block_scripts', $map);
     }
 
     /**
