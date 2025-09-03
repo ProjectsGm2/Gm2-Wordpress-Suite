@@ -70,6 +70,29 @@ NGINX;
         echo '<div class="wrap">';
         echo '<h1>' . esc_html__( 'AE Server Hints', 'gm2-wordpress-suite' ) . '</h1>';
 
+        $default  = includes_url('js/jquery/jquery.min.js');
+        $endpoint = esc_url_raw(rest_url('ae-seo/v1/diag/headers'));
+        $nonce    = wp_create_nonce('wp_rest');
+        echo '<h2>' . esc_html__( 'Check Asset Headers', 'gm2-wordpress-suite' ) . '</h2>';
+        echo '<p><input type="text" id="ae-seo-header-url" size="80" value="' . esc_attr($default) . '" /> ';
+        echo '<button type="button" class="button" id="ae-seo-header-check">' . esc_html__( 'Check', 'gm2-wordpress-suite' ) . '</button></p>';
+        echo '<pre id="ae-seo-header-result"></pre>';
+        echo '<script>';
+        echo 'document.getElementById("ae-seo-header-check").addEventListener("click",function(){';
+        echo 'var url=document.getElementById("ae-seo-header-url").value;';
+        echo 'var out=document.getElementById("ae-seo-header-result");';
+        echo 'out.textContent="Checking...";';
+        echo 'fetch("' . esc_js($endpoint) . '?url="+encodeURIComponent(url),{headers:{"X-WP-Nonce":"' . esc_js($nonce) . '"}})';
+        echo '.then(function(r){return r.json();}).then(function(data){';
+        echo 'var text="";';
+        echo 'if(data.headers){for(var k in data.headers){text+=k+": "+data.headers[k]+"\n";}}';
+        echo 'else if(data.message){text=data.message;}';
+        echo 'else{text=JSON.stringify(data);}';
+        echo 'out.textContent=text;';
+        echo '}).catch(function(err){out.textContent="Error: "+err;});';
+        echo '});';
+        echo '</script>';
+
         if (is_apache() && isset($_POST['ae_seo_write_htaccess']) && check_admin_referer('ae_seo_write_htaccess')) {
             $file = ABSPATH . '.htaccess';
             if ($this->htaccess_writable()) {
