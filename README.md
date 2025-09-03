@@ -16,15 +16,13 @@ This script creates a `gm2-wordpress-suite.zip` file that includes the plugin an
 
 ### Rebuilding Optimizer assets
 
-The Render Optimizer JavaScript is bundled with Rollup. After modifying files in `assets/src/optimizer`, regenerate the distributable scripts with:
+Front‑end scripts are bundled with **esbuild** using page‑scoped entry points. The build step outputs modern ESM and optional legacy bundles plus a runtime polyfill loader. After modifying files in `assets/src/optimizer` or `assets/src/` run:
 
 ```bash
-npm run build
-# or
-make build
+npm run build:assets
 ```
 
-The generated files in `assets/dist` should be committed to version control.
+This generates `assets/dist/ae-main.modern.js`, `ae-main.legacy.js`, page‑specific bundles like `contact.js`, and `polyfills.js`. Modern browsers load only the ESM files; older browsers without module support receive the `nomodule` bundle and polyfills when `needPolyfills()` detects missing features. Commit the updated files in `assets/dist` to version control.
 
 ## AI Providers
 
@@ -112,7 +110,7 @@ npm install
 npm test
 ```
 
-The Makefile includes a `test` target which automatically checks for the test suite and runs PHPUnit and the Jest tests. When invoking this target you must supply your database credentials via the `DB_NAME`, `DB_USER`, and `DB_PASS` environment variables:
+The acceptance tests `tests/test-main-diff-serving.php` and `tests/test-diff-serving.php` validate the **Send Legacy (nomodule) Bundle** setting and runtime polyfill logic. The Makefile includes a `test` target which automatically checks for the test suite and runs PHPUnit and the Jest tests. When invoking this target you must supply your database credentials via the `DB_NAME`, `DB_USER`, and `DB_PASS` environment variables:
 
 ```bash
 make test DB_NAME=wp_test DB_USER=root DB_PASS=pass
@@ -152,7 +150,7 @@ The Render Optimizer groups several front-end performance features behind **SEO 
 
 * Inline critical CSS and preload full stylesheets.
 * Defer or async scripts with an enable toggle plus handle and domain allow/deny lists.
-* Serve modern and legacy JavaScript bundles using `<script type="module" crossorigin="anonymous">` and `<script nomodule crossorigin="anonymous">`. Differential serving is enabled by default (`ae_seo_ro_enable_diff_serving`), and module scripts remain blocking even when JS deferral is active. The legacy ES5 bundle can be toggled via the "Send Legacy (nomodule) Bundle" setting (`ae_js_nomodule_legacy`).
+* Serve modern and legacy JavaScript bundles using `<script type="module" crossorigin="anonymous">` and `<script nomodule crossorigin="anonymous">`. Bundles are emitted per page‑scoped entry point. Differential serving is enabled by default (`ae_seo_ro_enable_diff_serving`), and module scripts remain blocking even when JS deferral is active. Modern browsers load only the ESM bundle while legacy browsers receive the `nomodule` file plus `polyfills.js` when required. The legacy ES5 bundle can be toggled via the "Send Legacy (nomodule) Bundle" setting (`ae_js_nomodule_legacy`).
 * Combine and minify local CSS and JS assets with per-type toggles, size caps and exclusion lists.
 
 ### Critical CSS
