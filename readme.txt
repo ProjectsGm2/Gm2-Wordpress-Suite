@@ -29,7 +29,7 @@ Key features include:
 * Automatically writes long-lived cache headers to `.htaccess` on Apache and LiteSpeed
 * Remote mirror for vendor scripts like Facebook Pixel and gtag with SRI hashes and a daily refresh
 * Script Attributes manager with dependency-aware “Defer all third-party” and “Conservative” presets
-* Render Optimizer for critical CSS, JS deferral with handle/domain allow and deny lists plus inline dependency and jQuery auto-detection, differential serving, and optional asset combination/minification with size limits and purge controls
+* Render Optimizer for critical CSS, JS deferral with handle/domain allow and deny lists plus inline dependency and jQuery auto-detection, differential serving with page-scoped entry points so modern browsers load only the ESM bundle while legacy browsers get a `nomodule` file and polyfills, and optional asset combination/minification with size limits and purge controls
 * JavaScript Manager powered by AE_SEO_JS_Detector and AE_SEO_JS_Controller for optional per-page auto-dequeue (beta), lazy loading, script replacements, handle allow/deny lists, and a Script Usage admin page for acceptance scenarios
 
 == Installation ==
@@ -62,6 +62,8 @@ If you plan to distribute or manually upload the plugin, you can create a ZIP
 archive with `bash bin/build-plugin.sh`. This command packages the plugin with
 all dependencies into `gm2-wordpress-suite.zip` for installation via the
 **Plugins → Add New** screen.
+
+Front‑end scripts are built with **esbuild** using page‑scoped entry points. Run `npm run build:assets` to produce modern ESM and optional legacy bundles alongside a `polyfills.js` loader that only runs when `needPolyfills()` detects missing browser features.
 == Setup Wizard ==
 After activation the **Gm2 Setup Wizard** (`index.php?page=gm2-setup-wizard`) opens once to walk through entering your AI provider API key, Google OAuth credentials, sitemap settings and which modules to enable. The wizard is optional and can be launched again from the **Gm2 Suite** dashboard at any time.
 
@@ -103,7 +105,7 @@ Enable performance modules from **SEO → Performance → Render Optimizer**. Av
 
 * Critical CSS with allow/deny lists and optional manual overrides.
 * JavaScript deferral with an enable toggle, handle and domain allow/deny lists, a "Respect in footer" option, and automatic inline dependency and jQuery detection.
-* Differential serving of modern and legacy JavaScript bundles using `<script type="module" crossorigin="anonymous">` and `<script nomodule crossorigin="anonymous">`. This feature is enabled by default via `ae_seo_ro_enable_diff_serving`, and module scripts stay blocking when deferral is active. The legacy bundle can be toggled via the "Send Legacy (nomodule) Bundle" setting (`ae_js_nomodule_legacy`).
+* Differential serving of modern and legacy JavaScript bundles using `<script type="module" crossorigin="anonymous">` and `<script nomodule crossorigin="anonymous">`. Bundles are generated per page entry point. Modern browsers execute only the ESM bundle; legacy browsers receive the `nomodule` file plus `polyfills.js` when `needPolyfills()` flags missing features. This feature is enabled by default via `ae_seo_ro_enable_diff_serving`, and module scripts stay blocking when deferral is active. The legacy bundle can be toggled via the **Send Legacy (nomodule) Bundle** setting (`ae_js_nomodule_legacy`).
 * Combination and minification of local CSS and JS assets with per-type toggles, size caps and exclusion lists.
 
 === Critical CSS ===
@@ -136,6 +138,8 @@ Toggle CSS and JS combination separately. Local files under the per-file limit a
 Use **Purge Critical CSS** and **Purge JS Map** on the Render Optimizer screen after changing themes or deferral settings. Clear any page, server or CDN caches and acceptance-test the site: load key pages, check the browser console and verify forms, logins and checkout flows work.
 
 For differential serving, open the site in a modern browser and confirm only `optimizer-modern.js` runs. Repeat in an older or emulated legacy browser to ensure just `optimizer-legacy.js` executes.
+
+Automated tests `tests/test-main-diff-serving.php` and `tests/test-diff-serving.php` cover this behavior and the **Send Legacy (nomodule) Bundle** toggle.
 
 === Runtime Filters ===
 The optimizer behavior can be customized with two filters:
@@ -599,7 +603,7 @@ The PHPUnit tests rely on the WordPress test suite and the `phpunit` executable.
    This downloads WordPress and prepares the test database.
 3. **Run the tests.** Execute `phpunit` or `make test` from the project root. The Makefile will install the test suite automatically if it is missing. Set `WP_TESTS_DIR` if you installed the suite elsewhere.
 
-The tests cover the AJAX endpoints used for content analysis and AI research (`gm2_check_rules`, `gm2_keyword_ideas`, `gm2_research_guidelines` and `gm2_ai_research`).
+The tests cover the AJAX endpoints used for content analysis and AI research (`gm2_check_rules`, `gm2_keyword_ideas`, `gm2_research_guidelines` and `gm2_ai_research`). Acceptance tests in `tests/test-main-diff-serving.php` and `tests/test-diff-serving.php` validate the **Send Legacy (nomodule) Bundle** option and polyfill behavior.
 
 JavaScript tests reside in `tests/js` and use Jest. Install Node dependencies
 and run them with:
