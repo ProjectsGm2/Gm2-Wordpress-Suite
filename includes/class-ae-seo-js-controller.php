@@ -18,6 +18,7 @@ class AE_SEO_JS_Controller {
      */
     public static function init(): void {
         add_action('wp_enqueue_scripts', [ __CLASS__, 'control_scripts' ], 999);
+        add_action('wp_enqueue_scripts', [ __CLASS__, 'maybe_remove_jquery' ], 1000);
         add_filter('ae_seo/js/enqueue_decision', [ __CLASS__, 'allow_override' ], 5, 3);
     }
 
@@ -74,6 +75,44 @@ class AE_SEO_JS_Controller {
             return true;
         }
         return $allow;
+    }
+
+    /**
+     * Remove jQuery when no scripts depend on it.
+     */
+    public static function maybe_remove_jquery(): void {
+        if (get_option('ae_js_jquery_on_demand', '0') !== '1') {
+            return;
+        }
+        $patterns = get_option('ae_js_jquery_url_allow', '');
+        $url = self::current_url();
+        if (is_string($patterns) && $patterns !== '') {
+            $list = array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', $patterns)));
+            foreach ($list as $pattern) {
+                if ($pattern !== '' && strpos($url, $pattern) !== false) {
+                    return;
+                }
+            }
+        }
+        $scripts = wp_scripts();
+        if (!$scripts) {
+            return;
+        }
+        $needs_jquery = in_array('jquery', $scripts->queue, true);
+        if (!$needs_jquery) {
+            foreach ($scripts->queue as $handle) {
+                $registered = $scripts->registered[$handle] ?? null;
+                if ($registered && in_array('jquery', $registered->deps, true)) {
+                    $needs_jquery = true;
+                    break;
+                }
+            }
+        }
+        if (!$needs_jquery) {
+            wp_dequeue_script('jquery');
+            wp_dequeue_script('jquery-migrate');
+            ae_seo_js_log('dequeue jquery (no-deps) ' . $url);
+        }
     }
 
     /**

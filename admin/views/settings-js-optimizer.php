@@ -19,6 +19,8 @@ $safe_mode     = get_option('ae_js_respect_safe_mode', '0');
 $nomodule      = get_option('ae_js_nomodule_legacy', '0');
 $allow         = get_option('ae_js_dequeue_allowlist', []);
 $deny          = get_option('ae_js_dequeue_denylist', []);
+$jquery_demand = get_option('ae_js_jquery_on_demand', '0');
+$jquery_allow  = get_option('ae_js_jquery_url_allow', '');
 if (!is_array($allow)) {
     $allow = [];
 }
@@ -47,6 +49,8 @@ echo '<tr><th scope="row">' . esc_html__( 'Debug Log', 'gm2-wordpress-suite' ) .
 echo '<tr><th scope="row">' . esc_html__( 'Enable Per-Page Auto-Dequeue (Beta)', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="ae_js_auto_dequeue" value="1" ' . checked($auto, '1', false) . ' /></td></tr>';
 echo '<tr><th scope="row">' . esc_html__( 'Respect Safe Mode param', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="ae_js_respect_safe_mode" value="1" ' . checked($safe_mode, '1', false) . ' /></td></tr>';
 echo '<tr><th scope="row">' . esc_html__( 'Send Legacy (nomodule) Bundle', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="ae_js_nomodule_legacy" value="1" ' . checked($nomodule, '1', false) . ' /><p class="description">' . esc_html__( 'Include an ES5 bundle for older browsers.', 'gm2-wordpress-suite' ) . '</p></td></tr>';
+echo '<tr><th scope="row">' . esc_html__( 'Remove jQuery when unused', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="ae_js_jquery_on_demand" value="1" ' . checked($jquery_demand, '1', false) . ' /></td></tr>';
+echo '<tr><th scope="row">' . esc_html__( 'jQuery URL Allowlist', 'gm2-wordpress-suite' ) . '</th><td><textarea name="ae_js_jquery_url_allow" rows="5" cols="50">' . esc_textarea($jquery_allow) . '</textarea><p class="description">' . esc_html__( 'One pattern per line; match current URL to keep jQuery.', 'gm2-wordpress-suite' ) . '</p></td></tr>';
 echo '<tr><th scope="row">' . esc_html__( 'Handle Allowlist', 'gm2-wordpress-suite' ) . '</th><td><select name="ae_js_dequeue_allowlist[]" multiple size="10" style="min-width:200px;">';
 foreach ($registered as $handle) {
     echo '<option value="' . esc_attr($handle) . '" ' . selected(in_array($handle, $allow, true), true, false) . '>' . esc_html($handle) . '</option>';
