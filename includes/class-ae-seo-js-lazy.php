@@ -24,9 +24,7 @@ class AE_SEO_JS_Lazy {
      * Register and enqueue script with configuration.
      */
     public static function enqueue(): void {
-        $base = GM2_PLUGIN_URL . 'assets/dist/';
-        $ver  = defined('GM2_VERSION') ? GM2_VERSION : false;
-        wp_register_script('ae-lazy', $base . 'ae-lazy.js', [], $ver, true);
+        ae_seo_register_asset('ae-lazy', 'ae-lazy.js');
         $modules = [
             'recaptcha' => get_option('ae_lazy_recaptcha', '0') === '1',
             'gtag'      => get_option('ae_lazy_gtag', '0') === '1',

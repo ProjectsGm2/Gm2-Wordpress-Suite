@@ -27,20 +27,19 @@ class AE_SEO_Main_Diff_Serving {
      * @return void
      */
     public function setup() {
-        $base = GM2_PLUGIN_URL . 'assets/dist/';
-        $ver  = defined('GM2_VERSION') ? GM2_VERSION : false;
+        $load_legacy = get_option('ae_js_nomodule_legacy', '0') === '1';
 
         // Register scripts.
-        wp_register_script('ae-main-modern', $base . 'ae-main.modern.js', [], $ver, true);
+        ae_seo_register_asset('ae-main-modern', 'ae-main.modern.js');
 
-        $load_legacy = get_option('ae_js_nomodule_legacy', '0') === '1';
         if ($load_legacy) {
-            wp_register_script('ae-main-legacy', $base . 'ae-main.legacy.js', [], $ver, true);
+            ae_seo_register_asset('ae-main-legacy', 'ae-main.legacy.js');
         }
 
         // Conditionally enqueue polyfills.
         if (ae_seo_needs_polyfills()) {
-            wp_enqueue_script('ae-polyfills', $base . 'polyfills.js', [], $ver, true);
+            ae_seo_register_asset('ae-polyfills', 'polyfills.js');
+            wp_enqueue_script('ae-polyfills');
         }
 
         // Enqueue main scripts.

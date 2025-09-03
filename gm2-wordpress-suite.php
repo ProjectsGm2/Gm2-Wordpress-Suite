@@ -105,6 +105,7 @@ require_once GM2_PLUGIN_DIR . 'includes/Gm2_Audit_Log.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Ajax_Upload.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Cache_Audit.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Script_Attributes.php';
+require_once GM2_PLUGIN_DIR . 'includes/functions-assets.php';
 require_once GM2_PLUGIN_DIR . 'includes/class-ae-seo-js-detector.php';
 require_once GM2_PLUGIN_DIR . 'includes/class-ae-seo-js-manager.php';
 require_once GM2_PLUGIN_DIR . 'includes/class-ae-seo-js-controller.php';

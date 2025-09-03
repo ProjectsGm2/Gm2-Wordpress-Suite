@@ -124,9 +124,6 @@ class AE_SEO_JS_Manager {
         $page_type = $ctx['page_type'] ?? '';
         $handle    = $page_type !== '' && isset($this->map[$page_type]) ? (string) $this->map[$page_type] : '';
 
-        $base = GM2_PLUGIN_URL . 'assets/dist/';
-        $ver  = defined('GM2_VERSION') ? GM2_VERSION : false;
-
         if ($handle !== '') {
             $allow = apply_filters('ae_seo/js/enqueue_decision', true, $handle, $ctx);
             if (!$allow) {
@@ -134,7 +131,8 @@ class AE_SEO_JS_Manager {
                 return;
             }
             $file = str_replace('ae-', '', $handle) . '.js';
-            wp_enqueue_script($handle, $base . $file, [], $ver, true);
+            ae_seo_register_asset($handle, $file);
+            wp_enqueue_script($handle);
             wp_script_add_data($handle, 'type', 'module');
             $this->ae_seo_localize_replacements($handle);
             ae_seo_js_log('enqueue ' . $handle);
@@ -148,12 +146,14 @@ class AE_SEO_JS_Manager {
             return;
         }
 
-        wp_enqueue_script('ae-main-modern', $base . 'ae-main.modern.js', [], $ver, true);
+        ae_seo_register_asset('ae-main-modern', 'ae-main.modern.js');
+        wp_enqueue_script('ae-main-modern');
         wp_script_add_data('ae-main-modern', 'type', 'module');
         $this->ae_seo_localize_replacements('ae-main-modern');
 
         if (get_option('ae_js_nomodule_legacy', '0') === '1') {
-            wp_enqueue_script('ae-main-legacy', $base . 'ae-main.legacy.js', [], $ver, true);
+            ae_seo_register_asset('ae-main-legacy', 'ae-main.legacy.js');
+            wp_enqueue_script('ae-main-legacy');
             wp_script_add_data('ae-main-legacy', 'nomodule', true);
             $this->ae_seo_localize_replacements('ae-main-legacy');
         }
