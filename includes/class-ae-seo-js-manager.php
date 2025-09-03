@@ -57,7 +57,7 @@ class AE_SEO_JS_Manager {
     }
 
     /**
-     * Load script replacement map with filter override.
+     * Load script map with filter override.
      *
      * @return array
      */
@@ -65,12 +65,12 @@ class AE_SEO_JS_Manager {
         $path = dirname(__DIR__) . '/config/script-map.json';
         $map  = [];
         if (!is_readable($path)) {
-            return apply_filters('ae_seo/js/replacements', $map);
+            return apply_filters('ae_seo/js/script_map', $map);
         }
         $json = file_get_contents($path);
         if ($json === false) {
             ae_seo_js_log('Unable to read script-map.json');
-            return apply_filters('ae_seo/js/replacements', $map);
+            return apply_filters('ae_seo/js/script_map', $map);
         }
         try {
             $data = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
@@ -80,7 +80,34 @@ class AE_SEO_JS_Manager {
         } catch (\JsonException $e) {
             ae_seo_js_log('Invalid script-map.json: ' . $e->getMessage());
         }
-        return apply_filters('ae_seo/js/replacements', $map);
+        return apply_filters('ae_seo/js/script_map', $map);
+    }
+
+    /**
+     * Retrieve DOM replacement callbacks via filter.
+     *
+     * @return array
+     */
+    private function ae_seo_get_replacements(): array {
+        $replacements = [];
+        return apply_filters('ae_seo/js/replacements', $replacements);
+    }
+
+    /**
+     * Localize replacements to a script handle when enabled.
+     *
+     * @param string $handle Script handle.
+     * @return void
+     */
+    private function ae_seo_localize_replacements(string $handle): void {
+        if (get_option('ae_js_replacements', '0') !== '1') {
+            return;
+        }
+        $replacements = $this->ae_seo_get_replacements();
+        if (empty($replacements)) {
+            return;
+        }
+        wp_localize_script($handle, 'aeSEO', [ 'replacements' => $replacements ]);
     }
 
     /**
@@ -109,6 +136,7 @@ class AE_SEO_JS_Manager {
             $file = str_replace('ae-', '', $handle) . '.js';
             wp_enqueue_script($handle, $base . $file, [], $ver, true);
             wp_script_add_data($handle, 'type', 'module');
+            $this->ae_seo_localize_replacements($handle);
             ae_seo_js_log('enqueue ' . $handle);
             return;
         }
@@ -122,10 +150,12 @@ class AE_SEO_JS_Manager {
 
         wp_enqueue_script('ae-main-modern', $base . 'ae-main.modern.js', [], $ver, true);
         wp_script_add_data('ae-main-modern', 'type', 'module');
+        $this->ae_seo_localize_replacements('ae-main-modern');
 
         if (get_option('ae_js_nomodule_legacy', '0') === '1') {
             wp_enqueue_script('ae-main-legacy', $base . 'ae-main.legacy.js', [], $ver, true);
             wp_script_add_data('ae-main-legacy', 'nomodule', true);
+            $this->ae_seo_localize_replacements('ae-main-legacy');
         }
 
         ae_seo_js_log('enqueue ' . $fallback);

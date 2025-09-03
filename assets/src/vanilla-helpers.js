@@ -6,7 +6,10 @@ export function closest(el, selector) {
   return el.closest(selector);
 }
 
-export function ajax(url, options = {}) {
+export function ajax(url, options) {
+  if (options === undefined) {
+    options = {};
+  }
   return fetch(url, options);
 }
 
