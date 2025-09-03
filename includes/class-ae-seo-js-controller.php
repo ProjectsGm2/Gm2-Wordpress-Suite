@@ -33,16 +33,39 @@ class AE_SEO_JS_Controller {
         if (!$scripts) {
             return;
         }
-        $context = AE_SEO_JS_Detector::get_current_context();
+        $context        = AE_SEO_JS_Detector::get_current_context();
         $context_scripts = $context['scripts'] ?? [];
-        $has_blocks = false;
-        foreach ($context['widgets'] ?? [] as $widget) {
-            if (strpos($widget, '/') !== false) {
-                $has_blocks = true;
-                break;
+        $url            = self::current_url();
+
+        // Allow scripts required by detected blocks.
+        $map = apply_filters(
+            'ae_seo/js/block_scripts',
+            [
+                'core/embed/youtube'     => [ 'ae-youtube' ],
+                'core/embed/vimeo'       => [ 'ae-vimeo' ],
+                'core/embed/google-maps' => [ 'ae-google-maps' ],
+            ]
+        );
+        foreach ($context['blocks'] ?? [] as $block) {
+            $key = $block['name'];
+            if (!empty($block['provider'])) {
+                $key .= '/' . $block['provider'];
+            }
+            if (!empty($map[$key])) {
+                foreach ((array) $map[$key] as $handle) {
+                    if (!in_array($handle, $context_scripts, true)) {
+                        $context_scripts[] = $handle;
+                    }
+                    if (wp_script_is($handle, 'registered') && !wp_script_is($handle, 'enqueued')) {
+                        wp_enqueue_script($handle);
+                    }
+                    ae_seo_js_log('allow ' . $handle . ' (block ' . $key . ') ' . $url);
+                }
             }
         }
-        $url = self::current_url();
+        $context_scripts = array_values(array_unique($context_scripts));
+        $has_blocks       = !empty($context['blocks']);
+
         foreach ($scripts->queue as $handle) {
             $allow = in_array($handle, $context_scripts, true);
             $allow = apply_filters('ae_seo/js/enqueue_decision', $allow, $handle, $context);
