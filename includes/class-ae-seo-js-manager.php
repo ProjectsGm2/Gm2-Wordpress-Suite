@@ -31,8 +31,9 @@ class AE_SEO_JS_Manager {
      * Bootstrap the manager.
      */
     public static function init(): void {
-        if (isset($_GET['aejs']) && $_GET['aejs'] === 'off') {
+        if (ae_seo_js_safe_mode()) {
             self::$disabled = true;
+            return;
         }
         (new self())->run();
     }

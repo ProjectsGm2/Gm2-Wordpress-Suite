@@ -24,6 +24,9 @@ class AE_SEO_JS_Lazy {
      * Register and enqueue script with configuration.
      */
     public static function enqueue(): void {
+        if (ae_seo_js_safe_mode()) {
+            return;
+        }
         ae_seo_register_asset('ae-lazy', 'ae-lazy.js');
         $modules = [
             'recaptcha' => get_option('ae_lazy_recaptcha', '0') === '1',
