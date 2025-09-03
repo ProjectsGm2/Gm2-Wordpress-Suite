@@ -68,6 +68,8 @@ class Gm2_SEO_Admin {
         add_option('ae_js_nomodule_legacy', '0');
         add_option('ae_js_dequeue_allowlist', []);
         add_option('ae_js_dequeue_denylist', []);
+        add_option('ae_js_jquery_on_demand', '0');
+        add_option('ae_js_jquery_url_allow', '');
 
         add_action('admin_menu', [$this, 'add_settings_pages']);
         add_action('add_meta_boxes', [$this, 'register_meta_boxes']);
@@ -613,6 +615,12 @@ class Gm2_SEO_Admin {
         ]);
         register_setting('gm2_seo_options', 'ae_js_dequeue_denylist', [
             'sanitize_callback' => [ $this, 'sanitize_handle_array' ],
+        ]);
+        register_setting('gm2_seo_options', 'ae_js_jquery_on_demand', [
+            'sanitize_callback' => 'sanitize_text_field',
+        ]);
+        register_setting('gm2_seo_options', 'ae_js_jquery_url_allow', [
+            'sanitize_callback' => 'sanitize_textarea_field',
         ]);
         register_setting('gm2_seo_options', 'gm2_tax_desc_prompt', [
             'sanitize_callback' => 'sanitize_textarea_field',
@@ -3067,6 +3075,12 @@ class Gm2_SEO_Admin {
 
         $nomodule = isset($_POST['ae_js_nomodule_legacy']) ? '1' : '0';
         update_option('ae_js_nomodule_legacy', $nomodule);
+
+        $jquery_demand = isset($_POST['ae_js_jquery_on_demand']) ? '1' : '0';
+        update_option('ae_js_jquery_on_demand', $jquery_demand);
+
+        $jquery_allow = isset($_POST['ae_js_jquery_url_allow']) ? sanitize_textarea_field($_POST['ae_js_jquery_url_allow']) : '';
+        update_option('ae_js_jquery_url_allow', $jquery_allow);
 
         $allow = isset($_POST['ae_js_dequeue_allowlist']) ? $this->sanitize_handle_array((array) $_POST['ae_js_dequeue_allowlist']) : [];
         update_option('ae_js_dequeue_allowlist', $allow);
