@@ -184,6 +184,17 @@ If WP Rocket, Autoptimize, Perfmatters or other optimizer plugins are active, th
 
 AE_SEO_JS_Detector builds a map of registered scripts and caches the page type, widgets and handles used on each request. AE_SEO_JS_Controller consults that context to dequeue handles that were not previously seen for the current URL.
 
+When blocks exist in the post content the detector parses them, detects providers for embeds and looks up related script handles from a block‑to‑script map. Developers can customize this map with the `ae_seo/js/block_scripts` filter. Return an array where keys are block names (optionally suffixed with `/provider`) and values are arrays of script handles to keep whitelisted.
+
+Example: only keep the core `wp-embed` script and the plugin’s YouTube helper for the `core/embed` block:
+
+```
+add_filter('ae_seo/js/block_scripts', function ( $map ) {
+    $map['core/embed/youtube'] = [ 'wp-embed', 'ae-youtube' ];
+    return $map;
+});
+```
+
 AE_SEO_JS_Lazy introduces user-intent triggers and consent gating so modules activate only when necessary. New per-module toggles let you specify scroll or input events that wake dormant scripts, gate analytics behind consent or interaction, and load reCAPTCHA only when a form field receives focus—usually in under 200 ms.
 
 Open **SEO → Performance → JavaScript** to enable the manager, lazy loading, script replacements, debug logging and an optional safe-mode query parameter. The screen also provides handle allow and deny lists and a per-page auto-dequeue option that is still in beta.
