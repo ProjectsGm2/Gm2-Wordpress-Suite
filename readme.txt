@@ -36,6 +36,7 @@ Key features include:
 * Hashed build pipeline with `ae_seo_register_asset` helper and debug sourcemaps
 * Tools → Server Hints page with one-click `.htaccess` writer, backup/rollback button and diagnostic REST endpoint
 * `wp ae-seo js:audit` CLI command audits recent posts for script counts, dequeued handles, jQuery and module usage
+* `wp ae-seo js:smoketest` runs internal requests and logs `registered`, `enqueued`, `dequeued`, `lazy`, `jquery` and `polyfills` metrics to `wp-content/ae-seo/logs/js-optimizer.log`; view the **Performance → JavaScript** report for Lighthouse-style hints like enabling lazy-load for Analytics, spotting jQuery without dependents or detecting unnecessary polyfills to troubleshoot script loading
 
 == Installation ==
 1. Upload the plugin files to the `/wp-content/plugins/gm2-wordpress-suite` directory.
