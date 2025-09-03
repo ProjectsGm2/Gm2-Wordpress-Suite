@@ -1124,7 +1124,23 @@ class Gm2_SEO_Admin {
             if ($subtab === 'render-optimizer') {
                 require GM2_PLUGIN_DIR . 'admin/views/settings-render-optimizer.php';
             } elseif ($subtab === 'javascript') {
-                require GM2_PLUGIN_DIR . 'admin/views/settings-js-optimizer.php';
+                $js_tab = isset($_GET['js-tab']) ? sanitize_key($_GET['js-tab']) : 'settings';
+                $js_tabs = [
+                    'settings' => esc_html__( 'Settings', 'gm2-wordpress-suite' ),
+                    'report'   => esc_html__( 'Performance Report', 'gm2-wordpress-suite' ),
+                ];
+                echo '<h3 class="nav-tab-wrapper" style="margin-top:20px;">';
+                foreach ($js_tabs as $slug => $label) {
+                    $url = admin_url('admin.php?page=gm2-seo&tab=performance&subtab=javascript&js-tab=' . $slug);
+                    $cls = ($js_tab === $slug) ? ' nav-tab-active' : '';
+                    echo '<a href="' . esc_url($url) . '" class="nav-tab' . $cls . '">' . esc_html($label) . '</a>';
+                }
+                echo '</h3>';
+                if ($js_tab === 'report') {
+                    require GM2_PLUGIN_DIR . 'admin/views/js-performance-report.php';
+                } else {
+                    require GM2_PLUGIN_DIR . 'admin/views/settings-js-optimizer.php';
+                }
             } else {
                 $auto_fill = get_option('gm2_auto_fill_alt', '0');
                 $clean_files = get_option('gm2_clean_image_filenames', '0');
