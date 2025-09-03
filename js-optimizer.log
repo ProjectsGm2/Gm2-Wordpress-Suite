@@ -1,3 +1,5 @@
 [2025-09-02 23:28:46] Visit Woo product page: Woo cart/checkout scripts remain (wc-cart-fragments, wc-checkout)
 [2025-09-02 23:28:46] Visit standard blog post: Woo scripts dequeued (wc-cart-fragments, wc-checkout)
 [2025-09-02 23:28:46] Visit non-Elementor page: Elementor front-end bundles dequeued (elementor-frontend, elementor-pro-frontend)
+[2025-09-03 00:20:00] Modern browsers (Chrome, Edge, Firefox, Safari) load only ae-main.modern.js
+[2025-09-03 00:20:00] Legacy browser UA loads ae-main.legacy.js and polyfills.js
