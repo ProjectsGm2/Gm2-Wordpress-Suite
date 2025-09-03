@@ -84,7 +84,7 @@ class AE_SEO_JS_Manager {
     }
 
     /**
-     * Enqueue scripts based on replacement map.
+     * Enqueue page-specific bundle or fall back to main script.
      *
      * @return void
      */
@@ -92,30 +92,43 @@ class AE_SEO_JS_Manager {
         if (self::is_disabled()) {
             return;
         }
-        foreach ($this->map as $handle => $config) {
-            $src = '';
-            if (is_string($config)) {
-                $src = $config;
-                $config = [];
-            } elseif (is_array($config) && isset($config['src'])) {
-                $src = (string) $config['src'];
-            }
-            if ($src === '') {
-                continue;
-            }
-            $ctx = AE_SEO_JS_Detector::get_current_context();
-            $ctx['src'] = $src;
+
+        $ctx       = AE_SEO_JS_Detector::get_current_context();
+        $page_type = $ctx['page_type'] ?? '';
+        $handle    = $page_type !== '' && isset($this->map[$page_type]) ? (string) $this->map[$page_type] : '';
+
+        $base = GM2_PLUGIN_URL . 'assets/dist/';
+        $ver  = defined('GM2_VERSION') ? GM2_VERSION : false;
+
+        if ($handle !== '') {
             $allow = apply_filters('ae_seo/js/enqueue_decision', true, $handle, $ctx);
             if (!$allow) {
                 ae_seo_js_log('skip ' . $handle);
-                continue;
+                return;
             }
-            $deps = isset($config['deps']) && is_array($config['deps']) ? $config['deps'] : [];
-            $ver  = $config['ver'] ?? null;
-            $foot = $config['in_footer'] ?? true;
-            wp_enqueue_script($handle, $src, $deps, $ver, $foot);
+            $file = str_replace('ae-', '', $handle) . '.js';
+            wp_enqueue_script($handle, $base . $file, [], $ver, true);
+            wp_script_add_data($handle, 'type', 'module');
             ae_seo_js_log('enqueue ' . $handle);
+            return;
         }
+
+        $fallback = 'ae-main-modern';
+        $allow    = apply_filters('ae_seo/js/enqueue_decision', true, $fallback, $ctx);
+        if (!$allow) {
+            ae_seo_js_log('skip ' . $fallback);
+            return;
+        }
+
+        wp_enqueue_script('ae-main-modern', $base . 'ae-main.modern.js', [], $ver, true);
+        wp_script_add_data('ae-main-modern', 'type', 'module');
+
+        if (get_option('ae_js_nomodule_legacy', '0') === '1') {
+            wp_enqueue_script('ae-main-legacy', $base . 'ae-main.legacy.js', [], $ver, true);
+            wp_script_add_data('ae-main-legacy', 'nomodule', true);
+        }
+
+        ae_seo_js_log('enqueue ' . $fallback);
     }
 
     /**
