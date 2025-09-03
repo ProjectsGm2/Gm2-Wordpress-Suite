@@ -1,0 +1,1 @@
+function o(t,e,n){t.addEventListener(e,n)}function s(t,e){return t.closest(e)}function r(t,e={}){return fetch(t,e)}function c(t){t.classList.toggle("is-open")}export{r as ajax,s as closest,o as on,c as slideToggle};

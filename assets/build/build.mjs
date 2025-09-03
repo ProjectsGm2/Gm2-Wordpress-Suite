@@ -51,6 +51,14 @@ await build({
   ...shared
 });
 
+await build({
+  entryPoints: ['assets/src/vanilla-helpers.js'],
+  outfile: 'assets/dist/vanilla-helpers.js',
+  format: 'esm',
+  target: ['es2020'],
+  ...shared
+});
+
 const modules = await readdir('assets/src/modules');
 for (const file of modules) {
   if (!file.endsWith('.js')) {
