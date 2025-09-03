@@ -22,11 +22,11 @@ Front‑end scripts are bundled with **esbuild** using page‑scoped entry point
 npm run build:assets
 ```
 
-This generates `assets/dist/ae-main.modern.js`, `ae-main.legacy.js`, page‑specific bundles like `contact.js`, and `polyfills.js`. Modern browsers load only the ESM files; older browsers without module support receive the `nomodule` bundle and polyfills when `needPolyfills()` detects missing features. Commit the updated files in `assets/dist` to version control.
+This generates `assets/dist/ae-main.modern.js`, `ae-main.legacy.js`, page‑specific bundles like `contact.js`, `polyfills.js`, and a `vanilla-helpers.js` module. Modern browsers load only the ESM files; older browsers without module support receive the `nomodule` bundle and polyfills when `needPolyfills()` detects missing features. Commit the updated files in `assets/dist` to version control.
 
 ### JavaScript Replacements
 
-When the **Enable Replacements** option is active (`ae_js_replacements`), front‑end scripts execute callbacks on matched elements. Use the `ae_seo/js/replacements` filter to return an associative array where keys are CSS selectors and values are callback names available on `window`. Each callback receives the matched element as its only argument.
+When the **Enable Replacements** option is active (`ae_js_replacements`), front‑end scripts execute callbacks on matched elements. Use the `ae_seo/js/replacements` filter to return an associative array where keys are CSS selectors and values are callback names available on `window`. Each callback receives the matched element as its only argument. The plugin also ships a `vanilla-helpers.js` module with tiny DOM utilities for these callbacks.
 
 ## AI Providers
 
@@ -402,7 +402,7 @@ AE_SEO_JS_Detector builds a transient map of registered scripts and records the 
 
 AE_SEO_JS_Lazy adds user-intent triggers and consent gating so modules load only when needed. New settings let you define scroll or input events that wake dormant modules, gate analytics behind consent or interaction, and toggle each module individually. Analytics stays idle until a visitor grants consent or interacts with the page, while reCAPTCHA loads only when a form field receives focus—typically in under 200&nbsp;ms.
 
-Settings live under **SEO → Performance → JavaScript** to enable the manager, lazy-loading, script replacements, debug logging, handle allow and deny lists and an optional safe-mode query parameter. Per-page auto-dequeue remains in beta—test on staging and use the allowlist, denylist or `?aejs=off` parameter if a handle is removed incorrectly.
+Settings live under **SEO → Performance → JavaScript** to enable the manager, lazy-loading, script replacements, debug logging, handle allow and deny lists and an optional safe-mode query parameter. A **Load jQuery only when required** option removes jQuery when no enqueued scripts depend on it; pages using Elementor or other jQuery‑dependent assets still receive it automatically. Regex patterns in **Always include jQuery on these URLs** let you force jQuery on specific URLs. When **Debug Log** is enabled, script decisions are recorded in `wp-content/ae-seo/logs/js-optimizer.log`. Per-page auto-dequeue remains in beta—test on staging and use the allowlist, denylist or `?aejs=off` parameter if a handle is removed incorrectly.
 
 The **SEO → Script Usage** page lists discovered script handles with counts per template so you can accept or override which templates require each script before relying on auto-dequeue.
 

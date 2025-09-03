@@ -31,6 +31,8 @@ Key features include:
 * Script Attributes manager with dependency-aware “Defer all third-party” and “Conservative” presets
 * Render Optimizer for critical CSS, JS deferral with handle/domain allow and deny lists plus inline dependency and jQuery auto-detection, differential serving with page-scoped entry points so modern browsers load only the ESM bundle while legacy browsers get a `nomodule` file and polyfills, and optional asset combination/minification with size limits and purge controls
 * JavaScript Manager powered by AE_SEO_JS_Detector, AE_SEO_JS_Controller and AE_SEO_JS_Lazy for optional per-page auto-dequeue (beta), user-intent triggers, consent gating, per-module toggles, lazy loading, script replacements, handle allow/deny lists, a Script Usage admin page for acceptance scenarios, and performance gains such as idle analytics and sub-200 ms reCAPTCHA on form focus
+* Option to load jQuery only when required with URL-based overrides and debug logging; pages with Elementor or other jQuery-dependent assets still enqueue it
+* DOM replacements via the `ae_seo/js/replacements` filter and bundled `vanilla-helpers.js` helpers
 
 == Installation ==
 1. Upload the plugin files to the `/wp-content/plugins/gm2-wordpress-suite` directory.
@@ -162,6 +164,8 @@ AE_SEO_JS_Detector builds a map of registered scripts and caches the page type, 
 AE_SEO_JS_Lazy introduces user-intent triggers and consent gating so modules activate only when necessary. New per-module toggles let you specify scroll or input events that wake dormant scripts, gate analytics behind consent or interaction, and load reCAPTCHA only when a form field receives focus—usually in under 200 ms.
 
 Open **SEO → Performance → JavaScript** to enable the manager, lazy loading, script replacements, debug logging and an optional safe-mode query parameter. The screen also provides handle allow and deny lists and a per-page auto-dequeue option that is still in beta.
+
+A **Load jQuery only when required** checkbox removes jQuery when no queued handles depend on it; pages with Elementor or other jQuery-based assets still load it automatically. Enter regex patterns in **Always include jQuery on these URLs** to force jQuery on specific pages. When **Debug Log** is enabled, decisions are recorded in `wp-content/ae-seo/logs/js-optimizer.log`. Define DOM replacements through the `ae_seo/js/replacements` filter and leverage helpers from `vanilla-helpers.js` in your callbacks.
 
 Visit **SEO → Script Usage** to review discovered handles and mark which page templates must always enqueue them. Use this page to define acceptance scenarios before enabling auto-dequeue on production—critical scripts can otherwise be removed.
 
