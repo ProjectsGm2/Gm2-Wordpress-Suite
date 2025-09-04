@@ -63,6 +63,7 @@ final class AESEO_LCP_Optimizer {
 
         add_filter('pre_wp_get_loading_optimization_attributes', [ __CLASS__, 'capture_image_context' ], 10, 4);
         add_filter('wp_lazy_loading_enabled', [ __CLASS__, 'maybe_disable_lazy' ], 10, 3);
+        add_filter('wp_img_tag_add_loading_attr', [ __CLASS__, 'maybe_unset_loading_attr' ], 10, 3);
         add_filter('wp_get_attachment_image_attributes', [ __CLASS__, 'maybe_adjust_attributes' ], 10, 3);
         add_filter('wp_get_attachment_image', [ __CLASS__, 'maybe_use_picture' ], 10, 5);
         add_action('wp_head', [ __CLASS__, 'maybe_print_links' ], 5);
@@ -352,6 +353,52 @@ final class AESEO_LCP_Optimizer {
         }
 
         return $default;
+    }
+
+    /**
+     * Unset loading attribute and mark the LCP image when matched.
+     *
+     * @param string|bool $value   Current loading attribute value.
+     * @param string      $image   HTML for the image tag.
+     * @param string      $context Context in which the image is loaded.
+     * @return string|bool
+     */
+    public static function maybe_unset_loading_attr($value, string $image, string $context) {
+        if (self::$done || empty(self::$settings['remove_lazy_on_lcp'])) {
+            return $value;
+        }
+
+        $candidate = self::get_lcp_candidate();
+        if (empty($candidate)) {
+            return $value;
+        }
+
+        $src          = '';
+        $attachment_id = 0;
+
+        if (preg_match('/src\s*=\s*["\']([^"\']+)["\']/', $image, $matches)) {
+            $src = $matches[1];
+        }
+
+        if (preg_match('/data-attachment-id\s*=\s*["\'](\d+)["\']/', $image, $matches)) {
+            $attachment_id = (int) $matches[1];
+        }
+
+        $is_match = false;
+        if ($candidate['attachment_id'] && $attachment_id && $candidate['attachment_id'] === $attachment_id) {
+            $is_match = true;
+        } elseif ($candidate['url'] && $src && $candidate['url'] === $src) {
+            $is_match = true;
+        }
+
+        if ($is_match) {
+            if (strpos($image, 'data-aeseo-lcp="1"') === false) {
+                $image = preg_replace('/<img\b/', '<img data-aeseo-lcp="1"', $image, 1);
+            }
+            return false;
+        }
+
+        return $value;
     }
 
     /**
