@@ -258,7 +258,11 @@ final class AESEO_LCP_Optimizer {
      * @return string
      */
     private static function maybe_add_fetchpriority_html(string $html): string {
-        if (self::$done || empty(self::$settings['add_fetchpriority_high'])) {
+        if (self::$done) {
+            return $html;
+        }
+
+        if (empty(self::$settings['add_fetchpriority_high']) && empty(self::$settings['force_width_height'])) {
             return $html;
         }
 
@@ -271,7 +275,14 @@ final class AESEO_LCP_Optimizer {
             return $html;
         }
 
-        $pattern = '/<img\\b[^>]*\\bsrc\\s*=\\s*["\']' . preg_quote($candidate['url'], '/') . '["\'][^>]*>/i';
+        // Ensure candidate dimensions are populated when possible.
+        if ((!$candidate['width'] || !$candidate['height']) && !empty($candidate['attachment_id'])) {
+            $dimensions = self::get_attachment_dimensions((int) $candidate['attachment_id']);
+            $candidate['width']  = $candidate['width']  ?: (int) $dimensions['width'];
+            $candidate['height'] = $candidate['height'] ?: (int) $dimensions['height'];
+        }
+
+        $pattern = '/<img\\b[^>]*' . preg_quote($candidate['url'], '/') . '[^>]*>/i';
         if (!preg_match($pattern, $html, $match)) {
             return $html;
         }
@@ -280,16 +291,54 @@ final class AESEO_LCP_Optimizer {
             return $html;
         }
 
-        $img_tag = $match[0];
-        if (strpos($img_tag, 'fetchpriority') === false) {
-            $img_tag = preg_replace('/<img\\b/', '<img fetchpriority="high"', $img_tag, 1);
+        $img_tag     = $match[0];
+        $new_img_tag = self::enhance_img_tag($img_tag, $candidate);
+
+        $count = 0;
+        $html  = str_replace($img_tag, $new_img_tag, $html, $count);
+
+        if ($count > 0) {
+            self::$done = true;
         }
 
-        $html = str_replace($match[0], $img_tag, $html);
-
-        self::$done = true;
-
         return $html;
+    }
+
+    /**
+     * Add fetchpriority and missing dimensions to an img tag.
+     *
+     * @param string $img_tag   Original img tag.
+     * @param array  $candidate LCP candidate details.
+     * @return string Modified img tag.
+     */
+    private static function enhance_img_tag(string $img_tag, array $candidate): string {
+        $attrs = [];
+
+        if (strpos($img_tag, 'fetchpriority') === false && !empty(self::$settings['add_fetchpriority_high'])) {
+            $attrs[] = 'fetchpriority="high"';
+        }
+
+        if (
+            !empty(self::$settings['force_width_height']) &&
+            !preg_match('/\bwidth\s*=\s*["\']\d+["\']/', $img_tag) &&
+            !empty($candidate['width'])
+        ) {
+            $attrs[] = 'width="' . (int) $candidate['width'] . '"';
+        }
+
+        if (
+            !empty(self::$settings['force_width_height']) &&
+            !preg_match('/\bheight\s*=\s*["\']\d+["\']/', $img_tag) &&
+            !empty($candidate['height'])
+        ) {
+            $attrs[] = 'height="' . (int) $candidate['height'] . '"';
+        }
+
+        if ($attrs) {
+            $img_tag = preg_replace('/<img\b/', '<img ' . implode(' ', $attrs), $img_tag, 1);
+        }
+
+        return $img_tag;
     }
 
     /**
