@@ -38,6 +38,8 @@ When the **Enable Replacements** option is active (`ae_js_replacements`), front�
 
 Improve Largest Contentful Paint by enabling targeted tweaks in **SEO → Performance → LCP Optimization**. The module runs entirely on the front end and is compatible with PHP 7.4+ and WordPress 5.8+.
 
+LCP candidates are detected by preferring the featured image on singular pages, falling back to the first image in rendered content and supporting WooCommerce product images. Results are cached briefly to avoid repeated parsing.
+
 Configuration options include:
 
 - `remove_lazy_on_lcp` – strips lazy‑loading from the element identified as the LCP candidate.

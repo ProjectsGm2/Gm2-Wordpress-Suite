@@ -3,7 +3,7 @@ Contributors: gm2team
 Tags: admin, tools, suite, performance
 Requires at least: 6.0
 Tested up to: 6.5
-Stable tag: 1.6.21
+Stable tag: 1.6.22
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -41,6 +41,8 @@ Key features include:
 
 == LCP Optimization ==
 Improve Largest Contentful Paint with targeted tweaks under **SEO → Performance → LCP Optimization**. The module operates solely on the front end and supports PHP 7.4+ and WordPress 5.8+.
+
+LCP candidates are detected by preferring the featured image on singular pages, falling back to the first image in content and handling WooCommerce product images. Results are cached briefly to avoid repeated parsing.
 
 Configuration options:
 
@@ -581,6 +583,8 @@ the last 100 missing URLs to help you create new redirects.
 * **Real-time character counts** – display running totals in the SEO meta box.
 
 == Changelog ==
+= 1.6.22 =
+* Improved LCP candidate detection for featured images, first content images and WooCommerce products with short-term caching.
 = 1.6.21 =
 * Added front-end only LCP Optimization module with configurable options `remove_lazy_on_lcp`, `add_fetchpriority_high`, `force_width_height`, `responsive_picture_nextgen`, `add_preconnect` and `add_preload`. Requires PHP 7.4+ and WordPress 5.8+.
 = 1.6.20 =
