@@ -474,6 +474,25 @@ wp ae-seo js:smoketest
 
 Each request writes a line to `wp-content/ae-seo/logs/js-optimizer.log` recording `registered`, `enqueued`, `dequeued`, `lazy`, `jquery` and `polyfills` counts from the `Server-Timing` header and DOM analysis. Review the results under **Performance → JavaScript**, which summarizes the log and surfaces Lighthouse-style hints such as “Consider enabling lazy-load for Analytics,” “jQuery loaded but no dependents found,” and “Polyfills detected. Review need for legacy browser support.” These tools help uncover unnecessary or blocking scripts that may hinder performance.
 
+## Third‑Party Script Optimization
+
+- **Audit UI** surfaces third‑party scripts and lets you enable, disable, or lazy‑load each integration.
+- **hCaptcha support** offers a privacy‑friendly alternative to reCAPTCHA.
+- **Lazy widget loading** defers fetching embeds until interaction using `aeLazy` triggers.
+- **Tag Manager consolidation** merges analytics and pixel tags into a single module.
+- **Self‑hosted fonts** mirror Google Fonts locally; run `wp gm2 fonts sync` after changing fonts to refresh the cache.
+
+Enable modules on demand:
+
+```html
+<script>
+window.aeLazy = window.aeLazy || {};
+window.aeLazy.modules = window.aeLazy.modules || {};
+window.aeLazy.modules.hcaptcha = true;
+</script>
+<div data-ae-module="hcaptcha"></div>
+```
+
 ## SEO Performance CLI
 
 Run `wp seo-perf` commands to audit a site and manage caching headers.
