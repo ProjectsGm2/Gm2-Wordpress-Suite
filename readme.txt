@@ -42,7 +42,7 @@ Key features include:
 == LCP Optimization ==
 Improve Largest Contentful Paint with targeted tweaks under **SEO → Performance → LCP Optimization**. The module operates solely on the front end and supports PHP 7.4+ and WordPress 5.8+.
 
-LCP candidates are detected by preferring the featured image on singular pages, falling back to the first image in content and handling WooCommerce product images. Results are cached briefly to avoid repeated parsing.
+LCP candidates are detected by preferring the featured image on singular pages, falling back to the first image in content and handling WooCommerce product images. The lookup runs automatically when `get_lcp_candidate()` is used and results are cached for sixty seconds to avoid repeated parsing.
 
 Configuration options:
 

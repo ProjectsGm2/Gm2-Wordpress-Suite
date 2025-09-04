@@ -93,12 +93,27 @@ final class AESEO_LCP_Optimizer {
         if (empty(self::$candidate) && is_singular()) {
             $post_id = get_the_ID();
             if ($post_id) {
+                // Attempt to load from cache first.
                 $cached = wp_cache_get('aeseo_lcp_candidate_' . $post_id, 'aeseo');
                 if (is_array($cached)) {
                     self::$candidate = $cached;
                 }
+
+                // Prime from featured image if still empty.
+                if (empty(self::$candidate)) {
+                    self::maybe_prime_candidate();
+                }
+
+                // Fallback to scanning the rendered content on demand.
+                if (empty(self::$candidate)) {
+                    $post = get_post($post_id);
+                    if ($post) {
+                        apply_filters('the_content', $post->post_content);
+                    }
+                }
             }
         }
+
         return self::$candidate;
     }
 
@@ -197,6 +212,15 @@ final class AESEO_LCP_Optimizer {
         }
 
         if ($src) {
+            // Populate missing dimensions from attachment metadata when possible.
+            if ((!$width || !$height) && $id) {
+                $meta = wp_get_attachment_metadata($id);
+                if (is_array($meta)) {
+                    $width  = $width  ?: (int) ($meta['width'] ?? 0);
+                    $height = $height ?: (int) ($meta['height'] ?? 0);
+                }
+            }
+
             self::set_candidate([
                 'source'        => 'img',
                 'attachment_id' => $id,
