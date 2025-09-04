@@ -85,8 +85,38 @@ class LcpOptimizerIntegrationTest extends WP_UnitTestCase {
         $this->assertNotEmpty($candidate['url']);
         $this->assertGreaterThan(0, $candidate['width']);
         $this->assertGreaterThan(0, $candidate['height']);
-        $this->assertSame('wp', $candidate['origin']);
+        $this->assertSame(wp_parse_url($candidate['url'], PHP_URL_HOST), $candidate['origin']);
         $this->assertFalse($candidate['is_background']);
+    }
+
+    /**
+     * Detection should prefer featured image on singular posts.
+     */
+    public function test_detects_featured_image_on_singular(): void {
+        $this->reset_optimizer_state();
+        $attachment_id = self::factory()->attachment->create_upload_object(DIR_TESTDATA . '/images/canola.jpg');
+        $post_id = self::factory()->post->create();
+        set_post_thumbnail($post_id, $attachment_id);
+        $this->go_to(get_permalink($post_id));
+        AESEO_LCP_Optimizer::maybe_prime_candidate();
+        $candidate = AESEO_LCP_Optimizer::get_lcp_candidate();
+        $this->assertSame($attachment_id, $candidate['attachment_id']);
+    }
+
+    /**
+     * Detection should fall back to first content image when no featured image exists.
+     */
+    public function test_detects_first_content_image(): void {
+        $this->reset_optimizer_state();
+        $attachment_id = self::factory()->attachment->create_upload_object(DIR_TESTDATA . '/images/canola.jpg');
+        $src = wp_get_attachment_url($attachment_id);
+        $post_id = self::factory()->post->create([
+            'post_content' => '<p><img src="' . esc_url($src) . '" width="100" height="100" /></p>',
+        ]);
+        $this->go_to(get_permalink($post_id));
+        apply_filters('the_content', get_post($post_id)->post_content);
+        $candidate = AESEO_LCP_Optimizer::get_lcp_candidate();
+        $this->assertSame($attachment_id, $candidate['attachment_id']);
     }
 
     /**

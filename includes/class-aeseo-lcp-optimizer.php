@@ -79,6 +79,9 @@ final class AESEO_LCP_Optimizer {
         add_filter('wp_get_attachment_image_attributes', [ __CLASS__, 'maybe_adjust_attributes' ], 10, 3);
         add_filter('wp_get_attachment_image', [ __CLASS__, 'maybe_use_picture' ], 10, 5);
         add_action('wp_head', [ __CLASS__, 'maybe_print_links' ], 5);
+        add_action('wp', [ __CLASS__, 'maybe_prime_candidate' ]);
+        add_filter('the_content', [ __CLASS__, 'detect_from_content' ], 1);
+        add_action('woocommerce_before_single_product', [ __CLASS__, 'detect_woo_product' ]);
     }
 
     /**
@@ -87,7 +90,167 @@ final class AESEO_LCP_Optimizer {
      * @return array
      */
     public static function get_lcp_candidate(): array {
+        if (empty(self::$candidate) && is_singular()) {
+            $post_id = get_the_ID();
+            if ($post_id) {
+                $cached = wp_cache_get('aeseo_lcp_candidate_' . $post_id, 'aeseo');
+                if (is_array($cached)) {
+                    self::$candidate = $cached;
+                }
+            }
+        }
         return self::$candidate;
+    }
+
+    /**
+     * Prime candidate data from featured image or cache.
+     */
+    public static function maybe_prime_candidate(): void {
+        if (!is_singular() || !empty(self::$candidate)) {
+            return;
+        }
+
+        $post_id = get_the_ID();
+        if (!$post_id) {
+            return;
+        }
+
+        $cached = wp_cache_get('aeseo_lcp_candidate_' . $post_id, 'aeseo');
+        if (is_array($cached)) {
+            self::$candidate = $cached;
+            return;
+        }
+
+        if (has_post_thumbnail($post_id)) {
+            $attachment_id = get_post_thumbnail_id($post_id);
+            self::set_candidate_from_attachment($attachment_id);
+        }
+    }
+
+    /**
+     * Detect candidate from the_content HTML.
+     *
+     * @param string $content Post content.
+     * @return string
+     */
+    public static function detect_from_content(string $content): string {
+        if (empty(self::$candidate)) {
+            self::detect_in_html($content);
+        }
+        remove_filter('the_content', [ __CLASS__, __FUNCTION__ ], 1);
+        return $content;
+    }
+
+    /**
+     * Detect candidate on WooCommerce single product pages.
+     */
+    public static function detect_woo_product(): void {
+        if (!empty(self::$candidate)) {
+            return;
+        }
+
+        $post_id = get_the_ID();
+        if (!$post_id) {
+            return;
+        }
+
+        $attachment_id = get_post_thumbnail_id($post_id);
+        if (!$attachment_id) {
+            $gallery = get_post_meta($post_id, '_product_image_gallery', true);
+            if ($gallery) {
+                $ids = array_filter(array_map('absint', explode(',', (string) $gallery)));
+                $attachment_id = $ids[0] ?? 0;
+            }
+        }
+
+        if ($attachment_id) {
+            self::set_candidate_from_attachment($attachment_id);
+        }
+    }
+
+    /**
+     * Parse HTML and record first image details.
+     *
+     * @param string $html HTML to scan.
+     */
+    private static function detect_in_html(string $html): void {
+        if (!is_singular() || !empty(self::$candidate)) {
+            return;
+        }
+
+        $doc = new \DOMDocument();
+        libxml_use_internal_errors(true);
+        $doc->loadHTML('<?xml encoding="utf-8" ?>' . shortcode_unautop($html));
+        libxml_clear_errors();
+
+        $img = $doc->getElementsByTagName('img')->item(0);
+        if (!$img) {
+            return;
+        }
+
+        $src    = $img->getAttribute('src');
+        $width  = (int) $img->getAttribute('width');
+        $height = (int) $img->getAttribute('height');
+        $id     = (int) $img->getAttribute('data-id');
+        if (!$id && $src) {
+            $id = attachment_url_to_postid($src);
+        }
+
+        if ($src) {
+            self::set_candidate([
+                'source'        => 'img',
+                'attachment_id' => $id,
+                'url'           => $src,
+                'width'         => $width,
+                'height'        => $height,
+                'origin'        => wp_parse_url($src, PHP_URL_HOST) ?: '',
+                'is_background' => false,
+            ]);
+        }
+    }
+
+    /**
+     * Set candidate data from an attachment ID.
+     *
+     * @param int $attachment_id Attachment ID.
+     */
+    private static function set_candidate_from_attachment(int $attachment_id): void {
+        $image = wp_get_attachment_image_src($attachment_id, 'full');
+        if (!$image) {
+            return;
+        }
+
+        $url    = $image[0];
+        $width  = (int) ($image[1] ?? 0);
+        $height = (int) ($image[2] ?? 0);
+
+        self::set_candidate([
+            'source'        => 'img',
+            'attachment_id' => $attachment_id,
+            'url'           => $url,
+            'width'         => $width,
+            'height'        => $height,
+            'origin'        => wp_parse_url($url, PHP_URL_HOST) ?: '',
+            'is_background' => false,
+        ]);
+    }
+
+    /**
+     * Store candidate data and cache it briefly.
+     *
+     * @param array $data Candidate data.
+     */
+    private static function set_candidate(array $data): void {
+        if (!empty(self::$candidate)) {
+            return;
+        }
+
+        self::$candidate = $data;
+
+        $post_id = is_singular() ? get_the_ID() : 0;
+        if ($post_id) {
+            wp_cache_set('aeseo_lcp_candidate_' . $post_id, $data, 'aeseo', 60);
+        }
     }
 
     /**
@@ -182,7 +345,7 @@ final class AESEO_LCP_Optimizer {
                     'url'           => $src,
                     'width'         => isset($attr['width']) ? (int) $attr['width'] : 0,
                     'height'        => isset($attr['height']) ? (int) $attr['height'] : 0,
-                    'origin'        => 'wp',
+                    'origin'        => wp_parse_url($src, PHP_URL_HOST) ?: '',
                     'is_background' => false,
                 ];
                 self::$done = true;
