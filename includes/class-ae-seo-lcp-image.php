@@ -100,6 +100,17 @@ class AE_SEO_LCP_Image {
                 if (!isset($attr['fetchpriority'])) {
                     $attr['fetchpriority'] = 'high';
                 }
+                if (empty($attr['width']) || empty($attr['height'])) {
+                    $meta = wp_get_attachment_metadata($attachment->ID);
+                    if (is_array($meta)) {
+                        if (empty($attr['width']) && ! empty($meta['width'])) {
+                            $attr['width'] = (string) $meta['width'];
+                        }
+                        if (empty($attr['height']) && ! empty($meta['height'])) {
+                            $attr['height'] = (string) $meta['height'];
+                        }
+                    }
+                }
                 self::$done = true;
             }
         }
