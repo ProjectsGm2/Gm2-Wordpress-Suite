@@ -1,10 +1,32 @@
 <?php
-/**
- * LCP optimizer integration tests.
- */
+namespace Gm2 {
+
+    // Counter for tracking getimagesize calls within the optimizer.
+    // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
+    global $aeseo_getimagesize_calls;
+    $aeseo_getimagesize_calls = 0;
+
+    /**
+     * Proxy for PHP's getimagesize to count invocations from the optimizer.
+     *
+     * @param string $filename Image file path.
+     * @param array  $imageinfo Optional image information.
+     * @return array|false
+     */
+    function getimagesize($filename, &$imageinfo = null) { // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
+        global $aeseo_getimagesize_calls;
+        $aeseo_getimagesize_calls++;
+        return \getimagesize($filename, $imageinfo);
+    }
+}
+
+namespace {
 
 use Gm2\AESEO_LCP_Optimizer;
 
+/**
+ * LCP optimizer integration tests.
+ */
 class LcpOptimizerIntegrationTest extends WP_UnitTestCase {
 
     /**
@@ -225,6 +247,7 @@ class LcpOptimizerIntegrationTest extends WP_UnitTestCase {
     public function test_content_filter_adds_fetchpriority_to_lcp_image(): void {
         $this->reset_optimizer_state();
         $this->remove_optimizer_hooks();
+        $this->setExpectedIncorrectUsage('wp_get_loading_optimization_attributes');
 
         $attachment_id = self::factory()->attachment->create_upload_object(DIR_TESTDATA . '/images/canola.jpg');
         $src = wp_get_attachment_url($attachment_id);
@@ -246,6 +269,7 @@ class LcpOptimizerIntegrationTest extends WP_UnitTestCase {
     public function test_content_filter_adds_dimensions_inside_picture(): void {
         $this->reset_optimizer_state();
         $this->remove_optimizer_hooks();
+        $this->setExpectedIncorrectUsage('wp_get_loading_optimization_attributes');
 
         $attachment_id = self::factory()->attachment->create_upload_object(DIR_TESTDATA . '/images/canola.jpg');
         $src           = wp_get_attachment_url($attachment_id);
@@ -254,7 +278,7 @@ class LcpOptimizerIntegrationTest extends WP_UnitTestCase {
         AESEO_LCP_Optimizer::detect_from_content('<img src="' . esc_url($src) . '" />');
 
         $post_id = self::factory()->post->create([
-            'post_content' => '<picture><source srcset="' . esc_url($src) . ' 1x" /><img src="placeholder.jpg" srcset="' . esc_url($src) . ' 1x" loading="lazy" /></picture>',
+            'post_content' => '<picture><source srcset="' . esc_url($src) . ' 1x" /><img src="' . esc_url($src) . '" srcset="' . esc_url($src) . ' 1x" loading="lazy" /></picture>',
         ]);
 
         $this->go_to(get_permalink($post_id));
@@ -264,6 +288,102 @@ class LcpOptimizerIntegrationTest extends WP_UnitTestCase {
         $this->assertStringContainsString('fetchpriority="high"', $filtered);
         $this->assertMatchesRegularExpression('/<img[^>]*width="\d+"[^>]*>/', $filtered);
         $this->assertMatchesRegularExpression('/<img[^>]*height="\d+"[^>]*>/', $filtered);
+    }
+
+    /**
+     * Optimizer should populate missing dimensions and update metadata.
+     */
+    public function test_optimizer_populates_dimensions_and_updates_metadata(): void {
+        $this->reset_optimizer_state();
+
+        $attachment_id = self::factory()->attachment->create_upload_object(DIR_TESTDATA . '/images/canola.jpg');
+
+        $meta = wp_get_attachment_metadata($attachment_id);
+        unset($meta['width'], $meta['height']);
+        wp_update_attachment_metadata($attachment_id, $meta);
+        clean_post_cache($attachment_id);
+        wp_cache_delete($attachment_id, 'post_meta');
+
+        $src = wp_get_attachment_url($attachment_id);
+        $post_id = self::factory()->post->create(['post_content' => '']);
+        $this->go_to(get_permalink($post_id));
+
+        global $aeseo_getimagesize_calls;
+        $aeseo_getimagesize_calls = 0;
+        AESEO_LCP_Optimizer::detect_from_content('<img src="' . esc_url($src) . '" />');
+
+        $html = wp_get_attachment_image($attachment_id, 'full');
+
+        $file = get_attached_file($attachment_id);
+        $size = getimagesize($file);
+
+        $this->assertStringContainsString('width="' . $size[0] . '"', $html);
+        $this->assertStringContainsString('height="' . $size[1] . '"', $html);
+        $this->assertSame(1, $aeseo_getimagesize_calls);
+
+        $updated = wp_get_attachment_metadata($attachment_id);
+        $this->assertSame($size[0], (int) $updated['width']);
+        $this->assertSame($size[1], (int) $updated['height']);
+
+        $aeseo_getimagesize_calls = 0;
+        $ref = new \ReflectionClass(AESEO_LCP_Optimizer::class);
+        $method = $ref->getMethod('get_attachment_dimensions');
+        $method->setAccessible(true);
+        $dims = $method->invoke(null, $attachment_id);
+        $this->assertSame($size[0], $dims['width']);
+        $this->assertSame($size[1], $dims['height']);
+        $this->assertSame(0, $aeseo_getimagesize_calls);
+    }
+
+    /**
+     * Optimizer should populate dimensions for LCP image inside a picture tag.
+     */
+    public function test_optimizer_adds_dimensions_inside_picture_and_updates_metadata(): void {
+        $this->reset_optimizer_state();
+        $this->remove_optimizer_hooks();
+
+        $attachment_id = self::factory()->attachment->create_upload_object(DIR_TESTDATA . '/images/canola.jpg');
+        $meta = wp_get_attachment_metadata($attachment_id);
+        unset($meta['width'], $meta['height']);
+        wp_update_attachment_metadata($attachment_id, $meta);
+        clean_post_cache($attachment_id);
+        wp_cache_delete($attachment_id, 'post_meta');
+
+        $src = wp_get_attachment_url($attachment_id);
+        $this->setExpectedIncorrectUsage('wp_get_loading_optimization_attributes');
+
+        global $aeseo_getimagesize_calls;
+        $aeseo_getimagesize_calls = 0;
+        AESEO_LCP_Optimizer::detect_from_content('<img src="' . esc_url($src) . '" />');
+
+        $post_id = self::factory()->post->create([
+            'post_content' => '<picture><source srcset="' . esc_url($src) . ' 1x" /><img src="' . esc_url($src) . '" srcset="' . esc_url($src) . ' 1x" loading="lazy" /></picture>',
+        ]);
+
+        $this->go_to(get_permalink($post_id));
+        AESEO_LCP_Optimizer::boot();
+
+        $filtered = apply_filters('the_content', get_post($post_id)->post_content);
+
+        $file = get_attached_file($attachment_id);
+        $size = getimagesize($file);
+
+        $this->assertMatchesRegularExpression('/<img[^>]*width="' . $size[0] . '"/', $filtered);
+        $this->assertMatchesRegularExpression('/<img[^>]*height="' . $size[1] . '"/', $filtered);
+        $this->assertSame(1, $aeseo_getimagesize_calls);
+
+        $updated = wp_get_attachment_metadata($attachment_id);
+        $this->assertSame($size[0], (int) $updated['width']);
+        $this->assertSame($size[1], (int) $updated['height']);
+
+        $aeseo_getimagesize_calls = 0;
+        $ref = new \ReflectionClass(AESEO_LCP_Optimizer::class);
+        $method = $ref->getMethod('get_attachment_dimensions');
+        $method->setAccessible(true);
+        $dims = $method->invoke(null, $attachment_id);
+        $this->assertSame($size[0], $dims['width']);
+        $this->assertSame($size[1], $dims['height']);
+        $this->assertSame(0, $aeseo_getimagesize_calls);
     }
 
     /**
@@ -286,4 +406,6 @@ class LcpOptimizerIntegrationTest extends WP_UnitTestCase {
         $this->assertFalse($admin_check);
         $this->assertFalse(has_filter('wp_lazy_loading_enabled', [ AESEO_LCP_Optimizer::class, 'maybe_disable_lazy' ]));
     }
+}
+
 }
