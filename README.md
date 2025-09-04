@@ -34,6 +34,21 @@ The build step appends a content hash to each filename so browsers can cache ass
 
 When the **Enable Replacements** option is active (`ae_js_replacements`), front‑end scripts execute callbacks on matched elements. Use the `ae_seo/js/replacements` filter to return an associative array where keys are CSS selectors and values are callback names available on `window`. Each callback receives the matched element as its only argument. The plugin also ships a `vanilla-helpers.js` module with tiny DOM utilities for these callbacks.
 
+## LCP Optimization
+
+Improve Largest Contentful Paint by enabling targeted tweaks in **SEO → Performance → LCP Optimization**. The module runs entirely on the front end and is compatible with PHP 7.4+ and WordPress 5.8+.
+
+Configuration options include:
+
+- `remove_lazy_on_lcp` – strips lazy‑loading from the element identified as the LCP candidate.
+- `add_fetchpriority_high` – adds `fetchpriority="high"` to the LCP resource so browsers request it sooner.
+- `force_width_height` – injects missing width and height attributes to avoid layout shifts.
+- `responsive_picture_nextgen` – converts `<img>` tags to responsive `<picture>` markup with modern formats when possible.
+- `add_preconnect` – outputs `preconnect` hints for the LCP host.
+- `add_preload` – preloads the LCP image or font so it starts downloading immediately.
+
+Each option can be toggled individually to tailor optimization for specific themes and content.
+
 ## AI Providers
 
 The suite can generate content using multiple AI services. Select **ChatGPT**, **Gemma**, or **Llama** from the **Gm2 → AI Settings** page and enter the corresponding API key and optional endpoint. The chosen provider is used throughout the plugin for AI-powered features.
