@@ -241,6 +241,32 @@ class LcpOptimizerIntegrationTest extends WP_UnitTestCase {
     }
 
     /**
+     * Content filter should add missing dimensions for the LCP img inside a picture tag.
+     */
+    public function test_content_filter_adds_dimensions_inside_picture(): void {
+        $this->reset_optimizer_state();
+        $this->remove_optimizer_hooks();
+
+        $attachment_id = self::factory()->attachment->create_upload_object(DIR_TESTDATA . '/images/canola.jpg');
+        $src           = wp_get_attachment_url($attachment_id);
+
+        // Prime candidate so the real image URL is recognized.
+        AESEO_LCP_Optimizer::detect_from_content('<img src="' . esc_url($src) . '" />');
+
+        $post_id = self::factory()->post->create([
+            'post_content' => '<picture><source srcset="' . esc_url($src) . ' 1x" /><img src="placeholder.jpg" srcset="' . esc_url($src) . ' 1x" loading="lazy" /></picture>',
+        ]);
+
+        $this->go_to(get_permalink($post_id));
+        AESEO_LCP_Optimizer::boot();
+
+        $filtered = apply_filters('the_content', get_post($post_id)->post_content);
+        $this->assertStringContainsString('fetchpriority="high"', $filtered);
+        $this->assertMatchesRegularExpression('/<img[^>]*width="\d+"[^>]*>/', $filtered);
+        $this->assertMatchesRegularExpression('/<img[^>]*height="\d+"[^>]*>/', $filtered);
+    }
+
+    /**
      * Hooks should run only on front-end requests.
      */
     public function test_hooks_run_only_on_frontend_requests(): void {
