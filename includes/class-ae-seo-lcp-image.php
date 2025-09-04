@@ -92,10 +92,21 @@ class AE_SEO_LCP_Image {
      *
      * @param array        $attr      Image attributes.
      * @param \WP_Post    $attachment Attachment object.
-     * @param string|int[] $size      Requested size.
-     * @return array
+    * @param string|int[] $size      Requested size.
+    * @return array
      */
     public static function maybe_adjust_attributes(array $attr, $attachment, $size): array {
+        if (is_object($attachment) && (empty($attr['width']) || empty($attr['height']))) {
+            $meta = wp_get_attachment_metadata($attachment->ID);
+            if (is_array($meta)) {
+                if (empty($attr['width']) && ! empty($meta['width'])) {
+                    $attr['width'] = sanitize_text_field((string) absint($meta['width']));
+                }
+                if (empty($attr['height']) && ! empty($meta['height'])) {
+                    $attr['height'] = sanitize_text_field((string) absint($meta['height']));
+                }
+            }
+        }
         if (self::$done) {
             return $attr;
         }
@@ -112,17 +123,6 @@ class AE_SEO_LCP_Image {
                 $src = $attr['src'] ?? wp_get_attachment_image_url($attachment->ID, $size);
                 if ($src) {
                     self::$lcp_url = $src;
-                }
-                if (empty($attr['width']) || empty($attr['height'])) {
-                    $meta = wp_get_attachment_metadata($attachment->ID);
-                    if (is_array($meta)) {
-                        if (empty($attr['width']) && ! empty($meta['width'])) {
-                            $attr['width'] = (string) $meta['width'];
-                        }
-                        if (empty($attr['height']) && ! empty($meta['height'])) {
-                            $attr['height'] = (string) $meta['height'];
-                        }
-                    }
                 }
                 self::$done = true;
             }
