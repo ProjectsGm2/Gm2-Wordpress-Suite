@@ -493,6 +493,15 @@ class Gm2_SEO_Admin {
         );
 
         add_submenu_page(
+            'gm2-seo',
+            esc_html__( 'Script Audit', 'gm2-wordpress-suite' ),
+            esc_html__( 'Script Audit', 'gm2-wordpress-suite' ),
+            'manage_options',
+            'gm2-script-audit',
+            [ $this, 'display_script_audit_page' ]
+        );
+
+        add_submenu_page(
             'gm2-ai',
             esc_html__( 'Bulk AI Review', 'gm2-wordpress-suite' ),
             esc_html__( 'Bulk AI Review', 'gm2-wordpress-suite' ),
@@ -6908,6 +6917,10 @@ class Gm2_SEO_Admin {
         echo '</tbody></table>';
         submit_button();
         echo '</form></div>';
+    }
+
+    public function display_script_audit_page() {
+        require GM2_PLUGIN_DIR . 'admin/views/third-party-audit.php';
     }
 
     public function cron_process_ai_tax_queue() {
