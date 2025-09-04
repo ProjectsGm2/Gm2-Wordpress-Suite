@@ -69,6 +69,8 @@ final class AESEO_LCP_Optimizer {
         add_action('wp_head', [ __CLASS__, 'maybe_print_links' ], 5);
         add_action('wp', [ __CLASS__, 'maybe_prime_candidate' ]);
         add_filter('the_content', [ __CLASS__, 'detect_from_content' ], 1);
+        add_filter('the_content', [ __CLASS__, 'maybe_add_fetchpriority_to_content' ], 20);
+        add_filter('render_block', [ __CLASS__, 'maybe_add_fetchpriority_to_block' ], 20, 2);
         add_action('woocommerce_before_single_product', [ __CLASS__, 'detect_woo_product' ]);
         add_filter('woocommerce_single_product_image_thumbnail_html', [ __CLASS__, 'strip_main_product_lazy' ], 10, 2);
     }
@@ -211,12 +213,83 @@ final class AESEO_LCP_Optimizer {
             return $html;
         }
 
+        if (self::is_already_optimized($attachment_id ? $attachment_id : $src)) {
+            return $html;
+        }
+
         $new_img_tag = preg_replace('/\sloading\s*=\s*["\']lazy["\']/', '', $img_tag);
+        if (strpos($new_img_tag, 'fetchpriority') === false && !empty(self::$settings['add_fetchpriority_high'])) {
+            $new_img_tag = preg_replace('/<img\b/', '<img fetchpriority="high"', $new_img_tag, 1);
+        }
         if (strpos($new_img_tag, 'data-aeseo-lcp="1"') === false) {
             $new_img_tag = preg_replace('/<img\b/', '<img data-aeseo-lcp="1"', $new_img_tag, 1);
         }
 
+        self::$done = true;
+
         return str_replace($img_tag, $new_img_tag, $html);
+    }
+
+    /**
+     * Add fetchpriority="high" to the LCP image within a block.
+     *
+     * @param string $block_content Rendered block HTML.
+     * @param array  $block         Block context.
+     * @return string
+     */
+    public static function maybe_add_fetchpriority_to_block(string $block_content, array $block): string {
+        return self::maybe_add_fetchpriority_html($block_content);
+    }
+
+    /**
+     * Add fetchpriority="high" to the LCP image within post content.
+     *
+     * @param string $content Post content.
+     * @return string
+     */
+    public static function maybe_add_fetchpriority_to_content(string $content): string {
+        return self::maybe_add_fetchpriority_html($content);
+    }
+
+    /**
+     * Inject fetchpriority="high" into existing HTML for the LCP image.
+     *
+     * @param string $html HTML to scan.
+     * @return string
+     */
+    private static function maybe_add_fetchpriority_html(string $html): string {
+        if (self::$done || empty(self::$settings['add_fetchpriority_high'])) {
+            return $html;
+        }
+
+        $candidate = self::get_lcp_candidate();
+        if (empty($candidate) || empty($candidate['url'])) {
+            return $html;
+        }
+
+        if (strpos($html, '<img') === false) {
+            return $html;
+        }
+
+        $pattern = '/<img\\b[^>]*\\bsrc\\s*=\\s*["\']' . preg_quote($candidate['url'], '/') . '["\'][^>]*>/i';
+        if (!preg_match($pattern, $html, $match)) {
+            return $html;
+        }
+
+        if (self::is_already_optimized($candidate['attachment_id'] ? $candidate['attachment_id'] : $candidate['url'])) {
+            return $html;
+        }
+
+        $img_tag = $match[0];
+        if (strpos($img_tag, 'fetchpriority') === false) {
+            $img_tag = preg_replace('/<img\\b/', '<img fetchpriority="high"', $img_tag, 1);
+        }
+
+        $html = str_replace($match[0], $img_tag, $html);
+
+        self::$done = true;
+
+        return $html;
     }
 
     /**
