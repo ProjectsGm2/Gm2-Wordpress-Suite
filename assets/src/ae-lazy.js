@@ -22,19 +22,10 @@ if (document.documentElement.hasAttribute('data-aejs-off')) {
     }
     analyticsLoaded = true;
     var analytics = window.aeLoadAnalyticsAllowed || {};
-    if (analytics.gtag || modules.gtag) {
-      import('./modules/gtag.js').then(function (m) {
-        m.default(analytics.gtag || ids.gtag);
-      });
-    }
-    if (analytics.gtm || modules.gtm) {
-      import('./modules/gtm.js').then(function (m) {
-        m.default(analytics.gtm || ids.gtm);
-      });
-    }
-    if (analytics.fbq || modules.fbq) {
-      import('./modules/fbq.js').then(function (m) {
-        m.default(analytics.fbq || ids.fbq);
+    if (analytics.tagManager || modules.tagManager) {
+      import('./modules/tag-manager.js').then(function (m) {
+        var cfg = analytics.tagManager || ids.tagManager || {};
+        m.default(cfg.id, { gtag: cfg.gtag, fbq: cfg.fbq });
       });
     }
   }
@@ -69,7 +60,7 @@ if (document.documentElement.hasAttribute('data-aejs-off')) {
     });
   }
 
-  var builtin = { gtag: 1, gtm: 1, fbq: 1, recaptcha: 1, hcaptcha: 1 };
+  var builtin = { tagManager: 1, recaptcha: 1, hcaptcha: 1 };
   function setupCustomModules() {
     for (var name in modules) {
       if (!modules[name] || builtin[name]) {

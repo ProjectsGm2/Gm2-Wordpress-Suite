@@ -5,10 +5,9 @@
   "product.js": "product.c47bc013.js",
   "blog.js": "blog.67d14dae.js",
   "polyfills.js": "polyfills.14e582c6.js",
-  "ae-lazy.js": "ae-lazy.9f2d5047.js",
+  "ae-lazy.js": "ae-lazy.1f004e55.js",
   "vanilla-helpers.js": "vanilla-helpers.93d0f290.js",
-  "modules/fbq.js": "modules/fbq.955660b5.js",
-  "modules/gtag.js": "modules/gtag.0cde50d2.js",
-  "modules/gtm.js": "modules/gtm.65781f79.js",
-  "modules/recaptcha.js": "modules/recaptcha.3c9ea9c3.js"
+  "modules/hcaptcha.js": "modules/hcaptcha.bc1b63fc.js",
+  "modules/recaptcha.js": "modules/recaptcha.116c515f.js",
+  "modules/tag-manager.js": "modules/tag-manager.bdc0bd50.js"
 }

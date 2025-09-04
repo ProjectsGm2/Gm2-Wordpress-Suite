@@ -1,0 +1,1 @@
+function c(t){if(!t||document.getElementById("ae-hcaptcha"))return;let e=document.createElement("script");e.id="ae-hcaptcha",e.src="https://hcaptcha.com/1/api.js?render="+encodeURIComponent(t),document.head.appendChild(e)}export{c as default};
