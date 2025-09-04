@@ -293,6 +293,59 @@ final class AESEO_LCP_Optimizer {
     }
 
     /**
+     * Get attachment dimensions, populating metadata if missing.
+     *
+     * @param int $attachment_id Attachment ID.
+     * @return array
+     */
+    private static function get_attachment_dimensions(int $attachment_id): array {
+        $cache_key = 'aeseo_att_dim_' . $attachment_id;
+        $cached    = wp_cache_get($cache_key, 'aeseo');
+        if (is_array($cached) && isset($cached['width'], $cached['height'])) {
+            return [
+                'width'  => (int) $cached['width'],
+                'height' => (int) $cached['height'],
+            ];
+        }
+
+        $meta   = wp_get_attachment_metadata($attachment_id) ?: [];
+        $width  = (int) ($meta['width'] ?? 0);
+        $height = (int) ($meta['height'] ?? 0);
+
+        if (!$width || !$height) {
+            $file = get_attached_file($attachment_id);
+            if ($file && file_exists($file)) {
+                $size = @getimagesize($file);
+                if (is_array($size)) {
+                    $updated = false;
+                    if (!$width && !empty($size[0])) {
+                        $width        = (int) $size[0];
+                        $meta['width'] = $width;
+                        $updated       = true;
+                    }
+                    if (!$height && !empty($size[1])) {
+                        $height        = (int) $size[1];
+                        $meta['height'] = $height;
+                        $updated        = true;
+                    }
+                    if ($updated) {
+                        wp_update_attachment_metadata($attachment_id, $meta);
+                    }
+                }
+            }
+        }
+
+        $result = [
+            'width'  => $width,
+            'height' => $height,
+        ];
+
+        wp_cache_set($cache_key, $result, 'aeseo', HOUR_IN_SECONDS);
+
+        return $result;
+    }
+
+    /**
      * Parse HTML and record first image details.
      *
      * @param string $html HTML to scan.
@@ -323,11 +376,9 @@ final class AESEO_LCP_Optimizer {
         if ($src) {
             // Populate missing dimensions from attachment metadata when possible.
             if ((!$width || !$height) && $id) {
-                $meta = wp_get_attachment_metadata($id);
-                if (is_array($meta)) {
-                    $width  = $width  ?: (int) ($meta['width'] ?? 0);
-                    $height = $height ?: (int) ($meta['height'] ?? 0);
-                }
+                $dimensions = self::get_attachment_dimensions($id);
+                $width      = $width  ?: (int) $dimensions['width'];
+                $height     = $height ?: (int) $dimensions['height'];
             }
 
             self::set_candidate([
@@ -356,6 +407,12 @@ final class AESEO_LCP_Optimizer {
         $url    = $image[0];
         $width  = (int) ($image[1] ?? 0);
         $height = (int) ($image[2] ?? 0);
+
+        if (!$width || !$height) {
+            $dimensions = self::get_attachment_dimensions($attachment_id);
+            $width      = $width  ?: (int) $dimensions['width'];
+            $height     = $height ?: (int) $dimensions['height'];
+        }
 
         self::set_candidate([
             'source'        => 'img',
@@ -536,14 +593,12 @@ final class AESEO_LCP_Optimizer {
         }
 
         if (!empty(self::$settings['force_width_height']) && is_object($attachment) && (empty($attr['width']) || empty($attr['height']))) {
-            $meta = wp_get_attachment_metadata($attachment->ID);
-            if (is_array($meta)) {
-                if (empty($attr['width']) && !empty($meta['width'])) {
-                    $attr['width'] = sanitize_text_field((string) absint($meta['width']));
-                }
-                if (empty($attr['height']) && !empty($meta['height'])) {
-                    $attr['height'] = sanitize_text_field((string) absint($meta['height']));
-                }
+            $dimensions = self::get_attachment_dimensions($attachment->ID);
+            if (empty($attr['width']) && !empty($dimensions['width'])) {
+                $attr['width'] = sanitize_text_field((string) absint($dimensions['width']));
+            }
+            if (empty($attr['height']) && !empty($dimensions['height'])) {
+                $attr['height'] = sanitize_text_field((string) absint($dimensions['height']));
             }
         }
 
