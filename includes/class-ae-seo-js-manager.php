@@ -82,6 +82,8 @@ class AE_SEO_JS_Manager {
         }
         $this->map = $this->ae_seo_load_map();
         add_action('wp_enqueue_scripts', [ $this, 'ae_seo_enqueue_scripts' ], 0);
+        add_action('wp_enqueue_scripts', [ __CLASS__, 'audit_third_party' ], PHP_INT_MAX);
+        add_filter('gm2_third_party_allowed', [ __CLASS__, 'filter_disabled' ], 10, 2);
         add_filter('script_loader_tag', [ $this, 'ae_seo_script_loader_tag' ], 10, 3);
         add_action('send_headers', [ __CLASS__, 'send_server_timing' ], 999);
     }
@@ -138,6 +140,42 @@ class AE_SEO_JS_Manager {
             return;
         }
         wp_localize_script($handle, 'aeSEO', [ 'replacements' => $replacements ]);
+    }
+
+    /**
+     * Dequeue scripts disallowed by filter hook.
+     */
+    public static function audit_third_party(): void {
+        if (self::is_disabled()) {
+            return;
+        }
+        $scripts = wp_scripts();
+        if (!$scripts) {
+            return;
+        }
+        foreach ($scripts->queue as $handle) {
+            $registered = $scripts->registered[$handle] ?? null;
+            if (!$registered) {
+                continue;
+            }
+            $src   = $registered->src;
+            $allow = apply_filters('gm2_third_party_allowed', true, $handle, $src);
+            if (!$allow) {
+                wp_dequeue_script($handle);
+                self::$dequeued++;
+            }
+        }
+    }
+
+    /**
+     * Default filter using saved disabled handles.
+     */
+    public static function filter_disabled(bool $allow, string $handle): bool {
+        $disabled = get_option('gm2_third_party_disabled', []);
+        if (is_array($disabled) && in_array($handle, $disabled, true)) {
+            return false;
+        }
+        return $allow;
     }
 
     /**
