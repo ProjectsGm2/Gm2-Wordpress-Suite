@@ -84,6 +84,22 @@ class Gm2_CLI extends \WP_CLI_Command {
     }
 
     /**
+     * Synchronize cached font files.
+     *
+     * ## SUBCOMMANDS
+     *
+     * sync  Refresh cached fonts
+     */
+    public function fonts( $args, $assoc_args ) {
+        $sub = $args[0] ?? '';
+        if ( $sub !== 'sync' ) {
+            \WP_CLI::error( __( 'Usage: wp gm2 fonts sync', 'gm2-wordpress-suite' ) );
+        }
+        AE_SEO_Font_Manager::sync_cached_fonts();
+        \WP_CLI::success( __( 'Fonts synchronized.', 'gm2-wordpress-suite' ) );
+    }
+
+    /**
      * Scaffold theme assets such as Twig/Blade templates or theme.json.
      *
      * ## SUBCOMMANDS
