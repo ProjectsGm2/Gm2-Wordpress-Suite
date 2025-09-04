@@ -705,6 +705,10 @@ final class AESEO_LCP_Optimizer {
             return $html;
         }
 
+        if (stripos($html, '<source') !== false && (stripos($html, 'image/avif') !== false || stripos($html, 'image/webp') !== false)) {
+            return $html;
+        }
+
         if (self::is_already_optimized($attachment_id)) {
             return $html;
         }
@@ -728,19 +732,49 @@ final class AESEO_LCP_Optimizer {
             return $html;
         }
 
-        $webp_srcset = self::convert_srcset_extension($srcset, $ext, 'webp');
-        $avif_srcset = self::convert_srcset_extension($srcset, $ext, 'avif');
-
-        if (!self::srcset_files_exist($webp_srcset) || !self::srcset_files_exist($avif_srcset)) {
-            return $html;
+        $sizes_attr = wp_get_attachment_image_sizes($attachment_id, $size);
+        if (!$sizes_attr) {
+            $sizes_attr = '(max-width: 768px) 100vw, 1200px';
         }
 
-        return sprintf(
-            '<picture><source type="image/avif" srcset="%s" /><source type="image/webp" srcset="%s" />%s</picture>',
-            esc_attr($avif_srcset),
-            esc_attr($webp_srcset),
-            $html
-        );
+        $img_tag = $html;
+        if (preg_match('/<img[^>]*>/i', $html, $m)) {
+            $img_tag = $m[0];
+            if (strpos($img_tag, ' srcset=') !== false) {
+                $img_tag = preg_replace('/srcset="[^"]*"/', 'srcset="' . esc_attr($srcset) . '"', $img_tag);
+            } else {
+                $img_tag = preg_replace('/<img/', '<img srcset="' . esc_attr($srcset) . '"', $img_tag, 1);
+            }
+            if (strpos($img_tag, ' sizes=') !== false) {
+                $img_tag = preg_replace('/sizes="[^"]*"/', 'sizes="' . esc_attr($sizes_attr) . '"', $img_tag);
+            } else {
+                $img_tag = preg_replace('/<img/', '<img sizes="' . esc_attr($sizes_attr) . '"', $img_tag, 1);
+            }
+        }
+
+        $sources = '';
+
+        if (wp_image_editor_supports(['mime_type' => 'image/avif'])) {
+            self::maybe_generate_nextgen_files($attachment_id, 'avif');
+            $avif_srcset = self::convert_srcset_extension($srcset, $ext, 'avif');
+            if (self::srcset_files_exist($avif_srcset)) {
+                $sources .= sprintf('<source type="image/avif" srcset="%s" sizes="%s" />', esc_attr($avif_srcset), esc_attr($sizes_attr));
+            }
+        }
+
+        if (wp_image_editor_supports(['mime_type' => 'image/webp'])) {
+            self::maybe_generate_nextgen_files($attachment_id, 'webp');
+            $webp_srcset = self::convert_srcset_extension($srcset, $ext, 'webp');
+            if (self::srcset_files_exist($webp_srcset)) {
+                $sources .= sprintf('<source type="image/webp" srcset="%s" sizes="%s" />', esc_attr($webp_srcset), esc_attr($sizes_attr));
+            }
+        }
+
+        if ($sources === '') {
+            return $img_tag;
+        }
+
+        return '<picture>' . $sources . $img_tag . '</picture>';
     }
 
     /**
@@ -827,6 +861,54 @@ final class AESEO_LCP_Optimizer {
             }
         }
         return false;
+    }
+
+    /**
+     * Generate next-gen images for the attachment if missing.
+     *
+     * @param int    $attachment_id Attachment ID.
+     * @param string $ext           Extension to generate (webp or avif).
+     */
+    private static function maybe_generate_nextgen_files(int $attachment_id, string $ext): void {
+        if (!in_array($ext, [ 'webp', 'avif' ], true)) {
+            return;
+        }
+
+        $mime = 'image/' . $ext;
+        if (!wp_image_editor_supports([ 'mime_type' => $mime ])) {
+            return;
+        }
+
+        $meta = wp_get_attachment_metadata($attachment_id);
+        if (!is_array($meta) || empty($meta['file'])) {
+            return;
+        }
+
+        $uploads = wp_get_upload_dir();
+        $base    = trailingslashit($uploads['basedir']) . trailingslashit(dirname($meta['file']));
+        $files   = [ $meta['file'] ];
+        if (!empty($meta['sizes']) && is_array($meta['sizes'])) {
+            foreach ($meta['sizes'] as $data) {
+                if (!empty($data['file'])) {
+                    $files[] = $data['file'];
+                }
+            }
+        }
+
+        foreach ($files as $file) {
+            $src_file  = $base . $file;
+            $dest_file = preg_replace('/\.[^.]+$/', '.' . $ext, $src_file);
+            if (!file_exists($src_file) || file_exists($dest_file)) {
+                continue;
+            }
+
+            $editor = wp_get_image_editor($src_file);
+            if (is_wp_error($editor)) {
+                continue;
+            }
+
+            $editor->save($dest_file, $mime);
+        }
     }
 }
 

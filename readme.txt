@@ -3,7 +3,7 @@ Contributors: gm2team
 Tags: admin, tools, suite, performance
 Requires at least: 6.0
 Tested up to: 6.5
-Stable tag: 1.6.24
+Stable tag: 1.6.25
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -51,7 +51,7 @@ Configuration options:
 * `remove_lazy_on_lcp` – remove lazy-loading from the element identified as the LCP candidate.
 * `add_fetchpriority_high` – add `fetchpriority="high"` so the browser requests the LCP resource sooner. Existing markup in `the_content` or block output is scanned to ensure the attribute is present.
 * `force_width_height` – fetch intrinsic dimensions (using `getimagesize()` if metadata is absent) and inject width and height attributes to prevent layout shifts.
-* `responsive_picture_nextgen` – convert images to responsive `<picture>` markup with next‑generation formats when possible.
+* `responsive_picture_nextgen` – convert the LCP image to a responsive `<picture>` with AVIF/WebP sources and full `srcset`/`sizes` when supported.
 * `add_preconnect` – output `preconnect` hints for the LCP host.
 * `add_preload` – preload the LCP image or font for immediate fetching.
 
@@ -587,6 +587,8 @@ the last 100 missing URLs to help you create new redirects.
 * **Real-time character counts** – display running totals in the SEO meta box.
 
 == Changelog ==
+= 1.6.25 =
+* LCP Optimization now generates AVIF/WebP sources with responsive `srcset`/`sizes` for the LCP image and skips themes that already output next-gen `<picture>` markup.
 = 1.6.24 =
 * Added `fetchpriority="high"` to the detected LCP image in rendered content and WooCommerce markup.
 * `force_width_height` now fetches intrinsic image dimensions (using `getimagesize()` when metadata is absent) and injects `width`/`height` attributes to prevent CLS.

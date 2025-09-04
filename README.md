@@ -47,7 +47,7 @@ Configuration options include:
 - `remove_lazy_on_lcp` – strips lazy‑loading from the element identified as the LCP candidate.
 - `add_fetchpriority_high` – adds `fetchpriority="high"` to the LCP resource so browsers request it sooner. Existing `the_content` and block output is scanned to insert the attribute when missing.
 - `force_width_height` – fetches intrinsic dimensions (using `getimagesize()` if metadata is absent) and injects width and height attributes to avoid layout shifts.
-- `responsive_picture_nextgen` – converts `<img>` tags to responsive `<picture>` markup with modern formats when possible.
+- `responsive_picture_nextgen` – converts the LCP image to a responsive `<picture>` with AVIF/WebP sources and full `srcset`/`sizes` when supported.
 - `add_preconnect` – outputs `preconnect` hints for the LCP host.
 - `add_preload` – preloads the LCP image or font so it starts downloading immediately.
 
