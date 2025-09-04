@@ -54,9 +54,25 @@ if (document.documentElement.hasAttribute('data-aejs-off')) {
     });
   }
 
+  var hcaptchaLoaded = false;
+  function loadHCaptcha() {
+    if (hcaptchaLoaded) {
+      return;
+    }
+    var key = window.aeLoadHCaptcha || (modules.hcaptcha && ids.hcaptcha);
+    if (!key) {
+      return;
+    }
+    hcaptchaLoaded = true;
+    import('./modules/hcaptcha.js').then(function (m) {
+      m.default(key);
+    });
+  }
+
   window.addEventListener('ae:engaged', function () {
     loadAnalytics();
     loadRecaptcha();
+    loadHCaptcha();
   });
 
   document.addEventListener('aeConsentChanged', loadAnalytics);

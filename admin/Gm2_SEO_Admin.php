@@ -86,6 +86,8 @@ class Gm2_SEO_Admin {
         add_option('ae_js_analytics_id', '');
         add_option('ae_js_gtm_id', '');
         add_option('ae_js_fb_id', '');
+        add_option('ae_recaptcha_site_key', '');
+        add_option('ae_hcaptcha_site_key', '');
         add_option('ae_js_consent_key', 'aeConsent');
         add_option('ae_js_consent_value', 'allow_analytics');
         add_option('ae_js_replacements', '0');
@@ -631,6 +633,12 @@ class Gm2_SEO_Admin {
             'sanitize_callback' => 'sanitize_text_field',
         ]);
         register_setting('gm2_seo_options', 'ae_js_fb_id', [
+            'sanitize_callback' => 'sanitize_text_field',
+        ]);
+        register_setting('gm2_seo_options', 'ae_recaptcha_site_key', [
+            'sanitize_callback' => 'sanitize_text_field',
+        ]);
+        register_setting('gm2_seo_options', 'ae_hcaptcha_site_key', [
             'sanitize_callback' => 'sanitize_text_field',
         ]);
         register_setting('gm2_seo_options', 'ae_js_consent_key', [
@@ -3115,6 +3123,12 @@ class Gm2_SEO_Admin {
 
         $fb_id = isset($_POST['ae_js_fb_id']) ? sanitize_text_field($_POST['ae_js_fb_id']) : '';
         update_option('ae_js_fb_id', $fb_id);
+
+        $recaptcha_key = isset($_POST['ae_recaptcha_site_key']) ? sanitize_text_field($_POST['ae_recaptcha_site_key']) : '';
+        update_option('ae_recaptcha_site_key', $recaptcha_key);
+
+        $hcaptcha_key = isset($_POST['ae_hcaptcha_site_key']) ? sanitize_text_field($_POST['ae_hcaptcha_site_key']) : '';
+        update_option('ae_hcaptcha_site_key', $hcaptcha_key);
 
         $consent_key = isset($_POST['ae_js_consent_key']) ? sanitize_text_field($_POST['ae_js_consent_key']) : 'aeConsent';
         update_option('ae_js_consent_key', $consent_key);
