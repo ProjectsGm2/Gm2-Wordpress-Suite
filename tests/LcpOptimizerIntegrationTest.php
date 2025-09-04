@@ -24,13 +24,11 @@ class LcpOptimizerIntegrationTest extends WP_UnitTestCase {
         $class = AESEO_LCP_Optimizer::class;
         $reflect = new ReflectionClass($class);
         $props = [
-            'settings'        => $settings === null ? $defaults : $settings,
-            'candidate_index' => null,
-            'lazy_count'      => 0,
-            'attr_count'      => 0,
-            'candidate'       => [],
-            'done'            => false,
-            'optimized'       => [],
+            'settings'      => $settings === null ? $defaults : $settings,
+            'candidate'     => [],
+            'current_image' => [],
+            'done'          => false,
+            'optimized'     => [],
         ];
         foreach ($props as $name => $value) {
             $prop = $reflect->getProperty($name);
@@ -43,6 +41,7 @@ class LcpOptimizerIntegrationTest extends WP_UnitTestCase {
      * Helper to remove optimizer hooks.
      */
     private function remove_optimizer_hooks(): void {
+        remove_filter('pre_wp_get_loading_optimization_attributes', [ AESEO_LCP_Optimizer::class, 'capture_image_context' ], 10);
         remove_filter('wp_lazy_loading_enabled', [ AESEO_LCP_Optimizer::class, 'maybe_disable_lazy' ], 10);
         remove_filter('wp_get_attachment_image_attributes', [ AESEO_LCP_Optimizer::class, 'maybe_adjust_attributes' ], 10);
         remove_filter('wp_get_attachment_image', [ AESEO_LCP_Optimizer::class, 'maybe_use_picture' ], 10);
@@ -75,8 +74,8 @@ class LcpOptimizerIntegrationTest extends WP_UnitTestCase {
     public function test_lcp_candidate_detection_structure(): void {
         $this->reset_optimizer_state();
         $attachment_id = self::factory()->attachment->create_upload_object(DIR_TESTDATA . '/images/canola.jpg');
-
-        wp_get_attachment_image($attachment_id, 'full');
+        $src = wp_get_attachment_url($attachment_id);
+        AESEO_LCP_Optimizer::detect_from_content('<img src="' . esc_url($src) . '" width="100" height="100" />');
         $candidate = AESEO_LCP_Optimizer::get_lcp_candidate();
 
         $this->assertIsArray($candidate);
@@ -126,6 +125,8 @@ class LcpOptimizerIntegrationTest extends WP_UnitTestCase {
         // Flags enabled.
         $this->reset_optimizer_state();
         $attachment1 = self::factory()->attachment->create_upload_object(DIR_TESTDATA . '/images/canola.jpg');
+        $src1 = wp_get_attachment_url($attachment1);
+        AESEO_LCP_Optimizer::detect_from_content('<img src="' . esc_url($src1) . '" width="100" height="100" />');
         $html1 = wp_get_attachment_image($attachment1, 'full');
         $this->assertStringNotContainsString('loading="', $html1);
         $this->assertStringContainsString('fetchpriority="high"', $html1);
@@ -141,6 +142,8 @@ class LcpOptimizerIntegrationTest extends WP_UnitTestCase {
         ];
         $this->reset_optimizer_state($settings);
         $attachment2 = self::factory()->attachment->create_upload_object(DIR_TESTDATA . '/images/canola.jpg');
+        $src2 = wp_get_attachment_url($attachment2);
+        AESEO_LCP_Optimizer::detect_from_content('<img src="' . esc_url($src2) . '" width="100" height="100" />');
         $html2 = wp_get_attachment_image($attachment2, 'full');
         $this->assertStringContainsString('loading="lazy"', $html2);
         $this->assertStringNotContainsString('fetchpriority="high"', $html2);

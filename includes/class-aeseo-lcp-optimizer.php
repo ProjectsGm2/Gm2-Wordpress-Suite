@@ -14,32 +14,18 @@ final class AESEO_LCP_Optimizer {
     private static $settings = [];
 
     /**
-     * Candidate index from wp_lazy_loading_enabled.
-     *
-     * @var int|null
-     */
-    private static $candidate_index = null;
-
-    /**
-     * Counter for wp_lazy_loading_enabled calls.
-     *
-     * @var int
-     */
-    private static $lazy_count = 0;
-
-    /**
-     * Counter for wp_get_attachment_image_attributes calls.
-     *
-     * @var int
-     */
-    private static $attr_count = 0;
-
-    /**
      * Information about the LCP image.
      *
      * @var array
      */
     private static $candidate = [];
+
+    /**
+     * Context for the current image being processed.
+     *
+     * @var array
+     */
+    private static $current_image = [];
 
     /**
      * Flag if processing done.
@@ -75,6 +61,7 @@ final class AESEO_LCP_Optimizer {
             ]
         );
 
+        add_filter('pre_wp_get_loading_optimization_attributes', [ __CLASS__, 'capture_image_context' ], 10, 4);
         add_filter('wp_lazy_loading_enabled', [ __CLASS__, 'maybe_disable_lazy' ], 10, 3);
         add_filter('wp_get_attachment_image_attributes', [ __CLASS__, 'maybe_adjust_attributes' ], 10, 3);
         add_filter('wp_get_attachment_image', [ __CLASS__, 'maybe_use_picture' ], 10, 5);
@@ -302,6 +289,31 @@ final class AESEO_LCP_Optimizer {
     }
 
     /**
+     * Store context of the current image being processed.
+     *
+     * @param mixed        $value   Short-circuit value.
+     * @param string       $tag     Tag name.
+     * @param array        $attr    Tag attributes.
+     * @param string|array $context Context for the element.
+     * @return mixed
+     */
+    public static function capture_image_context($value, $tag, $attr, $context) {
+        if ($tag === 'img' && is_array($attr)) {
+            $id  = isset($attr['attachment_id']) ? (int) $attr['attachment_id'] : 0;
+            $src = isset($attr['src']) ? (string) $attr['src'] : '';
+            if (!$id && $src) {
+                $id = attachment_url_to_postid($src);
+            }
+            self::$current_image = [
+                'attachment_id' => $id,
+                'src'          => $src,
+            ];
+        }
+
+        return $value;
+    }
+
+    /**
      * Disable lazy loading for LCP candidate.
      *
      * @param bool   $default Default decision.
@@ -310,14 +322,33 @@ final class AESEO_LCP_Optimizer {
      * @return bool
      */
     public static function maybe_disable_lazy(bool $default, string $tag, string $context): bool {
-        if ($tag !== 'img' || self::$done) {
+        if ($tag !== 'img' || self::$done || empty(self::$settings['remove_lazy_on_lcp'])) {
             return $default;
         }
 
-        self::$lazy_count++;
-        if (self::$candidate_index === null) {
-            self::$candidate_index = self::$lazy_count;
-            return !empty(self::$settings['remove_lazy_on_lcp']) ? false : $default;
+        $candidate = self::get_lcp_candidate();
+        if (empty($candidate)) {
+            return $default;
+        }
+
+        $attachment_id = 0;
+        $src           = '';
+
+        if (is_array($context)) {
+            $attachment_id = isset($context['attachment_id']) ? (int) $context['attachment_id'] : 0;
+            $src           = isset($context['src']) ? (string) $context['src'] : '';
+        }
+
+        if (!$attachment_id && !$src && !empty(self::$current_image)) {
+            $attachment_id = (int) (self::$current_image['attachment_id'] ?? 0);
+            $src           = (string) (self::$current_image['src'] ?? '');
+        }
+
+        if (
+            ($candidate['attachment_id'] && $attachment_id && $candidate['attachment_id'] === $attachment_id) ||
+            ($candidate['url'] && $src && $candidate['url'] === $src)
+        ) {
+            return false;
         }
 
         return $default;
@@ -348,27 +379,35 @@ final class AESEO_LCP_Optimizer {
             }
         }
 
-        self::$attr_count++;
-        if (self::$candidate_index !== null && self::$candidate_index === self::$attr_count) {
+        $candidate = self::get_lcp_candidate();
+        if (!empty($candidate)) {
             $src = $attr['src'] ?? '';
-            if (!$src && is_object($attachment)) {
-                $src = wp_get_attachment_image_url($attachment->ID, $size);
+            $attachment_id = is_object($attachment) ? (int) $attachment->ID : 0;
+            if (!$src && $attachment_id) {
+                $src = wp_get_attachment_image_url($attachment_id, $size);
             }
 
-            if ($src && !self::is_already_optimized(is_object($attachment) ? $attachment->ID : $src)) {
+            $is_match = false;
+            if ($candidate['attachment_id'] && $attachment_id && $candidate['attachment_id'] === $attachment_id) {
+                $is_match = true;
+            } elseif ($candidate['url'] && $src && $candidate['url'] === $src) {
+                $is_match = true;
+            }
+
+            if ($is_match && $src && !self::is_already_optimized($attachment_id ? $attachment_id : $src)) {
                 $attr['data-aeseo-lcp-optimized'] = '1';
                 if (isset($attr['loading']) && !empty(self::$settings['remove_lazy_on_lcp'])) {
                     unset($attr['loading']);
                 }
-                if ($src && !empty(self::$settings['add_fetchpriority_high']) && !isset($attr['fetchpriority'])) {
+                if (!empty(self::$settings['add_fetchpriority_high']) && !isset($attr['fetchpriority'])) {
                     $attr['fetchpriority'] = 'high';
                 }
                 self::$candidate = [
                     'source'        => 'img',
-                    'attachment_id' => is_object($attachment) ? $attachment->ID : 0,
+                    'attachment_id' => $attachment_id,
                     'url'           => $src,
-                    'width'         => isset($attr['width']) ? (int) $attr['width'] : 0,
-                    'height'        => isset($attr['height']) ? (int) $attr['height'] : 0,
+                    'width'         => isset($attr['width']) ? (int) $attr['width'] : (int) ($candidate['width'] ?? 0),
+                    'height'        => isset($attr['height']) ? (int) $attr['height'] : (int) ($candidate['height'] ?? 0),
                     'origin'        => wp_parse_url($src, PHP_URL_HOST) ?: '',
                     'is_background' => false,
                 ];
