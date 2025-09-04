@@ -70,6 +70,7 @@ final class AESEO_LCP_Optimizer {
         add_action('wp', [ __CLASS__, 'maybe_prime_candidate' ]);
         add_filter('the_content', [ __CLASS__, 'detect_from_content' ], 1);
         add_action('woocommerce_before_single_product', [ __CLASS__, 'detect_woo_product' ]);
+        add_filter('woocommerce_single_product_image_thumbnail_html', [ __CLASS__, 'strip_main_product_lazy' ], 10, 2);
     }
 
     /**
@@ -169,6 +170,53 @@ final class AESEO_LCP_Optimizer {
         if ($attachment_id) {
             self::set_candidate_from_attachment($attachment_id);
         }
+    }
+
+    /**
+     * Remove lazy loading from the main WooCommerce product image when it matches the LCP candidate.
+     *
+     * @param string $html    Image HTML.
+     * @param int    $post_id Product ID.
+     * @return string
+     */
+    public static function strip_main_product_lazy(string $html, $post_id): string {
+        $candidate = self::get_lcp_candidate();
+        if (empty($candidate) || strpos($html, '<img') === false) {
+            return $html;
+        }
+
+        if (!preg_match('/<img[^>]*>/i', $html, $img_match)) {
+            return $html;
+        }
+
+        $img_tag       = $img_match[0];
+        $src           = '';
+        $attachment_id = 0;
+
+        if (preg_match('/src\s*=\s*["\']([^"\']+)["\']/', $img_tag, $m)) {
+            $src = $m[1];
+        }
+        if (preg_match('/data-attachment-id\s*=\s*["\'](\d+)["\']/', $img_tag, $m)) {
+            $attachment_id = (int) $m[1];
+        }
+
+        $is_match = false;
+        if ($candidate['attachment_id'] && $attachment_id && $candidate['attachment_id'] === $attachment_id) {
+            $is_match = true;
+        } elseif ($candidate['url'] && $src && $candidate['url'] === $src) {
+            $is_match = true;
+        }
+
+        if (!$is_match) {
+            return $html;
+        }
+
+        $new_img_tag = preg_replace('/\sloading\s*=\s*["\']lazy["\']/', '', $img_tag);
+        if (strpos($new_img_tag, 'data-aeseo-lcp="1"') === false) {
+            $new_img_tag = preg_replace('/<img\b/', '<img data-aeseo-lcp="1"', $new_img_tag, 1);
+        }
+
+        return str_replace($img_tag, $new_img_tag, $html);
     }
 
     /**
