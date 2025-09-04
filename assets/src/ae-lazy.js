@@ -69,6 +69,41 @@ if (document.documentElement.hasAttribute('data-aejs-off')) {
     });
   }
 
+  var builtin = { gtag: 1, gtm: 1, fbq: 1, recaptcha: 1, hcaptcha: 1 };
+  function setupCustomModules() {
+    for (var name in modules) {
+      if (!modules[name] || builtin[name]) {
+        continue;
+      }
+      (function (moduleName) {
+        var loaded = false;
+        function load(event) {
+          if (loaded) {
+            return;
+          }
+          loaded = true;
+          import('./modules/' + moduleName + '.js').then(function (m) {
+            if (typeof m.default === 'function') {
+              m.default(event && event.currentTarget);
+            }
+          });
+        }
+        var els = document.querySelectorAll('[data-ae-module="' + moduleName + '"]');
+        for (var i = 0; i < els.length; i++) {
+          var el = els[i];
+          el.addEventListener('mouseenter', load, { once: true });
+          el.addEventListener('focus', load, { once: true });
+        }
+      })(name);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupCustomModules);
+  } else {
+    setupCustomModules();
+  }
+
   window.addEventListener('ae:engaged', function () {
     loadAnalytics();
     loadRecaptcha();
