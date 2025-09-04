@@ -40,11 +40,13 @@ Improve Largest Contentful Paint by enabling targeted tweaks in **SEO → Perfor
 
 LCP candidates are detected by preferring the featured image on singular pages, falling back to the first image in rendered content and supporting WooCommerce product images. Detection runs automatically when `get_lcp_candidate()` is called and results are cached for a minute to avoid repeated parsing.
 
+When a candidate lacks dimension metadata, the optimizer fetches its intrinsic width and height—falling back to PHP's `getimagesize()`—and injects the attributes to prevent Cumulative Layout Shift.
+
 Configuration options include:
 
 - `remove_lazy_on_lcp` – strips lazy‑loading from the element identified as the LCP candidate.
 - `add_fetchpriority_high` – adds `fetchpriority="high"` to the LCP resource so browsers request it sooner. Existing `the_content` and block output is scanned to insert the attribute when missing.
-- `force_width_height` – injects missing width and height attributes to avoid layout shifts.
+- `force_width_height` – fetches intrinsic dimensions (using `getimagesize()` if metadata is absent) and injects width and height attributes to avoid layout shifts.
 - `responsive_picture_nextgen` – converts `<img>` tags to responsive `<picture>` markup with modern formats when possible.
 - `add_preconnect` – outputs `preconnect` hints for the LCP host.
 - `add_preload` – preloads the LCP image or font so it starts downloading immediately.

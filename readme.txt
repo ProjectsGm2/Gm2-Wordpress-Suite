@@ -44,11 +44,13 @@ Improve Largest Contentful Paint with targeted tweaks under **SEO → Performanc
 
 LCP candidates are detected by preferring the featured image on singular pages, falling back to the first image in content and handling WooCommerce product images. The lookup runs automatically when `get_lcp_candidate()` is used and results are cached for sixty seconds to avoid repeated parsing.
 
+If a candidate is missing dimension metadata, the optimizer retrieves intrinsic width and height—using PHP's `getimagesize()` as a fallback—and injects the attributes to prevent Cumulative Layout Shift.
+
 Configuration options:
 
 * `remove_lazy_on_lcp` – remove lazy-loading from the element identified as the LCP candidate.
 * `add_fetchpriority_high` – add `fetchpriority="high"` so the browser requests the LCP resource sooner. Existing markup in `the_content` or block output is scanned to ensure the attribute is present.
-* `force_width_height` – inject missing width and height attributes to prevent layout shifts.
+* `force_width_height` – fetch intrinsic dimensions (using `getimagesize()` if metadata is absent) and inject width and height attributes to prevent layout shifts.
 * `responsive_picture_nextgen` – convert images to responsive `<picture>` markup with next‑generation formats when possible.
 * `add_preconnect` – output `preconnect` hints for the LCP host.
 * `add_preload` – preload the LCP image or font for immediate fetching.
@@ -587,6 +589,7 @@ the last 100 missing URLs to help you create new redirects.
 == Changelog ==
 = 1.6.24 =
 * Added `fetchpriority="high"` to the detected LCP image in rendered content and WooCommerce markup.
+* `force_width_height` now fetches intrinsic image dimensions (using `getimagesize()` when metadata is absent) and injects `width`/`height` attributes to prevent CLS.
 = 1.6.23 =
 * Exempted the LCP image from lazy-loading via `data-aeseo-lcp="1"` and added a `wp_img_tag_add_loading_attr` safeguard for WooCommerce compatibility.
 = 1.6.22 =
