@@ -35,6 +35,23 @@ class LcpOptimizerIntegrationTest extends WP_UnitTestCase {
             $prop->setAccessible(true);
             $prop->setValue(null, $value);
         }
+
+        update_option('gm2_enable_analytics', '0');
+        remove_action('send_headers', [ \Gm2\AE_SEO_JS_Manager::class, 'send_server_timing' ], 999);
+        global $wp_filter;
+        if (isset($wp_filter['init'])) {
+            foreach ($wp_filter['init']->callbacks as $priority => $callbacks) {
+                foreach ($callbacks as $id => $cb) {
+                    if (
+                        is_array($cb['function']) &&
+                        is_object($cb['function'][0]) &&
+                        get_class($cb['function'][0]) === 'Gm2\\Gm2_Analytics'
+                    ) {
+                        remove_action('init', $cb['function'], $priority);
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -75,6 +92,8 @@ class LcpOptimizerIntegrationTest extends WP_UnitTestCase {
         $this->reset_optimizer_state();
         $attachment_id = self::factory()->attachment->create_upload_object(DIR_TESTDATA . '/images/canola.jpg');
         $src = wp_get_attachment_url($attachment_id);
+        $post_id = self::factory()->post->create(['post_content' => '']);
+        $this->go_to(get_permalink($post_id));
         AESEO_LCP_Optimizer::detect_from_content('<img src="' . esc_url($src) . '" width="100" height="100" />');
         $candidate = AESEO_LCP_Optimizer::get_lcp_candidate();
 
@@ -126,9 +145,14 @@ class LcpOptimizerIntegrationTest extends WP_UnitTestCase {
         $this->reset_optimizer_state();
         $attachment1 = self::factory()->attachment->create_upload_object(DIR_TESTDATA . '/images/canola.jpg');
         $src1 = wp_get_attachment_url($attachment1);
+        $post1 = self::factory()->post->create([
+            'post_content' => ''
+        ]);
+        $this->go_to(get_permalink($post1));
         AESEO_LCP_Optimizer::detect_from_content('<img src="' . esc_url($src1) . '" width="100" height="100" />');
         $html1 = wp_get_attachment_image($attachment1, 'full');
-        $this->assertStringNotContainsString('loading="', $html1);
+        $this->assertStringNotContainsString('loading="lazy"', $html1);
+        $this->assertStringContainsString('data-aeseo-lcp="1"', $html1);
         $this->assertStringContainsString('fetchpriority="high"', $html1);
 
         // Flags disabled.
@@ -143,10 +167,53 @@ class LcpOptimizerIntegrationTest extends WP_UnitTestCase {
         $this->reset_optimizer_state($settings);
         $attachment2 = self::factory()->attachment->create_upload_object(DIR_TESTDATA . '/images/canola.jpg');
         $src2 = wp_get_attachment_url($attachment2);
+        $post2 = self::factory()->post->create([
+            'post_content' => ''
+        ]);
+        $this->go_to(get_permalink($post2));
         AESEO_LCP_Optimizer::detect_from_content('<img src="' . esc_url($src2) . '" width="100" height="100" />');
         $html2 = wp_get_attachment_image($attachment2, 'full');
         $this->assertStringContainsString('loading="lazy"', $html2);
         $this->assertStringNotContainsString('fetchpriority="high"', $html2);
+    }
+
+    /**
+     * WooCommerce main product image should not be lazy-loaded while thumbnails remain lazy.
+     */
+    public function test_woocommerce_main_image_not_lazy_and_thumbnails_lazy(): void {
+        $this->reset_optimizer_state();
+
+        register_post_type('product', [ 'public' => true ]);
+
+        $main_id  = self::factory()->attachment->create_upload_object(DIR_TESTDATA . '/images/canola.jpg');
+        $main_src = wp_get_attachment_url($main_id);
+        $thumb_id  = self::factory()->attachment->create_upload_object(DIR_TESTDATA . '/images/canola.jpg');
+        $thumb_src = wp_get_attachment_url($thumb_id);
+
+        $product_id = self::factory()->post->create([
+            'post_type' => 'product',
+        ]);
+        set_post_thumbnail($product_id, $main_id);
+        update_post_meta($product_id, '_product_image_gallery', (string) $thumb_id);
+
+        $this->go_to(get_permalink($product_id));
+        do_action('woocommerce_before_single_product');
+
+        $candidate = AESEO_LCP_Optimizer::get_lcp_candidate();
+        $this->assertNotEmpty($candidate);
+        $this->assertSame($main_id, $candidate['attachment_id']);
+
+        $main_html = sprintf('<div><img src="%s" data-attachment-id="%d" loading="lazy" /></div>', esc_url($main_src), $main_id);
+        $filtered_main = apply_filters('woocommerce_single_product_image_thumbnail_html', $main_html, $product_id);
+        $this->assertStringNotContainsString('loading="lazy"', $filtered_main);
+        $this->assertStringContainsString('data-aeseo-lcp="1"', $filtered_main);
+
+        $thumb_html = sprintf('<div><img src="%s" data-attachment-id="%d" loading="lazy" /></div>', esc_url($thumb_src), $thumb_id);
+        $filtered_thumb = apply_filters('woocommerce_single_product_image_thumbnail_html', $thumb_html, $product_id);
+        $this->assertStringContainsString('loading="lazy"', $filtered_thumb);
+        $this->assertStringNotContainsString('data-aeseo-lcp="1"', $filtered_thumb);
+
+        unregister_post_type('product');
     }
 
     /**
