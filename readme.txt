@@ -3,7 +3,7 @@ Contributors: gm2team
 Tags: admin, tools, suite, performance
 Requires at least: 6.0
 Tested up to: 6.5
-Stable tag: 1.6.22
+Stable tag: 1.6.23
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -54,6 +54,8 @@ Configuration options:
 * `add_preload` – preload the LCP image or font for immediate fetching.
 
 Each option can be enabled independently to match theme requirements.
+
+The identified LCP image bypasses lazy-loading and carries a `data-aeseo-lcp="1"` marker. A `wp_img_tag_add_loading_attr` safeguard maintains compatibility with WooCommerce when modifying the `loading` attribute.
 
 == Installation ==
 1. Upload the plugin files to the `/wp-content/plugins/gm2-wordpress-suite` directory.
@@ -583,6 +585,8 @@ the last 100 missing URLs to help you create new redirects.
 * **Real-time character counts** – display running totals in the SEO meta box.
 
 == Changelog ==
+= 1.6.23 =
+* Exempted the LCP image from lazy-loading via `data-aeseo-lcp="1"` and added a `wp_img_tag_add_loading_attr` safeguard for WooCommerce compatibility.
 = 1.6.22 =
 * Improved LCP candidate detection for featured images, first content images and WooCommerce products with short-term caching.
 = 1.6.21 =

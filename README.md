@@ -51,6 +51,8 @@ Configuration options include:
 
 Each option can be toggled individually to tailor optimization for specific themes and content.
 
+The detected LCP image bypasses WordPress's lazy-loading and is flagged with `data-aeseo-lcp="1"`. A `wp_img_tag_add_loading_attr` safeguard preserves WooCommerce compatibility when altering the `loading` attribute.
+
 ## AI Providers
 
 The suite can generate content using multiple AI services. Select **ChatGPT**, **Gemma**, or **Llama** from the **Gm2 → AI Settings** page and enter the corresponding API key and optional endpoint. The chosen provider is used throughout the plugin for AI-powered features.
