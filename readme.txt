@@ -39,6 +39,20 @@ Key features include:
 * `wp ae-seo js:audit` CLI command audits recent posts for script counts, dequeued handles, jQuery and module usage
 * `wp ae-seo js:smoketest` runs internal requests and logs `registered`, `enqueued`, `dequeued`, `lazy`, `jquery` and `polyfills` metrics to `wp-content/ae-seo/logs/js-optimizer.log`; view the **Performance → JavaScript** report for Lighthouse-style hints like enabling lazy-load for Analytics, spotting jQuery without dependents or detecting unnecessary polyfills to troubleshoot script loading
 
+== LCP Optimization ==
+Improve Largest Contentful Paint with targeted tweaks under **SEO → Performance → LCP Optimization**. The module operates solely on the front end and supports PHP 7.4+ and WordPress 5.8+.
+
+Configuration options:
+
+* `remove_lazy_on_lcp` – remove lazy-loading from the element identified as the LCP candidate.
+* `add_fetchpriority_high` – add `fetchpriority="high"` so the browser requests the LCP resource sooner.
+* `force_width_height` – inject missing width and height attributes to prevent layout shifts.
+* `responsive_picture_nextgen` – convert images to responsive `<picture>` markup with next‑generation formats when possible.
+* `add_preconnect` – output `preconnect` hints for the LCP host.
+* `add_preload` – preload the LCP image or font for immediate fetching.
+
+Each option can be enabled independently to match theme requirements.
+
 == Installation ==
 1. Upload the plugin files to the `/wp-content/plugins/gm2-wordpress-suite` directory.
 2. Activate the plugin through the 'Plugins' screen in WordPress.
@@ -567,6 +581,8 @@ the last 100 missing URLs to help you create new redirects.
 * **Real-time character counts** – display running totals in the SEO meta box.
 
 == Changelog ==
+= 1.6.21 =
+* Added front-end only LCP Optimization module with configurable options `remove_lazy_on_lcp`, `add_fetchpriority_high`, `force_width_height`, `responsive_picture_nextgen`, `add_preconnect` and `add_preload`. Requires PHP 7.4+ and WordPress 5.8+.
 = 1.6.20 =
 * Documented SEO Performance CLI commands and exit codes.
 = 1.6.19 =
