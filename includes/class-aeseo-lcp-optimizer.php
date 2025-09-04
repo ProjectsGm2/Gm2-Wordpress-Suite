@@ -320,7 +320,7 @@ final class AESEO_LCP_Optimizer {
      * @return bool
      */
     public static function is_already_optimized($attachment_id_or_url): bool {
-        if (is_string($attachment_id_or_url) && strpos($attachment_id_or_url, 'data-aeseo-lcp-optimized') !== false) {
+        if (is_string($attachment_id_or_url) && strpos($attachment_id_or_url, 'data-aeseo-lcp') !== false) {
             return true;
         }
 
@@ -328,12 +328,12 @@ final class AESEO_LCP_Optimizer {
             ? 'id_' . absint($attachment_id_or_url)
             : 'url_' . md5((string) $attachment_id_or_url);
 
-        if (isset(self::$optimized[$key]) || get_transient('aeseo_lcp_' . $key)) {
+        if (isset(self::$optimized[$key]) || get_transient('aeseo_lcp_attr_' . $key)) {
             return true;
         }
 
         self::$optimized[$key] = true;
-        set_transient('aeseo_lcp_' . $key, 1, HOUR_IN_SECONDS);
+        set_transient('aeseo_lcp_attr_' . $key, 1, HOUR_IN_SECONDS);
         return false;
     }
 
@@ -490,7 +490,7 @@ final class AESEO_LCP_Optimizer {
             }
 
             if ($is_match && $src && !self::is_already_optimized($attachment_id ? $attachment_id : $src)) {
-                $attr['data-aeseo-lcp-optimized'] = '1';
+                $attr['data-aeseo-lcp'] = '1';
                 if (isset($attr['loading']) && !empty(self::$settings['remove_lazy_on_lcp'])) {
                     unset($attr['loading']);
                 }
