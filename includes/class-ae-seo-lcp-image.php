@@ -42,12 +42,20 @@ class AE_SEO_LCP_Image {
     private static $done = false;
 
     /**
+     * URL for the LCP image.
+     *
+     * @var string|null
+     */
+    private static $lcp_url = null;
+
+    /**
      * Hook filters.
      */
     public static function init(): void {
         add_filter('wp_lazy_loading_enabled', [ __CLASS__, 'maybe_disable_lazy' ], 10, 3);
         add_filter('wp_get_attachment_image_attributes', [ __CLASS__, 'maybe_adjust_attributes' ], 10, 3);
         add_filter('wp_get_attachment_image', [ __CLASS__, 'maybe_use_picture' ], 10, 5);
+        add_action('wp_head', [ __CLASS__, 'maybe_print_links' ], 5);
     }
 
     /**
@@ -101,6 +109,10 @@ class AE_SEO_LCP_Image {
                 if (!isset($attr['fetchpriority'])) {
                     $attr['fetchpriority'] = 'high';
                 }
+                $src = $attr['src'] ?? wp_get_attachment_image_url($attachment->ID, $size);
+                if ($src) {
+                    self::$lcp_url = $src;
+                }
                 if (empty($attr['width']) || empty($attr['height'])) {
                     $meta = wp_get_attachment_metadata($attachment->ID);
                     if (is_array($meta)) {
@@ -116,6 +128,47 @@ class AE_SEO_LCP_Image {
             }
         }
         return $attr;
+    }
+
+    /**
+     * During wp_head, if no existing preload/preconnect for the LCP image exists,
+     * print the necessary <link> tags with deduplication using wp_resource_hints.
+     */
+    public static function maybe_print_links(): void {
+        if (!self::$lcp_url) {
+            return;
+        }
+
+        $url  = self::$lcp_url;
+        $head = ob_get_contents() ?: '';
+
+        $preloads = wp_resource_hints([], 'preload');
+        $preload_exists = in_array($url, $preloads, true) || (
+            (stripos($head, 'rel="preload"') !== false || stripos($head, "rel='preload'") !== false) &&
+            stripos($head, $url) !== false
+        );
+
+        $host = wp_parse_url($url, PHP_URL_HOST);
+        $preconnect_exists = false;
+        if ($host) {
+            $preconnect_hints = array_map(
+                static function ($u) {
+                    return wp_parse_url($u, PHP_URL_HOST);
+                },
+                wp_resource_hints([], 'preconnect')
+            );
+            $preconnect_exists = in_array($host, $preconnect_hints, true) || (
+                (stripos($head, 'rel="preconnect"') !== false || stripos($head, "rel='preconnect'") !== false) &&
+                stripos($head, $host) !== false
+            );
+        }
+
+        if ($host && ! $preconnect_exists) {
+            printf('<link rel="preconnect" href="%s" />' . "\n", esc_url('//' . $host));
+        }
+        if (! $preload_exists) {
+            printf('<link rel="preload" as="image" href="%s" fetchpriority="high" />' . "\n", esc_url($url));
+        }
     }
 
     /**
