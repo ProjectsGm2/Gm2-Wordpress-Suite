@@ -70,6 +70,15 @@ class AE_SEO_LCP_Image {
     }
 
     /**
+     * Determine if current image is the LCP candidate.
+     *
+     * @return bool
+     */
+    private static function is_lcp_image(): bool {
+        return self::$candidate === self::$attr_count;
+    }
+
+    /**
      * Remove loading attribute for LCP image and handle opt-out.
      *
      * @param array        $attr      Image attributes.
@@ -82,12 +91,15 @@ class AE_SEO_LCP_Image {
             return $attr;
         }
         self::$attr_count++;
-        if (self::$candidate === self::$attr_count) {
+        if (self::is_lcp_image()) {
             if (isset($attr['data-gm2-lcp']) && $attr['data-gm2-lcp'] === 'false') {
                 $attr['loading'] = $attr['loading'] ?? 'lazy';
                 self::$candidate = null;
             } else {
                 unset($attr['loading']);
+                if (!isset($attr['fetchpriority'])) {
+                    $attr['fetchpriority'] = 'high';
+                }
                 self::$done = true;
             }
         }
