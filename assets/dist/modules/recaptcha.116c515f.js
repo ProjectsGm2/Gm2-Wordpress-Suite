@@ -1,0 +1,1 @@
+function p(e){var t="",a=!1;if(typeof e=="object"?(t=e.siteKey||"",a=!!e.checkbox):t=e,!t||document.getElementById("ae-recaptcha"))return;var r="render="+encodeURIComponent(t);a&&(r+="&recaptcha=checkbox");let c=document.createElement("script");c.id="ae-recaptcha",c.src="https://www.google.com/recaptcha/api.js?"+r,document.head.appendChild(c)}export{p as default};
