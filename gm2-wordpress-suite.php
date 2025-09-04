@@ -112,6 +112,7 @@ require_once GM2_PLUGIN_DIR . 'includes/class-ae-seo-js-controller.php';
 require_once GM2_PLUGIN_DIR . 'includes/class-ae-seo-js-lazy.php';
 require_once GM2_PLUGIN_DIR . 'includes/class-ae-seo-diff-serving.php';
 require_once GM2_PLUGIN_DIR . 'includes/class-ae-seo-rest-diag.php';
+require_once GM2_PLUGIN_DIR . 'includes/class-ae-seo-font-manager.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Search_Console.php';
 require_once GM2_PLUGIN_DIR . 'includes/render-optimizer/class-ae-seo-render-optimizer.php';
 require_once GM2_PLUGIN_DIR . 'includes/Versioning_MTime.php';
@@ -137,6 +138,7 @@ require_once GM2_PLUGIN_DIR . 'includes/class-aeseo-plugin.php';
 (new \Gm2\AE_SEO_Debug_Logs_Admin())->run();
 (new \Gm2\AE_SEO_Server_Hints())->run();
 \Gm2\AESEO_Plugin::init();
+\Gm2\AE_SEO_Font_Manager::init();
 if (get_option('gm2_pretty_versioned_urls', '0') === '1') {
     \Gm2\Gm2_Version_Route_Apache::maybe_apply();
 }
@@ -225,6 +227,7 @@ function gm2_activate_plugin() {
     add_option('gm2_do_activation_redirect', '1');
     add_option('gm2_remote_mirror_vendors', []);
     add_option('gm2_remote_mirror_custom_urls', []);
+    add_option('ae_seo_local_fonts', '0');
 
     global $wpdb;
     $table_name = $wpdb->prefix . 'gm2_analytics_log';
