@@ -207,13 +207,37 @@ class LcpOptimizerIntegrationTest extends WP_UnitTestCase {
         $filtered_main = apply_filters('woocommerce_single_product_image_thumbnail_html', $main_html, $product_id);
         $this->assertStringNotContainsString('loading="lazy"', $filtered_main);
         $this->assertStringContainsString('data-aeseo-lcp="1"', $filtered_main);
+        $this->assertStringContainsString('fetchpriority="high"', $filtered_main);
+        $this->assertSame(1, substr_count($filtered_main, 'fetchpriority="high"'));
 
         $thumb_html = sprintf('<div><img src="%s" data-attachment-id="%d" loading="lazy" /></div>', esc_url($thumb_src), $thumb_id);
         $filtered_thumb = apply_filters('woocommerce_single_product_image_thumbnail_html', $thumb_html, $product_id);
         $this->assertStringContainsString('loading="lazy"', $filtered_thumb);
         $this->assertStringNotContainsString('data-aeseo-lcp="1"', $filtered_thumb);
+        $this->assertStringNotContainsString('fetchpriority="high"', $filtered_thumb);
 
         unregister_post_type('product');
+    }
+
+    /**
+     * Content filter should inject fetchpriority="high" when LCP image is printed directly.
+     */
+    public function test_content_filter_adds_fetchpriority_to_lcp_image(): void {
+        $this->reset_optimizer_state();
+        $this->remove_optimizer_hooks();
+
+        $attachment_id = self::factory()->attachment->create_upload_object(DIR_TESTDATA . '/images/canola.jpg');
+        $src = wp_get_attachment_url($attachment_id);
+        $post_id = self::factory()->post->create([
+            'post_content' => '<p><img src="' . esc_url($src) . '" width="100" height="100" loading="lazy" /></p>',
+        ]);
+
+        $this->go_to(get_permalink($post_id));
+        AESEO_LCP_Optimizer::boot();
+
+        $filtered = apply_filters('the_content', get_post($post_id)->post_content);
+        $this->assertStringContainsString('fetchpriority="high"', $filtered);
+        $this->assertSame(1, substr_count($filtered, 'fetchpriority="high"'));
     }
 
     /**

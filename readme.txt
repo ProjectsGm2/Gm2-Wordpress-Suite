@@ -3,7 +3,7 @@ Contributors: gm2team
 Tags: admin, tools, suite, performance
 Requires at least: 6.0
 Tested up to: 6.5
-Stable tag: 1.6.23
+Stable tag: 1.6.24
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -47,7 +47,7 @@ LCP candidates are detected by preferring the featured image on singular pages, 
 Configuration options:
 
 * `remove_lazy_on_lcp` – remove lazy-loading from the element identified as the LCP candidate.
-* `add_fetchpriority_high` – add `fetchpriority="high"` so the browser requests the LCP resource sooner.
+* `add_fetchpriority_high` – add `fetchpriority="high"` so the browser requests the LCP resource sooner. Existing markup in `the_content` or block output is scanned to ensure the attribute is present.
 * `force_width_height` – inject missing width and height attributes to prevent layout shifts.
 * `responsive_picture_nextgen` – convert images to responsive `<picture>` markup with next‑generation formats when possible.
 * `add_preconnect` – output `preconnect` hints for the LCP host.
@@ -585,6 +585,8 @@ the last 100 missing URLs to help you create new redirects.
 * **Real-time character counts** – display running totals in the SEO meta box.
 
 == Changelog ==
+= 1.6.24 =
+* Added `fetchpriority="high"` to the detected LCP image in rendered content and WooCommerce markup.
 = 1.6.23 =
 * Exempted the LCP image from lazy-loading via `data-aeseo-lcp="1"` and added a `wp_img_tag_add_loading_attr` safeguard for WooCommerce compatibility.
 = 1.6.22 =
