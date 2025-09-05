@@ -7,6 +7,7 @@ The Performance module exposes optional front‑end helpers that can be toggled 
 | `worker` | `ae_perf_worker` | Enable Web Worker offloading. |
 | `long_tasks` | `ae_perf_long_tasks` | Observe and log `longtask` entries. |
 | `layout_thrash` | `ae_perf_layout_thrash` | Batch DOM reads and writes via `aePerf.measure` and `aePerf.mutate`. |
+| `noThrash` | `ae_perf_no_thrash` | Batch DOM reads and writes via `fastdom-lite`. |
 | `passive_listeners` | `ae_perf_passive_listeners` | Default scroll and touch handlers to passive. |
 | `dom_audit` | `ae_perf_dom_audit` | Log total DOM nodes after paint. |
 
