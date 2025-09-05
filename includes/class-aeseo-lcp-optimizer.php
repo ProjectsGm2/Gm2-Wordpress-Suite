@@ -153,6 +153,8 @@ final class AESEO_LCP_Optimizer {
             }
         }
 
+        self::$candidate = apply_filters('aeseo_lcp_candidate', self::$candidate);
+
         return self::$candidate;
     }
 
@@ -160,6 +162,10 @@ final class AESEO_LCP_Optimizer {
      * Prime candidate data from featured image or cache.
      */
     public static function maybe_prime_candidate(): void {
+        if (!apply_filters('aeseo_lcp_should_optimize', true, self::$candidate)) {
+            return;
+        }
+
         if (!is_singular() || !empty(self::$candidate)) {
             return;
         }
@@ -407,6 +413,10 @@ final class AESEO_LCP_Optimizer {
      * @return string
      */
     public static function maybe_add_fetchpriority_to_block(string $block_content, array $block): string {
+        if (!apply_filters('aeseo_lcp_should_optimize', true, self::$candidate)) {
+            return $block_content;
+        }
+
         return self::maybe_add_fetchpriority_html($block_content);
     }
 
@@ -417,6 +427,10 @@ final class AESEO_LCP_Optimizer {
      * @return string
      */
     public static function maybe_add_fetchpriority_to_content(string $content): string {
+        if (!apply_filters('aeseo_lcp_should_optimize', true, self::$candidate)) {
+            return $content;
+        }
+
         return self::maybe_add_fetchpriority_html($content);
     }
 
@@ -427,6 +441,10 @@ final class AESEO_LCP_Optimizer {
      * @return string
      */
     private static function maybe_add_fetchpriority_html(string $html): string {
+        if (!apply_filters('aeseo_lcp_should_optimize', true, self::$candidate)) {
+            return $html;
+        }
+
         if (self::$done) {
             return $html;
         }
@@ -719,6 +737,10 @@ final class AESEO_LCP_Optimizer {
      * @return bool
      */
     public static function maybe_disable_lazy(bool $default, string $tag, string $context): bool {
+        if (!apply_filters('aeseo_lcp_should_optimize', true, self::$candidate)) {
+            return $default;
+        }
+
         if ($tag !== 'img' || self::$done || empty(self::$settings['remove_lazy_on_lcp'])) {
             return $default;
         }
@@ -760,6 +782,10 @@ final class AESEO_LCP_Optimizer {
      * @return string|bool
      */
     public static function maybe_unset_loading_attr($value, string $image, string $context) {
+        if (!apply_filters('aeseo_lcp_should_optimize', true, self::$candidate)) {
+            return $value;
+        }
+
         if (self::$done || empty(self::$settings['remove_lazy_on_lcp'])) {
             return $value;
         }
@@ -806,6 +832,10 @@ final class AESEO_LCP_Optimizer {
      * @return array
      */
     public static function maybe_adjust_attributes(array $attr, $attachment, $size): array {
+        if (!apply_filters('aeseo_lcp_should_optimize', true, self::$candidate)) {
+            return $attr;
+        }
+
         if (self::$done) {
             return $attr;
         }
@@ -870,6 +900,10 @@ final class AESEO_LCP_Optimizer {
      * @return string
      */
     public static function maybe_use_picture(string $html, $attachment_id, $size, $icon, $attr): string {
+        if (!apply_filters('aeseo_lcp_should_optimize', true, self::$candidate)) {
+            return $html;
+        }
+
         if (empty(self::$settings['responsive_picture_nextgen']) || empty(self::$candidate) || self::$candidate['attachment_id'] !== (int) $attachment_id) {
             return $html;
         }
@@ -957,6 +991,10 @@ final class AESEO_LCP_Optimizer {
      * Inject a preload link for the LCP image.
      */
     public static function maybe_print_preload(): void {
+        if (!apply_filters('aeseo_lcp_should_optimize', true, self::$candidate)) {
+            return;
+        }
+
         if (self::$preload_printed || empty(self::$candidate['url']) || empty(self::$settings['add_preload'])) {
             return;
         }
@@ -992,13 +1030,19 @@ final class AESEO_LCP_Optimizer {
     }
 
     /**
-     * Add a preconnect resource hint for the LCP image origin.
+     * Add preconnect resource hints for the LCP image origin.
+     *
+     * Allows customizing the hosts via the {@see 'aeseo_lcp_preconnect_hosts'} filter.
      *
      * @param array  $urls          URLs to print for resource hints.
      * @param string $relation_type The relation type the URLs are printed for.
-     * @return array
+     * @return array Filtered list of resource hints.
      */
     public static function maybe_add_preconnect(array $urls, string $relation_type): array {
+        if (!apply_filters('aeseo_lcp_should_optimize', true, self::$candidate)) {
+            return $urls;
+        }
+
         if ($relation_type !== 'preconnect' || self::$preconnect_added || empty(self::$settings['add_preconnect']) || empty(self::$candidate['url'])) {
             return $urls;
         }
@@ -1017,8 +1061,11 @@ final class AESEO_LCP_Optimizer {
             $urls
         );
 
-        if (!in_array($host, $existing_hosts, true)) {
-            $urls[] = '//' . $host;
+        $hosts = apply_filters('aeseo_lcp_preconnect_hosts', ['//' . $host], self::$candidate);
+        foreach ($hosts as $h) {
+            if (!in_array(wp_parse_url($h, PHP_URL_HOST), $existing_hosts, true)) {
+                $urls[] = $h;
+            }
         }
 
         self::$preconnect_added = true;
