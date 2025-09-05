@@ -42,7 +42,6 @@ class Manager {
             'webWorker'        => 'ae_perf_worker',
             'worker'           => 'ae_perf_worker', // Legacy key for compatibility.
             'long_tasks'       => 'ae_perf_long_tasks',
-            'layout_thrash'    => 'ae_perf_layout_thrash',
             'noThrash'         => 'ae_perf_no_thrash',
             'passive_listeners' => 'ae_perf_passive_listeners',
             'dom_audit'        => 'ae_perf_dom_audit',

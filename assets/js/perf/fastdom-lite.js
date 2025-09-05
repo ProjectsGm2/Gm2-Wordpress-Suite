@@ -120,7 +120,7 @@ function runMeasure(fn) {
         observer.disconnect();
         if (mutated) {
             // eslint-disable-next-line no-console
-            console.warn('aePerf.measure callback mutated the DOM');
+            console.warn('aePerf.dom.measure callback mutated the DOM');
         }
     }
     return result;
@@ -165,7 +165,7 @@ function runMutate(fn) {
         Object.defineProperty(HTMLElement.prototype, 'offsetHeight', ohDesc);
         if (accessed) {
             // eslint-disable-next-line no-console
-            console.warn('aePerf.mutate callback performed a layout read');
+            console.warn('aePerf.dom.mutate callback performed a layout read');
         }
     }
     return result;
