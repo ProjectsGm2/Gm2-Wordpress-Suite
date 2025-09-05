@@ -1,13 +1,25 @@
 jQuery(function($){
-    var $email = $('#billing_email');
-    var $phone = $('#billing_phone');
+    const dom = window.aePerf?.dom;
+    const measure = dom ? dom.measure.bind(dom) : (fn) => fn();
+    const mutate = dom ? dom.mutate.bind(dom) : (fn) => fn();
+
+    var $email;
+    var $phone;
+    measure(() => {
+        $email = $('#billing_email');
+        $phone = $('#billing_phone');
+    });
     if(!$email.length && !$phone.length){
         return;
     }
     var timer;
     var postContact = function(){
-        var emailVal = $email.val();
-        var phoneVal = $phone.val();
+        var emailVal;
+        var phoneVal;
+        measure(() => {
+            emailVal = $email.val();
+            phoneVal = $phone.val();
+        });
         if(!emailVal && !phoneVal){
             return;
         }
@@ -19,8 +31,10 @@ jQuery(function($){
             url: window.location.href
         });
     };
-    $email.add($phone).on('change input', function(){
-        clearTimeout(timer);
-        timer = setTimeout(postContact, 500);
+    mutate(() => {
+        $email.add($phone).on('change input', function(){
+            clearTimeout(timer);
+            timer = setTimeout(postContact, 500);
+        });
     });
 });
