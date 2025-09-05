@@ -49,6 +49,12 @@ window.aePerf = {
 
 if (flags.longTasks === true) {
     imports.push(import('./yield.js').then((m) => { window.aePerf.yield = m; }));
+    imports.push(
+        import('./longtask.js').then((m) => {
+            m.init();
+            window.aePerf.getSummary = m.getSummary;
+        })
+    );
 }
 
 if (flags.webWorker && typeof Worker !== 'undefined') {
@@ -58,9 +64,6 @@ if (flags.webWorker && typeof Worker !== 'undefined') {
             window.aePerf.runTask = m.runTask;
         })
     );
-}
-if (flags.long_tasks) {
-    imports.push(import('./longtask.js').then((m) => m.init()));
 }
 if (flags.noThrash === true) {
     imports.push(
