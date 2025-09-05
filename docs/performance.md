@@ -10,6 +10,16 @@ The Performance module exposes optional front‑end helpers that can be toggled 
 | `passive_listeners` | `ae_perf_passive_listeners` | Default scroll and touch handlers to passive. |
 | `dom_audit` | `ae_perf_dom_audit` | Log total DOM nodes after paint. |
 
+To offload expensive tasks to a Web Worker, use `aePerf.runTask`:
+
+```js
+if (window.aePerf?.runTask) {
+  const hash = await window.aePerf.runTask('sha1', { text: longString });
+}
+```
+
+Note that disabling the `worker`/`webWorker` flag prevents worker creation, causing the fallback to run on the main thread.
+
 Developers may override any flag:
 
 ```php
