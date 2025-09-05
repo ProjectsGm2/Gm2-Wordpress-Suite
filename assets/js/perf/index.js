@@ -62,11 +62,13 @@ if (flags.webWorker && typeof Worker !== 'undefined') {
 if (flags.long_tasks) {
     imports.push(import('./longtask.js').then((m) => m.init()));
 }
-if (flags.layout_thrash) {
+if (flags.noThrash === true) {
     imports.push(
         import('./fastdom-lite.js').then((m) => {
-            window.aePerf.measure = m.measure;
-            window.aePerf.mutate = m.mutate;
+            window.aePerf.dom = {
+                measure: m.measure,
+                mutate: m.mutate,
+            };
         })
     );
 }
