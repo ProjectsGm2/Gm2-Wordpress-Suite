@@ -373,6 +373,24 @@ class LcpOptimizerIntegrationTest extends WP_UnitTestCase {
     }
 
     /**
+     * maybe_use_picture should skip processing when source has a webp extension without a type attribute.
+     */
+    public function test_maybe_use_picture_skips_when_source_has_webp_extension_without_type(): void {
+        $this->reset_optimizer_state();
+
+        $attachment_id = self::factory()->attachment->create_upload_object(DIR_TESTDATA . '/images/canola.jpg');
+        $src           = wp_get_attachment_url($attachment_id);
+        AESEO_LCP_Optimizer::detect_from_content('<img src="' . esc_url($src) . '" width="100" height="100" />');
+
+        $webp_src    = preg_replace('/\.jpg$/', '.webp', $src);
+        $picture_html = '<picture><source srcset="' . esc_url($webp_src) . '"><img src="' . esc_url($src) . '" width="100" height="100" /></picture>';
+
+        $result = AESEO_LCP_Optimizer::maybe_use_picture($picture_html, $attachment_id, 'full', false, []);
+
+        $this->assertSame($picture_html, $result);
+    }
+
+    /**
      * Optimizer should populate dimensions for LCP image inside a picture tag.
      */
     public function test_optimizer_adds_dimensions_inside_picture_and_updates_metadata(): void {
