@@ -10,7 +10,7 @@ The Performance module exposes optional front‑end helpers that can be toggled 
 | `passive_listeners` | `ae_perf_passive_listeners` | Default scroll and touch handlers to passive. |
 | `dom_audit` | `ae_perf_dom_audit` | Log total DOM nodes after paint. |
 
-Enabling `longTasks` logs per‑second summaries of `longtask` entries. Lifetime totals are available via `aePerf.getSummary()`. If `AE_PERF_FLAGS.longTaskBudgetMs` is defined, a warning is emitted when the last 10 s of long tasks exceed this budget.
+Enabling `longTasks` logs per‑second summaries of `longtask` entries. Lifetime totals are available via `aePerf.getLongTaskSummary()`. If `AE_PERF_FLAGS.longTaskBudgetMs` is defined, a warning is emitted when the last 10 s of long tasks exceed this budget.
 
 To offload expensive tasks to a Web Worker, use `aePerf.runTask`:
 
