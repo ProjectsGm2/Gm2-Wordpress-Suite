@@ -61,6 +61,11 @@ final class AESEO_LCP_Optimizer {
             return;
         }
 
+        $post_id = get_queried_object_id();
+        if ($post_id && absint(get_post_meta($post_id, '_aeseo_lcp_disable', true)) && !apply_filters('aeseo_lcp_should_optimize', false, [])) {
+            return;
+        }
+
         self::$settings = get_option(
             'aeseo_lcp_settings',
             [
@@ -98,10 +103,39 @@ final class AESEO_LCP_Optimizer {
         if (empty(self::$candidate) && is_singular()) {
             $post_id = get_the_ID();
             if ($post_id) {
+                $disabled = absint(get_post_meta($post_id, '_aeseo_lcp_disable', true));
+                if ($disabled && !apply_filters('aeseo_lcp_should_optimize', false, [])) {
+                    return [];
+                }
+
                 // Attempt to load from cache first.
                 $cached = wp_cache_get('aeseo_lcp_candidate_' . $post_id, 'aeseo');
                 if (is_array($cached)) {
                     self::$candidate = $cached;
+                }
+
+                if (empty(self::$candidate)) {
+                    $override = wp_cache_get('aeseo_lcp_override_' . $post_id, 'aeseo');
+                    if ($override === false) {
+                        $override = get_post_meta($post_id, '_aeseo_lcp_override', true);
+                        wp_cache_set('aeseo_lcp_override_' . $post_id, $override, 'aeseo', 60);
+                    }
+                    if ($override !== '') {
+                        if (is_numeric($override)) {
+                            self::set_candidate_from_attachment(absint($override));
+                        } else {
+                            $url = esc_url_raw($override);
+                            self::set_candidate([
+                                'source'        => 'img',
+                                'attachment_id' => 0,
+                                'url'           => $url,
+                                'width'         => 0,
+                                'height'        => 0,
+                                'origin'        => wp_parse_url($url, PHP_URL_HOST) ?: '',
+                                'is_background' => false,
+                            ]);
+                        }
+                    }
                 }
 
                 // Prime from featured image if still empty.
