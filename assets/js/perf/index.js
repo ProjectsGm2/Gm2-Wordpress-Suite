@@ -63,7 +63,12 @@ if (flags.long_tasks) {
     imports.push(import('./longtask.js').then((m) => m.init()));
 }
 if (flags.layout_thrash) {
-    imports.push(import('./layout.js').then((m) => m.init()));
+    imports.push(
+        import('./fastdom-lite.js').then((m) => {
+            window.aePerf.measure = m.measure;
+            window.aePerf.mutate = m.mutate;
+        })
+    );
 }
 if (flags.passive_listeners) {
     imports.push(import('./passive.js').then((m) => m.init()));
