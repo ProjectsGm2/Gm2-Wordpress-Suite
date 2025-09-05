@@ -62,8 +62,11 @@ final class AESEO_LCP_Optimizer {
         }
 
         $post_id = get_queried_object_id();
-        if ($post_id && absint(get_post_meta($post_id, '_aeseo_lcp_disable', true)) && !apply_filters('aeseo_lcp_should_optimize', false, [])) {
-            return;
+        if ($post_id && function_exists('get_post_meta')) {
+            $disabled = absint(get_post_meta($post_id, '_aeseo_lcp_disable', true));
+            if ($disabled && !apply_filters('aeseo_lcp_should_optimize', false, [])) {
+                return;
+            }
         }
 
         self::$settings = get_option(
@@ -103,49 +106,56 @@ final class AESEO_LCP_Optimizer {
         if (empty(self::$candidate) && is_singular()) {
             $post_id = get_the_ID();
             if ($post_id) {
-                $disabled = absint(get_post_meta($post_id, '_aeseo_lcp_disable', true));
+                $disabled = function_exists('get_post_meta') ? absint(get_post_meta($post_id, '_aeseo_lcp_disable', true)) : 0;
                 if ($disabled && !apply_filters('aeseo_lcp_should_optimize', false, [])) {
                     return [];
                 }
 
-                // Attempt to load from cache first.
-                $cached = wp_cache_get('aeseo_lcp_candidate_' . $post_id, 'aeseo');
-                if (is_array($cached)) {
-                    self::$candidate = $cached;
-                }
-
-                if (empty(self::$candidate)) {
+                $override = '';
+                if (function_exists('get_post_meta')) {
                     $override = wp_cache_get('aeseo_lcp_override_' . $post_id, 'aeseo');
                     if ($override === false) {
                         $override = get_post_meta($post_id, '_aeseo_lcp_override', true);
                         wp_cache_set('aeseo_lcp_override_' . $post_id, $override, 'aeseo', 60);
                     }
-                    if ($override !== '') {
-                        if (is_numeric($override)) {
-                            self::set_candidate_from_attachment(absint($override));
-                        } else {
-                            $url = esc_url_raw($override);
-                            self::set_candidate([
-                                'source'        => 'img',
-                                'attachment_id' => 0,
-                                'url'           => $url,
-                                'width'         => 0,
-                                'height'        => 0,
-                                'origin'        => wp_parse_url($url, PHP_URL_HOST) ?: '',
-                                'is_background' => false,
-                            ]);
+                }
+
+                if ($override !== '') {
+                    wp_cache_delete('aeseo_lcp_candidate_' . $post_id, 'aeseo');
+                    if (is_numeric($override)) {
+                        $id = absint($override);
+                        if ($id) {
+                            wp_cache_set('aeseo_lcp_override_' . $post_id, $id, 'aeseo', 60);
+                            self::set_candidate_from_attachment($id);
                         }
+                    } else {
+                        $url = esc_url_raw($override);
+                        wp_cache_set('aeseo_lcp_override_' . $post_id, $url, 'aeseo', 60);
+                        self::set_candidate([
+                            'source'        => 'img',
+                            'attachment_id' => 0,
+                            'url'           => $url,
+                            'width'         => 0,
+                            'height'        => 0,
+                            'origin'        => wp_parse_url($url, PHP_URL_HOST) ?: '',
+                            'is_background' => false,
+                        ]);
                     }
                 }
 
-                // Prime from featured image if still empty.
+                if (empty(self::$candidate)) {
+                    $cached = wp_cache_get('aeseo_lcp_candidate_' . $post_id, 'aeseo');
+                    if (is_array($cached)) {
+                        self::$candidate = $cached;
+                    }
+                }
+
                 if (empty(self::$candidate)) {
                     self::maybe_prime_candidate();
                 }
 
-                // Fallback to scanning the rendered content on demand.
                 if (empty(self::$candidate)) {
-                    $post = get_post($post_id);
+                    $post = function_exists('get_post') ? get_post($post_id) : null;
                     if ($post) {
                         apply_filters('the_content', $post->post_content);
                     }
@@ -337,7 +347,7 @@ final class AESEO_LCP_Optimizer {
 
         $attachment_id = get_post_thumbnail_id($post_id);
         if (!$attachment_id) {
-            $gallery = get_post_meta($post_id, '_product_image_gallery', true);
+            $gallery = function_exists('get_post_meta') ? get_post_meta($post_id, '_product_image_gallery', true) : '';
             if ($gallery) {
                 $ids = array_filter(array_map('absint', explode(',', (string) $gallery)));
                 $attachment_id = $ids[0] ?? 0;
@@ -635,6 +645,10 @@ final class AESEO_LCP_Optimizer {
      * @param int $attachment_id Attachment ID.
      */
     private static function set_candidate_from_attachment(int $attachment_id): void {
+        if ($attachment_id <= 0 || !function_exists('wp_get_attachment_image_src')) {
+            return;
+        }
+
         $image = wp_get_attachment_image_src($attachment_id, 'full');
         if (!$image) {
             return;
@@ -854,7 +868,7 @@ final class AESEO_LCP_Optimizer {
         if (!empty($candidate)) {
             $src = $attr['src'] ?? '';
             $attachment_id = is_object($attachment) ? (int) $attachment->ID : 0;
-            if (!$src && $attachment_id) {
+            if (!$src && $attachment_id > 0 && function_exists('wp_get_attachment_image_url')) {
                 $src = wp_get_attachment_image_url($attachment_id, $size);
             }
 
@@ -925,6 +939,15 @@ final class AESEO_LCP_Optimizer {
 
         if (function_exists('gm2_queue_image_optimization')) {
             gm2_queue_image_optimization($attachment_id);
+        }
+
+        if (
+            !$attachment_id ||
+            !function_exists('wp_get_attachment_image_url') ||
+            !function_exists('wp_get_attachment_image_srcset') ||
+            !function_exists('wp_get_attachment_image_sizes')
+        ) {
+            return $html;
         }
 
         $srcset = wp_get_attachment_image_srcset($attachment_id, $size);

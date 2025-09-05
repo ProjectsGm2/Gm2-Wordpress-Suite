@@ -2488,8 +2488,9 @@ class Gm2_SEO_Admin {
 
 
     public function render_lcp_overrides_meta_box($post) {
-        $override = get_post_meta($post->ID, '_aeseo_lcp_override', true);
-        $disable  = get_post_meta($post->ID, '_aeseo_lcp_disable', true);
+        $post_id = ($post instanceof \WP_Post) ? $post->ID : 0;
+        $override = $post_id ? get_post_meta($post_id, '_aeseo_lcp_override', true) : '';
+        $disable  = $post_id ? get_post_meta($post_id, '_aeseo_lcp_disable', true) : '';
         ?>
         <p>
             <label for="aeseo_lcp_override"><?php esc_html_e('Override LCP image (URL or attachment ID):', 'gm2-wordpress-suite'); ?></label>
@@ -2796,8 +2797,14 @@ class Gm2_SEO_Admin {
         update_post_meta($post_id, '_gm2_schema_rating', $schema_rating);
 
         if (isset($_POST['aeseo_lcp_meta_nonce']) && wp_verify_nonce($_POST['aeseo_lcp_meta_nonce'], 'aeseo_lcp_meta')) {
-            update_post_meta($post_id, '_aeseo_lcp_override', sanitize_text_field($_POST['aeseo_lcp_override'] ?? ''));
+            $raw_override = $_POST['aeseo_lcp_override'] ?? '';
+            $override     = is_numeric($raw_override) ? absint($raw_override) : esc_url_raw($raw_override);
+            update_post_meta($post_id, '_aeseo_lcp_override', $override);
             update_post_meta($post_id, '_aeseo_lcp_disable', isset($_POST['aeseo_lcp_disable']) ? '1' : '0');
+            if ($override !== '') {
+                wp_cache_delete('aeseo_lcp_candidate_' . $post_id, 'aeseo');
+                wp_cache_delete('aeseo_lcp_override_' . $post_id, 'aeseo');
+            }
         }
     }
 
