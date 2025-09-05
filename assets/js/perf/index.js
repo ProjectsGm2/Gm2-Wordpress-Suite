@@ -73,7 +73,7 @@ if (flags.noThrash === true) {
     );
 }
 if (flags.passive_listeners) {
-    imports.push(import('./passive.js').then((m) => m.init()));
+    imports.push(import('./passive.js'));
 }
 if (flags.dom_audit) {
     imports.push(import('./dom-audit.js').then((m) => m.init()));
