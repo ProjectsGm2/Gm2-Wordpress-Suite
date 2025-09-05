@@ -45,3 +45,25 @@ add_filter( 'ae/perf/flag', function( $enabled, $feature ) {
 Disabling a flag or removing the filter safely rolls back to WordPress default behaviour.
 
 `window.aePerf.debug()` prints the current flag state to the browser console.
+
+## Passive event listeners
+
+Use `aePerf.addPassive` to attach listeners that default to `{ passive: true, capture: false }`:
+
+```js
+if (window.aePerf?.addPassive) {
+  aePerf.addPassive(window, 'scroll', onScroll);
+}
+```
+
+Provide `{ passive: false }` to retain cancelable behaviour. Setting the global `window.AE_PERF_DISABLE_PASSIVE` to `true` before the bootstrap script loads disables both the helper and the patch described below.
+
+When the `passive_listeners` flag is enabled, `AE_PERF_FLAGS.passivePatch` controls whether `EventTarget.prototype.addEventListener` is patched so that `scroll`, `touchstart`, `touchmove`, and `wheel` listeners become passive when no options are supplied.
+
+Themes or plugins can disable the patch if third‑party code misbehaves (for example, Google reCAPTCHA or other iframe‑embedded widgets) via:
+
+```php
+add_filter( 'ae/perf/passive_allow_patch', '__return_false' );
+```
+
+The patch skips nested browsing contexts, but interacting with iframes may still require opting out. Calling `preventDefault()` inside a patched listener logs a console warning and does not stop the default action.
