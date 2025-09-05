@@ -60,6 +60,13 @@ class Manager {
         // Include flag indicating whether a user is logged in.
         $flags['isAdmin'] = (bool) is_user_logged_in();
 
+        /**
+         * Filter whether the passive listeners patch is allowed.
+         *
+         * @param bool $allow_patch Whether the passive listeners patch is allowed.
+         */
+        $flags['passivePatch'] = $flags['passive_listeners'] && apply_filters('ae/perf/passive_allow_patch', true);
+
         return $flags;
     }
 }
