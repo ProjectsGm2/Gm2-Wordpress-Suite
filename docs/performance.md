@@ -5,10 +5,12 @@ The Performance module exposes optional front‑end helpers that can be toggled 
 | Flag | Option | Description |
 | --- | --- | --- |
 | `worker` | `ae_perf_worker` | Enable Web Worker offloading. |
-| `long_tasks` | `ae_perf_long_tasks` | Observe and log `longtask` entries. |
+| `longTasks` | `ae_perf_long_tasks` | Observe and log `longtask` entries. |
 | `noThrash` | `ae_perf_no_thrash` | Batch DOM reads and writes via `aePerf.dom.measure` and `aePerf.dom.mutate`. |
 | `passive_listeners` | `ae_perf_passive_listeners` | Default scroll and touch handlers to passive. |
 | `dom_audit` | `ae_perf_dom_audit` | Log total DOM nodes after paint. |
+
+Enabling `longTasks` logs per‑second summaries of `longtask` entries. Lifetime totals are available via `aePerf.getSummary()`. If `AE_PERF_FLAGS.longTaskBudgetMs` is defined, a warning is emitted when the last 10 s of long tasks exceed this budget.
 
 To offload expensive tasks to a Web Worker, use `aePerf.runTask`:
 
