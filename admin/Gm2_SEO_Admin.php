@@ -101,6 +101,11 @@ class Gm2_SEO_Admin {
         add_option('ae_js_jquery_on_demand', '0');
         add_option('ae_js_jquery_url_allow', '');
         add_option('ae_js_compat_overrides', []);
+        add_option('ae_perf_worker', '0');
+        add_option('ae_perf_long_tasks', '0');
+        add_option('ae_perf_layout_thrash', '0');
+        add_option('ae_perf_passive_listeners', '0');
+        add_option('ae_perf_dom_audit', '0');
 
         $this->migrate_js_option_names();
 
@@ -1182,6 +1187,11 @@ class Gm2_SEO_Admin {
                 $pretty_versions = get_option('gm2_pretty_versioned_urls', '0');
                 $ps_key    = get_option('gm2_pagespeed_api_key', '');
                 $ps_scores = get_option('gm2_pagespeed_scores', []);
+                $perf_worker = get_option('ae_perf_worker', '0');
+                $perf_long   = get_option('ae_perf_long_tasks', '0');
+                $perf_layout = get_option('ae_perf_layout_thrash', '0');
+                $perf_passive = get_option('ae_perf_passive_listeners', '0');
+                $perf_dom = get_option('ae_perf_dom_audit', '0');
                 $script_attrs = get_option('gm2_script_attributes', []);
                 $rm_vendors = get_option('gm2_remote_mirror_vendors', []);
                 $rm_fb     = !empty($rm_vendors['facebook']);
@@ -1283,6 +1293,13 @@ class Gm2_SEO_Admin {
                     echo '<p>Mobile: ' . esc_html($ps_scores['mobile'] ?? '') . ' Desktop: ' . esc_html($ps_scores['desktop'] ?? '') . ' ' . esc_html($time) . '</p>';
                 }
                 echo '</td></tr>';
+
+                echo '<tr><th colspan="2"><h2>' . esc_html__( 'Performance', 'gm2-wordpress-suite' ) . '</h2></th></tr>';
+                echo '<tr><th scope="row">' . esc_html__( 'Enable Web Worker offloading', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="ae_perf_worker" value="1" ' . checked($perf_worker, '1', false) . '></label></td></tr>';
+                echo '<tr><th scope="row">' . esc_html__( 'Break up long tasks', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="ae_perf_long_tasks" value="1" ' . checked($perf_long, '1', false) . '></label></td></tr>';
+                echo '<tr><th scope="row">' . esc_html__( 'Prevent layout thrash', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="ae_perf_layout_thrash" value="1" ' . checked($perf_layout, '1', false) . '></label></td></tr>';
+                echo '<tr><th scope="row">' . esc_html__( 'Passive scroll/touch listeners', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="ae_perf_passive_listeners" value="1" ' . checked($perf_passive, '1', false) . '></label></td></tr>';
+                echo '<tr><th scope="row">' . esc_html__( 'DOM size audit', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="ae_perf_dom_audit" value="1" ' . checked($perf_dom, '1', false) . '></label></td></tr>';
 
                 echo '<tr><th colspan="2"><h2>' . esc_html__( 'Script Loading', 'gm2-wordpress-suite' ) . '</h2></th></tr>';
                 echo '<tr><th scope="row">' . esc_html__( 'Presets', 'gm2-wordpress-suite' ) . '</th><td><select name="gm2_script_attr_preset">';
@@ -3286,6 +3303,17 @@ class Gm2_SEO_Admin {
         if ($pretty_versions === '1') {
             Gm2_Version_Route_Apache::maybe_apply();
         }
+
+        $perf_worker = isset($_POST['ae_perf_worker']) ? '1' : '0';
+        update_option('ae_perf_worker', $perf_worker);
+        $perf_long = isset($_POST['ae_perf_long_tasks']) ? '1' : '0';
+        update_option('ae_perf_long_tasks', $perf_long);
+        $perf_layout = isset($_POST['ae_perf_layout_thrash']) ? '1' : '0';
+        update_option('ae_perf_layout_thrash', $perf_layout);
+        $perf_passive = isset($_POST['ae_perf_passive_listeners']) ? '1' : '0';
+        update_option('ae_perf_passive_listeners', $perf_passive);
+        $perf_dom = isset($_POST['ae_perf_dom_audit']) ? '1' : '0';
+        update_option('ae_perf_dom_audit', $perf_dom);
 
         $map = get_option('ae_seo_ro_critical_css_map', []);
         if (!is_array($map)) {
