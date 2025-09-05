@@ -119,6 +119,7 @@ require_once GM2_PLUGIN_DIR . 'includes/Versioning_MTime.php';
 require_once GM2_PLUGIN_DIR . 'admin/class-ae-seo-debug-logs-admin.php';
 require_once GM2_PLUGIN_DIR . 'admin/class-ae-seo-server-hints.php';
 require_once GM2_PLUGIN_DIR . 'includes/class-aeseo-plugin.php';
+require_once GM2_PLUGIN_DIR . 'includes/class-aeseo-settings.php';
 
 \Gm2\Gm2_REST_Visibility::init();
 \Gm2\Gm2_REST_Rate_Limiter::init();
@@ -138,6 +139,7 @@ require_once GM2_PLUGIN_DIR . 'includes/class-aeseo-plugin.php';
 (new \Gm2\AE_SEO_Debug_Logs_Admin())->run();
 (new \Gm2\AE_SEO_Server_Hints())->run();
 \Gm2\AESEO_Plugin::init();
+\Gm2\AESEO_Settings::register();
 \Gm2\AE_SEO_Font_Manager::init();
 if (get_option('gm2_pretty_versioned_urls', '0') === '1') {
     \Gm2\Gm2_Version_Route_Apache::maybe_apply();
