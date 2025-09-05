@@ -336,6 +336,43 @@ class LcpOptimizerIntegrationTest extends WP_UnitTestCase {
     }
 
     /**
+     * maybe_use_picture should wrap the LCP image in a picture tag with next-gen sources.
+     */
+    public function test_maybe_use_picture_generates_nextgen_sources(): void {
+        $this->reset_optimizer_state();
+
+        $attachment_id = self::factory()->attachment->create_upload_object(DIR_TESTDATA . '/images/canola.jpg');
+        $src           = wp_get_attachment_url($attachment_id);
+        AESEO_LCP_Optimizer::detect_from_content('<img src="' . esc_url($src) . '" width="100" height="100" />');
+
+        add_filter(
+            'wp_image_editor_supports',
+            static function ($supports, $args) {
+                if (isset($args['mime_type']) && in_array($args['mime_type'], [ 'image/avif', 'image/webp' ], true)) {
+                    return true;
+                }
+                return $supports;
+            },
+            10,
+            2
+        );
+
+        $meta    = wp_get_attachment_metadata($attachment_id);
+        $uploads = wp_get_upload_dir();
+        $base    = trailingslashit($uploads['basedir']) . trailingslashit(dirname($meta['file']));
+        $file    = pathinfo($meta['file'], PATHINFO_FILENAME);
+        touch($base . $file . '.avif');
+        touch($base . $file . '.webp');
+
+        $img_html = wp_get_attachment_image($attachment_id, 'full');
+        $result   = AESEO_LCP_Optimizer::maybe_use_picture($img_html, $attachment_id, 'full', false, []);
+
+        $this->assertStringContainsString('<picture>', $result);
+        $this->assertStringContainsString('<source type="image/avif"', $result);
+        $this->assertStringContainsString('<source type="image/webp"', $result);
+    }
+
+    /**
      * Optimizer should populate dimensions for LCP image inside a picture tag.
      */
     public function test_optimizer_adds_dimensions_inside_picture_and_updates_metadata(): void {
