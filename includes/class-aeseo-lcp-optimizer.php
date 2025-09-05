@@ -705,7 +705,14 @@ final class AESEO_LCP_Optimizer {
             return $html;
         }
 
-        if (stripos($html, '<source') !== false && (stripos($html, 'image/avif') !== false || stripos($html, 'image/webp') !== false)) {
+        if (
+            stripos($html, '<source') !== false &&
+            (
+                stripos($html, 'image/avif') !== false ||
+                stripos($html, 'image/webp') !== false ||
+                preg_match('/<source[^>]+\.(?:avif|webp)[^>]*>/i', $html)
+            )
+        ) {
             return $html;
         }
 
