@@ -5,6 +5,11 @@ if (document.documentElement.hasAttribute('data-aejs-off')) {
   var modules = cfg.modules || {};
   var ids = cfg.ids || {};
   var consent = cfg.consent || { key: 'aeConsent', value: 'allow_analytics' };
+  var addPassive = !window.AE_PERF_DISABLE_PASSIVE && window.aePerf && window.aePerf.addPassive
+    ? window.aePerf.addPassive
+    : function (el, type, handler, options) {
+        el.addEventListener(type, handler, options);
+      };
 
   function cookie(name) {
     var match = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
@@ -82,26 +87,26 @@ if (document.documentElement.hasAttribute('data-aejs-off')) {
         var els = document.querySelectorAll('[data-ae-module="' + moduleName + '"]');
         for (var i = 0; i < els.length; i++) {
           var el = els[i];
-          el.addEventListener('mouseenter', load, { once: true });
-          el.addEventListener('focus', load, { once: true });
+          addPassive(el, 'mouseenter', load, { once: true });
+          addPassive(el, 'focus', load, { once: true });
         }
       })(name);
     }
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', setupCustomModules);
+    addPassive(document, 'DOMContentLoaded', setupCustomModules);
   } else {
     setupCustomModules();
   }
 
-  window.addEventListener('ae:engaged', function () {
+  addPassive(window, 'ae:engaged', function () {
     loadAnalytics();
     loadRecaptcha();
     loadHCaptcha();
   });
 
-  document.addEventListener('aeConsentChanged', loadAnalytics);
+  addPassive(document, 'aeConsentChanged', loadAnalytics);
 
   var fired = false;
   function go() {
@@ -112,9 +117,9 @@ if (document.documentElement.hasAttribute('data-aejs-off')) {
     window.dispatchEvent(new Event('ae:engaged'));
   }
 
-  window.addEventListener('click', go, { once: true });
-  window.addEventListener('scroll', go, { once: true });
-  window.addEventListener('keydown', go, { once: true });
-  window.addEventListener('pointerdown', go, { once: true, passive: true });
+  addPassive(window, 'click', go, { once: true });
+  addPassive(window, 'scroll', go, { once: true });
+  addPassive(window, 'keydown', go, { once: true });
+  addPassive(window, 'pointerdown', go, { once: true });
   setTimeout(go, 3000);
 }

@@ -2,6 +2,9 @@
     const dom = window.aePerf?.dom;
     const measure = dom ? dom.measure.bind(dom) : (fn) => fn();
     const mutate = dom ? dom.mutate.bind(dom) : (fn) => fn();
+    const addPassive = !window.AE_PERF_DISABLE_PASSIVE && window.aePerf?.addPassive
+        ? window.aePerf.addPassive
+        : (el, type, handler, options) => el.addEventListener(type, handler, options);
 
     const KEY = 'gm2AcTabCount';
     const ENTRY_KEY = 'gm2_entry_url';
@@ -209,11 +212,11 @@
     }
 
     mutate(() => {
-        document.body.addEventListener('added_to_cart', () => {
+        addPassive(document.body, 'added_to_cart', () => {
             resetInactivityTimer();
         });
 
-        document.addEventListener('click', (e) => {
+        addPassive(document, 'click', (e) => {
             resetInactivityTimer();
             let anchor;
             measure(() => {
@@ -236,10 +239,10 @@
         });
 
         ['mousemove', 'keydown', 'scroll', 'touchstart'].forEach((ev) => {
-            document.addEventListener(ev, resetInactivityTimer, { passive: true });
+            addPassive(document, ev, resetInactivityTimer);
         });
 
-        document.addEventListener('visibilitychange', () => {
+        addPassive(document, 'visibilitychange', () => {
             let state;
             measure(() => {
                 state = document.visibilityState;
@@ -249,7 +252,7 @@
                 resetInactivityTimer(false);
             }
         });
-        window.addEventListener('beforeunload', () => {
+        addPassive(window, 'beforeunload', () => {
             if (decrementTabs()) {
                 if (typeof pendingTargetUrl === 'undefined') {
                     send('gm2_ac_mark_abandoned');
@@ -257,7 +260,7 @@
                 }
             }
         });
-        window.addEventListener('pagehide', () => {
+        addPassive(window, 'pagehide', () => {
             if (decrementTabs()) {
                 if (typeof pendingTargetUrl === 'undefined') {
                     send('gm2_ac_mark_abandoned');

@@ -3,6 +3,9 @@
     const { render } = wp.element;
     const { Button, TextControl, SelectControl, FormTokenField, PanelBody, Panel, Card, CardBody, Sortable } = wp.components;
     const { dispatch } = wp.data;
+    const addPassive = !window.AE_PERF_DISABLE_PASSIVE && window.aePerf?.addPassive
+        ? window.aePerf.addPassive
+        : (el, type, handler, options) => el.addEventListener(type, handler, options);
 
     const StepOne = ({ data, setData, existing, loadGroup, setExisting }) => {
         const options = [ { label: 'New', value: '' } ];
@@ -491,7 +494,7 @@
         );
     };
 
-    document.addEventListener('DOMContentLoaded', () => {
+    addPassive(document, 'DOMContentLoaded', () => {
         const root = document.getElementById('gm2-fg-wizard-root');
         if(root){
             render(el(Wizard), root);

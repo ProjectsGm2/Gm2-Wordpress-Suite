@@ -2,6 +2,9 @@ jQuery(function($){
   const dom = window.aePerf?.dom;
   const measure = dom ? dom.measure.bind(dom) : (fn) => fn();
   const mutate = dom ? dom.mutate.bind(dom) : (fn) => fn();
+  const addPassive = !window.AE_PERF_DISABLE_PASSIVE && window.aePerf?.addPassive
+    ? window.aePerf.addPassive
+    : (el, type, handler, options) => el.addEventListener(type, handler, options);
 
   mutate(() => {
     jQuery(window).on('elementor/frontend/init', function() {
@@ -75,7 +78,7 @@ jQuery(function($){
             return;
           }
           mutate(() => {
-            form.addEventListener('submit', function() {
+            addPassive(form, 'submit', function() {
               var contact;
               var emailHidden;
               measure(() => {
