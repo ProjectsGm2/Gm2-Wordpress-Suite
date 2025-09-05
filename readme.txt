@@ -3,7 +3,7 @@ Contributors: gm2team
 Tags: admin, tools, suite, performance
 Requires at least: 6.0
 Tested up to: 6.5
-Stable tag: 1.6.25
+Stable tag: 1.6.27
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -74,6 +74,7 @@ Configuration options:
 * `add_preload` – preload the LCP image with `<link rel="preload" as="image" fetchpriority="high">` and include `imagesrcset`/`imagesizes` when available.
 
 Each option can be enabled independently to match theme requirements.
+All flags are exposed as admin toggles on the LCP Optimization settings screen, and individual posts include an **LCP Overrides** meta box to supply a custom image URL or attachment ID or disable optimization for that entry. Developers can refine behaviour via hooks like `aeseo_lcp_candidate` to override the detected element, `aeseo_lcp_preconnect_hosts` to adjust preconnect hosts, and `aeseo_lcp_should_optimize` to short-circuit the module.
 
 The identified LCP image bypasses lazy-loading and carries a `data-aeseo-lcp="1"` marker. A `wp_img_tag_add_loading_attr` safeguard maintains compatibility with WooCommerce when modifying the `loading` attribute.
 
@@ -605,6 +606,8 @@ the last 100 missing URLs to help you create new redirects.
 * **Real-time character counts** – display running totals in the SEO meta box.
 
 == Changelog ==
+= 1.6.27 =
+* Added admin toggles for each LCP flag, an "LCP Overrides" meta box for custom URLs or attachment IDs with a disable option, and developer hooks `aeseo_lcp_candidate`, `aeseo_lcp_preconnect_hosts` and `aeseo_lcp_should_optimize`.
 = 1.6.26 =
 * Introduced Third-Party Script Optimization with audit UI, hCaptcha support, lazy widget loading, Tag Manager consolidation, and self-hosted fonts.
 = 1.6.25 =
