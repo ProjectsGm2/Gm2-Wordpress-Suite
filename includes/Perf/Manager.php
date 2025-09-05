@@ -27,6 +27,7 @@ class Manager {
         $src  = GM2_PLUGIN_URL . 'assets/js/perf/index.js';
         $ver  = file_exists($file) ? (string) filemtime($file) : GM2_VERSION;
         wp_enqueue_script('ae-perf', $src, ['wp-hooks'], $ver, true);
+        wp_script_add_data('ae-perf', 'type', 'module');
         wp_script_add_data('ae-perf', 'defer', true);
         wp_localize_script('ae-perf', 'AE_PERF_FLAGS', self::get_flags());
     }
@@ -38,11 +39,12 @@ class Manager {
      */
     private static function get_flags(): array {
         $map = [
-            'worker'            => 'ae_perf_worker',
-            'long_tasks'        => 'ae_perf_long_tasks',
-            'layout_thrash'     => 'ae_perf_layout_thrash',
+            'webWorker'        => 'ae_perf_worker',
+            'worker'           => 'ae_perf_worker', // Legacy key for compatibility.
+            'long_tasks'       => 'ae_perf_long_tasks',
+            'layout_thrash'    => 'ae_perf_layout_thrash',
             'passive_listeners' => 'ae_perf_passive_listeners',
-            'dom_audit'         => 'ae_perf_dom_audit',
+            'dom_audit'        => 'ae_perf_dom_audit',
         ];
         $flags = [];
         foreach ($map as $feature => $option) {
