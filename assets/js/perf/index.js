@@ -73,7 +73,11 @@ if (flags.noThrash === true) {
     );
 }
 if (flags.passive_listeners) {
-    imports.push(import('./passive.js'));
+    imports.push(
+        import('./passive.js').then((m) => {
+            window.aePerf.addPassive = m.addPassive;
+        })
+    );
 }
 if (flags.dom_audit) {
     imports.push(import('./dom-audit.js').then((m) => m.init()));
