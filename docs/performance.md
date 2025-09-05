@@ -6,8 +6,7 @@ The Performance module exposes optional front‑end helpers that can be toggled 
 | --- | --- | --- |
 | `worker` | `ae_perf_worker` | Enable Web Worker offloading. |
 | `long_tasks` | `ae_perf_long_tasks` | Observe and log `longtask` entries. |
-| `layout_thrash` | `ae_perf_layout_thrash` | Batch DOM reads and writes via `aePerf.measure` and `aePerf.mutate`. |
-| `noThrash` | `ae_perf_no_thrash` | Batch DOM reads and writes via `fastdom-lite`. |
+| `noThrash` | `ae_perf_no_thrash` | Batch DOM reads and writes via `aePerf.dom.measure` and `aePerf.dom.mutate`. |
 | `passive_listeners` | `ae_perf_passive_listeners` | Default scroll and touch handlers to passive. |
 | `dom_audit` | `ae_perf_dom_audit` | Log total DOM nodes after paint. |
 
@@ -20,6 +19,17 @@ if (window.aePerf?.runTask) {
 ```
 
 Note that disabling the `worker`/`webWorker` flag prevents worker creation, causing the fallback to run on the main thread.
+
+Batch DOM reads and writes:
+
+```js
+if (window.aePerf?.dom) {
+  const height = await aePerf.dom.measure(() => el.offsetHeight);
+  await aePerf.dom.mutate(() => { el.style.height = `${height}px`; });
+}
+```
+
+Both methods return Promises, so `await` can be used. Append `?aePerfDebug=1` to the URL to log if a measure callback mutates or a mutate callback performs layout reads.
 
 Developers may override any flag:
 
