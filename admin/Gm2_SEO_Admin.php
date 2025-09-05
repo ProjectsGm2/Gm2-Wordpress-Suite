@@ -2474,7 +2474,35 @@ class Gm2_SEO_Admin {
                 'normal',
                 'high'
             );
+
+            add_meta_box(
+                'aeseo_lcp_overrides',
+                __( 'LCP Overrides', 'gm2-wordpress-suite' ),
+                [ $this, 'render_lcp_overrides_meta_box' ],
+                $type,
+                'side',
+                'default'
+            );
         }
+    }
+
+
+    public function render_lcp_overrides_meta_box($post) {
+        $override = get_post_meta($post->ID, '_aeseo_lcp_override', true);
+        $disable  = get_post_meta($post->ID, '_aeseo_lcp_disable', true);
+        ?>
+        <p>
+            <label for="aeseo_lcp_override"><?php esc_html_e('Override LCP image (URL or attachment ID):', 'gm2-wordpress-suite'); ?></label>
+            <input type="text" class="widefat" name="aeseo_lcp_override" id="aeseo_lcp_override" value="<?php echo esc_attr($override); ?>" />
+        </p>
+        <p>
+            <label>
+                <input type="checkbox" name="aeseo_lcp_disable" <?php checked($disable, '1'); ?> />
+                <?php esc_html_e('Disable LCP optimization on this page.', 'gm2-wordpress-suite'); ?>
+            </label>
+        </p>
+        <?php
+        wp_nonce_field('aeseo_lcp_meta', 'aeseo_lcp_meta_nonce');
     }
 
 
@@ -2766,6 +2794,11 @@ class Gm2_SEO_Admin {
         update_post_meta($post_id, '_gm2_schema_type', $schema_type);
         update_post_meta($post_id, '_gm2_schema_brand', $schema_brand);
         update_post_meta($post_id, '_gm2_schema_rating', $schema_rating);
+
+        if (isset($_POST['aeseo_lcp_meta_nonce']) && wp_verify_nonce($_POST['aeseo_lcp_meta_nonce'], 'aeseo_lcp_meta')) {
+            update_post_meta($post_id, '_aeseo_lcp_override', sanitize_text_field($_POST['aeseo_lcp_override'] ?? ''));
+            update_post_meta($post_id, '_aeseo_lcp_disable', isset($_POST['aeseo_lcp_disable']) ? '1' : '0');
+        }
     }
 
     public function save_taxonomy_meta($term_id) {
