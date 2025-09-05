@@ -35,7 +35,7 @@ class Manager {
     /**
      * Retrieve flags.
      *
-     * @return array
+     * @return array<string,bool> Performance flags keyed by feature.
      */
     private static function get_flags(): array {
         $map = [
@@ -57,6 +57,9 @@ class Manager {
              */
             $flags[$feature] = (bool) apply_filters('ae/perf/flag', $enabled, $feature);
         }
+        // Include flag indicating whether a user is logged in.
+        $flags['isAdmin'] = (bool) is_user_logged_in();
+
         return $flags;
     }
 }
