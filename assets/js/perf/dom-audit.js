@@ -9,6 +9,7 @@ import { idle } from './yield.js';
 
 const DEFAULT_THRESHOLDS = { totalElements: 600, maxDepth: 12 };
 const DESCENDANT_LIMIT = 500;
+const BADGE_ID = 'ae-dom-audit';
 
 function getSelector(el) {
     if (!el || el === document.body) {
@@ -92,11 +93,69 @@ export function auditDom() {
     return ae.domAuditPromise;
 }
 
+function renderBadge(result, thresholds) {
+    const bar = document.getElementById('wp-admin-bar-top-secondary');
+    if (!bar) {
+        return;
+    }
+    let li = document.getElementById(`wp-admin-bar-${BADGE_ID}`);
+    if (!li) {
+        li = document.createElement('li');
+        li.id = `wp-admin-bar-${BADGE_ID}`;
+        const a = document.createElement('a');
+        a.className = 'ab-item';
+        li.appendChild(a);
+        bar.appendChild(li);
+    }
+    const link = li.querySelector('a');
+    if (!link) {
+        return;
+    }
+    link.textContent = `DOM: ${result.totalElements} / d${result.maxDepth}`;
+    const ratios = {
+        total: result.totalElements / thresholds.totalElements,
+        depth: result.maxDepth / thresholds.maxDepth,
+    };
+    const maxRatio = Math.max(ratios.total, ratios.depth);
+    let color = '#46b450'; // green
+    if (maxRatio >= 1) {
+        color = '#dc3232'; // red
+    } else if (maxRatio >= 0.8) {
+        color = '#ffb900'; // amber
+    }
+    link.style.background = color;
+    link.style.color = '#fff';
+}
+
 /**
  * Initialize DOM audit.
  *
  * @return {void}
  */
 export function init() {
-    auditDom();
+    const flags = window.AE_PERF_FLAGS || {};
+    if (!window.wp || !flags.isAdmin) {
+        return;
+    }
+    const thresholds = {
+        ...DEFAULT_THRESHOLDS,
+        ...(flags.domAuditThresholds || {}),
+    };
+    const ae = (window.aePerf = window.aePerf || {});
+
+    function runAndRender() {
+        auditDom().then((res) => renderBadge(res, thresholds));
+    }
+
+    ae.refreshDomAudit = () => {
+        delete ae.domAudit;
+        delete ae.domAuditPromise;
+        runAndRender();
+    };
+
+    if (ae.domAudit) {
+        renderBadge(ae.domAudit, thresholds);
+    } else {
+        runAndRender();
+    }
 }
