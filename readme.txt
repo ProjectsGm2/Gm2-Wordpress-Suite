@@ -73,6 +73,8 @@ Configuration options:
 * `add_preconnect` – add a `wp_resource_hints` preconnect for the LCP image's origin.
 * `add_preload` – preload the LCP image with `<link rel="preload" as="image" fetchpriority="high">` and include `imagesrcset`/`imagesizes` when available.
 
+The optimizer skips admin, AJAX, JSON, feed and 404 requests and ignores images inside comments or sidebars. If PHP's `DOMDocument` extension is missing or fails to parse markup the module exits without errors. Enable the `aeseo_lcp_debug` option to log actions to `WP_DEBUG_LOG` prefixed with `[AESEO LCP]`. When `WP_DEBUG` is active, assertions verify only one preload and preconnect are emitted, the LCP tag includes width/height and `fetchpriority`, and lazy loading is removed solely from that image.
+
 Each option can be enabled independently to match theme requirements.
 All flags are exposed as admin toggles on the LCP Optimization settings screen, and individual posts include an **LCP Overrides** meta box to supply a custom image URL or attachment ID or disable optimization for that entry. Developers can refine behaviour via hooks like `aeseo_lcp_candidate` to override the detected element, `aeseo_lcp_preconnect_hosts` to adjust preconnect hosts, and `aeseo_lcp_should_optimize` to short-circuit the module.
 
@@ -606,6 +608,8 @@ the last 100 missing URLs to help you create new redirects.
 * **Real-time character counts** – display running totals in the SEO meta box.
 
 == Changelog ==
+= 1.6.28 =
+* Hardened LCP optimization with request gating, comment/sidebar exclusions, graceful `DOMDocument` fallback, optional `[AESEO LCP]` debug logging and runtime assertions.
 = 1.6.27 =
 * Added admin toggles for each LCP flag, an "LCP Overrides" meta box for custom URLs or attachment IDs with a disable option, and developer hooks `aeseo_lcp_candidate`, `aeseo_lcp_preconnect_hosts` and `aeseo_lcp_should_optimize`.
 = 1.6.26 =

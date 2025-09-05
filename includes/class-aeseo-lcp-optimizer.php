@@ -54,10 +54,39 @@ final class AESEO_LCP_Optimizer {
     private static $preload_printed = false;
 
     /**
+     * Counts for debug assertions.
+     *
+     * @var int
+     */
+    private static $preconnect_count = 0;
+
+    /**
+     * @var int
+     */
+    private static $preload_count = 0;
+
+    /**
+     * @var int
+     */
+    private static $lazy_removed_count = 0;
+
+    /**
+     * @var bool
+     */
+    private static $fetchpriority_set = false;
+
+    /**
      * Boot the optimizer by attaching hooks.
      */
     public static function boot(): void {
-        if (is_admin() || (defined('REST_REQUEST') && REST_REQUEST) || is_feed()) {
+        if (
+            is_admin() ||
+            (function_exists('wp_doing_ajax') && wp_doing_ajax()) ||
+            (function_exists('wp_is_json_request') && wp_is_json_request()) ||
+            (defined('REST_REQUEST') && REST_REQUEST) ||
+            is_feed() ||
+            is_404()
+        ) {
             return;
         }
 
@@ -80,6 +109,9 @@ final class AESEO_LCP_Optimizer {
                 'add_preload'              => true,
             ]
         );
+        self::$settings['debug'] = (bool) get_option('aeseo_lcp_debug', false);
+
+        self::log('boot');
 
         add_filter('pre_wp_get_loading_optimization_attributes', [ __CLASS__, 'capture_image_context' ], 10, 4);
         add_filter('wp_lazy_loading_enabled', [ __CLASS__, 'maybe_disable_lazy' ], 10, 3);
@@ -95,6 +127,7 @@ final class AESEO_LCP_Optimizer {
         add_filter('render_block', [ __CLASS__, 'maybe_add_fetchpriority_to_block' ], 20, 2);
         add_action('woocommerce_before_single_product', [ __CLASS__, 'detect_woo_product' ]);
         add_filter('woocommerce_single_product_image_thumbnail_html', [ __CLASS__, 'strip_main_product_lazy' ], 10, 2);
+        add_action('shutdown', [ __CLASS__, 'debug_assertions' ]);
     }
 
     /**
@@ -204,6 +237,9 @@ final class AESEO_LCP_Optimizer {
      * @return string
      */
     public static function detect_from_content(string $content): string {
+        if (!in_the_loop() || !is_main_query()) {
+            return $content;
+        }
         if (empty(self::$candidate)) {
             self::detect_in_html($content);
         }
@@ -511,8 +547,11 @@ final class AESEO_LCP_Optimizer {
     private static function enhance_img_tag(string $img_tag, array $candidate): string {
         $attrs = [];
 
-        if (strpos($img_tag, 'fetchpriority') === false && !empty(self::$settings['add_fetchpriority_high'])) {
-            $attrs[] = 'fetchpriority="high"';
+        if (!empty(self::$settings['add_fetchpriority_high'])) {
+            if (strpos($img_tag, 'fetchpriority') === false) {
+                $attrs[] = 'fetchpriority="high"';
+            }
+            self::$fetchpriority_set = true;
         }
 
         if (
@@ -601,10 +640,20 @@ final class AESEO_LCP_Optimizer {
             return;
         }
 
+        if (!class_exists('DOMDocument')) {
+            self::log('DOMDocument unavailable');
+            return;
+        }
+
         $doc = new \DOMDocument();
         libxml_use_internal_errors(true);
-        $doc->loadHTML('<?xml encoding="utf-8" ?>' . shortcode_unautop($html));
+        $loaded = @$doc->loadHTML('<?xml encoding="utf-8" ?>' . shortcode_unautop($html));
         libxml_clear_errors();
+
+        if (!$loaded) {
+            self::log('DOMDocument loadHTML failed');
+            return;
+        }
 
         $img = $doc->getElementsByTagName('img')->item(0);
         if (!$img) {
@@ -686,6 +735,7 @@ final class AESEO_LCP_Optimizer {
         }
 
         self::$candidate = $data;
+        self::log('candidate ' . ($data['url'] ?? ''));
 
         $post_id = is_singular() ? get_the_ID() : 0;
         if ($post_id) {
@@ -727,7 +777,7 @@ final class AESEO_LCP_Optimizer {
      * @return mixed
      */
     public static function capture_image_context($value, $tag, $attr, $context) {
-        if ($tag === 'img' && is_array($attr)) {
+        if ($tag === 'img' && is_array($attr) && !self::is_excluded_context($context)) {
             $id  = isset($attr['attachment_id']) ? (int) $attr['attachment_id'] : 0;
             $src = isset($attr['src']) ? (string) $attr['src'] : '';
             if (!$id && $src) {
@@ -737,6 +787,8 @@ final class AESEO_LCP_Optimizer {
                 'attachment_id' => $id,
                 'src'          => $src,
             ];
+        } else {
+            self::$current_image = [];
         }
 
         return $value;
@@ -755,7 +807,12 @@ final class AESEO_LCP_Optimizer {
             return $default;
         }
 
-        if ($tag !== 'img' || self::$done || empty(self::$settings['remove_lazy_on_lcp'])) {
+        if (
+            $tag !== 'img' ||
+            self::$done ||
+            empty(self::$settings['remove_lazy_on_lcp']) ||
+            self::is_excluded_context($context)
+        ) {
             return $default;
         }
 
@@ -781,6 +838,8 @@ final class AESEO_LCP_Optimizer {
             ($candidate['attachment_id'] && $attachment_id && $candidate['attachment_id'] === $attachment_id) ||
             ($candidate['url'] && $src && $candidate['url'] === $src)
         ) {
+            self::$lazy_removed_count++;
+            self::log('lazy removed');
             return false;
         }
 
@@ -800,7 +859,7 @@ final class AESEO_LCP_Optimizer {
             return $value;
         }
 
-        if (self::$done || empty(self::$settings['remove_lazy_on_lcp'])) {
+        if (self::$done || empty(self::$settings['remove_lazy_on_lcp']) || self::is_excluded_context($context)) {
             return $value;
         }
 
@@ -830,6 +889,9 @@ final class AESEO_LCP_Optimizer {
         if ($is_match) {
             if (strpos($image, 'data-aeseo-lcp="1"') === false) {
                 $image = preg_replace('/<img\b/', '<img data-aeseo-lcp="1"', $image, 1);
+            }
+            if ($value !== false) {
+                self::$lazy_removed_count++;
             }
             return false;
         }
@@ -884,8 +946,11 @@ final class AESEO_LCP_Optimizer {
                 if (isset($attr['loading']) && !empty(self::$settings['remove_lazy_on_lcp'])) {
                     unset($attr['loading']);
                 }
-                if (!empty(self::$settings['add_fetchpriority_high']) && !isset($attr['fetchpriority'])) {
-                    $attr['fetchpriority'] = 'high';
+                if (!empty(self::$settings['add_fetchpriority_high'])) {
+                    if (!isset($attr['fetchpriority'])) {
+                        $attr['fetchpriority'] = 'high';
+                    }
+                    self::$fetchpriority_set = true;
                 }
                 self::$candidate = [
                     'source'        => 'img',
@@ -1032,6 +1097,7 @@ final class AESEO_LCP_Optimizer {
 
         if ($exists) {
             self::$preload_printed = true;
+            self::$preload_count++;
             return;
         }
 
@@ -1050,6 +1116,8 @@ final class AESEO_LCP_Optimizer {
 
         printf('<link %s />' . "\n", $attr); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
         self::$preload_printed = true;
+        self::$preload_count++;
+        self::log('preload ' . $url);
     }
 
     /**
@@ -1092,7 +1160,59 @@ final class AESEO_LCP_Optimizer {
         }
 
         self::$preconnect_added = true;
+        self::$preconnect_count++;
+        self::log('preconnect ' . $host);
         return $urls;
+    }
+
+    /**
+     * Determine if the given context should be skipped.
+     *
+     * @param mixed $context Context string or array.
+     * @return bool
+     */
+    private static function is_excluded_context($context): bool {
+        if (is_array($context)) {
+            $context = implode(',', $context);
+        }
+        $context = (string) $context;
+        return stripos($context, 'comment') !== false || stripos($context, 'widget') !== false || stripos($context, 'sidebar') !== false;
+    }
+
+    /**
+     * Log debug messages when enabled.
+     *
+     * @param string $message Message to log.
+     */
+    private static function log(string $message): void {
+        if (empty(self::$settings['debug']) || !defined('WP_DEBUG') || !WP_DEBUG) {
+            return;
+        }
+        error_log('[AESEO LCP] ' . $message);
+    }
+
+    /**
+     * Run runtime assertions in debug mode.
+     */
+    public static function debug_assertions(): void {
+        if (!defined('WP_DEBUG') || !WP_DEBUG) {
+            return;
+        }
+        if (!empty(self::$settings['add_preload'])) {
+            assert(self::$preload_count <= 1);
+        }
+        if (!empty(self::$settings['add_preconnect'])) {
+            assert(self::$preconnect_count <= 1);
+        }
+        if (!empty(self::$candidate)) {
+            assert(!empty(self::$candidate['width']) && !empty(self::$candidate['height']));
+            if (!empty(self::$settings['add_fetchpriority_high'])) {
+                assert(self::$fetchpriority_set);
+            }
+            if (!empty(self::$settings['remove_lazy_on_lcp'])) {
+                assert(self::$lazy_removed_count <= 1);
+            }
+        }
     }
 
     /**
@@ -1189,5 +1309,3 @@ final class AESEO_LCP_Optimizer {
         }
     }
 }
-
-AESEO_LCP_Optimizer::boot();

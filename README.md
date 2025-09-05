@@ -51,6 +51,8 @@ Configuration options include:
 - `add_preconnect` – adds a `wp_resource_hints` preconnect for the LCP image's origin.
 - `add_preload` – preloads the LCP image via `<link rel="preload" as="image">` with `fetchpriority="high"` and passes through `imagesrcset`/`imagesizes` when available.
 
+The optimizer skips admin, AJAX, JSON, feed and 404 requests and ignores images inside comments or sidebars. If PHP's `DOMDocument` extension is missing or fails to parse markup the module exits without errors. Enable the `aeseo_lcp_debug` option to log actions to `WP_DEBUG_LOG` prefixed with `[AESEO LCP]`. When `WP_DEBUG` is on, assertions ensure only one preload and preconnect are emitted, the LCP tag includes width/height and `fetchpriority`, and that lazy loading is removed only from that element.
+
 Each option can be toggled individually to tailor optimization for specific themes and content.
 All flags surface as admin toggles on the settings page, and posts provide an **LCP Overrides** meta box for supplying a custom image URL or attachment ID or disabling optimization. Developers can customize behavior with hooks such as `aeseo_lcp_candidate`, `aeseo_lcp_preconnect_hosts`, and `aeseo_lcp_should_optimize`.
 
