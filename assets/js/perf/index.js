@@ -9,9 +9,51 @@
 /* global AE_PERF_FLAGS */
 const flags = window.AE_PERF_FLAGS || {};
 const imports = [];
+let warned = false;
 
-if (flags.worker) {
-    imports.push(import('./worker.js').then((m) => m.init()));
+async function fallbackRunTask(name, payload) {
+    if (!warned) {
+        // eslint-disable-next-line no-console
+        console.warn('Web Workers are not supported');
+        warned = true;
+    }
+    return new Promise((resolve, reject) => {
+        queueMicrotask(async () => {
+            try {
+                const m = await import('./worker/ae-worker.js');
+                const fn = m[name];
+                if (!fn) {
+                    throw new Error('Unknown task');
+                }
+                const result = await fn(payload);
+                resolve(result);
+            } catch (err) {
+                reject(err);
+            }
+        });
+    });
+}
+
+window.aePerf = {
+    /**
+     * Output current flag state.
+     *
+     * @return {void}
+     */
+    debug() {
+        // eslint-disable-next-line no-console
+        console.log(flags);
+    },
+    runTask: fallbackRunTask,
+};
+
+if (flags.webWorker && typeof Worker !== 'undefined') {
+    imports.push(
+        import('./worker/index.js').then((m) => {
+            m.init();
+            window.aePerf.runTask = m.runTask;
+        })
+    );
 }
 if (flags.long_tasks) {
     imports.push(import('./longtask.js').then((m) => m.init()));
@@ -30,15 +72,3 @@ Promise.all(imports).catch((err) => {
     // eslint-disable-next-line no-console
     console.error('AE Performance error', err);
 });
-
-window.aePerf = {
-    /**
-     * Output current flag state.
-     *
-     * @return {void}
-     */
-    debug() {
-        // eslint-disable-next-line no-console
-        console.log(flags);
-    },
-};
