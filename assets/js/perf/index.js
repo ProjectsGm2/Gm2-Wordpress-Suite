@@ -47,6 +47,10 @@ window.aePerf = {
     runTask: fallbackRunTask,
 };
 
+if (flags.longTasks === true) {
+    imports.push(import('./yield.js').then((m) => { window.aePerf.yield = m; }));
+}
+
 if (flags.webWorker && typeof Worker !== 'undefined') {
     imports.push(
         import('./worker/index.js').then((m) => {
