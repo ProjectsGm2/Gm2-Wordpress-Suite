@@ -12,6 +12,35 @@ The Performance module exposes optional front‑end helpers that can be toggled 
 
 Enabling `longTasks` logs per‑second summaries of `longtask` entries. Lifetime totals are available via `aePerf.getLongTaskSummary()`. If `AE_PERF_FLAGS.longTaskBudgetMs` is defined, a warning is emitted when the last 10 s of long tasks exceed this budget.
 
+### Long task monitoring
+
+Enable observation by setting `AE_PERF_FLAGS.longTasks` and optionally provide a budget with `AE_PERF_FLAGS.longTaskBudgetMs`:
+
+```html
+<script>
+window.AE_PERF_FLAGS = {
+  longTasks: true,
+  longTaskBudgetMs: 200 // 200 ms per 10 s window
+};
+</script>
+```
+
+With the flag enabled the browser console prints summaries for each `longtask` and warns when the budget is exceeded:
+
+```
+[aePerf] longtask: 120 ms (total 120 ms)
+[aePerf] longtask: 150 ms (total 270 ms)
+[aePerf] long task budget exceeded: 270 ms / 200 ms
+```
+
+Disable monitoring by turning off the flag. No `longtask` messages appear when the observer is inactive:
+
+```html
+<script>
+window.AE_PERF_FLAGS = { longTasks: false };
+</script>
+```
+
 To offload expensive tasks to a Web Worker, use `aePerf.runTask`:
 
 ```js
