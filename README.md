@@ -48,8 +48,8 @@ Configuration options include:
 - `add_fetchpriority_high` – adds `fetchpriority="high"` to the LCP resource so browsers request it sooner. Existing `the_content` and block output is scanned to insert the attribute when missing.
 - `force_width_height` – fetches intrinsic dimensions (using `getimagesize()` if metadata is absent) and injects width and height attributes to avoid layout shifts.
 - `responsive_picture_nextgen` – converts the LCP image to a responsive `<picture>` with AVIF/WebP sources and full `srcset`/`sizes` when supported.
-- `add_preconnect` – outputs `preconnect` hints for the LCP host.
-- `add_preload` – preloads the LCP image or font so it starts downloading immediately.
+- `add_preconnect` – adds a `wp_resource_hints` preconnect for the LCP image's origin.
+- `add_preload` – preloads the LCP image via `<link rel="preload" as="image">` with `fetchpriority="high"` and passes through `imagesrcset`/`imagesizes` when available.
 
 Each option can be toggled individually to tailor optimization for specific themes and content.
 

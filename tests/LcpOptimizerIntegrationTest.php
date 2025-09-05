@@ -46,11 +46,13 @@ class LcpOptimizerIntegrationTest extends WP_UnitTestCase {
         $class = AESEO_LCP_Optimizer::class;
         $reflect = new ReflectionClass($class);
         $props = [
-            'settings'      => $settings === null ? $defaults : $settings,
-            'candidate'     => [],
-            'current_image' => [],
-            'done'          => false,
-            'optimized'     => [],
+            'settings'        => $settings === null ? $defaults : $settings,
+            'candidate'       => [],
+            'current_image'   => [],
+            'done'            => false,
+            'optimized'       => [],
+            'preconnect_added' => false,
+            'preload_printed'  => false,
         ];
         foreach ($props as $name => $value) {
             $prop = $reflect->getProperty($name);
@@ -84,7 +86,8 @@ class LcpOptimizerIntegrationTest extends WP_UnitTestCase {
         remove_filter('wp_lazy_loading_enabled', [ AESEO_LCP_Optimizer::class, 'maybe_disable_lazy' ], 10);
         remove_filter('wp_get_attachment_image_attributes', [ AESEO_LCP_Optimizer::class, 'maybe_adjust_attributes' ], 10);
         remove_filter('wp_get_attachment_image', [ AESEO_LCP_Optimizer::class, 'maybe_use_picture' ], 10);
-        remove_action('wp_head', [ AESEO_LCP_Optimizer::class, 'maybe_print_links' ], 5);
+        remove_action('wp_head', [ AESEO_LCP_Optimizer::class, 'maybe_print_preload' ], 5);
+        remove_filter('wp_resource_hints', [ AESEO_LCP_Optimizer::class, 'maybe_add_preconnect' ], 10);
     }
 
     /**

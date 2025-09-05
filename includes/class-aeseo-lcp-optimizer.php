@@ -42,6 +42,18 @@ final class AESEO_LCP_Optimizer {
     private static $optimized = [];
 
     /**
+     * Track whether resource hints or preload links were output.
+     *
+     * @var bool
+     */
+    private static $preconnect_added = false;
+
+    /**
+     * @var bool
+     */
+    private static $preload_printed = false;
+
+    /**
      * Boot the optimizer by attaching hooks.
      */
     public static function boot(): void {
@@ -66,7 +78,8 @@ final class AESEO_LCP_Optimizer {
         add_filter('wp_img_tag_add_loading_attr', [ __CLASS__, 'maybe_unset_loading_attr' ], 10, 3);
         add_filter('wp_get_attachment_image_attributes', [ __CLASS__, 'maybe_adjust_attributes' ], 10, 3);
         add_filter('wp_get_attachment_image', [ __CLASS__, 'maybe_use_picture' ], 10, 5);
-        add_action('wp_head', [ __CLASS__, 'maybe_print_links' ], 5);
+        add_filter('wp_resource_hints', [ __CLASS__, 'maybe_add_preconnect' ], 10, 2);
+        add_action('wp_head', [ __CLASS__, 'maybe_print_preload' ], 5);
         add_action('wp', [ __CLASS__, 'maybe_prime_candidate' ]);
         add_filter('the_content', [ __CLASS__, 'detect_from_content' ], 1);
         add_filter('the_content', [ __CLASS__, 'maybe_add_fetchpriority_to_content' ], 20);
@@ -785,43 +798,75 @@ final class AESEO_LCP_Optimizer {
     }
 
     /**
-     * Print preload and preconnect link tags if needed.
+     * Inject a preload link for the LCP image.
      */
-    public static function maybe_print_links(): void {
-        if (empty(self::$candidate['url'])) {
+    public static function maybe_print_preload(): void {
+        if (self::$preload_printed || empty(self::$candidate['url']) || empty(self::$settings['add_preload'])) {
             return;
         }
 
-        $url  = self::$candidate['url'];
-        $host = wp_parse_url($url, PHP_URL_HOST);
-        $head = ob_get_contents() ?: '';
+        $url   = self::$candidate['url'];
+        $head  = ob_get_contents() ?: '';
+        $hints = wp_resource_hints([], 'preload');
+        $exists = in_array($url, $hints, true) || (
+            (stripos($head, 'rel="preload"') !== false || stripos($head, "rel='preload'") !== false) &&
+            stripos($head, $url) !== false
+        );
 
-        if (!empty(self::$settings['add_preconnect']) && $host) {
-            $preconnect_hints = array_map(
-                static function ($u) {
-                    return wp_parse_url($u, PHP_URL_HOST);
-                },
-                wp_resource_hints([], 'preconnect')
-            );
-            $preconnect_exists = in_array($host, $preconnect_hints, true) || (
-                (stripos($head, 'rel="preconnect"') !== false || stripos($head, "rel='preconnect'") !== false) &&
-                stripos($head, $host) !== false
-            );
-            if (!$preconnect_exists) {
-                printf('<link rel="preconnect" href="%s" />' . "\n", esc_url('//' . $host));
+        if ($exists) {
+            self::$preload_printed = true;
+            return;
+        }
+
+        $attr = sprintf('rel="preload" as="image" href="%s" fetchpriority="high"', esc_url($url));
+
+        if (!empty(self::$candidate['attachment_id'])) {
+            $srcset = wp_get_attachment_image_srcset(self::$candidate['attachment_id'], 'full');
+            if ($srcset) {
+                $attr .= sprintf(' imagesrcset="%s"', esc_attr($srcset));
+                $sizes = wp_get_attachment_image_sizes(self::$candidate['attachment_id'], 'full');
+                if ($sizes) {
+                    $attr .= sprintf(' imagesizes="%s"', esc_attr($sizes));
+                }
             }
         }
 
-        if (!empty(self::$settings['add_preload'])) {
-            $preloads = wp_resource_hints([], 'preload');
-            $preload_exists = in_array($url, $preloads, true) || (
-                (stripos($head, 'rel="preload"') !== false || stripos($head, "rel='preload'") !== false) &&
-                stripos($head, $url) !== false
-            );
-            if (!$preload_exists) {
-                printf('<link rel="preload" as="image" href="%s" fetchpriority="high" />' . "\n", esc_url($url));
-            }
+        printf('<link %s />' . "\n", $attr); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+        self::$preload_printed = true;
+    }
+
+    /**
+     * Add a preconnect resource hint for the LCP image origin.
+     *
+     * @param array  $urls          URLs to print for resource hints.
+     * @param string $relation_type The relation type the URLs are printed for.
+     * @return array
+     */
+    public static function maybe_add_preconnect(array $urls, string $relation_type): array {
+        if ($relation_type !== 'preconnect' || self::$preconnect_added || empty(self::$settings['add_preconnect']) || empty(self::$candidate['url'])) {
+            return $urls;
         }
+
+        $host      = wp_parse_url(self::$candidate['url'], PHP_URL_HOST);
+        $site_host = wp_parse_url(home_url(), PHP_URL_HOST);
+
+        if (!$host || $host === $site_host) {
+            return $urls;
+        }
+
+        $existing_hosts = array_map(
+            static function ($u) {
+                return wp_parse_url($u, PHP_URL_HOST);
+            },
+            $urls
+        );
+
+        if (!in_array($host, $existing_hosts, true)) {
+            $urls[] = '//' . $host;
+        }
+
+        self::$preconnect_added = true;
+        return $urls;
     }
 
     /**
