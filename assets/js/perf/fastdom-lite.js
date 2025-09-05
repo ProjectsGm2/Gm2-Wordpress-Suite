@@ -4,6 +4,72 @@ let scheduled = false;
 
 const DEBUG = typeof window !== 'undefined' && /[?&]aePerfDebug=1\b/.test(window.location.search);
 
+// Common layout read APIs that can trigger forced synchronous layouts when
+// accessed. This list is not exhaustive but covers the most common cases we
+// want to guard against when batching DOM reads and writes.
+const LAYOUT_READ_PROPS = new Set([
+    'offsetWidth',
+    'offsetHeight',
+    'offsetTop',
+    'offsetLeft',
+    'scrollTop',
+    'scrollLeft',
+    'scrollWidth',
+    'scrollHeight',
+    'clientTop',
+    'clientLeft',
+    'clientWidth',
+    'clientHeight',
+    'getBoundingClientRect',
+    'getClientRects',
+    'getComputedStyle',
+]);
+
+/**
+ * Determine if accessing the given property is considered a layout read.
+ *
+ * @param {string} prop Property or method name being accessed.
+ * @return {boolean} Whether the access is a layout read.
+ */
+function isLayoutRead(prop) {
+    return LAYOUT_READ_PROPS.has(prop);
+}
+
+// Layout write operations. For simplicity we detect direct style mutations and
+// common DOM APIs that mutate layout such as classList operations.
+const CLASSLIST_METHODS = new Set(['add', 'remove', 'toggle', 'replace']);
+const LAYOUT_WRITE_PROPS = new Set([
+    'innerHTML',
+    'outerHTML',
+    'innerText',
+    'textContent',
+    'scrollTop',
+    'scrollLeft',
+    'appendChild',
+    'insertBefore',
+    'removeChild',
+    'replaceChild',
+    'insertAdjacentHTML',
+    'insertAdjacentElement',
+]);
+
+/**
+ * Determine if writing to the given property is considered a layout write.
+ *
+ * @param {string} prop Property or method name being set or invoked.
+ * @return {boolean} Whether the access is a layout mutation.
+ */
+function isLayoutWrite(prop) {
+    if (prop.startsWith('style.')) {
+        return true;
+    }
+    if (prop.startsWith('classList.')) {
+        const method = prop.split('.')[1];
+        return CLASSLIST_METHODS.has(method);
+    }
+    return LAYOUT_WRITE_PROPS.has(prop);
+}
+
 function schedule() {
     if (!scheduled) {
         scheduled = true;
@@ -118,4 +184,6 @@ export function mutate(fn) {
         schedule();
     });
 }
+
+export { isLayoutRead, isLayoutWrite };
 
