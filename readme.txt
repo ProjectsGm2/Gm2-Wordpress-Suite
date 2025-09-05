@@ -60,7 +60,7 @@ window.aeLazy.modules.hcaptcha = true;
 == LCP Optimization ==
 Improve Largest Contentful Paint with targeted tweaks under **SEO → Performance → LCP Optimization**. The module operates solely on the front end and supports PHP 7.4+ and WordPress 5.8+.
 
-LCP candidates are detected by preferring the featured image on singular pages, falling back to the first image in content and handling WooCommerce product images. The lookup runs automatically when `get_lcp_candidate()` is used and results are cached for sixty seconds to avoid repeated parsing.
+LCP candidates are detected by preferring the featured image on singular pages, falling back to the first image in content and handling WooCommerce product images. If no `<img>` candidate is found, enqueued styles are scanned for `background-image` rules on common hero selectors such as `.hero`, `.site-hero`, `.elementor-hero`, `.wp-block-cover` or `.slider` and the first large match is preloaded. The lookup runs automatically when `get_lcp_candidate()` is used and results are cached for sixty seconds to avoid repeated parsing.
 
 If a candidate is missing dimension metadata, the optimizer retrieves intrinsic width and height—using PHP's `getimagesize()` as a fallback—and injects the attributes to prevent Cumulative Layout Shift.
 

@@ -79,6 +79,7 @@ final class AESEO_LCP_Optimizer {
         add_filter('wp_get_attachment_image_attributes', [ __CLASS__, 'maybe_adjust_attributes' ], 10, 3);
         add_filter('wp_get_attachment_image', [ __CLASS__, 'maybe_use_picture' ], 10, 5);
         add_filter('wp_resource_hints', [ __CLASS__, 'maybe_add_preconnect' ], 10, 2);
+        add_action('wp_head', [ __CLASS__, 'detect_background_hero' ], 1);
         add_action('wp_head', [ __CLASS__, 'maybe_print_preload' ], 5);
         add_action('wp', [ __CLASS__, 'maybe_prime_candidate' ]);
         add_filter('the_content', [ __CLASS__, 'detect_from_content' ], 1);
@@ -158,6 +159,127 @@ final class AESEO_LCP_Optimizer {
         }
         remove_filter('the_content', [ __CLASS__, __FUNCTION__ ], 1);
         return $content;
+    }
+
+    /**
+     * Attempt to detect a hero image defined via CSS background-image.
+     */
+    public static function detect_background_hero(): void {
+        if (!empty(self::$candidate)) {
+            return;
+        }
+
+        $styles = wp_styles();
+        if (!($styles instanceof \WP_Styles)) {
+            return;
+        }
+
+        $css = '';
+        foreach ($styles->queue as $handle) {
+            if (empty($styles->registered[$handle])) {
+                continue;
+            }
+            $style = $styles->registered[$handle];
+
+            if (!empty($style->extra['before'])) {
+                $css .= is_array($style->extra['before']) ? implode(' ', $style->extra['before']) : (string) $style->extra['before'];
+            }
+            if (!empty($style->extra['after'])) {
+                $css .= is_array($style->extra['after']) ? implode(' ', $style->extra['after']) : (string) $style->extra['after'];
+            }
+
+            $src = $style->src;
+            if ($src) {
+                $src_url = $src;
+                if (strpos($src_url, '//') === 0) {
+                    $src_url = (is_ssl() ? 'https:' : 'http:') . $src_url;
+                } elseif (strpos($src_url, '/') === 0) {
+                    $src_url = home_url($src_url);
+                } elseif (strpos($src_url, 'http') !== 0) {
+                    $src_url = trailingslashit($styles->base_url) . ltrim($src_url, '/');
+                }
+
+                $path = self::url_to_path($src_url);
+                if ($path && file_exists($path)) {
+                    $css .= @file_get_contents($path);
+                }
+            }
+        }
+
+        if ($css === '') {
+            return;
+        }
+
+        $selectors = [ '.hero', '.site-hero', '.elementor-hero', '.wp-block-cover', '.slider' ];
+        foreach ($selectors as $selector) {
+            $pattern = '/' . preg_quote($selector, '/') . '[^{]*{[^}]*background(?:-image)?[^:]*:\s*url\(("|\')?([^"\'\)]+)\1?\)/i';
+            if (!preg_match($pattern, $css, $matches)) {
+                continue;
+            }
+
+            $url = trim($matches[2]);
+            if ($url === '') {
+                continue;
+            }
+
+            if (strpos($url, '//') === 0) {
+                $url = (is_ssl() ? 'https:' : 'http:') . $url;
+            } elseif (strpos($url, '/') === 0) {
+                $url = home_url($url);
+            }
+
+            $attachment_id = attachment_url_to_postid($url);
+            $width = 0;
+            $height = 0;
+            if ($attachment_id) {
+                $dimensions = self::get_attachment_dimensions($attachment_id);
+                $width = (int) $dimensions['width'];
+                $height = (int) $dimensions['height'];
+            } else {
+                $path = self::url_to_path($url);
+                if ($path && file_exists($path)) {
+                    $size = @getimagesize($path);
+                    if (is_array($size)) {
+                        $width = (int) ($size[0] ?? 0);
+                        $height = (int) ($size[1] ?? 0);
+                    }
+                }
+            }
+
+            if ($width && $height && $width < 400 && $height < 300) {
+                continue;
+            }
+
+            self::set_candidate([
+                'source'        => 'css-bg',
+                'attachment_id' => $attachment_id,
+                'url'           => $url,
+                'width'         => $width,
+                'height'        => $height,
+                'origin'        => wp_parse_url($url, PHP_URL_HOST) ?: '',
+                'is_background' => true,
+            ]);
+            break;
+        }
+    }
+
+    /**
+     * Convert a URL into a local filesystem path when possible.
+     *
+     * @param string $url URL to convert.
+     * @return string|null
+     */
+    private static function url_to_path(string $url): ?string {
+        $home = home_url('/');
+        if (strpos($url, $home) === 0) {
+            $relative = substr($url, strlen($home));
+            $path     = ABSPATH . ltrim($relative, '/');
+            $real     = realpath($path);
+            if ($real && file_exists($real)) {
+                return $real;
+            }
+        }
+        return null;
     }
 
     /**
