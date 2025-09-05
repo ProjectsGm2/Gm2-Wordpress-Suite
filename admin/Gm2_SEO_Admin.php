@@ -104,6 +104,7 @@ class Gm2_SEO_Admin {
         add_option('ae_perf_worker', '0');
         add_option('ae_perf_long_tasks', '0');
         add_option('ae_perf_layout_thrash', '0');
+        add_option('ae_perf_no_thrash', '0');
         add_option('ae_perf_passive_listeners', '0');
         add_option('ae_perf_dom_audit', '0');
 
@@ -1190,6 +1191,7 @@ class Gm2_SEO_Admin {
                 $perf_worker = get_option('ae_perf_worker', '0');
                 $perf_long   = get_option('ae_perf_long_tasks', '0');
                 $perf_layout = get_option('ae_perf_layout_thrash', '0');
+                $perf_no_thrash = get_option('ae_perf_no_thrash', '0');
                 $perf_passive = get_option('ae_perf_passive_listeners', '0');
                 $perf_dom = get_option('ae_perf_dom_audit', '0');
                 $script_attrs = get_option('gm2_script_attributes', []);
@@ -1298,6 +1300,7 @@ class Gm2_SEO_Admin {
                 echo '<tr><th scope="row">' . esc_html__( 'Enable Web Worker offloading', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="ae_perf_worker" value="1" ' . checked($perf_worker, '1', false) . '></label></td></tr>';
                 echo '<tr><th scope="row">' . esc_html__( 'Break up long tasks', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="ae_perf_long_tasks" value="1" ' . checked($perf_long, '1', false) . '></label></td></tr>';
                 echo '<tr><th scope="row">' . esc_html__( 'Prevent layout thrash', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="ae_perf_layout_thrash" value="1" ' . checked($perf_layout, '1', false) . '></label></td></tr>';
+                echo '<tr><th scope="row">' . esc_html__( 'Batch DOM reads & writes', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="ae_perf_no_thrash" value="1" ' . checked($perf_no_thrash, '1', false) . '></label></td></tr>';
                 echo '<tr><th scope="row">' . esc_html__( 'Passive scroll/touch listeners', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="ae_perf_passive_listeners" value="1" ' . checked($perf_passive, '1', false) . '></label></td></tr>';
                 echo '<tr><th scope="row">' . esc_html__( 'DOM size audit', 'gm2-wordpress-suite' ) . '</th><td><label><input type="checkbox" name="ae_perf_dom_audit" value="1" ' . checked($perf_dom, '1', false) . '></label></td></tr>';
 
@@ -3310,6 +3313,8 @@ class Gm2_SEO_Admin {
         update_option('ae_perf_long_tasks', $perf_long);
         $perf_layout = isset($_POST['ae_perf_layout_thrash']) ? '1' : '0';
         update_option('ae_perf_layout_thrash', $perf_layout);
+        $perf_no_thrash = isset($_POST['ae_perf_no_thrash']) ? '1' : '0';
+        update_option('ae_perf_no_thrash', $perf_no_thrash);
         $perf_passive = isset($_POST['ae_perf_passive_listeners']) ? '1' : '0';
         update_option('ae_perf_passive_listeners', $perf_passive);
         $perf_dom = isset($_POST['ae_perf_dom_audit']) ? '1' : '0';
