@@ -1,4 +1,8 @@
 (function () {
+    const dom = window.aePerf?.dom;
+    const measure = dom ? dom.measure.bind(dom) : (fn) => fn();
+    const mutate = dom ? dom.mutate.bind(dom) : (fn) => fn();
+
     const KEY = 'gm2AcTabCount';
     const ENTRY_KEY = 'gm2_entry_url';
     const CLIENT_KEY = 'gm2_ac_client_id';
@@ -204,48 +208,62 @@
         resetInactivityTimer();
     }
 
-    document.body.addEventListener('added_to_cart', () => {
-        resetInactivityTimer();
-    });
+    mutate(() => {
+        document.body.addEventListener('added_to_cart', () => {
+            resetInactivityTimer();
+        });
 
-    document.addEventListener('click', (e) => {
-        resetInactivityTimer();
-        const anchor = e.target.closest('a');
-        if (!anchor) {
-            return;
-        }
-        const href = anchor.href;
-        if (href && anchor.origin === window.location.origin) {
-            pendingTargetUrl = href;
-        } else {
-            pendingTargetUrl = undefined;
-        }
-    });
-
-    ['mousemove', 'keydown', 'scroll', 'touchstart'].forEach((ev) => {
-        document.addEventListener(ev, resetInactivityTimer, { passive: true });
-    });
-
-    document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') {
-            markActive();
-            resetInactivityTimer(false);
-        }
-    });
-    window.addEventListener('beforeunload', () => {
-        if (decrementTabs()) {
-            if (typeof pendingTargetUrl === 'undefined') {
-                send('gm2_ac_mark_abandoned');
-                clearEntryUrl();
+        document.addEventListener('click', (e) => {
+            resetInactivityTimer();
+            let anchor;
+            measure(() => {
+                anchor = e.target.closest('a');
+            });
+            if (!anchor) {
+                return;
             }
-        }
-    });
-    window.addEventListener('pagehide', () => {
-        if (decrementTabs()) {
-            if (typeof pendingTargetUrl === 'undefined') {
-                send('gm2_ac_mark_abandoned');
-                clearEntryUrl();
+            let href;
+            let origin;
+            measure(() => {
+                href = anchor.href;
+                origin = anchor.origin;
+            });
+            if (href && origin === window.location.origin) {
+                pendingTargetUrl = href;
+            } else {
+                pendingTargetUrl = undefined;
             }
-        }
-    }, { once: true });
+        });
+
+        ['mousemove', 'keydown', 'scroll', 'touchstart'].forEach((ev) => {
+            document.addEventListener(ev, resetInactivityTimer, { passive: true });
+        });
+
+        document.addEventListener('visibilitychange', () => {
+            let state;
+            measure(() => {
+                state = document.visibilityState;
+            });
+            if (state === 'visible') {
+                markActive();
+                resetInactivityTimer(false);
+            }
+        });
+        window.addEventListener('beforeunload', () => {
+            if (decrementTabs()) {
+                if (typeof pendingTargetUrl === 'undefined') {
+                    send('gm2_ac_mark_abandoned');
+                    clearEntryUrl();
+                }
+            }
+        });
+        window.addEventListener('pagehide', () => {
+            if (decrementTabs()) {
+                if (typeof pendingTargetUrl === 'undefined') {
+                    send('gm2_ac_mark_abandoned');
+                    clearEntryUrl();
+                }
+            }
+        }, { once: true });
+    });
 })();
