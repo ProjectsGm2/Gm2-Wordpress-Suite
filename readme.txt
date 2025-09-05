@@ -39,6 +39,24 @@ Key features include:
 * `wp ae-seo js:audit` CLI command audits recent posts for script counts, dequeued handles, jQuery and module usage
 * `wp ae-seo js:smoketest` runs internal requests and logs `registered`, `enqueued`, `dequeued`, `lazy`, `jquery` and `polyfills` metrics to `wp-content/ae-seo/logs/js-optimizer.log`; view the **Performance → JavaScript** report for Lighthouse-style hints like enabling lazy-load for Analytics, spotting jQuery without dependents or detecting unnecessary polyfills to troubleshoot script loading
 
+== Third-Party Script Optimization ==
+* Audit UI lists detected third-party scripts and lets you enable, disable, or lazy-load them.
+* hCaptcha support offers a privacy-friendly alternative to reCAPTCHA.
+* Lazy widget loading defers embeds until interaction using `aeLazy` triggers.
+* Tag manager consolidation merges analytics and pixel tags into a single module.
+* Self-hosted fonts mirror Google Fonts locally; run `wp gm2 fonts sync` after changing fonts to refresh the cache.
+
+Enable modules via `aeLazy`:
+
+```html
+<script>
+window.aeLazy = window.aeLazy || {};
+window.aeLazy.modules = window.aeLazy.modules || {};
+window.aeLazy.modules.hcaptcha = true;
+</script>
+<div data-ae-module="hcaptcha"></div>
+```
+
 == LCP Optimization ==
 Improve Largest Contentful Paint with targeted tweaks under **SEO → Performance → LCP Optimization**. The module operates solely on the front end and supports PHP 7.4+ and WordPress 5.8+.
 
@@ -587,6 +605,8 @@ the last 100 missing URLs to help you create new redirects.
 * **Real-time character counts** – display running totals in the SEO meta box.
 
 == Changelog ==
+= 1.6.26 =
+* Introduced Third-Party Script Optimization with audit UI, hCaptcha support, lazy widget loading, Tag Manager consolidation, and self-hosted fonts.
 = 1.6.25 =
 * LCP Optimization now generates AVIF/WebP sources with responsive `srcset`/`sizes` for the LCP image and skips themes that already output next-gen `<picture>` markup.
 = 1.6.24 =
