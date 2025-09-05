@@ -23,6 +23,7 @@ namespace Gm2 {
 namespace {
 
 use Gm2\AESEO_LCP_Optimizer;
+use Gm2\Gm2_SEO_Admin;
 
 /**
  * LCP optimizer integration tests.
@@ -442,6 +443,60 @@ class LcpOptimizerIntegrationTest extends WP_UnitTestCase {
         $this->assertSame($size[0], $dims['width']);
         $this->assertSame($size[1], $dims['height']);
         $this->assertSame(0, $aeseo_getimagesize_calls);
+    }
+
+    /**
+     * Override should take precedence over cached or featured images and be sanitized.
+     */
+    public function test_override_wins_over_cached_candidate(): void {
+        $this->reset_optimizer_state();
+        $attachment1 = self::factory()->attachment->create_upload_object(DIR_TESTDATA . '/images/canola.jpg');
+        $attachment2 = self::factory()->attachment->create_upload_object(DIR_TESTDATA . '/images/codeispoetry.png');
+        $post_id = self::factory()->post->create();
+        set_post_thumbnail($post_id, $attachment1);
+        $this->go_to(get_permalink($post_id));
+        AESEO_LCP_Optimizer::maybe_prime_candidate();
+        $candidate1 = AESEO_LCP_Optimizer::get_lcp_candidate();
+        $this->assertSame($attachment1, $candidate1['attachment_id']);
+        $admin = new Gm2_SEO_Admin();
+        $_POST = [
+            'gm2_seo_nonce' => wp_create_nonce('gm2_save_seo_meta'),
+            'aeseo_lcp_meta_nonce' => wp_create_nonce('aeseo_lcp_meta'),
+            'aeseo_lcp_override' => ' ' . $attachment2 . ' junk',
+        ];
+        $admin->save_post_meta($post_id, get_post($post_id));
+        $_POST = [];
+        $this->reset_optimizer_state();
+        $this->go_to(get_permalink($post_id));
+        $candidate2 = AESEO_LCP_Optimizer::get_lcp_candidate();
+        $this->assertSame($attachment2, $candidate2['attachment_id']);
+    }
+
+    /**
+     * save_post_meta should sanitize override values.
+     */
+    public function test_save_post_meta_sanitizes_override(): void {
+        $admin = new Gm2_SEO_Admin();
+        $post_id = self::factory()->post->create();
+        $attachment_id = self::factory()->attachment->create_upload_object(DIR_TESTDATA . '/images/canola.jpg');
+
+        $_POST = [
+            'gm2_seo_nonce' => wp_create_nonce('gm2_save_seo_meta'),
+            'aeseo_lcp_meta_nonce' => wp_create_nonce('aeseo_lcp_meta'),
+            'aeseo_lcp_override' => 'https://example.com/img.jpg<script>',
+        ];
+        $admin->save_post_meta($post_id, get_post($post_id));
+        $this->assertSame('https://example.com/img.jpg', get_post_meta($post_id, '_aeseo_lcp_override', true));
+
+        $_POST = [
+            'gm2_seo_nonce' => wp_create_nonce('gm2_save_seo_meta'),
+            'aeseo_lcp_meta_nonce' => wp_create_nonce('aeseo_lcp_meta'),
+            'aeseo_lcp_override' => ' ' . $attachment_id . 'junk',
+        ];
+        $admin->save_post_meta($post_id, get_post($post_id));
+        $this->assertSame((string) $attachment_id, get_post_meta($post_id, '_aeseo_lcp_override', true));
+
+        $_POST = [];
     }
 
     /**
