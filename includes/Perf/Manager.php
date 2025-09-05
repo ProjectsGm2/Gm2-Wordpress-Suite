@@ -41,7 +41,7 @@ class Manager {
         $map = [
             'webWorker'        => 'ae_perf_worker',
             'worker'           => 'ae_perf_worker', // Legacy key for compatibility.
-            'long_tasks'       => 'ae_perf_long_tasks',
+            'longTasks'        => 'ae_perf_long_tasks',
             'noThrash'         => 'ae_perf_no_thrash',
             'passive_listeners' => 'ae_perf_passive_listeners',
             'dom_audit'        => 'ae_perf_dom_audit',

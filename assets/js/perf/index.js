@@ -50,9 +50,9 @@ window.aePerf = {
 if (flags.longTasks === true) {
     imports.push(import('./yield.js').then((m) => { window.aePerf.yield = m; }));
     imports.push(
-        import('./longtask.js').then((m) => {
-            m.init();
-            window.aePerf.getSummary = m.getSummary;
+        import('./longtask.js').then(async (m) => {
+            await m.init();
+            window.aePerf.getLongTaskSummary = m.getSummary;
         })
     );
 }
