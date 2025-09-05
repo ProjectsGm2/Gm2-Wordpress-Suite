@@ -1,4 +1,8 @@
-document.addEventListener('DOMContentLoaded', () => {
+const addPassive = !window.AE_PERF_DISABLE_PASSIVE && window.aePerf?.addPassive
+    ? window.aePerf.addPassive
+    : (el, type, handler, options) => el.addEventListener(type, handler, options);
+
+addPassive(document, 'DOMContentLoaded', () => {
     const fields = document.querySelectorAll('.gm2-geo-field');
     fields.forEach(field => {
         const mapEl = field.querySelector('.gm2-geo-map');

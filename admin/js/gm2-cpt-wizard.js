@@ -3,6 +3,9 @@
     const { render } = wp.element;
     const { Button, TextControl, SelectControl, PanelBody, Panel, NoticeList, SnackbarList } = wp.components;
     const { dispatch, useSelect } = wp.data;
+    const addPassive = !window.AE_PERF_DISABLE_PASSIVE && window.aePerf?.addPassive
+        ? window.aePerf.addPassive
+        : (el, type, handler, options) => el.addEventListener(type, handler, options);
 
     const slugify = (str) => str.toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '');
 
@@ -388,7 +391,7 @@
         );
     };
 
-    document.addEventListener('DOMContentLoaded', () => {
+    addPassive(document, 'DOMContentLoaded', () => {
         const root = document.getElementById('gm2-cpt-wizard-root');
         if(root){
             render(el(Wizard), root);

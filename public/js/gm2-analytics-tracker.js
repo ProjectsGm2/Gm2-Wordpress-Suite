@@ -2,9 +2,12 @@
     const dom = window.aePerf?.dom;
     const measure = dom ? dom.measure.bind(dom) : (fn) => fn();
     const mutate = dom ? dom.mutate.bind(dom) : (fn) => fn();
+    const addPassive = !window.AE_PERF_DISABLE_PASSIVE && window.aePerf?.addPassive
+        ? window.aePerf.addPassive
+        : (el, type, handler, options) => el.addEventListener(type, handler, options);
 
     mutate(() => {
-        document.addEventListener('DOMContentLoaded', function(){
+        addPassive(document, 'DOMContentLoaded', function(){
             if (typeof gm2Analytics === 'undefined' || !gm2Analytics.ajax_url) {
                 return;
             }
@@ -53,12 +56,12 @@
             }
 
             mutate(() => {
-                document.addEventListener('visibilitychange', handleVisibility);
-                window.addEventListener('pagehide', handleVisibility);
+                addPassive(document, 'visibilitychange', handleVisibility);
+                addPassive(window, 'pagehide', handleVisibility);
             });
 
             mutate(() => {
-                document.addEventListener('click', function(e){
+                addPassive(document, 'click', function(e){
                     var el;
                     measure(() => {
                         el = e.target;
@@ -74,7 +77,7 @@
                         identifier = el.getAttribute('href') || el.getAttribute('id') || el.getAttribute('class') || '';
                     });
                     send({ event_type: 'click', element: identifier });
-                }, true);
+                }, { capture: true });
             });
         });
     });
