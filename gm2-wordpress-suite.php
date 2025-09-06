@@ -141,6 +141,7 @@ require_once GM2_PLUGIN_DIR . 'includes/class-aeseo-settings.php';
 (new \Gm2\AE_SEO_Server_Hints())->run();
 \Gm2\AESEO_Plugin::init();
 \Gm2\AESEO_Settings::register();
+\Gm2\Perf\Settings::init();
 \Gm2\AE_SEO_Font_Manager::init();
 if (get_option('gm2_pretty_versioned_urls', '0') === '1') {
     \Gm2\Gm2_Version_Route_Apache::maybe_apply();
