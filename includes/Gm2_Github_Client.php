@@ -39,8 +39,15 @@ namespace Gm2 {
     }
 
     public function get_comments($repo, $pr_number) {
-        $url = sprintf('https://api.github.com/repos/%s/pulls/%d/comments', $repo, $pr_number);
-        return $this->get($url);
+        $url    = sprintf('https://api.github.com/repos/%s/pulls/%d/comments', $repo, $pr_number);
+        $result = $this->get($url);
+        if (is_wp_error($result)) {
+            return $result;
+        }
+        if (!is_array($result)) {
+            return new \WP_Error('github_invalid_response', __('Invalid response from GitHub', 'gm2-wordpress-suite'));
+        }
+        return $result;
     }
 }
 }
@@ -48,8 +55,7 @@ namespace Gm2 {
 namespace {
     function gm2_get_github_comments($repo, $pr_number) {
         $client = new \Gm2\Gm2_Github_Client();
-        $result = $client->get_comments($repo, $pr_number);
-        return is_wp_error($result) ? [] : $result;
+        return $client->get_comments($repo, $pr_number);
     }
 }
 
