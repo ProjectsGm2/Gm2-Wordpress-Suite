@@ -13,7 +13,11 @@
     }
 
     function App() {
-        const [comments, setComments] = useState(gm2GithubComments.comments || []);
+        const [allComments, setAllComments] = useState(gm2GithubComments.comments || []);
+        const [codexOnly, setCodexOnly] = useState(true);
+        const comments = codexOnly
+            ? allComments.filter(c => c.user && c.user.login === 'ChatGPT Codex Connector')
+            : allComments;
         const [notice, setNotice] = useState(gm2GithubComments.error || '');
         const [noticeIsError, setNoticeIsError] = useState(!!gm2GithubComments.error);
 
@@ -34,7 +38,7 @@
             }).then(r => r.json()).then(data => {
                 if (data.success) {
                     setNotice(data.data.message);
-                    setComments(data.data.comments || []);
+                    setAllComments(data.data.comments || []);
                 } else {
                     setNotice(data.data || 'Error');
                     setNoticeIsError(true);
@@ -44,6 +48,14 @@
 
         return h('div', null, [
             notice ? h('div', {className: noticeIsError ? 'gm2-notice gm2-notice-error' : 'gm2-notice'}, notice) : null,
+            h('label', {className: 'gm2-comment-filter'}, [
+                h('input', {
+                    type: 'checkbox',
+                    checked: codexOnly,
+                    onChange: e => setCodexOnly(e.target.checked)
+                }),
+                codexOnly ? 'ChatGPT Codex Connector only' : 'All comments'
+            ]),
             comments.map(c => h(CommentItem, {key: c.id, comment: c, onApply: applyPatch}))
         ]);
     }
