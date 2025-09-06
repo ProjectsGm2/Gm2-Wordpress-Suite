@@ -106,7 +106,7 @@ require_once GM2_PLUGIN_DIR . 'includes/Gm2_Ajax_Upload.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Cache_Audit.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Script_Attributes.php';
 require_once GM2_PLUGIN_DIR . 'includes/functions-assets.php';
-require_once GM2_PLUGIN_DIR . 'includes/Perf/Manager.php';
+require_once GM2_PLUGIN_DIR . 'includes/Perf/Enqueue.php';
 require_once GM2_PLUGIN_DIR . 'includes/class-ae-seo-js-detector.php';
 require_once GM2_PLUGIN_DIR . 'includes/class-ae-seo-js-manager.php';
 require_once GM2_PLUGIN_DIR . 'includes/class-ae-seo-js-controller.php';
@@ -141,6 +141,7 @@ require_once GM2_PLUGIN_DIR . 'includes/class-aeseo-settings.php';
 (new \Gm2\AE_SEO_Server_Hints())->run();
 \Gm2\AESEO_Plugin::init();
 \Gm2\AESEO_Settings::register();
+\Gm2\Perf\Enqueue::init();
 \Gm2\Perf\Settings::init();
 \Gm2\AE_SEO_Font_Manager::init();
 if (get_option('gm2_pretty_versioned_urls', '0') === '1') {
