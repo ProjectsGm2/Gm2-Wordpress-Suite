@@ -6,6 +6,8 @@ if (!defined('ABSPATH')) {
 }
 
 class Gm2_Github_Comments_Admin {
+    private $error = '';
+
     public function run() {
         add_action('admin_menu', [ $this, 'add_menu' ]);
         add_action('admin_enqueue_scripts', [ $this, 'enqueue_scripts' ]);
@@ -35,25 +37,33 @@ class Gm2_Github_Comments_Admin {
             file_exists(GM2_PLUGIN_DIR . 'admin/js/gm2-github-comments.js') ? filemtime(GM2_PLUGIN_DIR . 'admin/js/gm2-github-comments.js') : GM2_VERSION,
             true
         );
+        $comments = $this->get_comments();
         wp_localize_script(
             'gm2-github-comments',
             'gm2GithubComments',
             [
                 'ajax_url' => admin_url('admin-ajax.php'),
                 'nonce'    => wp_create_nonce('gm2_apply_patch'),
-                'comments' => $this->get_comments(),
+                'comments' => $comments,
+                'error'    => $this->error,
             ]
         );
     }
 
     private function get_comments() {
-        $repo = isset($_GET['repo']) ? sanitize_text_field(wp_unslash($_GET['repo'])) : get_option('gm2_last_repo', '');
-        $pr   = isset($_GET['pr']) ? absint($_GET['pr']) : 0;
+        $repo       = isset($_GET['repo']) ? sanitize_text_field(wp_unslash($_GET['repo'])) : get_option('gm2_last_repo', '');
+        $pr         = isset($_GET['pr']) ? absint($_GET['pr']) : 0;
+        $this->error = '';
         if ($repo !== '') {
             update_option('gm2_last_repo', $repo);
         }
         if ($repo !== '' && $pr > 0) {
-            return gm2_get_github_comments($repo, $pr);
+            $comments = gm2_get_github_comments($repo, $pr);
+            if (is_wp_error($comments)) {
+                $this->error = $comments->get_error_message();
+                return [];
+            }
+            return $comments;
         }
         return [];
     }

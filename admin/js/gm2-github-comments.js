@@ -14,10 +14,12 @@
 
     function App() {
         const [comments, setComments] = useState(gm2GithubComments.comments || []);
-        const [notice, setNotice] = useState('');
+        const [notice, setNotice] = useState(gm2GithubComments.error || '');
+        const [noticeIsError, setNoticeIsError] = useState(!!gm2GithubComments.error);
 
         function applyPatch(file, patch) {
             setNotice('');
+            setNoticeIsError(false);
             const body = new URLSearchParams({
                 action: 'gm2_apply_patch',
                 nonce: gm2GithubComments.nonce,
@@ -35,12 +37,13 @@
                     setComments(data.data.comments || []);
                 } else {
                     setNotice(data.data || 'Error');
+                    setNoticeIsError(true);
                 }
             });
         }
 
         return h('div', null, [
-            notice ? h('div', {className: 'gm2-notice'}, notice) : null,
+            notice ? h('div', {className: noticeIsError ? 'gm2-notice gm2-notice-error' : 'gm2-notice'}, notice) : null,
             comments.map(c => h(CommentItem, {key: c.id, comment: c, onApply: applyPatch}))
         ]);
     }
