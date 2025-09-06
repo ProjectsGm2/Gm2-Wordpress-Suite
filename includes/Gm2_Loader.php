@@ -32,6 +32,9 @@ class Gm2_Loader {
 
             $links = new Gm2_Link_Counts();
             $links->run();
+
+            $github = new Gm2_Github_Settings();
+            $github->run();
         }
 
         $enable_seo       = get_option('gm2_enable_seo', '1') === '1';
