@@ -137,15 +137,56 @@ class Gm2_Github_Comments_Admin {
         if (!current_user_can('manage_options')) {
             wp_send_json_error(__('You do not have permission to apply patches.', 'gm2-wordpress-suite'));
         }
-        $file  = isset($_POST['file']) ? sanitize_text_field(wp_unslash($_POST['file'])) : '';
-        $patch = isset($_POST['patch']) ? wp_unslash($_POST['patch']) : '';
-        $result = gm2_apply_patch($file, $patch);
-        if (is_wp_error($result)) {
-            wp_send_json_error($result->get_error_message());
+
+        $patches = isset($_POST['patches']) ? json_decode(wp_unslash($_POST['patches']), true) : null;
+        if (!is_array($patches)) {
+            $file  = isset($_POST['file']) ? sanitize_text_field(wp_unslash($_POST['file'])) : '';
+            $patch = isset($_POST['patch']) ? wp_unslash($_POST['patch']) : '';
+            $patches = [ [ 'file' => $file, 'patch' => $patch ] ];
         }
-        wp_send_json_success([
-            'message'  => __('Patch applied', 'gm2-wordpress-suite'),
+
+        $results  = [];
+        $all_ok   = true;
+
+        foreach ($patches as $p) {
+            $file  = isset($p['file']) ? sanitize_text_field(wp_unslash($p['file'])) : '';
+            $patch = isset($p['patch']) ? wp_unslash($p['patch']) : '';
+            if ($file === '' || $patch === '') {
+                $results[] = [
+                    'file'    => $file,
+                    'message' => __('Invalid patch data', 'gm2-wordpress-suite'),
+                    'success' => false,
+                ];
+                $all_ok = false;
+                continue;
+            }
+            $result = gm2_apply_patch($file, $patch);
+            if (is_wp_error($result)) {
+                $results[] = [
+                    'file'    => $file,
+                    'message' => $result->get_error_message(),
+                    'success' => false,
+                ];
+                $all_ok = false;
+            } else {
+                $results[] = [
+                    'file'    => $file,
+                    'message' => __('Patch applied', 'gm2-wordpress-suite'),
+                    'success' => true,
+                ];
+            }
+        }
+
+        $response = [
+            'results'  => $results,
             'comments' => $this->get_comments(),
-        ]);
+        ];
+        if ($all_ok) {
+            $response['message'] = __('Patches applied', 'gm2-wordpress-suite');
+            wp_send_json_success($response);
+        }
+
+        $response['message'] = __('Some patches failed', 'gm2-wordpress-suite');
+        wp_send_json_error($response);
     }
 }
