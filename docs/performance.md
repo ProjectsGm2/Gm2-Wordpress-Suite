@@ -98,3 +98,13 @@ add_filter( 'ae/perf/passive_allow_patch', '__return_false' );
 ```
 
 The patch skips nested browsing contexts, but interacting with iframes may still require opting out. Calling `preventDefault()` inside a patched listener logs a console warning and does not stop the default action.
+
+## Troubleshooting
+
+Widgets such as Google reCAPTCHA or carousel scripts may interfere with the passive listener patch. To disable only the patch while keeping other helpers active, filter the flag:
+
+```php
+add_filter('ae/perf/flag', fn($on,$feature)=> $feature==='passivePatch' ? false : $on, 10, 2);
+```
+
+This opts out of the patch without affecting other performance features.
