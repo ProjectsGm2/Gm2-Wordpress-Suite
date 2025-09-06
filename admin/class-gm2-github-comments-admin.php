@@ -47,8 +47,11 @@ class Gm2_Github_Comments_Admin {
     }
 
     private function get_comments() {
-        $repo = isset($_GET['repo']) ? sanitize_text_field(wp_unslash($_GET['repo'])) : '';
+        $repo = isset($_GET['repo']) ? sanitize_text_field(wp_unslash($_GET['repo'])) : get_option('gm2_last_repo', '');
         $pr   = isset($_GET['pr']) ? absint($_GET['pr']) : 0;
+        if ($repo !== '') {
+            update_option('gm2_last_repo', $repo);
+        }
         if ($repo !== '' && $pr > 0) {
             return gm2_get_github_comments($repo, $pr);
         }
@@ -59,7 +62,17 @@ class Gm2_Github_Comments_Admin {
         if (!current_user_can('manage_options')) {
             return;
         }
-        echo '<div class="wrap"><h1>' . esc_html__('PR Reviews', 'gm2-wordpress-suite') . '</h1><div id="gm2-github-comments-root"></div></div>';
+        $repo = isset($_GET['repo']) ? sanitize_text_field(wp_unslash($_GET['repo'])) : get_option('gm2_last_repo', '');
+        $pr   = isset($_GET['pr']) ? absint($_GET['pr']) : 0;
+        echo '<div class="wrap"><h1>' . esc_html__('PR Reviews', 'gm2-wordpress-suite') . '</h1>';
+        echo '<form method="get"><input type="hidden" name="page" value="gm2-github-comments" />';
+        echo '<p><label>' . esc_html__('Repository (owner/repo)', 'gm2-wordpress-suite') . ' <input type="text" name="repo" value="' . esc_attr($repo) . '" /></label></p>';
+        echo '<p><label>' . esc_html__('PR Number', 'gm2-wordpress-suite') . ' <input type="number" name="pr" value="' . ($pr > 0 ? esc_attr($pr) : '') . '" /></label></p>';
+        echo '<p><input type="submit" class="button button-primary" value="' . esc_attr__('Load', 'gm2-wordpress-suite') . '" /></p></form>';
+        if ($repo === '' || $pr <= 0) {
+            echo '<p>' . esc_html__('No PR selected', 'gm2-wordpress-suite') . '</p>';
+        }
+        echo '<div id="gm2-github-comments-root"></div></div>';
     }
 
     public function ajax_apply_patch() {
