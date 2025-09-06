@@ -87,6 +87,9 @@ class Gm2_Github_Comments_Admin {
 
     public function ajax_apply_patch() {
         check_ajax_referer('gm2_apply_patch', 'nonce');
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(__('You do not have permission to apply patches.', 'gm2-wordpress-suite'));
+        }
         $file  = isset($_POST['file']) ? sanitize_text_field(wp_unslash($_POST['file'])) : '';
         $patch = isset($_POST['patch']) ? wp_unslash($_POST['patch']) : '';
         $result = gm2_apply_patch($file, $patch);
