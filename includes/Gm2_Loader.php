@@ -35,6 +35,9 @@ class Gm2_Loader {
 
             $github = new Gm2_Github_Settings();
             $github->run();
+
+            $github_comments = new Gm2_Github_Comments_Admin();
+            $github_comments->run();
         }
 
         $enable_seo       = get_option('gm2_enable_seo', '1') === '1';
