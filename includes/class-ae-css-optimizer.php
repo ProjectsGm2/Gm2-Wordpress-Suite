@@ -90,14 +90,14 @@ final class AE_CSS_Optimizer {
         if (!$styles instanceof \WP_Styles) {
             return;
         }
-        if (empty($this->settings['flags']['woo']) && !self::is_woocommerce_context()) {
+        if (\class_exists('WooCommerce') && empty($this->settings['flags']['woo']) && !self::is_woocommerce_context()) {
             foreach ($styles->queue as $handle) {
                 if (strpos($handle, 'woocommerce') === 0) {
                     \wp_dequeue_style($handle);
                 }
             }
         }
-        if (empty($this->settings['flags']['elementor']) && !self::is_elementor_context()) {
+        if (\did_action('elementor/loaded') && empty($this->settings['flags']['elementor']) && !self::is_elementor_context()) {
             foreach ($styles->queue as $handle) {
                 if (strpos($handle, 'elementor') === 0) {
                     \wp_dequeue_style($handle);
