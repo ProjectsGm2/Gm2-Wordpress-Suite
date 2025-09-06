@@ -38,6 +38,18 @@ namespace Gm2 {
         return $body === '' ? [] : json_decode($body, true);
     }
 
+    public function list_open_pr_numbers($repo) {
+        $url    = sprintf('https://api.github.com/repos/%s/pulls?state=open', $repo);
+        $result = $this->get($url);
+        if (is_wp_error($result)) {
+            return $result;
+        }
+        if (!is_array($result)) {
+            return new \WP_Error('github_invalid_response', __('Invalid response from GitHub', 'gm2-wordpress-suite'));
+        }
+        return array_map('intval', array_column($result, 'number'));
+    }
+
     public function get_comments($repo, $pr_number) {
         $url    = sprintf('https://api.github.com/repos/%s/pulls/%d/comments', $repo, $pr_number);
         $result = $this->get($url);
