@@ -124,14 +124,27 @@ $option_names = array(
     'gm2_project_description',
     'gm2_sc_query_limit',
     'gm2_analytics_days',
+    'ae_css_settings',
 );
+if ( is_multisite() ) {
+    // Remove options from all sites in the network.
+    $site_ids = get_sites( array( 'fields' => 'ids' ) );
+    foreach ( $site_ids as $site_id ) {
+        switch_to_blog( $site_id );
+        foreach ( $option_names as $option ) {
+            delete_option( $option );
+        }
+    }
+    restore_current_blog();
 
-foreach ( $option_names as $option ) {
-    if ( is_multisite() ) {
+    // Remove network-level options.
+    foreach ( $option_names as $option ) {
         delete_site_option( $option );
     }
-
-    delete_option( $option );
+} else {
+    foreach ( $option_names as $option ) {
+        delete_option( $option );
+    }
 }
 
 // Remove per-user Bulk AI settings stored as user meta.
@@ -141,7 +154,7 @@ $user_meta_keys = array(
     'gm2_bulk_ai_post_type',
     'gm2_bulk_ai_term',
 );
-$user_ids = get_users( array( 'fields' => 'ID' ) );
+$user_ids = get_users( array( 'fields' => 'ID', 'blog_id' => 0 ) );
 foreach ( $user_ids as $uid ) {
     foreach ( $user_meta_keys as $key ) {
         delete_user_meta( $uid, $key );
