@@ -107,6 +107,7 @@ require_once GM2_PLUGIN_DIR . 'includes/Gm2_Cache_Audit.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Script_Attributes.php';
 require_once GM2_PLUGIN_DIR . 'includes/functions-assets.php';
 require_once GM2_PLUGIN_DIR . 'includes/Perf/Enqueue.php';
+require_once GM2_PLUGIN_DIR . 'includes/class-ae-css-optimizer.php';
 require_once GM2_PLUGIN_DIR . 'includes/class-ae-seo-js-detector.php';
 require_once GM2_PLUGIN_DIR . 'includes/class-ae-seo-js-manager.php';
 require_once GM2_PLUGIN_DIR . 'includes/class-ae-seo-js-controller.php';
@@ -119,6 +120,7 @@ require_once GM2_PLUGIN_DIR . 'includes/render-optimizer/class-ae-seo-render-opt
 require_once GM2_PLUGIN_DIR . 'includes/Versioning_MTime.php';
 require_once GM2_PLUGIN_DIR . 'admin/class-ae-seo-debug-logs-admin.php';
 require_once GM2_PLUGIN_DIR . 'admin/class-ae-seo-server-hints.php';
+require_once GM2_PLUGIN_DIR . 'admin/class-ae-css-admin.php';
 require_once GM2_PLUGIN_DIR . 'includes/class-aeseo-plugin.php';
 require_once GM2_PLUGIN_DIR . 'includes/class-aeseo-settings.php';
 
@@ -139,6 +141,7 @@ require_once GM2_PLUGIN_DIR . 'includes/class-aeseo-settings.php';
 \Gm2\Versioning_MTime::init();
 (new \Gm2\AE_SEO_Debug_Logs_Admin())->run();
 (new \Gm2\AE_SEO_Server_Hints())->run();
+(new \Gm2\AE_CSS_Admin())->run();
 \Gm2\AESEO_Plugin::init();
 \Gm2\AESEO_Settings::register();
 \Gm2\Perf\Enqueue::init();
