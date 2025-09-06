@@ -39,12 +39,12 @@ class Manager {
      */
     private static function get_flags(): array {
         $map = [
-            'webWorker'        => 'ae_perf_worker',
-            'worker'           => 'ae_perf_worker', // Legacy key for compatibility.
-            'longTasks'        => 'ae_perf_long_tasks',
-            'noThrash'         => 'ae_perf_no_thrash',
-            'passive_listeners' => 'ae_perf_passive_listeners',
-            'dom_audit'        => 'ae_perf_dom_audit',
+            'webWorker'         => 'ae_perf_webworker',
+            'worker'            => 'ae_perf_webworker', // Legacy key for compatibility.
+            'longTasks'         => 'ae_perf_longtasks',
+            'noThrash'          => 'ae_perf_nothrash',
+            'passive_listeners' => 'ae_perf_passive',
+            'dom_audit'         => 'ae_perf_domaudit',
         ];
         $flags = [];
         foreach ($map as $feature => $option) {
@@ -65,7 +65,8 @@ class Manager {
          *
          * @param bool $allow_patch Whether the passive listeners patch is allowed.
          */
-        $flags['passivePatch'] = $flags['passive_listeners'] && apply_filters('ae/perf/passive_allow_patch', true);
+        $allow_patch           = get_option('ae_perf_passive_patch', '0') === '1';
+        $flags['passivePatch'] = $flags['passive_listeners'] && $allow_patch && apply_filters('ae/perf/passive_allow_patch', true);
 
         return $flags;
     }
