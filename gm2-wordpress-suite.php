@@ -126,6 +126,12 @@ require_once GM2_PLUGIN_DIR . 'admin/class-ae-css-admin.php';
 require_once GM2_PLUGIN_DIR . 'includes/class-aeseo-plugin.php';
 require_once GM2_PLUGIN_DIR . 'includes/class-aeseo-settings.php';
 
+function gm2_css_optimizer_init() {
+    \AE\CSS\AE_CSS_Optimizer::get_instance()->init();
+    (new \Gm2\AE_CSS_Admin())->run();
+}
+add_action('init', 'gm2_css_optimizer_init');
+
 \Gm2\Gm2_REST_Visibility::init();
 \Gm2\Gm2_REST_Rate_Limiter::init();
 \Gm2\Gm2_REST_Media::init();
@@ -143,7 +149,6 @@ require_once GM2_PLUGIN_DIR . 'includes/class-aeseo-settings.php';
 \Gm2\Versioning_MTime::init();
 (new \Gm2\AE_SEO_Debug_Logs_Admin())->run();
 (new \Gm2\AE_SEO_Server_Hints())->run();
-(new \Gm2\AE_CSS_Admin())->run();
 \Gm2\AESEO_Plugin::init();
 \Gm2\AESEO_Settings::register();
 \Gm2\Perf\Enqueue::init();
@@ -272,6 +277,11 @@ function gm2_activate_plugin() {
     \Gm2\Gm2_Cache_Headers_Nginx::maybe_apply();
 }
 register_activation_hook(__FILE__, 'gm2_activate_plugin');
+
+function gm2_activate_css_optimizer_defaults() {
+    add_option('ae_css_settings', [ 'flags' => [], 'critical' => [], 'queue' => [] ]);
+}
+register_activation_hook(__FILE__, 'gm2_activate_css_optimizer_defaults');
 
 function gm2_deactivate_plugin() {
     flush_rewrite_rules();
