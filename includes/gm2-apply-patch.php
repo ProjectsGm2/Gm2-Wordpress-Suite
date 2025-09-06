@@ -12,6 +12,11 @@
  * @return true|\WP_Error True on success, WP_Error on failure.
  */
 function gm2_apply_patch($file, $patch) {
+    if (!current_user_can('manage_options')) {
+        $error = new \WP_Error('permission', __('You do not have permission to apply patches.', 'gm2-wordpress-suite'));
+        error_log('gm2_apply_patch: ' . $error->get_error_message());
+        return $error;
+    }
     if (!function_exists('WP_Filesystem')) {
         require_once ABSPATH . 'wp-admin/includes/file.php';
     }
