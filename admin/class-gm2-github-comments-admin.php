@@ -117,7 +117,12 @@ class Gm2_Github_Comments_Admin {
         $this->token_result = $client->validate_token();
         echo '<div class="wrap"><h1>' . esc_html__('PR Reviews', 'gm2-wordpress-suite') . '</h1>';
         if (is_wp_error($this->token_result)) {
-            echo '<div class="notice notice-error"><p>' . esc_html($this->token_result->get_error_message()) . '</p></div>';
+            echo '<div class="notice notice-error"><p>' . esc_html($this->token_result->get_error_message());
+            if ($this->token_result->get_error_code() === 'github_no_token') {
+                $settings_url = esc_url(admin_url('admin.php?page=gm2-github-settings'));
+                echo ' <a href="' . $settings_url . '">' . esc_html__('Configure your token on the GitHub settings page', 'gm2-wordpress-suite') . '</a>';
+            }
+            echo '</p></div>';
         } else {
             $login = isset($this->token_result['login']) ? $this->token_result['login'] : '';
             if ($login !== '') {
