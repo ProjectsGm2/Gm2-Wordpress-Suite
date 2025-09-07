@@ -196,16 +196,16 @@
         if (btn) {
             btn.addEventListener('click', function(){
                 const repoInput = document.getElementById('gm2-repo');
-                const prInput = document.getElementById('gm2-pr');
+                const prSelect = document.getElementById('gm2-pr');
                 const repo = repoInput ? repoInput.value.trim() : '';
-                const pr = prInput ? prInput.value.trim() : '';
+                const pr = prSelect ? prSelect.options[prSelect.selectedIndex].value : '';
                 gm2GithubComments.currentRepo = repo;
                 gm2GithubComments.currentPr = pr;
                 const body = new URLSearchParams({
                     action: 'gm2_get_github_comments',
                     nonce: gm2GithubComments.commentsNonce,
                     repo: repo,
-                    pr: pr
+                    pr: pr === 'all' ? 'all' : pr
                 });
                 document.dispatchEvent(new CustomEvent('gm2CommentsLoading'));
                 fetch(gm2GithubComments.ajax_url, {

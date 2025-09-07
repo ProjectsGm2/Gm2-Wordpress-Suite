@@ -112,7 +112,6 @@ class Gm2_Github_Comments_Admin {
             return;
         }
         $repo   = get_option('gm2_last_repo', '');
-        $pr     = '';
         $client = new Gm2_Github_Client();
         $this->token_result = $client->validate_token();
         echo '<div class="wrap"><h1>' . esc_html__('PR Reviews', 'gm2-wordpress-suite') . '</h1>';
@@ -125,7 +124,23 @@ class Gm2_Github_Comments_Admin {
             }
         }
         echo '<p><label>' . esc_html__('Repository (owner/repo)', 'gm2-wordpress-suite') . ' <input type="text" id="gm2-repo" value="' . esc_attr($repo) . '" /></label></p>';
-        echo '<p><label>' . esc_html__('PR Number', 'gm2-wordpress-suite') . ' <input type="text" id="gm2-pr" value="' . esc_attr($pr) . '" /></label></p>';
+
+        $numbers = [];
+        if ($repo !== '' && !is_wp_error($this->token_result)) {
+            $numbers = $client->list_open_pr_numbers($repo);
+            if (is_wp_error($numbers)) {
+                echo '<div class="notice notice-error"><p>' . esc_html($numbers->get_error_message()) . '</p></div>';
+                $numbers = [];
+            }
+        }
+
+        echo '<p><label>' . esc_html__('PR Number', 'gm2-wordpress-suite') . ' <select id="gm2-pr">';
+        echo '<option value="all">' . esc_html__('All PRs', 'gm2-wordpress-suite') . '</option>';
+        foreach ($numbers as $number) {
+            echo '<option value="' . esc_attr($number) . '">' . esc_html($number) . '</option>';
+        }
+        echo '</select></label></p>';
+
         echo '<p><button type="button" class="button button-primary" id="gm2-load-comments">' . esc_html__('Load', 'gm2-wordpress-suite') . '</button></p>';
         echo '<div id="gm2-github-comments-root"></div></div>';
     }
