@@ -7,6 +7,7 @@ if (!defined('ABSPATH')) {
 
 class Gm2_Github_Comments_Admin {
     private $error = '';
+    private $token_result = null;
 
     public function run() {
         add_action('admin_menu', [ $this, 'add_menu' ]);
@@ -28,6 +29,13 @@ class Gm2_Github_Comments_Admin {
 
     public function enqueue_scripts($hook) {
         if ($hook !== 'toplevel_page_gm2-github-comments') {
+            return;
+        }
+        if ($this->token_result === null) {
+            $client             = new Gm2_Github_Client();
+            $this->token_result = $client->validate_token();
+        }
+        if (is_wp_error($this->token_result)) {
             return;
         }
         wp_enqueue_script(
@@ -106,17 +114,29 @@ class Gm2_Github_Comments_Admin {
         if (!current_user_can('manage_options')) {
             return;
         }
-        $repo        = isset($_GET['repo']) ? sanitize_text_field(wp_unslash($_GET['repo'])) : get_option('gm2_last_repo', '');
-        $pr          = isset($_GET['pr']) ? sanitize_text_field(wp_unslash($_GET['pr'])) : '';
-        $client      = new Gm2_Github_Client();
-        $pr_numbers  = $repo !== '' ? $client->list_open_pr_numbers($repo) : [];
-        if (is_wp_error($pr_numbers)) {
-            $pr_numbers = [];
+        $repo   = isset($_GET['repo']) ? sanitize_text_field(wp_unslash($_GET['repo'])) : get_option('gm2_last_repo', '');
+        $pr     = isset($_GET['pr']) ? sanitize_text_field(wp_unslash($_GET['pr'])) : '';
+        $client = new Gm2_Github_Client();
+        $this->token_result = $client->validate_token();
+        $pr_numbers         = [];
+        if (!is_wp_error($this->token_result) && $repo !== '') {
+            $pr_numbers = $client->list_open_pr_numbers($repo);
+            if (is_wp_error($pr_numbers)) {
+                $pr_numbers = [];
+            }
         }
         if ($pr === '' && !empty($pr_numbers)) {
             $pr = (string) $pr_numbers[0];
         }
         echo '<div class="wrap"><h1>' . esc_html__('PR Reviews', 'gm2-wordpress-suite') . '</h1>';
+        if (is_wp_error($this->token_result)) {
+            echo '<div class="notice notice-error"><p>' . esc_html($this->token_result->get_error_message()) . '</p></div>';
+        } else {
+            $login = isset($this->token_result['login']) ? $this->token_result['login'] : '';
+            if ($login !== '') {
+                echo '<div class="notice notice-success"><p>' . sprintf(esc_html__('Connected to GitHub as %s', 'gm2-wordpress-suite'), esc_html($login)) . '</p></div>';
+            }
+        }
         echo '<form method="get"><input type="hidden" name="page" value="gm2-github-comments" />';
         echo '<p><label>' . esc_html__('Repository (owner/repo)', 'gm2-wordpress-suite') . ' <input type="text" name="repo" value="' . esc_attr($repo) . '" /></label></p>';
         echo '<p><label>' . esc_html__('PR Number', 'gm2-wordpress-suite') . ' <select name="pr">';
