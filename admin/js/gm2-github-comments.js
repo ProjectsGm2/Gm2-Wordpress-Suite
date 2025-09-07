@@ -1,5 +1,5 @@
 (function(wp){
-    const { createElement: h, render, useState } = wp.element;
+    const { createElement: h, render, useState, useEffect } = wp.element;
 
     function CommentItem({comment, onApply, selected, onToggle}) {
         const patchMatch = comment.body && comment.body.match(/```suggestion\n([\s\S]*?)\n```/);
@@ -20,7 +20,12 @@
     }
 
     function App() {
-        const [allComments, setAllComments] = useState(gm2GithubComments.comments || []);
+        const [allComments, setAllComments] = useState([]);
+        const [loading, setLoading] = useState(true);
+        useEffect(() => {
+            setAllComments(gm2GithubComments.comments || []);
+            setLoading(false);
+        }, []);
         const [codexOnly, setCodexOnly] = useState(true);
         const comments = codexOnly
             ? allComments.filter(c => c.user && c.user.login === 'ChatGPT Codex Connector')
@@ -32,6 +37,7 @@
         function applyPatch(file, patch) {
             setNotice('');
             setNoticeIsError(false);
+            setLoading(true);
             const body = new URLSearchParams({
                 action: 'gm2_apply_patch',
                 nonce: gm2GithubComments.nonce,
@@ -56,7 +62,7 @@
                     setAllComments(data.data.comments || []);
                     setSelected({});
                 }
-            });
+            }).finally(() => setLoading(false));
         }
 
         function applySelected() {
@@ -71,6 +77,7 @@
             }
             setNotice('');
             setNoticeIsError(false);
+            setLoading(true);
             const body = new URLSearchParams({
                 action: 'gm2_apply_patch',
                 nonce: gm2GithubComments.nonce,
@@ -94,7 +101,7 @@
                     setAllComments(data.data.comments || []);
                     setSelected({});
                 }
-            });
+            }).finally(() => setLoading(false));
         }
 
         const toggleSelect = (id, checked) => {
@@ -118,7 +125,8 @@
         }
 
         return h('div', null, [
-            notice ? h('div', {className: noticeIsError ? 'gm2-notice gm2-notice-error' : 'gm2-notice'}, notice) : null,
+            loading ? h('div', {className: 'gm2-notice'}, 'Loading comments...') :
+                (notice ? h('div', {className: noticeIsError ? 'gm2-notice gm2-notice-error' : 'gm2-notice'}, notice) : null),
             h('label', {className: 'gm2-comment-filter'}, [
                 h('input', {
                     type: 'checkbox',
@@ -138,6 +146,7 @@
                 ]),
                 h('button', {onClick: applySelected}, 'Apply Selected Patches')
             ]) : null,
+            !loading && comments.length === 0 ? h('p', {className: 'gm2-no-comments'}, 'No comments found') : null,
             comments.map(c => h(CommentItem, {
                 key: c.id,
                 comment: c,
