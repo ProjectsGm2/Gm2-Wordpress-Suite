@@ -42,7 +42,9 @@
                 action: 'gm2_apply_patch',
                 nonce: gm2GithubComments.nonce,
                 file: file,
-                patch: patch
+                patch: patch,
+                repo: gm2GithubComments.currentRepo || '',
+                pr: gm2GithubComments.currentPr || ''
             });
             fetch(gm2GithubComments.ajax_url, {
                 method: 'POST',
@@ -81,7 +83,9 @@
             const body = new URLSearchParams({
                 action: 'gm2_apply_patch',
                 nonce: gm2GithubComments.nonce,
-                patches: JSON.stringify(patches)
+                patches: JSON.stringify(patches),
+                repo: gm2GithubComments.currentRepo || '',
+                pr: gm2GithubComments.currentPr || ''
             });
             fetch(gm2GithubComments.ajax_url, {
                 method: 'POST',
@@ -124,6 +128,32 @@
             setSelected(newSel);
         }
 
+        useEffect(() => {
+            const loadingHandler = () => {
+                setLoading(true);
+                setNotice('');
+                setNoticeIsError(false);
+            };
+            const loadedHandler = e => {
+                setLoading(false);
+                if (e.detail && e.detail.error) {
+                    setNotice(e.detail.error);
+                    setNoticeIsError(true);
+                    setAllComments([]);
+                    setSelected({});
+                } else {
+                    setAllComments(e.detail && e.detail.comments ? e.detail.comments : []);
+                    setSelected({});
+                }
+            };
+            document.addEventListener('gm2CommentsLoading', loadingHandler);
+            document.addEventListener('gm2CommentsLoaded', loadedHandler);
+            return () => {
+                document.removeEventListener('gm2CommentsLoading', loadingHandler);
+                document.removeEventListener('gm2CommentsLoaded', loadedHandler);
+            };
+        }, []);
+
         return h('div', null, [
             loading ? h('div', {className: 'gm2-notice'}, 'Loading comments...') :
                 (notice ? h('div', {className: noticeIsError ? 'gm2-notice gm2-notice-error' : 'gm2-notice'}, notice) : null),
@@ -161,6 +191,39 @@
         const root = document.getElementById('gm2-github-comments-root');
         if (root) {
             render(h(App), root);
+        }
+        const btn = document.getElementById('gm2-load-comments');
+        if (btn) {
+            btn.addEventListener('click', function(){
+                const repoInput = document.getElementById('gm2-repo');
+                const prInput = document.getElementById('gm2-pr');
+                const repo = repoInput ? repoInput.value.trim() : '';
+                const pr = prInput ? prInput.value.trim() : '';
+                gm2GithubComments.currentRepo = repo;
+                gm2GithubComments.currentPr = pr;
+                const body = new URLSearchParams({
+                    action: 'gm2_get_github_comments',
+                    nonce: gm2GithubComments.commentsNonce,
+                    repo: repo,
+                    pr: pr
+                });
+                document.dispatchEvent(new CustomEvent('gm2CommentsLoading'));
+                fetch(gm2GithubComments.ajax_url, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: body.toString()
+                }).then(r => r.json()).then(data => {
+                    if (data.success) {
+                        document.dispatchEvent(new CustomEvent('gm2CommentsLoaded', {detail: {comments: data.data}}));
+                    } else {
+                        const message = data.data || data.message || 'Error';
+                        document.dispatchEvent(new CustomEvent('gm2CommentsLoaded', {detail: {error: message}}));
+                    }
+                }).catch(() => {
+                    document.dispatchEvent(new CustomEvent('gm2CommentsLoaded', {detail: {error: 'Error'}}));
+                });
+            });
         }
     });
 })(window.wp);

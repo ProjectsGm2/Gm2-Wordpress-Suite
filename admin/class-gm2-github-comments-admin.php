@@ -13,6 +13,7 @@ class Gm2_Github_Comments_Admin {
         add_action('admin_menu', [ $this, 'add_menu' ]);
         add_action('admin_enqueue_scripts', [ $this, 'enqueue_scripts' ]);
         add_action('wp_ajax_gm2_apply_patch', [ $this, 'ajax_apply_patch' ]);
+        add_action('wp_ajax_gm2_get_github_comments', [ $this, 'ajax_get_comments' ]);
     }
 
     public function add_menu() {
@@ -45,19 +46,15 @@ class Gm2_Github_Comments_Admin {
             file_exists(GM2_PLUGIN_DIR . 'admin/js/gm2-github-comments.js') ? filemtime(GM2_PLUGIN_DIR . 'admin/js/gm2-github-comments.js') : GM2_VERSION,
             true
         );
-        $comments = $this->get_comments();
-        if (is_wp_error($comments)) {
-            $this->error = $comments->get_error_message();
-            $comments    = [];
-        }
         wp_localize_script(
             'gm2-github-comments',
             'gm2GithubComments',
             [
                 'ajax_url' => admin_url('admin-ajax.php'),
                 'nonce'    => wp_create_nonce('gm2_apply_patch'),
-                'comments' => $comments,
-                'error'    => $this->error,
+                'commentsNonce' => wp_create_nonce('gm2_get_github_comments'),
+                'comments' => [],
+                'error'    => '',
             ]
         );
     }
@@ -114,20 +111,10 @@ class Gm2_Github_Comments_Admin {
         if (!current_user_can('manage_options')) {
             return;
         }
-        $repo   = isset($_GET['repo']) ? sanitize_text_field(wp_unslash($_GET['repo'])) : get_option('gm2_last_repo', '');
-        $pr     = isset($_GET['pr']) ? sanitize_text_field(wp_unslash($_GET['pr'])) : '';
+        $repo   = get_option('gm2_last_repo', '');
+        $pr     = '';
         $client = new Gm2_Github_Client();
         $this->token_result = $client->validate_token();
-        $pr_numbers         = [];
-        if (!is_wp_error($this->token_result) && $repo !== '') {
-            $pr_numbers = $client->list_open_pr_numbers($repo);
-            if (is_wp_error($pr_numbers)) {
-                $pr_numbers = [];
-            }
-        }
-        if ($pr === '' && !empty($pr_numbers)) {
-            $pr = (string) $pr_numbers[0];
-        }
         echo '<div class="wrap"><h1>' . esc_html__('PR Reviews', 'gm2-wordpress-suite') . '</h1>';
         if (is_wp_error($this->token_result)) {
             echo '<div class="notice notice-error"><p>' . esc_html($this->token_result->get_error_message()) . '</p></div>';
@@ -137,19 +124,26 @@ class Gm2_Github_Comments_Admin {
                 echo '<div class="notice notice-success"><p>' . sprintf(esc_html__('Connected to GitHub as %s', 'gm2-wordpress-suite'), esc_html($login)) . '</p></div>';
             }
         }
-        echo '<form method="get"><input type="hidden" name="page" value="gm2-github-comments" />';
-        echo '<p><label>' . esc_html__('Repository (owner/repo)', 'gm2-wordpress-suite') . ' <input type="text" name="repo" value="' . esc_attr($repo) . '" /></label></p>';
-        echo '<p><label>' . esc_html__('PR Number', 'gm2-wordpress-suite') . ' <select name="pr">';
-        echo '<option value="all"' . selected($pr === 'all', true, false) . '>' . esc_html__('All', 'gm2-wordpress-suite') . '</option>';
-        foreach ($pr_numbers as $number) {
-            echo '<option value="' . esc_attr($number) . '"' . selected($pr == $number, true, false) . '>' . esc_html($number) . '</option>';
-        }
-        echo '</select></label></p>';
-        echo '<p><input type="submit" class="button button-primary" value="' . esc_attr__('Load', 'gm2-wordpress-suite') . '" /></p></form>';
-        if ($repo === '' || $pr === '') {
-            echo '<p>' . esc_html__('No PR selected', 'gm2-wordpress-suite') . '</p>';
-        }
+        echo '<p><label>' . esc_html__('Repository (owner/repo)', 'gm2-wordpress-suite') . ' <input type="text" id="gm2-repo" value="' . esc_attr($repo) . '" /></label></p>';
+        echo '<p><label>' . esc_html__('PR Number', 'gm2-wordpress-suite') . ' <input type="text" id="gm2-pr" value="' . esc_attr($pr) . '" /></label></p>';
+        echo '<p><button type="button" class="button button-primary" id="gm2-load-comments">' . esc_html__('Load', 'gm2-wordpress-suite') . '</button></p>';
         echo '<div id="gm2-github-comments-root"></div></div>';
+    }
+
+    public function ajax_get_comments() {
+        check_ajax_referer('gm2_get_github_comments', 'nonce');
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(__('You do not have permission to fetch comments.', 'gm2-wordpress-suite'));
+        }
+        $repo = isset($_POST['repo']) ? sanitize_text_field(wp_unslash($_POST['repo'])) : '';
+        $pr   = isset($_POST['pr']) ? sanitize_text_field(wp_unslash($_POST['pr'])) : '';
+        $_GET['repo'] = $repo;
+        $_GET['pr']   = $pr;
+        $comments = $this->get_comments();
+        if (is_wp_error($comments)) {
+            wp_send_json_error($comments->get_error_message());
+        }
+        wp_send_json_success($comments);
     }
 
     public function ajax_apply_patch() {
@@ -157,6 +151,11 @@ class Gm2_Github_Comments_Admin {
         if (!current_user_can('manage_options')) {
             wp_send_json_error(__('You do not have permission to apply patches.', 'gm2-wordpress-suite'));
         }
+
+        $repo = isset($_POST['repo']) ? sanitize_text_field(wp_unslash($_POST['repo'])) : '';
+        $pr   = isset($_POST['pr']) ? sanitize_text_field(wp_unslash($_POST['pr'])) : '';
+        $_GET['repo'] = $repo;
+        $_GET['pr']   = $pr;
 
         $patches = isset($_POST['patches']) ? json_decode(wp_unslash($_POST['patches']), true) : null;
         if (!is_array($patches)) {
