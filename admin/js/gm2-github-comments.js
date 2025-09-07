@@ -26,9 +26,9 @@
             setAllComments(gm2GithubComments.comments || []);
             setLoading(false);
         }, []);
-        const [codexOnly, setCodexOnly] = useState(true);
+        const [codexOnly, setCodexOnly] = useState(false);
         const comments = codexOnly
-            ? allComments.filter(c => c.user && c.user.login === 'ChatGPT Codex Connector')
+            ? allComments.filter(c => c.user && /chatgpt-codex-connector/i.test(c.user.login))
             : allComments;
         const [notice, setNotice] = useState(gm2GithubComments.error || '');
         const [noticeIsError, setNoticeIsError] = useState(!!gm2GithubComments.error);
@@ -165,7 +165,7 @@
                     checked: codexOnly,
                     onChange: e => setCodexOnly(e.target.checked)
                 }),
-                codexOnly ? 'ChatGPT Codex Connector only' : 'All comments'
+                codexOnly ? 'AI bot only' : 'All comments'
             ]),
             patchable.length ? h('div', {className: 'gm2-comment-actions'}, [
                 h('label', null, [
