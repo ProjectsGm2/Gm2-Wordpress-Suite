@@ -17,7 +17,7 @@ class AE_SEO_JS_Detector {
      * Bootstrap the detector.
      */
     public static function init(): void {
-        add_action('init', [ __CLASS__, 'build_map' ]);
+        add_action('wp_enqueue_scripts', [ __CLASS__, 'build_map' ], PHP_INT_MAX);
         add_action('shutdown', [ __CLASS__, 'store_context' ]);
     }
 
