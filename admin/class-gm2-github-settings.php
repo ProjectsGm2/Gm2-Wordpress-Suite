@@ -67,6 +67,13 @@ class Gm2_Github_Settings {
         }
         echo '<div class="wrap">';
         echo '<h1>' . esc_html__( 'GitHub Settings', 'gm2-wordpress-suite' ) . '</h1>';
+        $client = new Gm2_Github_Client();
+        $user   = $client->validate_token();
+        if (is_wp_error($user)) {
+            echo '<div class="notice notice-error"><p>' . esc_html($user->get_error_message()) . '</p></div>';
+        } else {
+            echo '<div class="notice notice-success"><p>' . sprintf(esc_html__('Connected as %s', 'gm2-wordpress-suite'), esc_html($user['login'])) . '</p></div>';
+        }
         echo '<form action="options.php" method="post">';
         settings_fields('gm2_github');
         do_settings_sections('gm2-github-settings');

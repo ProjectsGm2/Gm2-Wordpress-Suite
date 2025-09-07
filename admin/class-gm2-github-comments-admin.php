@@ -38,6 +38,10 @@ class Gm2_Github_Comments_Admin {
             true
         );
         $comments = $this->get_comments();
+        if (is_wp_error($comments)) {
+            $this->error = $comments->get_error_message();
+            $comments    = [];
+        }
         wp_localize_script(
             'gm2-github-comments',
             'gm2GithubComments',
@@ -64,8 +68,7 @@ class Gm2_Github_Comments_Admin {
         if ($pr === '' || $pr === '0') {
             $numbers = $client->list_open_pr_numbers($repo);
             if (is_wp_error($numbers)) {
-                $this->error = $numbers->get_error_message();
-                return [];
+                return $numbers;
             }
             if (empty($numbers)) {
                 return [];
@@ -76,15 +79,13 @@ class Gm2_Github_Comments_Admin {
         if ($pr === 'all') {
             $numbers = $client->list_open_pr_numbers($repo);
             if (is_wp_error($numbers)) {
-                $this->error = $numbers->get_error_message();
-                return [];
+                return $numbers;
             }
             $comments = [];
             foreach ($numbers as $number) {
                 $pr_comments = gm2_get_github_comments($repo, $number);
                 if (is_wp_error($pr_comments)) {
-                    $this->error = $pr_comments->get_error_message();
-                    return [];
+                    return $pr_comments;
                 }
                 $comments = array_merge($comments, $pr_comments);
             }
@@ -94,8 +95,7 @@ class Gm2_Github_Comments_Admin {
         if ($pr_number > 0) {
             $comments = gm2_get_github_comments($repo, $pr_number);
             if (is_wp_error($comments)) {
-                $this->error = $comments->get_error_message();
-                return [];
+                return $comments;
             }
             return $comments;
         }
@@ -177,10 +177,20 @@ class Gm2_Github_Comments_Admin {
             }
         }
 
+        $comments = $this->get_comments();
+        if (is_wp_error($comments)) {
+            $this->error = $comments->get_error_message();
+            $comments    = [];
+        }
+
         $response = [
             'results'  => $results,
-            'comments' => $this->get_comments(),
+            'comments' => $comments,
         ];
+        if ($this->error !== '') {
+            $response['message'] = $this->error;
+            wp_send_json_error($response);
+        }
         if ($all_ok) {
             $response['message'] = __('Patches applied', 'gm2-wordpress-suite');
             wp_send_json_success($response);
