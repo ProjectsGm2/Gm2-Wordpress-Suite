@@ -44,7 +44,8 @@
                 file: file,
                 patch: patch,
                 repo: gm2GithubComments.currentRepo || '',
-                pr: gm2GithubComments.currentPr || ''
+                pr: gm2GithubComments.currentPr || '',
+                branch: gm2GithubComments.currentBranch || ''
             });
             fetch(gm2GithubComments.ajax_url, {
                 method: 'POST',
@@ -85,7 +86,8 @@
                 nonce: gm2GithubComments.nonce,
                 patches: JSON.stringify(patches),
                 repo: gm2GithubComments.currentRepo || '',
-                pr: gm2GithubComments.currentPr || ''
+                pr: gm2GithubComments.currentPr || '',
+                branch: gm2GithubComments.currentBranch || ''
             });
             fetch(gm2GithubComments.ajax_url, {
                 method: 'POST',
@@ -197,15 +199,19 @@
             btn.addEventListener('click', function(){
                 const repoInput = document.getElementById('gm2-repo');
                 const prSelect = document.getElementById('gm2-pr');
+                const branchSelect = document.getElementById('gm2-branch');
                 const repo = repoInput ? repoInput.value.trim() : '';
                 const pr = prSelect ? prSelect.options[prSelect.selectedIndex].value : '';
+                const branch = branchSelect ? branchSelect.options[branchSelect.selectedIndex].value : '';
                 gm2GithubComments.currentRepo = repo;
                 gm2GithubComments.currentPr = pr;
+                gm2GithubComments.currentBranch = branch;
                 const body = new URLSearchParams({
                     action: 'gm2_get_github_comments',
                     nonce: gm2GithubComments.commentsNonce,
                     repo: repo,
-                    pr: pr === 'all' ? 'all' : pr
+                    pr: pr === 'all' ? 'all' : pr,
+                    branch: branch
                 });
                 document.dispatchEvent(new CustomEvent('gm2CommentsLoading'));
                 fetch(gm2GithubComments.ajax_url, {

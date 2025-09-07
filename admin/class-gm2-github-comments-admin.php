@@ -60,18 +60,22 @@ class Gm2_Github_Comments_Admin {
     }
 
     private function get_comments() {
-        $repo       = isset($_GET['repo']) ? sanitize_text_field(wp_unslash($_GET['repo'])) : get_option('gm2_last_repo', '');
-        $pr         = isset($_GET['pr']) ? sanitize_text_field(wp_unslash($_GET['pr'])) : '';
+        $repo    = isset($_GET['repo']) ? sanitize_text_field(wp_unslash($_GET['repo'])) : get_option('gm2_last_repo', '');
+        $pr      = isset($_GET['pr']) ? sanitize_text_field(wp_unslash($_GET['pr'])) : '';
+        $branch  = isset($_GET['branch']) ? sanitize_text_field(wp_unslash($_GET['branch'])) : get_option('gm2_last_branch', '');
         $this->error = '';
         if ($repo !== '') {
             update_option('gm2_last_repo', $repo);
+        }
+        if ($branch !== '') {
+            update_option('gm2_last_branch', $branch);
         }
         if ($repo === '') {
             return [];
         }
         $client = new Gm2_Github_Client();
         if ($pr === '' || $pr === '0') {
-            $numbers = $client->list_open_pr_numbers($repo);
+            $numbers = $client->list_open_pr_numbers($repo, $branch);
             if (is_wp_error($numbers)) {
                 return $numbers;
             }
@@ -82,7 +86,7 @@ class Gm2_Github_Comments_Admin {
             $_GET['pr'] = $pr;
         }
         if ($pr === 'all') {
-            $numbers = $client->list_open_pr_numbers($repo);
+            $numbers = $client->list_open_pr_numbers($repo, $branch);
             if (is_wp_error($numbers)) {
                 return $numbers;
             }
@@ -112,6 +116,7 @@ class Gm2_Github_Comments_Admin {
             return;
         }
         $repo   = get_option('gm2_last_repo', '');
+        $branch = get_option('gm2_last_branch', '');
         $client = new Gm2_Github_Client();
         $this->token_result = $client->validate_token();
         echo '<div class="wrap"><h1>' . esc_html__('PR Reviews', 'gm2-wordpress-suite') . '</h1>';
@@ -130,14 +135,30 @@ class Gm2_Github_Comments_Admin {
         }
         echo '<p><label>' . esc_html__('Repository (owner/repo)', 'gm2-wordpress-suite') . ' <input type="text" id="gm2-repo" value="' . esc_attr($repo) . '" /></label></p>';
 
-        $numbers = [];
+        $branches = [];
+        $numbers  = [];
         if ($repo !== '' && !is_wp_error($this->token_result)) {
-            $numbers = $client->list_open_pr_numbers($repo);
+            $branches = $client->list_branches($repo);
+            if (is_wp_error($branches)) {
+                echo '<div class="notice notice-error"><p>' . esc_html($branches->get_error_message()) . '</p></div>';
+                $branches = [];
+            }
+            if ($branch === '' && !empty($branches)) {
+                $branch = $branches[0];
+            }
+            $numbers = $client->list_open_pr_numbers($repo, $branch);
             if (is_wp_error($numbers)) {
                 echo '<div class="notice notice-error"><p>' . esc_html($numbers->get_error_message()) . '</p></div>';
                 $numbers = [];
             }
         }
+
+        echo '<p><label>' . esc_html__('Branch', 'gm2-wordpress-suite') . ' <select id="gm2-branch">';
+        foreach ($branches as $b) {
+            $selected = selected($branch, $b, false);
+            echo '<option value="' . esc_attr($b) . '"' . $selected . '>' . esc_html($b) . '</option>';
+        }
+        echo '</select></label></p>';
 
         echo '<p><label>' . esc_html__('PR Number', 'gm2-wordpress-suite') . ' <select id="gm2-pr">';
         echo '<option value="all">' . esc_html__('All PRs', 'gm2-wordpress-suite') . '</option>';
@@ -155,10 +176,12 @@ class Gm2_Github_Comments_Admin {
         if (!current_user_can('manage_options')) {
             wp_send_json_error(__('You do not have permission to fetch comments.', 'gm2-wordpress-suite'));
         }
-        $repo = isset($_POST['repo']) ? sanitize_text_field(wp_unslash($_POST['repo'])) : '';
-        $pr   = isset($_POST['pr']) ? sanitize_text_field(wp_unslash($_POST['pr'])) : '';
-        $_GET['repo'] = $repo;
-        $_GET['pr']   = $pr;
+        $repo   = isset($_POST['repo']) ? sanitize_text_field(wp_unslash($_POST['repo'])) : '';
+        $pr     = isset($_POST['pr']) ? sanitize_text_field(wp_unslash($_POST['pr'])) : '';
+        $branch = isset($_POST['branch']) ? sanitize_text_field(wp_unslash($_POST['branch'])) : '';
+        $_GET['repo']   = $repo;
+        $_GET['pr']     = $pr;
+        $_GET['branch'] = $branch;
         $comments = $this->get_comments();
         if (is_wp_error($comments)) {
             wp_send_json_error($comments->get_error_message());
@@ -172,10 +195,12 @@ class Gm2_Github_Comments_Admin {
             wp_send_json_error(__('You do not have permission to apply patches.', 'gm2-wordpress-suite'));
         }
 
-        $repo = isset($_POST['repo']) ? sanitize_text_field(wp_unslash($_POST['repo'])) : '';
-        $pr   = isset($_POST['pr']) ? sanitize_text_field(wp_unslash($_POST['pr'])) : '';
-        $_GET['repo'] = $repo;
-        $_GET['pr']   = $pr;
+        $repo   = isset($_POST['repo']) ? sanitize_text_field(wp_unslash($_POST['repo'])) : '';
+        $pr     = isset($_POST['pr']) ? sanitize_text_field(wp_unslash($_POST['pr'])) : '';
+        $branch = isset($_POST['branch']) ? sanitize_text_field(wp_unslash($_POST['branch'])) : '';
+        $_GET['repo']   = $repo;
+        $_GET['pr']     = $pr;
+        $_GET['branch'] = $branch;
 
         $patches = isset($_POST['patches']) ? json_decode(wp_unslash($_POST['patches']), true) : null;
         if (!is_array($patches)) {
