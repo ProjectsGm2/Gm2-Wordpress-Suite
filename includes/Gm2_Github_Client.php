@@ -38,6 +38,20 @@ namespace Gm2 {
         return $body === '' ? [] : json_decode($body, true);
     }
 
+    public function validate_token() {
+        if ($this->token === '') {
+            return new \WP_Error('github_no_token', __('No token configured', 'gm2-wordpress-suite'));
+        }
+        $user = $this->get('https://api.github.com/user');
+        if (is_wp_error($user)) {
+            return $user;
+        }
+        if (!is_array($user) || empty($user['login'])) {
+            return new \WP_Error('github_invalid_response', __('Invalid response from GitHub', 'gm2-wordpress-suite'));
+        }
+        return $user;
+    }
+
     public function list_open_pr_numbers($repo) {
         $url    = sprintf('https://api.github.com/repos/%s/pulls?state=open', $repo);
         $result = $this->get($url);
