@@ -52,8 +52,25 @@ namespace Gm2 {
         return $user;
     }
 
-    public function list_open_pr_numbers($repo) {
-        $url    = sprintf('https://api.github.com/repos/%s/pulls?state=open', $repo);
+    public function list_branches($repo) {
+        $url    = sprintf('https://api.github.com/repos/%s/branches', $repo);
+        $result = $this->get($url);
+        if (is_wp_error($result)) {
+            return $result;
+        }
+        if (!is_array($result)) {
+            return new \WP_Error('github_invalid_response', __('Invalid response from GitHub', 'gm2-wordpress-suite'));
+        }
+        return array_values(array_filter(array_map(function ($b) {
+            return isset($b['name']) ? (string) $b['name'] : '';
+        }, $result)));
+    }
+
+    public function list_open_pr_numbers($repo, $branch = '') {
+        $url = sprintf('https://api.github.com/repos/%s/pulls?state=open', $repo);
+        if ($branch !== '') {
+            $url .= '&base=' . rawurlencode($branch);
+        }
         $result = $this->get($url);
         if (is_wp_error($result)) {
             return $result;
