@@ -35,6 +35,8 @@ class AE_CSS_Admin {
                     'include_above_the_fold_handles'=> [],
                     'generate_critical'             => '0',
                     'async_load_noncritical'        => '0',
+                    'woocommerce_smart_enqueue'     => '0',
+                    'elementor_smart_enqueue'       => '0',
                     'critical'                      => [],
                     'queue'                         => [],
                 ],
@@ -56,6 +58,8 @@ class AE_CSS_Admin {
             'include_above_the_fold_handles'=> [],
             'generate_critical'             => '0',
             'async_load_noncritical'        => '0',
+            'woocommerce_smart_enqueue'     => '0',
+            'elementor_smart_enqueue'       => '0',
             'critical'                      => [],
             'queue'                         => [],
         ];
@@ -84,8 +88,10 @@ class AE_CSS_Admin {
             $include = array_values(array_unique(array_map('sanitize_key', $input['include_above_the_fold_handles'])));
         }
 
-        $generate = isset($input['generate_critical']) && $input['generate_critical'] === '1' ? '1' : '0';
-        $async    = isset($input['async_load_noncritical']) && $input['async_load_noncritical'] === '1' ? '1' : '0';
+        $generate  = isset($input['generate_critical']) && $input['generate_critical'] === '1' ? '1' : '0';
+        $async     = isset($input['async_load_noncritical']) && $input['async_load_noncritical'] === '1' ? '1' : '0';
+        $woo       = isset($input['woocommerce_smart_enqueue']) && $input['woocommerce_smart_enqueue'] === '1' ? '1' : '0';
+        $elementor = isset($input['elementor_smart_enqueue']) && $input['elementor_smart_enqueue'] === '1' ? '1' : '0';
 
         $current['flags']                        = $sanitized_flags;
         $current['safelist']                     = $safelist;
@@ -93,6 +99,8 @@ class AE_CSS_Admin {
         $current['include_above_the_fold_handles']= $include;
         $current['generate_critical']            = $generate;
         $current['async_load_noncritical']       = $async;
+        $current['woocommerce_smart_enqueue']    = $woo;
+        $current['elementor_smart_enqueue']      = $elementor;
 
         return $current;
     }
@@ -125,6 +133,8 @@ class AE_CSS_Admin {
         $include = $settings['include_above_the_fold_handles'] ?? [];
         $generate = $settings['generate_critical'] ?? '0';
         $async    = $settings['async_load_noncritical'] ?? '0';
+        $woo_smart = $settings['woocommerce_smart_enqueue'] ?? '0';
+        $elementor_smart = $settings['elementor_smart_enqueue'] ?? '0';
 
         $all_handles = [];
         $styles = wp_styles();
@@ -133,8 +143,8 @@ class AE_CSS_Admin {
         }
 
         $flag_labels = [
-            'woo'       => __( 'Dequeue WooCommerce styles on non-WooCommerce pages', 'gm2-wordpress-suite' ),
-            'elementor' => __( 'Dequeue Elementor styles on non-Elementor pages', 'gm2-wordpress-suite' ),
+            'woo'       => __( 'Force keep WooCommerce styles', 'gm2-wordpress-suite' ),
+            'elementor' => __( 'Force keep Elementor styles', 'gm2-wordpress-suite' ),
         ];
 
         $has_node = AE_CSS_Optimizer::has_node_capability();
@@ -152,7 +162,7 @@ class AE_CSS_Admin {
 
         echo '<table class="form-table"><tbody>';
         // Flags
-        echo '<tr><th scope="row">' . esc_html__( 'Automatic dequeues', 'gm2-wordpress-suite' ) . '</th><td>';
+        echo '<tr><th scope="row">' . esc_html__( 'Force Keep Styles', 'gm2-wordpress-suite' ) . '</th><td>';
         foreach ($flag_labels as $key => $label) {
             $checked = !empty($flags[$key]) && $flags[$key] === '1' ? 'checked="checked"' : '';
             echo '<label style="display:block;"><input type="checkbox" name="ae_css_settings[flags][' . esc_attr($key) . ']" value="1" ' . $checked . ' /> ' . esc_html($label) . '</label>';
@@ -165,6 +175,14 @@ class AE_CSS_Admin {
         echo '<label style="display:block;"><input type="checkbox" name="ae_css_settings[generate_critical]" value="1" ' . $checked . ' /> ' . esc_html__( 'Inline critical CSS when available', 'gm2-wordpress-suite' ) . '</label>';
         $checked = $async === '1' ? 'checked="checked"' : '';
         echo '<label style="display:block;"><input type="checkbox" name="ae_css_settings[async_load_noncritical]" value="1" ' . $checked . ' /> ' . esc_html__( 'Load non-critical CSS asynchronously', 'gm2-wordpress-suite' ) . '</label>';
+        echo '</td></tr>';
+
+        // Smart enqueue toggles
+        echo '<tr><th scope="row">' . esc_html__( 'Smart Enqueue', 'gm2-wordpress-suite' ) . '</th><td>';
+        $checked = $woo_smart === '1' ? 'checked="checked"' : '';
+        echo '<label style="display:block;"><input type="checkbox" name="ae_css_settings[woocommerce_smart_enqueue]" value="1" ' . $checked . ' /> ' . esc_html__( 'Only load WooCommerce styles on WooCommerce pages', 'gm2-wordpress-suite' ) . '</label>';
+        $checked = $elementor_smart === '1' ? 'checked="checked"' : '';
+        echo '<label style="display:block;"><input type="checkbox" name="ae_css_settings[elementor_smart_enqueue]" value="1" ' . $checked . ' /> ' . esc_html__( 'Only load Elementor styles on Elementor pages', 'gm2-wordpress-suite' ) . '</label>';
         echo '</td></tr>';
 
         // Safelist textarea

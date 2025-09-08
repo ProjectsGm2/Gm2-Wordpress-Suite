@@ -290,6 +290,8 @@ function gm2_activate_css_optimizer_defaults() {
             'include_above_the_fold_handles'=> [],
             'generate_critical'             => '0',
             'async_load_noncritical'        => '0',
+            'woocommerce_smart_enqueue'     => '0',
+            'elementor_smart_enqueue'       => '0',
             'critical'                      => [],
             'queue'                         => [],
         ]
