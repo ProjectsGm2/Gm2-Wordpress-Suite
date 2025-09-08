@@ -24,6 +24,28 @@ npm run build:assets
 
 This generates `assets/dist/ae-main.modern.js`, `ae-main.legacy.js`, page‑specific bundles like `contact.js`, `polyfills.js`, and a `vanilla-helpers.js` module. Modern browsers load only the ESM files; older browsers without module support receive the `nomodule` bundle and polyfills when `needPolyfills()` detects missing features. Commit the updated files in `assets/dist` to version control.
 
+### CSS utilities
+
+Utilities for purging unused CSS and extracting critical CSS live under `tools/node`.
+
+Install dependencies:
+
+```bash
+npm --prefix tools/node install
+```
+
+Purge unused selectors:
+
+```bash
+npm --prefix tools/node run purge
+```
+
+Generate critical CSS:
+
+```bash
+npm --prefix tools/node run critical -- --url https://example.com --css dist/main.css --width 1300 --height 900
+```
+
 ### Hashed Asset Pipeline and Sourcemaps
 
 The build step appends a content hash to each filename so browsers can cache assets indefinitely. Enqueue files with `ae_seo_register_asset()` which resolves the current hash and registers the correct path. When `SCRIPT_DEBUG` is enabled the pipeline also emits sourcemaps to aid debugging.
