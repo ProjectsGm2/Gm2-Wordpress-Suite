@@ -128,12 +128,17 @@ class AE_CSS_CLI extends \WP_CLI_Command {
         }
 
         $css_paths = \glob( trailingslashit( \get_stylesheet_directory() ) . 'css/*.css' ) ?: [];
+        $settings  = \get_option( 'ae_css_settings', [] );
+        $safelist  = [];
+        if ( \is_array( $settings ) && isset( $settings['safelist'] ) ) {
+            $safelist = (array) $settings['safelist'];
+        }
         $queue_obj = AE_CSS_Queue::get_instance();
         foreach ( $urls as $url ) {
             $payload = [
                 'css'      => $css_paths,
                 'html'     => [ $url ],
-                'safelist' => [],
+                'safelist' => $safelist,
             ];
             $queue_obj->enqueue( 'snapshot', $payload );
         }

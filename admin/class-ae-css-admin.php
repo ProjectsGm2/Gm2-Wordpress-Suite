@@ -35,7 +35,7 @@ class AE_CSS_Admin {
                 'sanitize_callback' => [ __CLASS__, 'sanitize_settings' ],
                 'default'           => [
                     'flags'                         => [],
-                    'safelist'                      => '',
+                    'safelist'                      => [],
                     'exclude_handles'               => [],
                     'include_above_the_fold_handles'=> [],
                     'generate_critical'             => '0',
@@ -57,7 +57,7 @@ class AE_CSS_Admin {
     public static function sanitize_settings($input): array {
         $defaults = [
             'flags'                         => [],
-            'safelist'                      => '',
+            'safelist'                      => [],
             'exclude_handles'               => [],
             'include_above_the_fold_handles'=> [],
             'generate_critical'             => '0',
@@ -79,7 +79,22 @@ class AE_CSS_Admin {
             $sanitized_flags[$key] = isset($flag_inputs[$flag]) && $flag_inputs[$flag] === '1' ? '1' : '0';
         }
 
-        $safelist = isset($input['safelist']) ? sanitize_textarea_field($input['safelist']) : '';
+        $safelist_input = isset($input['safelist']) ? sanitize_textarea_field($input['safelist']) : '';
+        $safelist = [];
+        if ($safelist_input !== '') {
+            $lines = preg_split('/\r\n|\r|\n/', $safelist_input);
+            foreach ($lines as $line) {
+                $line = trim($line);
+                if ($line === '') {
+                    continue;
+                }
+                if (strlen($line) >= 2 && $line[0] === '/' && substr($line, -1) === '/') {
+                    $safelist[] = $line;
+                } else {
+                    $safelist[] = sanitize_text_field($line);
+                }
+            }
+        }
 
         $exclude = [];
         if (!empty($input['exclude_handles']) && is_array($input['exclude_handles'])) {
@@ -173,9 +188,14 @@ class AE_CSS_Admin {
         if (!is_wp_error($res)) {
             $html = (string) wp_remote_retrieve_body($res);
         }
-        $purged = 0;
+        $purged    = 0;
+        $settings  = get_option('ae_css_settings', []);
+        $safelist  = [];
+        if (is_array($settings) && isset($settings['safelist'])) {
+            $safelist = (array) $settings['safelist'];
+        }
         if ($html !== '' && !empty($css_paths)) {
-            $purged_css = AE_CSS_Optimizer::purgecss_analyze($css_paths, [ $html ]);
+            $purged_css = AE_CSS_Optimizer::purgecss_analyze($css_paths, [ $html ], $safelist);
             $purged     = strlen($purged_css);
         }
         $diff    = max($total - $purged, 0);
@@ -266,8 +286,12 @@ class AE_CSS_Admin {
         if (!is_array($settings)) {
             $settings = [];
         }
-        $flags   = $settings['flags'] ?? [];
-        $safelist = $settings['safelist'] ?? '';
+        $flags    = $settings['flags'] ?? [];
+        $safelist = $settings['safelist'] ?? [];
+        if (!is_array($safelist)) {
+            $safelist = array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', (string) $safelist)));
+        }
+        $safelist_str = implode("\n", $safelist);
         $exclude = $settings['exclude_handles'] ?? [];
         $include = $settings['include_above_the_fold_handles'] ?? [];
         $generate = $settings['generate_critical'] ?? '0';
@@ -334,7 +358,7 @@ class AE_CSS_Admin {
 
         // Safelist textarea
         echo '<tr><th scope="row"><label for="ae-css-safelist">' . esc_html__( 'Safelist', 'gm2-wordpress-suite' ) . '</label></th>';
-        echo '<td><textarea id="ae-css-safelist" name="ae_css_settings[safelist]" rows="5" cols="50" class="large-text code">' . esc_textarea($safelist) . '</textarea><p class="description">' . esc_html__( 'One selector per line to always keep.', 'gm2-wordpress-suite' ) . '</p></td></tr>';
+        echo '<td><textarea id="ae-css-safelist" name="ae_css_settings[safelist]" rows="5" cols="50" class="large-text code">' . esc_textarea($safelist_str) . '</textarea><p class="description">' . esc_html__( 'One selector or /regex/ per line to always keep.', 'gm2-wordpress-suite' ) . '</p></td></tr>';
 
         // Exclude handles
         echo '<tr><th scope="row"><label for="ae-css-exclude">' . esc_html__( 'Exclude Handles', 'gm2-wordpress-suite' ) . '</label></th>';

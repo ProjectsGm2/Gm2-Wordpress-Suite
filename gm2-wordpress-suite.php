@@ -287,7 +287,7 @@ function gm2_activate_css_optimizer_defaults() {
         'ae_css_settings',
         [
             'flags'                         => [],
-            'safelist'                      => '',
+            'safelist'                      => [],
             'exclude_handles'               => [],
             'include_above_the_fold_handles'=> [],
             'generate_critical'             => '0',
