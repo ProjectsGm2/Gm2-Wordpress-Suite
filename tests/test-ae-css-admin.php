@@ -49,3 +49,20 @@ class AeCssAdminHelpTabsTest extends WP_UnitTestCase {
         $this->assertStringContainsString('ae_css_settings', $content);
     }
 }
+
+class AeCssAdminSanitizeSettingsTest extends WP_UnitTestCase {
+    public function test_exclude_handles_persist_after_sanitize(): void {
+        wp_register_style('alpha', 'https://example.com/alpha.css');
+        wp_register_style('beta', 'https://example.com/beta.css');
+
+        $input     = ['exclude_handles' => ['alpha', 'beta']];
+        $sanitized = AE_CSS_Admin::sanitize_settings($input);
+        update_option('ae_css_settings', $sanitized);
+
+        $saved = get_option('ae_css_settings');
+        $this->assertSame(['alpha', 'beta'], $saved['exclude_handles']);
+
+        wp_deregister_style('alpha');
+        wp_deregister_style('beta');
+    }
+}
