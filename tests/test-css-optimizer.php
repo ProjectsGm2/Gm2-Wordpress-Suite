@@ -334,6 +334,46 @@ class CssOptimizerTest extends WP_UnitTestCase {
         $this->assertStringContainsString('rel="preload"', $out);
     }
 
+    /**
+     * @runInSeparateProcess
+     */
+    public function test_bypass_query_param_outputs_standard_link_tags(): void {
+        $_GET['ae-css-bypass'] = '1';
+        $url = home_url(add_query_arg([], ''));
+        update_option(
+            'ae_css_settings',
+            [
+                'enabled'                      => '1',
+                'flags'                         => [],
+                'safelist'                      => [],
+                'exclude_handles'               => [],
+                'include_above_the_fold_handles'=> [],
+                'generate_critical'             => '1',
+                'async_load_noncritical'        => '1',
+                'woocommerce_smart_enqueue'     => '0',
+                'elementor_smart_enqueue'       => '0',
+                'critical'                      => [ $url => '.critical{color:red;}' ],
+                'logs'                          => [],
+            ]
+        );
+        $optimizer = AE_CSS_Optimizer::get_instance();
+        $optimizer->init();
+
+        wp_enqueue_style('test', 'https://example.com/style.css');
+
+        ob_start();
+        do_action('wp_head');
+        $head = ob_get_clean();
+        $this->assertStringNotContainsString('ae-critical-css', $head);
+
+        ob_start();
+        wp_print_styles();
+        $out = ob_get_clean();
+        $this->assertStringNotContainsString('rel="preload"', $out);
+        $this->assertStringContainsString('rel="stylesheet"', $out);
+        unset($_GET['ae-css-bypass']);
+    }
+
     public function test_inject_critical_and_defer_no_effect_when_disabled(): void {
         $optimizer = AE_CSS_Optimizer::get_instance();
         $optimizer->init();
