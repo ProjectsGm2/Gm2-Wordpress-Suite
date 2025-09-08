@@ -40,9 +40,11 @@ final class AE_CSS_Optimizer {
     ];
 
     /**
-     * Retrieve the singleton.
+     * Retrieve the singleton instance.
+     *
+     * @return self Singleton instance.
      */
-    public static function get_instance(): AE_CSS_Optimizer {
+    public static function get_instance(): self {
         if (self::$instance === null) {
             self::$instance = new self();
         }
@@ -51,6 +53,8 @@ final class AE_CSS_Optimizer {
 
     /**
      * Register callbacks on important hooks.
+     *
+     * @return void
      */
     public static function bootstrap(): void {
         $instance = self::get_instance();
@@ -69,6 +73,8 @@ final class AE_CSS_Optimizer {
 
     /**
      * Initialise internals once per request.
+     *
+     * @return void
      */
     public function init(): void {
         if ($this->booted) {
@@ -83,7 +89,9 @@ final class AE_CSS_Optimizer {
     }
 
     /**
-     * Dequeue WooCommerce/Elementor styles when unneeded.
+     * Dequeue WooCommerce and Elementor styles when unneeded.
+     *
+     * @return void
      */
     public function enqueue_smart(): void {
         $styles = \wp_styles();
@@ -108,6 +116,11 @@ final class AE_CSS_Optimizer {
 
     /**
      * Mark a URL for critical CSS generation.
+     *
+     * @param string $url     URL to capture.
+     * @param int    $post_id Optional related post ID.
+     *
+     * @return void
      */
     public function mark_url_for_critical_generation(string $url, int $post_id = 0): void {
         $url = \esc_url_raw($url);
@@ -119,7 +132,10 @@ final class AE_CSS_Optimizer {
     }
 
     /**
-     * Retrieve stored critical CSS for URL.
+     * Retrieve stored critical CSS for a given URL.
+     *
+     * @param string $url URL whose CSS to fetch.
+     * @return string Critical CSS or empty string.
      */
     public function get_critical_css(string $url): string {
         $url = \esc_url_raw($url);
@@ -127,13 +143,13 @@ final class AE_CSS_Optimizer {
     }
 
     /**
-     * Inject critical CSS and defer rest.
+     * Inject critical CSS and defer the rest of the stylesheet loading.
      *
      * @param string $html   Original tag when used as filter.
      * @param string $handle Handle of the style.
      * @param string $href   Stylesheet URL.
      * @param string $media  Media attribute.
-     * @return string|null
+     * @return string|null Modified HTML tag or null on action.
      */
     public function inject_critical_and_defer(string $html = '', string $handle = '', string $href = '', string $media = '') {
         if (\is_admin()) {
@@ -160,6 +176,11 @@ final class AE_CSS_Optimizer {
 
     /**
      * Analyse CSS usage with PurgeCSS.
+     *
+     * @param array $css_paths  Array of CSS file paths.
+     * @param array $html_paths Array of HTML file paths.
+     * @param array $safelist   Optional list of selectors to preserve.
+     * @return string Optimised CSS output.
      */
     public static function purgecss_analyze(array $css_paths, array $html_paths, array $safelist = []): string {
         if (!self::has_node_capability()) {
@@ -184,6 +205,8 @@ final class AE_CSS_Optimizer {
 
     /**
      * Determine if Node or npx is available.
+     *
+     * @return bool True if Node tooling is available, false otherwise.
      */
     public static function has_node_capability(): bool {
         $cached = \get_transient('ae_css_has_node');
@@ -204,6 +227,8 @@ final class AE_CSS_Optimizer {
 
     /**
      * Detect if current request is a WooCommerce context.
+     *
+     * @return bool Whether WooCommerce styles are needed.
      */
     public static function is_woocommerce_context(): bool {
         if (!\class_exists('WooCommerce')) {
@@ -226,6 +251,8 @@ final class AE_CSS_Optimizer {
 
     /**
      * Detect if current request is an Elementor context.
+     *
+     * @return bool Whether Elementor assets are required.
      */
     public static function is_elementor_context(): bool {
         if (!\did_action('elementor/loaded')) {
