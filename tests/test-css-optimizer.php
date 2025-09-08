@@ -99,6 +99,8 @@ class CssOptimizerTest extends WP_UnitTestCase {
         $optimizer->enqueue_smart();
         $this->assertContains('woocommerce-general', wp_styles()->queue);
         $this->assertContains('elementor-frontend', wp_styles()->queue);
+        $this->assertTrue(wp_style_is('woocommerce-general', 'enqueued'));
+        $this->assertTrue(wp_style_is('elementor-frontend', 'enqueued'));
     }
 
     /**
@@ -149,6 +151,7 @@ class CssOptimizerTest extends WP_UnitTestCase {
         wp_enqueue_style('woocommerce-general', 'https://example.com/woo.css');
         $optimizer->enqueue_smart();
         $this->assertContains('woocommerce-general', wp_styles()->queue);
+        $this->assertTrue(wp_style_is('woocommerce-general', 'enqueued'));
     }
 
     public function test_inject_critical_and_defer_inlines_and_defers_when_enabled(): void {
@@ -168,6 +171,7 @@ class CssOptimizerTest extends WP_UnitTestCase {
         $optimizer->init();
 
         wp_enqueue_style('test', 'https://example.com/style.css');
+        $this->assertTrue(wp_style_is('test', 'enqueued'));
 
         ob_start();
         do_action('wp_head');
@@ -194,6 +198,7 @@ class CssOptimizerTest extends WP_UnitTestCase {
         wp_print_styles();
         $out = ob_get_clean();
         $this->assertStringNotContainsString('rel="preload"', $out);
+        $this->assertStringContainsString('rel="stylesheet"', $out);
     }
 }
 
