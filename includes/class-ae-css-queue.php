@@ -23,7 +23,7 @@ final class AE_CSS_Queue {
         add_action('save_post', [ __CLASS__, 'handle_save_post' ], 10, 1);
         add_action('switch_theme', [ __CLASS__, 'handle_switch_theme' ], 10, 0);
         if (!\wp_next_scheduled('ae_css_queue_runner')) {
-            \wp_schedule_event(time(), 'ae_css_queue_5min', 'ae_css_queue_runner');
+            \wp_schedule_event(time(), 'ae_css_five_minutes', 'ae_css_queue_runner');
         }
     }
 
@@ -53,9 +53,9 @@ final class AE_CSS_Queue {
      * @return array Modified schedules.
      */
     public static function add_schedule(array $schedules): array {
-        if (!isset($schedules['ae_css_queue_5min'])) {
-            $schedules['ae_css_queue_5min'] = [
-                'interval' => 5 * MINUTE_IN_SECONDS,
+        if (!isset($schedules['ae_css_five_minutes'])) {
+            $schedules['ae_css_five_minutes'] = [
+                'interval' => 300,
                 'display'  => __( 'Every Five Minutes', 'gm2-wordpress-suite' ),
             ];
         }
@@ -144,7 +144,7 @@ final class AE_CSS_Queue {
         \update_option('ae_css_job_status', $status, false);
 
         if (!\wp_next_scheduled('ae_css_queue_runner')) {
-            \wp_schedule_event(time(), 'ae_css_queue_5min', 'ae_css_queue_runner');
+            \wp_schedule_event(time(), 'ae_css_five_minutes', 'ae_css_queue_runner');
         }
     }
 
