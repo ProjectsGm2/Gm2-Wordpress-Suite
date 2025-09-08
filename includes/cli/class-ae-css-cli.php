@@ -50,13 +50,27 @@ class AE_CSS_CLI extends \WP_CLI_Command {
      * --url=<url>
      */
     public function generate( $args, $assoc_args ) {
-        $url = isset( $assoc_args['url'] ) ? \esc_url_raw( $assoc_args['url'] ) : '';
-        if ( $url === '' ) {
+        $url = $assoc_args['url'] ?? '';
+        $url = \is_string( $url ) ? \esc_url_raw( $url ) : '';
+        if ( $url === '' || ! \filter_var( $url, FILTER_VALIDATE_URL ) ) {
             \WP_CLI::error( __( 'Please provide a valid --url.', 'gm2-wordpress-suite' ) );
         }
-        $queue = AE_CSS_Queue::get_instance();
-        $queue->enqueue( 'snapshot', $url );
-        AE_CSS_Optimizer::get_instance()->mark_url_for_critical_generation( $url );
+
+        if ( ! \class_exists( __NAMESPACE__ . '\\AE_CSS_Queue' ) || ! \method_exists( AE_CSS_Queue::class, 'get_instance' ) ) {
+            \WP_CLI::error( __( 'AE_CSS_Queue class is required.', 'gm2-wordpress-suite' ) );
+        }
+        if ( ! \class_exists( __NAMESPACE__ . '\\AE_CSS_Optimizer' ) || ! \method_exists( AE_CSS_Optimizer::class, 'get_instance' ) ) {
+            \WP_CLI::error( __( 'AE_CSS_Optimizer class is required.', 'gm2-wordpress-suite' ) );
+        }
+
+        try {
+            $queue = AE_CSS_Queue::get_instance();
+            $queue->enqueue( 'snapshot', $url );
+            AE_CSS_Optimizer::get_instance()->mark_url_for_critical_generation( $url );
+        } catch ( \Throwable $e ) {
+            \WP_CLI::error( $e->getMessage() );
+        }
+
         \WP_CLI::success( sprintf( __( 'Enqueued snapshot and critical jobs for %s.', 'gm2-wordpress-suite' ), $url ) );
     }
 
@@ -68,11 +82,24 @@ class AE_CSS_CLI extends \WP_CLI_Command {
      * --theme  Purge current theme.
      */
     public function purge( $args, $assoc_args ) {
-        if ( ! isset( $assoc_args['theme'] ) ) {
+        if ( empty( $assoc_args['theme'] ) ) {
             \WP_CLI::error( __( 'Usage: wp ae-css purge --theme', 'gm2-wordpress-suite' ) );
         }
+        if ( ! \function_exists( 'get_stylesheet_directory' ) ) {
+            \WP_CLI::error( __( 'Function get_stylesheet_directory() is required.', 'gm2-wordpress-suite' ) );
+        }
         $theme_dir = \get_stylesheet_directory();
-        AE_CSS_Queue::get_instance()->enqueue( 'purge', $theme_dir );
+        if ( ! \is_string( $theme_dir ) || $theme_dir === '' || ! \is_dir( $theme_dir ) ) {
+            \WP_CLI::error( __( 'Unable to determine theme directory.', 'gm2-wordpress-suite' ) );
+        }
+        if ( ! \class_exists( __NAMESPACE__ . '\\AE_CSS_Queue' ) || ! \method_exists( AE_CSS_Queue::class, 'get_instance' ) ) {
+            \WP_CLI::error( __( 'AE_CSS_Queue class is required.', 'gm2-wordpress-suite' ) );
+        }
+        try {
+            AE_CSS_Queue::get_instance()->enqueue( 'purge', $theme_dir );
+        } catch ( \Throwable $e ) {
+            \WP_CLI::error( $e->getMessage() );
+        }
         \WP_CLI::success( __( 'Enqueued purge job for current theme.', 'gm2-wordpress-suite' ) );
     }
 
