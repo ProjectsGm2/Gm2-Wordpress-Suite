@@ -381,5 +381,50 @@ class CssOptimizerTest extends WP_UnitTestCase {
         rmdir($tmp);
         delete_transient('ae_css_has_node');
     }
+
+    public function test_print_critical_css_php_fallback_filters_and_limits_output(): void {
+        set_transient('ae_css_has_node', '0');
+        update_option(
+            'ae_css_settings',
+            [
+                'flags'                         => [],
+                'safelist'                      => '',
+                'exclude_handles'               => [],
+                'include_above_the_fold_handles'=> [ 'test' ],
+                'generate_critical'             => '0',
+                'async_load_noncritical'        => '0',
+                'woocommerce_smart_enqueue'     => '0',
+                'elementor_smart_enqueue'       => '0',
+                'critical'                      => [],
+                'queue'                         => [],
+            ]
+        );
+        $optimizer = AE_CSS_Optimizer::get_instance();
+        $optimizer->init();
+
+        wp_register_style('test', 'https://example.com/test.css');
+        wp_enqueue_style('test');
+
+        $css = str_repeat('.menu{color:red;}', 2000) . str_repeat('.foo{color:blue;}', 1000);
+        $filter = static function ($pre, $args, $url) use ($css) {
+            if ($url === 'https://example.com/test.css') {
+                return [ 'body' => $css, 'response' => [ 'code' => 200 ] ];
+            }
+            return $pre;
+        };
+        add_filter('pre_http_request', $filter, 10, 3);
+
+        ob_start();
+        $optimizer->print_critical_css();
+        $output = ob_get_clean();
+        remove_filter('pre_http_request', $filter, 10);
+
+        $this->assertStringContainsString('<style id="ae-critical-css">', $output);
+        $this->assertStringNotContainsString('.foo', $output);
+        preg_match('/<style id="ae-critical-css">(.*)<\/style>/s', $output, $m);
+        $critical = $m[1] ?? '';
+        $this->assertSame(20000, strlen($critical));
+        $this->assertStringContainsString('.menu{color:red', $critical);
+    }
 }
 
