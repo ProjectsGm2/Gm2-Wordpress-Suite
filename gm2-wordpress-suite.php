@@ -296,6 +296,7 @@ function gm2_activate_css_optimizer_defaults() {
             'queue'                         => [],
         ]
     );
+    \AE\CSS\AE_CSS_Optimizer::get_instance()->maybe_generate_home_critical();
 }
 register_activation_hook(__FILE__, 'gm2_activate_css_optimizer_defaults');
 

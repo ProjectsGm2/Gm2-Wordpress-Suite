@@ -96,6 +96,7 @@ final class AE_CSS_Optimizer {
 
         add_action('wp_enqueue_scripts', [ $this, 'enqueue_smart' ], PHP_INT_MAX);
         $this->inject_critical_and_defer();
+        $this->maybe_generate_home_critical();
     }
 
     /**
@@ -335,6 +336,42 @@ final class AE_CSS_Optimizer {
         }
         \set_transient('ae_css_has_node', $has ? '1' : '0', DAY_IN_SECONDS);
         return $has;
+    }
+
+    /**
+     * Ensure the site's home URL has critical CSS generated once Node becomes available.
+     *
+     * @return void
+     */
+    public function maybe_generate_home_critical(): void {
+        $home = \home_url(\add_query_arg([], ''));
+        $hash = \md5($home);
+        if (\get_option('ae_critical_css_' . $hash, '') !== '') {
+            return;
+        }
+        \delete_transient('ae_css_has_node');
+        if (!self::has_node_capability()) {
+            return;
+        }
+        $style = \get_stylesheet_directory() . '/style.css';
+        $css_paths = [];
+        if (\file_exists($style)) {
+            $css_paths[] = $style;
+        }
+        if (empty($css_paths)) {
+            return;
+        }
+        try {
+            $this->run_node_critical($home, $css_paths);
+            $status = \get_option('ae_css_job_status', []);
+            $status['critical'] = [
+                'status'  => 'done',
+                'message' => \sprintf(\__('Generated critical CSS for %s', 'gm2-wordpress-suite'), $home),
+            ];
+            \update_option('ae_css_job_status', $status, false);
+        } catch (\Throwable $e) {
+            // Silently ignore failures.
+        }
     }
 
     /**
