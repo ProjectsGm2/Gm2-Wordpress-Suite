@@ -16,6 +16,7 @@ class CssOptimizerTest extends WP_UnitTestCase {
         update_option(
             'ae_css_settings',
             [
+                'enabled'                      => '1',
                 'flags'                         => [],
                 'safelist'                      => [],
                 'exclude_handles'               => [],
@@ -56,6 +57,7 @@ class CssOptimizerTest extends WP_UnitTestCase {
         gm2_activate_css_optimizer_defaults();
         $this->assertSame(
             [
+                'enabled'                      => '1',
                 'flags'                         => [],
                 'safelist'                      => [],
                 'exclude_handles'               => [],
@@ -150,6 +152,7 @@ class CssOptimizerTest extends WP_UnitTestCase {
         update_option(
             'ae_css_settings',
             [
+                'enabled'                      => '1',
                 'flags'                         => [ 'woo' => '1' ],
                 'safelist'                      => [],
                 'exclude_handles'               => [],
@@ -177,6 +180,7 @@ class CssOptimizerTest extends WP_UnitTestCase {
         update_option(
             'ae_css_settings',
             [
+                'enabled'                      => '1',
                 'flags'                         => [],
                 'safelist'                      => [],
                 'exclude_handles'               => [],
@@ -204,6 +208,7 @@ class CssOptimizerTest extends WP_UnitTestCase {
         update_option(
             'ae_css_settings',
             [
+                'enabled'                      => '1',
                 'flags'                         => [],
                 'safelist'                      => [],
                 'exclude_handles'               => [],
@@ -238,6 +243,7 @@ class CssOptimizerTest extends WP_UnitTestCase {
         update_option(
             'ae_css_settings',
             [
+                'enabled'                      => '1',
                 'flags'                         => [],
                 'safelist'                      => [],
                 'exclude_handles'               => [],
@@ -272,6 +278,7 @@ class CssOptimizerTest extends WP_UnitTestCase {
         update_option(
             'ae_css_settings',
             [
+                'enabled'                      => '1',
                 'flags'                         => [],
                 'safelist'                      => [],
                 'exclude_handles'               => [],
@@ -297,6 +304,7 @@ class CssOptimizerTest extends WP_UnitTestCase {
         update_option(
             'ae_css_settings',
             [
+                'enabled'                      => '1',
                 'flags'                         => [],
                 'safelist'                      => [],
                 'exclude_handles'               => [],
@@ -341,6 +349,20 @@ class CssOptimizerTest extends WP_UnitTestCase {
         $out = ob_get_clean();
         $this->assertStringNotContainsString('rel="preload"', $out);
         $this->assertStringContainsString('rel="stylesheet"', $out);
+    }
+
+    public function test_enabled_flag_toggles_hooks(): void {
+        $optimizer = AE_CSS_Optimizer::get_instance();
+        $optimizer->init();
+        $this->assertNotFalse(has_action('wp_head', [ $optimizer, 'print_critical_css' ]));
+        $this->assertNotFalse(has_filter('style_loader_tag', [ $optimizer, 'filter_style_loader_tag' ]));
+        $this->assertNotFalse(has_action('wp_enqueue_scripts', [ $optimizer, 'enqueue_smart' ]));
+
+        update_option('ae_css_settings', array_merge(get_option('ae_css_settings'), [ 'enabled' => '0' ]));
+        $optimizer->init();
+        $this->assertFalse(has_action('wp_head', [ $optimizer, 'print_critical_css' ]));
+        $this->assertFalse(has_filter('style_loader_tag', [ $optimizer, 'filter_style_loader_tag' ]));
+        $this->assertFalse(has_action('wp_enqueue_scripts', [ $optimizer, 'enqueue_smart' ]));
     }
 
     public function test_purgecss_analyze_generates_and_caches_css(): void {
@@ -388,6 +410,7 @@ class CssOptimizerTest extends WP_UnitTestCase {
         update_option(
             'ae_css_settings',
             [
+                'enabled'                      => '1',
                 'flags'                         => [],
                 'safelist'                      => [],
                 'exclude_handles'               => [],
