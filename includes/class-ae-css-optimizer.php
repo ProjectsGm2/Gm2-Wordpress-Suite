@@ -110,8 +110,43 @@ final class AE_CSS_Optimizer {
         }
 
         add_action('wp_enqueue_scripts', [ $this, 'enqueue_smart' ], PHP_INT_MAX);
+        add_action('admin_bar_menu', [ $this, 'admin_bar_status' ], 100);
         $this->inject_critical_and_defer();
         $this->maybe_generate_home_critical();
+    }
+
+    /**
+     * Display CSS optimizer status in the admin bar.
+     *
+     * @param \WP_Admin_Bar $bar Admin bar instance.
+     *
+     * @return void
+     */
+    public function admin_bar_status(\WP_Admin_Bar $bar): void {
+        if (!\current_user_can('manage_options')) {
+            return;
+        }
+        $label = 'AE CSS: OFF';
+        $color = '#dc3232';
+        if (($this->settings['enabled'] ?? '1') === '1') {
+            if (self::has_node_capability()) {
+                $label = 'AE CSS: ON (Node)';
+                $color = '#46b450';
+            } else {
+                $label = 'AE CSS: ON (PHP Fallback)';
+                $color = '#ffb900';
+            }
+        }
+        $bar->add_node([
+            'id'     => 'ae-css-status',
+            'parent' => 'top-secondary',
+            'title'  => $label,
+            'href'   => false,
+            'meta'   => [
+                'class' => 'ae-css-status',
+                'style' => 'background: ' . $color . '; color: #fff;',
+            ],
+        ]);
     }
 
     /**
