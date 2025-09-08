@@ -43,6 +43,7 @@ class AE_CSS_Admin {
                     'woocommerce_smart_enqueue'     => '0',
                     'elementor_smart_enqueue'       => '0',
                     'critical'                      => [],
+                    'logs'                          => [],
                 ],
             ]
         );
@@ -65,6 +66,7 @@ class AE_CSS_Admin {
             'woocommerce_smart_enqueue'     => '0',
             'elementor_smart_enqueue'       => '0',
             'critical'                      => [],
+            'logs'                          => [],
         ];
         $current = get_option('ae_css_settings', $defaults);
         if (!is_array($current)) {
@@ -119,6 +121,21 @@ class AE_CSS_Admin {
         $current['async_load_noncritical']       = $async;
         $current['woocommerce_smart_enqueue']    = $woo;
         $current['elementor_smart_enqueue']      = $elementor;
+
+        if (isset($input['logs']) && is_array($input['logs'])) {
+            $logs = [];
+            foreach ($input['logs'] as $entry) {
+                if (!is_array($entry)) {
+                    continue;
+                }
+                $logs[] = [
+                    'timestamp' => isset($entry['timestamp']) ? sanitize_text_field($entry['timestamp']) : '',
+                    'action'    => isset($entry['action']) ? sanitize_text_field($entry['action']) : '',
+                    'details'   => isset($entry['details']) ? sanitize_text_field($entry['details']) : '',
+                ];
+            }
+            $current['logs'] = $logs;
+        }
 
         return $current;
     }
@@ -221,6 +238,23 @@ class AE_CSS_Admin {
         $status['purge'] = [ 'status' => 'queued', 'message' => '' ];
         update_option('ae_css_job_status', $status, false);
         wp_schedule_single_event(time() + 1, 'ae_css_run_purgecss', [ $dir ]);
+
+        $settings = get_option('ae_css_settings', []);
+        if (!is_array($settings)) {
+            $settings = [];
+        }
+        $logs   = isset($settings['logs']) && is_array($settings['logs']) ? $settings['logs'] : [];
+        $logs[] = [
+            'timestamp' => (string) current_time('timestamp'),
+            'action'    => 'purge',
+            'details'   => $dir,
+        ];
+        if (count($logs) > 10) {
+            $logs = array_slice($logs, -10);
+        }
+        $settings['logs'] = $logs;
+        update_option('ae_css_settings', $settings);
+
         wp_safe_redirect(wp_get_referer() ?: admin_url('admin.php?page=gm2-css-optimization'));
         exit;
     }
@@ -237,6 +271,22 @@ class AE_CSS_Admin {
         if ($url !== '') {
             AE_CSS_Queue::get_instance()->enqueue('critical', [ 'url' => $url ]);
         }
+        $settings = get_option('ae_css_settings', []);
+        if (!is_array($settings)) {
+            $settings = [];
+        }
+        $logs   = isset($settings['logs']) && is_array($settings['logs']) ? $settings['logs'] : [];
+        $logs[] = [
+            'timestamp' => (string) current_time('timestamp'),
+            'action'    => 'critical',
+            'details'   => $url,
+        ];
+        if (count($logs) > 10) {
+            $logs = array_slice($logs, -10);
+        }
+        $settings['logs'] = $logs;
+        update_option('ae_css_settings', $settings);
+
         wp_safe_redirect(wp_get_referer() ?: admin_url('admin.php?page=gm2-css-optimization'));
         exit;
     }
@@ -398,7 +448,34 @@ class AE_CSS_Admin {
         echo '<input type="url" name="critical_url" class="regular-text" placeholder="https://example.com" required /> ';
         submit_button(__( 'Generate Critical CSS for this URL', 'gm2-wordpress-suite' ), 'secondary');
         echo '</form>';
+        $logs = isset($settings['logs']) && is_array($settings['logs']) ? $settings['logs'] : [];
+        if (!empty($logs)) {
+            echo '<h2>' . esc_html__( 'Recent actions', 'gm2-wordpress-suite' ) . '</h2><ul>';
+            foreach (array_reverse($logs) as $entry) {
+                echo '<li>' . $this->format_log_entry($entry) . '</li>';
+            }
+            echo '</ul>';
+        }
 
         echo '</div>';
+    }
+
+    /**
+     * Format and sanitize a log entry for display.
+     *
+     * @param array $entry Log entry.
+     * @return string Formatted line ready for output.
+     */
+    private function format_log_entry(array $entry): string {
+        $ts = isset($entry['timestamp']) ? (int) $entry['timestamp'] : 0;
+        $timestamp = $ts > 0 ? date_i18n('Y-m-d H:i:s', $ts) : '';
+        $action    = isset($entry['action']) ? sanitize_text_field($entry['action']) : '';
+        $details   = isset($entry['details']) ? sanitize_text_field($entry['details']) : '';
+        $line      = $timestamp !== '' ? $timestamp . ' - ' : '';
+        $line     .= $action;
+        if ($details !== '') {
+            $line .= ': ' . $details;
+        }
+        return esc_html($line);
     }
 }
