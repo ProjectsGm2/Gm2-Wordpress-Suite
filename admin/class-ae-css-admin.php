@@ -22,6 +22,46 @@ class AE_CSS_Admin {
         add_action('admin_post_ae_css_generate_critical', [ $this, 'handle_generate_critical_request' ]);
         add_action('admin_notices', [ $this, 'show_queue_notices' ]);
         add_action('wp_ajax_ae_css_estimate_savings', [ $this, 'ajax_estimate_savings' ]);
+        add_action('load-gm2-css-optimization', [ $this, 'add_help_tabs' ]);
+    }
+
+    /**
+     * Register contextual help tabs for the CSS Optimization screen.
+     */
+    public function add_help_tabs(): void {
+        $screen = get_current_screen();
+        if (!$screen) {
+            return;
+        }
+
+        $content = <<<'HTML'
+<p><code>ae/css/safelist</code> – Add selectors to the PurgeCSS safelist.</p>
+<pre><code>add_filter( 'ae/css/safelist', function ( $list ) {
+    $list[] = '.keep-me';
+    return $list;
+} );</code></pre>
+<p><code>ae/css/exclude_handles</code> – Prevent handles from async loading.</p>
+<pre><code>add_filter( 'ae/css/exclude_handles', function ( $handles ) {
+    $handles[] = 'plugin-style';
+    return $handles;
+} );</code></pre>
+<p><code>ae/css/force_keep_style</code> – Always keep a style handle enqueued.</p>
+<pre><code>add_filter( 'ae/css/force_keep_style', function ( $keep, $handle ) {
+    return $handle === 'my-style' ? true : $keep;
+}, 10, 2 );</code></pre>
+<p><code>ae/css/elementor_allow</code> – Allow specific Elementor handles when smart enqueue runs.</p>
+<pre><code>add_filter( 'ae/css/elementor_allow', function ( $allow ) {
+    $allow[] = 'elementor-frontend';
+    return $allow;
+} );</code></pre>
+<p>All controls persist in the <code>ae_css_settings</code> option.</p>
+HTML;
+
+        $screen->add_help_tab([
+            'id'      => 'gm2-css-hooks',
+            'title'   => __('Hooks', 'gm2-wordpress-suite'),
+            'content' => $content,
+        ]);
     }
 
     /**

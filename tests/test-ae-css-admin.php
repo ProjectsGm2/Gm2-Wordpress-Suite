@@ -25,3 +25,27 @@ class AeCssAdminNoticesTest extends WP_UnitTestCase {
         $this->assertStringContainsString('Critical: done', $output);
     }
 }
+
+class AeCssAdminHelpTabsTest extends WP_UnitTestCase {
+    public function test_run_hooks_help_tabs(): void {
+        $admin = new AE_CSS_Admin();
+        $admin->run();
+        $this->assertSame(10, has_action('load-gm2-css-optimization', [ $admin, 'add_help_tabs' ]));
+    }
+
+    public function test_add_help_tabs_adds_tab(): void {
+        set_current_screen('gm2-css-optimization');
+        $admin = new AE_CSS_Admin();
+        $admin->add_help_tabs();
+        $screen = get_current_screen();
+        $tabs   = $screen->get_help_tabs();
+
+        $this->assertArrayHasKey('gm2-css-hooks', $tabs);
+        $content = $tabs['gm2-css-hooks']['content'] ?? '';
+        $this->assertStringContainsString('ae/css/safelist', $content);
+        $this->assertStringContainsString('ae/css/exclude_handles', $content);
+        $this->assertStringContainsString('ae/css/force_keep_style', $content);
+        $this->assertStringContainsString('ae/css/elementor_allow', $content);
+        $this->assertStringContainsString('ae_css_settings', $content);
+    }
+}
