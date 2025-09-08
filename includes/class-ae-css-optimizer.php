@@ -304,16 +304,83 @@ final class AE_CSS_Optimizer {
     }
 
     /**
-     * Naive PHP split to extract above-the-fold CSS.
+     * Generate a rudimentary critical CSS string purely in PHP.
      *
-     * @param string $css_string CSS string.
-     * @return array{0:string,1:string} Critical and remaining CSS parts.
+     * @param string $css_string Raw CSS string.
+     * @return string Minified critical CSS.
      */
-    public static function php_fallback_split_css(string $css_string): array {
-        $limit    = 20000; // bytes.
-        $critical = \substr($css_string, 0, $limit);
-        $rest     = \substr($css_string, $limit);
-        return [ $critical, $rest ];
+    public function php_fallback_split_css(string $css_string): string {
+        $limit = 20000; // bytes.
+
+        if (!\class_exists(\Sabberworm\CSS\Parser::class)) {
+            return \substr($css_string, 0, $limit);
+        }
+
+        $allow = \array_unique(\array_merge([
+            'header',
+            '.site-header',
+            '.navbar',
+            '.menu',
+            '.logo',
+            'h1',
+            'h2',
+            'h3',
+            '.hero',
+            '.btn',
+            'body',
+            'html',
+        ], $this->settings['include_above_the_fold_handles']));
+
+        $keep_block = static function ($block) use ($allow): bool {
+            if (!$block instanceof \Sabberworm\CSS\RuleSet\DeclarationBlock) {
+                return false;
+            }
+            foreach ($block->getSelectors() as $selector) {
+                $sel = (string) $selector;
+                if ($sel === ':root') {
+                    return true;
+                }
+                foreach ($allow as $allowed) {
+                    if ($allowed !== '' && \strpos($sel, $allowed) !== false) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        };
+
+        try {
+            $parser = new \Sabberworm\CSS\Parser($css_string);
+            $doc    = $parser->parse();
+            $critical_css = '';
+            foreach ($doc->getContents() as $content) {
+                if ($keep_block($content)) {
+                    $critical_css .= $content->render(new \Sabberworm\CSS\OutputFormat());
+                    continue;
+                }
+                if ($content instanceof \Sabberworm\CSS\CSSList\AtRuleBlockList) {
+                    $name = \strtolower($content->atRuleName());
+                    if ($name === 'font-face') {
+                        $critical_css .= $content->render(new \Sabberworm\CSS\OutputFormat());
+                    } elseif ($name === 'supports') {
+                        $inner = [];
+                        foreach ($content->getContents() as $inner_block) {
+                            if ($keep_block($inner_block)) {
+                                $inner[] = $inner_block;
+                            }
+                        }
+                        if (!empty($inner)) {
+                            $content->setContents($inner);
+                            $critical_css .= $content->render(new \Sabberworm\CSS\OutputFormat());
+                        }
+                    }
+                }
+            }
+            $minified = (new \MatthiasMullie\Minify\CSS($critical_css))->minify();
+            return \substr($minified, 0, $limit);
+        } catch (\Throwable $e) {
+            return \substr($css_string, 0, $limit);
+        }
     }
 
     /**
