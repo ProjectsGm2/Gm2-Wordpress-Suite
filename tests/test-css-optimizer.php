@@ -19,6 +19,8 @@ class CssOptimizerTest extends WP_UnitTestCase {
                 'safelist'                      => '',
                 'exclude_handles'               => [],
                 'include_above_the_fold_handles'=> [],
+                'generate_critical'             => '0',
+                'async_load_noncritical'        => '0',
                 'critical'                      => [],
                 'queue'                         => [],
             ]
@@ -52,6 +54,8 @@ class CssOptimizerTest extends WP_UnitTestCase {
                 'safelist'                      => '',
                 'exclude_handles'               => [],
                 'include_above_the_fold_handles'=> [],
+                'generate_critical'             => '0',
+                'async_load_noncritical'        => '0',
                 'critical'                      => [],
                 'queue'                         => [],
             ],
@@ -142,6 +146,8 @@ class CssOptimizerTest extends WP_UnitTestCase {
                 'safelist'                      => '',
                 'exclude_handles'               => [],
                 'include_above_the_fold_handles'=> [],
+                'generate_critical'             => '0',
+                'async_load_noncritical'        => '0',
                 'critical'                      => [],
                 'queue'                         => [],
             ]
@@ -163,6 +169,8 @@ class CssOptimizerTest extends WP_UnitTestCase {
                 'safelist'                      => '',
                 'exclude_handles'               => [],
                 'include_above_the_fold_handles'=> [],
+                'generate_critical'             => '1',
+                'async_load_noncritical'        => '1',
                 'critical'                      => [ $url => '.critical{color:red;}' ],
                 'queue'                         => [],
             ]

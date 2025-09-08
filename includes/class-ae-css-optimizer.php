@@ -34,9 +34,14 @@ final class AE_CSS_Optimizer {
      * @var array
      */
     private array $settings = [
-        'flags'    => [],
-        'critical' => [],
-        'queue'    => [],
+        'flags'                         => [],
+        'safelist'                      => '',
+        'exclude_handles'               => [],
+        'include_above_the_fold_handles'=> [],
+        'generate_critical'             => '0',
+        'async_load_noncritical'        => '0',
+        'critical'                      => [],
+        'queue'                         => [],
     ];
 
     /**
@@ -84,8 +89,7 @@ final class AE_CSS_Optimizer {
         $this->settings = \get_option(self::OPTION, $this->settings);
 
         add_action('wp_enqueue_scripts', [ $this, 'enqueue_smart' ], PHP_INT_MAX);
-        add_action('wp_head', [ $this, 'inject_critical_and_defer' ], 1);
-        add_filter('style_loader_tag', [ $this, 'inject_critical_and_defer' ], 10, 4);
+        $this->inject_critical_and_defer();
     }
 
     /**
@@ -143,35 +147,64 @@ final class AE_CSS_Optimizer {
     }
 
     /**
-     * Inject critical CSS and defer the rest of the stylesheet loading.
+     * Attach hooks for critical CSS printing and async style loading.
      *
-     * @param string $html   Original tag when used as filter.
+     * @return void
+     */
+    public function inject_critical_and_defer(): void {
+        if (\is_admin()) {
+            return;
+        }
+        add_action('wp_head', [ $this, 'print_critical_css' ], 1);
+        add_filter('style_loader_tag', [ $this, 'filter_style_loader_tag' ], 20, 4);
+    }
+
+    /**
+     * Output stored critical CSS for the current URL when enabled.
+     *
+     * @return void
+     */
+    public function print_critical_css(): void {
+        $url      = \home_url(\add_query_arg([], ''));
+        $critical = $this->get_critical_css($url);
+        if ($critical !== '' && !empty($this->settings['generate_critical'])) {
+            echo '<style id="ae-critical-css">' . $critical . '</style>';
+        }
+    }
+
+    /**
+     * Filter a stylesheet tag to load non-critical CSS asynchronously.
+     *
+     * @param string $html   Original tag.
      * @param string $handle Handle of the style.
      * @param string $href   Stylesheet URL.
      * @param string $media  Media attribute.
-     * @return string|null Modified HTML tag or null on action.
+     * @return string Filtered tag.
      */
-    public function inject_critical_and_defer(string $html = '', string $handle = '', string $href = '', string $media = '') {
-        if (\is_admin()) {
+    public function filter_style_loader_tag(string $html, string $handle, string $href, string $media): string {
+        $excluded = $this->settings['exclude_handles'] ?? [];
+        if (empty($this->settings['async_load_noncritical']) || in_array($handle, $excluded, true) || $this->should_bypass_async()) {
             return $html;
         }
-        if (current_filter() === 'style_loader_tag') {
-            if ($html === '') {
-                return $html;
-            }
-            if (strpos($html, 'rel="stylesheet"') !== false) {
-                $html = str_replace('rel="stylesheet"', 'rel="preload" as="style" onload="this.onload=null;this.rel=\'stylesheet\'"', $html);
-            } elseif (strpos($html, "rel='stylesheet'") !== false) {
-                $html = str_replace("rel='stylesheet'", "rel='preload' as='style' onload=\"this.onload=null;this.rel='stylesheet'\"", $html);
-            }
-            return $html;
+        $href = \esc_url($href);
+        return '<link rel="preload" as="style" href="' . $href . '" onload="this.onload=null;this.rel=\'stylesheet\'">'
+            . '<noscript><link rel="stylesheet" href="' . $href . '"></noscript>';
+    }
+
+    /**
+     * Determine whether async loading should be bypassed for debugging.
+     *
+     * @return bool
+     */
+    private function should_bypass_async(): bool {
+        if (!\is_user_logged_in() || !\current_user_can('manage_options')) {
+            return false;
         }
-        $current = \home_url(\add_query_arg([], ''));
-        $css     = $this->get_critical_css($current);
-        if ($css !== '') {
-            echo '<style id="ae-critical-css">' . $css . '</style>';
+        if (empty($_GET['ae-css-debug']) || $_GET['ae-css-debug'] !== '1') {
+            return false;
         }
-        return null;
+        $nonce = $_GET['_wpnonce'] ?? '';
+        return \wp_verify_nonce($nonce, 'ae-css-debug');
     }
 
     /**
