@@ -76,6 +76,10 @@ final class AE_CSS_Optimizer {
         ] as $hook) {
             add_action($hook, [ $instance, 'init' ]);
         }
+
+        // Process cron queues.
+        add_action('ae_css_run_purgecss', [ $instance, 'cron_run_purgecss' ], 10, 1);
+        add_action('ae_css_process_queue', [ $instance, 'process_queue' ]);
     }
 
     /**
@@ -378,6 +382,75 @@ final class AE_CSS_Optimizer {
         }
         $this->settings['critical'][$url] = $css;
         \update_option(self::OPTION, $this->settings, false);
+    }
+
+    /**
+     * Cron callback to run PurgeCSS over a theme directory.
+     *
+     * @param string $theme_dir Path to the theme directory.
+     * @return void
+     */
+    public function cron_run_purgecss(string $theme_dir): void {
+        $status = \get_option('ae_css_job_status', []);
+        $status['purge']['status']  = 'running';
+        \update_option('ae_css_job_status', $status, false);
+
+        $css_paths = \glob(trailingslashit($theme_dir) . 'css/*.css') ?: [];
+        $result    = '';
+        if (!empty($css_paths)) {
+            $result = self::purgecss_analyze($css_paths, [ \home_url('/') ], []);
+        }
+        $status['purge'] = [
+            'status'  => 'done',
+            'message' => $result !== ''
+                ? sprintf(__('Optimised %d file(s).', 'gm2-wordpress-suite'), count($css_paths))
+                : __('No CSS files found.', 'gm2-wordpress-suite'),
+        ];
+        \update_option('ae_css_job_status', $status, false);
+    }
+
+    /**
+     * Process queued critical CSS generation jobs.
+     *
+     * @return void
+     */
+    public function process_queue(): void {
+        $queue  = $this->settings['queue'] ?? [];
+        $status = \get_option('ae_css_job_status', []);
+        if (empty($queue)) {
+            $status['critical'] = [ 'status' => 'done', 'message' => '' ];
+            \update_option('ae_css_job_status', $status, false);
+            return;
+        }
+
+        $status['critical']['status'] = 'running';
+        \update_option('ae_css_job_status', $status, false);
+
+        $item = array_shift($queue);
+        $url  = $item['url'] ?? '';
+        $msg  = '';
+        if ($url !== '') {
+            try {
+                $css_paths = \glob(get_stylesheet_directory() . '/css/*.css') ?: [];
+                $this->run_node_critical($url, $css_paths);
+                $msg = sprintf(__('Generated critical CSS for %s', 'gm2-wordpress-suite'), $url);
+            } catch (\Throwable $e) {
+                $msg = $e->getMessage();
+            }
+        }
+
+        $this->settings['queue'] = $queue;
+        \update_option(self::OPTION, $this->settings, false);
+
+        $status['critical'] = [
+            'status'  => empty($queue) ? 'done' : 'queued',
+            'message' => $msg,
+        ];
+        \update_option('ae_css_job_status', $status, false);
+
+        if (!empty($queue)) {
+            \wp_schedule_single_event(time() + MINUTE_IN_SECONDS, 'ae_css_process_queue');
+        }
     }
 
     /**
