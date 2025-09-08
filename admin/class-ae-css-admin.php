@@ -33,6 +33,8 @@ class AE_CSS_Admin {
                     'safelist'                      => '',
                     'exclude_handles'               => [],
                     'include_above_the_fold_handles'=> [],
+                    'generate_critical'             => '0',
+                    'async_load_noncritical'        => '0',
                     'critical'                      => [],
                     'queue'                         => [],
                 ],
@@ -52,6 +54,8 @@ class AE_CSS_Admin {
             'safelist'                      => '',
             'exclude_handles'               => [],
             'include_above_the_fold_handles'=> [],
+            'generate_critical'             => '0',
+            'async_load_noncritical'        => '0',
             'critical'                      => [],
             'queue'                         => [],
         ];
@@ -80,10 +84,15 @@ class AE_CSS_Admin {
             $include = array_values(array_unique(array_map('sanitize_key', $input['include_above_the_fold_handles'])));
         }
 
+        $generate = isset($input['generate_critical']) && $input['generate_critical'] === '1' ? '1' : '0';
+        $async    = isset($input['async_load_noncritical']) && $input['async_load_noncritical'] === '1' ? '1' : '0';
+
         $current['flags']                        = $sanitized_flags;
         $current['safelist']                     = $safelist;
         $current['exclude_handles']              = $exclude;
         $current['include_above_the_fold_handles']= $include;
+        $current['generate_critical']            = $generate;
+        $current['async_load_noncritical']       = $async;
 
         return $current;
     }
@@ -110,10 +119,12 @@ class AE_CSS_Admin {
         if (!is_array($settings)) {
             $settings = [];
         }
-        $flags = $settings['flags'] ?? [];
+        $flags   = $settings['flags'] ?? [];
         $safelist = $settings['safelist'] ?? '';
         $exclude = $settings['exclude_handles'] ?? [];
         $include = $settings['include_above_the_fold_handles'] ?? [];
+        $generate = $settings['generate_critical'] ?? '0';
+        $async    = $settings['async_load_noncritical'] ?? '0';
 
         $all_handles = [];
         $styles = wp_styles();
@@ -146,6 +157,14 @@ class AE_CSS_Admin {
             $checked = !empty($flags[$key]) && $flags[$key] === '1' ? 'checked="checked"' : '';
             echo '<label style="display:block;"><input type="checkbox" name="ae_css_settings[flags][' . esc_attr($key) . ']" value="1" ' . $checked . ' /> ' . esc_html($label) . '</label>';
         }
+        echo '</td></tr>';
+
+        // Critical and async toggles
+        echo '<tr><th scope="row">' . esc_html__( 'Critical & Async CSS', 'gm2-wordpress-suite' ) . '</th><td>';
+        $checked = $generate === '1' ? 'checked="checked"' : '';
+        echo '<label style="display:block;"><input type="checkbox" name="ae_css_settings[generate_critical]" value="1" ' . $checked . ' /> ' . esc_html__( 'Inline critical CSS when available', 'gm2-wordpress-suite' ) . '</label>';
+        $checked = $async === '1' ? 'checked="checked"' : '';
+        echo '<label style="display:block;"><input type="checkbox" name="ae_css_settings[async_load_noncritical]" value="1" ' . $checked . ' /> ' . esc_html__( 'Load non-critical CSS asynchronously', 'gm2-wordpress-suite' ) . '</label>';
         echo '</td></tr>';
 
         // Safelist textarea
