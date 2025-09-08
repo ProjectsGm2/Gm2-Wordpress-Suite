@@ -275,6 +275,53 @@ final class AE_CSS_Optimizer {
     }
 
     /**
+     * Generate critical CSS for a URL using the Node script.
+     *
+     * @param string $url       URL to analyse.
+     * @param array  $css_paths CSS file paths to include.
+     * @return void
+     * @throws \RuntimeException When the Node process fails.
+     */
+    public function run_node_critical(string $url, array $css_paths): void {
+        if (!self::has_node_capability()) {
+            return;
+        }
+        $url = \esc_url_raw($url);
+        if ($url === '' || empty($css_paths)) {
+            return;
+        }
+        $script = \escapeshellarg(\dirname(__DIR__) . '/tools/node/critical.js');
+        $css_arg = \escapeshellarg(\implode(',', $css_paths));
+        $cmd    = 'node ' . $script
+            . ' --url=' . \escapeshellarg($url)
+            . ' --css=' . $css_arg
+            . ' --width=1200 --height=900';
+        $cmd .= ' 2>&1; echo "__EXIT_STATUS__$?"';
+        $output = \shell_exec($cmd);
+        if (!\is_string($output)) {
+            return;
+        }
+        $exit_code = 0;
+        if (\preg_match('/__EXIT_STATUS__(\d+)$/', $output, $m)) {
+            $exit_code = (int) $m[1];
+            $output    = \substr($output, 0, -\strlen($m[0]));
+        }
+        $css = \trim($output);
+        if ($exit_code !== 0) {
+            throw new \RuntimeException($css !== '' ? $css : 'Critical CSS generation failed', $exit_code);
+        }
+        $hash    = \md5($url);
+        $post_id = \url_to_postid($url);
+        if ($post_id) {
+            \update_post_meta($post_id, '_ae_critical_css_' . $hash, $css);
+        } else {
+            \update_option('ae_critical_css_' . $hash, $css, false);
+        }
+        $this->settings['critical'][$url] = $css;
+        \update_option(self::OPTION, $this->settings, false);
+    }
+
+    /**
      * Detect if current request is a WooCommerce context.
      *
      * @return bool Whether WooCommerce styles are needed.
