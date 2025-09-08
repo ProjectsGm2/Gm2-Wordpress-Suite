@@ -149,9 +149,6 @@ class AE_CSS_Admin {
         $url = isset($_POST['critical_url']) ? esc_url_raw(wp_unslash($_POST['critical_url'])) : '';
         if ($url !== '') {
             AE_CSS_Queue::get_instance()->enqueue('critical', [ 'url' => $url ]);
-            $status = get_option('ae_css_job_status', []);
-            $status['critical'] = [ 'status' => 'queued', 'message' => '' ];
-            update_option('ae_css_job_status', $status, false);
         }
         wp_safe_redirect(wp_get_referer() ?: admin_url('admin.php?page=gm2-css-optimization'));
         exit;

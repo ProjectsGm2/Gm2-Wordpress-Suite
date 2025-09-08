@@ -139,6 +139,10 @@ final class AE_CSS_Queue {
         $queue[] = [ 'type' => $type, 'payload' => $payload ];
         \update_option(self::OPTION, $queue, false);
 
+        $status           = \get_option('ae_css_job_status', []);
+        $status[$type]    = [ 'status' => 'queued', 'message' => '' ];
+        \update_option('ae_css_job_status', $status, false);
+
         if (!\wp_next_scheduled('ae_css_queue_runner')) {
             \wp_schedule_event(time(), 'ae_css_queue_5min', 'ae_css_queue_runner');
         }
