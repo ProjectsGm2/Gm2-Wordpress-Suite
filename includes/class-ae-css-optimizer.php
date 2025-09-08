@@ -43,6 +43,7 @@ final class AE_CSS_Optimizer {
         'woocommerce_smart_enqueue'     => '0',
         'elementor_smart_enqueue'       => '0',
         'critical'                      => [],
+        'logs'                          => [],
     ];
 
     /**
