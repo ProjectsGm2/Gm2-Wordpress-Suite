@@ -429,6 +429,114 @@ class CssOptimizerTest extends WP_UnitTestCase {
         $this->assertFalse(has_action('wp_enqueue_scripts', [ $optimizer, 'enqueue_smart' ]));
     }
 
+    /**
+     * @runInSeparateProcess
+     */
+    public function test_panic_switch_toggle_outputs_single_stylesheet_and_updates_admin_bar(): void {
+        wp_set_current_user(self::factory()->user->create(['role' => 'administrator']));
+        $url = home_url(add_query_arg([], ''));
+        update_option(
+            'ae_css_settings',
+            [
+                'enabled'                      => '1',
+                'flags'                         => [],
+                'safelist'                      => [],
+                'exclude_handles'               => [],
+                'include_above_the_fold_handles'=> [],
+                'generate_critical'             => '1',
+                'async_load_noncritical'        => '1',
+                'woocommerce_smart_enqueue'     => '0',
+                'elementor_smart_enqueue'       => '0',
+                'critical'                      => [ $url => '.critical{color:red;}' ],
+                'logs'                          => [],
+            ]
+        );
+        $optimizer = AE_CSS_Optimizer::get_instance();
+        $optimizer->init();
+        wp_enqueue_style('test', 'https://example.com/style.css');
+
+        require_once ABSPATH . 'wp-includes/class-wp-admin-bar.php';
+        $bar  = new \WP_Admin_Bar();
+        $optimizer->admin_bar_status($bar);
+        $node = $bar->get_node('ae-css-status');
+        $this->assertStringContainsString('AE CSS: ON', $node->title);
+
+        ob_start();
+        do_action('wp_head');
+        $head_on = ob_get_clean();
+        ob_start();
+        wp_print_styles();
+        $out_on     = ob_get_clean();
+        $combined_on = $head_on . $out_on;
+        $this->assertSame(1, substr_count($combined_on, 'rel="preload"'));
+        $this->assertSame(1, substr_count($combined_on, 'rel="stylesheet"'));
+
+        update_option('ae_css_settings', array_merge(get_option('ae_css_settings'), [ 'enabled' => '0' ]));
+        $optimizer->init();
+
+        $bar  = new \WP_Admin_Bar();
+        $optimizer->admin_bar_status($bar);
+        $node = $bar->get_node('ae-css-status');
+        $this->assertStringContainsString('AE CSS: OFF', $node->title);
+
+        wp_dequeue_style('test');
+        wp_deregister_style('test');
+        wp_styles()->queue = [];
+        wp_styles()->done  = [];
+        wp_enqueue_style('test', 'https://example.com/style.css');
+
+        ob_start();
+        do_action('wp_head');
+        $head_off = ob_get_clean();
+        ob_start();
+        wp_print_styles();
+        $out_off     = ob_get_clean();
+        $combined_off = $head_off . $out_off;
+        $this->assertSame(1, substr_count($combined_off, 'rel="stylesheet"'));
+        $this->assertStringNotContainsString('rel="preload"', $combined_off);
+    }
+
+    /**
+     * @runInSeparateProcess
+     */
+    public function test_bypass_query_param_outputs_single_stylesheet(): void {
+        $_GET['ae-css-bypass'] = '1';
+        $url = home_url(add_query_arg([], ''));
+        update_option(
+            'ae_css_settings',
+            [
+                'enabled'                      => '1',
+                'flags'                         => [],
+                'safelist'                      => [],
+                'exclude_handles'               => [],
+                'include_above_the_fold_handles'=> [],
+                'generate_critical'             => '1',
+                'async_load_noncritical'        => '1',
+                'woocommerce_smart_enqueue'     => '0',
+                'elementor_smart_enqueue'       => '0',
+                'critical'                      => [ $url => '.critical{color:red;}' ],
+                'logs'                          => [],
+            ]
+        );
+        $optimizer = AE_CSS_Optimizer::get_instance();
+        $optimizer->init();
+
+        wp_enqueue_style('test', 'https://example.com/style.css');
+
+        ob_start();
+        do_action('wp_head');
+        $head = ob_get_clean();
+        ob_start();
+        wp_print_styles();
+        $out      = ob_get_clean();
+        $combined = $head . $out;
+
+        $this->assertStringNotContainsString('ae-critical-css', $combined);
+        $this->assertSame(1, substr_count($combined, 'rel="stylesheet"'));
+        $this->assertStringNotContainsString('rel="preload"', $combined);
+        unset($_GET['ae-css-bypass']);
+    }
+
     public function test_purgecss_analyze_generates_and_caches_css(): void {
         delete_transient('ae_css_has_node');
         $old_path = getenv('PATH');
