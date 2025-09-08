@@ -161,12 +161,29 @@ class AE_CSS_Admin {
         if (!current_user_can('manage_options')) {
             return;
         }
+        $queue  = get_option('ae_css_queue', []);
+        if (!is_array($queue)) {
+            $queue = [];
+        }
         $status = get_option('ae_css_job_status', []);
-        foreach ($status as $job => $data) {
-            if (empty($data['status']) || $data['status'] === 'idle') {
+        if (!is_array($status)) {
+            $status = [];
+        }
+
+        foreach ($queue as $job) {
+            $type = $job['type'] ?? '';
+            if (in_array($type, [ 'snapshot', 'purge', 'critical' ], true) && !isset($status[$type])) {
+                $status[$type] = [ 'status' => 'queued', 'message' => '' ];
+            }
+        }
+
+        foreach ([ 'snapshot', 'purge', 'critical' ] as $job) {
+            $data   = $status[$job] ?? null;
+            $state  = is_array($data) ? ($data['status'] ?? '') : '';
+            if ($state === '' || $state === 'idle') {
                 continue;
             }
-            $msg = ucfirst($job) . ': ' . $data['status'];
+            $msg = ucfirst($job) . ': ' . $state;
             if (!empty($data['message'])) {
                 $msg .= ' - ' . $data['message'];
             }
