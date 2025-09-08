@@ -11,8 +11,9 @@ use AE\CSS\AE_CSS_Queue;
 /**
  * Admin interface for CSS Optimization settings.
  */
-class AE_CSS_Admin {
+    class AE_CSS_Admin {
     private const DEFAULTS = [
+        'enabled'                      => '1',
         'flags'                         => [],
         'safelist'                      => [],
         'exclude_handles'               => [],
@@ -163,6 +164,7 @@ HTML;
         $async     = isset($input['async_load_noncritical']) && $input['async_load_noncritical'] === '1' ? '1' : '0';
         $woo       = isset($input['woocommerce_smart_enqueue']) && $input['woocommerce_smart_enqueue'] === '1' ? '1' : '0';
         $elementor = isset($input['elementor_smart_enqueue']) && $input['elementor_smart_enqueue'] === '1' ? '1' : '0';
+        $enabled   = isset($input['enabled']) && $input['enabled'] === '1' ? '1' : '0';
 
         $current['exclude_handles']              = $exclude;
         $current['include_above_the_fold_handles']= $include;
@@ -170,6 +172,9 @@ HTML;
         $current['async_load_noncritical']       = $async;
         $current['woocommerce_smart_enqueue']    = $woo;
         $current['elementor_smart_enqueue']      = $elementor;
+        if (array_key_exists('enabled', $input)) {
+            $current['enabled'] = $enabled;
+        }
 
         if (isset($input['logs']) && is_array($input['logs'])) {
             $logs = [];
@@ -407,6 +412,7 @@ HTML;
         $async    = $settings['async_load_noncritical'] ?? '0';
         $woo_smart = $settings['woocommerce_smart_enqueue'] ?? '0';
         $elementor_smart = $settings['elementor_smart_enqueue'] ?? '0';
+        $enabled = $settings['enabled'] ?? '1';
 
         $all_handles = [];
         $styles = wp_styles();
@@ -441,6 +447,12 @@ HTML;
         settings_fields('ae_css');
 
         echo '<table class="form-table"><tbody>';
+        // Enable toggle
+        $checked = $enabled === '1' ? 'checked="checked"' : '';
+        echo '<tr><th scope="row">' . esc_html__( 'Enable CSS optimization', 'gm2-wordpress-suite' ) . '</th><td>';
+        echo '<label><input type="checkbox" name="ae_css_settings[enabled]" value="1" ' . $checked . ' /> ' . esc_html__( 'Enable CSS optimization', 'gm2-wordpress-suite' ) . '</label>';
+        echo '</td></tr>';
+
         // Flags
         echo '<tr><th scope="row">' . esc_html__( 'Force Keep Styles', 'gm2-wordpress-suite' ) . '</th><td>';
         foreach ($flag_labels as $key => $label) {

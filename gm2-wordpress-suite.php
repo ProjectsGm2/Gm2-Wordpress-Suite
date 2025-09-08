@@ -286,6 +286,7 @@ function gm2_activate_css_optimizer_defaults() {
     add_option(
         'ae_css_settings',
         [
+            'enabled'                      => '1',
             'flags'                         => [],
             'safelist'                      => [],
             'exclude_handles'               => [],

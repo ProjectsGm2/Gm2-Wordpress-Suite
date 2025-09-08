@@ -34,6 +34,7 @@ final class AE_CSS_Optimizer {
      * @var array
      */
     private array $settings = [
+        'enabled'                      => '1',
         'flags'                         => [],
         'safelist'                      => [],
         'exclude_handles'               => [],
@@ -87,11 +88,20 @@ final class AE_CSS_Optimizer {
      * @return void
      */
     public function init(): void {
+        $this->settings = \get_option(self::OPTION, $this->settings);
+
+        if (($this->settings['enabled'] ?? '1') !== '1') {
+            remove_action('wp_enqueue_scripts', [ $this, 'enqueue_smart' ], PHP_INT_MAX);
+            remove_action('wp_head', [ $this, 'print_critical_css' ], 1);
+            remove_filter('style_loader_tag', [ $this, 'filter_style_loader_tag' ], 20);
+            return;
+        }
+
         if ($this->booted) {
             return;
         }
-        $this->booted   = true;
-        $this->settings = \get_option(self::OPTION, $this->settings);
+        $this->booted = true;
+
         if (!\is_array($this->settings['safelist'])) {
             $this->settings['safelist'] = \array_filter(\array_map('trim', \preg_split('/\r\n|\r|\n/', (string) $this->settings['safelist'])));
         }
