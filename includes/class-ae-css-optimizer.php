@@ -88,6 +88,16 @@ final class AE_CSS_Optimizer {
      * @return void
      */
     public function init(): void {
+        if (isset($_GET['ae-css-rollback']) && $_GET['ae-css-rollback'] === '1') {
+            $nonce = $_GET['_wpnonce'] ?? '';
+            if (\wp_verify_nonce($nonce, 'ae-css-rollback')) {
+                $url = \home_url(\add_query_arg([], ''));
+                \set_transient('ae_css_bypass_' . \md5($url), '1', HOUR_IN_SECONDS);
+                \wp_safe_redirect($url);
+                exit;
+            }
+        }
+
         $this->settings = \get_option(self::OPTION, $this->settings);
 
         if (($this->settings['enabled'] ?? '1') !== '1') {
@@ -146,6 +156,15 @@ final class AE_CSS_Optimizer {
                 'class' => 'ae-css-status',
                 'style' => 'background: ' . $color . '; color: #fff;',
             ],
+        ]);
+
+        $current_url  = \home_url(\add_query_arg([], ''));
+        $rollback_url = \wp_nonce_url(\add_query_arg('ae-css-rollback', '1', $current_url), 'ae-css-rollback');
+        $bar->add_node([
+            'id'     => 'ae-css-rollback',
+            'parent' => 'ae-css-status',
+            'title'  => 'Rollback styles for this page',
+            'href'   => $rollback_url,
         ]);
     }
 
@@ -315,12 +334,15 @@ final class AE_CSS_Optimizer {
      * @return bool
      */
     private function should_bypass_async(): bool {
+        $url = \home_url(\add_query_arg([], ''));
+        if (\get_transient('ae_css_bypass_' . \md5($url)) === '1') {
+            return true;
+        }
         if (isset($_GET['ae-css-bypass']) && $_GET['ae-css-bypass'] === '1') {
             return true;
         }
         $bypass = \get_transient('ae_css_bypass_urls');
         if (\is_array($bypass)) {
-            $url = \home_url(\add_query_arg([], ''));
             if (\in_array($url, $bypass, true)) {
                 return true;
             }
