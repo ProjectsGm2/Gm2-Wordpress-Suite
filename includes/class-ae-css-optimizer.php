@@ -199,6 +199,9 @@ final class AE_CSS_Optimizer {
      * @return void
      */
     public function print_critical_css(): void {
+        if ($this->should_bypass_async()) {
+            return;
+        }
         $url      = \home_url(\add_query_arg([], ''));
         $critical = $this->get_critical_css($url);
 
@@ -272,11 +275,21 @@ final class AE_CSS_Optimizer {
     }
 
     /**
-     * Determine whether async loading should be bypassed for debugging.
+     * Determine whether async loading should be bypassed for debugging or per-request.
      *
      * @return bool
      */
     private function should_bypass_async(): bool {
+        if (isset($_GET['ae-css-bypass']) && $_GET['ae-css-bypass'] === '1') {
+            return true;
+        }
+        $bypass = \get_transient('ae_css_bypass_urls');
+        if (\is_array($bypass)) {
+            $url = \home_url(\add_query_arg([], ''));
+            if (\in_array($url, $bypass, true)) {
+                return true;
+            }
+        }
         if (!\is_user_logged_in() || !\current_user_can('manage_options')) {
             return false;
         }
