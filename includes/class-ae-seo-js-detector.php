@@ -25,21 +25,25 @@ class AE_SEO_JS_Detector {
      * Build and cache script dependency map.
      */
     public static function build_map(): void {
-        if (get_transient('aejs_map') !== false) {
-            return;
-        }
+        $existing = get_transient('aejs_map');
+        $map      = is_array($existing) ? $existing : [];
+
         $scripts = wp_scripts();
         if (!$scripts) {
             return;
         }
-        $map = [];
+
         foreach ($scripts->registered as $handle => $script) {
+            if (isset($map[$handle])) {
+                continue;
+            }
             $map[$handle] = [
                 'src'       => $script->src,
                 'deps'      => $script->deps,
                 'in_footer' => !empty($script->extra['group']) && (int) $script->extra['group'] === 1,
             ];
         }
+
         set_transient('aejs_map', $map, 30 * MINUTE_IN_SECONDS);
     }
 
