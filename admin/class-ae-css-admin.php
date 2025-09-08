@@ -21,6 +21,7 @@ class AE_CSS_Admin {
         add_action('admin_post_ae_css_purge', [ $this, 'handle_purge_request' ]);
         add_action('admin_post_ae_css_generate_critical', [ $this, 'handle_generate_critical_request' ]);
         add_action('admin_notices', [ $this, 'show_queue_notices' ]);
+        add_action('wp_ajax_ae_css_estimate_savings', [ $this, 'ajax_estimate_savings' ]);
     }
 
     /**
@@ -119,6 +120,72 @@ class AE_CSS_Admin {
             'gm2-css-optimization',
             [ $this, 'render_page' ]
         );
+    }
+
+    /**
+     * AJAX handler for estimated savings refresh.
+     */
+    public function ajax_estimate_savings(): void {
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('forbidden', 403);
+        }
+        check_ajax_referer('ae_css_refresh', 'nonce');
+        wp_send_json_success($this->calculate_estimated_savings());
+    }
+
+    /**
+     * Calculate bytes and estimated savings for current page styles.
+     *
+     * @return array{
+     *   total:int,
+     *   purged:int,
+     *   diff:int,
+     *   percent:float
+     * }
+     */
+    private function calculate_estimated_savings(): array {
+        $total     = 0;
+        $css_paths = [];
+        $styles    = wp_styles();
+        if ($styles instanceof \WP_Styles) {
+            foreach ($styles->registered as $style) {
+                $src = $style->src ?? '';
+                if ($src === '') {
+                    continue;
+                }
+                $src_path = wp_parse_url($src, PHP_URL_PATH);
+                $path     = '';
+                if ($src_path !== false && strpos($src, home_url()) === 0) {
+                    $home_path = wp_parse_url(home_url(), PHP_URL_PATH);
+                    $path      = ABSPATH . ltrim(substr($src_path, strlen($home_path)), '/');
+                } elseif ($src_path !== false && strpos($src, '://') === false) {
+                    $path = ABSPATH . ltrim($src_path, '/');
+                }
+                if ($path !== '' && file_exists($path)) {
+                    $css_paths[] = $path;
+                    $total      += (int) filesize($path);
+                }
+            }
+        }
+
+        $html = '';
+        $res  = wp_remote_get(home_url('/'));
+        if (!is_wp_error($res)) {
+            $html = (string) wp_remote_retrieve_body($res);
+        }
+        $purged = 0;
+        if ($html !== '' && !empty($css_paths)) {
+            $purged_css = AE_CSS_Optimizer::purgecss_analyze($css_paths, [ $html ]);
+            $purged     = strlen($purged_css);
+        }
+        $diff    = max($total - $purged, 0);
+        $percent = $total > 0 ? round(($diff / $total) * 100, 2) : 0.0;
+        return [
+            'total'   => $total,
+            'purged'  => $purged,
+            'diff'    => $diff,
+            'percent' => $percent,
+        ];
     }
 
     /**
@@ -228,6 +295,14 @@ class AE_CSS_Admin {
         echo '<div class="wrap">';
         echo '<h1>' . esc_html__( 'CSS Optimization', 'gm2-wordpress-suite' ) . '</h1>';
         echo '<p><span style="display:inline-block;padding:2px 6px;color:#fff;border-radius:3px;background:' . esc_attr($badge_color) . ';">' . esc_html($badge_text) . '</span></p>';
+
+        wp_enqueue_script('jquery');
+        $estimate = $this->calculate_estimated_savings();
+        $nonce    = wp_create_nonce('ae_css_refresh');
+        echo '<div id="ae-css-estimate" class="notice notice-info" data-nonce="' . esc_attr($nonce) . '">';
+        echo '<p><strong>' . esc_html__( 'Estimated savings', 'gm2-wordpress-suite' ) . ':</strong> <span id="ae-css-estimate-text">' . esc_html($estimate['diff']) . ' bytes (' . esc_html($estimate['percent']) . '%)</span> <button type="button" id="ae-css-refresh" class="button">' . esc_html__( 'Refresh', 'gm2-wordpress-suite' ) . '</button></p>';
+        echo '</div>';
+        echo '<script>jQuery(function($){$(\'#ae-css-refresh\').on(\'click\',function(e){e.preventDefault();var b=$(this);b.prop(\'disabled\',true);$.post(ajaxurl,{action:\'ae_css_estimate_savings\',nonce:$(\'#ae-css-estimate\').data(\'nonce\')},function(r){if(r&&r.success){$(\'#ae-css-estimate-text\').text(r.data.diff+" bytes ("+r.data.percent+"%)");}b.prop(\'disabled\',false);});});});</script>';
 
         echo '<form method="post" action="options.php">';
         settings_fields('ae_css');
