@@ -131,6 +131,7 @@ require_once GM2_PLUGIN_DIR . 'includes/class-aeseo-settings.php';
 
 function gm2_css_optimizer_init() {
     \AE\CSS\AE_CSS_Optimizer::get_instance()->init();
+    \AE\CSS\AE_CSS_Queue::init();
     (new \Gm2\AE_CSS_Admin())->run();
 }
 add_action('init', 'gm2_css_optimizer_init');
