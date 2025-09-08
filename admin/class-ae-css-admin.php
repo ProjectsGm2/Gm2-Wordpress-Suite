@@ -6,6 +6,7 @@ if (!defined('ABSPATH')) {
 }
 
 use AE\CSS\AE_CSS_Optimizer;
+use AE\CSS\AE_CSS_Queue;
 
 /**
  * Admin interface for CSS Optimization settings.
@@ -41,7 +42,6 @@ class AE_CSS_Admin {
                     'woocommerce_smart_enqueue'     => '0',
                     'elementor_smart_enqueue'       => '0',
                     'critical'                      => [],
-                    'queue'                         => [],
                 ],
             ]
         );
@@ -64,7 +64,6 @@ class AE_CSS_Admin {
             'woocommerce_smart_enqueue'     => '0',
             'elementor_smart_enqueue'       => '0',
             'critical'                      => [],
-            'queue'                         => [],
         ];
         $current = get_option('ae_css_settings', $defaults);
         if (!is_array($current)) {
@@ -149,14 +148,10 @@ class AE_CSS_Admin {
         check_admin_referer('ae_css_critical');
         $url = isset($_POST['critical_url']) ? esc_url_raw(wp_unslash($_POST['critical_url'])) : '';
         if ($url !== '') {
-            $optimizer = AE_CSS_Optimizer::get_instance();
-            $optimizer->mark_url_for_critical_generation($url);
+            AE_CSS_Queue::get_instance()->enqueue('critical', [ 'url' => $url ]);
             $status = get_option('ae_css_job_status', []);
             $status['critical'] = [ 'status' => 'queued', 'message' => '' ];
             update_option('ae_css_job_status', $status, false);
-            if (!wp_next_scheduled('ae_css_process_queue')) {
-                wp_schedule_single_event(time() + 1, 'ae_css_process_queue');
-            }
         }
         wp_safe_redirect(wp_get_referer() ?: admin_url('admin.php?page=gm2-css-optimization'));
         exit;

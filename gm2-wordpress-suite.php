@@ -295,7 +295,6 @@ function gm2_activate_css_optimizer_defaults() {
             'woocommerce_smart_enqueue'     => '0',
             'elementor_smart_enqueue'       => '0',
             'critical'                      => [],
-            'queue'                         => [],
         ]
     );
     \AE\CSS\AE_CSS_Optimizer::get_instance()->maybe_generate_home_critical();
