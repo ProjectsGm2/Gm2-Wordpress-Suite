@@ -12,6 +12,19 @@ use AE\CSS\AE_CSS_Queue;
  * Admin interface for CSS Optimization settings.
  */
 class AE_CSS_Admin {
+    private const DEFAULTS = [
+        'flags'                         => [],
+        'safelist'                      => [],
+        'exclude_handles'               => [],
+        'include_above_the_fold_handles'=> [],
+        'generate_critical'             => '0',
+        'async_load_noncritical'        => '0',
+        'woocommerce_smart_enqueue'     => '0',
+        'elementor_smart_enqueue'       => '0',
+        'critical'                      => [],
+        'logs'                          => [],
+    ];
+
     /**
      * Hook registrations.
      */
@@ -73,18 +86,7 @@ HTML;
             'ae_css_settings',
             [
                 'sanitize_callback' => [ __CLASS__, 'sanitize_settings' ],
-                'default'           => [
-                    'flags'                         => [],
-                    'safelist'                      => [],
-                    'exclude_handles'               => [],
-                    'include_above_the_fold_handles'=> [],
-                    'generate_critical'             => '0',
-                    'async_load_noncritical'        => '0',
-                    'woocommerce_smart_enqueue'     => '0',
-                    'elementor_smart_enqueue'       => '0',
-                    'critical'                      => [],
-                    'logs'                          => [],
-                ],
+                'default'           => self::DEFAULTS,
             ]
         );
     }
@@ -96,19 +98,8 @@ HTML;
      * @return array Sanitized settings merged with existing.
      */
     public static function sanitize_settings($input): array {
-        $defaults = [
-            'flags'                         => [],
-            'safelist'                      => [],
-            'exclude_handles'               => [],
-            'include_above_the_fold_handles'=> [],
-            'generate_critical'             => '0',
-            'async_load_noncritical'        => '0',
-            'woocommerce_smart_enqueue'     => '0',
-            'elementor_smart_enqueue'       => '0',
-            'critical'                      => [],
-            'logs'                          => [],
-        ];
-        $current = get_option('ae_css_settings', $defaults);
+        $defaults = self::DEFAULTS;
+        $current  = get_option('ae_css_settings', $defaults);
         if (!is_array($current)) {
             $current = $defaults;
         }
@@ -121,22 +112,42 @@ HTML;
             $sanitized_flags[$key] = isset($flag_inputs[$flag]) && $flag_inputs[$flag] === '1' ? '1' : '0';
         }
 
-        $safelist_input = isset($input['safelist']) ? sanitize_textarea_field($input['safelist']) : '';
-        $safelist = [];
-        if ($safelist_input !== '') {
-            $lines = preg_split('/\r\n|\r|\n/', $safelist_input);
-            foreach ($lines as $line) {
-                $line = trim($line);
-                if ($line === '') {
-                    continue;
+        if (array_key_exists('safelist', $input)) {
+            $raw      = $input['safelist'];
+            $safelist = [];
+            if (is_array($raw)) {
+                foreach ($raw as $line) {
+                    $line = trim((string) $line);
+                    if ($line === '') {
+                        continue;
+                    }
+                    if (strlen($line) >= 2 && $line[0] === '/' && substr($line, -1) === '/') {
+                        $safelist[] = $line;
+                    } else {
+                        $safelist[] = sanitize_text_field($line);
+                    }
                 }
-                if (strlen($line) >= 2 && $line[0] === '/' && substr($line, -1) === '/') {
-                    $safelist[] = $line;
-                } else {
-                    $safelist[] = sanitize_text_field($line);
+            } else {
+                $safelist_input = sanitize_textarea_field($raw);
+                if ($safelist_input !== '') {
+                    $lines = preg_split('/\r\n|\r|\n/', $safelist_input);
+                    foreach ($lines as $line) {
+                        $line = trim($line);
+                        if ($line === '') {
+                            continue;
+                        }
+                        if (strlen($line) >= 2 && $line[0] === '/' && substr($line, -1) === '/') {
+                            $safelist[] = $line;
+                        } else {
+                            $safelist[] = sanitize_text_field($line);
+                        }
+                    }
                 }
             }
+            $current['safelist'] = $safelist;
         }
+
+        $current['flags']                        = $sanitized_flags;
 
         $exclude = [];
         if (!empty($input['exclude_handles']) && is_array($input['exclude_handles'])) {
@@ -153,8 +164,6 @@ HTML;
         $woo       = isset($input['woocommerce_smart_enqueue']) && $input['woocommerce_smart_enqueue'] === '1' ? '1' : '0';
         $elementor = isset($input['elementor_smart_enqueue']) && $input['elementor_smart_enqueue'] === '1' ? '1' : '0';
 
-        $current['flags']                        = $sanitized_flags;
-        $current['safelist']                     = $safelist;
         $current['exclude_handles']              = $exclude;
         $current['include_above_the_fold_handles']= $include;
         $current['generate_critical']            = $generate;
@@ -175,6 +184,13 @@ HTML;
                 ];
             }
             $current['logs'] = $logs;
+        }
+
+        if (!isset($current['safelist']) || !is_array($current['safelist'])) {
+            $current['safelist'] = [];
+        }
+        if (!isset($current['logs']) || !is_array($current['logs'])) {
+            $current['logs'] = [];
         }
 
         return $current;
