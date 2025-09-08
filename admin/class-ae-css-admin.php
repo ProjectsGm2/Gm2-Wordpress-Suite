@@ -28,7 +28,14 @@ class AE_CSS_Admin {
             'ae_css_settings',
             [
                 'sanitize_callback' => [ __CLASS__, 'sanitize_settings' ],
-                'default'           => [],
+                'default'           => [
+                    'flags'                         => [],
+                    'safelist'                      => '',
+                    'exclude_handles'               => [],
+                    'include_above_the_fold_handles'=> [],
+                    'critical'                      => [],
+                    'queue'                         => [],
+                ],
             ]
         );
     }
@@ -40,21 +47,25 @@ class AE_CSS_Admin {
      * @return array Sanitized settings merged with existing.
      */
     public static function sanitize_settings($input): array {
-        $current = get_option('ae_css_settings', [ 'flags' => [], 'critical' => [], 'queue' => [] ]);
+        $defaults = [
+            'flags'                         => [],
+            'safelist'                      => '',
+            'exclude_handles'               => [],
+            'include_above_the_fold_handles'=> [],
+            'critical'                      => [],
+            'queue'                         => [],
+        ];
+        $current = get_option('ae_css_settings', $defaults);
         if (!is_array($current)) {
-            $current = [ 'flags' => [], 'critical' => [], 'queue' => [] ];
+            $current = $defaults;
         }
 
-        $flags = [ 'woo', 'elementor' ];
         $sanitized_flags = [];
-        if (isset($input['flags']) && is_array($input['flags'])) {
-            foreach ($flags as $flag) {
-                $sanitized_flags[$flag] = isset($input['flags'][$flag]) && $input['flags'][$flag] === '1' ? '1' : '0';
-            }
-        } else {
-            foreach ($flags as $flag) {
-                $sanitized_flags[$flag] = '0';
-            }
+        $flag_inputs    = isset($input['flags']) && is_array($input['flags']) ? $input['flags'] : [];
+        $known_flags    = array_unique(array_merge(array_keys($current['flags']), array_keys($flag_inputs)));
+        foreach ($known_flags as $flag) {
+            $key = sanitize_key($flag);
+            $sanitized_flags[$key] = isset($flag_inputs[$flag]) && $flag_inputs[$flag] === '1' ? '1' : '0';
         }
 
         $safelist = isset($input['safelist']) ? sanitize_textarea_field($input['safelist']) : '';
@@ -69,10 +80,10 @@ class AE_CSS_Admin {
             $include = array_values(array_unique(array_map('sanitize_key', $input['include_above_the_fold_handles'])));
         }
 
-        $current['flags'] = $sanitized_flags;
-        $current['safelist'] = $safelist;
-        $current['exclude_handles'] = $exclude;
-        $current['include_above_the_fold_handles'] = $include;
+        $current['flags']                        = $sanitized_flags;
+        $current['safelist']                     = $safelist;
+        $current['exclude_handles']              = $exclude;
+        $current['include_above_the_fold_handles']= $include;
 
         return $current;
     }
@@ -148,7 +159,7 @@ class AE_CSS_Admin {
             $selected = in_array($handle, $exclude, true) ? 'selected="selected"' : '';
             echo '<option value="' . esc_attr($handle) . '" ' . $selected . '>' . esc_html($handle) . '</option>';
         }
-        echo '</select></td></tr>';
+        echo '</select><p class="description">' . esc_html__( 'Styles to ignore during optimization.', 'gm2-wordpress-suite' ) . '</p></td></tr>';
 
         // Include above the fold handles
         echo '<tr><th scope="row"><label for="ae-css-include">' . esc_html__( 'Include Above The Fold', 'gm2-wordpress-suite' ) . '</label></th>';
@@ -157,7 +168,7 @@ class AE_CSS_Admin {
             $selected = in_array($handle, $include, true) ? 'selected="selected"' : '';
             echo '<option value="' . esc_attr($handle) . '" ' . $selected . '>' . esc_html($handle) . '</option>';
         }
-        echo '</select></td></tr>';
+        echo '</select><p class="description">' . esc_html__( 'Styles always kept above the fold.', 'gm2-wordpress-suite' ) . '</p></td></tr>';
 
         echo '</tbody></table>';
 
