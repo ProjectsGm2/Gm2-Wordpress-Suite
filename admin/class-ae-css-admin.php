@@ -213,7 +213,7 @@ class AE_CSS_Admin {
         $has_node = AE_CSS_Optimizer::has_node_capability();
         $badge_text = $has_node
             ? __( 'Node tools available (PurgeCSS/Penthouse)', 'gm2-wordpress-suite' )
-            : __( 'PHP fallback mode', 'gm2-wordpress-suite' );
+            : __( 'PHP fallback in use', 'gm2-wordpress-suite' );
         $badge_color = $has_node ? '#46b450' : '#dc3232';
 
         echo '<div class="wrap">';
