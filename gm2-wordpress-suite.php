@@ -281,7 +281,17 @@ function gm2_activate_plugin() {
 register_activation_hook(__FILE__, 'gm2_activate_plugin');
 
 function gm2_activate_css_optimizer_defaults() {
-    add_option('ae_css_settings', [ 'flags' => [], 'critical' => [], 'queue' => [] ]);
+    add_option(
+        'ae_css_settings',
+        [
+            'flags'                         => [],
+            'safelist'                      => '',
+            'exclude_handles'               => [],
+            'include_above_the_fold_handles'=> [],
+            'critical'                      => [],
+            'queue'                         => [],
+        ]
+    );
 }
 register_activation_hook(__FILE__, 'gm2_activate_css_optimizer_defaults');
 
