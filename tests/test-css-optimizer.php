@@ -12,7 +12,17 @@ class CssOptimizerTest extends WP_UnitTestCase {
     protected function setUp(): void {
         parent::setUp();
         $this->reset_optimizer();
-        update_option('ae_css_settings', [ 'flags' => [], 'critical' => [], 'queue' => [] ]);
+        update_option(
+            'ae_css_settings',
+            [
+                'flags'                         => [],
+                'safelist'                      => '',
+                'exclude_handles'               => [],
+                'include_above_the_fold_handles'=> [],
+                'critical'                      => [],
+                'queue'                         => [],
+            ]
+        );
         remove_all_actions('wp_head');
         add_action('wp_head', 'wp_print_styles', 8);
     }
@@ -37,7 +47,14 @@ class CssOptimizerTest extends WP_UnitTestCase {
         delete_option('ae_css_settings');
         gm2_activate_css_optimizer_defaults();
         $this->assertSame(
-            [ 'flags' => [], 'critical' => [], 'queue' => [] ],
+            [
+                'flags'                         => [],
+                'safelist'                      => '',
+                'exclude_handles'               => [],
+                'include_above_the_fold_handles'=> [],
+                'critical'                      => [],
+                'queue'                         => [],
+            ],
             get_option('ae_css_settings')
         );
         if (!defined('WP_UNINSTALL_PLUGIN')) {
@@ -116,7 +133,17 @@ class CssOptimizerTest extends WP_UnitTestCase {
         if (!class_exists('WooCommerce')) {
             eval('class WooCommerce {}');
         }
-        update_option('ae_css_settings', [ 'flags' => [ 'woo' => '1' ], 'critical' => [], 'queue' => [] ]);
+        update_option(
+            'ae_css_settings',
+            [
+                'flags'                         => [ 'woo' => '1' ],
+                'safelist'                      => '',
+                'exclude_handles'               => [],
+                'include_above_the_fold_handles'=> [],
+                'critical'                      => [],
+                'queue'                         => [],
+            ]
+        );
         $optimizer = AE_CSS_Optimizer::get_instance();
         $optimizer->init();
         wp_enqueue_style('woocommerce-general', 'https://example.com/woo.css');
@@ -126,11 +153,17 @@ class CssOptimizerTest extends WP_UnitTestCase {
 
     public function test_inject_critical_and_defer_inlines_and_defers_when_enabled(): void {
         $url = home_url(add_query_arg([], ''));
-        update_option('ae_css_settings', [
-            'flags'    => [],
-            'critical' => [ $url => '.critical{color:red;}' ],
-            'queue'    => [],
-        ]);
+        update_option(
+            'ae_css_settings',
+            [
+                'flags'                         => [],
+                'safelist'                      => '',
+                'exclude_handles'               => [],
+                'include_above_the_fold_handles'=> [],
+                'critical'                      => [ $url => '.critical{color:red;}' ],
+                'queue'                         => [],
+            ]
+        );
         $optimizer = AE_CSS_Optimizer::get_instance();
         $optimizer->init();
 
