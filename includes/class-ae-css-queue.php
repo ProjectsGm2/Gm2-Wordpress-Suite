@@ -26,6 +26,13 @@ final class AE_CSS_Queue {
     }
 
     /**
+     * Initialize the queue.
+     */
+    public static function init(): void {
+        self::bootstrap();
+    }
+
+    /**
      * Retrieve singleton instance.
      *
      * @return self
@@ -121,5 +128,3 @@ final class AE_CSS_Queue {
         }
     }
 }
-
-AE_CSS_Queue::bootstrap();
