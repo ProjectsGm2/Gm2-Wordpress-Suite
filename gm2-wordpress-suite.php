@@ -112,6 +112,7 @@ require_once GM2_PLUGIN_DIR . 'includes/Gm2_Script_Attributes.php';
 require_once GM2_PLUGIN_DIR . 'includes/functions-assets.php';
 require_once GM2_PLUGIN_DIR . 'includes/Perf/Enqueue.php';
 require_once GM2_PLUGIN_DIR . 'includes/class-ae-css-optimizer.php';
+require_once GM2_PLUGIN_DIR . 'includes/class-ae-css-queue.php';
 require_once GM2_PLUGIN_DIR . 'includes/class-ae-seo-js-detector.php';
 require_once GM2_PLUGIN_DIR . 'includes/class-ae-seo-js-manager.php';
 require_once GM2_PLUGIN_DIR . 'includes/class-ae-seo-js-controller.php';
