@@ -113,6 +113,7 @@ require_once GM2_PLUGIN_DIR . 'includes/functions-assets.php';
 require_once GM2_PLUGIN_DIR . 'includes/Perf/Enqueue.php';
 require_once GM2_PLUGIN_DIR . 'includes/class-ae-css-optimizer.php';
 require_once GM2_PLUGIN_DIR . 'includes/class-ae-css-queue.php';
+require_once GM2_PLUGIN_DIR . 'includes/class-ae-utility-css.php';
 require_once GM2_PLUGIN_DIR . 'includes/class-ae-seo-js-detector.php';
 require_once GM2_PLUGIN_DIR . 'includes/class-ae-seo-js-manager.php';
 require_once GM2_PLUGIN_DIR . 'includes/class-ae-seo-js-controller.php';
@@ -157,6 +158,7 @@ add_action('init', 'gm2_css_optimizer_init');
 \Gm2\AESEO_Settings::register();
 \Gm2\Perf\Enqueue::init();
 \Gm2\Perf\Settings::init();
+\Gm2\AE_Utility_CSS::init();
 \Gm2\AE_SEO_Font_Manager::init();
 if (get_option('gm2_pretty_versioned_urls', '0') === '1') {
     \Gm2\Gm2_Version_Route_Apache::maybe_apply();
@@ -295,6 +297,7 @@ function gm2_activate_css_optimizer_defaults() {
             'async_load_noncritical'        => '0',
             'woocommerce_smart_enqueue'     => '0',
             'elementor_smart_enqueue'       => '0',
+            'utility_css'                   => '0',
             'critical'                      => [],
             'logs'                          => [],
         ]
