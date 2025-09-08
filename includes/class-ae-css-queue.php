@@ -116,7 +116,9 @@ final class AE_CSS_Queue {
                     }
                     break;
                 case 'critical':
-                    $optimizer->process_queue();
+                    if (is_array($payload)) {
+                        $optimizer->process_critical_job($payload);
+                    }
                     break;
             }
         } catch (\Throwable $e) {

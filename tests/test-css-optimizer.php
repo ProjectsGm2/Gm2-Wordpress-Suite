@@ -24,7 +24,6 @@ class CssOptimizerTest extends WP_UnitTestCase {
                 'woocommerce_smart_enqueue'     => '0',
                 'elementor_smart_enqueue'       => '0',
                 'critical'                      => [],
-                'queue'                         => [],
             ]
         );
         remove_all_actions('wp_head');
@@ -64,7 +63,6 @@ class CssOptimizerTest extends WP_UnitTestCase {
                 'woocommerce_smart_enqueue'     => '0',
                 'elementor_smart_enqueue'       => '0',
                 'critical'                      => [],
-                'queue'                         => [],
             ],
             get_option('ae_css_settings')
         );
@@ -158,7 +156,6 @@ class CssOptimizerTest extends WP_UnitTestCase {
                 'woocommerce_smart_enqueue'     => '0',
                 'elementor_smart_enqueue'       => '0',
                 'critical'                      => [],
-                'queue'                         => [],
             ]
         );
         $optimizer = AE_CSS_Optimizer::get_instance();
@@ -185,7 +182,6 @@ class CssOptimizerTest extends WP_UnitTestCase {
                 'woocommerce_smart_enqueue'     => '1',
                 'elementor_smart_enqueue'       => '0',
                 'critical'                      => [],
-                'queue'                         => [],
             ]
         );
         $optimizer = AE_CSS_Optimizer::get_instance();
@@ -212,7 +208,6 @@ class CssOptimizerTest extends WP_UnitTestCase {
                 'woocommerce_smart_enqueue'     => '1',
                 'elementor_smart_enqueue'       => '0',
                 'critical'                      => [],
-                'queue'                         => [],
             ]
         );
         add_filter('ae/css/force_keep_style', function ($keep, $handle) {
@@ -246,7 +241,6 @@ class CssOptimizerTest extends WP_UnitTestCase {
                 'woocommerce_smart_enqueue'     => '0',
                 'elementor_smart_enqueue'       => '1',
                 'critical'                      => [],
-                'queue'                         => [],
             ]
         );
         $optimizer = AE_CSS_Optimizer::get_instance();
@@ -280,7 +274,6 @@ class CssOptimizerTest extends WP_UnitTestCase {
                 'woocommerce_smart_enqueue'     => '0',
                 'elementor_smart_enqueue'       => '1',
                 'critical'                      => [],
-                'queue'                         => [],
             ]
         );
         $optimizer = AE_CSS_Optimizer::get_instance();
@@ -305,7 +298,6 @@ class CssOptimizerTest extends WP_UnitTestCase {
                 'woocommerce_smart_enqueue'     => '0',
                 'elementor_smart_enqueue'       => '0',
                 'critical'                      => [ $url => '.critical{color:red;}' ],
-                'queue'                         => [],
             ]
         );
         $optimizer = AE_CSS_Optimizer::get_instance();
@@ -396,7 +388,6 @@ class CssOptimizerTest extends WP_UnitTestCase {
                 'woocommerce_smart_enqueue'     => '0',
                 'elementor_smart_enqueue'       => '0',
                 'critical'                      => [],
-                'queue'                         => [],
             ]
         );
         $optimizer = AE_CSS_Optimizer::get_instance();
