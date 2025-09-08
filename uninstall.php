@@ -23,7 +23,7 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 // gm2_chatgpt_max_tokens, gm2_chatgpt_endpoint, gm2_gemma_api_key, gm2_gemma_endpoint,
 // gm2_gemma_model_path, gm2_gemma_binary_path,
 // gm2_llama_api_key, gm2_llama_endpoint, gm2_llama_model_path, gm2_llama_binary_path, gm2_pagespeed_api_key, gm2_pagespeed_scores,
-// gm2_bulk_ai_page_size, gm2_bulk_ai_status, gm2_bulk_ai_post_type, gm2_bulk_ai_term.
+// gm2_bulk_ai_page_size, gm2_bulk_ai_status, gm2_bulk_ai_post_type, gm2_bulk_ai_term, ae_css_settings.
 $option_names = array(
     'gm2_suite_settings',
     'gm2_suite_version',
@@ -134,8 +134,8 @@ if ( is_multisite() ) {
         foreach ( $option_names as $option ) {
             delete_option( $option );
         }
+        restore_current_blog();
     }
-    restore_current_blog();
 
     // Remove network-level options.
     foreach ( $option_names as $option ) {
