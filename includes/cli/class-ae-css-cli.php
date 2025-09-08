@@ -22,11 +22,23 @@ class AE_CSS_CLI extends \WP_CLI_Command {
         \WP_CLI::line( sprintf( __( 'Queue length: %d', 'gm2-wordpress-suite' ), count( $queue ) ) );
         if ( empty( $types ) ) {
             \WP_CLI::line( __( 'No pending jobs.', 'gm2-wordpress-suite' ) );
-            return;
+        } else {
+            \WP_CLI::line( __( 'Pending job types:', 'gm2-wordpress-suite' ) );
+            foreach ( $types as $type => $count ) {
+                \WP_CLI::line( sprintf( ' - %s: %d', $type, $count ) );
+            }
         }
-        \WP_CLI::line( __( 'Pending job types:', 'gm2-wordpress-suite' ) );
-        foreach ( $types as $type => $count ) {
-            \WP_CLI::line( sprintf( ' - %s: %d', $type, $count ) );
+
+        $status = \get_option( 'ae_css_job_status', [] );
+        if ( \is_array( $status ) && ! empty( $status ) ) {
+            \WP_CLI::line( __( 'Job status:', 'gm2-wordpress-suite' ) );
+            foreach ( $status as $job => $data ) {
+                $msg = $data['status'] ?? '';
+                if ( ! empty( $data['message'] ) ) {
+                    $msg .= ' - ' . $data['message'];
+                }
+                \WP_CLI::line( sprintf( ' * %s: %s', $job, $msg ) );
+            }
         }
     }
 
