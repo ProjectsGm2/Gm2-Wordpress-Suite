@@ -161,7 +161,7 @@ class AE_CSS_Admin {
         if (!current_user_can('manage_options')) {
             wp_send_json_error('forbidden', 403);
         }
-        check_ajax_referer('ae_css_refresh', 'nonce');
+        check_ajax_referer('ae_css_admin', 'nonce');
         wp_send_json_success($this->calculate_estimated_savings());
     }
 
@@ -332,6 +332,9 @@ class AE_CSS_Admin {
      * Render settings page.
      */
     public function render_page(): void {
+        if (!current_user_can('manage_options')) {
+            wp_die();
+        }
         $settings = get_option('ae_css_settings', []);
         if (!is_array($settings)) {
             $settings = [];
@@ -372,11 +375,11 @@ class AE_CSS_Admin {
 
         wp_enqueue_script('jquery');
         $estimate = $this->calculate_estimated_savings();
-        $nonce    = wp_create_nonce('ae_css_refresh');
+        $nonce    = wp_create_nonce('ae_css_admin');
         echo '<div id="ae-css-estimate" class="notice notice-info" data-nonce="' . esc_attr($nonce) . '">';
         echo '<p><strong>' . esc_html__( 'Estimated savings', 'gm2-wordpress-suite' ) . ':</strong> <span id="ae-css-estimate-text">' . esc_html($estimate['diff']) . ' bytes (' . esc_html($estimate['percent']) . '%)</span> <button type="button" id="ae-css-refresh" class="button">' . esc_html__( 'Refresh', 'gm2-wordpress-suite' ) . '</button></p>';
         echo '</div>';
-        echo '<script>jQuery(function($){$(\'#ae-css-refresh\').on(\'click\',function(e){e.preventDefault();var b=$(this);b.prop(\'disabled\',true);$.post(ajaxurl,{action:\'ae_css_estimate_savings\',nonce:$(\'#ae-css-estimate\').data(\'nonce\')},function(r){if(r&&r.success){$(\'#ae-css-estimate-text\').text(r.data.diff+" bytes ("+r.data.percent+"%)");}b.prop(\'disabled\',false);});});});</script>';
+        echo '<script>jQuery(function($){$(\'#ae-css-refresh\').on(\'click\',function(e){e.preventDefault();var b=$(this);b.prop(\'disabled\',true);$.post(ajaxurl,{action:\'ae_css_estimate_savings\',nonce:$(\'#ae-css-estimate\').data(\'nonce\')}).done(function(r){if(r&&r.success){$(\'#ae-css-estimate-text\').text(r.data.diff+" bytes ("+r.data.percent+"%)");}else{$(\'#ae-css-estimate-text\').text(r&&r.data?r.data:\'Error\');}}).fail(function(){$(\'#ae-css-estimate-text\').text(\'Error\');}).always(function(){b.prop(\'disabled\',false);});});});</script>';
 
         echo '<form method="post" action="options.php">';
         settings_fields('ae_css');
