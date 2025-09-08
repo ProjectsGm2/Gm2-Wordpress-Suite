@@ -95,6 +95,9 @@ final class AE_CSS_Optimizer {
         if (!\is_array($this->settings['safelist'])) {
             $this->settings['safelist'] = \array_filter(\array_map('trim', \preg_split('/\r\n|\r|\n/', (string) $this->settings['safelist'])));
         }
+        if (!isset($this->settings['logs']) || !\is_array($this->settings['logs'])) {
+            $this->settings['logs'] = [];
+        }
 
         add_action('wp_enqueue_scripts', [ $this, 'enqueue_smart' ], PHP_INT_MAX);
         $this->inject_critical_and_defer();

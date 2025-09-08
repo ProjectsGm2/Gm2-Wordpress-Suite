@@ -1,5 +1,6 @@
 <?php
 use AE\CSS\AE_CSS_Optimizer;
+use Gm2\AE_CSS_Admin;
 
 class CssOptimizerTest extends WP_UnitTestCase {
     private function reset_optimizer(): void {
@@ -425,6 +426,32 @@ class CssOptimizerTest extends WP_UnitTestCase {
         $critical = $m[1] ?? '';
         $this->assertSame(20000, strlen($critical));
         $this->assertStringContainsString('.menu{color:red', $critical);
+    }
+
+    public function test_safelist_and_logs_survive_update_option(): void {
+        $admin = new AE_CSS_Admin();
+        $admin->register_settings();
+
+        $settings = get_option('ae_css_settings', []);
+        $settings['safelist'] = ['.keep-me'];
+        $settings['logs']     = [ [ 'timestamp' => '1', 'action' => 'test', 'details' => 'ok' ] ];
+        update_option('ae_css_settings', $settings);
+
+        update_option('ae_css_settings', [ 'generate_critical' => '1' ]);
+
+        $stored = get_option('ae_css_settings');
+        $this->assertSame(['.keep-me'], $stored['safelist']);
+        $this->assertSame([[ 'timestamp' => '1', 'action' => 'test', 'details' => 'ok' ]], $stored['logs']);
+
+        $this->reset_optimizer();
+        $optimizer = AE_CSS_Optimizer::get_instance();
+        $optimizer->init();
+        $ref  = new ReflectionClass(AE_CSS_Optimizer::class);
+        $prop = $ref->getProperty('settings');
+        $prop->setAccessible(true);
+        $settings = $prop->getValue($optimizer);
+        $this->assertSame(['.keep-me'], $settings['safelist']);
+        $this->assertSame([[ 'timestamp' => '1', 'action' => 'test', 'details' => 'ok' ]], $settings['logs']);
     }
 }
 
