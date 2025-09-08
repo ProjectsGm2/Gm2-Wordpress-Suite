@@ -21,6 +21,8 @@ class CssOptimizerTest extends WP_UnitTestCase {
                 'include_above_the_fold_handles'=> [],
                 'generate_critical'             => '0',
                 'async_load_noncritical'        => '0',
+                'woocommerce_smart_enqueue'     => '0',
+                'elementor_smart_enqueue'       => '0',
                 'critical'                      => [],
                 'queue'                         => [],
             ]
@@ -39,6 +41,9 @@ class CssOptimizerTest extends WP_UnitTestCase {
         }
         wp_styles()->queue = [];
         wp_styles()->done  = [];
+        if (class_exists('Elementor\\Plugin')) {
+            \Elementor\Plugin::$instance = null;
+        }
         parent::tearDown();
     }
 
@@ -56,6 +61,8 @@ class CssOptimizerTest extends WP_UnitTestCase {
                 'include_above_the_fold_handles'=> [],
                 'generate_critical'             => '0',
                 'async_load_noncritical'        => '0',
+                'woocommerce_smart_enqueue'     => '0',
+                'elementor_smart_enqueue'       => '0',
                 'critical'                      => [],
                 'queue'                         => [],
             ],
@@ -148,6 +155,8 @@ class CssOptimizerTest extends WP_UnitTestCase {
                 'include_above_the_fold_handles'=> [],
                 'generate_critical'             => '0',
                 'async_load_noncritical'        => '0',
+                'woocommerce_smart_enqueue'     => '0',
+                'elementor_smart_enqueue'       => '0',
                 'critical'                      => [],
                 'queue'                         => [],
             ]
@@ -158,6 +167,128 @@ class CssOptimizerTest extends WP_UnitTestCase {
         $optimizer->enqueue_smart();
         $this->assertContains('woocommerce-general', wp_styles()->queue);
         $this->assertTrue(wp_style_is('woocommerce-general', 'enqueued'));
+    }
+
+    public function test_enqueue_smart_dequeues_woo_styles_on_non_woo_pages_when_enabled(): void {
+        if (!class_exists('WooCommerce')) {
+            eval('class WooCommerce {}');
+        }
+        update_option(
+            'ae_css_settings',
+            [
+                'flags'                         => [],
+                'safelist'                      => '',
+                'exclude_handles'               => [],
+                'include_above_the_fold_handles'=> [],
+                'generate_critical'             => '0',
+                'async_load_noncritical'        => '0',
+                'woocommerce_smart_enqueue'     => '1',
+                'elementor_smart_enqueue'       => '0',
+                'critical'                      => [],
+                'queue'                         => [],
+            ]
+        );
+        $optimizer = AE_CSS_Optimizer::get_instance();
+        $optimizer->init();
+        wp_enqueue_style('woocommerce-general', 'https://example.com/woo.css');
+        $this->assertTrue(wp_style_is('woocommerce-general', 'enqueued'));
+        $optimizer->enqueue_smart();
+        $this->assertFalse(wp_style_is('woocommerce-general', 'enqueued'));
+    }
+
+    public function test_enqueue_smart_force_keep_style_filter_preserves_handle(): void {
+        if (!class_exists('WooCommerce')) {
+            eval('class WooCommerce {}');
+        }
+        update_option(
+            'ae_css_settings',
+            [
+                'flags'                         => [],
+                'safelist'                      => '',
+                'exclude_handles'               => [],
+                'include_above_the_fold_handles'=> [],
+                'generate_critical'             => '0',
+                'async_load_noncritical'        => '0',
+                'woocommerce_smart_enqueue'     => '1',
+                'elementor_smart_enqueue'       => '0',
+                'critical'                      => [],
+                'queue'                         => [],
+            ]
+        );
+        add_filter('ae/css/force_keep_style', function ($keep, $handle) {
+            return $handle === 'woocommerce-general' ? true : $keep;
+        }, 10, 2);
+        $optimizer = AE_CSS_Optimizer::get_instance();
+        $optimizer->init();
+        wp_enqueue_style('woocommerce-general', 'https://example.com/woo.css');
+        $optimizer->enqueue_smart();
+        $this->assertTrue(wp_style_is('woocommerce-general', 'enqueued'));
+        remove_all_filters('ae/css/force_keep_style');
+    }
+
+    public function test_enqueue_smart_dequeues_elementor_styles_on_non_elementor_pages_when_enabled(): void {
+        do_action('elementor/loaded');
+        if (!class_exists('Elementor\\Plugin')) {
+            eval('namespace Elementor; class DB { public function is_built_with_elementor($id){ return false; } } class Dummy { public function is_edit_mode(){ return false; } public function is_preview_mode(){ return false; } } class Plugin { public static $instance; public $db; public $editor; public $preview; public function __construct(){ self::$instance=$this; $this->db=new DB(); $this->editor=new Dummy(); $this->preview=new Dummy(); } }');
+            new \Elementor\Plugin();
+        }
+        self::factory()->post->create();
+        self::go_to('/?p=1');
+        update_option(
+            'ae_css_settings',
+            [
+                'flags'                         => [],
+                'safelist'                      => '',
+                'exclude_handles'               => [],
+                'include_above_the_fold_handles'=> [],
+                'generate_critical'             => '0',
+                'async_load_noncritical'        => '0',
+                'woocommerce_smart_enqueue'     => '0',
+                'elementor_smart_enqueue'       => '1',
+                'critical'                      => [],
+                'queue'                         => [],
+            ]
+        );
+        $optimizer = AE_CSS_Optimizer::get_instance();
+        $optimizer->init();
+        wp_enqueue_style('elementor-frontend', 'https://example.com/el.css');
+        $optimizer->enqueue_smart();
+        $this->assertFalse(wp_style_is('elementor-frontend', 'enqueued'));
+    }
+
+    public function test_enqueue_smart_elementor_allow_filter_preserves_handle(): void {
+        do_action('elementor/loaded');
+        if (!class_exists('Elementor\\Plugin')) {
+            eval('namespace Elementor; class DB { public function is_built_with_elementor($id){ return false; } } class Dummy { public function is_edit_mode(){ return false; } public function is_preview_mode(){ return false; } } class Plugin { public static $instance; public $db; public $editor; public $preview; public function __construct(){ self::$instance=$this; $this->db=new DB(); $this->editor=new Dummy(); $this->preview=new Dummy(); } }');
+            new \Elementor\Plugin();
+        }
+        self::factory()->post->create();
+        self::go_to('/?p=1');
+        add_filter('ae/css/elementor_allow', function ($allow) {
+            $allow[] = 'elementor-frontend';
+            return $allow;
+        });
+        update_option(
+            'ae_css_settings',
+            [
+                'flags'                         => [],
+                'safelist'                      => '',
+                'exclude_handles'               => [],
+                'include_above_the_fold_handles'=> [],
+                'generate_critical'             => '0',
+                'async_load_noncritical'        => '0',
+                'woocommerce_smart_enqueue'     => '0',
+                'elementor_smart_enqueue'       => '1',
+                'critical'                      => [],
+                'queue'                         => [],
+            ]
+        );
+        $optimizer = AE_CSS_Optimizer::get_instance();
+        $optimizer->init();
+        wp_enqueue_style('elementor-frontend', 'https://example.com/el.css');
+        $optimizer->enqueue_smart();
+        $this->assertTrue(wp_style_is('elementor-frontend', 'enqueued'));
+        remove_all_filters('ae/css/elementor_allow');
     }
 
     public function test_inject_critical_and_defer_inlines_and_defers_when_enabled(): void {
@@ -171,6 +302,8 @@ class CssOptimizerTest extends WP_UnitTestCase {
                 'include_above_the_fold_handles'=> [],
                 'generate_critical'             => '1',
                 'async_load_noncritical'        => '1',
+                'woocommerce_smart_enqueue'     => '0',
+                'elementor_smart_enqueue'       => '0',
                 'critical'                      => [ $url => '.critical{color:red;}' ],
                 'queue'                         => [],
             ]

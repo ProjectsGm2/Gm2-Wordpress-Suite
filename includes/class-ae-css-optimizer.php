@@ -40,6 +40,8 @@ final class AE_CSS_Optimizer {
         'include_above_the_fold_handles'=> [],
         'generate_critical'             => '0',
         'async_load_noncritical'        => '0',
+        'woocommerce_smart_enqueue'     => '0',
+        'elementor_smart_enqueue'       => '0',
         'critical'                      => [],
         'queue'                         => [],
     ];
@@ -102,16 +104,29 @@ final class AE_CSS_Optimizer {
         if (!$styles instanceof \WP_Styles) {
             return;
         }
-        if (\class_exists('WooCommerce') && empty($this->settings['flags']['woo']) && !self::is_woocommerce_context()) {
-            foreach ($styles->queue as $handle) {
-                if (strpos($handle, 'woocommerce') === 0) {
+        if (!empty($this->settings['woocommerce_smart_enqueue'])
+            && \class_exists('WooCommerce')
+            && empty($this->settings['flags']['woo'])
+            && !self::is_woocommerce_context()
+        ) {
+            foreach (['woocommerce-layout', 'woocommerce-smallscreen', 'woocommerce-general'] as $handle) {
+                if (\wp_style_is($handle, 'enqueued') && !\apply_filters('ae/css/force_keep_style', false, $handle)) {
                     \wp_dequeue_style($handle);
                 }
             }
         }
-        if (\did_action('elementor/loaded') && empty($this->settings['flags']['elementor']) && !self::is_elementor_context()) {
+        if (!empty($this->settings['elementor_smart_enqueue'])
+            && \did_action('elementor/loaded')
+            && empty($this->settings['flags']['elementor'])
+            && !self::is_elementor_context()
+            && !self::is_elementor_builder()
+        ) {
+            $allow = (array) \apply_filters('ae/css/elementor_allow', []);
             foreach ($styles->queue as $handle) {
-                if (strpos($handle, 'elementor') === 0) {
+                if (strpos($handle, 'elementor') === 0
+                    && !in_array($handle, $allow, true)
+                    && !\apply_filters('ae/css/force_keep_style', false, $handle)
+                ) {
                     \wp_dequeue_style($handle);
                 }
             }
@@ -182,7 +197,7 @@ final class AE_CSS_Optimizer {
      * @return string Filtered tag.
      */
     public function filter_style_loader_tag(string $html, string $handle, string $href, string $media): string {
-        $excluded = $this->settings['exclude_handles'] ?? [];
+        $excluded = \apply_filters('ae/css/exclude_handles', $this->settings['exclude_handles'] ?? []);
         if (empty($this->settings['async_load_noncritical']) || in_array($handle, $excluded, true) || $this->should_bypass_async()) {
             return $html;
         }
@@ -216,6 +231,7 @@ final class AE_CSS_Optimizer {
      * @return string Optimised CSS output.
      */
     public static function purgecss_analyze(array $css_paths, array $html_paths, array $safelist = []): string {
+        $safelist = \apply_filters('ae/css/safelist', $safelist);
         if (!self::has_node_capability()) {
             return '';
         }
@@ -302,6 +318,25 @@ final class AE_CSS_Optimizer {
                     return $db->is_built_with_elementor($post_id);
                 }
             }
+        }
+        return false;
+    }
+
+    /**
+     * Determine if the Elementor frontend builder is active.
+     *
+     * @return bool Whether the builder is running.
+     */
+    private static function is_elementor_builder(): bool {
+        if (!\did_action('elementor/loaded') || !\class_exists('Elementor\\Plugin')) {
+            return false;
+        }
+        $plugin = \Elementor\Plugin::$instance;
+        if (isset($plugin->editor) && \method_exists($plugin->editor, 'is_edit_mode') && $plugin->editor->is_edit_mode()) {
+            return true;
+        }
+        if (isset($plugin->preview) && \method_exists($plugin->preview, 'is_preview_mode') && $plugin->preview->is_preview_mode()) {
+            return true;
         }
         return false;
     }
