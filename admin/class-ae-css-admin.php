@@ -53,7 +53,7 @@ class AE_CSS_Admin {
     $list[] = '.keep-me';
     return $list;
 } );</code></pre>
-<p><code>ae/css/exclude_handles</code> – Prevent handles from async loading.</p>
+<p><code>ae/css/exclude_handles</code> – Prevent handles from async loading. Filter can alter the list at runtime.</p>
 <pre><code>add_filter( 'ae/css/exclude_handles', function ( $handles ) {
     $handles[] = 'plugin-style';
     return $handles;
