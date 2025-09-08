@@ -22,6 +22,7 @@ use AE\CSS\AE_CSS_Queue;
         'async_load_noncritical'        => '0',
         'woocommerce_smart_enqueue'     => '0',
         'elementor_smart_enqueue'       => '0',
+        'utility_css'                   => '0',
         'critical'                      => [],
         'logs'                          => [],
     ];
@@ -164,6 +165,7 @@ HTML;
         $async     = isset($input['async_load_noncritical']) && $input['async_load_noncritical'] === '1' ? '1' : '0';
         $woo       = isset($input['woocommerce_smart_enqueue']) && $input['woocommerce_smart_enqueue'] === '1' ? '1' : '0';
         $elementor = isset($input['elementor_smart_enqueue']) && $input['elementor_smart_enqueue'] === '1' ? '1' : '0';
+        $utility   = isset($input['utility_css']) && $input['utility_css'] === '1' ? '1' : '0';
         $enabled   = isset($input['enabled']) && $input['enabled'] === '1' ? '1' : '0';
 
         $current['exclude_handles']              = $exclude;
@@ -172,6 +174,7 @@ HTML;
         $current['async_load_noncritical']       = $async;
         $current['woocommerce_smart_enqueue']    = $woo;
         $current['elementor_smart_enqueue']      = $elementor;
+        $current['utility_css']                  = $utility;
         if (array_key_exists('enabled', $input)) {
             $current['enabled'] = $enabled;
         }
@@ -412,6 +415,7 @@ HTML;
         $async    = $settings['async_load_noncritical'] ?? '0';
         $woo_smart = $settings['woocommerce_smart_enqueue'] ?? '0';
         $elementor_smart = $settings['elementor_smart_enqueue'] ?? '0';
+        $utility = $settings['utility_css'] ?? '0';
         $enabled = $settings['enabled'] ?? '1';
 
         $all_handles = [];
@@ -475,6 +479,12 @@ HTML;
         echo '<label style="display:block;"><input type="checkbox" name="ae_css_settings[woocommerce_smart_enqueue]" value="1" ' . $checked . ' /> ' . esc_html__( 'Only load WooCommerce styles on WooCommerce pages', 'gm2-wordpress-suite' ) . '</label>';
         $checked = $elementor_smart === '1' ? 'checked="checked"' : '';
         echo '<label style="display:block;"><input type="checkbox" name="ae_css_settings[elementor_smart_enqueue]" value="1" ' . $checked . ' /> ' . esc_html__( 'Only load Elementor styles on Elementor pages', 'gm2-wordpress-suite' ) . '</label>';
+        echo '</td></tr>';
+
+        // Utility CSS toggle
+        echo '<tr><th scope="row">' . esc_html__( 'Utility CSS', 'gm2-wordpress-suite' ) . '</th><td>';
+        $checked = $utility === '1' ? 'checked="checked"' : '';
+        echo '<label><input type="checkbox" name="ae_css_settings[utility_css]" value="1" ' . $checked . ' /> ' . esc_html__( 'Load AE utility CSS', 'gm2-wordpress-suite' ) . '</label>';
         echo '</td></tr>';
 
         // Safelist textarea

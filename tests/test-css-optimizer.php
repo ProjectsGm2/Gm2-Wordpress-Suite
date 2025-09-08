@@ -25,6 +25,7 @@ class CssOptimizerTest extends WP_UnitTestCase {
                 'async_load_noncritical'        => '0',
                 'woocommerce_smart_enqueue'     => '0',
                 'elementor_smart_enqueue'       => '0',
+                'utility_css'                   => '0',
                 'critical'                      => [],
                 'logs'                          => [],
             ]
@@ -66,6 +67,7 @@ class CssOptimizerTest extends WP_UnitTestCase {
                 'async_load_noncritical'        => '0',
                 'woocommerce_smart_enqueue'     => '0',
                 'elementor_smart_enqueue'       => '0',
+                'utility_css'                   => '0',
                 'critical'                      => [],
                 'logs'                          => [],
             ],
@@ -161,6 +163,7 @@ class CssOptimizerTest extends WP_UnitTestCase {
                 'async_load_noncritical'        => '0',
                 'woocommerce_smart_enqueue'     => '0',
                 'elementor_smart_enqueue'       => '0',
+                'utility_css'                   => '0',
                 'critical'                      => [],
                 'logs'                          => [],
             ]
@@ -189,6 +192,7 @@ class CssOptimizerTest extends WP_UnitTestCase {
                 'async_load_noncritical'        => '0',
                 'woocommerce_smart_enqueue'     => '1',
                 'elementor_smart_enqueue'       => '0',
+                'utility_css'                   => '0',
                 'critical'                      => [],
                 'logs'                          => [],
             ]
@@ -217,6 +221,7 @@ class CssOptimizerTest extends WP_UnitTestCase {
                 'async_load_noncritical'        => '0',
                 'woocommerce_smart_enqueue'     => '1',
                 'elementor_smart_enqueue'       => '0',
+                'utility_css'                   => '0',
                 'critical'                      => [],
                 'logs'                          => [],
             ]
@@ -252,6 +257,7 @@ class CssOptimizerTest extends WP_UnitTestCase {
                 'async_load_noncritical'        => '0',
                 'woocommerce_smart_enqueue'     => '0',
                 'elementor_smart_enqueue'       => '1',
+                'utility_css'                   => '0',
                 'critical'                      => [],
                 'logs'                          => [],
             ]
@@ -287,6 +293,7 @@ class CssOptimizerTest extends WP_UnitTestCase {
                 'async_load_noncritical'        => '0',
                 'woocommerce_smart_enqueue'     => '0',
                 'elementor_smart_enqueue'       => '1',
+                'utility_css'                   => '0',
                 'critical'                      => [],
                 'logs'                          => [],
             ]
@@ -313,6 +320,7 @@ class CssOptimizerTest extends WP_UnitTestCase {
                 'async_load_noncritical'        => '1',
                 'woocommerce_smart_enqueue'     => '0',
                 'elementor_smart_enqueue'       => '0',
+                'utility_css'                   => '0',
                 'critical'                      => [ $url => '.critical{color:red;}' ],
                 'logs'                          => [],
             ]
@@ -352,6 +360,7 @@ class CssOptimizerTest extends WP_UnitTestCase {
                 'async_load_noncritical'        => '1',
                 'woocommerce_smart_enqueue'     => '0',
                 'elementor_smart_enqueue'       => '0',
+                'utility_css'                   => '0',
                 'critical'                      => [ $url => '.critical{color:red;}' ],
                 'logs'                          => [],
             ]
@@ -447,6 +456,7 @@ class CssOptimizerTest extends WP_UnitTestCase {
                 'async_load_noncritical'        => '1',
                 'woocommerce_smart_enqueue'     => '0',
                 'elementor_smart_enqueue'       => '0',
+                'utility_css'                   => '0',
                 'critical'                      => [ $url => '.critical{color:red;}' ],
                 'logs'                          => [],
             ]
@@ -514,6 +524,7 @@ class CssOptimizerTest extends WP_UnitTestCase {
                 'async_load_noncritical'        => '1',
                 'woocommerce_smart_enqueue'     => '0',
                 'elementor_smart_enqueue'       => '0',
+                'utility_css'                   => '0',
                 'critical'                      => [ $url => '.critical{color:red;}' ],
                 'logs'                          => [],
             ]
@@ -591,6 +602,7 @@ class CssOptimizerTest extends WP_UnitTestCase {
                 'async_load_noncritical'        => '0',
                 'woocommerce_smart_enqueue'     => '0',
                 'elementor_smart_enqueue'       => '0',
+                'utility_css'                   => '0',
                 'critical'                      => [],
                 'logs'                          => [],
             ]
