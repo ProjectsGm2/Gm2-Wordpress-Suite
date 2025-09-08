@@ -16,7 +16,7 @@ class CssOptimizerTest extends WP_UnitTestCase {
             'ae_css_settings',
             [
                 'flags'                         => [],
-                'safelist'                      => '',
+                'safelist'                      => [],
                 'exclude_handles'               => [],
                 'include_above_the_fold_handles'=> [],
                 'generate_critical'             => '0',
@@ -55,7 +55,7 @@ class CssOptimizerTest extends WP_UnitTestCase {
         $this->assertSame(
             [
                 'flags'                         => [],
-                'safelist'                      => '',
+                'safelist'                      => [],
                 'exclude_handles'               => [],
                 'include_above_the_fold_handles'=> [],
                 'generate_critical'             => '0',
@@ -148,7 +148,7 @@ class CssOptimizerTest extends WP_UnitTestCase {
             'ae_css_settings',
             [
                 'flags'                         => [ 'woo' => '1' ],
-                'safelist'                      => '',
+                'safelist'                      => [],
                 'exclude_handles'               => [],
                 'include_above_the_fold_handles'=> [],
                 'generate_critical'             => '0',
@@ -174,7 +174,7 @@ class CssOptimizerTest extends WP_UnitTestCase {
             'ae_css_settings',
             [
                 'flags'                         => [],
-                'safelist'                      => '',
+                'safelist'                      => [],
                 'exclude_handles'               => [],
                 'include_above_the_fold_handles'=> [],
                 'generate_critical'             => '0',
@@ -200,7 +200,7 @@ class CssOptimizerTest extends WP_UnitTestCase {
             'ae_css_settings',
             [
                 'flags'                         => [],
-                'safelist'                      => '',
+                'safelist'                      => [],
                 'exclude_handles'               => [],
                 'include_above_the_fold_handles'=> [],
                 'generate_critical'             => '0',
@@ -233,7 +233,7 @@ class CssOptimizerTest extends WP_UnitTestCase {
             'ae_css_settings',
             [
                 'flags'                         => [],
-                'safelist'                      => '',
+                'safelist'                      => [],
                 'exclude_handles'               => [],
                 'include_above_the_fold_handles'=> [],
                 'generate_critical'             => '0',
@@ -266,7 +266,7 @@ class CssOptimizerTest extends WP_UnitTestCase {
             'ae_css_settings',
             [
                 'flags'                         => [],
-                'safelist'                      => '',
+                'safelist'                      => [],
                 'exclude_handles'               => [],
                 'include_above_the_fold_handles'=> [],
                 'generate_critical'             => '0',
@@ -290,7 +290,7 @@ class CssOptimizerTest extends WP_UnitTestCase {
             'ae_css_settings',
             [
                 'flags'                         => [],
-                'safelist'                      => '',
+                'safelist'                      => [],
                 'exclude_handles'               => [],
                 'include_above_the_fold_handles'=> [],
                 'generate_critical'             => '1',
@@ -380,7 +380,7 @@ class CssOptimizerTest extends WP_UnitTestCase {
             'ae_css_settings',
             [
                 'flags'                         => [],
-                'safelist'                      => '',
+                'safelist'                      => [],
                 'exclude_handles'               => [],
                 'include_above_the_fold_handles'=> [ 'test' ],
                 'generate_critical'             => '0',

@@ -35,7 +35,7 @@ final class AE_CSS_Optimizer {
      */
     private array $settings = [
         'flags'                         => [],
-        'safelist'                      => '',
+        'safelist'                      => [],
         'exclude_handles'               => [],
         'include_above_the_fold_handles'=> [],
         'generate_critical'             => '0',
@@ -91,6 +91,9 @@ final class AE_CSS_Optimizer {
         }
         $this->booted   = true;
         $this->settings = \get_option(self::OPTION, $this->settings);
+        if (!\is_array($this->settings['safelist'])) {
+            $this->settings['safelist'] = \array_filter(\array_map('trim', \preg_split('/\r\n|\r|\n/', (string) $this->settings['safelist'])));
+        }
 
         add_action('wp_enqueue_scripts', [ $this, 'enqueue_smart' ], PHP_INT_MAX);
         $this->inject_critical_and_defer();
@@ -335,7 +338,7 @@ final class AE_CSS_Optimizer {
             $cmd .= ' --css ' . \escapeshellarg($css);
         }
         $cmd .= ' --content ' . \escapeshellarg($snap_dir . '/*.html');
-        $cmd .= ' --safelist ' . \escapeshellarg(\wp_json_encode($safelist));
+        $cmd .= ' --safelist ' . \escapeshellarg(\wp_json_encode($safelist, JSON_UNESCAPED_SLASHES));
         $cmd .= ' --stdout 2>&1';
         $output = \shell_exec($cmd);
         if (!\is_string($output)) {
@@ -545,7 +548,7 @@ final class AE_CSS_Optimizer {
         $css_paths = \glob(trailingslashit($theme_dir) . 'css/*.css') ?: [];
         $result    = '';
         if (!empty($css_paths)) {
-            $result = self::purgecss_analyze($css_paths, [ \home_url('/') ], []);
+            $result = self::purgecss_analyze($css_paths, [ \home_url('/') ], (array) ($this->settings['safelist'] ?? []));
         }
         $status['purge'] = [
             'status'  => 'done',
