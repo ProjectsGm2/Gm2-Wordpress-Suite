@@ -187,7 +187,53 @@ final class AE_CSS_Optimizer {
     public function print_critical_css(): void {
         $url      = \home_url(\add_query_arg([], ''));
         $critical = $this->get_critical_css($url);
-        if ($critical !== '' && !empty($this->settings['generate_critical'])) {
+
+        if ($critical === '' && !self::has_node_capability()) {
+            $handles = (array) ($this->settings['include_above_the_fold_handles'] ?? []);
+            if (!empty($handles)) {
+                $styles = \wp_styles();
+                $css    = '';
+                if ($styles instanceof \WP_Styles) {
+                    foreach ($handles as $handle) {
+                        $handle = (string) $handle;
+                        if ($handle === '' || !isset($styles->registered[$handle])) {
+                            continue;
+                        }
+                        $src = $styles->registered[$handle]->src;
+                        if ($src === '') {
+                            continue;
+                        }
+                        if (\strpos($src, 'http://') !== 0 && \strpos($src, 'https://') !== 0) {
+                            if (\strpos($src, '//') === 0) {
+                                $src = (\is_ssl() ? 'https:' : 'http:') . $src;
+                            } else {
+                                $src = $styles->base_url . $src;
+                            }
+                        }
+                        $res     = \wp_remote_get($src);
+                        $content = '';
+                        if (!\is_wp_error($res)) {
+                            $content = (string) \wp_remote_retrieve_body($res);
+                        }
+                        if ($content === '') {
+                            $path = ABSPATH . \ltrim(\parse_url($src, PHP_URL_PATH) ?? '', '/');
+                            if (\file_exists($path)) {
+                                $content = (string) \file_get_contents($path);
+                            }
+                        }
+                        if ($content !== '') {
+                            $css .= $content;
+                        }
+                    }
+                }
+                if ($css !== '') {
+                    $critical = $this->php_fallback_split_css($css);
+                }
+            }
+        }
+
+        if ($critical !== '') {
+            $critical = \substr($critical, 0, 20000);
             echo '<style id="ae-critical-css">' . $critical . '</style>';
         }
     }
