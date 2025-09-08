@@ -374,6 +374,30 @@ class CssOptimizerTest extends WP_UnitTestCase {
         unset($_GET['ae-css-bypass']);
     }
 
+    /**
+     * @runInSeparateProcess
+     */
+    public function test_rollback_transient_bypasses_async_then_expires(): void {
+        $url       = home_url(add_query_arg([], ''));
+        $optimizer = AE_CSS_Optimizer::get_instance();
+        $optimizer->init();
+
+        set_transient('ae_css_bypass_' . md5($url), '1', HOUR_IN_SECONDS);
+        $timeout_key = '_transient_timeout_ae_css_bypass_' . md5($url);
+        $timeout     = get_option($timeout_key);
+        $this->assertIsInt($timeout);
+        $this->assertGreaterThanOrEqual(time() + HOUR_IN_SECONDS - 5, $timeout);
+        $this->assertLessThanOrEqual(time() + HOUR_IN_SECONDS + 5, $timeout);
+
+        $ref    = new ReflectionClass(AE_CSS_Optimizer::class);
+        $method = $ref->getMethod('should_bypass_async');
+        $method->setAccessible(true);
+        $this->assertTrue($method->invoke($optimizer));
+
+        update_option($timeout_key, time() - 1);
+        $this->assertFalse($method->invoke($optimizer));
+    }
+
     public function test_inject_critical_and_defer_no_effect_when_disabled(): void {
         $optimizer = AE_CSS_Optimizer::get_instance();
         $optimizer->init();
