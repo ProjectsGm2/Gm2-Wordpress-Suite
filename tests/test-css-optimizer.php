@@ -341,5 +341,45 @@ class CssOptimizerTest extends WP_UnitTestCase {
         $this->assertStringNotContainsString('rel="preload"', $out);
         $this->assertStringContainsString('rel="stylesheet"', $out);
     }
+
+    public function test_purgecss_analyze_generates_and_caches_css(): void {
+        delete_transient('ae_css_has_node');
+        $old_path = getenv('PATH');
+        $tmp      = sys_get_temp_dir() . '/npxstub' . uniqid();
+        mkdir($tmp);
+        file_put_contents($tmp . '/node', "#!/bin/sh\necho v18.0.0\n");
+        chmod($tmp . '/node', 0755);
+        file_put_contents($tmp . '/npx', "#!/bin/sh\nif [ \"$1\" = \"--version\" ]; then echo v9.0.0; exit 0; fi\nif [ \"$1\" = \"--yes\" ]; then shift; fi\necho 'body{color:green}'\n");
+        chmod($tmp . '/npx', 0755);
+        putenv('PATH=' . $tmp);
+
+        $css_file = tempnam(sys_get_temp_dir(), 'css');
+        file_put_contents($css_file, 'body{color:red}.unused{display:none}');
+
+        $filter = function ($pre, $args, $url) {
+            return [ 'body' => '<html><body class="current-menu-item is-active">x</body></html>' ];
+        };
+        add_filter('pre_http_request', $filter, 10, 3);
+
+        $result = AE_CSS_Optimizer::purgecss_analyze([$css_file], [ 123 => 'https://example.com/page' ]);
+        $this->assertSame('body{color:green}', $result);
+
+        $upload = wp_upload_dir();
+        $this->assertFileExists($upload['basedir'] . '/ae-css/snapshots/123.html');
+
+        file_put_contents($tmp . '/npx', "#!/bin/sh\nif [ \"$1\" = \"--version\" ]; then echo v9.0.0; exit 0; fi\nif [ \"$1\" = \"--yes\" ]; then shift; fi\necho 'body{color:blue}'\n");
+        chmod($tmp . '/npx', 0755);
+
+        $result2 = AE_CSS_Optimizer::purgecss_analyze([$css_file], [ 123 => 'https://example.com/page' ]);
+        $this->assertSame('body{color:green}', $result2);
+
+        remove_filter('pre_http_request', $filter, 10);
+        putenv('PATH=' . $old_path);
+        unlink($css_file);
+        unlink($tmp . '/node');
+        unlink($tmp . '/npx');
+        rmdir($tmp);
+        delete_transient('ae_css_has_node');
+    }
 }
 

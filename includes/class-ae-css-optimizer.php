@@ -231,12 +231,71 @@ final class AE_CSS_Optimizer {
      * @return string Optimised CSS output.
      */
     public static function purgecss_analyze(array $css_paths, array $html_paths, array $safelist = []): string {
+        $safelist = \array_values(\array_unique(\array_merge([
+            '/dynamic-/',
+            'is-active',
+            'current-menu-item',
+        ], $safelist)));
         $safelist = \apply_filters('ae/css/safelist', $safelist);
         if (!self::has_node_capability()) {
             return '';
         }
-        // Stub: integrate with Node-based PurgeCSS.
-        return '';
+
+        $cache_key = 'ae_css_purge_' . \md5(\wp_json_encode([
+            $css_paths,
+            $html_paths,
+            $safelist,
+        ]));
+        $cached = \get_transient($cache_key);
+        if (\is_string($cached)) {
+            return $cached;
+        }
+
+        $upload = \wp_upload_dir(null, false);
+        if (empty($upload['basedir'])) {
+            return '';
+        }
+        $snap_dir = $upload['basedir'] . '/ae-css/snapshots';
+        \wp_mkdir_p($snap_dir);
+
+        foreach ($html_paths as $post_id => $path) {
+            $html = '';
+            if (\is_string($path) && \filter_var($path, \FILTER_VALIDATE_URL)) {
+                $res = \wp_remote_get($path);
+                if (!\is_wp_error($res)) {
+                    $html = (string) \wp_remote_retrieve_body($res);
+                }
+            } elseif (\is_string($path) && \file_exists($path)) {
+                \ob_start();
+                include $path;
+                $html = (string) \ob_get_clean();
+            } elseif (\is_string($path)) {
+                $html = $path;
+            }
+            if ($html !== '') {
+                $pid  = (\is_int($post_id) || \ctype_digit((string) $post_id)) ? (string) $post_id : \md5((string) $path);
+                \file_put_contents($snap_dir . '/' . $pid . '.html', $html);
+            }
+        }
+
+        if (empty($css_paths)) {
+            return '';
+        }
+
+        $cmd = 'npx --yes purgecss';
+        foreach ($css_paths as $css) {
+            $cmd .= ' --css ' . \escapeshellarg($css);
+        }
+        $cmd .= ' --content ' . \escapeshellarg($snap_dir . '/*.html');
+        $cmd .= ' --safelist ' . \escapeshellarg(\wp_json_encode($safelist));
+        $cmd .= ' --stdout 2>&1';
+        $output = \shell_exec($cmd);
+        if (!\is_string($output)) {
+            return '';
+        }
+        $output = \trim($output);
+        \set_transient($cache_key, $output, DAY_IN_SECONDS);
+        return $output;
     }
 
     /**
