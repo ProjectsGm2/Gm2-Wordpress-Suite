@@ -20,6 +20,8 @@ final class AE_CSS_Queue {
         $instance = self::get_instance();
         add_action('ae_css_queue_runner', [ $instance, 'run_next' ]);
         add_filter('cron_schedules', [ __CLASS__, 'add_schedule' ]);
+        add_action('save_post', [ __CLASS__, 'handle_save_post' ], 10, 1);
+        add_action('switch_theme', [ __CLASS__, 'handle_switch_theme' ], 10, 0);
         if (!\wp_next_scheduled('ae_css_queue_runner')) {
             \wp_schedule_event(time(), 'ae_css_queue_5min', 'ae_css_queue_runner');
         }
@@ -58,6 +60,65 @@ final class AE_CSS_Queue {
             ];
         }
         return $schedules;
+    }
+
+    /**
+     * Handle a post save event.
+     *
+     * @param int $post_id Post identifier.
+     * @return void
+     */
+    public static function handle_save_post(int $post_id): void {
+        if (\wp_is_post_autosave($post_id) || \wp_is_post_revision($post_id)) {
+            return;
+        }
+        $urls = self::determine_urls($post_id);
+        self::enqueue_urls($urls);
+    }
+
+    /**
+     * Handle a theme switch.
+     *
+     * @return void
+     */
+    public static function handle_switch_theme(): void {
+        $urls = self::determine_urls();
+        self::enqueue_urls($urls);
+    }
+
+    /**
+     * Determine URLs affected by a change.
+     *
+     * @param int $post_id Optional post identifier.
+     * @return array<string>
+     */
+    private static function determine_urls(int $post_id = 0): array {
+        $urls = [];
+        if ($post_id > 0) {
+            $permalink = \get_permalink($post_id);
+            if (is_string($permalink) && $permalink !== '') {
+                $urls[] = $permalink;
+            }
+        }
+        $home = \home_url('/');
+        if (is_string($home) && $home !== '') {
+            $urls[] = $home;
+        }
+        return array_values(array_unique(array_filter($urls)));
+    }
+
+    /**
+     * Enqueue snapshot and critical jobs for a list of URLs.
+     *
+     * @param array $urls URLs to enqueue.
+     * @return void
+     */
+    private static function enqueue_urls(array $urls): void {
+        $queue = self::get_instance();
+        foreach ($urls as $url) {
+            $queue->enqueue('snapshot', $url);
+            $queue->enqueue('critical', $url);
+        }
     }
 
     /**
