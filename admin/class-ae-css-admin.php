@@ -17,6 +17,9 @@ class AE_CSS_Admin {
     public function run(): void {
         add_action('admin_init', [ $this, 'register_settings' ]);
         add_action('admin_menu', [ $this, 'add_menu' ]);
+        add_action('admin_post_ae_css_purge', [ $this, 'handle_purge_request' ]);
+        add_action('admin_post_ae_css_generate_critical', [ $this, 'handle_generate_critical_request' ]);
+        add_action('admin_notices', [ $this, 'show_queue_notices' ]);
     }
 
     /**
@@ -120,6 +123,66 @@ class AE_CSS_Admin {
     }
 
     /**
+     * Handle immediate PurgeCSS requests by scheduling a cron event.
+     */
+    public function handle_purge_request(): void {
+        if (!current_user_can('manage_options')) {
+            wp_die();
+        }
+        check_admin_referer('ae_css_purge');
+        $dir    = get_stylesheet_directory();
+        $status = get_option('ae_css_job_status', []);
+        $status['purge'] = [ 'status' => 'queued', 'message' => '' ];
+        update_option('ae_css_job_status', $status, false);
+        wp_schedule_single_event(time() + 1, 'ae_css_run_purgecss', [ $dir ]);
+        wp_safe_redirect(wp_get_referer() ?: admin_url('admin.php?page=gm2-css-optimization'));
+        exit;
+    }
+
+    /**
+     * Handle critical CSS generation requests for a URL.
+     */
+    public function handle_generate_critical_request(): void {
+        if (!current_user_can('manage_options')) {
+            wp_die();
+        }
+        check_admin_referer('ae_css_critical');
+        $url = isset($_POST['critical_url']) ? esc_url_raw(wp_unslash($_POST['critical_url'])) : '';
+        if ($url !== '') {
+            $optimizer = AE_CSS_Optimizer::get_instance();
+            $optimizer->mark_url_for_critical_generation($url);
+            $status = get_option('ae_css_job_status', []);
+            $status['critical'] = [ 'status' => 'queued', 'message' => '' ];
+            update_option('ae_css_job_status', $status, false);
+            if (!wp_next_scheduled('ae_css_process_queue')) {
+                wp_schedule_single_event(time() + 1, 'ae_css_process_queue');
+            }
+        }
+        wp_safe_redirect(wp_get_referer() ?: admin_url('admin.php?page=gm2-css-optimization'));
+        exit;
+    }
+
+    /**
+     * Display status messages for background CSS jobs.
+     */
+    public function show_queue_notices(): void {
+        if (!current_user_can('manage_options')) {
+            return;
+        }
+        $status = get_option('ae_css_job_status', []);
+        foreach ($status as $job => $data) {
+            if (empty($data['status']) || $data['status'] === 'idle') {
+                continue;
+            }
+            $msg = ucfirst($job) . ': ' . $data['status'];
+            if (!empty($data['message'])) {
+                $msg .= ' - ' . $data['message'];
+            }
+            echo '<div class="notice notice-info"><p>' . esc_html($msg) . '</p></div>';
+        }
+    }
+
+    /**
      * Render settings page.
      */
     public function render_page(): void {
@@ -208,9 +271,26 @@ class AE_CSS_Admin {
         echo '</select><p class="description">' . esc_html__( 'Styles always kept above the fold.', 'gm2-wordpress-suite' ) . '</p></td></tr>';
 
         echo '</tbody></table>';
-
         submit_button();
         echo '</form>';
+
+        echo '<hr />';
+
+        // PurgeCSS button.
+        echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
+        wp_nonce_field('ae_css_purge');
+        echo '<input type="hidden" name="action" value="ae_css_purge" />';
+        submit_button(__( 'Run PurgeCSS now', 'gm2-wordpress-suite' ), 'secondary');
+        echo '</form>';
+
+        // Critical CSS generation button.
+        echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" style="margin-top:15px;">';
+        wp_nonce_field('ae_css_critical');
+        echo '<input type="hidden" name="action" value="ae_css_generate_critical" />';
+        echo '<input type="url" name="critical_url" class="regular-text" placeholder="https://example.com" required /> ';
+        submit_button(__( 'Generate Critical CSS for this URL', 'gm2-wordpress-suite' ), 'secondary');
+        echo '</form>';
+
         echo '</div>';
     }
 }
