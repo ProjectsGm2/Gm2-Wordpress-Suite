@@ -5,6 +5,8 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+require_once __DIR__ . '/class-font-css-util.php';
+
 if (class_exists(__NAMESPACE__ . '\\Font_Performance')) {
     return;
 }
