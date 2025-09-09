@@ -37,5 +37,34 @@
     $(function(){
         initRepeater('preload');
         initRepeater('families');
+
+        function renderVariants(list){
+            var wrap = $('#gm2-variant-suggestions');
+            wrap.empty();
+            if(!list || !list.length){ return; }
+            list.forEach(function(v){
+                var id = 'gm2-variant-' + v.replace(/[^a-z0-9]/gi, '-');
+                var label = $('<label for="'+id+'"></label>');
+                var chk = $('<input type="checkbox" id="'+id+'" name="gm2seo_fonts[variant_suggestions][]" value="'+v+'" />');
+                if($.inArray(v, GM2FontPerf.selected) !== -1){ chk.prop('checked', true); }
+                label.append(chk).append(' '+v);
+                wrap.append($('<div></div>').append(label));
+            });
+        }
+
+        function fetchVariants(){
+            $.post(GM2FontPerf.ajax_url, {action: 'gm2_detect_font_variants', nonce: GM2FontPerf.nonce}, function(resp){
+                if(resp && resp.success){
+                    renderVariants(resp.data);
+                }
+            });
+        }
+
+        $('#gm2-detect-variants').on('click', function(e){
+            e.preventDefault();
+            fetchVariants();
+        });
+
+        fetchVariants();
     });
 })(jQuery);
