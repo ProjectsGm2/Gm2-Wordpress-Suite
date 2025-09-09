@@ -46,6 +46,7 @@ Key features include:
 * Tag manager consolidation merges analytics and pixel tags into a single module.
 * Self-hosted fonts mirror Google Fonts locally; run `wp gm2 fonts sync` after changing fonts to refresh the cache.
 * WOFF2 font preloading outputs up to three `<link rel="preload" as="font" type="font/woff2" crossorigin>` tags for valid URLs.
+* Font caching provides server snippets with a plugin endpoint fallback that serves fonts with long cache headers.
 
 Enable modules via `aeLazy`:
 

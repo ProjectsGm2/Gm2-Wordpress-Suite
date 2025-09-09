@@ -168,9 +168,9 @@ class Font_Performance_Admin {
         $selected = array_map('sanitize_text_field', $selected);
         $sizes    = \Gm2\Font_Performance\Font_Performance::compute_variant_savings($selected);
         $data     = [
-            'total'     = round($sizes['total'] / 1024, 2),
-            'selected'  = round($sizes['allowed'] / 1024, 2),
-            'reduction' = round($sizes['reduction'] / 1024, 2),
+            'total'     => round($sizes['total'] / 1024, 2),
+            'selected'  => round($sizes['allowed'] / 1024, 2),
+            'reduction' => round($sizes['reduction'] / 1024, 2),
         ];
         wp_send_json_success($data);
     }
@@ -254,6 +254,14 @@ class Font_Performance_Admin {
         do_settings_sections('gm2-fonts');
         submit_button();
         echo '</form>';
+
+        echo '<h2>' . esc_html__('Server Font Caching', 'gm2-wordpress-suite') . '</h2>';
+        echo '<p>' . esc_html__('Configure your web server to cache fonts for one year. Add one of the snippets below to your server configuration.', 'gm2-wordpress-suite') . '</p>';
+        echo '<h3>' . esc_html__('Apache', 'gm2-wordpress-suite') . '</h3>';
+        echo '<pre><code>' . esc_html("<FilesMatch \"\\.(woff2?|ttf|otf)\$\">\n  Header set Cache-Control \"public, max-age=31536000, immutable\"\n</FilesMatch>") . '</code></pre>';
+        echo '<h3>' . esc_html__('Nginx', 'gm2-wordpress-suite') . '</h3>';
+        echo '<pre><code>' . esc_html("location ~* \\.(woff2?|ttf|otf)\$ {\n  add_header Cache-Control \"public, max-age=31536000, immutable\";\n}") . '</code></pre>';
+        echo '<p>' . esc_html__('If server access is not available, enable “Cache headers” above to serve fonts through the plugin with the same caching headers.', 'gm2-wordpress-suite') . '</p>';
 
         echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
         wp_nonce_field('gm2_self_host_fonts', '_wpnonce_gm2_self_host_fonts');

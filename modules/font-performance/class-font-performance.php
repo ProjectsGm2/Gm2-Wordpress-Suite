@@ -238,7 +238,8 @@ class Font_Performance {
             add_action('wp_head', [__CLASS__, 'fallback_css']);
         }
         if (!empty(self::$options['cache_headers'])) {
-            add_filter('wp_headers', [__CLASS__, 'cache_headers']);
+            add_action('rest_api_init', [__CLASS__, 'register_font_route']);
+            add_filter('style_loader_src', [__CLASS__, 'rewrite_font_src']);
         }
         if (!empty(self::$options['self_host']) && class_exists('Gm2\\AE_SEO_Font_Manager')) {
             \Gm2\AE_SEO_Font_Manager::init();
@@ -257,7 +258,8 @@ class Font_Performance {
         remove_action('wp_head', [__CLASS__, 'preconnect_links']);
         remove_action('wp_head', [__CLASS__, 'preload_links']);
         remove_action('wp_head', [__CLASS__, 'fallback_css']);
-        remove_filter('wp_headers', [__CLASS__, 'cache_headers']);
+        remove_action('rest_api_init', [__CLASS__, 'register_font_route']);
+        remove_filter('style_loader_src', [__CLASS__, 'rewrite_font_src']);
         if (class_exists('Gm2\\AE_SEO_Font_Manager')) {
             \Gm2\AE_SEO_Font_Manager::disable();
         }
@@ -420,6 +422,7 @@ class Font_Performance {
         );
 
         foreach (array_slice(array_values(array_unique($urls)), 0, 3) as $url) {
+            $url = self::endpoint_url($url);
             printf(
                 '<link rel="preload" as="font" type="font/woff2" href="%s" crossorigin>' . "\n",
                 esc_url($url)
@@ -440,16 +443,60 @@ class Font_Performance {
         echo "</style>\n";
     }
 
-    /** Add long cache headers. */
-    public static function cache_headers(array $headers): array {
+    /** Register REST route for serving font files with cache headers. */
+    public static function register_font_route(): void {
+        register_rest_route(
+            'gm2seo/v1',
+            '/font',
+            [
+                'methods'             => 'GET',
+                'permission_callback' => '__return_true',
+                'callback'            => [__CLASS__, 'serve_font'],
+            ]
+        );
+    }
+
+    /** Stream the requested font file with long-term cache headers. */
+    public static function serve_font(\WP_REST_Request $req) {
+        $file = sanitize_text_field($req->get_param('file'));
+        $path = wp_normalize_path(ABSPATH . $file);
+        $real = realpath($path);
+        if (!$real || 0 !== strpos($real, ABSPATH) || !is_readable($real)) {
+            return new \WP_Error('not_found', 'Font not found', ['status' => 404]);
+        }
+        $mime = wp_check_filetype($real);
+        $type = $mime['type'] ?: 'font/woff2';
+        header('Content-Type: ' . $type);
+        header('Cache-Control: public, max-age=31536000, immutable');
+        header('Cross-Origin-Resource-Policy: cross-origin');
+        readfile($real);
+        exit;
+    }
+
+    /** Rewrite local font URLs to the REST endpoint. */
+    public static function rewrite_font_src(string $src): string {
         if (empty(self::$options['enabled'])) {
-            return $headers;
+            return $src;
         }
-        $headers['Cache-Control'] = 'public, max-age=31536000, immutable';
-        if (is_multisite()) {
-            $headers['Vary'] = isset($headers['Vary']) ? $headers['Vary'] . ', Host' : 'Host';
+        return self::endpoint_url($src);
+    }
+
+    /** Convert eligible font URLs to the plugin endpoint. */
+    private static function endpoint_url(string $src): string {
+        if (empty(self::$options['cache_headers'])) {
+            return $src;
         }
-        return $headers;
+        $parts = wp_parse_url($src);
+        $path  = $parts['path'] ?? '';
+        if (!$path || !preg_match('/\.(woff2?|ttf|otf)$/i', $path)) {
+            return $src;
+        }
+        $home_host = wp_parse_url(home_url(), PHP_URL_HOST);
+        if (!empty($parts['host']) && $parts['host'] !== $home_host) {
+            return $src;
+        }
+        $path = ltrim($path, '/');
+        return rest_url('gm2seo/v1/font?file=' . rawurlencode($path));
     }
 
     /** Toggle the feature and persist the option. */
