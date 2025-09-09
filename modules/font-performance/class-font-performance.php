@@ -430,17 +430,12 @@ class Font_Performance {
         }
     }
 
-    /** Output simple system fallback CSS for specified families. */
+    /** Output a lightweight system font stack when enabled. */
     public static function fallback_css(): void {
-        if (empty(self::$options['enabled']) || empty(self::$options['families'])) {
+        if (empty(self::$options['enabled']) || empty(self::$options['system_fallback_css'])) {
             return;
         }
-        echo "<style id='gm2-font-fallback'>\n";
-        foreach (self::$options['families'] as $family) {
-            $family = esc_html($family);
-            echo "body{font-family:'{$family}',system-ui,sans-serif;}\n";
-        }
-        echo "</style>\n";
+        echo "<style id='gm2-font-fallback'>body{font-family:system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Ubuntu,\"Helvetica Neue\",Arial,\"Noto Sans\",sans-serif;}</style>\n";
     }
 
     /** Register REST route for serving font files with cache headers. */
