@@ -161,11 +161,28 @@ class Font_Performance_Admin {
     public static function render(): void {
         echo '<div class="wrap">';
         echo '<h1>' . esc_html__('Font Performance', 'gm2-wordpress-suite') . '</h1>';
+
+        if (isset($_GET['gm2_self_host'])) {
+            $type  = $_GET['gm2_self_host'] === 'success' ? 'success' : 'error';
+            $class = 'notice notice-' . $type;
+            $msg   = $type === 'success'
+                ? __('Fonts were self-hosted.', 'gm2-wordpress-suite')
+                : __('Font self-hosting failed.', 'gm2-wordpress-suite');
+            printf('<div class="%1$s is-dismissible"><p>%2$s</p></div>', esc_attr($class), esc_html($msg));
+        }
+
         echo '<form method="post" action="options.php">';
         settings_fields('gm2_font_performance');
         do_settings_sections('gm2-fonts');
         submit_button();
         echo '</form>';
+
+        echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
+        wp_nonce_field('gm2_self_host_fonts', '_wpnonce_gm2_self_host_fonts');
+        echo '<input type="hidden" name="action" value="gm2_self_host_fonts" />';
+        submit_button(__('Self-host Google Fonts', 'gm2-wordpress-suite'), 'secondary');
+        echo '</form>';
+
         echo '</div>';
     }
 }
