@@ -75,7 +75,7 @@ class Font_Performance {
         }
         if (!empty(self::$options['inject_display_swap'])) {
             add_filter('style_loader_src', [__CLASS__, 'inject_display_swap'], 10, 2);
-            add_filter('style_loader_tag', [__CLASS__, 'inject_font_display'], 10, 4);
+            add_action('wp_head', [__CLASS__, 'inline_font_display'], 99);
         }
         if (!empty(self::$options['preconnect'])) {
             add_filter('wp_resource_hints', [__CLASS__, 'resource_hints'], 10, 2);
@@ -102,7 +102,7 @@ class Font_Performance {
         }
         remove_filter('style_loader_src', [__CLASS__, 'rewrite_google_url'], 9);
         remove_filter('style_loader_src', [__CLASS__, 'inject_display_swap'], 10);
-        remove_filter('style_loader_tag', [__CLASS__, 'inject_font_display'], 10);
+        remove_action('wp_head', [__CLASS__, 'inline_font_display'], 99);
         remove_filter('wp_resource_hints', [__CLASS__, 'resource_hints'], 10);
         remove_action('wp_head', [__CLASS__, 'preload_links']);
         remove_action('wp_head', [__CLASS__, 'fallback_css']);
@@ -157,49 +157,75 @@ class Font_Performance {
         return $src;
     }
 
-    /** Inject font-display: swap into @font-face rules within enqueued styles. */
-    public static function inject_font_display(string $html, string $handle, string $href, string $media): string {
+    /**
+     * Scan enqueued styles for @font-face blocks missing font-display and output overrides.
+     */
+    public static function inline_font_display(): void {
         if (empty(self::$options['enabled']) || empty(self::$options['inject_display_swap'])) {
-            return $html;
+            return;
+        }
+
+        global $wp_styles;
+        if (!($wp_styles instanceof \WP_Styles)) {
+            return;
         }
 
         $home_host = wp_parse_url(home_url(), PHP_URL_HOST);
-        $parts     = wp_parse_url($href);
+        $families  = [];
 
-        if (!empty($parts['host']) && $parts['host'] !== $home_host) {
-            return $html;
-        }
-
-        $path = $parts['path'] ?? '';
-        if (empty($path)) {
-            return $html;
-        }
-
-        $file = ABSPATH . ltrim($path, '/');
-        if (!file_exists($file)) {
-            return $html;
-        }
-
-        $css = file_get_contents($file);
-        if ($css === false) {
-            return $html;
-        }
-
-        $modified = preg_replace_callback('/@font-face\s*{[^}]*}/i', function (array $matches) {
-            $block = $matches[0];
-            if (stripos($block, 'font-display') === false) {
-                $block = rtrim($block, '}') . 'font-display: swap;}';
+        foreach ((array) $wp_styles->queue as $handle) {
+            $style = $wp_styles->registered[ $handle ] ?? null;
+            if (!$style || empty($style->src)) {
+                continue;
             }
-            return $block;
-        }, $css);
 
-        if ($modified === $css) {
-            return $html;
+            $src = $style->src;
+            if (!preg_match('#^(https?:)?//#', $src) && isset($wp_styles->base_url)) {
+                if (0 !== strpos($src, '/')) {
+                    $src = $wp_styles->base_url . $src;
+                }
+            }
+
+            $parts = wp_parse_url($src);
+            if (!empty($parts['host']) && $parts['host'] !== $home_host) {
+                continue;
+            }
+            $path = $parts['path'] ?? '';
+            if (!$path) {
+                continue;
+            }
+            $file = ABSPATH . ltrim($path, '/');
+            if (!is_readable($file)) {
+                continue;
+            }
+            $css = file_get_contents($file);
+            if ($css === false) {
+                continue;
+            }
+
+            preg_match_all('/@font-face\s*{[^}]*}/i', $css, $blocks);
+            foreach ($blocks[0] as $block) {
+                if (stripos($block, 'font-display') !== false) {
+                    continue;
+                }
+                if (preg_match("/font-family\s*:\s*['\"]?([^;'\"}]+)['\"]?/i", $block, $m)) {
+                    $family = trim(str_replace(['"', "'"], '', $m[1]));
+                    if ($family !== '') {
+                        $families[$family] = true;
+                    }
+                }
+            }
         }
 
-        $media_attr = $media && 'all' !== $media ? sprintf(" media='%s'", esc_attr($media)) : '';
-
-        return sprintf("<style id='%s'%s>\n%s\n</style>", esc_attr($handle) . '-css', $media_attr, $modified);
+        if ($families) {
+            $css_out = '';
+            foreach (array_keys($families) as $family) {
+                $family   = str_replace(['"', "'"], '', $family);
+                $css_out .= "@font-face{font-family:'{$family}';font-display:swap;}";
+            }
+            // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+            echo "<style id='gm2-font-display-swap'>" . $css_out . "</style>";
+        }
     }
 
     /** Rewrite Google Font URLs to css2 endpoint. */
