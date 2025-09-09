@@ -75,6 +75,7 @@ class Font_Performance {
         }
         if (!empty(self::$options['inject_display_swap'])) {
             add_filter('style_loader_src', [__CLASS__, 'inject_display_swap'], 10, 2);
+            add_filter('style_loader_tag', [__CLASS__, 'inject_font_display'], 10, 4);
         }
         if (!empty(self::$options['preconnect'])) {
             add_filter('wp_resource_hints', [__CLASS__, 'resource_hints'], 10, 2);
@@ -101,6 +102,7 @@ class Font_Performance {
         }
         remove_filter('style_loader_src', [__CLASS__, 'rewrite_google_url'], 9);
         remove_filter('style_loader_src', [__CLASS__, 'inject_display_swap'], 10);
+        remove_filter('style_loader_tag', [__CLASS__, 'inject_font_display'], 10);
         remove_filter('wp_resource_hints', [__CLASS__, 'resource_hints'], 10);
         remove_action('wp_head', [__CLASS__, 'preload_links']);
         remove_action('wp_head', [__CLASS__, 'fallback_css']);
@@ -153,6 +155,51 @@ class Font_Performance {
         }
 
         return $src;
+    }
+
+    /** Inject font-display: swap into @font-face rules within enqueued styles. */
+    public static function inject_font_display(string $html, string $handle, string $href, string $media): string {
+        if (empty(self::$options['enabled']) || empty(self::$options['inject_display_swap'])) {
+            return $html;
+        }
+
+        $home_host = wp_parse_url(home_url(), PHP_URL_HOST);
+        $parts     = wp_parse_url($href);
+
+        if (!empty($parts['host']) && $parts['host'] !== $home_host) {
+            return $html;
+        }
+
+        $path = $parts['path'] ?? '';
+        if (empty($path)) {
+            return $html;
+        }
+
+        $file = ABSPATH . ltrim($path, '/');
+        if (!file_exists($file)) {
+            return $html;
+        }
+
+        $css = file_get_contents($file);
+        if ($css === false) {
+            return $html;
+        }
+
+        $modified = preg_replace_callback('/@font-face\s*{[^}]*}/i', function (array $matches) {
+            $block = $matches[0];
+            if (stripos($block, 'font-display') === false) {
+                $block = rtrim($block, '}') . 'font-display: swap;}';
+            }
+            return $block;
+        }, $css);
+
+        if ($modified === $css) {
+            return $html;
+        }
+
+        $media_attr = $media && 'all' !== $media ? sprintf(" media='%s'", esc_attr($media)) : '';
+
+        return sprintf("<style id='%s'%s>\n%s\n</style>", esc_attr($handle) . '-css', $media_attr, $modified);
     }
 
     /** Rewrite Google Font URLs to css2 endpoint. */
