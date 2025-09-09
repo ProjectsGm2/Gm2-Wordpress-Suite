@@ -35,6 +35,7 @@ class Font_Performance {
         'self_host'           => false,
         'families'            => [],
         'limit_variants'      => true,
+        'variant_suggestions' => [],
         'system_fallback_css' => true,
         'cache_headers'       => true,
     ];

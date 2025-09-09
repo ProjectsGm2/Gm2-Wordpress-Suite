@@ -17,6 +17,7 @@ class Font_Performance_Admin {
     public static function init(): void {
         add_action('admin_init', [__CLASS__, 'register']);
         add_action('admin_menu', [__CLASS__, 'menu'], 99);
+        add_action('wp_ajax_gm2_detect_font_variants', [__CLASS__, 'ajax_detect_variants']);
     }
 
     /** Register settings and fields. */
@@ -53,6 +54,22 @@ class Font_Performance_Admin {
                 ['key' => $key, 'type' => $args['type']]
             );
         }
+
+        add_settings_section(
+            'gm2_font_performance_variants',
+            __('Detected Variants', 'gm2-wordpress-suite'),
+            '__return_false',
+            'gm2-fonts'
+        );
+
+        add_settings_field(
+            'variant_suggestions',
+            __('Variants', 'gm2-wordpress-suite'),
+            [__CLASS__, 'render_field'],
+            'gm2-fonts',
+            'gm2_font_performance_variants',
+            ['key' => 'variant_suggestions', 'type' => 'variants']
+        );
     }
 
     /** Sanitize submitted values. */
@@ -70,6 +87,7 @@ class Font_Performance_Admin {
         $opts['preconnect'] = self::sanitize_lines($input['preconnect'] ?? '');
         $opts['preload']    = self::sanitize_lines($input['preload'] ?? '');
         $opts['families']   = self::sanitize_lines($input['families'] ?? '');
+        $opts['variant_suggestions'] = array_map('sanitize_text_field', $input['variant_suggestions'] ?? []);
 
         return $opts;
     }
@@ -104,7 +122,31 @@ class Font_Performance_Admin {
                     esc_textarea($value)
                 );
                 break;
+            case 'variants':
+                echo '<p><button type="button" class="button" id="gm2-detect-variants">' . esc_html__('Detect Font Variants', 'gm2-wordpress-suite') . '</button></p>';
+                echo '<div id="gm2-variant-suggestions">';
+                if (!empty($value) && is_array($value)) {
+                    foreach ($value as $variant) {
+                        $id = 'gm2-variant-' . esc_attr(sanitize_title($variant));
+                        printf(
+                            '<div><label for="%1$s"><input type="checkbox" id="%1$s" name="%2$s[%3$s][]" value="%4$s" checked="checked" /> %4$s</label></div>',
+                            esc_attr($id),
+                            esc_attr(self::OPTION_KEY),
+                            esc_attr($args['key']),
+                            esc_html($variant)
+                        );
+                    }
+                }
+                echo '</div>';
+                break;
         }
+    }
+
+    /** AJAX handler to detect variants. */
+    public static function ajax_detect_variants(): void {
+        check_ajax_referer('gm2_font_variants', 'nonce');
+        $variants = \Gm2\Font_Performance\Font_Performance::detect_font_variants();
+        wp_send_json_success($variants);
     }
 
     /** Add submenu page. */
@@ -154,6 +196,16 @@ class Font_Performance_Admin {
             ['jquery'],
             filemtime(plugin_dir_path(__FILE__) . '../assets/admin.js'),
             true
+        );
+
+        wp_localize_script(
+            'gm2-font-performance-admin',
+            'GM2FontPerf',
+            [
+                'ajax_url' => admin_url('admin-ajax.php'),
+                'nonce'    => wp_create_nonce('gm2_font_variants'),
+                'selected' => \Gm2\Font_Performance\Font_Performance::get_settings()['variant_suggestions'] ?? [],
+            ]
         );
     }
 
