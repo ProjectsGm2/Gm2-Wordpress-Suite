@@ -51,5 +51,36 @@ class FontPreloadLinksTest extends WP_UnitTestCase {
         $this->assertStringNotContainsString('style.css', $html);
         $this->assertStringNotContainsString('d.woff2', $html);
         $this->assertStringNotContainsString('.woff"', $html);
+
+        $valid = [
+            'https://example.com/a.woff2',
+            'https://example.com/b.woff2?ver=1',
+            'https://example.com/c.woff2',
+        ];
+
+        $callback = static function($pre, $args, $url) use ($valid) {
+            if (in_array($url, $valid, true)) {
+                return [
+                    'headers'  => [],
+                    'body'     => '',
+                    'response' => ['code' => 200, 'message' => 'OK'],
+                    'cookies'  => [],
+                    'filename' => null,
+                ];
+            }
+
+            return new WP_Error('http_request_failed', 'Not Found');
+        };
+
+        add_filter('pre_http_request', $callback, 10, 3);
+
+        foreach ($valid as $url) {
+            $head = wp_remote_head($url);
+            $this->assertSame(200, wp_remote_retrieve_response_code($head));
+            $get = wp_remote_get($url);
+            $this->assertSame(200, wp_remote_retrieve_response_code($get));
+        }
+
+        remove_filter('pre_http_request', $callback, 10);
     }
 }
