@@ -121,6 +121,7 @@ require_once GM2_PLUGIN_DIR . 'includes/class-ae-seo-js-lazy.php';
 require_once GM2_PLUGIN_DIR . 'includes/class-ae-seo-diff-serving.php';
 require_once GM2_PLUGIN_DIR . 'includes/class-ae-seo-rest-diag.php';
 require_once GM2_PLUGIN_DIR . 'includes/class-ae-seo-font-manager.php';
+require_once GM2_PLUGIN_DIR . 'modules/font-performance/class-font-performance.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Search_Console.php';
 require_once GM2_PLUGIN_DIR . 'includes/render-optimizer/class-ae-seo-render-optimizer.php';
 require_once GM2_PLUGIN_DIR . 'includes/Versioning_MTime.php';
@@ -159,7 +160,7 @@ add_action('init', 'gm2_css_optimizer_init');
 \Gm2\Perf\Enqueue::init();
 \Gm2\Perf\Settings::init();
 \Gm2\AE_Utility_CSS::init();
-\Gm2\AE_SEO_Font_Manager::init();
+\Gm2\Font_Performance\Font_Performance::init();
 if (get_option('gm2_pretty_versioned_urls', '0') === '1') {
     \Gm2\Gm2_Version_Route_Apache::maybe_apply();
 }
