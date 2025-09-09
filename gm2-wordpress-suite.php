@@ -817,5 +817,6 @@ if (defined('WP_CLI') && WP_CLI) {
     require_once GM2_PLUGIN_DIR . 'includes/cli/class-ae-seo-critical-cli.php';
     require_once GM2_PLUGIN_DIR . 'includes/cli/class-ae-seo-js-smoketest.php';
     require_once GM2_PLUGIN_DIR . 'includes/cli/class-ae-seo-js-map.php';
+    require_once GM2_PLUGIN_DIR . 'includes/cli/class-font-performance-cli.php';
 }
 
