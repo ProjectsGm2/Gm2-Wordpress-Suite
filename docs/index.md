@@ -2,6 +2,8 @@
 
 See [model-cli.md](model-cli.md) for managing custom post types, taxonomies and fields via WP-CLI.
 
+For font optimization checks, review [font-performance-test-plan.md](font-performance-test-plan.md).
+
 This release adds several new SEO and AI options:
 
 - Added an index on the `timestamp` column of the `gm2_analytics_log` table for faster lookups. Existing installations upgrade automatically.
