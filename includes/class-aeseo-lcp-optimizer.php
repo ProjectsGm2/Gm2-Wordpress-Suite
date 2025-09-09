@@ -1223,7 +1223,7 @@ final class AESEO_LCP_Optimizer {
      * @param string $to_ext   New extension.
      * @return string
      */
-    private static function convert_srcset_extension(string $srcset, string $from_ext, string $to_ext): string {
+    public static function convert_srcset_extension(string $srcset, string $from_ext, string $to_ext): string {
         $sources   = array_map('trim', explode(',', $srcset));
         $converted = [];
         foreach ($sources as $source) {
@@ -1245,7 +1245,7 @@ final class AESEO_LCP_Optimizer {
      * @param string $srcset Srcset string.
      * @return bool
      */
-    private static function srcset_files_exist(string $srcset): bool {
+    public static function srcset_files_exist(string $srcset): bool {
         $uploads = wp_get_upload_dir();
         $sources = array_map('trim', explode(',', $srcset));
         foreach ($sources as $source) {
@@ -1267,7 +1267,7 @@ final class AESEO_LCP_Optimizer {
      * @param int    $attachment_id Attachment ID.
      * @param string $ext           Extension to generate (webp or avif).
      */
-    private static function maybe_generate_nextgen_files(int $attachment_id, string $ext): void {
+    public static function maybe_generate_nextgen_files(int $attachment_id, string $ext): void {
         if (!in_array($ext, [ 'webp', 'avif' ], true)) {
             return;
         }

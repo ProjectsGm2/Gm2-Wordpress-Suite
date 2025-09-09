@@ -28,6 +28,7 @@ final class AESEO_Plugin {
         }
 
         require_once __DIR__ . '/class-aeseo-lcp-optimizer.php';
+        require_once __DIR__ . '/class-ae-seo-image-optimizer.php';
 
         add_action(
             'template_redirect',
@@ -36,6 +37,7 @@ final class AESEO_Plugin {
                     return;
                 }
                 AESEO_LCP_Optimizer::boot();
+                AE_SEO_Image_Optimizer::boot();
             },
             0
         );
