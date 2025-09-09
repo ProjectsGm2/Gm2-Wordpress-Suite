@@ -45,6 +45,7 @@ Key features include:
 * Lazy widget loading defers embeds until interaction using `aeLazy` triggers.
 * Tag manager consolidation merges analytics and pixel tags into a single module.
 * Self-hosted fonts mirror Google Fonts locally; run `wp gm2 fonts sync` after changing fonts to refresh the cache.
+* WOFF2 font preloading outputs up to three `<link rel="preload" as="font" type="font/woff2" crossorigin>` tags for valid URLs.
 
 Enable modules via `aeLazy`:
 
