@@ -57,7 +57,7 @@ class Font_Performance_Admin {
 
     /** Sanitize submitted values. */
     public static function sanitize(array $input): array {
-        $opts = get_option(self::OPTION_KEY, []);
+        $opts = \Gm2\Font_Performance\Font_Performance::get_settings();
 
         $opts['enabled']             = !empty($input['enabled']);
         $opts['inject_display_swap'] = !empty($input['inject_display_swap']);
@@ -82,7 +82,7 @@ class Font_Performance_Admin {
 
     /** Render checkbox or textarea field. */
     public static function render_field(array $args): void {
-        $options = get_option(self::OPTION_KEY, []);
+        $options = \Gm2\Font_Performance\Font_Performance::get_settings();
         $value   = $options[$args['key']] ?? '';
         switch ($args['type']) {
             case 'checkbox':
