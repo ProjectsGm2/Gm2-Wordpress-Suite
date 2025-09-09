@@ -34,6 +34,7 @@ class Font_Performance {
         if (is_admin()) {
             require_once __DIR__ . '/admin/class-font-performance-admin.php';
             Admin\Font_Performance_Admin::init();
+            add_action('admin_post_gm2_self_host_fonts', [__CLASS__, 'self_host_fonts']);
         }
     }
 
@@ -313,5 +314,133 @@ class Font_Performance {
         } else {
             self::remove_hooks();
         }
+    }
+
+    /** Handle font self-hosting request. */
+    public static function self_host_fonts(): void {
+        if (!current_user_can('manage_options')) {
+            wp_die(__('Insufficient permissions.', 'gm2-wordpress-suite'));
+        }
+        check_admin_referer('gm2_self_host_fonts', '_wpnonce_gm2_self_host_fonts');
+
+        global $wp_styles;
+        if (!($wp_styles instanceof \WP_Styles)) {
+            $wp_styles = wp_styles();
+        }
+
+        $handles = [];
+        foreach ((array) $wp_styles->registered as $handle => $style) {
+            if (!empty($style->src) && str_contains($style->src, 'fonts.googleapis.com')) {
+                $handles[$handle] = $style->src;
+            }
+        }
+
+        $uploads  = wp_upload_dir();
+        $base_dir = trailingslashit($uploads['basedir']) . 'gm2seo-fonts/';
+        $base_url = trailingslashit($uploads['baseurl']) . 'gm2seo-fonts/';
+
+        require_once ABSPATH . 'wp-admin/includes/file.php';
+        WP_Filesystem();
+        global $wp_filesystem;
+        if (!$wp_filesystem) {
+            wp_safe_redirect(add_query_arg('gm2_self_host', 'error', admin_url('admin.php?page=gm2-fonts')));
+            exit;
+        }
+
+        if (!$wp_filesystem->is_dir($base_dir)) {
+            $wp_filesystem->mkdir($base_dir);
+        }
+
+        $css_out  = '';
+        $families = [];
+        $error    = false;
+
+        foreach ($handles as $handle => $src) {
+            $response = wp_remote_get($src);
+            if (is_wp_error($response)) {
+                $error = true;
+                break;
+            }
+            $css = wp_remote_retrieve_body($response);
+            preg_match_all('/@font-face\s*{[^}]+}/i', $css, $blocks);
+            foreach ($blocks[0] as $block) {
+                if (preg_match("/font-family\s*:\s*['\"]?([^;'\"}]+)['\"]?/i", $block, $m)) {
+                    $family_name = trim(str_replace(['"', "'"], '', $m[1]));
+                    $family_slug = sanitize_title($family_name);
+                } else {
+                    $family_name = 'font';
+                    $family_slug = 'font';
+                }
+
+                $weight = '';
+                if (preg_match('/font-weight\s*:\s*([0-9]+)/i', $block, $w)) {
+                    $weight = trim($w[1]);
+                }
+                $families[$family_name][$weight] = true;
+
+                preg_match_all('/url\(([^)]+\.woff2[^)]*)\)/i', $block, $urls);
+                foreach ($urls[1] as $font_url) {
+                    $font_url = trim($font_url, "'\"");
+                    $filename = sanitize_file_name(wp_basename(parse_url($font_url, PHP_URL_PATH)));
+                    if (!$filename) {
+                        continue;
+                    }
+                    $dir = $base_dir . $family_slug . '/';
+                    if (!$wp_filesystem->is_dir($dir) && !$wp_filesystem->mkdir($dir)) {
+                        $error = true;
+                        break 2;
+                    }
+                    $font_resp = wp_remote_get($font_url);
+                    if (is_wp_error($font_resp)) {
+                        $error = true;
+                        break 2;
+                    }
+                    $font_body = wp_remote_retrieve_body($font_resp);
+                    if (!$wp_filesystem->put_contents($dir . $filename, $font_body, FS_CHMOD_FILE)) {
+                        $error = true;
+                        break 2;
+                    }
+                    $local_url = $base_url . $family_slug . '/' . $filename;
+                    $block     = str_replace($font_url, $local_url, $block);
+                }
+
+                if (stripos($block, 'font-display') === false) {
+                    $block = preg_replace('/@font-face\s*{/', '@font-face{font-display:swap;', $block, 1);
+                }
+                $css_out .= $block . "\n";
+            }
+        }
+
+        if ($error) {
+            if ($wp_filesystem->is_dir($base_dir)) {
+                $wp_filesystem->rmdir($base_dir, true);
+            }
+            wp_safe_redirect(add_query_arg('gm2_self_host', 'error', admin_url('admin.php?page=gm2-fonts')));
+            exit;
+        }
+
+        $wp_filesystem->put_contents($base_dir . 'fonts-local.css', $css_out, FS_CHMOD_FILE);
+
+        foreach (array_keys($handles) as $h) {
+            wp_dequeue_style($h);
+            wp_deregister_style($h);
+        }
+        wp_register_style('gm2seo-fonts-local', $base_url . 'fonts-local.css', [], null);
+        wp_enqueue_style('gm2seo-fonts-local');
+
+        $opts              = self::get_settings();
+        $opts['families']  = [];
+        foreach ($families as $fam => $weights) {
+            $weights = array_filter(array_keys($weights));
+            sort($weights);
+            $opts['families'][] = $weights ? $fam . ':' . implode(',', $weights) : $fam;
+        }
+        $opts['self_host'] = true;
+        self::$options     = $opts;
+        $fn                = is_multisite() ? 'update_site_option' : 'update_option';
+        $fn(self::OPTION_KEY, $opts, false);
+
+        wp_safe_redirect(add_query_arg('gm2_self_host', 'success', admin_url('admin.php?page=gm2-fonts')));
+        exit;
     }
 }
