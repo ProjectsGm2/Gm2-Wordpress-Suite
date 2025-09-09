@@ -19,6 +19,7 @@ class Font_Performance_Admin {
         add_action('admin_menu', [__CLASS__, 'menu'], 99);
         add_action('wp_ajax_gm2_detect_font_variants', [__CLASS__, 'ajax_detect_variants']);
         add_action('wp_ajax_gm2_font_size_diff', [__CLASS__, 'ajax_font_size_diff']);
+        add_action('admin_post_gm2_restore_fonts', [__CLASS__, 'restore_remote_fonts']);
     }
 
     /** Register settings and fields. */
@@ -33,16 +34,13 @@ class Font_Performance_Admin {
         );
 
         $fields = [
-            'enabled'             => ['type' => 'checkbox', 'label' => __('Enable', 'gm2-wordpress-suite')],
-            'inject_display_swap' => ['type' => 'checkbox', 'label' => __('Inject display=swap', 'gm2-wordpress-suite')],
+            'enabled'             => ['type' => 'checkbox', 'label' => __('Enable module', 'gm2-wordpress-suite')],
+            'inject_display_swap' => ['type' => 'checkbox', 'label' => __('Display Swap', 'gm2-wordpress-suite')],
             'google_url_rewrite'  => ['type' => 'checkbox', 'label' => __('Rewrite Google URLs', 'gm2-wordpress-suite')],
-            'preconnect'          => ['type' => 'textarea', 'label' => __('Preconnect URLs (one per line)', 'gm2-wordpress-suite')],
-            'preload'             => ['type' => 'textarea', 'label' => __('Preload font URLs (.woff2, one per line)', 'gm2-wordpress-suite')],
-            'self_host'           => ['type' => 'checkbox', 'label' => __('Self-host fonts', 'gm2-wordpress-suite')],
-            'families'            => ['type' => 'textarea', 'label' => __('Font families (one per line)', 'gm2-wordpress-suite')],
-            'limit_variants'      => ['type' => 'checkbox', 'label' => __('Limit variants', 'gm2-wordpress-suite')],
-            'system_fallback_css' => ['type' => 'checkbox', 'label' => __('System fallback CSS', 'gm2-wordpress-suite')],
-            'cache_headers'       => ['type' => 'checkbox', 'label' => __('Cache headers', 'gm2-wordpress-suite')],
+            'preconnect'          => ['type' => 'textarea', 'label' => __('Preconnect hosts', 'gm2-wordpress-suite')],
+            'preload'             => ['type' => 'textarea', 'label' => __('Preload fonts (.woff2)', 'gm2-wordpress-suite')],
+            'limit_variants'      => ['type' => 'checkbox', 'label' => __('Limit Variants', 'gm2-wordpress-suite')],
+            'system_fallback_css' => ['type' => 'checkbox', 'label' => __('System Fallback Stack', 'gm2-wordpress-suite')],
         ];
 
         foreach ($fields as $key => $args) {
@@ -80,14 +78,11 @@ class Font_Performance_Admin {
         $opts['enabled']             = !empty($input['enabled']);
         $opts['inject_display_swap'] = !empty($input['inject_display_swap']);
         $opts['google_url_rewrite']  = !empty($input['google_url_rewrite']);
-        $opts['self_host']           = !empty($input['self_host']);
         $opts['limit_variants']      = !empty($input['limit_variants']);
         $opts['system_fallback_css'] = !empty($input['system_fallback_css']);
-        $opts['cache_headers']       = !empty($input['cache_headers']);
 
-        $opts['preconnect'] = self::sanitize_lines($input['preconnect'] ?? '');
-        $opts['preload']    = self::sanitize_lines($input['preload'] ?? '');
-        $opts['families'] = self::sanitize_lines($input['families'] ?? '');
+        $opts['preconnect'] = self::sanitize_urls($input['preconnect'] ?? '');
+        $opts['preload']    = self::sanitize_woff2($input['preload'] ?? '');
 
         $variants = $input['variant_suggestions'] ?? [];
         if (!is_array($variants)) {
@@ -104,6 +99,22 @@ class Font_Performance_Admin {
     private static function sanitize_lines(string $value): array {
         $lines = array_filter(array_map('trim', explode("\n", $value)));
         return array_values($lines);
+    }
+
+    /** Sanitize URLs from textarea input. */
+    private static function sanitize_urls(string $value): array {
+        $lines = self::sanitize_lines($value);
+        return array_values(array_filter($lines, static function (string $url): bool {
+            return (bool) filter_var($url, FILTER_VALIDATE_URL);
+        }));
+    }
+
+    /** Ensure URLs are valid WOFF2 files. */
+    private static function sanitize_woff2(string $value): array {
+        $urls = self::sanitize_urls($value);
+        return array_values(array_filter($urls, static function (string $url): bool {
+            return (bool) preg_match('/\.woff2(\?.*)?$/i', $url);
+        }));
     }
 
     /** Render checkbox or textarea field. */
@@ -132,20 +143,28 @@ class Font_Performance_Admin {
                 break;
             case 'variants':
                 echo '<p><button type="button" class="button" id="gm2-detect-variants">' . esc_html__('Detect Font Variants', 'gm2-wordpress-suite') . '</button></p>';
-                echo '<div id="gm2-variant-suggestions">';
-                if (!empty($value) && is_array($value)) {
-                    foreach ($value as $variant) {
-                        $id = 'gm2-variant-' . esc_attr(sanitize_title($variant));
-                        printf(
-                            '<div><label for="%1$s"><input type="checkbox" id="%1$s" name="%2$s[%3$s][]" value="%4$s" checked="checked" /> %4$s</label></div>',
-                            esc_attr($id),
-                            esc_attr(self::OPTION_KEY),
-                            esc_attr($args['key']),
-                            esc_html($variant)
-                        );
-                    }
+                echo '<table id="gm2-variant-suggestions" class="widefat fixed">';
+                echo '<thead><tr><th>' . esc_html__('Weight', 'gm2-wordpress-suite') . '</th><th>' . esc_html__('Normal', 'gm2-wordpress-suite') . '</th><th>' . esc_html__('Italic', 'gm2-wordpress-suite') . '</th></tr></thead><tbody>';
+                $selected = is_array($value) ? $value : [];
+                foreach ([100,200,300,400,500,600,700,800,900] as $weight) {
+                    $normal = $weight . ' normal';
+                    $italic = $weight . ' italic';
+                    $n_id   = 'gm2-variant-' . $weight . '-normal';
+                    $i_id   = 'gm2-variant-' . $weight . '-italic';
+                    printf(
+                        '<tr><th>%1$s</th><td><input type="checkbox" id="%2$s" name="%3$s[%4$s][]" value="%5$s" %6$s /></td><td><input type="checkbox" id="%7$s" name="%3$s[%4$s][]" value="%8$s" %9$s /></td></tr>',
+                        esc_html($weight),
+                        esc_attr($n_id),
+                        esc_attr(self::OPTION_KEY),
+                        esc_attr($args['key']),
+                        esc_attr($normal),
+                        checked(in_array($normal, $selected, true), true, false),
+                        esc_attr($i_id),
+                        esc_attr($italic),
+                        checked(in_array($italic, $selected, true), true, false)
+                    );
                 }
-                echo '</div>';
+                echo '</tbody></table>';
                 echo '<p id="gm2-variant-savings"></p>';
                 break;
         }
@@ -248,6 +267,9 @@ class Font_Performance_Admin {
                 : __('Font self-hosting failed.', 'gm2-wordpress-suite');
             printf('<div class="%1$s is-dismissible"><p>%2$s</p></div>', esc_attr($class), esc_html($msg));
         }
+        if (isset($_GET['gm2_restore']) && $_GET['gm2_restore'] === 'success') {
+            printf('<div class="notice notice-success is-dismissible"><p>%s</p></div>', esc_html__('Remote fonts restored.', 'gm2-wordpress-suite'));
+        }
 
         echo '<form method="post" action="options.php">';
         settings_fields('gm2_font_performance');
@@ -255,20 +277,39 @@ class Font_Performance_Admin {
         submit_button();
         echo '</form>';
 
-        echo '<h2>' . esc_html__('Server Font Caching', 'gm2-wordpress-suite') . '</h2>';
+        echo '<details class="gm2-font-cache"><summary>' . esc_html__('Caching Guidance', 'gm2-wordpress-suite') . '</summary>';
         echo '<p>' . esc_html__('Configure your web server to cache fonts for one year. Add one of the snippets below to your server configuration.', 'gm2-wordpress-suite') . '</p>';
-        echo '<h3>' . esc_html__('Apache', 'gm2-wordpress-suite') . '</h3>';
-        echo '<pre><code>' . esc_html("<FilesMatch \"\\.(woff2?|ttf|otf)\$\">\n  Header set Cache-Control \"public, max-age=31536000, immutable\"\n</FilesMatch>") . '</code></pre>';
-        echo '<h3>' . esc_html__('Nginx', 'gm2-wordpress-suite') . '</h3>';
-        echo '<pre><code>' . esc_html("location ~* \\.(woff2?|ttf|otf)\$ {\n  add_header Cache-Control \"public, max-age=31536000, immutable\";\n}") . '</code></pre>';
-        echo '<p>' . esc_html__('If server access is not available, enable “Cache headers” above to serve fonts through the plugin with the same caching headers.', 'gm2-wordpress-suite') . '</p>';
-
+        echo '<details><summary>' . esc_html__('Apache', 'gm2-wordpress-suite') . '</summary><pre><code>' . esc_html("<FilesMatch \"\\.(woff2?|ttf|otf)\$\">\n  Header set Cache-Control \"public, max-age=31536000, immutable\"\n</FilesMatch>") . '</code></pre></details>';
+        echo '<details><summary>' . esc_html__('Nginx', 'gm2-wordpress-suite') . '</summary><pre><code>' . esc_html("location ~* \\.(woff2?|ttf|otf)\$ {\n  add_header Cache-Control \"public, max-age=31536000, immutable\";\n}") . '</code></pre></details>';
+        echo '</details>';
         echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
         wp_nonce_field('gm2_self_host_fonts', '_wpnonce_gm2_self_host_fonts');
         echo '<input type="hidden" name="action" value="gm2_self_host_fonts" />';
-        submit_button(__('Self-host Google Fonts', 'gm2-wordpress-suite'), 'secondary');
+        submit_button(__('Scan & Download', 'gm2-wordpress-suite'), 'secondary');
+        echo '</form>';
+
+        echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" style="margin-top:1em;">';
+        wp_nonce_field('gm2_restore_fonts', '_wpnonce_gm2_restore_fonts');
+        echo '<input type="hidden" name="action" value="gm2_restore_fonts" />';
+        submit_button(__('Restore remote fonts', 'gm2-wordpress-suite'), 'secondary');
         echo '</form>';
 
         echo '</div>';
+    }
+
+    /** Restore remote font loading without deleting local files. */
+    public static function restore_remote_fonts(): void {
+        if (!current_user_can('manage_options')) {
+            wp_die(__('Insufficient permissions.', 'gm2-wordpress-suite'));
+        }
+        check_admin_referer('gm2_restore_fonts', '_wpnonce_gm2_restore_fonts');
+
+        $opts = \Gm2\Font_Performance\Font_Performance::get_settings();
+        $opts['self_host'] = false;
+        $fn = is_multisite() ? 'update_site_option' : 'update_option';
+        $fn(self::OPTION_KEY, $opts, false);
+
+        wp_safe_redirect(add_query_arg('gm2_restore', 'success', admin_url('admin.php?page=gm2-fonts')));
+        exit;
     }
 }

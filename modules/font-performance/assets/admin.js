@@ -36,19 +36,16 @@
 
     $(function(){
         initRepeater('preload');
-        initRepeater('families');
+        initRepeater('preconnect');
 
         function renderVariants(list){
-            var wrap = $('#gm2-variant-suggestions');
-            wrap.empty();
             if(!list || !list.length){ return; }
             list.forEach(function(v){
-                var id = 'gm2-variant-' + v.replace(/[^a-z0-9]/gi, '-');
-                var label = $('<label for="'+id+'"></label>');
-                var chk = $('<input type="checkbox" id="'+id+'" name="gm2seo_fonts[variant_suggestions][]" value="'+v+'" />');
-                if($.inArray(v, GM2FontPerf.selected) !== -1){ chk.prop('checked', true); }
-                label.append(chk).append(' '+v);
-                wrap.append($('<div></div>').append(label));
+                var id = '#gm2-variant-' + v.replace(/[^a-z0-9]/gi, '-');
+                var chk = $(id);
+                if(chk.length){
+                    chk.prop('checked', true);
+                }
             });
             updateSavings();
         }
@@ -83,6 +80,12 @@
         });
 
         $('#gm2-variant-suggestions').on('change', 'input[type="checkbox"]', updateSavings);
+
+        GM2FontPerf.selected.forEach(function(v){
+            var id = '#gm2-variant-' + v.replace(/[^a-z0-9]/gi, '-');
+            var chk = $(id);
+            if(chk.length){ chk.prop('checked', true); }
+        });
 
         fetchVariants();
         updateSavings();
