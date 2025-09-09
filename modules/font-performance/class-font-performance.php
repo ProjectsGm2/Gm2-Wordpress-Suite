@@ -78,7 +78,7 @@ class Font_Performance {
             add_action('wp_head', [__CLASS__, 'inline_font_display'], 99);
         }
         if (!empty(self::$options['preconnect'])) {
-            add_filter('wp_resource_hints', [__CLASS__, 'resource_hints'], 10, 2);
+            add_action('wp_head', [__CLASS__, 'preconnect_links']);
         }
         if (!empty(self::$options['preload'])) {
             add_action('wp_head', [__CLASS__, 'preload_links']);
@@ -103,7 +103,7 @@ class Font_Performance {
         remove_filter('style_loader_src', [__CLASS__, 'rewrite_google_url'], 9);
         remove_filter('style_loader_src', [__CLASS__, 'inject_display_swap'], 10);
         remove_action('wp_head', [__CLASS__, 'inline_font_display'], 99);
-        remove_filter('wp_resource_hints', [__CLASS__, 'resource_hints'], 10);
+        remove_action('wp_head', [__CLASS__, 'preconnect_links']);
         remove_action('wp_head', [__CLASS__, 'preload_links']);
         remove_action('wp_head', [__CLASS__, 'fallback_css']);
         remove_filter('wp_headers', [__CLASS__, 'cache_headers']);
@@ -239,17 +239,19 @@ class Font_Performance {
         return $src;
     }
 
-    /** Inject preconnect resource hints. */
-    public static function resource_hints(array $urls, string $relation_type): array {
-        if (empty(self::$options['enabled']) || $relation_type !== 'preconnect') {
-            return $urls;
+    /** Output preconnect link tags. */
+    public static function preconnect_links(): void {
+        if (empty(self::$options['enabled']) || empty(self::$options['preconnect'])) {
+            return;
         }
-        foreach (self::$options['preconnect'] as $url) {
-            if (!in_array($url, $urls, true)) {
-                $urls[] = $url;
+        $hosts = array_unique((array) self::$options['preconnect']);
+        foreach ($hosts as $host) {
+            $host = esc_url($host);
+            if (!filter_var($host, FILTER_VALIDATE_URL)) {
+                continue;
             }
+            printf("<link rel='preconnect' href='%s' crossorigin />\n", $host);
         }
-        return $urls;
     }
 
     /** Output preload link tags. */
