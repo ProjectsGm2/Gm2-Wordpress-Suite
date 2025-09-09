@@ -31,6 +31,10 @@ class Font_Performance {
     /** Register init hook. */
     public static function init(): void {
         add_action('init', [__CLASS__, 'bootstrap'], 20);
+        if (is_admin()) {
+            require_once __DIR__ . '/admin/class-font-performance-admin.php';
+            Admin\Font_Performance_Admin::init();
+        }
     }
 
     /** Load options and set up hooks. */
