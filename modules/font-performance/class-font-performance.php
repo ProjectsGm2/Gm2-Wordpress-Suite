@@ -444,6 +444,17 @@ class Font_Performance {
             }
         }
 
+        $opts             = self::get_settings();
+        $allowed_variants = [];
+        if (!empty($opts['limit_variants']) && !empty($opts['variant_suggestions'])) {
+            foreach ((array) $opts['variant_suggestions'] as $variant) {
+                $variant = strtolower(trim((string) $variant));
+                if (preg_match('/^\d{3}\s+(normal|italic|oblique)$/', $variant)) {
+                    $allowed_variants[$variant] = true;
+                }
+            }
+        }
+
         $uploads  = wp_upload_dir();
         $base_dir = trailingslashit($uploads['basedir']) . 'gm2seo-fonts/';
         $base_url = trailingslashit($uploads['baseurl']) . 'gm2seo-fonts/';
@@ -481,10 +492,21 @@ class Font_Performance {
                     $family_slug = 'font';
                 }
 
-                $weight = '';
+                $weight = '400';
                 if (preg_match('/font-weight\s*:\s*([0-9]+)/i', $block, $w)) {
                     $weight = trim($w[1]);
                 }
+
+                $style = 'normal';
+                if (preg_match('/font-style\s*:\s*([a-z]+)/i', $block, $s)) {
+                    $style = strtolower(trim($s[1]));
+                }
+
+                $variant_key = $weight . ' ' . $style;
+                if (!empty($allowed_variants) && !isset($allowed_variants[$variant_key])) {
+                    continue;
+                }
+
                 $families[$family_name][$weight] = true;
 
                 preg_match_all('/url\(([^)]+\.woff2[^)]*)\)/i', $block, $urls);
@@ -537,7 +559,6 @@ class Font_Performance {
         wp_register_style('gm2seo-fonts-local', $base_url . 'fonts-local.css', [], null);
         wp_enqueue_style('gm2seo-fonts-local');
 
-        $opts              = self::get_settings();
         $opts['families']  = [];
         foreach ($families as $fam => $weights) {
             $weights = array_filter(array_keys($weights));

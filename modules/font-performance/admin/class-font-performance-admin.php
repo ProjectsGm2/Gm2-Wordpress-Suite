@@ -86,8 +86,15 @@ class Font_Performance_Admin {
 
         $opts['preconnect'] = self::sanitize_lines($input['preconnect'] ?? '');
         $opts['preload']    = self::sanitize_lines($input['preload'] ?? '');
-        $opts['families']   = self::sanitize_lines($input['families'] ?? '');
-        $opts['variant_suggestions'] = array_map('sanitize_text_field', $input['variant_suggestions'] ?? []);
+        $opts['families'] = self::sanitize_lines($input['families'] ?? '');
+
+        $variants = $input['variant_suggestions'] ?? [];
+        if (!is_array($variants)) {
+            $variants = [];
+        }
+        $opts['variant_suggestions'] = array_values(
+            array_map('sanitize_text_field', $variants)
+        );
 
         return $opts;
     }
