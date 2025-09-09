@@ -507,6 +507,7 @@ Each request writes a line to `wp-content/ae-seo/logs/js-optimizer.log` recordin
 - **Tag Manager consolidation** merges analytics and pixel tags into a single module.
 - **Self‑hosted fonts** mirror Google Fonts locally; run `wp gm2 fonts sync` after changing fonts to refresh the cache.
 - **Font preloading** emits up to three `<link rel="preload" as="font" type="font/woff2" crossorigin>` tags for valid WOFF2 URLs.
+- **Font caching** provides server configuration snippets with a plugin endpoint fallback that serves fonts with one‑year cache headers.
 
 Enable modules on demand:
 
