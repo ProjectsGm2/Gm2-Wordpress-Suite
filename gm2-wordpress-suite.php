@@ -121,7 +121,6 @@ require_once GM2_PLUGIN_DIR . 'includes/class-ae-seo-js-lazy.php';
 require_once GM2_PLUGIN_DIR . 'includes/class-ae-seo-diff-serving.php';
 require_once GM2_PLUGIN_DIR . 'includes/class-ae-seo-rest-diag.php';
 require_once GM2_PLUGIN_DIR . 'includes/class-ae-seo-font-manager.php';
-require_once GM2_PLUGIN_DIR . 'modules/font-performance/class-font-performance.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Search_Console.php';
 require_once GM2_PLUGIN_DIR . 'includes/render-optimizer/class-ae-seo-render-optimizer.php';
 require_once GM2_PLUGIN_DIR . 'includes/Versioning_MTime.php';
@@ -160,7 +159,20 @@ add_action('init', 'gm2_css_optimizer_init');
 \Gm2\Perf\Enqueue::init();
 \Gm2\Perf\Settings::init();
 \Gm2\AE_Utility_CSS::init();
-\Gm2\Font_Performance\Font_Performance::init();
+
+$gm2_font_perf_dir = GM2_PLUGIN_DIR . 'modules/font-performance/';
+if (is_dir($gm2_font_perf_dir) && !class_exists('\\Gm2\\Font_Performance\\Font_Performance')) {
+    require_once $gm2_font_perf_dir . 'class-font-performance.php';
+}
+if (class_exists('\\Gm2\\Font_Performance\\Font_Performance')) {
+    \Gm2\Font_Performance\Font_Performance::init();
+    if (is_admin() && !class_exists('\\Gm2\\Font_Performance\\Admin\\Font_Performance_Admin')) {
+        require_once $gm2_font_perf_dir . 'admin/class-font-performance-admin.php';
+        if (class_exists('\\Gm2\\Font_Performance\\Admin\\Font_Performance_Admin')) {
+            \Gm2\Font_Performance\Admin\Font_Performance_Admin::init();
+        }
+    }
+}
 if (get_option('gm2_pretty_versioned_urls', '0') === '1') {
     \Gm2\Gm2_Version_Route_Apache::maybe_apply();
 }
