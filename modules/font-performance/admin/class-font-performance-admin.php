@@ -140,6 +140,21 @@ class Font_Performance_Admin {
             file_exists(GM2_PLUGIN_DIR . 'admin/js/gm2-seo.js') ? filemtime(GM2_PLUGIN_DIR . 'admin/js/gm2-seo.js') : GM2_VERSION,
             true
         );
+
+        wp_enqueue_style(
+            'gm2-font-performance-admin',
+            plugin_dir_url(__FILE__) . '../assets/admin.css',
+            [],
+            filemtime(plugin_dir_path(__FILE__) . '../assets/admin.css')
+        );
+
+        wp_enqueue_script(
+            'gm2-font-performance-admin',
+            plugin_dir_url(__FILE__) . '../assets/admin.js',
+            ['jquery'],
+            filemtime(plugin_dir_path(__FILE__) . '../assets/admin.js'),
+            true
+        );
     }
 
     /** Render settings page. */
