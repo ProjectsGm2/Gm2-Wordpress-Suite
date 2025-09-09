@@ -32,3 +32,27 @@
 1. Request the font REST endpoint.
 2. Inspect response headers to confirm `Cache-Control` and `ETag` values are set for caching.
 3. Verify server rules (e.g., `.htaccess` or Nginx config) send proper caching headers for font files.
+
+### Web Server Configuration
+
+To mirror the REST endpoint's long‑term caching when fonts are served directly by the web server, add rules similar to the following:
+
+**Apache**
+
+```
+<FilesMatch "\.(woff2?|ttf|otf)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+    Header set Cross-Origin-Resource-Policy "cross-origin"
+</FilesMatch>
+```
+
+**Nginx**
+
+```
+location ~* \.(woff2?|ttf|otf)$ {
+    add_header Cache-Control "public, max-age=31536000, immutable";
+    add_header Cross-Origin-Resource-Policy "cross-origin";
+}
+```
+
+These directives ensure static font files receive the same caching directives as the plugin's REST endpoint.
