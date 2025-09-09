@@ -12,6 +12,20 @@ if (class_exists(__NAMESPACE__ . '\\Font_Performance')) {
 class Font_Performance {
     private const OPTION_KEY = 'gm2seo_fonts';
 
+    /**
+     * Selected plugin directories to inspect for font usage. Only these
+     * directories are scanned to avoid excessive filesystem traversal.
+     *
+     * @var string[]
+     */
+    private const PLUGIN_DIRS = [
+        'elementor',
+        'elementor-pro',
+        'woocommerce',
+        'contact-form-7',
+        'seo-by-rank-math',
+    ];
+
     private static array $defaults = [
         'enabled'             => true,
         'inject_display_swap' => true,
@@ -64,6 +78,100 @@ class Font_Performance {
             self::$options = self::get_options();
         }
         return self::$options;
+    }
+
+    /**
+     * Detect unique font-weight and font-style combinations used across
+     * theme and selected plugin stylesheets.
+     */
+    public static function detect_font_variants(): array {
+        $dirs   = [];
+        $themes = [get_template_directory(), get_stylesheet_directory()];
+        foreach (array_unique(array_filter($themes)) as $dir) {
+            if (is_dir($dir)) {
+                $dirs[] = $dir;
+            }
+        }
+
+        if (defined('WP_PLUGIN_DIR')) {
+            $plugin_slugs = apply_filters('gm2_font_variant_plugin_dirs', self::PLUGIN_DIRS);
+            foreach ((array) $plugin_slugs as $slug) {
+                $path = rtrim(WP_PLUGIN_DIR, '/\\') . '/' . $slug;
+                if (is_dir($path)) {
+                    $dirs[] = $path;
+                }
+            }
+        }
+
+        $variants = [];
+        foreach ($dirs as $dir) {
+            $iterator = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($dir, \FilesystemIterator::SKIP_DOTS)
+            );
+            foreach ($iterator as $file) {
+                if (!$file->isFile() || strtolower($file->getExtension()) !== 'css') {
+                    continue;
+                }
+                $css = @file_get_contents($file->getPathname());
+                if ($css === false) {
+                    continue;
+                }
+
+                preg_match_all('/{[^}]*}/', $css, $blocks);
+                foreach ($blocks[0] as $block) {
+                    $weight = null;
+                    $style  = null;
+
+                    if (preg_match('/font-weight\s*:\s*(\d{3}|bold|normal|bolder|lighter)/i', $block, $m)) {
+                        $w = strtolower($m[1]);
+                        switch ($w) {
+                            case 'bold':
+                                $weight = '700';
+                                break;
+                            case 'normal':
+                                $weight = '400';
+                                break;
+                            case 'bolder':
+                                $weight = '700';
+                                break;
+                            case 'lighter':
+                                $weight = '300';
+                                break;
+                            default:
+                                $weight = $w;
+                        }
+                    }
+
+                    if (preg_match('/font-style\s*:\s*(normal|italic|oblique)/i', $block, $m)) {
+                        $style = strtolower($m[1]);
+                    }
+
+                    if (!$weight && !$style && preg_match('/font\s*:\s*([^;]+);/i', $block, $m)) {
+                        $tokens = preg_split('/\s+/', strtolower($m[1]));
+                        foreach ($tokens as $token) {
+                            if (!$style && in_array($token, ['normal', 'italic', 'oblique'], true)) {
+                                $style = $token;
+                            } elseif (!$weight && preg_match('/^(\d{3})$/', $token)) {
+                                $weight = $token;
+                            } elseif (!$weight && $token === 'bold') {
+                                $weight = '700';
+                            } elseif (!$weight && $token === 'normal') {
+                                $weight = '400';
+                            }
+                        }
+                    }
+
+                    if ($weight || $style) {
+                        $weight = $weight ?: '400';
+                        $style  = $style ?: 'normal';
+                        $variants[$weight . ' ' . $style] = true;
+                    }
+                }
+            }
+        }
+
+        ksort($variants, SORT_NATURAL);
+        return array_keys($variants);
     }
 
     /** Add hooks and filters. */
