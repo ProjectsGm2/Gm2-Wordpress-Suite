@@ -39,7 +39,7 @@ class Font_Performance {
 
     /** Load options and set up hooks. */
     public static function bootstrap(): void {
-        self::$options = self::get_options();
+        self::get_settings();
         if (!empty(self::$options['enabled'])) {
             self::add_hooks();
         } else {
@@ -55,6 +55,14 @@ class Font_Performance {
             $opts = [];
         }
         return wp_parse_args($opts, self::$defaults);
+    }
+
+    /** Wrapper to access settings. */
+    public static function get_settings(): array {
+        if (empty(self::$options)) {
+            self::$options = self::get_options();
+        }
+        return self::$options;
     }
 
     /** Add hooks and filters. */
@@ -97,11 +105,17 @@ class Font_Performance {
         remove_action('wp_head', [__CLASS__, 'preload_links']);
         remove_action('wp_head', [__CLASS__, 'fallback_css']);
         remove_filter('wp_headers', [__CLASS__, 'cache_headers']);
+        if (class_exists('Gm2\\AE_SEO_Font_Manager')) {
+            \Gm2\AE_SEO_Font_Manager::disable();
+        }
         self::$hooks_added = false;
     }
 
     /** Append display=swap parameter to Google Font URLs. */
     public static function inject_display_swap(string $src, string $handle): string {
+        if (empty(self::$options['enabled'])) {
+            return $src;
+        }
         if (str_contains($src, 'fonts.googleapis.com')) {
             $src = add_query_arg('display', 'swap', $src);
         }
@@ -110,6 +124,9 @@ class Font_Performance {
 
     /** Rewrite Google Font URLs to css2 endpoint. */
     public static function rewrite_google_url(string $src, string $handle): string {
+        if (empty(self::$options['enabled'])) {
+            return $src;
+        }
         if (str_contains($src, 'fonts.googleapis.com') && !str_contains($src, '/css2')) {
             $src = preg_replace('#fonts\.googleapis\.com/[^?]+#', 'fonts.googleapis.com/css2', $src);
         }
@@ -118,7 +135,7 @@ class Font_Performance {
 
     /** Inject preconnect resource hints. */
     public static function resource_hints(array $urls, string $relation_type): array {
-        if ($relation_type !== 'preconnect') {
+        if (empty(self::$options['enabled']) || $relation_type !== 'preconnect') {
             return $urls;
         }
         foreach (self::$options['preconnect'] as $url) {
@@ -131,6 +148,9 @@ class Font_Performance {
 
     /** Output preload link tags. */
     public static function preload_links(): void {
+        if (empty(self::$options['enabled'])) {
+            return;
+        }
         foreach (self::$options['preload'] as $url) {
             printf("<link rel='preload' href='%s' as='style' />\n", esc_url($url));
         }
@@ -138,7 +158,7 @@ class Font_Performance {
 
     /** Output simple system fallback CSS for specified families. */
     public static function fallback_css(): void {
-        if (empty(self::$options['families'])) {
+        if (empty(self::$options['enabled']) || empty(self::$options['families'])) {
             return;
         }
         echo "<style id='gm2-font-fallback'>\n";
@@ -151,14 +171,21 @@ class Font_Performance {
 
     /** Add long cache headers. */
     public static function cache_headers(array $headers): array {
+        if (empty(self::$options['enabled'])) {
+            return $headers;
+        }
         $headers['Cache-Control'] = 'public, max-age=31536000, immutable';
+        if (is_multisite()) {
+            $headers['Vary'] = isset($headers['Vary']) ? $headers['Vary'] . ', Host' : 'Host';
+        }
         return $headers;
     }
 
     /** Toggle the feature and persist the option. */
     public static function set_enabled(bool $enabled): void {
-        $opts = self::get_options();
+        $opts = self::get_settings();
         $opts['enabled'] = $enabled;
+        self::$options   = $opts;
         $fn = is_multisite() ? 'update_site_option' : 'update_option';
         $fn(self::OPTION_KEY, $opts, false);
         if ($enabled) {

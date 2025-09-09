@@ -37,6 +37,16 @@ class AE_SEO_Font_Manager {
         self::schedule_event();
     }
 
+    /** Remove hooks and scheduled events. */
+    public static function disable(): void {
+        remove_filter('style_loader_src', [__CLASS__, 'intercept_style'], 10);
+        remove_filter('wp_resource_hints', [__CLASS__, 'filter_hints'], 10);
+        remove_action('wp_head', [__CLASS__, 'start_head_buffer'], 0);
+        remove_action('wp_head', [__CLASS__, 'end_head_buffer'], PHP_INT_MAX);
+        remove_action(self::CRON_HOOK, [__CLASS__, 'sync_cached_fonts']);
+        wp_clear_scheduled_hook(self::CRON_HOOK);
+    }
+
     /**
      * Register the enable setting on the Reading settings screen.
      */
@@ -86,8 +96,9 @@ class AE_SEO_Font_Manager {
     private static function cache_stylesheet(string $url): ?string {
         $cache = get_option(self::OPTION_CACHE, []);
         $dir   = wp_upload_dir();
-        $base_dir = trailingslashit($dir['basedir']) . 'fonts';
-        $base_url = trailingslashit($dir['baseurl']) . 'fonts';
+        $suffix   = is_multisite() ? '-' . get_current_blog_id() : '';
+        $base_dir = trailingslashit($dir['basedir']) . 'fonts' . $suffix;
+        $base_url = trailingslashit($dir['baseurl']) . 'fonts' . $suffix;
         if (!is_dir($base_dir)) {
             wp_mkdir_p($base_dir);
         }
