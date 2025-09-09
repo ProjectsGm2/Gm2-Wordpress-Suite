@@ -173,6 +173,14 @@ if (class_exists('\\Gm2\\Font_Performance\\Font_Performance')) {
         }
     }
 }
+
+$gm2_netpayload_dir = GM2_PLUGIN_DIR . 'modules/network-payload/';
+if (is_dir($gm2_netpayload_dir) && file_exists($gm2_netpayload_dir . 'Module.php')) {
+    require_once $gm2_netpayload_dir . 'Module.php';
+    \Gm2\NetworkPayload\Module::boot();
+    register_activation_hook(__FILE__, ['\\Gm2\\NetworkPayload\\Module', 'activate']);
+    register_deactivation_hook(__FILE__, ['\\Gm2\\NetworkPayload\\Module', 'deactivate']);
+}
 if (get_option('gm2_pretty_versioned_urls', '0') === '1') {
     \Gm2\Gm2_Version_Route_Apache::maybe_apply();
 }

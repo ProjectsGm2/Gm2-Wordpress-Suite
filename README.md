@@ -56,6 +56,17 @@ The build step appends a content hash to each filename so browsers can cache ass
 
 When the **Enable Replacements** option is active (`ae_js_replacements`), front‑end scripts execute callbacks on matched elements. Use the `ae_seo/js/replacements` filter to return an associative array where keys are CSS selectors and values are callback names available on `window`. Each callback receives the matched element as its only argument. The plugin also ships a `vanilla-helpers.js` module with tiny DOM utilities for these callbacks.
 
+## Network Payload Optimizer
+
+The Network Payload Optimizer records Resource Timing data from the admin and tracks a rolling seven‑day average of transferred bytes. Configure the module under **Gm2 → Network Payload** where you can toggle:
+
+- **Next‑Gen Images** – serve modern formats when available.
+- **Gzip Detection** – detect when server compression is missing.
+- **Smart Lazyload** – defer offscreen assets.
+- **Asset Budget** – warn when pages exceed size thresholds.
+
+The settings page displays the current average payload and emits a small script that posts telemetry to the `/gm2/v1/netpayload` REST endpoint. On multisite, network administrators may set defaults that individual sites can override.
+
 ## LCP Optimization
 
 Improve Largest Contentful Paint by enabling targeted tweaks in **SEO → Performance → LCP Optimization**. The module runs entirely on the front end and is compatible with PHP 7.4+ and WordPress 5.8+.
