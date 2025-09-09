@@ -111,14 +111,47 @@ class Font_Performance {
         self::$hooks_added = false;
     }
 
-    /** Append display=swap parameter to Google Font URLs. */
+    /**
+     * Append display=swap parameter to Google Font URLs and ensure query params are unique.
+     * Adds subset=latin when google_url_rewrite is enabled.
+     */
     public static function inject_display_swap(string $src, string $handle): string {
-        if (empty(self::$options['enabled'])) {
+        if (empty(self::$options['enabled']) || !str_contains($src, 'fonts.googleapis.com')) {
             return $src;
         }
-        if (str_contains($src, 'fonts.googleapis.com')) {
-            $src = add_query_arg('display', 'swap', $src);
+
+        $parts  = parse_url($src);
+        $params = [];
+
+        if (!empty($parts['query'])) {
+            parse_str($parts['query'], $params);
         }
+
+        if (!isset($params['display'])) {
+            $params['display'] = 'swap';
+        }
+
+        if (!empty(self::$options['google_url_rewrite']) && !isset($params['subset'])) {
+            $params['subset'] = 'latin';
+        }
+
+        $parts['query'] = http_build_query($params, '', '&', PHP_QUERY_RFC3986);
+
+        $scheme = '';
+        if (isset($parts['scheme'])) {
+            $scheme = $parts['scheme'] . '://';
+        } elseif (0 === strpos($src, '//')) {
+            $scheme = '//';
+        }
+
+        $src = $scheme . ($parts['host'] ?? '') . ($parts['path'] ?? '');
+        if (!empty($parts['query'])) {
+            $src .= '?' . $parts['query'];
+        }
+        if (!empty($parts['fragment'])) {
+            $src .= '#' . $parts['fragment'];
+        }
+
         return $src;
     }
 
