@@ -1,0 +1,19 @@
+.gm2-fonts-repeater {
+    margin-top: 5px;
+}
+
+.gm2-fonts-repeater .gm2-fonts-row {
+    margin-bottom: 5px;
+}
+
+.gm2-fonts-repeater .gm2-fonts-row input[type="text"] {
+    width: 60%;
+}
+
+.gm2-fonts-repeater .gm2-fonts-remove {
+    margin-left: 5px;
+}
+
+.gm2-fonts-repeater .gm2-fonts-add {
+    margin-top: 5px;
+}
