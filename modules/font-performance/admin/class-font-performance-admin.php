@@ -35,7 +35,7 @@ class Font_Performance_Admin {
             'inject_display_swap' => ['type' => 'checkbox', 'label' => __('Inject display=swap', 'gm2-wordpress-suite')],
             'google_url_rewrite'  => ['type' => 'checkbox', 'label' => __('Rewrite Google URLs', 'gm2-wordpress-suite')],
             'preconnect'          => ['type' => 'textarea', 'label' => __('Preconnect URLs (one per line)', 'gm2-wordpress-suite')],
-            'preload'             => ['type' => 'textarea', 'label' => __('Preload URLs (one per line)', 'gm2-wordpress-suite')],
+            'preload'             => ['type' => 'textarea', 'label' => __('Preload font URLs (.woff2, one per line)', 'gm2-wordpress-suite')],
             'self_host'           => ['type' => 'checkbox', 'label' => __('Self-host fonts', 'gm2-wordpress-suite')],
             'families'            => ['type' => 'textarea', 'label' => __('Font families (one per line)', 'gm2-wordpress-suite')],
             'limit_variants'      => ['type' => 'checkbox', 'label' => __('Limit variants', 'gm2-wordpress-suite')],

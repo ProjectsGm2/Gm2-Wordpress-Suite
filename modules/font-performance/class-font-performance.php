@@ -254,13 +254,25 @@ class Font_Performance {
         }
     }
 
-    /** Output preload link tags. */
+    /** Output preload link tags for up to three unique WOFF2 fonts. */
     public static function preload_links(): void {
-        if (empty(self::$options['enabled'])) {
+        if (empty(self::$options['enabled']) || empty(self::$options['preload'])) {
             return;
         }
-        foreach (self::$options['preload'] as $url) {
-            printf("<link rel='preload' href='%s' as='style' />\n", esc_url($url));
+
+        $urls = array_filter(
+            self::$options['preload'],
+            static function ($url) {
+                return filter_var($url, FILTER_VALIDATE_URL)
+                    && preg_match('/\.woff2(\?.*)?$/i', $url);
+            }
+        );
+
+        foreach (array_slice(array_values(array_unique($urls)), 0, 3) as $url) {
+            printf(
+                '<link rel="preload" as="font" type="font/woff2" href="%s" crossorigin>' . "\n",
+                esc_url($url)
+            );
         }
     }
 
