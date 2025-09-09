@@ -18,6 +18,7 @@ class Font_Performance_Admin {
         add_action('admin_init', [__CLASS__, 'register']);
         add_action('admin_menu', [__CLASS__, 'menu'], 99);
         add_action('wp_ajax_gm2_detect_font_variants', [__CLASS__, 'ajax_detect_variants']);
+        add_action('wp_ajax_gm2_font_size_diff', [__CLASS__, 'ajax_font_size_diff']);
     }
 
     /** Register settings and fields. */
@@ -145,6 +146,7 @@ class Font_Performance_Admin {
                     }
                 }
                 echo '</div>';
+                echo '<p id="gm2-variant-savings"></p>';
                 break;
         }
     }
@@ -154,6 +156,23 @@ class Font_Performance_Admin {
         check_ajax_referer('gm2_font_variants', 'nonce');
         $variants = \Gm2\Font_Performance\Font_Performance::detect_font_variants();
         wp_send_json_success($variants);
+    }
+
+    /** AJAX handler to compute font size savings. */
+    public static function ajax_font_size_diff(): void {
+        check_ajax_referer('gm2_font_variants', 'nonce');
+        $selected = $_POST['variants'] ?? [];
+        if (!is_array($selected)) {
+            $selected = [];
+        }
+        $selected = array_map('sanitize_text_field', $selected);
+        $sizes    = \Gm2\Font_Performance\Font_Performance::compute_variant_savings($selected);
+        $data     = [
+            'total'     = round($sizes['total'] / 1024, 2),
+            'selected'  = round($sizes['allowed'] / 1024, 2),
+            'reduction' = round($sizes['reduction'] / 1024, 2),
+        ];
+        wp_send_json_success($data);
     }
 
     /** Add submenu page. */

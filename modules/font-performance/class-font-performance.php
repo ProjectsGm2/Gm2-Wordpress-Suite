@@ -175,6 +175,47 @@ class Font_Performance {
         return array_keys($variants);
     }
 
+    /**
+     * Compute total font size and savings for selected variants.
+     */
+    public static function compute_variant_savings(array $selected): array {
+        $uploads  = wp_upload_dir();
+        $base_dir = trailingslashit($uploads['basedir']) . 'gm2seo-fonts/';
+
+        require_once ABSPATH . 'wp-admin/includes/file.php';
+        WP_Filesystem();
+        global $wp_filesystem;
+        $totals = ['total' => 0, 'allowed' => 0, 'reduction' => 0];
+        if (!$wp_filesystem || !$wp_filesystem->is_dir($base_dir)) {
+            return $totals;
+        }
+
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($base_dir, \FilesystemIterator::SKIP_DOTS)
+        );
+        foreach ($iterator as $file) {
+            if (!$file->isFile() || strtolower($file->getExtension()) !== 'woff2') {
+                continue;
+            }
+            $path = $file->getPathname();
+            $size = (int) $wp_filesystem->size($path);
+            $totals['total'] += $size;
+
+            $name = $file->getBasename('.woff2');
+            if (preg_match('/-(\d{3})-(normal|italic|oblique)$/i', $name, $m)) {
+                $variant = strtolower($m[1] . ' ' . $m[2]);
+            } else {
+                $variant = '400 normal';
+            }
+            if (in_array($variant, $selected, true)) {
+                $totals['allowed'] += $size;
+            }
+        }
+
+        $totals['reduction'] = $totals['total'] - $totals['allowed'];
+        return $totals;
+    }
+
     /** Add hooks and filters. */
     private static function add_hooks(): void {
         if (self::$hooks_added) {

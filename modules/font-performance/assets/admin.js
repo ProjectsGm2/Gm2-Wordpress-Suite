@@ -50,6 +50,23 @@
                 label.append(chk).append(' '+v);
                 wrap.append($('<div></div>').append(label));
             });
+            updateSavings();
+        }
+
+        function updateSavings(){
+            var variants = [];
+            $('#gm2-variant-suggestions input:checked').each(function(){
+                variants.push($(this).val());
+            });
+            $.post(GM2FontPerf.ajax_url, {
+                action: 'gm2_font_size_diff',
+                nonce: GM2FontPerf.nonce,
+                variants: variants
+            }, function(resp){
+                if(resp && resp.success && resp.data){
+                    $('#gm2-variant-savings').text('Projected reduction: ' + resp.data.reduction + ' KB');
+                }
+            });
         }
 
         function fetchVariants(){
@@ -65,6 +82,9 @@
             fetchVariants();
         });
 
+        $('#gm2-variant-suggestions').on('change', 'input[type="checkbox"]', updateSavings);
+
         fetchVariants();
+        updateSavings();
     });
 })(jQuery);
