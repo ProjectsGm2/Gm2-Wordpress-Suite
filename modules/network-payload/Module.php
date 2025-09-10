@@ -66,7 +66,98 @@ class Module {
         if (!self::any_feature_enabled()) {
             return;
         }
+        $opts = self::get_settings();
+        if (!empty($opts['nextgen_images'])) {
+            add_filter('wp_generate_attachment_metadata', [__CLASS__, 'add_nextgen_variants'], 10, 2);
+        }
         // Actual feature hooks would be added here.
+    }
+
+    /**
+     * Generate next-gen image formats for intermediate sizes.
+     */
+    public static function add_nextgen_variants(array $metadata, int $attachment_id): array {
+        if (empty($metadata['sizes']) || !wp_attachment_is_image($attachment_id)) {
+            return $metadata;
+        }
+
+        $editor_args   = ['methods' => ['Imagick', 'GD']];
+        $supports_webp = wp_image_editor_supports(['mime_type' => 'image/webp'] + $editor_args);
+        $supports_avif = wp_image_editor_supports(['mime_type' => 'image/avif'] + $editor_args);
+
+        if (!$supports_webp && !$supports_avif) {
+            return $metadata;
+        }
+
+        $file     = get_attached_file($attachment_id);
+        $base_dir = dirname($file);
+
+        foreach ($metadata['sizes'] as $size => $data) {
+            $size_file = $base_dir . '/' . $data['file'];
+            if (!file_exists($size_file)) {
+                continue;
+            }
+
+            $type      = wp_check_filetype($size_file);
+            $mime      = $type['type'];
+            $lossless  = true;
+
+            if ($mime === 'image/png') {
+                $is_large = filesize($size_file) > 500 * 1024; // >500KB
+                $has_alpha = self::png_has_alpha($size_file);
+                if ($is_large && !$has_alpha) {
+                    $lossless = false;
+                }
+            }
+
+            if ($supports_webp) {
+                $webp_path = preg_replace('/\.[^\.]+$/', '.webp', $size_file);
+                $editor    = wp_get_image_editor($size_file, $editor_args);
+                if (!is_wp_error($editor)) {
+                    $editor->save($webp_path, 'image/webp', ['lossless' => $lossless]);
+                    $metadata['gm2_nextgen'][$size]['webp'] = basename($webp_path);
+                }
+            }
+
+            $can_avif = $supports_avif;
+            if ($mime === 'image/gif' && self::is_animated_gif($size_file)) {
+                $can_avif = false;
+            }
+            if ($can_avif) {
+                $avif_path = preg_replace('/\.[^\.]+$/', '.avif', $size_file);
+                $editor    = wp_get_image_editor($size_file, $editor_args);
+                if (!is_wp_error($editor)) {
+                    $editor->save($avif_path, 'image/avif', ['lossless' => $lossless]);
+                    $metadata['gm2_nextgen'][$size]['avif'] = basename($avif_path);
+                }
+            }
+        }
+
+        return $metadata;
+    }
+
+    /** Determine if PNG has an alpha channel by reading its header. */
+    private static function png_has_alpha(string $file): bool {
+        $data = @file_get_contents($file, false, null, 0, 26);
+        if ($data === false || strlen($data) < 26) {
+            return false;
+        }
+        return (ord($data[25]) & 4) === 4; // Color type bit for alpha.
+    }
+
+    /** Quickly detect if a GIF is animated. */
+    private static function is_animated_gif(string $file): bool {
+        $fh = @fopen($file, 'rb');
+        if (!$fh) {
+            return false;
+        }
+        $count = 0;
+        while (!feof($fh) && $count < 2) {
+            $chunk = fread($fh, 1024 * 100); // 100KB
+            $count += preg_match_all('/\x00\x21\xF9\x04/', $chunk, $m);
+        }
+        fclose($fh);
+        return $count > 1;
     }
 
     /** Retrieve settings merged with network defaults. */
