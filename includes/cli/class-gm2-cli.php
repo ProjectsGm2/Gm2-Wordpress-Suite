@@ -143,6 +143,49 @@ class Gm2_CLI extends \WP_CLI_Command {
     }
 
     /**
+     * Audit script and style handles for a URL.
+     *
+     * ## SUBCOMMANDS
+     *
+     * run  Queue an audit fetch
+     *
+     * ## OPTIONS
+     *
+     * [--url=<path>]
+     * : Relative URL to audit. Defaults to '/'.
+     */
+    public function audit( $args, $assoc_args ) {
+        $sub = $args[0] ?? '';
+        if ( $sub !== 'run' ) {
+            \WP_CLI::error( __( 'Usage: wp gm2 audit run [--url=<path>]', 'gm2-wordpress-suite' ) );
+        }
+
+        $url   = $assoc_args['url'] ?? '/';
+        \WP_CLI::line( sprintf( __( 'Queuing audit for %s', 'gm2-wordpress-suite' ), $url ) );
+        $total = \Gm2\NetworkPayload\Module::queue_audit( $url );
+
+        $progress = \WP_CLI\Utils\make_progress_bar( __( 'Auditing', 'gm2-wordpress-suite' ), $total );
+        $done = 0;
+        do {
+            $state     = \Gm2\NetworkPayload\Module::get_audit_state();
+            $processed = intval( $state['processed'] ?? 0 );
+            if ( $processed > $done ) {
+                $progress->tick( $processed - $done );
+                $done = $processed;
+            }
+            if ( $done < $total ) {
+                sleep( 1 );
+            }
+        } while ( $done < $total );
+        $progress->finish();
+
+        foreach ( $state['log'] ?? [] as $entry ) {
+            \WP_CLI::line( sprintf( '%s: %s', $entry['url'], $entry['message'] ) );
+        }
+        \WP_CLI::success( __( 'Audit complete.', 'gm2-wordpress-suite' ) );
+    }
+
+    /**
      * Scaffold theme assets such as Twig/Blade templates or theme.json.
      *
      * ## SUBCOMMANDS
