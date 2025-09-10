@@ -50,7 +50,7 @@ class Module {
         add_action('rest_api_init', [Compression::class, 'register_test_route']);
         add_action('admin_notices', [__CLASS__, 'maybe_show_missing_notice']);
         add_action('network_admin_notices', [__CLASS__, 'maybe_show_missing_notice']);
-        add_action('gm2_np_regen_batch', [__CLASS__, 'process_regen_batch']);
+        add_action('gm2_np_regen_batch', [__CLASS__, 'process_regen_batch'], 10, 2);
         add_action('admin_post_gm2_np_export', [__CLASS__, 'handle_export']);
         add_action('admin_post_gm2_np_import', [__CLASS__, 'handle_import']);
 
@@ -260,8 +260,53 @@ class Module {
         }
     }
 
+    /** Queue regeneration from the CLI with progress tracking. */
+    public static function start_regeneration_cli(bool $only_missing = true): array {
+        $args = [
+            'post_type'      => 'attachment',
+            'post_mime_type' => 'image',
+            'fields'         => 'ids',
+            'orderby'        => 'ID',
+            'order'          => 'ASC',
+            'posts_per_page' => -1,
+        ];
+        $ids = get_posts($args);
+        $state = [
+            'processed'    => 0,
+            'total'        => count($ids),
+            'only_missing' => $only_missing,
+        ];
+        update_option(self::REGEN_STATE_KEY, $state, false);
+
+        $chunks = array_chunk($ids, 10);
+        $delay  = 0;
+        foreach ($chunks as $chunk) {
+            if (function_exists('as_schedule_single_action')) {
+                as_schedule_single_action(time(), 'gm2_np_regen_batch', [$chunk, $only_missing]);
+            } else {
+                wp_schedule_single_event(time() + $delay, 'gm2_np_regen_batch', [$chunk, $only_missing]);
+                $delay += MINUTE_IN_SECONDS;
+            }
+        }
+        return $ids;
+    }
+
     /** Process a batch of attachment regeneration. */
-    public static function process_regen_batch(): void {
+    public static function process_regen_batch(array $ids = [], bool $only_missing = true): void {
+        if (!empty($ids)) {
+            self::regenerate_images($ids, $only_missing);
+            $state = get_option(self::REGEN_STATE_KEY);
+            if (is_array($state)) {
+                $state['processed'] = intval($state['processed'] ?? 0) + count($ids);
+                if ($state['processed'] >= intval($state['total'] ?? 0)) {
+                    delete_option(self::REGEN_STATE_KEY);
+                } else {
+                    update_option(self::REGEN_STATE_KEY, $state, false);
+                }
+            }
+            return;
+        }
+
         $state = get_option(self::REGEN_STATE_KEY);
         if (!is_array($state)) {
             return;
@@ -321,6 +366,24 @@ class Module {
         $meta = self::add_nextgen_variants($meta, $attachment_id);
         wp_update_attachment_metadata($attachment_id, $meta);
         return true;
+    }
+
+    /** Regenerate provided attachments, with safeguards. */
+    public static function regenerate_images(array $ids, bool $only_missing = true, ?callable $progress = null): int {
+        if (function_exists('wp_raise_memory_limit')) {
+            wp_raise_memory_limit('image');
+        }
+        @set_time_limit(0);
+        $count = 0;
+        foreach ($ids as $id) {
+            if (self::regenerate_attachment((int) $id, $only_missing)) {
+                $count++;
+            }
+            if ($progress) {
+                $progress($id);
+            }
+        }
+        return $count;
     }
 
     /** Regenerate all images, optionally only those missing variants. */
