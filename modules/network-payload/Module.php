@@ -24,6 +24,8 @@ class Module {
         'gzip_detection'   => 'detect',
         'fallback_gzip'    => false,
         'smart_lazyload'   => true,
+        'auto_hero'        => true,
+        'eager_selectors'  => [],
         'lite_embeds'      => true,
         'asset_budget'     => true,
     ];
@@ -379,6 +381,9 @@ class Module {
         $site    = self::get_raw_options(false);
         $opts    = wp_parse_args($site, wp_parse_args($network, self::$defaults));
         $opts['big_image_cap'] = intval($opts['big_image_cap']);
+        $opts['auto_hero']      = !empty($opts['auto_hero']);
+        $opts['lite_embeds']    = !empty($opts['lite_embeds']);
+        $opts['eager_selectors'] = array_values(array_filter(array_map('trim', (array)($opts['eager_selectors'] ?? []))));
         return $opts;
     }
 
@@ -444,7 +449,7 @@ class Module {
         $tabs = [
             ['gm2_np_nextgen', __('Next‑Gen Images', 'gm2-wordpress-suite'), __('Serve images in modern formats where possible.', 'gm2-wordpress-suite')],
             ['gm2_np_gzip', __('Gzip Detection', 'gm2-wordpress-suite'), __('Detect whether the server compresses responses.', 'gm2-wordpress-suite')],
-            ['gm2_np_lazy', __('Smart Lazyload', 'gm2-wordpress-suite'), __('Delay offscreen assets for faster paint.', 'gm2-wordpress-suite')],
+            ['gm2_np_lazy', __('Smart Lazyload', 'gm2-wordpress-suite'), __('Delay offscreen assets for faster paint. Auto-detects the first content image and supports custom eager selectors.', 'gm2-wordpress-suite')],
             ['gm2_np_lite', __('Lite Embeds', 'gm2-wordpress-suite'), __('Swap video iframes for click-to-load placeholders.', 'gm2-wordpress-suite')],
             ['gm2_np_budget', __('Asset Budget', 'gm2-wordpress-suite'), __('Alert when pages exceed size thresholds.', 'gm2-wordpress-suite')],
         ];
@@ -479,6 +484,10 @@ class Module {
             $opts['gzip_detection'] = isset($input['gzip_detection']) ? sanitize_text_field($input['gzip_detection']) : 'detect';
             $opts['fallback_gzip']  = !empty($input['fallback_gzip']);
             $opts['smart_lazyload'] = !empty($input['smart_lazyload']);
+            $opts['auto_hero']      = !empty($input['auto_hero']);
+            $opts['eager_selectors'] = isset($input['eager_selectors'])
+                ? array_values(array_filter(array_map('sanitize_text_field', explode("\n", $input['eager_selectors']))))
+                : [];
             $opts['lite_embeds']    = !empty($input['lite_embeds']);
             $opts['asset_budget']   = !empty($input['asset_budget']);
             if (is_network_admin()) {
@@ -533,6 +542,17 @@ class Module {
                     <tr>
                         <th scope="row"><?php esc_html_e('Smart Lazyload', 'gm2-wordpress-suite'); ?></th>
                         <td><input type="checkbox" name="<?php echo esc_attr(self::OPTION_KEY); ?>[smart_lazyload]" value="1" <?php checked($opts['smart_lazyload']); ?> /></td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php esc_html_e('Auto Hero', 'gm2-wordpress-suite'); ?></th>
+                        <td><input type="checkbox" name="<?php echo esc_attr(self::OPTION_KEY); ?>[auto_hero]" value="1" <?php checked($opts['auto_hero']); ?> /></td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php esc_html_e('Eager Selectors', 'gm2-wordpress-suite'); ?></th>
+                        <td>
+                            <textarea name="<?php echo esc_attr(self::OPTION_KEY); ?>[eager_selectors]" rows="3" cols="50"><?php echo esc_textarea(implode("\n", $opts['eager_selectors'])); ?></textarea>
+                            <p class="description"><?php esc_html_e('One CSS selector per line.', 'gm2-wordpress-suite'); ?></p>
+                        </td>
                     </tr>
                     <tr>
                         <th scope="row"><?php esc_html_e('Lite Embeds', 'gm2-wordpress-suite'); ?></th>
