@@ -87,6 +87,10 @@ class Module {
         if (!empty($opts['fallback_gzip'])) {
             add_action('template_redirect', [__CLASS__, 'maybe_start_fallback_gzip'], 0);
         }
+        if (!empty($opts['smart_lazyload'])) {
+            require_once __DIR__ . '/Lazyload.php';
+            Lazyload::boot();
+        }
         // Actual feature hooks would be added here.
     }
 
