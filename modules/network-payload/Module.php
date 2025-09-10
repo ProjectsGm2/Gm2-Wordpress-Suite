@@ -24,6 +24,7 @@ class Module {
         'gzip_detection'   => 'detect',
         'fallback_gzip'    => false,
         'smart_lazyload'   => true,
+        'lite_embeds'      => true,
         'asset_budget'     => true,
     ];
 
@@ -70,6 +71,7 @@ class Module {
             $opts['gzip_detection'] !== 'off',
             $opts['fallback_gzip'],
             $opts['smart_lazyload'],
+            $opts['lite_embeds'],
             $opts['asset_budget'],
         ]));
     }
@@ -90,6 +92,10 @@ class Module {
         if (!empty($opts['smart_lazyload'])) {
             require_once __DIR__ . '/Lazyload.php';
             Lazyload::boot();
+        }
+        if (!empty($opts['lite_embeds'])) {
+            require_once __DIR__ . '/LiteEmbeds.php';
+            LiteEmbeds::boot();
         }
         // Actual feature hooks would be added here.
     }
@@ -422,6 +428,14 @@ class Module {
             'restUrl' => rest_url('gm2/v1/netpayload'),
             'nonce'   => wp_create_nonce('wp_rest'),
         ]);
+
+        $opts = self::get_settings();
+        if (!empty($opts['lite_embeds'])) {
+            if (function_exists('ae_seo_register_asset')) {
+                ae_seo_register_asset('gm2-lite-embeds', 'lite-embeds.js');
+            }
+            wp_enqueue_script('gm2-lite-embeds');
+        }
     }
 
     /** Add contextual help tabs. */
@@ -431,6 +445,7 @@ class Module {
             ['gm2_np_nextgen', __('Next‑Gen Images', 'gm2-wordpress-suite'), __('Serve images in modern formats where possible.', 'gm2-wordpress-suite')],
             ['gm2_np_gzip', __('Gzip Detection', 'gm2-wordpress-suite'), __('Detect whether the server compresses responses.', 'gm2-wordpress-suite')],
             ['gm2_np_lazy', __('Smart Lazyload', 'gm2-wordpress-suite'), __('Delay offscreen assets for faster paint.', 'gm2-wordpress-suite')],
+            ['gm2_np_lite', __('Lite Embeds', 'gm2-wordpress-suite'), __('Swap video iframes for click-to-load placeholders.', 'gm2-wordpress-suite')],
             ['gm2_np_budget', __('Asset Budget', 'gm2-wordpress-suite'), __('Alert when pages exceed size thresholds.', 'gm2-wordpress-suite')],
         ];
         foreach ($tabs as $tab) {
@@ -464,6 +479,7 @@ class Module {
             $opts['gzip_detection'] = isset($input['gzip_detection']) ? sanitize_text_field($input['gzip_detection']) : 'detect';
             $opts['fallback_gzip']  = !empty($input['fallback_gzip']);
             $opts['smart_lazyload'] = !empty($input['smart_lazyload']);
+            $opts['lite_embeds']    = !empty($input['lite_embeds']);
             $opts['asset_budget']   = !empty($input['asset_budget']);
             if (is_network_admin()) {
                 update_site_option(self::OPTION_KEY, $opts, false);
@@ -517,6 +533,10 @@ class Module {
                     <tr>
                         <th scope="row"><?php esc_html_e('Smart Lazyload', 'gm2-wordpress-suite'); ?></th>
                         <td><input type="checkbox" name="<?php echo esc_attr(self::OPTION_KEY); ?>[smart_lazyload]" value="1" <?php checked($opts['smart_lazyload']); ?> /></td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php esc_html_e('Lite Embeds', 'gm2-wordpress-suite'); ?></th>
+                        <td><input type="checkbox" name="<?php echo esc_attr(self::OPTION_KEY); ?>[lite_embeds]" value="1" <?php checked($opts['lite_embeds']); ?> /></td>
                     </tr>
                     <tr>
                         <th scope="row"><?php esc_html_e('Asset Budget', 'gm2-wordpress-suite'); ?></th>
