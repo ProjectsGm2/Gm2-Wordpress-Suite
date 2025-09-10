@@ -117,10 +117,15 @@ HTACCESS;
         }
     }
 
+    private static function htaccess_path(): string {
+        $path = ABSPATH . '.htaccess';
+        return apply_filters('gm2_compression_htaccess_path', $path);
+    }
+
     private static function backup_htaccess(): ?string {
-        $file = ABSPATH . '.htaccess';
+        $file = self::htaccess_path();
         $timestamp = gmdate('Ymd-His');
-        $backup = ABSPATH . '.htaccess.' . $timestamp;
+        $backup = $file . '.' . $timestamp;
         if (file_exists($file)) {
             if (!@copy($file, $backup)) {
                 return null;
@@ -141,16 +146,20 @@ HTACCESS;
         if (!array_intersect(['mod_deflate', 'mod_brotli'], $mods)) {
             return ['success' => false, 'message' => __('Required Apache modules missing.', 'gm2-wordpress-suite')];
         }
-        $file = ABSPATH . '.htaccess';
-        $writable = file_exists($file) ? wp_is_writable($file) : wp_is_writable(ABSPATH);
+        $file = self::htaccess_path();
+        $dir = trailingslashit(dirname($file));
+        $writable = file_exists($file) ? wp_is_writable($file) : wp_is_writable($dir);
         if (!$writable) {
             return ['success' => false, 'message' => __('.htaccess is not writable.', 'gm2-wordpress-suite')];
         }
-        $backup = self::backup_htaccess();
-        if (!$backup) {
-            return ['success' => false, 'message' => __('Could not create backup.', 'gm2-wordpress-suite')];
+        $backup = get_option('gm2_compression_htaccess_backup');
+        if (!$backup || !file_exists($backup)) {
+            $backup = self::backup_htaccess();
+            if (!$backup) {
+                return ['success' => false, 'message' => __('Could not create backup.', 'gm2-wordpress-suite')];
+            }
+            update_option('gm2_compression_htaccess_backup', $backup, false);
         }
-        update_option('gm2_compression_htaccess_backup', $backup, false);
         self::load_misc();
         insert_with_markers($file, self::HTACCESS_MARKER, explode("\n", self::$rules));
         return ['success' => true, 'message' => __('Compression enabled.', 'gm2-wordpress-suite')];
@@ -161,7 +170,7 @@ HTACCESS;
         if (!$backup || !file_exists($backup)) {
             return ['success' => false, 'message' => __('No backup found.', 'gm2-wordpress-suite')];
         }
-        $file = ABSPATH . '.htaccess';
+        $file = self::htaccess_path();
         if (!@copy($backup, $file)) {
             return ['success' => false, 'message' => __('Could not restore backup.', 'gm2-wordpress-suite')];
         }
