@@ -11,6 +11,7 @@ class Module {
     private const OPTION_KEY     = 'gm2_netpayload_settings';
     private const STATS_KEY      = 'gm2_netpayload_stats';
     private const REGEN_STATE_KEY = 'gm2_np_regen_state';
+    private const AUDIT_STATE_KEY = 'gm2_np_audit_state';
 
     private static bool $booted = false;
     private static string $page_hook = '';
@@ -51,6 +52,7 @@ class Module {
         add_action('admin_notices', [__CLASS__, 'maybe_show_missing_notice']);
         add_action('network_admin_notices', [__CLASS__, 'maybe_show_missing_notice']);
         add_action('gm2_np_regen_batch', [__CLASS__, 'process_regen_batch'], 10, 2);
+        add_action('gm2_np_audit_fetch', [__CLASS__, 'process_audit_fetch']);
         add_action('admin_post_gm2_np_export', [__CLASS__, 'handle_export']);
         add_action('admin_post_gm2_np_import', [__CLASS__, 'handle_import']);
 
@@ -248,6 +250,62 @@ class Module {
             return file_exists($file) ? $file : null;
         }
         return null;
+    }
+
+    /** Queue an audit fetch for a URL. */
+    public static function queue_audit(string $url): int {
+        $state = get_option(self::AUDIT_STATE_KEY, [
+            'pending'   => [],
+            'processed' => 0,
+            'total'     => 0,
+            'log'       => [],
+        ]);
+        $url = '/' . ltrim($url, '/');
+        $state['pending'][] = $url;
+        $state['total']     = intval($state['total']) + 1;
+        update_option(self::AUDIT_STATE_KEY, $state, false);
+
+        $delay = floor((($state['total'] - 1) / 10)) * MINUTE_IN_SECONDS;
+        if (function_exists('as_schedule_single_action')) {
+            as_schedule_single_action(time() + $delay, 'gm2_np_audit_fetch', [$url]);
+        } else {
+            wp_schedule_single_event(time() + $delay, 'gm2_np_audit_fetch', [$url]);
+        }
+        return (int) $state['total'];
+    }
+
+    /** Retrieve audit state. */
+    public static function get_audit_state(): array {
+        $state = get_option(self::AUDIT_STATE_KEY, []);
+        return is_array($state) ? $state : [];
+    }
+
+    /** Process a scheduled audit fetch. */
+    public static function process_audit_fetch(string $url): void {
+        $state = get_option(self::AUDIT_STATE_KEY, [
+            'pending'   => [],
+            'processed' => 0,
+            'total'     => 0,
+            'log'       => [],
+        ]);
+        $state['pending'] = array_values(array_diff($state['pending'], [$url]));
+        $resp = wp_remote_get(home_url($url));
+        if (is_wp_error($resp)) {
+            $state['log'][] = [
+                'url'     => $url,
+                'status'  => 'error',
+                'message' => $resp->get_error_message(),
+            ];
+        } else {
+            $code = (int) wp_remote_retrieve_response_code($resp);
+            $state['log'][] = [
+                'url'     => $url,
+                'status'  => 'ok',
+                'message' => $code >= 400 ? (string) $code : 'OK',
+            ];
+        }
+        $state['processed'] = intval($state['processed']) + 1;
+        update_option(self::AUDIT_STATE_KEY, $state, false);
     }
 
     /** Start background regeneration of next-gen images. */
