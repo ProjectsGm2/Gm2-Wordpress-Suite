@@ -6,8 +6,9 @@ if (!defined('ABSPATH')) {
 }
 
 class Module {
-    private const OPTION_KEY = 'gm2_netpayload_settings';
-    private const STATS_KEY  = 'gm2_netpayload_stats';
+    private const OPTION_KEY     = 'gm2_netpayload_settings';
+    private const STATS_KEY      = 'gm2_netpayload_stats';
+    private const REGEN_STATE_KEY = 'gm2_np_regen_state';
 
     private static bool $booted = false;
     private static string $page_hook = '';
@@ -40,6 +41,7 @@ class Module {
         add_action('rest_api_init', [__CLASS__, 'register_rest_route']);
         add_action('admin_notices', [__CLASS__, 'maybe_show_missing_notice']);
         add_action('network_admin_notices', [__CLASS__, 'maybe_show_missing_notice']);
+        add_action('gm2_np_regen_batch', [__CLASS__, 'process_regen_batch']);
 
         if (self::any_feature_enabled()) {
             add_action('init', [__CLASS__, 'maybe_run_features']);
@@ -78,6 +80,106 @@ class Module {
             add_filter('big_image_size_threshold', [__CLASS__, 'filter_big_image_cap'], 10, 4);
         }
         // Actual feature hooks would be added here.
+    }
+
+    /** Start background regeneration of next-gen images. */
+    public static function start_regeneration(bool $only_missing = true): void {
+        update_option(self::REGEN_STATE_KEY, ['offset' => 0, 'only_missing' => $only_missing], false);
+        if (function_exists('as_enqueue_async_action')) {
+            as_enqueue_async_action('gm2_np_regen_batch');
+        } else {
+            wp_schedule_single_event(time() + 1, 'gm2_np_regen_batch');
+        }
+    }
+
+    /** Process a batch of attachment regeneration. */
+    public static function process_regen_batch(): void {
+        $state = get_option(self::REGEN_STATE_KEY);
+        if (!is_array($state)) {
+            return;
+        }
+        $offset       = intval($state['offset'] ?? 0);
+        $only_missing = !empty($state['only_missing']);
+        $args = [
+            'post_type'      => 'attachment',
+            'post_mime_type' => 'image',
+            'posts_per_page' => 20,
+            'fields'         => 'ids',
+            'orderby'        => 'ID',
+            'order'          => 'ASC',
+            'offset'         => $offset,
+        ];
+        $ids = get_posts($args);
+        if (!$ids) {
+            delete_option(self::REGEN_STATE_KEY);
+            return;
+        }
+        foreach ($ids as $id) {
+            self::regenerate_attachment($id, $only_missing);
+            $offset++;
+        }
+        $state['offset'] = $offset;
+        update_option(self::REGEN_STATE_KEY, $state, false);
+        if (count($ids) === intval($args['posts_per_page'])) {
+            if (function_exists('as_enqueue_async_action')) {
+                as_enqueue_async_action('gm2_np_regen_batch');
+            } else {
+                wp_schedule_single_event(time() + 1, 'gm2_np_regen_batch');
+            }
+        } else {
+            delete_option(self::REGEN_STATE_KEY);
+        }
+    }
+
+    /** Regenerate next-gen files for a single attachment. */
+    private static function regenerate_attachment(int $attachment_id, bool $only_missing): bool {
+        $meta = wp_get_attachment_metadata($attachment_id);
+        if (!is_array($meta)) {
+            return false;
+        }
+        if ($only_missing && !empty($meta['gm2_nextgen']['full'])) {
+            $opts = self::get_settings();
+            $needs = false;
+            foreach (['webp', 'avif'] as $fmt) {
+                if (!empty($opts[$fmt]) && empty($meta['gm2_nextgen']['full'][$fmt])) {
+                    $needs = true;
+                    break;
+                }
+            }
+            if (!$needs) {
+                return false;
+            }
+        }
+        $meta = self::add_nextgen_variants($meta, $attachment_id);
+        wp_update_attachment_metadata($attachment_id, $meta);
+        return true;
+    }
+
+    /** Regenerate all images, optionally only those missing variants. */
+    public static function regenerate_all_images(bool $only_missing = true, ?callable $progress = null): int {
+        $args = [
+            'post_type'      => 'attachment',
+            'post_mime_type' => 'image',
+            'posts_per_page' => 200,
+            'fields'         => 'ids',
+            'orderby'        => 'ID',
+            'order'          => 'ASC',
+            'offset'         => 0,
+        ];
+        $count = 0;
+        do {
+            $ids = get_posts($args);
+            foreach ($ids as $id) {
+                if (self::regenerate_attachment($id, $only_missing)) {
+                    $count++;
+                }
+                if ($progress) {
+                    $progress($id);
+                }
+            }
+            $args['offset'] += $args['posts_per_page'];
+        } while ($ids);
+        return $count;
     }
 
     /**
@@ -319,6 +421,11 @@ class Module {
         if (!current_user_can('manage_options')) {
             wp_die(__('Permission denied', 'gm2-wordpress-suite'));
         }
+        if (isset($_POST['gm2_regen_nextgen'])) {
+            check_admin_referer('gm2_regen_nextgen');
+            self::start_regeneration(true);
+            echo '<div class="updated"><p>' . esc_html__('Regeneration started in the background.', 'gm2-wordpress-suite') . '</p></div>';
+        }
         if (isset($_POST[self::OPTION_KEY])) {
             check_admin_referer('gm2_netpayload_settings');
             $input = wp_unslash($_POST[self::OPTION_KEY]);
@@ -386,6 +493,11 @@ class Module {
                     </tr>
                 </table>
                 <?php submit_button(); ?>
+            </form>
+            <form method="post" style="margin-top:1em;">
+                <?php wp_nonce_field('gm2_regen_nextgen'); ?>
+                <input type="hidden" name="gm2_regen_nextgen" value="1" />
+                <?php submit_button(__('Regenerate Next‑Gen Images', 'gm2-wordpress-suite'), 'secondary'); ?>
             </form>
         </div>
         <?php

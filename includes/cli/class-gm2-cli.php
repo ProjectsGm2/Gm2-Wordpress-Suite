@@ -100,6 +100,30 @@ class Gm2_CLI extends \WP_CLI_Command {
     }
 
     /**
+     * Regenerate next-gen image variants.
+     *
+     * ## SUBCOMMANDS
+     *
+     * regenerate  Generate missing next-gen images
+     *
+     * ## OPTIONS
+     *
+     * [--only-missing]
+     * : Skip attachments that already have variants.
+     */
+    public function images( $args, $assoc_args ) {
+        $sub = $args[0] ?? '';
+        if ( $sub !== 'regenerate' ) {
+            \WP_CLI::error( __( 'Usage: wp gm2 images regenerate [--only-missing]', 'gm2-wordpress-suite' ) );
+        }
+        $only_missing = ! empty( $assoc_args['only-missing'] );
+        $count = \Gm2\NetworkPayload\Module::regenerate_all_images( $only_missing, function( $id ) {
+            \WP_CLI::line( sprintf( __( 'Processed attachment %d', 'gm2-wordpress-suite' ), $id ) );
+        } );
+        \WP_CLI::success( sprintf( __( '%d images processed.', 'gm2-wordpress-suite' ), $count ) );
+    }
+
+    /**
      * Scaffold theme assets such as Twig/Blade templates or theme.json.
      *
      * ## SUBCOMMANDS
