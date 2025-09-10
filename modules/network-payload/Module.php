@@ -99,6 +99,10 @@ class Module {
             require_once __DIR__ . '/LiteEmbeds.php';
             LiteEmbeds::boot();
         }
+        if (!empty($opts['asset_budget'])) {
+            require_once __DIR__ . '/HandleAuditor.php';
+            HandleAuditor::boot();
+        }
         // Actual feature hooks would be added here.
     }
 

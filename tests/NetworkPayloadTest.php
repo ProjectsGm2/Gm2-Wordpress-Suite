@@ -45,4 +45,20 @@ class NetworkPayloadTest extends WP_UnitTestCase {
         $stats = get_option('gm2_netpayload_stats');
         $this->assertEquals(200, $stats['average']);
     }
+
+    public function test_handle_auditor_records_assets() {
+        $_SERVER['REQUEST_URI'] = '/test-page?foo=bar';
+        do_action('init');
+        wp_enqueue_script('jquery');
+        wp_enqueue_style('admin-bar');
+        do_action('wp_enqueue_scripts');
+        do_action('wp_print_scripts');
+        $url = home_url('/test-page');
+        $key = 'gm2_np_' . md5($url);
+        $data = get_transient($key);
+        $this->assertIsArray($data);
+        $this->assertEquals($url, $data['url']);
+        $stats = get_option('gm2_netpayload_stats');
+        $this->assertArrayHasKey('assets', $stats);
+    }
 }
