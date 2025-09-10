@@ -510,6 +510,8 @@ wp ae-seo js:smoketest
 
 Each request writes a line to `wp-content/ae-seo/logs/js-optimizer.log` recording `registered`, `enqueued`, `dequeued`, `lazy`, `jquery` and `polyfills` counts from the `Server-Timing` header and DOM analysis. Review the results under **Performance → JavaScript**, which summarizes the log and surfaces Lighthouse-style hints such as “Consider enabling lazy-load for Analytics,” “jQuery loaded but no dependents found,” and “Polyfills detected. Review need for legacy browser support.” These tools help uncover unnecessary or blocking scripts that may hinder performance.
 
+Set a size threshold to flag oversized scripts. Handles above the limit are logged and highlighted in the report with suggestions to dequeue or lazy load, and an option is available to auto-dequeue them on the front end.
+
 ## Third‑Party Script Optimization
 
 - **Audit UI** surfaces third‑party scripts and lets you enable, disable, or lazy‑load each integration.

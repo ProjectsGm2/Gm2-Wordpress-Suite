@@ -64,6 +64,8 @@ $replace       = get_option('ae_js_replacements', '0');
 $debug         = get_option('ae_js_debug_log', '0');
 $console       = get_option('ae_js_console_log', '0');
 $auto          = get_option('ae_js_auto_dequeue', '0');
+$size_thresh   = (int) get_option('ae_js_size_threshold', 0);
+$auto_large    = get_option('ae_js_auto_dequeue_large', '0');
 $safe_mode     = get_option('ae_js_respect_safe_mode', '0');
 $nomodule      = get_option('ae_js_nomodule_legacy', '0');
 $allow         = get_option('ae_js_dequeue_allowlist', []);
@@ -98,6 +100,8 @@ echo '<tr><th scope="row">' . esc_html__( 'Consent Mode value to watch', 'gm2-wo
 echo '<tr><th scope="row">' . esc_html__( 'Enable Replacements', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="ae_js_replacements" value="1" ' . checked($replace, '1', false) . ' /></td></tr>';
 echo '<tr><th scope="row">' . esc_html__( 'Debug Log', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="ae_js_debug_log" value="1" ' . checked($debug, '1', false) . ' /></td></tr>';
 echo '<tr><th scope="row">' . esc_html__( 'Log to console in dev', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="ae_js_console_log" value="1" ' . checked($console, '1', false) . ' /></td></tr>';
+echo '<tr><th scope="row">' . esc_html__( 'Large Script Threshold (KB)', 'gm2-wordpress-suite' ) . '</th><td><input type="number" name="ae_js_size_threshold" value="' . esc_attr($size_thresh > 0 ? round($size_thresh / 1024) : 0) . '" min="0" /> <p class="description">' . esc_html__( 'Handles above this size are logged in the JavaScript report.', 'gm2-wordpress-suite' ) . '</p></td></tr>';
+echo '<tr><th scope="row">' . esc_html__( 'Auto-dequeue Large Scripts', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="ae_js_auto_dequeue_large" value="1" ' . checked($auto_large, '1', false) . ' /> <p class="description">' . esc_html__( 'Remove scripts exceeding the threshold on the front end.', 'gm2-wordpress-suite' ) . '</p></td></tr>';
 echo '<tr><th scope="row">' . esc_html__( 'Enable Per-Page Auto-Dequeue (Beta)', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="ae_js_auto_dequeue" value="1" ' . checked($auto, '1', false) . ' /></td></tr>';
 echo '<tr><th scope="row">' . esc_html__( 'Respect Safe Mode param', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="ae_js_respect_safe_mode" value="1" ' . checked($safe_mode, '1', false) . ' /></td></tr>';
 echo '<tr><th scope="row">' . esc_html__( 'Send Legacy (nomodule) Bundle', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="ae_js_nomodule_legacy" value="1" ' . checked($nomodule, '1', false) . ' /><p class="description">' . esc_html__( 'Include an ES5 bundle for older browsers.', 'gm2-wordpress-suite' ) . '</p></td></tr>';

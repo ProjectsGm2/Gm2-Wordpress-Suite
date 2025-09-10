@@ -12,6 +12,7 @@ if (!file_exists($log_file)) {
 }
 
 $rows = [];
+$large = [];
 if (is_readable($log_file)) {
     $lines = file($log_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     $lines = array_reverse($lines);
@@ -31,6 +32,13 @@ if (is_readable($log_file)) {
                 'polyfills'  => (int) $m[8],
             ];
             $seen[$url] = true;
+            continue;
+        }
+        if (preg_match('/large\s+(\S+)\s+size=(\d+)/', $line, $m)) {
+            $handle = $m[1];
+            if (!isset($large[$handle])) {
+                $large[$handle] = (int) $m[2];
+            }
         }
     }
     $rows = array_reverse($rows);
@@ -47,6 +55,18 @@ foreach ($rows as $url => $m) {
     }
     if ($m['polyfills'] > 0) {
         $hints['polyfills'] = __('Polyfills detected. Review need for legacy browser support.', 'gm2-wordpress-suite');
+    }
+}
+
+if ($large) {
+    foreach ($large as $handle => $bytes) {
+        $kb = $bytes / 1024;
+        $hints['size-' . $handle] = sprintf(
+            /* translators: 1: script handle, 2: size in KB */
+            __('%1$s is %2$.1f KB. Consider dequeuing or lazy loading.', 'gm2-wordpress-suite'),
+            $handle,
+            $kb
+        );
     }
 }
 
