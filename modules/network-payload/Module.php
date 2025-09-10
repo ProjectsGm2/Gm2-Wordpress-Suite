@@ -28,6 +28,7 @@ class Module {
         'eager_selectors'  => [],
         'lite_embeds'      => true,
         'asset_budget'     => true,
+        'asset_budget_limit' => 1258291,
         'handle_rules'     => [],
     ];
 
@@ -512,6 +513,7 @@ class Module {
         $site    = self::get_raw_options(false);
         $opts    = wp_parse_args($site, wp_parse_args($network, self::$defaults));
         $opts['big_image_cap'] = intval($opts['big_image_cap']);
+        $opts['asset_budget_limit'] = intval($opts['asset_budget_limit']);
         $opts['auto_hero']      = !empty($opts['auto_hero']);
         $opts['lite_embeds']    = !empty($opts['lite_embeds']);
         $opts['eager_selectors'] = array_values(array_filter(array_map('trim', (array)($opts['eager_selectors'] ?? []))));
@@ -561,12 +563,13 @@ class Module {
             file_exists($base_dir . 'admin.js') ? filemtime($base_dir . 'admin.js') : GM2_VERSION,
             true
         );
+        $opts = self::get_settings();
         wp_localize_script('gm2-netpayload-admin', 'gm2Netpayload', [
             'restUrl' => rest_url('gm2/v1/netpayload'),
             'nonce'   => wp_create_nonce('wp_rest'),
+            'budget'  => intval($opts['asset_budget_limit'] / 1024),
         ]);
 
-        $opts = self::get_settings();
         if (!empty($opts['lite_embeds'])) {
             if (function_exists('ae_seo_register_asset')) {
                 ae_seo_register_asset('gm2-lite-embeds', 'lite-embeds.js');
@@ -622,6 +625,8 @@ class Module {
                 : [];
             $opts['lite_embeds']    = !empty($input['lite_embeds']);
             $opts['asset_budget']   = !empty($input['asset_budget']);
+            $limit_mb = isset($input['asset_budget_limit']) ? floatval(sanitize_text_field($input['asset_budget_limit'])) : 0;
+            $opts['asset_budget_limit'] = $limit_mb > 0 ? (int)($limit_mb * 1024 * 1024) : self::$defaults['asset_budget_limit'];
             $opts['handle_rules']   = [];
             if (!empty($input['handle_rules']) && is_array($input['handle_rules'])) {
                 foreach (['scripts', 'styles'] as $type) {
@@ -654,7 +659,7 @@ class Module {
             echo '<div class="updated"><p>' . esc_html__('Settings saved.', 'gm2-wordpress-suite') . '</p></div>';
         }
         $opts  = self::get_settings();
-        $stats = get_option(self::STATS_KEY, ['average' => 0]);
+        $stats = get_option(self::STATS_KEY, ['average' => 0, 'budget' => 0]);
         ?>
         <div class="wrap gm2-netpayload-wrap">
             <h1><?php esc_html_e('Network Payload Optimizer', 'gm2-wordpress-suite'); ?></h1>
@@ -717,6 +722,10 @@ class Module {
                     <tr>
                         <th scope="row"><?php esc_html_e('Asset Budget', 'gm2-wordpress-suite'); ?></th>
                         <td><input type="checkbox" name="<?php echo esc_attr(self::OPTION_KEY); ?>[asset_budget]" value="1" <?php checked($opts['asset_budget']); ?> /></td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php esc_html_e('Asset Budget Limit (MB)', 'gm2-wordpress-suite'); ?></th>
+                        <td><input type="number" step="0.1" min="0" name="<?php echo esc_attr(self::OPTION_KEY); ?>[asset_budget_limit]" value="<?php echo esc_attr(round($opts['asset_budget_limit'] / 1024 / 1024, 2)); ?>" /></td>
                     </tr>
                 </table>
                 <h2><?php esc_html_e('Handle Auditor', 'gm2-wordpress-suite'); ?></h2>
@@ -783,7 +792,8 @@ class Module {
     /** Handle beacon POST and store rolling average. */
     public static function handle_rest(\WP_REST_Request $request) {
         $payload = intval($request['payload']);
-        $stats   = get_option(self::STATS_KEY, ['samples' => [], 'average' => 0]);
+        $budget  = intval($request['budget']);
+        $stats   = get_option(self::STATS_KEY, ['samples' => [], 'average' => 0, 'budget' => 0]);
         if (!is_array($stats['samples'] ?? null)) {
             $stats['samples'] = [];
         }
@@ -799,8 +809,9 @@ class Module {
         }
         $count = count($stats['samples']);
         $stats['average'] = $count ? $total / $count : 0;
+        $stats['budget']  = $budget > 0 ? $budget : intval($stats['budget'] ?? 0);
         update_option(self::STATS_KEY, $stats, false);
-        return rest_ensure_response(['average' => $stats['average']]);
+        return rest_ensure_response(['average' => $stats['average'], 'budget' => $stats['budget']]);
     }
 
     /** Activation: create options. */
@@ -810,7 +821,7 @@ class Module {
             add_site_option(self::OPTION_KEY, $defaults, '', 'no');
         }
         add_option(self::OPTION_KEY, $defaults, '', 'no');
-        add_option(self::STATS_KEY, ['samples' => [], 'average' => 0], '', 'no');
+        add_option(self::STATS_KEY, ['samples' => [], 'average' => 0, 'budget' => intval($defaults['asset_budget_limit'] / 1024)], '', 'no');
     }
 
     /** Deactivation: clear scheduled hooks. */

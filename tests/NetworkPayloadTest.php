@@ -30,17 +30,21 @@ class NetworkPayloadTest extends WP_UnitTestCase {
         $this->assertSame('detect', $opts['gzip_detection']);
         $this->assertTrue($opts['smart_lazyload']);
         $this->assertTrue($opts['asset_budget']);
+        $this->assertEquals(1258291, $opts['asset_budget_limit']);
     }
 
     public function test_rest_endpoint_updates_average() {
         $request = new WP_REST_Request('POST', '/gm2/v1/netpayload');
         $request->set_param('payload', 100);
+        $request->set_param('budget', 2000);
         rest_get_server()->dispatch($request);
         $stats = get_option('gm2_netpayload_stats');
         $this->assertEquals(100, $stats['average']);
+        $this->assertEquals(2000, $stats['budget']);
 
         $request2 = new WP_REST_Request('POST', '/gm2/v1/netpayload');
         $request2->set_param('payload', 300);
+        $request2->set_param('budget', 2000);
         rest_get_server()->dispatch($request2);
         $stats = get_option('gm2_netpayload_stats');
         $this->assertEquals(200, $stats['average']);

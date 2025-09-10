@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 'X-WP-Nonce': gm2Netpayload.nonce,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ payload: Math.round(total / 1024) })
+            body: JSON.stringify({ payload: Math.round(total / 1024), budget: gm2Netpayload.budget })
         });
     } catch (e) {}
 });

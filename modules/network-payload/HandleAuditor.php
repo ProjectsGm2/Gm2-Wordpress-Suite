@@ -60,13 +60,16 @@ class HandleAuditor {
             $summary['total_css'] += $bytes;
         }
 
+        $summary['total'] = $summary['total_js'] + $summary['total_css'];
+
         $key = 'gm2_np_' . md5($summary['url']);
         set_transient($key, $summary, DAY_IN_SECONDS);
 
-        $stats   = get_option('gm2_netpayload_stats', ['samples' => [], 'average' => 0]);
-        $assets  = $stats['assets'] ?? ['js' => 0, 'css' => 0];
+        $stats   = get_option('gm2_netpayload_stats', ['samples' => [], 'average' => 0, 'budget' => 0]);
+        $assets  = $stats['assets'] ?? ['js' => 0, 'css' => 0, 'total' => 0];
         $assets['js']  += $summary['total_js'];
         $assets['css'] += $summary['total_css'];
+        $assets['total'] += $summary['total'];
         $stats['assets'] = $assets;
 
         $handles = $stats['handles'] ?? ['scripts' => [], 'styles' => []];
@@ -92,6 +95,24 @@ class HandleAuditor {
         $stats['handles'] = $handles;
 
         update_option('gm2_netpayload_stats', $stats, false);
+
+        $opts = Module::get_settings();
+        if (!empty($opts['asset_budget']) && !empty($opts['asset_budget_limit'])) {
+            $limit = intval($opts['asset_budget_limit']);
+            if ($summary['total'] > $limit && current_user_can('manage_options') && is_admin_bar_showing()) {
+                add_action('admin_bar_menu', function ($bar) use ($summary, $limit) {
+                    $title = sprintf(
+                        __('Asset payload %s KB exceeds limit %s KB', 'gm2-wordpress-suite'),
+                        number_format_i18n($summary['total'] / 1024, 1),
+                        number_format_i18n($limit / 1024, 1)
+                    );
+                    $bar->add_node([
+                        'id'    => 'gm2-asset-budget',
+                        'title' => esc_html($title),
+                    ]);
+                }, 100);
+            }
+        }
     }
 
     private static function current_url(): string {
