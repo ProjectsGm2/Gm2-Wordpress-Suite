@@ -245,6 +245,8 @@ AE_SEO_JS_Lazy introduces user-intent triggers and consent gating so modules act
 
 Open **SEO → Performance → JavaScript** to enable the manager, lazy loading, script replacements, debug logging and an optional safe-mode query parameter. The screen also provides handle allow and deny lists and a per-page auto-dequeue option that is still in beta.
 
+Set a size threshold to log oversized scripts. Handles beyond the limit appear in the **Performance → JavaScript** report with suggestions to dequeue or lazy load, and you can opt to automatically dequeue them on the front end.
+
 A **Load jQuery only when required** checkbox removes jQuery when no queued handles depend on it; pages with Elementor or other jQuery-based assets still load it automatically. Enter regex patterns in **Always include jQuery on these URLs** to force jQuery on specific pages. When **Debug Log** is enabled, decisions are recorded in `wp-content/ae-seo/logs/js-optimizer.log`. Define DOM replacements through the `ae_seo/js/replacements` filter and leverage helpers from `vanilla-helpers.js` in your callbacks.
 
 Visit **SEO → Script Usage** to review discovered handles and mark which page templates must always enqueue them. Use this page to define acceptance scenarios before enabling auto-dequeue on production—critical scripts can otherwise be removed.

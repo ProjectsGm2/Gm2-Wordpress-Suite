@@ -56,6 +56,13 @@ class AE_SEO_JS_Manager {
     public static int $jquery = 0;
 
     /**
+     * Recorded script sizes in bytes.
+     *
+     * @var array<string,int>
+     */
+    public static array $sizes = [];
+
+    /**
      * Bootstrap the manager.
      */
     public static function init(): void {
@@ -153,18 +160,71 @@ class AE_SEO_JS_Manager {
         if (!$scripts) {
             return;
         }
+        $threshold = (int) apply_filters(
+            'ae_seo/js/size_threshold',
+            (int) get_option('ae_js_size_threshold', 0)
+        );
         foreach ($scripts->queue as $handle) {
             $registered = $scripts->registered[$handle] ?? null;
             if (!$registered) {
                 continue;
             }
             $src   = $registered->src;
+            $size  = self::get_script_size($src);
+            if ($size > 0) {
+                self::$sizes[$handle] = $size;
+                if ($threshold > 0 && $size > $threshold) {
+                    ae_seo_js_log('large ' . $handle . ' size=' . $size);
+                    $auto = apply_filters(
+                        'ae_seo/js/auto_dequeue_large',
+                        get_option('ae_js_auto_dequeue_large', '0') === '1',
+                        $handle,
+                        $size,
+                        $src
+                    );
+                    if ($auto && !is_admin()) {
+                        wp_dequeue_script($handle);
+                        self::$dequeued++;
+                        continue;
+                    }
+                }
+            }
+
             $allow = apply_filters('gm2_third_party_allowed', true, $handle, $src);
             if (!$allow) {
                 wp_dequeue_script($handle);
                 self::$dequeued++;
             }
         }
+    }
+
+    /**
+     * Determine script size.
+     *
+     * @param string $src Script source URL.
+     * @return int Size in bytes.
+     */
+    private static function get_script_size(string $src): int {
+        if ($src === '') {
+            return 0;
+        }
+        // Relative path.
+        if (strpos($src, '//') === false) {
+            $path = ABSPATH . ltrim($src, '/');
+            return file_exists($path) ? (int) filesize($path) : 0;
+        }
+        $host      = wp_parse_url($src, PHP_URL_HOST);
+        $home_host = wp_parse_url(home_url(), PHP_URL_HOST);
+        if ($host === $home_host) {
+            $path = ABSPATH . ltrim(wp_parse_url($src, PHP_URL_PATH) ?? '', '/');
+            return file_exists($path) ? (int) filesize($path) : 0;
+        }
+        $resp = wp_remote_head($src);
+        if (is_wp_error($resp)) {
+            return 0;
+        }
+        $len = (int) wp_remote_retrieve_header($resp, 'content-length');
+        return $len > 0 ? $len : 0;
     }
 
     /**

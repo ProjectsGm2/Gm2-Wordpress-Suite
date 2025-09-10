@@ -3211,6 +3211,12 @@ class Gm2_SEO_Admin {
         $console = isset($_POST['ae_js_console_log']) ? '1' : '0';
         update_option('ae_js_console_log', $console);
 
+        $size_threshold = isset($_POST['ae_js_size_threshold']) ? max(0, (int) $_POST['ae_js_size_threshold']) * 1024 : 0;
+        update_option('ae_js_size_threshold', $size_threshold);
+
+        $auto_large = isset($_POST['ae_js_auto_dequeue_large']) ? '1' : '0';
+        update_option('ae_js_auto_dequeue_large', $auto_large);
+
         $auto = isset($_POST['ae_js_auto_dequeue']) ? '1' : '0';
         update_option('ae_js_auto_dequeue', $auto);
 
