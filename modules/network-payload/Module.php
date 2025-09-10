@@ -22,6 +22,7 @@ class Module {
         'no_originals'     => false,
         'big_image_cap'    => 2560,
         'gzip_detection'   => 'detect',
+        'fallback_gzip'    => false,
         'smart_lazyload'   => true,
         'asset_budget'     => true,
     ];
@@ -41,6 +42,7 @@ class Module {
         add_action('network_admin_menu', [__CLASS__, 'register_admin_page']);
         add_action('admin_enqueue_scripts', [__CLASS__, 'enqueue_admin_assets']);
         add_action('rest_api_init', [__CLASS__, 'register_rest_route']);
+        add_action('rest_api_init', [Compression::class, 'register_test_route']);
         add_action('admin_notices', [__CLASS__, 'maybe_show_missing_notice']);
         add_action('network_admin_notices', [__CLASS__, 'maybe_show_missing_notice']);
         add_action('gm2_np_regen_batch', [__CLASS__, 'process_regen_batch']);
@@ -66,6 +68,7 @@ class Module {
         return !empty(array_filter([
             $opts['nextgen_images'],
             $opts['gzip_detection'] !== 'off',
+            $opts['fallback_gzip'],
             $opts['smart_lazyload'],
             $opts['asset_budget'],
         ]));
@@ -81,7 +84,24 @@ class Module {
             add_filter('wp_generate_attachment_metadata', [__CLASS__, 'add_nextgen_variants'], 10, 2);
             add_filter('big_image_size_threshold', [__CLASS__, 'filter_big_image_cap'], 10, 4);
         }
+        if (!empty($opts['fallback_gzip'])) {
+            add_action('template_redirect', [__CLASS__, 'maybe_start_fallback_gzip'], 0);
+        }
         // Actual feature hooks would be added here.
+    }
+
+    /** Start PHP output buffering with gzip handler for HTML responses. */
+    public static function maybe_start_fallback_gzip(): void {
+        if (headers_sent() || is_admin() || defined('REST_REQUEST') || is_feed()) {
+            return;
+        }
+        $accept = $_SERVER['HTTP_ACCEPT'] ?? '';
+        if (strpos($accept, 'text/html') === false) {
+            return;
+        }
+        if (function_exists('ob_gzhandler')) {
+            ob_start('ob_gzhandler');
+        }
     }
 
     /** Start background regeneration of next-gen images. */
@@ -438,6 +458,7 @@ class Module {
             $opts['no_originals']   = !empty($input['no_originals']);
             $opts['big_image_cap']  = isset($input['big_image_cap']) ? intval($input['big_image_cap']) : self::$defaults['big_image_cap'];
             $opts['gzip_detection'] = isset($input['gzip_detection']) ? sanitize_text_field($input['gzip_detection']) : 'detect';
+            $opts['fallback_gzip']  = !empty($input['fallback_gzip']);
             $opts['smart_lazyload'] = !empty($input['smart_lazyload']);
             $opts['asset_budget']   = !empty($input['asset_budget']);
             if (is_network_admin()) {
@@ -484,6 +505,10 @@ class Module {
                                 <option value="off" <?php selected($opts['gzip_detection'], 'off'); ?>><?php esc_html_e('Off', 'gm2-wordpress-suite'); ?></option>
                             </select>
                         </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php esc_html_e('Fallback Gzip', 'gm2-wordpress-suite'); ?></th>
+                        <td><input type="checkbox" name="<?php echo esc_attr(self::OPTION_KEY); ?>[fallback_gzip]" value="1" <?php checked($opts['fallback_gzip']); ?> /></td>
                     </tr>
                     <tr>
                         <th scope="row"><?php esc_html_e('Smart Lazyload', 'gm2-wordpress-suite'); ?></th>
