@@ -51,6 +51,8 @@ class Module {
         add_action('admin_notices', [__CLASS__, 'maybe_show_missing_notice']);
         add_action('network_admin_notices', [__CLASS__, 'maybe_show_missing_notice']);
         add_action('gm2_np_regen_batch', [__CLASS__, 'process_regen_batch']);
+        add_action('admin_post_gm2_np_export', [__CLASS__, 'handle_export']);
+        add_action('admin_post_gm2_np_import', [__CLASS__, 'handle_import']);
 
         if (self::any_feature_enabled()) {
             add_action('init', [__CLASS__, 'maybe_run_features']);
@@ -530,6 +532,60 @@ class Module {
         return $opts;
     }
 
+    /**
+     * Sanitize raw settings array.
+     *
+     * @param array $input    Raw input values.
+     * @param array $existing Existing option values.
+     * @return array Sanitized options.
+     */
+    private static function sanitize_settings(array $input, array $existing): array {
+        $opts  = array_merge(self::$defaults, $existing);
+        $bools = ['nextgen_images', 'webp', 'avif', 'no_originals', 'fallback_gzip', 'smart_lazyload', 'auto_hero', 'lite_embeds', 'asset_budget'];
+        foreach ($bools as $b) {
+            if (array_key_exists($b, $input)) {
+                $opts[$b] = !empty($input[$b]);
+            }
+        }
+        if (array_key_exists('big_image_cap', $input)) {
+            $opts['big_image_cap'] = intval($input['big_image_cap']);
+        }
+        if (array_key_exists('gzip_detection', $input)) {
+            $opts['gzip_detection'] = sanitize_text_field($input['gzip_detection']);
+        }
+        if (array_key_exists('eager_selectors', $input)) {
+            $opts['eager_selectors'] = array_values(array_filter(array_map('sanitize_text_field', (array) $input['eager_selectors'])));
+        }
+        if (array_key_exists('asset_budget_limit', $input)) {
+            $limit_mb = floatval(sanitize_text_field($input['asset_budget_limit']));
+            $opts['asset_budget_limit'] = $limit_mb > 0 ? (int) ($limit_mb * 1024 * 1024) : self::$defaults['asset_budget_limit'];
+        }
+        if (array_key_exists('handle_rules', $input) && is_array($input['handle_rules'])) {
+            $opts['handle_rules'] = [];
+            foreach (['scripts', 'styles'] as $type) {
+                foreach ($input['handle_rules'][$type] ?? [] as $h => $rule) {
+                    $h = sanitize_key($h);
+                    $dequeue = [
+                        'front_page'    => !empty($rule['dequeue']['front_page'] ?? $rule['dequeue_front'] ?? false),
+                        'page_template' => sanitize_text_field($rule['dequeue']['page_template'] ?? $rule['page_template'] ?? ''),
+                        'shortcode'     => sanitize_text_field($rule['dequeue']['shortcode'] ?? $rule['shortcode'] ?? ''),
+                    ];
+                    $entry = ['dequeue' => $dequeue];
+                    if ($type === 'scripts') {
+                        $attr          = sanitize_key($rule['attr'] ?? '');
+                        $entry['attr'] = in_array($attr, ['defer', 'async'], true) ? $attr : '';
+                    } else {
+                        $entry['inline'] = !empty($rule['inline']);
+                    }
+                    if ($entry['dequeue']['front_page'] || $entry['dequeue']['page_template'] || $entry['dequeue']['shortcode'] || !empty($entry['attr']) || !empty($entry['inline'])) {
+                        $opts['handle_rules'][$type][$h] = $entry;
+                    }
+                }
+            }
+        }
+        return $opts;
+    }
+
     /** Add submenu page for settings. */
     public static function register_admin_page(): void {
         self::$page_hook = add_submenu_page(
@@ -603,50 +659,7 @@ class Module {
         if (isset($_POST[self::OPTION_KEY])) {
             check_admin_referer('gm2_netpayload_settings');
             $input = wp_unslash($_POST[self::OPTION_KEY]);
-            $opts  = self::get_settings();
-            $bools = ['nextgen_images', 'webp', 'avif', 'no_originals', 'fallback_gzip', 'smart_lazyload', 'auto_hero', 'lite_embeds', 'asset_budget'];
-            foreach ($bools as $b) {
-                if (array_key_exists($b, $input)) {
-                    $opts[$b] = !empty($input[$b]);
-                }
-            }
-            if (array_key_exists('big_image_cap', $input)) {
-                $opts['big_image_cap'] = intval($input['big_image_cap']);
-            }
-            if (array_key_exists('gzip_detection', $input)) {
-                $opts['gzip_detection'] = sanitize_text_field($input['gzip_detection']);
-            }
-            if (array_key_exists('eager_selectors', $input)) {
-                $opts['eager_selectors'] = array_values(array_filter(array_map('sanitize_text_field', explode("\n", $input['eager_selectors']))));
-            }
-            if (array_key_exists('asset_budget_limit', $input)) {
-                $limit_mb = floatval(sanitize_text_field($input['asset_budget_limit']));
-                $opts['asset_budget_limit'] = $limit_mb > 0 ? (int)($limit_mb * 1024 * 1024) : self::$defaults['asset_budget_limit'];
-            }
-            if (array_key_exists('handle_rules', $input) && is_array($input['handle_rules'])) {
-                $opts['handle_rules'] = [];
-                foreach (['scripts', 'styles'] as $type) {
-                    foreach ($input['handle_rules'][$type] ?? [] as $h => $rule) {
-                        $h = sanitize_key($h);
-                        $entry = [
-                            'dequeue' => [
-                                'front_page'    => !empty($rule['dequeue_front']),
-                                'page_template' => sanitize_text_field($rule['page_template'] ?? ''),
-                                'shortcode'     => sanitize_text_field($rule['shortcode'] ?? ''),
-                            ],
-                        ];
-                        if ($type === 'scripts') {
-                            $attr          = sanitize_key($rule['attr'] ?? '');
-                            $entry['attr'] = in_array($attr, ['defer', 'async'], true) ? $attr : '';
-                        } else {
-                            $entry['inline'] = !empty($rule['inline']);
-                        }
-                        if ($entry['dequeue']['front_page'] || $entry['dequeue']['page_template'] || $entry['dequeue']['shortcode'] || !empty($entry['attr']) || !empty($entry['inline'])) {
-                            $opts['handle_rules'][$type][$h] = $entry;
-                        }
-                    }
-                }
-            }
+            $opts  = self::sanitize_settings($input, self::get_settings());
             if (is_network_admin()) {
                 update_site_option(self::OPTION_KEY, $opts, false);
             } else {
@@ -659,6 +672,15 @@ class Module {
             check_admin_referer('gm2_regen_nextgen');
             self::start_regeneration(true);
             echo '<div class="updated"><p>' . esc_html__('Regeneration started in the background.', 'gm2-wordpress-suite') . '</p></div>';
+        }
+
+        if (isset($_GET['gm2_np_import'])) {
+            $status = sanitize_key($_GET['gm2_np_import']);
+            if ($status === 'success') {
+                echo '<div class="updated"><p>' . esc_html__('Settings imported.', 'gm2-wordpress-suite') . '</p></div>';
+            } else {
+                echo '<div class="error"><p>' . esc_html__('Invalid settings file.', 'gm2-wordpress-suite') . '</p></div>';
+            }
         }
 
         $opts  = self::get_settings();
@@ -681,6 +703,20 @@ class Module {
             echo '<a class="' . esc_attr($class) . '" href="' . esc_url($url) . '">' . esc_html($label) . '</a>';
         }
         echo '</h2>';
+        $action = is_network_admin() ? network_admin_url('admin-post.php') : admin_url('admin-post.php');
+
+        echo '<form method="post" action="' . esc_url($action) . '">';
+        wp_nonce_field('gm2_np_export');
+        echo '<input type="hidden" name="action" value="gm2_np_export" />';
+        submit_button(esc_html__('Export Settings', 'gm2-wordpress-suite'), 'secondary');
+        echo '</form>';
+
+        echo '<form method="post" action="' . esc_url($action) . '" enctype="multipart/form-data">';
+        wp_nonce_field('gm2_np_import');
+        echo '<input type="hidden" name="action" value="gm2_np_import" />';
+        echo '<input type="file" name="gm2_np_settings_file" accept="application/json" /> ';
+        submit_button(esc_html__('Import Settings', 'gm2-wordpress-suite'), 'secondary');
+        echo '</form>';
 
         if ($tab === 'status') {
             echo '<p class="status">' . sprintf(esc_html__('7‑day average payload: %s KB', 'gm2-wordpress-suite'), number_format_i18n(floatval($stats['average']), 2)) . '</p>';
@@ -764,6 +800,47 @@ class Module {
         }
 
         echo '</div>';
+    }
+
+    /**
+     * Export settings as a JSON file.
+     */
+    public static function handle_export(): void {
+        if (!current_user_can('manage_options')) {
+            wp_die(esc_html__('Permission denied', 'gm2-wordpress-suite'));
+        }
+        check_admin_referer('gm2_np_export');
+        $json = json_encode(get_option(self::OPTION_KEY, []));
+        header('Content-Type: application/json');
+        header('Content-Disposition: attachment; filename="gm2-netpayload-settings.json"');
+        echo $json;
+        exit;
+    }
+
+    /**
+     * Handle uploaded settings JSON and update option.
+     */
+    public static function handle_import(): void {
+        if (!current_user_can('manage_options')) {
+            wp_die(esc_html__('Permission denied', 'gm2-wordpress-suite'));
+        }
+        check_admin_referer('gm2_np_import');
+        $status = 'error';
+        if (!empty($_FILES['gm2_np_settings_file']['tmp_name'])) {
+            $raw  = file_get_contents($_FILES['gm2_np_settings_file']['tmp_name']);
+            $data = json_decode($raw, true);
+            if (is_array($data)) {
+                $opts = self::sanitize_settings($data, self::get_settings());
+                if (is_network_admin()) {
+                    update_site_option(self::OPTION_KEY, $opts, false);
+                } else {
+                    update_option(self::OPTION_KEY, $opts, false);
+                }
+                $status = 'success';
+            }
+        }
+        wp_safe_redirect(add_query_arg('gm2_np_import', $status, menu_page_url('gm2_netpayload', false)));
+        exit;
     }
 
     /** Register REST route for beacon data. */
