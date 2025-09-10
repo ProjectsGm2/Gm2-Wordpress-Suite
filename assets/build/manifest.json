@@ -10,5 +10,6 @@
   "modules/hcaptcha.js": "modules/hcaptcha.bc1b63fc.js",
   "modules/recaptcha.js": "modules/recaptcha.116c515f.js",
   "modules/tag-manager.js": "modules/tag-manager.bdc0bd50.js",
-  "lazy-embeds.js": "lazy-embeds.js"
+  "lazy-embeds.js": "lazy-embeds.js",
+  "lite-embeds.js": "lite-embeds.js"
 }
