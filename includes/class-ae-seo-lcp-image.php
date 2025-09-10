@@ -55,6 +55,7 @@ class AE_SEO_LCP_Image {
         add_filter('wp_lazy_loading_enabled', [ __CLASS__, 'maybe_disable_lazy' ], 10, 3);
         add_filter('wp_get_attachment_image_attributes', [ __CLASS__, 'maybe_adjust_attributes' ], 10, 3);
         add_filter('wp_get_attachment_image', [ __CLASS__, 'maybe_use_picture' ], 10, 5);
+        add_filter('the_content', [ __CLASS__, 'maybe_replace_content' ], 20);
         add_action('wp_head', [ __CLASS__, 'maybe_print_links' ], 5);
     }
 
@@ -111,6 +112,12 @@ class AE_SEO_LCP_Image {
             return $attr;
         }
         self::$attr_count++;
+        if (strpos($attr['class'] ?? '', 'gm2-hero') !== false && !isset($attr['fetchpriority'])) {
+            $attr['fetchpriority'] = 'high';
+        }
+        if (!isset($attr['decoding'])) {
+            $attr['decoding'] = 'async';
+        }
         if (self::is_lcp_image()) {
             if (isset($attr['data-gm2-lcp']) && $attr['data-gm2-lcp'] === 'false') {
                 $attr['loading'] = $attr['loading'] ?? 'lazy';
@@ -119,6 +126,9 @@ class AE_SEO_LCP_Image {
                 unset($attr['loading']);
                 if (!isset($attr['fetchpriority'])) {
                     $attr['fetchpriority'] = 'high';
+                }
+                if (!isset($attr['decoding'])) {
+                    $attr['decoding'] = 'async';
                 }
                 $src = $attr['src'] ?? wp_get_attachment_image_url($attachment->ID, $size);
                 if ($src) {
@@ -182,76 +192,127 @@ class AE_SEO_LCP_Image {
      * @return string
      */
     public static function maybe_use_picture(string $html, $attachment_id, $size, $icon, $attr): string {
-        if (!self::is_lcp_image()) {
+        if (!self::is_lcp_image() || post_password_required()) {
             return $html;
         }
 
-        if (stripos($html, '<source') !== false && (stripos($html, 'image/avif') !== false || stripos($html, 'image/webp') !== false)) {
+        if (stripos($html, '<picture') !== false) {
             return $html;
         }
 
-        if (function_exists('gm2_queue_image_optimization')) {
-            gm2_queue_image_optimization($attachment_id);
-        }
+        $img_tag = self::add_img_attributes($html, true);
 
-        $srcset = wp_get_attachment_image_srcset($attachment_id, $size);
-        if (!$srcset) {
-            return $html;
-        }
-
-        $src = wp_get_attachment_image_url($attachment_id, $size);
-        if (!$src) {
-            return $html;
-        }
-
-        $ext = pathinfo($src, PATHINFO_EXTENSION);
-        if (!$ext) {
-            return $html;
-        }
-
-        $sizes_attr = wp_get_attachment_image_sizes($attachment_id, $size);
-        if (!$sizes_attr) {
-            $sizes_attr = '(max-width: 768px) 100vw, 1200px';
-        }
-
-        $img_tag = $html;
-        if (preg_match('/<img[^>]*>/i', $html, $m)) {
-            $img_tag = $m[0];
-            if (strpos($img_tag, ' srcset=') !== false) {
-                $img_tag = preg_replace('/srcset="[^"]*"/', 'srcset="' . esc_attr($srcset) . '"', $img_tag);
-            } else {
-                $img_tag = preg_replace('/<img/', '<img srcset="' . esc_attr($srcset) . '"', $img_tag, 1);
-            }
-            if (strpos($img_tag, ' sizes=') !== false) {
-                $img_tag = preg_replace('/sizes="[^"]*"/', 'sizes="' . esc_attr($sizes_attr) . '"', $img_tag);
-            } else {
-                $img_tag = preg_replace('/<img/', '<img sizes="' . esc_attr($sizes_attr) . '"', $img_tag, 1);
-            }
-        }
-
-        $sources = '';
-
-        if (wp_image_editor_supports(['mime_type' => 'image/avif'])) {
-            self::maybe_generate_nextgen_files($attachment_id, 'avif');
-            $avif_srcset = self::convert_srcset_extension($srcset, $ext, 'avif');
-            if (self::srcset_files_exist($avif_srcset)) {
-                $sources .= sprintf('<source type="image/avif" srcset="%s" sizes="%s" />', esc_attr($avif_srcset), esc_attr($sizes_attr));
-            }
-        }
-
-        if (wp_image_editor_supports(['mime_type' => 'image/webp'])) {
-            self::maybe_generate_nextgen_files($attachment_id, 'webp');
-            $webp_srcset = self::convert_srcset_extension($srcset, $ext, 'webp');
-            if (self::srcset_files_exist($webp_srcset)) {
-                $sources .= sprintf('<source type="image/webp" srcset="%s" sizes="%s" />', esc_attr($webp_srcset), esc_attr($sizes_attr));
-            }
-        }
-
+        $sources = self::build_nextgen_sources((int) $attachment_id, $img_tag);
         if ($sources === '') {
             return $img_tag;
         }
 
         return '<picture>' . $sources . $img_tag . '</picture>';
+    }
+
+    /**
+     * Replace the LCP image inside post content with a picture element.
+     */
+    public static function maybe_replace_content(string $content): string {
+        if (!self::$lcp_url || post_password_required()) {
+            return $content;
+        }
+
+        if (strpos($content, self::$lcp_url) === false || strpos($content, '<img') === false) {
+            return $content;
+        }
+
+        if (strpos($content, '<picture') !== false && preg_match('/<picture[^>]*>\s*<img[^>]*' . preg_quote(self::$lcp_url, '/') . '/i', $content)) {
+            return $content;
+        }
+
+        $attachment_id = attachment_url_to_postid(self::$lcp_url);
+        if (!$attachment_id) {
+            return $content;
+        }
+
+        $pattern = '/<img\b[^>]*' . preg_quote(self::$lcp_url, '/') . '[^>]*>/i';
+        $content = preg_replace_callback($pattern, static function ($matches) use ($attachment_id) {
+            $img_tag = self::add_img_attributes($matches[0], true);
+            $sources = self::build_nextgen_sources($attachment_id, $img_tag);
+            if ($sources === '') {
+                return $img_tag;
+            }
+            return '<picture>' . $sources . $img_tag . '</picture>';
+        }, $content, 1);
+
+        return $content;
+    }
+
+    /**
+     * Add decoding and fetchpriority attributes to an img tag.
+     */
+    private static function add_img_attributes(string $img_tag, bool $fetch_high): string {
+        if (strpos($img_tag, 'decoding') === false) {
+            $img_tag = preg_replace('/<img/', '<img decoding="async"', $img_tag, 1);
+        }
+        $is_hero = strpos($img_tag, 'gm2-hero') !== false;
+        if (($fetch_high || $is_hero) && strpos($img_tag, 'fetchpriority') === false) {
+            $img_tag = preg_replace('/<img/', '<img fetchpriority="high"', $img_tag, 1);
+        }
+        return $img_tag;
+    }
+
+    /**
+     * Build source tags for next-gen formats using gm2_nextgen metadata.
+     */
+    private static function build_nextgen_sources(int $attachment_id, string $img_tag): string {
+        $meta = wp_get_attachment_metadata($attachment_id);
+        if (!is_array($meta) || empty($meta['gm2_nextgen'])) {
+            return '';
+        }
+        $sizes_attr = '';
+        if (preg_match('/sizes="([^"]*)"/i', $img_tag, $m)) {
+            $sizes_attr = $m[1];
+        } else {
+            $sizes_attr = wp_get_attachment_image_sizes($attachment_id, 'full') ?: '';
+        }
+
+        $uploads = wp_get_upload_dir();
+        $baseurl = trailingslashit($uploads['baseurl']) . trailingslashit(dirname($meta['file']));
+
+        $sources = '';
+        foreach (['avif', 'webp'] as $fmt) {
+            $srcset = self::nextgen_srcset_from_meta($meta, $fmt, $baseurl);
+            if ($srcset) {
+                $sources .= sprintf('<source type="image/%s" srcset="%s"%s />', $fmt, esc_attr($srcset), $sizes_attr ? ' sizes="' . esc_attr($sizes_attr) . '"' : '');
+            }
+        }
+        return $sources;
+    }
+
+    /**
+     * Generate a srcset string for a specific next-gen format from metadata.
+     */
+    private static function nextgen_srcset_from_meta(array $meta, string $format, string $baseurl): string {
+        if (empty($meta['gm2_nextgen'])) {
+            return '';
+        }
+        $items = [];
+        if (!empty($meta['gm2_nextgen']['full'][$format]) && !empty($meta['width'])) {
+            $items[(int) $meta['width']] = $baseurl . $meta['gm2_nextgen']['full'][$format];
+        }
+        if (!empty($meta['sizes']) && is_array($meta['sizes'])) {
+            foreach ($meta['sizes'] as $size => $data) {
+                if (!empty($meta['gm2_nextgen'][$size][$format]) && !empty($data['width'])) {
+                    $items[(int) $data['width']] = $baseurl . $meta['gm2_nextgen'][$size][$format];
+                }
+            }
+        }
+        if (empty($items)) {
+            return '';
+        }
+        ksort($items, SORT_NUMERIC);
+        $parts = [];
+        foreach ($items as $width => $url) {
+            $parts[] = esc_url($url) . ' ' . (int) $width . 'w';
+        }
+        return implode(', ', $parts);
     }
 
     /**

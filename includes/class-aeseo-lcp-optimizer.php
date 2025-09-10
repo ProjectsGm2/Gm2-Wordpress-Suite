@@ -124,6 +124,7 @@ final class AESEO_LCP_Optimizer {
         add_action('wp', [ __CLASS__, 'maybe_prime_candidate' ]);
         add_filter('the_content', [ __CLASS__, 'detect_from_content' ], 1);
         add_filter('the_content', [ __CLASS__, 'maybe_add_fetchpriority_to_content' ], 20);
+        add_filter('the_content', [ __CLASS__, 'maybe_replace_content_image' ], 30);
         add_filter('render_block', [ __CLASS__, 'maybe_add_fetchpriority_to_block' ], 20, 2);
         add_action('woocommerce_before_single_product', [ __CLASS__, 'detect_woo_product' ]);
         add_filter('woocommerce_single_product_image_thumbnail_html', [ __CLASS__, 'strip_main_product_lazy' ], 10, 2);
@@ -481,6 +482,45 @@ final class AESEO_LCP_Optimizer {
     }
 
     /**
+     * Replace the LCP image inside content with a picture element.
+     */
+    public static function maybe_replace_content_image(string $content): string {
+        if (!apply_filters('aeseo_lcp_should_optimize', true, self::$candidate)) {
+            return $content;
+        }
+
+        if (post_password_required() || empty(self::$settings['responsive_picture_nextgen'])) {
+            return $content;
+        }
+
+        $candidate = self::get_lcp_candidate();
+        if (empty($candidate) || empty($candidate['url']) || strpos($content, $candidate['url']) === false) {
+            return $content;
+        }
+
+        if (strpos($content, '<picture') !== false && preg_match('/<picture[^>]*>\s*<img[^>]*' . preg_quote($candidate['url'], '/') . '/i', $content)) {
+            return $content;
+        }
+
+        $attachment_id = $candidate['attachment_id'] ?: attachment_url_to_postid($candidate['url']);
+        if (!$attachment_id) {
+            return $content;
+        }
+
+        $pattern = '/<img\b[^>]*' . preg_quote($candidate['url'], '/') . '[^>]*>/i';
+        $content = preg_replace_callback($pattern, static function ($matches) use ($candidate, $attachment_id) {
+            $img_tag = self::enhance_img_tag($matches[0], $candidate);
+            $sources = self::build_nextgen_sources($attachment_id, $img_tag);
+            if ($sources === '') {
+                return $img_tag;
+            }
+            return '<picture>' . $sources . $img_tag . '</picture>';
+        }, $content, 1);
+
+        return $content;
+    }
+
+    /**
      * Inject fetchpriority="high" into existing HTML for the LCP image.
      *
      * @param string $html HTML to scan.
@@ -547,11 +587,20 @@ final class AESEO_LCP_Optimizer {
     private static function enhance_img_tag(string $img_tag, array $candidate): string {
         $attrs = [];
 
-        if (!empty(self::$settings['add_fetchpriority_high'])) {
+        $classes = '';
+        if (preg_match('/class\s*=\s*["\']([^"\']+)["\']/', $img_tag, $m)) {
+            $classes = $m[1];
+        }
+
+        if (!empty(self::$settings['add_fetchpriority_high']) || strpos($classes, 'gm2-hero') !== false) {
             if (strpos($img_tag, 'fetchpriority') === false) {
                 $attrs[] = 'fetchpriority="high"';
             }
             self::$fetchpriority_set = true;
+        }
+
+        if (strpos($img_tag, 'decoding') === false) {
+            $attrs[] = 'decoding="async"';
         }
 
         if (
@@ -575,6 +624,63 @@ final class AESEO_LCP_Optimizer {
         }
 
         return $img_tag;
+    }
+
+    /**
+     * Build source tags for next-gen formats using gm2_nextgen metadata.
+     */
+    private static function build_nextgen_sources(int $attachment_id, string $img_tag): string {
+        $meta = wp_get_attachment_metadata($attachment_id);
+        if (!is_array($meta) || empty($meta['gm2_nextgen'])) {
+            return '';
+        }
+        $sizes_attr = '';
+        if (preg_match('/sizes="([^"]*)"/i', $img_tag, $m)) {
+            $sizes_attr = $m[1];
+        } else {
+            $sizes_attr = wp_get_attachment_image_sizes($attachment_id, 'full') ?: '';
+        }
+
+        $uploads = wp_get_upload_dir();
+        $baseurl = trailingslashit($uploads['baseurl']) . trailingslashit(dirname($meta['file']));
+
+        $sources = '';
+        foreach (['avif', 'webp'] as $fmt) {
+            $srcset = self::nextgen_srcset_from_meta($meta, $fmt, $baseurl);
+            if ($srcset) {
+                $sources .= sprintf('<source type="image/%s" srcset="%s"%s />', $fmt, esc_attr($srcset), $sizes_attr ? ' sizes="' . esc_attr($sizes_attr) . '"' : '');
+            }
+        }
+        return $sources;
+    }
+
+    /**
+     * Generate a srcset string for a specific next-gen format from metadata.
+     */
+    private static function nextgen_srcset_from_meta(array $meta, string $format, string $baseurl): string {
+        if (empty($meta['gm2_nextgen'])) {
+            return '';
+        }
+        $items = [];
+        if (!empty($meta['gm2_nextgen']['full'][$format]) && !empty($meta['width'])) {
+            $items[(int) $meta['width']] = $baseurl . $meta['gm2_nextgen']['full'][$format];
+        }
+        if (!empty($meta['sizes']) && is_array($meta['sizes'])) {
+            foreach ($meta['sizes'] as $size => $data) {
+                if (!empty($meta['gm2_nextgen'][$size][$format]) && !empty($data['width'])) {
+                    $items[(int) $data['width']] = $baseurl . $meta['gm2_nextgen'][$size][$format];
+                }
+            }
+        }
+        if (empty($items)) {
+            return '';
+        }
+        ksort($items, SORT_NUMERIC);
+        $parts = [];
+        foreach ($items as $width => $url) {
+            $parts[] = esc_url($url) . ' ' . (int) $width . 'w';
+        }
+        return implode(', ', $parts);
     }
 
     /**
@@ -927,6 +1033,12 @@ final class AESEO_LCP_Optimizer {
         }
 
         $candidate = self::get_lcp_candidate();
+        if (strpos($attr['class'] ?? '', 'gm2-hero') !== false && !isset($attr['fetchpriority'])) {
+            $attr['fetchpriority'] = 'high';
+        }
+        if (!isset($attr['decoding'])) {
+            $attr['decoding'] = 'async';
+        }
         if (!empty($candidate)) {
             $src = $attr['src'] ?? '';
             $attachment_id = is_object($attachment) ? (int) $attachment->ID : 0;
@@ -983,91 +1095,17 @@ final class AESEO_LCP_Optimizer {
             return $html;
         }
 
-        if (empty(self::$settings['responsive_picture_nextgen']) || empty(self::$candidate) || self::$candidate['attachment_id'] !== (int) $attachment_id) {
+        if (empty(self::$settings['responsive_picture_nextgen']) || empty(self::$candidate) || self::$candidate['attachment_id'] !== (int) $attachment_id || post_password_required()) {
             return $html;
         }
 
-        if (
-            stripos($html, '<source') !== false &&
-            (
-                stripos($html, 'image/avif') !== false ||
-                stripos($html, 'image/webp') !== false ||
-                preg_match('/<source[^>]+\.(?:avif|webp)[^>]*>/i', $html)
-            )
-        ) {
+        if (stripos($html, '<picture') !== false || self::is_already_optimized($attachment_id)) {
             return $html;
         }
 
-        if (self::is_already_optimized($attachment_id)) {
-            return $html;
-        }
+        $img_tag = self::enhance_img_tag($html, self::$candidate);
 
-        if (function_exists('gm2_queue_image_optimization')) {
-            gm2_queue_image_optimization($attachment_id);
-        }
-
-        if (
-            !$attachment_id ||
-            !function_exists('wp_get_attachment_image_url') ||
-            !function_exists('wp_get_attachment_image_srcset') ||
-            !function_exists('wp_get_attachment_image_sizes')
-        ) {
-            return $html;
-        }
-
-        $srcset = wp_get_attachment_image_srcset($attachment_id, $size);
-        if (!$srcset) {
-            return $html;
-        }
-
-        $src = wp_get_attachment_image_url($attachment_id, $size);
-        if (!$src) {
-            return $html;
-        }
-
-        $ext = pathinfo($src, PATHINFO_EXTENSION);
-        if (!$ext) {
-            return $html;
-        }
-
-        $sizes_attr = wp_get_attachment_image_sizes($attachment_id, $size);
-        if (!$sizes_attr) {
-            $sizes_attr = '(max-width: 768px) 100vw, 1200px';
-        }
-
-        $img_tag = $html;
-        if (preg_match('/<img[^>]*>/i', $html, $m)) {
-            $img_tag = $m[0];
-            if (strpos($img_tag, ' srcset=') !== false) {
-                $img_tag = preg_replace('/srcset="[^"]*"/', 'srcset="' . esc_attr($srcset) . '"', $img_tag);
-            } else {
-                $img_tag = preg_replace('/<img/', '<img srcset="' . esc_attr($srcset) . '"', $img_tag, 1);
-            }
-            if (strpos($img_tag, ' sizes=') !== false) {
-                $img_tag = preg_replace('/sizes="[^"]*"/', 'sizes="' . esc_attr($sizes_attr) . '"', $img_tag);
-            } else {
-                $img_tag = preg_replace('/<img/', '<img sizes="' . esc_attr($sizes_attr) . '"', $img_tag, 1);
-            }
-        }
-
-        $sources = '';
-
-        if (wp_image_editor_supports(['mime_type' => 'image/avif'])) {
-            self::maybe_generate_nextgen_files($attachment_id, 'avif');
-            $avif_srcset = self::convert_srcset_extension($srcset, $ext, 'avif');
-            if (self::srcset_files_exist($avif_srcset)) {
-                $sources .= sprintf('<source type="image/avif" srcset="%s" sizes="%s" />', esc_attr($avif_srcset), esc_attr($sizes_attr));
-            }
-        }
-
-        if (wp_image_editor_supports(['mime_type' => 'image/webp'])) {
-            self::maybe_generate_nextgen_files($attachment_id, 'webp');
-            $webp_srcset = self::convert_srcset_extension($srcset, $ext, 'webp');
-            if (self::srcset_files_exist($webp_srcset)) {
-                $sources .= sprintf('<source type="image/webp" srcset="%s" sizes="%s" />', esc_attr($webp_srcset), esc_attr($sizes_attr));
-            }
-        }
-
+        $sources = self::build_nextgen_sources((int) $attachment_id, $img_tag);
         if ($sources === '') {
             return $img_tag;
         }
