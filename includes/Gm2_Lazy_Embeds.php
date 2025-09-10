@@ -40,10 +40,11 @@ class Gm2_Lazy_Embeds {
         $allow_classes = $allow['classes'] ?? [];
 
         $modified = false;
-        $pattern = '#<(iframe|video)([^>]*)>#i';
-        $content = preg_replace_callback($pattern, function ($m) use ($allow_urls, $allow_classes, &$modified) {
-            $tag   = $m[1];
-            $attrs = $m[2];
+
+        // Handle iframe tags.
+        $pattern_iframe = '#<iframe([^>]*)>#i';
+        $content = preg_replace_callback($pattern_iframe, function ($m) use ($allow_urls, $allow_classes, &$modified) {
+            $attrs = $m[1];
 
             if (!preg_match('/src\s*=\s*(\"|\')(.*?)\1/i', $attrs, $src_m)) {
                 return $m[0];
@@ -79,7 +80,65 @@ class Gm2_Lazy_Embeds {
             if (!preg_match('/\sloading\s*=/', $new_attrs)) {
                 $new_attrs .= ' loading="lazy"';
             }
-            return '<' . $tag . $new_attrs . '>';
+            return '<iframe' . $new_attrs . '>';
+        }, $content);
+
+        // Handle video tags with nested sources.
+        $pattern_video = '#<video([^>]*)>(.*?)</video>#is';
+        $content = preg_replace_callback($pattern_video, function ($m) use ($allow_urls, $allow_classes, &$modified) {
+            $attrs = $m[1];
+            $inner = $m[2];
+
+            $src = '';
+            if (preg_match('/src\s*=\s*(\"|\')(.*?)\1/i', $attrs, $src_m)) {
+                $src = $src_m[2];
+            } elseif (preg_match('/<source[^>]*src\s*=\s*(\"|\')(.*?)\1/i', $inner, $src_m)) {
+                $src = $src_m[2];
+            }
+
+            $class_list = [];
+            if (preg_match('/class\s*=\s*(\"|\')(.*?)\1/i', $attrs, $class_m)) {
+                $class_list = preg_split('/\s+/', trim($class_m[2]));
+            }
+
+            $allowed = false;
+            foreach ($allow_urls as $u) {
+                if ($u !== '' && $src !== '' && str_contains($src, $u)) {
+                    $allowed = true;
+                    break;
+                }
+            }
+            if (!$allowed && $allow_classes) {
+                foreach ($class_list as $cls) {
+                    if (in_array($cls, $allow_classes, true)) {
+                        $allowed = true;
+                        break;
+                    }
+                }
+            }
+            if ($allowed) {
+                return $m[0];
+            }
+
+            $modified = true;
+
+            $new_attrs = preg_replace('/\s+src\s*=\s*(\"|\')(.*?)\1/i', ' data-src="$2"', $attrs);
+            $new_attrs = preg_replace('/\s+srcset\s*=\s*(\"|\')(.*?)\1/i', ' data-srcset="$2"', $new_attrs);
+            if (!preg_match('/\sloading\s*=/', $new_attrs)) {
+                $new_attrs .= ' loading="lazy"';
+            }
+            if (!preg_match('/\spreload\s*=/', $new_attrs)) {
+                $new_attrs .= ' preload="metadata"';
+            }
+
+            $new_inner = preg_replace_callback('/<source([^>]*)>/i', function ($sm) {
+                $sattrs = $sm[1];
+                $sattrs = preg_replace('/\s+src\s*=\s*(\"|\')(.*?)\1/i', ' data-src="$2"', $sattrs);
+                $sattrs = preg_replace('/\s+srcset\s*=\s*(\"|\')(.*?)\1/i', ' data-srcset="$2"', $sattrs);
+                return '<source' . $sattrs . '>';
+            }, $inner);
+
+            return '<video' . $new_attrs . '>' . $new_inner . '</video>';
         }, $content);
 
         if ($modified) {
