@@ -28,6 +28,7 @@ class Module {
         'eager_selectors'  => [],
         'lite_embeds'      => true,
         'asset_budget'     => true,
+        'handle_rules'     => [],
     ];
 
     /**
@@ -75,6 +76,7 @@ class Module {
             $opts['smart_lazyload'],
             $opts['lite_embeds'],
             $opts['asset_budget'],
+            !empty($opts['handle_rules']),
         ]));
     }
 
@@ -99,9 +101,12 @@ class Module {
             require_once __DIR__ . '/LiteEmbeds.php';
             LiteEmbeds::boot();
         }
-        if (!empty($opts['asset_budget'])) {
+        if (!empty($opts['asset_budget']) || !empty($opts['handle_rules'])) {
             require_once __DIR__ . '/HandleAuditor.php';
             HandleAuditor::boot();
+            add_action('wp_enqueue_scripts', [__CLASS__, 'maybe_apply_handle_rules'], 20);
+            add_filter('script_loader_tag', [__CLASS__, 'filter_script_tag'], 10, 3);
+            add_filter('style_loader_tag', [__CLASS__, 'filter_style_tag'], 10, 4);
         }
         // Actual feature hooks would be added here.
     }
@@ -118,6 +123,128 @@ class Module {
         if (function_exists('ob_gzhandler')) {
             ob_start('ob_gzhandler');
         }
+    }
+
+    /** Apply handle rules such as dequeuing. */
+    public static function maybe_apply_handle_rules(): void {
+        $opts  = self::get_settings();
+        $rules = $opts['handle_rules'] ?? [];
+        if (empty($rules)) {
+            return;
+        }
+        global $wp_scripts, $wp_styles;
+        foreach (['scripts' => $wp_scripts, 'styles' => $wp_styles] as $type => $deps) {
+            if (empty($rules[$type]) || !$deps) {
+                continue;
+            }
+            foreach ($rules[$type] as $handle => $rule) {
+                if (!self::should_dequeue($rule)) {
+                    continue;
+                }
+                if (self::has_dependents($deps, $handle)) {
+                    continue;
+                }
+                if ($type === 'scripts') {
+                    wp_dequeue_script($handle);
+                } else {
+                    wp_dequeue_style($handle);
+                }
+            }
+        }
+    }
+
+    /** Filter script tag to add attributes like defer/async. */
+    public static function filter_script_tag(string $tag, string $handle, string $src): string {
+        $opts  = self::get_settings();
+        $rule  = $opts['handle_rules']['scripts'][$handle] ?? null;
+        $attr  = $rule['attr'] ?? '';
+        if (!$attr) {
+            return $tag;
+        }
+        global $wp_scripts;
+        if ($attr === 'async' && self::has_dependents($wp_scripts, $handle)) {
+            return $tag;
+        }
+        if (false === strpos($tag, $attr)) {
+            $tag = str_replace('<script ', '<script ' . $attr . ' ', $tag);
+        }
+        return $tag;
+    }
+
+    /** Inline small styles when requested. */
+    public static function filter_style_tag(string $html, string $handle, string $href, string $media): string {
+        $opts = self::get_settings();
+        $rule = $opts['handle_rules']['styles'][$handle]['inline'] ?? false;
+        if (empty($rule)) {
+            return $html;
+        }
+        global $wp_styles;
+        $src  = $wp_styles->registered[$handle]->src ?? '';
+        $src  = self::resolve_src($src, $wp_styles);
+        $path = self::local_path($src);
+        if (!$path) {
+            return $html;
+        }
+        $size = @filesize($path);
+        if ($size === false || $size > 2048) {
+            return $html;
+        }
+        $css = trim((string) @file_get_contents($path));
+        if ($css === '') {
+            return $html;
+        }
+        return '<style id="' . esc_attr($handle) . '-inline" media="' . esc_attr($media) . '">' . $css . '</style>';
+    }
+
+    private static function should_dequeue(array $rule): bool {
+        $dq = $rule['dequeue'] ?? [];
+        if (!empty($dq['front_page']) && is_front_page()) {
+            return true;
+        }
+        if (!empty($dq['page_template']) && is_page_template($dq['page_template'])) {
+            return true;
+        }
+        if (!empty($dq['shortcode']) && is_singular()) {
+            global $post;
+            if ($post && has_shortcode($post->post_content, $dq['shortcode'])) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static function has_dependents(\WP_Dependencies $deps, string $handle): bool {
+        foreach ((array) $deps->queue as $queued) {
+            if ($queued === $handle) {
+                continue;
+            }
+            $reg = $deps->registered[$queued] ?? null;
+            if ($reg && in_array($handle, (array) ($reg->deps ?? []), true)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static function resolve_src(string $src, \WP_Dependencies $deps): string {
+        if ($src === '') {
+            return '';
+        }
+        if (preg_match('#^(https?:)?//#', $src)) {
+            return $src;
+        }
+        return $deps->base_url . $src;
+    }
+
+    private static function local_path(string $url): ?string {
+        $host = wp_parse_url($url, PHP_URL_HOST);
+        $site = wp_parse_url(home_url(), PHP_URL_HOST);
+        if (!$host || $host === $site) {
+            $path = wp_parse_url($url, PHP_URL_PATH);
+            $file = ABSPATH . ltrim($path ?? '', '/');
+            return file_exists($file) ? $file : null;
+        }
+        return null;
     }
 
     /** Start background regeneration of next-gen images. */
@@ -388,6 +515,7 @@ class Module {
         $opts['auto_hero']      = !empty($opts['auto_hero']);
         $opts['lite_embeds']    = !empty($opts['lite_embeds']);
         $opts['eager_selectors'] = array_values(array_filter(array_map('trim', (array)($opts['eager_selectors'] ?? []))));
+        $opts['handle_rules']   = is_array($opts['handle_rules'] ?? null) ? $opts['handle_rules'] : [];
         return $opts;
     }
 
@@ -494,6 +622,30 @@ class Module {
                 : [];
             $opts['lite_embeds']    = !empty($input['lite_embeds']);
             $opts['asset_budget']   = !empty($input['asset_budget']);
+            $opts['handle_rules']   = [];
+            if (!empty($input['handle_rules']) && is_array($input['handle_rules'])) {
+                foreach (['scripts', 'styles'] as $type) {
+                    foreach ($input['handle_rules'][$type] ?? [] as $h => $rule) {
+                        $h = sanitize_key($h);
+                        $entry = [
+                            'dequeue' => [
+                                'front_page'   => !empty($rule['dequeue_front']),
+                                'page_template'=> sanitize_text_field($rule['page_template'] ?? ''),
+                                'shortcode'    => sanitize_text_field($rule['shortcode'] ?? ''),
+                            ],
+                        ];
+                        if ($type === 'scripts') {
+                            $attr = sanitize_key($rule['attr'] ?? '');
+                            $entry['attr'] = in_array($attr, ['defer', 'async'], true) ? $attr : '';
+                        } else {
+                            $entry['inline'] = !empty($rule['inline']);
+                        }
+                        if ($entry['dequeue']['front_page'] || $entry['dequeue']['page_template'] || $entry['dequeue']['shortcode'] || !empty($entry['attr']) || !empty($entry['inline'])) {
+                            $opts['handle_rules'][$type][$h] = $entry;
+                        }
+                    }
+                }
+            }
             if (is_network_admin()) {
                 update_site_option(self::OPTION_KEY, $opts, false);
             } else {
@@ -567,6 +719,44 @@ class Module {
                         <td><input type="checkbox" name="<?php echo esc_attr(self::OPTION_KEY); ?>[asset_budget]" value="1" <?php checked($opts['asset_budget']); ?> /></td>
                     </tr>
                 </table>
+                <h2><?php esc_html_e('Handle Auditor', 'gm2-wordpress-suite'); ?></h2>
+                <?php
+                $handles = $stats['handles'] ?? ['scripts' => [], 'styles' => []];
+                foreach (['scripts' => __('Scripts', 'gm2-wordpress-suite'), 'styles' => __('Styles', 'gm2-wordpress-suite')] as $type => $label) {
+                    $list = $handles[$type] ?? [];
+                    if (!$list) {
+                        continue;
+                    }
+                    uasort($list, function ($a, $b) {
+                        return intval($b['bytes'] ?? 0) <=> intval($a['bytes'] ?? 0);
+                    });
+                    echo '<h3>' . esc_html($label) . '</h3>';
+                    echo '<table class="widefat"><thead><tr><th>' . esc_html__('Handle', 'gm2-wordpress-suite') . '</th><th>' . esc_html__('Size', 'gm2-wordpress-suite') . '</th><th>' . esc_html__('Dependencies', 'gm2-wordpress-suite') . '</th><th>' . esc_html__('Loaded On', 'gm2-wordpress-suite') . '</th><th>' . esc_html__('Rules', 'gm2-wordpress-suite') . '</th></tr></thead><tbody>';
+                    foreach ($list as $h => $info) {
+                        $size = number_format_i18n(intval($info['bytes']) / 1024, 2) . ' KB';
+                        $deps = implode(', ', array_map('esc_html', $info['deps'] ?? []));
+                        $ctxs = implode(', ', array_map('esc_html', $info['contexts'] ?? []));
+                        $rule = $opts['handle_rules'][$type][$h] ?? [];
+                        echo '<tr>';
+                        echo '<td>' . esc_html($h) . '</td>';
+                        echo '<td>' . esc_html($size) . '</td>';
+                        echo '<td>' . $deps . '</td>';
+                        echo '<td>' . $ctxs . '</td>';
+                        echo '<td>';
+                        echo '<label><input type="checkbox" name="' . esc_attr(self::OPTION_KEY) . '[handle_rules][' . esc_attr($type) . '][' . esc_attr($h) . '][dequeue_front]" value="1" ' . checked($rule['dequeue']['front_page'] ?? false, true, false) . ' /> ' . esc_html__('Front', 'gm2-wordpress-suite') . '</label><br />';
+                        echo '<label>' . esc_html__('Template', 'gm2-wordpress-suite') . ': <input type="text" name="' . esc_attr(self::OPTION_KEY) . '[handle_rules][' . esc_attr($type) . '][' . esc_attr($h) . '][page_template]" value="' . esc_attr($rule['dequeue']['page_template'] ?? '') . '" /></label><br />';
+                        echo '<label>' . esc_html__('Shortcode', 'gm2-wordpress-suite') . ': <input type="text" name="' . esc_attr(self::OPTION_KEY) . '[handle_rules][' . esc_attr($type) . '][' . esc_attr($h) . '][shortcode]" value="' . esc_attr($rule['dequeue']['shortcode'] ?? '') . '" /></label><br />';
+                        if ($type === 'scripts') {
+                            $attr = $rule['attr'] ?? '';
+                            echo '<label>' . esc_html__('Attr', 'gm2-wordpress-suite') . ': <select name="' . esc_attr(self::OPTION_KEY) . '[handle_rules][scripts][' . esc_attr($h) . '][attr]"><option value="">' . esc_html__('None', 'gm2-wordpress-suite') . '</option><option value="defer"' . selected($attr, 'defer', false) . '>defer</option><option value="async"' . selected($attr, 'async', false) . '>async</option></select></label>';
+                        } else {
+                            echo '<label><input type="checkbox" name="' . esc_attr(self::OPTION_KEY) . '[handle_rules][styles][' . esc_attr($h) . '][inline]" value="1" ' . checked($rule['inline'] ?? false, true, false) . ' /> ' . esc_html__('Inline ≤2KB', 'gm2-wordpress-suite') . '</label>';
+                        }
+                        echo '</td></tr>';
+                    }
+                    echo '</tbody></table>';
+                }
+                ?>
                 <?php submit_button(); ?>
             </form>
             <form method="post" style="margin-top:1em;">
