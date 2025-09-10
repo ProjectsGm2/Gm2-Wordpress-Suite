@@ -23,6 +23,10 @@ class NetworkPayloadTest extends WP_UnitTestCase {
         $opts = get_option('gm2_netpayload_settings');
         $this->assertIsArray($opts);
         $this->assertTrue($opts['nextgen_images']);
+        $this->assertTrue($opts['webp']);
+        $this->assertTrue($opts['avif']);
+        $this->assertFalse($opts['no_originals']);
+        $this->assertEquals(2560, $opts['big_image_cap']);
         $this->assertSame('detect', $opts['gzip_detection']);
         $this->assertTrue($opts['smart_lazyload']);
         $this->assertTrue($opts['asset_budget']);

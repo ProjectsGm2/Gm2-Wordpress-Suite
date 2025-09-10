@@ -13,10 +13,14 @@ class Module {
     private static string $page_hook = '';
 
     private static array $defaults = [
-        'nextgen_images' => true,
-        'gzip_detection' => 'detect',
-        'smart_lazyload' => true,
-        'asset_budget'   => true,
+        'nextgen_images'   => true,
+        'webp'             => true,
+        'avif'             => true,
+        'no_originals'     => false,
+        'big_image_cap'    => 2560,
+        'gzip_detection'   => 'detect',
+        'smart_lazyload'   => true,
+        'asset_budget'     => true,
     ];
 
     /**
@@ -34,6 +38,8 @@ class Module {
         add_action('network_admin_menu', [__CLASS__, 'register_admin_page']);
         add_action('admin_enqueue_scripts', [__CLASS__, 'enqueue_admin_assets']);
         add_action('rest_api_init', [__CLASS__, 'register_rest_route']);
+        add_action('admin_notices', [__CLASS__, 'maybe_show_missing_notice']);
+        add_action('network_admin_notices', [__CLASS__, 'maybe_show_missing_notice']);
 
         if (self::any_feature_enabled()) {
             add_action('init', [__CLASS__, 'maybe_run_features']);
@@ -69,6 +75,7 @@ class Module {
         $opts = self::get_settings();
         if (!empty($opts['nextgen_images'])) {
             add_filter('wp_generate_attachment_metadata', [__CLASS__, 'add_nextgen_variants'], 10, 2);
+            add_filter('big_image_size_threshold', [__CLASS__, 'filter_big_image_cap'], 10, 4);
         }
         // Actual feature hooks would be added here.
     }
@@ -81,9 +88,10 @@ class Module {
             return $metadata;
         }
 
-        $editor_args   = ['methods' => ['Imagick', 'GD']];
-        $supports_webp = wp_image_editor_supports(['mime_type' => 'image/webp'] + $editor_args);
-        $supports_avif = wp_image_editor_supports(['mime_type' => 'image/avif'] + $editor_args);
+        $opts        = self::get_settings();
+        $editor_args = ['methods' => ['Imagick', 'GD']];
+        $supports_webp = !empty($opts['webp']) && wp_image_editor_supports(['mime_type' => 'image/webp'] + $editor_args);
+        $supports_avif = !empty($opts['avif']) && wp_image_editor_supports(['mime_type' => 'image/avif'] + $editor_args);
 
         if (!$supports_webp && !$supports_avif) {
             return $metadata;
@@ -91,6 +99,39 @@ class Module {
 
         $file     = get_attached_file($attachment_id);
         $base_dir = dirname($file);
+
+        if (empty($opts['no_originals']) && file_exists($file)) {
+            $type     = wp_check_filetype($file);
+            $mime     = $type['type'];
+            $lossless = true;
+            if ($mime === 'image/png') {
+                $is_large  = filesize($file) > 500 * 1024;
+                $has_alpha = self::png_has_alpha($file);
+                if ($is_large && !$has_alpha) {
+                    $lossless = false;
+                }
+            }
+            if ($supports_webp) {
+                $webp_path = preg_replace('/\.[^\.]+$/', '.webp', $file);
+                $editor    = wp_get_image_editor($file, $editor_args);
+                if (!is_wp_error($editor)) {
+                    $editor->save($webp_path, 'image/webp', ['lossless' => $lossless]);
+                    $metadata['gm2_nextgen']['full']['webp'] = basename($webp_path);
+                }
+            }
+            $can_avif = $supports_avif;
+            if ($mime === 'image/gif' && self::is_animated_gif($file)) {
+                $can_avif = false;
+            }
+            if ($can_avif) {
+                $avif_path = preg_replace('/\.[^\.]+$/', '.avif', $file);
+                $editor    = wp_get_image_editor($file, $editor_args);
+                if (!is_wp_error($editor)) {
+                    $editor->save($avif_path, 'image/avif', ['lossless' => $lossless]);
+                    $metadata['gm2_nextgen']['full']['avif'] = basename($avif_path);
+                }
+            }
+        }
 
         foreach ($metadata['sizes'] as $size => $data) {
             $size_file = $base_dir . '/' . $data['file'];
@@ -160,11 +201,51 @@ class Module {
         return $count > 1;
     }
 
+    /** Filter the big image size threshold. */
+    public static function filter_big_image_cap($threshold, $imagesize = null, $file = '', $attachment_id = 0) {
+        $opts = self::get_settings();
+        $cap  = intval($opts['big_image_cap']);
+        if ($cap > 0) {
+            return $cap;
+        }
+        return $threshold;
+    }
+
+    /** Warn if server lacks next-gen support. */
+    public static function maybe_show_missing_notice(): void {
+        if (!current_user_can('manage_options')) {
+            return;
+        }
+        $opts = self::get_settings();
+        if (empty($opts['nextgen_images'])) {
+            return;
+        }
+        $editor_args = ['methods' => ['Imagick', 'GD']];
+        $missing = [];
+        if (!empty($opts['webp']) && !wp_image_editor_supports(['mime_type' => 'image/webp'] + $editor_args)) {
+            $missing[] = __('WebP', 'gm2-wordpress-suite');
+        }
+        if (!empty($opts['avif']) && !wp_image_editor_supports(['mime_type' => 'image/avif'] + $editor_args)) {
+            $missing[] = __('AVIF', 'gm2-wordpress-suite');
+        }
+        if (!$missing) {
+            return;
+        }
+        $formats = implode(' & ', $missing);
+        echo '<div class="notice notice-warning"><p>' . esc_html(sprintf(
+            /* translators: list of image formats */
+            __('Your server does not support %s. Responsive srcset will remain intact.', 'gm2-wordpress-suite'),
+            $formats
+        )) . '</p></div>';
+    }
+
     /** Retrieve settings merged with network defaults. */
     public static function get_settings(): array {
         $network = is_multisite() ? self::get_raw_options(true) : [];
         $site    = self::get_raw_options(false);
-        return wp_parse_args($site, wp_parse_args($network, self::$defaults));
+        $opts    = wp_parse_args($site, wp_parse_args($network, self::$defaults));
+        $opts['big_image_cap'] = intval($opts['big_image_cap']);
+        return $opts;
     }
 
     private static function get_raw_options(bool $network): array {
@@ -243,6 +324,10 @@ class Module {
             $input = wp_unslash($_POST[self::OPTION_KEY]);
             $opts  = self::get_settings();
             $opts['nextgen_images'] = !empty($input['nextgen_images']);
+            $opts['webp']           = !empty($input['webp']);
+            $opts['avif']           = !empty($input['avif']);
+            $opts['no_originals']   = !empty($input['no_originals']);
+            $opts['big_image_cap']  = isset($input['big_image_cap']) ? intval($input['big_image_cap']) : self::$defaults['big_image_cap'];
             $opts['gzip_detection'] = isset($input['gzip_detection']) ? sanitize_text_field($input['gzip_detection']) : 'detect';
             $opts['smart_lazyload'] = !empty($input['smart_lazyload']);
             $opts['asset_budget']   = !empty($input['asset_budget']);
@@ -265,6 +350,22 @@ class Module {
                     <tr>
                         <th scope="row"><?php esc_html_e('Next‑Gen Images', 'gm2-wordpress-suite'); ?></th>
                         <td><input type="checkbox" name="<?php echo esc_attr(self::OPTION_KEY); ?>[nextgen_images]" value="1" <?php checked($opts['nextgen_images']); ?> /></td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php esc_html_e('Enable WebP', 'gm2-wordpress-suite'); ?></th>
+                        <td><input type="checkbox" name="<?php echo esc_attr(self::OPTION_KEY); ?>[webp]" value="1" <?php checked($opts['webp']); ?> /></td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php esc_html_e('Enable AVIF', 'gm2-wordpress-suite'); ?></th>
+                        <td><input type="checkbox" name="<?php echo esc_attr(self::OPTION_KEY); ?>[avif]" value="1" <?php checked($opts['avif']); ?> /></td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php esc_html_e("Don't convert originals", 'gm2-wordpress-suite'); ?></th>
+                        <td><input type="checkbox" name="<?php echo esc_attr(self::OPTION_KEY); ?>[no_originals]" value="1" <?php checked($opts['no_originals']); ?> /></td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php esc_html_e('Big image cap', 'gm2-wordpress-suite'); ?></th>
+                        <td><input type="number" name="<?php echo esc_attr(self::OPTION_KEY); ?>[big_image_cap]" value="<?php echo esc_attr(intval($opts['big_image_cap'])); ?>" /></td>
                     </tr>
                     <tr>
                         <th scope="row"><?php esc_html_e('Gzip Detection', 'gm2-wordpress-suite'); ?></th>
