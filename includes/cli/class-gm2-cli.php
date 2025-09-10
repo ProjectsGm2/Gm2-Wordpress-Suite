@@ -114,13 +114,32 @@ class Gm2_CLI extends \WP_CLI_Command {
     public function images( $args, $assoc_args ) {
         $sub = $args[0] ?? '';
         if ( $sub !== 'regenerate' ) {
-            \WP_CLI::error( __( 'Usage: wp gm2 images regenerate [--only-missing]', 'gm2-wordpress-suite' ) );
+            \WP_CLI::error( __( 'Usage: wp gm2 images regenerate [--only-missing] [--ids=<ids>]', 'gm2-wordpress-suite' ) );
         }
+
         $only_missing = ! empty( $assoc_args['only-missing'] );
-        $count = \Gm2\NetworkPayload\Module::regenerate_all_images( $only_missing, function( $id ) {
-            \WP_CLI::line( sprintf( __( 'Processed attachment %d', 'gm2-wordpress-suite' ), $id ) );
-        } );
-        \WP_CLI::success( sprintf( __( '%d images processed.', 'gm2-wordpress-suite' ), $count ) );
+        $ids = [];
+        if ( ! empty( $assoc_args['ids'] ) ) {
+            $ids = array_filter( array_map( 'absint', explode( ',', $assoc_args['ids'] ) ) );
+        }
+
+        if ( ! empty( $ids ) ) {
+            $progress = \WP_CLI\Utils\make_progress_bar( __( 'Regenerating images', 'gm2-wordpress-suite' ), count( $ids ) );
+            $count = \Gm2\NetworkPayload\Module::regenerate_images( $ids, $only_missing, function( $id ) use ( $progress ) {
+                $progress->tick();
+            } );
+            $progress->finish();
+            \WP_CLI::success( sprintf( __( '%d images processed.', 'gm2-wordpress-suite' ), $count ) );
+            return;
+        }
+
+        $queued = \Gm2\NetworkPayload\Module::start_regeneration_cli( $only_missing );
+        $progress = \WP_CLI\Utils\make_progress_bar( __( 'Queuing images', 'gm2-wordpress-suite' ), count( $queued ) );
+        foreach ( $queued as $_ ) {
+            $progress->tick();
+        }
+        $progress->finish();
+        \WP_CLI::success( sprintf( __( '%d images queued for regeneration.', 'gm2-wordpress-suite' ), count( $queued ) ) );
     }
 
     /**
