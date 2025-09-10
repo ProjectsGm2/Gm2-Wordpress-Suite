@@ -68,12 +68,51 @@ class HandleAuditor {
         $assets['js']  += $summary['total_js'];
         $assets['css'] += $summary['total_css'];
         $stats['assets'] = $assets;
+
+        $handles = $stats['handles'] ?? ['scripts' => [], 'styles' => []];
+        $ctx     = self::context_tag();
+        foreach ($summary['scripts'] as $entry) {
+            $h = $entry['handle'];
+            $info = $handles['scripts'][$h] ?? ['bytes' => 0, 'deps' => [], 'contexts' => []];
+            $info['bytes'] = max(intval($entry['bytes']), intval($info['bytes']));
+            $info['deps']  = $wp_scripts->registered[$h]->deps ?? [];
+            $info['contexts'][] = $ctx;
+            $info['contexts'] = array_values(array_unique($info['contexts']));
+            $handles['scripts'][$h] = $info;
+        }
+        foreach ($summary['styles'] as $entry) {
+            $h = $entry['handle'];
+            $info = $handles['styles'][$h] ?? ['bytes' => 0, 'deps' => [], 'contexts' => []];
+            $info['bytes'] = max(intval($entry['bytes']), intval($info['bytes']));
+            $info['deps']  = $wp_styles->registered[$h]->deps ?? [];
+            $info['contexts'][] = $ctx;
+            $info['contexts'] = array_values(array_unique($info['contexts']));
+            $handles['styles'][$h] = $info;
+        }
+        $stats['handles'] = $handles;
+
         update_option('gm2_netpayload_stats', $stats, false);
     }
 
     private static function current_url(): string {
         $path = isset($_SERVER['REQUEST_URI']) ? (string) wp_parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) : '/';
         return home_url($path);
+    }
+
+    private static function context_tag(): string {
+        if (is_front_page()) {
+            return 'front';
+        }
+        if (is_home()) {
+            return 'home';
+        }
+        if (function_exists('is_product') && is_product()) {
+            return 'product';
+        }
+        if (function_exists('is_checkout') && is_checkout()) {
+            return 'checkout';
+        }
+        return 'other';
     }
 
     private static function resolve_src(string $src, \WP_Dependencies $deps): string {
