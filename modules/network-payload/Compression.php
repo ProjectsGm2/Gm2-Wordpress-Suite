@@ -17,6 +17,23 @@ class Compression {
   AddOutputFilterByType BROTLI_COMPRESS text/html text/plain text/xml text/css text/javascript application/javascript application/json
 </IfModule>
 HTACCESS;
+
+    /** Register REST route used for compression testing. */
+    public static function register_test_route(): void {
+        register_rest_route('gm2-compression-test', '/', [
+            'methods'             => \WP_REST_Server::READABLE,
+            'permission_callback' => '__return_true',
+            'callback'            => [__CLASS__, 'rest_test'],
+        ]);
+    }
+
+    /** Return a fixed byte string to check response encoding. */
+    public static function rest_test(\WP_REST_Request $request): \WP_REST_Response {
+        $data = str_repeat('A', 1024);
+        $resp = new \WP_REST_Response($data);
+        $resp->header('Content-Type', 'application/octet-stream');
+        return $resp;
+    }
     /**
      * Render compression details panel.
      */
@@ -60,7 +77,14 @@ HTACCESS;
             echo '<ul><li>' . esc_html__('Turn on Brotli compression.', 'gm2-wordpress-suite') . '</li><li>' . esc_html__('Enable Auto Minify for CSS/JS/HTML.', 'gm2-wordpress-suite') . '</li></ul>';
         }
 
+        $endpoint = rest_url('gm2-compression-test');
+        $probe    = self::probe($endpoint);
+        if (!$probe || 'none' === $probe['encoding']) {
+            echo '<div class="notice notice-warning"><p>' . esc_html__('Compression not detected. Enable server compression or the fallback option.', 'gm2-wordpress-suite') . '</p></div>';
+        }
+
         $tests = [
+            ['label' => __('Compression Test', 'gm2-wordpress-suite'), 'url' => $endpoint, 'info' => $probe],
             ['label' => __('Front Page', 'gm2-wordpress-suite'), 'url' => home_url('/')],
             ['label' => __('Plugin CSS', 'gm2-wordpress-suite'), 'url' => GM2_PLUGIN_URL . 'modules/network-payload/assets/admin.css'],
         ];
@@ -73,7 +97,7 @@ HTACCESS;
         echo '</tr></thead><tbody>';
 
         foreach ($tests as $test) {
-            $info = self::probe($test['url']);
+            $info = $test['info'] ?? self::probe($test['url']);
             echo '<tr><th scope="row">' . esc_html($test['label']) . '</th>';
             if ($info) {
                 echo '<td>' . esc_html($info['encoding']) . '</td>';
