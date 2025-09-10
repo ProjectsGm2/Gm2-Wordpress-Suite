@@ -5,6 +5,8 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+require_once __DIR__ . '/Compression.php';
+
 class Module {
     private const OPTION_KEY     = 'gm2_netpayload_settings';
     private const STATS_KEY      = 'gm2_netpayload_stats';
@@ -499,6 +501,7 @@ class Module {
                 <input type="hidden" name="gm2_regen_nextgen" value="1" />
                 <?php submit_button(__('Regenerate Next‑Gen Images', 'gm2-wordpress-suite'), 'secondary'); ?>
             </form>
+            <?php Compression::render_panel(); ?>
         </div>
         <?php
     }
