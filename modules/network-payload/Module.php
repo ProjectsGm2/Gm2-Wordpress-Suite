@@ -534,8 +534,8 @@ class Module {
     public static function register_admin_page(): void {
         self::$page_hook = add_submenu_page(
             'gm2',
-            __('Network Payload', 'gm2-wordpress-suite'),
-            __('Network Payload', 'gm2-wordpress-suite'),
+            esc_html__('Network Payload', 'gm2-wordpress-suite'),
+            esc_html__('Network Payload', 'gm2-wordpress-suite'),
             'manage_options',
             'gm2_netpayload',
             [__CLASS__, 'render_settings_page']
@@ -580,67 +580,63 @@ class Module {
 
     /** Add contextual help tabs. */
     public static function add_help_tabs(): void {
-        $screen = get_current_screen();
-        $tabs = [
-            ['gm2_np_nextgen', __('Next‑Gen Images', 'gm2-wordpress-suite'), __('Serve images in modern formats where possible.', 'gm2-wordpress-suite')],
-            ['gm2_np_gzip', __('Gzip Detection', 'gm2-wordpress-suite'), __('Detect whether the server compresses responses.', 'gm2-wordpress-suite')],
-            ['gm2_np_lazy', __('Smart Lazyload', 'gm2-wordpress-suite'), __('Delay offscreen assets for faster paint. Auto-detects the first content image and supports custom eager selectors.', 'gm2-wordpress-suite')],
-            ['gm2_np_lite', __('Lite Embeds', 'gm2-wordpress-suite'), __('Swap video iframes for click-to-load placeholders.', 'gm2-wordpress-suite')],
-            ['gm2_np_budget', __('Asset Budget', 'gm2-wordpress-suite'), __('Alert when pages exceed size thresholds.', 'gm2-wordpress-suite')],
-        ];
-        foreach ($tabs as $tab) {
-            $screen->add_help_tab([
-                'id'      => $tab[0],
-                'title'   => $tab[1],
-                'content' => '<p>' . esc_html($tab[2]) . '</p>',
-            ]);
-        }
+        $screen  = get_current_screen();
+        $content = '<p>' . esc_html__('Next‑Gen Images: Generates WebP/AVIF versions; may increase storage usage.', 'gm2-wordpress-suite') . '</p>';
+        $content .= '<p>' . esc_html__('Gzip Detection: Checks if server compression is active; turning it off could mask misconfiguration.', 'gm2-wordpress-suite') . '</p>';
+        $content .= '<p>' . esc_html__('Smart Lazy Load: Defers offscreen assets for faster paint; excessive use may delay important content.', 'gm2-wordpress-suite') . '</p>';
+        $content .= '<p>' . esc_html__('Scripts: Asset budgeting and handle rules can defer or remove scripts but may break site features if misused.', 'gm2-wordpress-suite') . '</p>';
+        $screen->add_help_tab([
+            'id'      => 'gm2_np_overview',
+            'title'   => esc_html__('Overview', 'gm2-wordpress-suite'),
+            'content' => $content,
+        ]);
     }
 
-    /** Render settings form. */
+    /** Render settings form with tabbed interface. */
     public static function render_settings_page(): void {
         if (!current_user_can('manage_options')) {
-            wp_die(__('Permission denied', 'gm2-wordpress-suite'));
+            wp_die(esc_html__('Permission denied', 'gm2-wordpress-suite'));
         }
-        if (isset($_POST['gm2_regen_nextgen'])) {
-            check_admin_referer('gm2_regen_nextgen');
-            self::start_regeneration(true);
-            echo '<div class="updated"><p>' . esc_html__('Regeneration started in the background.', 'gm2-wordpress-suite') . '</p></div>';
-        }
+
+        $tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : 'status';
+
         if (isset($_POST[self::OPTION_KEY])) {
             check_admin_referer('gm2_netpayload_settings');
             $input = wp_unslash($_POST[self::OPTION_KEY]);
             $opts  = self::get_settings();
-            $opts['nextgen_images'] = !empty($input['nextgen_images']);
-            $opts['webp']           = !empty($input['webp']);
-            $opts['avif']           = !empty($input['avif']);
-            $opts['no_originals']   = !empty($input['no_originals']);
-            $opts['big_image_cap']  = isset($input['big_image_cap']) ? intval($input['big_image_cap']) : self::$defaults['big_image_cap'];
-            $opts['gzip_detection'] = isset($input['gzip_detection']) ? sanitize_text_field($input['gzip_detection']) : 'detect';
-            $opts['fallback_gzip']  = !empty($input['fallback_gzip']);
-            $opts['smart_lazyload'] = !empty($input['smart_lazyload']);
-            $opts['auto_hero']      = !empty($input['auto_hero']);
-            $opts['eager_selectors'] = isset($input['eager_selectors'])
-                ? array_values(array_filter(array_map('sanitize_text_field', explode("\n", $input['eager_selectors']))))
-                : [];
-            $opts['lite_embeds']    = !empty($input['lite_embeds']);
-            $opts['asset_budget']   = !empty($input['asset_budget']);
-            $limit_mb = isset($input['asset_budget_limit']) ? floatval(sanitize_text_field($input['asset_budget_limit'])) : 0;
-            $opts['asset_budget_limit'] = $limit_mb > 0 ? (int)($limit_mb * 1024 * 1024) : self::$defaults['asset_budget_limit'];
-            $opts['handle_rules']   = [];
-            if (!empty($input['handle_rules']) && is_array($input['handle_rules'])) {
+            $bools = ['nextgen_images', 'webp', 'avif', 'no_originals', 'fallback_gzip', 'smart_lazyload', 'auto_hero', 'lite_embeds', 'asset_budget'];
+            foreach ($bools as $b) {
+                if (array_key_exists($b, $input)) {
+                    $opts[$b] = !empty($input[$b]);
+                }
+            }
+            if (array_key_exists('big_image_cap', $input)) {
+                $opts['big_image_cap'] = intval($input['big_image_cap']);
+            }
+            if (array_key_exists('gzip_detection', $input)) {
+                $opts['gzip_detection'] = sanitize_text_field($input['gzip_detection']);
+            }
+            if (array_key_exists('eager_selectors', $input)) {
+                $opts['eager_selectors'] = array_values(array_filter(array_map('sanitize_text_field', explode("\n", $input['eager_selectors']))));
+            }
+            if (array_key_exists('asset_budget_limit', $input)) {
+                $limit_mb = floatval(sanitize_text_field($input['asset_budget_limit']));
+                $opts['asset_budget_limit'] = $limit_mb > 0 ? (int)($limit_mb * 1024 * 1024) : self::$defaults['asset_budget_limit'];
+            }
+            if (array_key_exists('handle_rules', $input) && is_array($input['handle_rules'])) {
+                $opts['handle_rules'] = [];
                 foreach (['scripts', 'styles'] as $type) {
                     foreach ($input['handle_rules'][$type] ?? [] as $h => $rule) {
                         $h = sanitize_key($h);
                         $entry = [
                             'dequeue' => [
-                                'front_page'   => !empty($rule['dequeue_front']),
-                                'page_template'=> sanitize_text_field($rule['page_template'] ?? ''),
-                                'shortcode'    => sanitize_text_field($rule['shortcode'] ?? ''),
+                                'front_page'    => !empty($rule['dequeue_front']),
+                                'page_template' => sanitize_text_field($rule['page_template'] ?? ''),
+                                'shortcode'     => sanitize_text_field($rule['shortcode'] ?? ''),
                             ],
                         ];
                         if ($type === 'scripts') {
-                            $attr = sanitize_key($rule['attr'] ?? '');
+                            $attr          = sanitize_key($rule['attr'] ?? '');
                             $entry['attr'] = in_array($attr, ['defer', 'async'], true) ? $attr : '';
                         } else {
                             $entry['inline'] = !empty($rule['inline']);
@@ -658,124 +654,116 @@ class Module {
             }
             echo '<div class="updated"><p>' . esc_html__('Settings saved.', 'gm2-wordpress-suite') . '</p></div>';
         }
+
+        if (isset($_POST['gm2_regen_nextgen'])) {
+            check_admin_referer('gm2_regen_nextgen');
+            self::start_regeneration(true);
+            echo '<div class="updated"><p>' . esc_html__('Regeneration started in the background.', 'gm2-wordpress-suite') . '</p></div>';
+        }
+
         $opts  = self::get_settings();
         $stats = get_option(self::STATS_KEY, ['average' => 0, 'budget' => 0]);
-        ?>
-        <div class="wrap gm2-netpayload-wrap">
-            <h1><?php esc_html_e('Network Payload Optimizer', 'gm2-wordpress-suite'); ?></h1>
-            <p class="status"><?php printf(esc_html__('7‑day average payload: %s KB', 'gm2-wordpress-suite'), number_format_i18n(floatval($stats['average']), 2)); ?></p>
-            <form method="post">
-                <?php wp_nonce_field('gm2_netpayload_settings'); ?>
-                <table class="form-table" role="presentation">
-                    <tr>
-                        <th scope="row"><?php esc_html_e('Next‑Gen Images', 'gm2-wordpress-suite'); ?></th>
-                        <td><input type="checkbox" name="<?php echo esc_attr(self::OPTION_KEY); ?>[nextgen_images]" value="1" <?php checked($opts['nextgen_images']); ?> /></td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><?php esc_html_e('Enable WebP', 'gm2-wordpress-suite'); ?></th>
-                        <td><input type="checkbox" name="<?php echo esc_attr(self::OPTION_KEY); ?>[webp]" value="1" <?php checked($opts['webp']); ?> /></td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><?php esc_html_e('Enable AVIF', 'gm2-wordpress-suite'); ?></th>
-                        <td><input type="checkbox" name="<?php echo esc_attr(self::OPTION_KEY); ?>[avif]" value="1" <?php checked($opts['avif']); ?> /></td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><?php esc_html_e("Don't convert originals", 'gm2-wordpress-suite'); ?></th>
-                        <td><input type="checkbox" name="<?php echo esc_attr(self::OPTION_KEY); ?>[no_originals]" value="1" <?php checked($opts['no_originals']); ?> /></td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><?php esc_html_e('Big image cap', 'gm2-wordpress-suite'); ?></th>
-                        <td><input type="number" name="<?php echo esc_attr(self::OPTION_KEY); ?>[big_image_cap]" value="<?php echo esc_attr(intval($opts['big_image_cap'])); ?>" /></td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><?php esc_html_e('Gzip Detection', 'gm2-wordpress-suite'); ?></th>
-                        <td>
-                            <select name="<?php echo esc_attr(self::OPTION_KEY); ?>[gzip_detection]">
-                                <option value="detect" <?php selected($opts['gzip_detection'], 'detect'); ?>><?php esc_html_e('Detect', 'gm2-wordpress-suite'); ?></option>
-                                <option value="off" <?php selected($opts['gzip_detection'], 'off'); ?>><?php esc_html_e('Off', 'gm2-wordpress-suite'); ?></option>
-                            </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><?php esc_html_e('Fallback Gzip', 'gm2-wordpress-suite'); ?></th>
-                        <td><input type="checkbox" name="<?php echo esc_attr(self::OPTION_KEY); ?>[fallback_gzip]" value="1" <?php checked($opts['fallback_gzip']); ?> /></td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><?php esc_html_e('Smart Lazyload', 'gm2-wordpress-suite'); ?></th>
-                        <td><input type="checkbox" name="<?php echo esc_attr(self::OPTION_KEY); ?>[smart_lazyload]" value="1" <?php checked($opts['smart_lazyload']); ?> /></td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><?php esc_html_e('Auto Hero', 'gm2-wordpress-suite'); ?></th>
-                        <td><input type="checkbox" name="<?php echo esc_attr(self::OPTION_KEY); ?>[auto_hero]" value="1" <?php checked($opts['auto_hero']); ?> /></td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><?php esc_html_e('Eager Selectors', 'gm2-wordpress-suite'); ?></th>
-                        <td>
-                            <textarea name="<?php echo esc_attr(self::OPTION_KEY); ?>[eager_selectors]" rows="3" cols="50"><?php echo esc_textarea(implode("\n", $opts['eager_selectors'])); ?></textarea>
-                            <p class="description"><?php esc_html_e('One CSS selector per line.', 'gm2-wordpress-suite'); ?></p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><?php esc_html_e('Lite Embeds', 'gm2-wordpress-suite'); ?></th>
-                        <td><input type="checkbox" name="<?php echo esc_attr(self::OPTION_KEY); ?>[lite_embeds]" value="1" <?php checked($opts['lite_embeds']); ?> /></td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><?php esc_html_e('Asset Budget', 'gm2-wordpress-suite'); ?></th>
-                        <td><input type="checkbox" name="<?php echo esc_attr(self::OPTION_KEY); ?>[asset_budget]" value="1" <?php checked($opts['asset_budget']); ?> /></td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><?php esc_html_e('Asset Budget Limit (MB)', 'gm2-wordpress-suite'); ?></th>
-                        <td><input type="number" step="0.1" min="0" name="<?php echo esc_attr(self::OPTION_KEY); ?>[asset_budget_limit]" value="<?php echo esc_attr(round($opts['asset_budget_limit'] / 1024 / 1024, 2)); ?>" /></td>
-                    </tr>
-                </table>
-                <h2><?php esc_html_e('Handle Auditor', 'gm2-wordpress-suite'); ?></h2>
-                <?php
-                $handles = $stats['handles'] ?? ['scripts' => [], 'styles' => []];
-                foreach (['scripts' => __('Scripts', 'gm2-wordpress-suite'), 'styles' => __('Styles', 'gm2-wordpress-suite')] as $type => $label) {
-                    $list = $handles[$type] ?? [];
-                    if (!$list) {
-                        continue;
-                    }
-                    uasort($list, function ($a, $b) {
-                        return intval($b['bytes'] ?? 0) <=> intval($a['bytes'] ?? 0);
-                    });
-                    echo '<h3>' . esc_html($label) . '</h3>';
-                    echo '<table class="widefat"><thead><tr><th>' . esc_html__('Handle', 'gm2-wordpress-suite') . '</th><th>' . esc_html__('Size', 'gm2-wordpress-suite') . '</th><th>' . esc_html__('Dependencies', 'gm2-wordpress-suite') . '</th><th>' . esc_html__('Loaded On', 'gm2-wordpress-suite') . '</th><th>' . esc_html__('Rules', 'gm2-wordpress-suite') . '</th></tr></thead><tbody>';
-                    foreach ($list as $h => $info) {
-                        $size = number_format_i18n(intval($info['bytes']) / 1024, 2) . ' KB';
-                        $deps = implode(', ', array_map('esc_html', $info['deps'] ?? []));
-                        $ctxs = implode(', ', array_map('esc_html', $info['contexts'] ?? []));
-                        $rule = $opts['handle_rules'][$type][$h] ?? [];
-                        echo '<tr>';
-                        echo '<td>' . esc_html($h) . '</td>';
-                        echo '<td>' . esc_html($size) . '</td>';
-                        echo '<td>' . $deps . '</td>';
-                        echo '<td>' . $ctxs . '</td>';
-                        echo '<td>';
-                        echo '<label><input type="checkbox" name="' . esc_attr(self::OPTION_KEY) . '[handle_rules][' . esc_attr($type) . '][' . esc_attr($h) . '][dequeue_front]" value="1" ' . checked($rule['dequeue']['front_page'] ?? false, true, false) . ' /> ' . esc_html__('Front', 'gm2-wordpress-suite') . '</label><br />';
-                        echo '<label>' . esc_html__('Template', 'gm2-wordpress-suite') . ': <input type="text" name="' . esc_attr(self::OPTION_KEY) . '[handle_rules][' . esc_attr($type) . '][' . esc_attr($h) . '][page_template]" value="' . esc_attr($rule['dequeue']['page_template'] ?? '') . '" /></label><br />';
-                        echo '<label>' . esc_html__('Shortcode', 'gm2-wordpress-suite') . ': <input type="text" name="' . esc_attr(self::OPTION_KEY) . '[handle_rules][' . esc_attr($type) . '][' . esc_attr($h) . '][shortcode]" value="' . esc_attr($rule['dequeue']['shortcode'] ?? '') . '" /></label><br />';
-                        if ($type === 'scripts') {
-                            $attr = $rule['attr'] ?? '';
-                            echo '<label>' . esc_html__('Attr', 'gm2-wordpress-suite') . ': <select name="' . esc_attr(self::OPTION_KEY) . '[handle_rules][scripts][' . esc_attr($h) . '][attr]"><option value="">' . esc_html__('None', 'gm2-wordpress-suite') . '</option><option value="defer"' . selected($attr, 'defer', false) . '>defer</option><option value="async"' . selected($attr, 'async', false) . '>async</option></select></label>';
-                        } else {
-                            echo '<label><input type="checkbox" name="' . esc_attr(self::OPTION_KEY) . '[handle_rules][styles][' . esc_attr($h) . '][inline]" value="1" ' . checked($rule['inline'] ?? false, true, false) . ' /> ' . esc_html__('Inline ≤2KB', 'gm2-wordpress-suite') . '</label>';
-                        }
-                        echo '</td></tr>';
-                    }
-                    echo '</tbody></table>';
+
+        echo '<div class="wrap gm2-netpayload-wrap">';
+        echo '<h1>' . esc_html__('Network Payload Optimizer', 'gm2-wordpress-suite') . '</h1>';
+
+        $tabs = [
+            'status'      => esc_html__('Status', 'gm2-wordpress-suite'),
+            'images'      => esc_html__('Images', 'gm2-wordpress-suite'),
+            'compression' => esc_html__('Compression', 'gm2-wordpress-suite'),
+            'lazy'        => esc_html__('Lazy Load', 'gm2-wordpress-suite'),
+            'scripts'     => esc_html__('Scripts', 'gm2-wordpress-suite'),
+        ];
+        echo '<h2 class="nav-tab-wrapper">';
+        foreach ($tabs as $slug => $label) {
+            $class = $tab === $slug ? 'nav-tab nav-tab-active' : 'nav-tab';
+            $url   = add_query_arg('tab', $slug, menu_page_url('gm2_netpayload', false));
+            echo '<a class="' . esc_attr($class) . '" href="' . esc_url($url) . '">' . esc_html($label) . '</a>';
+        }
+        echo '</h2>';
+
+        if ($tab === 'status') {
+            echo '<p class="status">' . sprintf(esc_html__('7‑day average payload: %s KB', 'gm2-wordpress-suite'), number_format_i18n(floatval($stats['average']), 2)) . '</p>';
+            echo '<form method="post" style="margin-top:1em;">';
+            wp_nonce_field('gm2_regen_nextgen');
+            echo '<input type="hidden" name="gm2_regen_nextgen" value="1" />';
+            submit_button(esc_html__('Regenerate Next‑Gen Images', 'gm2-wordpress-suite'), 'secondary');
+            echo '</form>';
+            Compression::render_panel();
+        } elseif ($tab === 'images') {
+            echo '<form method="post">';
+            wp_nonce_field('gm2_netpayload_settings');
+            echo '<table class="form-table" role="presentation">';
+            echo '<tr><th scope="row">' . esc_html__('Next‑Gen Images', 'gm2-wordpress-suite') . '</th><td><input type="checkbox" name="' . esc_attr(self::OPTION_KEY) . '[nextgen_images]" value="1" ' . checked($opts['nextgen_images'], true, false) . ' /></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__('Enable WebP', 'gm2-wordpress-suite') . '</th><td><input type="checkbox" name="' . esc_attr(self::OPTION_KEY) . '[webp]" value="1" ' . checked($opts['webp'], true, false) . ' /></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__('Enable AVIF', 'gm2-wordpress-suite') . '</th><td><input type="checkbox" name="' . esc_attr(self::OPTION_KEY) . '[avif]" value="1" ' . checked($opts['avif'], true, false) . ' /></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__("Don't convert originals", 'gm2-wordpress-suite') . '</th><td><input type="checkbox" name="' . esc_attr(self::OPTION_KEY) . '[no_originals]" value="1" ' . checked($opts['no_originals'], true, false) . ' /></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__('Big image cap', 'gm2-wordpress-suite') . '</th><td><input type="number" name="' . esc_attr(self::OPTION_KEY) . '[big_image_cap]" value="' . esc_attr(intval($opts['big_image_cap'])) . '" /></td></tr>';
+            echo '</table>';
+            submit_button();
+            echo '</form>';
+        } elseif ($tab === 'compression') {
+            echo '<form method="post">';
+            wp_nonce_field('gm2_netpayload_settings');
+            echo '<table class="form-table" role="presentation">';
+            echo '<tr><th scope="row">' . esc_html__('Gzip Detection', 'gm2-wordpress-suite') . '</th><td><select name="' . esc_attr(self::OPTION_KEY) . '[gzip_detection]"><option value="detect" ' . selected($opts['gzip_detection'], 'detect', false) . '>' . esc_html__('Detect', 'gm2-wordpress-suite') . '</option><option value="off" ' . selected($opts['gzip_detection'], 'off', false) . '>' . esc_html__('Off', 'gm2-wordpress-suite') . '</option></select></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__('Fallback Gzip', 'gm2-wordpress-suite') . '</th><td><input type="checkbox" name="' . esc_attr(self::OPTION_KEY) . '[fallback_gzip]" value="1" ' . checked($opts['fallback_gzip'], true, false) . ' /></td></tr>';
+            echo '</table>';
+            submit_button();
+            echo '</form>';
+        } elseif ($tab === 'lazy') {
+            echo '<form method="post">';
+            wp_nonce_field('gm2_netpayload_settings');
+            echo '<table class="form-table" role="presentation">';
+            echo '<tr><th scope="row">' . esc_html__('Smart Lazyload', 'gm2-wordpress-suite') . '</th><td><input type="checkbox" name="' . esc_attr(self::OPTION_KEY) . '[smart_lazyload]" value="1" ' . checked($opts['smart_lazyload'], true, false) . ' /></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__('Auto Hero', 'gm2-wordpress-suite') . '</th><td><input type="checkbox" name="' . esc_attr(self::OPTION_KEY) . '[auto_hero]" value="1" ' . checked($opts['auto_hero'], true, false) . ' /></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__('Eager Selectors', 'gm2-wordpress-suite') . '</th><td><textarea name="' . esc_attr(self::OPTION_KEY) . '[eager_selectors]" rows="3" cols="50">' . esc_textarea(implode("\n", $opts['eager_selectors'])) . '</textarea><p class="description">' . esc_html__('One CSS selector per line.', 'gm2-wordpress-suite') . '</p></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__('Lite Embeds', 'gm2-wordpress-suite') . '</th><td><input type="checkbox" name="' . esc_attr(self::OPTION_KEY) . '[lite_embeds]" value="1" ' . checked($opts['lite_embeds'], true, false) . ' /></td></tr>';
+            echo '</table>';
+            submit_button();
+            echo '</form>';
+        } elseif ($tab === 'scripts') {
+            echo '<form method="post">';
+            wp_nonce_field('gm2_netpayload_settings');
+            echo '<table class="form-table" role="presentation">';
+            echo '<tr><th scope="row">' . esc_html__('Asset Budget', 'gm2-wordpress-suite') . '</th><td><input type="checkbox" name="' . esc_attr(self::OPTION_KEY) . '[asset_budget]" value="1" ' . checked($opts['asset_budget'], true, false) . ' /></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__('Asset Budget Limit (MB)', 'gm2-wordpress-suite') . '</th><td><input type="number" step="0.1" min="0" name="' . esc_attr(self::OPTION_KEY) . '[asset_budget_limit]" value="' . esc_attr(round($opts['asset_budget_limit'] / 1024 / 1024, 2)) . '" /></td></tr>';
+            echo '</table>';
+
+            $handles = $stats['handles'] ?? ['scripts' => [], 'styles' => []];
+            echo '<h2>' . esc_html__('Handle Auditor', 'gm2-wordpress-suite') . '</h2>';
+            foreach (['scripts' => esc_html__('Scripts', 'gm2-wordpress-suite'), 'styles' => esc_html__('Styles', 'gm2-wordpress-suite')] as $type => $label) {
+                $list = $handles[$type] ?? [];
+                if (!$list) {
+                    continue;
                 }
-                ?>
-                <?php submit_button(); ?>
-            </form>
-            <form method="post" style="margin-top:1em;">
-                <?php wp_nonce_field('gm2_regen_nextgen'); ?>
-                <input type="hidden" name="gm2_regen_nextgen" value="1" />
-                <?php submit_button(__('Regenerate Next‑Gen Images', 'gm2-wordpress-suite'), 'secondary'); ?>
-            </form>
-            <?php Compression::render_panel(); ?>
-        </div>
-        <?php
+                uasort($list, function ($a, $b) { return intval($b['bytes'] ?? 0) <=> intval($a['bytes'] ?? 0); });
+                echo '<h3>' . esc_html($label) . '</h3>';
+                echo '<table class="widefat"><thead><tr><th>' . esc_html__('Handle', 'gm2-wordpress-suite') . '</th><th>' . esc_html__('Size', 'gm2-wordpress-suite') . '</th><th>' . esc_html__('Dependencies', 'gm2-wordpress-suite') . '</th><th>' . esc_html__('Loaded On', 'gm2-wordpress-suite') . '</th><th>' . esc_html__('Rules', 'gm2-wordpress-suite') . '</th></tr></thead><tbody>';
+                foreach ($list as $h => $info) {
+                    $size = number_format_i18n(intval($info['bytes']) / 1024, 2) . ' KB';
+                    $deps = implode(', ', array_map('esc_html', $info['deps'] ?? []));
+                    $ctxs = implode(', ', array_map('esc_html', $info['contexts'] ?? []));
+                    $rule = $opts['handle_rules'][$type][$h] ?? [];
+                    echo '<tr><td>' . esc_html($h) . '</td><td>' . esc_html($size) . '</td><td>' . $deps . '</td><td>' . $ctxs . '</td><td>';
+                    echo '<label><input type="checkbox" name="' . esc_attr(self::OPTION_KEY) . '[handle_rules][' . esc_attr($type) . '][' . esc_attr($h) . '][dequeue_front]" value="1" ' . checked($rule['dequeue']['front_page'] ?? false, true, false) . ' /> ' . esc_html__('Front', 'gm2-wordpress-suite') . '</label><br />';
+                    echo '<label>' . esc_html__('Template', 'gm2-wordpress-suite') . ': <input type="text" name="' . esc_attr(self::OPTION_KEY) . '[handle_rules][' . esc_attr($type) . '][' . esc_attr($h) . '][page_template]" value="' . esc_attr($rule['dequeue']['page_template'] ?? '') . '" /></label><br />';
+                    echo '<label>' . esc_html__('Shortcode', 'gm2-wordpress-suite') . ': <input type="text" name="' . esc_attr(self::OPTION_KEY) . '[handle_rules][' . esc_attr($type) . '][' . esc_attr($h) . '][shortcode]" value="' . esc_attr($rule['dequeue']['shortcode'] ?? '') . '" /></label><br />';
+                    if ($type === 'scripts') {
+                        $attr = $rule['attr'] ?? '';
+                        echo '<label>' . esc_html__('Attr', 'gm2-wordpress-suite') . ': <select name="' . esc_attr(self::OPTION_KEY) . '[handle_rules][scripts][' . esc_attr($h) . '][attr]"><option value="">' . esc_html__('None', 'gm2-wordpress-suite') . '</option><option value="defer"' . selected($attr, 'defer', false) . '>defer</option><option value="async"' . selected($attr, 'async', false) . '>async</option></select></label>';
+                    } else {
+                        echo '<label><input type="checkbox" name="' . esc_attr(self::OPTION_KEY) . '[handle_rules][styles][' . esc_attr($h) . '][inline]" value="1" ' . checked($rule['inline'] ?? false, true, false) . ' /> ' . esc_html__('Inline ≤2KB', 'gm2-wordpress-suite') . '</label>';
+                    }
+                    echo '</td></tr>';
+                }
+                echo '</tbody></table>';
+            }
+            submit_button();
+            echo '</form>';
+        }
+
+        echo '</div>';
     }
 
     /** Register REST route for beacon data. */
