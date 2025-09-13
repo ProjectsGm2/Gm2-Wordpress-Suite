@@ -20,7 +20,7 @@ class GM2_Field_Gallery extends GM2_Field {
         echo '<div class="gm2-media-field"><input type="hidden" name="' . esc_attr( $this->key ) . '" value="' . esc_attr( implode( ',', $ids ) ) . '"' . $disabled . $placeholder_attr . ' />' . $button . $preview . '</div>';
     }
 
-    public function sanitize( $value ) {
+    public function sanitize_field_value( $value ) {
         $ids = is_array( $value ) ? $value : explode( ',', (string) $value );
         $ids = array_filter( array_map( 'absint', $ids ) );
         return $ids;

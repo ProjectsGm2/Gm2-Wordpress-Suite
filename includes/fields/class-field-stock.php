@@ -13,7 +13,7 @@ class GM2_Field_Stock extends GM2_Field {
         echo '<input type="number" name="' . esc_attr( $this->key ) . '" value="' . esc_attr( $value ) . '" min="' . esc_attr( $min ) . '"' . $max_attr . ' class="gm2-stock"' . $disabled . $placeholder_attr . ' />';
     }
 
-    public function sanitize( $value ) {
+    public function sanitize_field_value( $value ) {
         if ( ! is_numeric( $value ) ) {
             return '';
         }

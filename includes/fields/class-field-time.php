@@ -12,7 +12,7 @@ class GM2_Field_Time extends GM2_Field {
         echo '<input type="time" name="' . esc_attr( $this->key ) . '" value="' . esc_attr( $value ) . '"' . $min . $max . $disabled . $placeholder_attr . ' />';
     }
 
-    public function sanitize( $value ) {
+    public function sanitize_field_value( $value ) {
         $value = is_string( $value ) ? trim( $value ) : '';
         if ( $value === '' ) {
             return '';

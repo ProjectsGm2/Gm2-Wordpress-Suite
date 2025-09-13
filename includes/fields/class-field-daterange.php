@@ -14,7 +14,7 @@ class GM2_Field_Daterange extends GM2_Field {
         echo '<input type="date" name="' . esc_attr( $this->key ) . '[end]" value="' . esc_attr( $end ) . '"' . $disabled . $placeholder_attr . ' />';
     }
 
-    public function sanitize( $value ) {
+    public function sanitize_field_value( $value ) {
         $result = array( 'start' => '', 'end' => '' );
         if ( ! is_array( $value ) ) {
             return $result;

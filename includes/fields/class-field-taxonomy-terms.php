@@ -17,7 +17,7 @@ class GM2_Field_Taxonomy_Terms extends GM2_Field {
         echo '</select>';
     }
 
-    public function sanitize( $value ) {
+    public function sanitize_field_value( $value ) {
         $value = is_array( $value ) ? $value : array();
         $taxonomy = $this->args['taxonomy'] ?? 'category';
         $clean  = array();

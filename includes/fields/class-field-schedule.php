@@ -39,7 +39,7 @@ class GM2_Field_Schedule extends GM2_Field {
         echo '</div>';
     }
 
-    public function sanitize( $value ) {
+    public function sanitize_field_value( $value ) {
         $clean = array();
         if ( is_array( $value ) && isset( $value['day'], $value['start'], $value['end'] ) ) {
             $count = count( $value['day'] );

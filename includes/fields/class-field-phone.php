@@ -10,7 +10,7 @@ class GM2_Field_Phone extends GM2_Field {
         echo '<input type="tel" name="' . esc_attr( $this->key ) . '" value="' . esc_attr( $value ) . '"' . $disabled . $placeholder_attr . ' />';
     }
 
-    public function sanitize( $value ) {
+    public function sanitize_field_value( $value ) {
         $value = sanitize_text_field( $value );
         return preg_match( '/^\+?[0-9\s\-()]+$/', $value ) ? $value : '';
     }

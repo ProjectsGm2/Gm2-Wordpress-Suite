@@ -10,7 +10,7 @@ class GM2_Field_Email extends GM2_Field {
         echo '<input type="email" name="' . esc_attr( $this->key ) . '" value="' . esc_attr( $value ) . '"' . $disabled . $placeholder_attr . ' />';
     }
 
-    public function sanitize( $value ) {
+    public function sanitize_field_value( $value ) {
         $value = sanitize_email( $value );
         return is_email( $value ) ? $value : '';
     }

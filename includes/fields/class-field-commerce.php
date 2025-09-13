@@ -10,7 +10,7 @@ class GM2_Field_Commerce extends GM2_Field {
         echo '<input type="text" name="' . esc_attr( $this->key ) . '" value="' . esc_attr( $value ) . '" class="gm2-commerce"' . $disabled . $placeholder_attr . ' />';
     }
 
-    public function sanitize( $value ) {
+    public function sanitize_field_value( $value ) {
         return is_numeric( $value ) ? $value : '';
     }
 }

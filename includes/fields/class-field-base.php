@@ -33,7 +33,35 @@ abstract class GM2_Field {
         echo '<input type="text" name="' . esc_attr( $this->key ) . '" value="' . esc_attr( $value ) . '"' . $disabled . $placeholder_attr . ' />';
     }
 
+    /**
+     * Sanitize a value for this field.
+     *
+     * @param mixed $value Raw value.
+     * @return mixed Sanitized value after filters.
+     */
     public function sanitize( $value ) {
+        $value = $this->sanitize_field_value( $value );
+
+        /**
+         * Filters the sanitized value for a field.
+         *
+         * The dynamic portion of the hook name, {$this->key}, refers to the field key.
+         *
+         * @param mixed     $value Sanitized value.
+         * @param GM2_Field $this  Field instance.
+         */
+        return apply_filters( "gm2_cp_field_sanitize_{$this->key}", $value, $this );
+    }
+
+    /**
+     * Default field-specific sanitization callback.
+     *
+     * Child classes may override this to implement custom sanitization logic.
+     *
+     * @param mixed $value Raw value.
+     * @return mixed Sanitized value.
+     */
+    protected function sanitize_field_value( $value ) {
         return sanitize_text_field( $value );
     }
 

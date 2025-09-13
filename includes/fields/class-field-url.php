@@ -10,7 +10,7 @@ class GM2_Field_Url extends GM2_Field {
         echo '<input type="url" name="' . esc_attr( $this->key ) . '" value="' . esc_attr( $value ) . '"' . $disabled . $placeholder_attr . ' />';
     }
 
-    public function sanitize( $value ) {
+    public function sanitize_field_value( $value ) {
         $value = esc_url_raw( $value );
         return $value && filter_var( $value, FILTER_VALIDATE_URL ) ? $value : '';
     }

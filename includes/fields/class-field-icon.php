@@ -38,7 +38,7 @@ class GM2_Field_Icon extends GM2_Field {
         echo '</div>';
     }
 
-    public function sanitize( $value ) {
+    public function sanitize_field_value( $value ) {
         return sanitize_text_field( $value );
     }
 }

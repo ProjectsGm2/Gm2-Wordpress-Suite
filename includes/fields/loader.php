@@ -52,9 +52,25 @@ require_once __DIR__ . '/class-field-user.php';
 
 $gm2_field_types = array();
 
+/**
+ * Register a custom field type class.
+ *
+ * Fires the `gm2_cp_register_field_type` action after a type is registered.
+ *
+ * @param string $type  Field type identifier.
+ * @param string $class Fully qualified class name.
+ */
 function gm2_register_field_type( $type, $class ) {
     global $gm2_field_types;
     $gm2_field_types[ $type ] = $class;
+
+    /**
+     * Fires after a field type is registered.
+     *
+     * @param string $type  Field type identifier.
+     * @param string $class Fully qualified class name.
+     */
+    do_action( 'gm2_cp_register_field_type', $type, $class );
 }
 
 function gm2_get_field_type_class( $type ) {

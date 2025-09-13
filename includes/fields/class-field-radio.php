@@ -13,7 +13,7 @@ class GM2_Field_Radio extends GM2_Field {
         }
     }
 
-    public function sanitize( $value ) {
+    public function sanitize_field_value( $value ) {
         return sanitize_text_field( $value );
     }
 }
