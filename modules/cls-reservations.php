@@ -27,11 +27,28 @@ function enqueue_assets(): void {
 }
 
 function get_reservations(): array {
-    $reservations = get_option('plugin_cls_reservations', []);
-    if (!is_array($reservations)) {
-        $reservations = [];
+    $rows = get_option('plugin_cls_reservations', []);
+    if (!is_array($rows)) {
+        $rows = [];
     }
-    return array_map('sanitize_text_field', $reservations);
+    $reservations = [];
+    foreach ($rows as $row) {
+        if (!is_array($row)) {
+            continue;
+        }
+        $selector = sanitize_text_field($row['selector'] ?? '');
+        if ($selector === '') {
+            continue;
+        }
+        $min = isset($row['min']) ? absint($row['min']) : 0;
+        $unreserve = !empty($row['unreserve']);
+        $reservations[] = [
+            'selector'  => $selector,
+            'min'       => $min,
+            'unreserve' => $unreserve,
+        ];
+    }
+    return $reservations;
 }
 
 function is_sticky_header_enabled(): bool {
