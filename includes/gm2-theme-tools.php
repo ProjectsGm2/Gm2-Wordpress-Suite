@@ -123,6 +123,80 @@ function gm2_field_image($key, $size = 'full', $attr = [], $object_id = null, $c
 }
 
 /**
+ * Format a numeric field value as currency.
+ *
+ * Fetches a field with {@see gm2_field()} and wraps the formatted amount in a
+ * span element. The returned HTML uses a dollar symbol and two decimal places.
+ *
+ * Example usage:
+ * `echo gm2_field_currency( 'price' );`
+ *
+ * @param string   $key          Meta field key.
+ * @param mixed    $default      Default value if the field is empty.
+ * @param int|null $object_id    Context object ID. Defaults to current post.
+ * @param string   $context_type Context type.
+ * @return string HTML markup or empty string when no value is available.
+ */
+function gm2_field_currency($key, $default = '', $object_id = null, $context_type = 'post') {
+    $value = gm2_field($key, $default, $object_id, $context_type);
+    if ($value === '' || $value === null) {
+        return '';
+    }
+
+    $amount    = (float) preg_replace('/[^0-9.\-]/', '', (string) $value);
+    $formatted = number_format_i18n($amount, 2);
+    return sprintf('<span class="gm2-currency">$%s</span>', esc_html($formatted));
+}
+
+/**
+ * Generate a telephone link from a field value.
+ *
+ * Example usage:
+ * `echo gm2_field_phone_link( 'support_phone' );`
+ *
+ * @param string   $key          Meta field key.
+ * @param mixed    $default      Default value if the field is empty.
+ * @param int|null $object_id    Context object ID. Defaults to current post.
+ * @param string   $context_type Context type.
+ * @return string HTML anchor or empty string when no value is available.
+ */
+function gm2_field_phone_link($key, $default = '', $object_id = null, $context_type = 'post') {
+    $number = gm2_field($key, $default, $object_id, $context_type);
+    if ($number === '' || $number === null) {
+        return '';
+    }
+
+    $tel = preg_replace('/[^0-9+]/', '', (string) $number);
+    if ($tel === '') {
+        return '';
+    }
+
+    return sprintf('<a href="tel:%s">%s</a>', esc_attr($tel), esc_html($number));
+}
+
+/**
+ * Generate a Google Maps link from an address field.
+ *
+ * Example usage:
+ * `echo gm2_field_map_link( 'address' );`
+ *
+ * @param string   $key          Meta field key.
+ * @param mixed    $default      Default value if the field is empty.
+ * @param int|null $object_id    Context object ID. Defaults to current post.
+ * @param string   $context_type Context type.
+ * @return string HTML anchor or empty string when no value is available.
+ */
+function gm2_field_map_link($key, $default = '', $object_id = null, $context_type = 'post') {
+    $address = gm2_field($key, $default, $object_id, $context_type);
+    if ($address === '' || $address === null) {
+        return '';
+    }
+
+    $url = 'https://www.google.com/maps/search/?api=1&query=' . rawurlencode($address);
+    return sprintf('<a href="%s" target="_blank" rel="noopener">%s</a>', esc_url($url), esc_html($address));
+}
+
+/**
  * Locate a field definition from stored field groups.
  *
  * @param string $key Field key.
