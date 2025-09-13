@@ -15,6 +15,27 @@ class ThemeToolsTest extends WP_UnitTestCase {
         $this->assertStringContainsString('src=', $html);
     }
 
+    public function test_currency_phone_and_map_helpers_format_values() {
+        $post_id = self::factory()->post->create([
+            'meta_input' => [
+                'price'   => '1234.5',
+                'phone'   => '(123) 555-7890',
+                'address' => '1600 Amphitheatre Pkwy, Mountain View, CA',
+            ],
+        ]);
+
+        $currency = gm2_field_currency('price', '', $post_id);
+        $this->assertSame('<span class="gm2-currency">$1,234.50</span>', $currency);
+
+        $phone = gm2_field_phone_link('phone', '', $post_id);
+        $this->assertSame('<a href="tel:1235557890">(123) 555-7890</a>', $phone);
+
+        $map_url = 'https://www.google.com/maps/search/?api=1&query=' . rawurlencode('1600 Amphitheatre Pkwy, Mountain View, CA');
+        $expected = '<a href="' . esc_url($map_url) . '" target="_blank" rel="noopener">1600 Amphitheatre Pkwy, Mountain View, CA</a>';
+        $map = gm2_field_map_link('address', '', $post_id);
+        $this->assertSame($expected, $map);
+    }
+
     public function test_theme_json_snippet_is_generated() {
         update_option('gm2_enable_theme_json', '1');
         update_option('gm2_field_groups', [
