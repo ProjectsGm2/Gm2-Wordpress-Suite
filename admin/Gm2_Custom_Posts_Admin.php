@@ -759,26 +759,87 @@ class Gm2_Custom_Posts_Admin {
             wp_safe_redirect(admin_url('admin.php?page=gm2-custom-posts&gm2_pt_deleted=0'));
             exit;
         }
-        if (count($slugs) > 1 || $bulk_action === 'delete') {
-            check_admin_referer('bulk-gm2-cpts');
+
+        $confirming = !empty($_POST['gm2_confirm_delete']);
+        if ($confirming) {
+            check_admin_referer('gm2_confirm_delete_post_type');
         } else {
-            check_admin_referer('gm2_delete_post_type_' . $slugs[0]);
+            if (count($slugs) > 1 || $bulk_action === 'delete') {
+                check_admin_referer('bulk-gm2-cpts');
+            } else {
+                check_admin_referer('gm2_delete_post_type_' . $slugs[0]);
+            }
+            $counts = [];
+            foreach ($slugs as $slug) {
+                $obj   = wp_count_posts($slug, 'readable');
+                $total = 0;
+                foreach ((array) $obj as $c) {
+                    $total += $c;
+                }
+                if ($total > 0) {
+                    $counts[$slug] = $total;
+                }
+            }
+            if ($counts) {
+                $html  = '<p>' . esc_html__( 'The selected post type(s) still have posts. Consider migrating the content before unregistering.', 'gm2-wordpress-suite' ) . '</p>';
+                $html .= '<ul>';
+                foreach ($counts as $slug => $count) {
+                    $html .= '<li>' . esc_html($slug . ' - ' . $count) . '</li>';
+                }
+                $html .= '</ul>';
+                $html .= '<p>' . esc_html__( 'You may convert these posts to the default "post" type automatically.', 'gm2-wordpress-suite' ) . '</p>';
+                $html .= '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
+                $html .= '<input type="hidden" name="action" value="gm2_delete_post_type" />';
+                foreach ($slugs as $slug) {
+                    $html .= '<input type="hidden" name="slug[]" value="' . esc_attr($slug) . '" />';
+                }
+                $html .= '<input type="hidden" name="gm2_confirm_delete" value="1" />';
+                $html .= '<p><label><input type="checkbox" name="gm2_convert_to_post" value="1" /> ' . esc_html__( 'Convert posts to the default "post" type before deletion', 'gm2-wordpress-suite' ) . '</label></p>';
+                wp_nonce_field('gm2_confirm_delete_post_type');
+                $html .= '<p><button type="submit" class="button button-primary">' . esc_html__( 'Continue', 'gm2-wordpress-suite' ) . '</button> <a href="' . esc_url(admin_url('admin.php?page=gm2-custom-posts')) . '" class="button">' . esc_html__( 'Cancel', 'gm2-wordpress-suite' ) . '</a></p>';
+                $html .= '</form>';
+                wp_die($html, esc_html__( 'Confirm Post Type Deletion', 'gm2-wordpress-suite' ), [ 'back_link' => false ]);
+            }
         }
-        $config  = $this->get_config();
-        $deleted = false;
+
+        $convert   = $confirming && !empty($_POST['gm2_convert_to_post']);
+        $config    = $this->get_config();
+        $deleted   = false;
+        $converted = false;
         foreach ($slugs as $slug) {
+            if ($convert) {
+                $posts = get_posts([
+                    'post_type'   => $slug,
+                    'numberposts' => -1,
+                    'post_status' => 'any',
+                ]);
+                foreach ($posts as $post) {
+                    wp_update_post([
+                        'ID'        => $post->ID,
+                        'post_type' => 'post',
+                    ]);
+                }
+                if ($posts) {
+                    $converted = true;
+                    error_log('GM2: Converted ' . count($posts) . ' posts from ' . $slug . ' to post');
+                }
+            }
             if (isset($config['post_types'][$slug])) {
                 unset($config['post_types'][$slug]);
                 $deleted = true;
                 if (post_type_exists($slug)) {
                     unregister_post_type($slug);
                 }
+                error_log('GM2: Deleted post type ' . $slug);
             }
         }
         if ($deleted) {
             update_option('gm2_custom_posts_config', $config);
         }
         $redirect = 'admin.php?page=gm2-custom-posts&gm2_pt_deleted=' . ($deleted ? '1' : '0');
+        if ($converted) {
+            $redirect .= '&gm2_pt_converted=1';
+        }
         if ($too_many) {
             $redirect .= '&gm2_pt_too_many=1';
         }
@@ -795,18 +856,73 @@ class Gm2_Custom_Posts_Admin {
             wp_safe_redirect(admin_url('admin.php?page=gm2-custom-posts&gm2_tax_deleted=0'));
             exit;
         }
-        check_admin_referer('gm2_delete_taxonomy_' . $slug);
-        $config = $this->get_config();
+
+        $confirming = !empty($_POST['gm2_confirm_delete']);
+        if ($confirming) {
+            check_admin_referer('gm2_confirm_delete_taxonomy');
+        } else {
+            check_admin_referer('gm2_delete_taxonomy_' . $slug);
+            $count = wp_count_terms($slug, [ 'hide_empty' => false ]);
+            if ($count) {
+                $html  = '<p>' . esc_html__( 'This taxonomy still has terms. Consider migrating them before unregistering.', 'gm2-wordpress-suite' ) . '</p>';
+                $html .= '<p>' . sprintf(esc_html__( '%d terms found.', 'gm2-wordpress-suite' ), (int) $count) . '</p>';
+                $html .= '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
+                $html .= '<input type="hidden" name="action" value="gm2_delete_taxonomy" />';
+                $html .= '<input type="hidden" name="slug" value="' . esc_attr($slug) . '" />';
+                $html .= '<input type="hidden" name="gm2_confirm_delete" value="1" />';
+                $html .= '<p><label><input type="checkbox" name="gm2_convert_to_category" value="1" /> ' . esc_html__( 'Convert terms to the default "category" taxonomy before deletion', 'gm2-wordpress-suite' ) . '</label></p>';
+                wp_nonce_field('gm2_confirm_delete_taxonomy');
+                $html .= '<p><button type="submit" class="button button-primary">' . esc_html__( 'Continue', 'gm2-wordpress-suite' ) . '</button> <a href="' . esc_url(admin_url('admin.php?page=gm2-custom-posts')) . '" class="button">' . esc_html__( 'Cancel', 'gm2-wordpress-suite' ) . '</a></p>';
+                $html .= '</form>';
+                wp_die($html, esc_html__( 'Confirm Taxonomy Deletion', 'gm2-wordpress-suite' ), [ 'back_link' => false ]);
+            }
+        }
+
+        $convert   = $confirming && !empty($_POST['gm2_convert_to_category']);
+        $config    = $this->get_config();
+        $deleted   = false;
+        $converted = false;
+        if ($convert) {
+            $terms = get_terms([
+                'taxonomy'   => $slug,
+                'hide_empty' => false,
+            ]);
+            foreach ($terms as $term) {
+                $existing = term_exists($term->slug, 'category');
+                if ($existing) {
+                    $new_id = (int) $existing['term_id'];
+                } else {
+                    $insert = wp_insert_term($term->name, 'category', [ 'slug' => $term->slug ]);
+                    if (is_wp_error($insert)) {
+                        continue;
+                    }
+                    $new_id = (int) $insert['term_id'];
+                }
+                $objects = get_objects_in_term($term->term_id, $slug);
+                foreach ($objects as $obj_id) {
+                    wp_set_post_terms($obj_id, [ $new_id ], 'category', true);
+                }
+            }
+            if (!empty($terms)) {
+                $converted = true;
+                error_log('GM2: Converted terms from taxonomy ' . $slug . ' to category');
+            }
+        }
+
         if (isset($config['taxonomies'][$slug])) {
             unset($config['taxonomies'][$slug]);
             update_option('gm2_custom_posts_config', $config);
             if (taxonomy_exists($slug)) {
                 unregister_taxonomy($slug);
             }
-            wp_safe_redirect(admin_url('admin.php?page=gm2-custom-posts&gm2_tax_deleted=1'));
-            exit;
+            $deleted = true;
+            error_log('GM2: Deleted taxonomy ' . $slug);
         }
-        wp_safe_redirect(admin_url('admin.php?page=gm2-custom-posts&gm2_tax_deleted=0'));
+        $redirect = 'admin.php?page=gm2-custom-posts&gm2_tax_deleted=' . ($deleted ? '1' : '0');
+        if ($converted) {
+            $redirect .= '&gm2_tax_converted=1';
+        }
+        wp_safe_redirect(admin_url($redirect));
         exit;
     }
 
