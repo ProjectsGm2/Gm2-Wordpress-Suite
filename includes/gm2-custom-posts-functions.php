@@ -641,9 +641,15 @@ function gm2_match_location($groups, $context = []) {
  * @param int    $object_id    Object identifier.
  * @param string $context_type Context type: post, term, user, etc.
  */
-function gm2_render_field_group($fields, $object_id, $context_type = 'post') {
+function gm2_render_field_group($fields, $object_id, $context_type = 'post', $values = null, $name_prefix = '') {
     if (empty($fields) || !is_array($fields)) {
         return;
+    }
+    $data = is_array($values) ? $values : [];
+    $original_request = null;
+    if (is_array($values)) {
+        $original_request = $_REQUEST;
+        $_REQUEST         = array_merge($_REQUEST, $values);
     }
     uasort($fields, function ($a, $b) {
         return ($a['order'] ?? 0) <=> ($b['order'] ?? 0);
@@ -675,8 +681,9 @@ function gm2_render_field_group($fields, $object_id, $context_type = 'post') {
         if (!empty($field['container'])) {
             $wrapper .= ' gm2-container-' . sanitize_html_class($field['container']);
         }
-        $type  = $field['type'] ?? 'text';
-        $class = gm2_get_field_type_class($type);
+        $type       = $field['type'] ?? 'text';
+        $class      = gm2_get_field_type_class($type);
+        $input_name = $name_prefix ? $name_prefix . '[' . $key . ']' : $key;
         echo '<div class="' . esc_attr($wrapper) . '" data-type="' . esc_attr($type) . '"';
         if ($field['disabled']) {
             echo ' data-disabled="1"';
@@ -698,14 +705,17 @@ function gm2_render_field_group($fields, $object_id, $context_type = 'post') {
         }
         echo '>';
         if ($class && class_exists($class)) {
-            $obj   = new $class($key, $field);
-            $value = gm2_get_meta_value($object_id, $key, $context_type, $field);
+            $obj   = new $class($input_name, $field);
+            $value = array_key_exists($key, $data) ? $data[$key] : gm2_get_meta_value($object_id, $key, $context_type, $field);
             $obj->render_admin($value, $object_id, $context_type);
         }
         if (!empty($field['instructions'])) {
             echo '<p class="description">' . esc_html($field['instructions']) . '</p>';
         }
         echo '</div>';
+    }
+    if ($original_request !== null) {
+        $_REQUEST = $original_request;
     }
 }
 
@@ -868,9 +878,15 @@ function gm2_queue_image_optimization($attachment_id) {
 /**
  * Save field group data for any object type.
  */
-function gm2_save_field_group($fields, $object_id, $context_type = 'post') {
+function gm2_save_field_group($fields, $object_id, $context_type = 'post', $values = null) {
     if (empty($fields) || !is_array($fields)) {
         return;
+    }
+    $data             = is_array($values) ? $values : $_POST;
+    $original_request = null;
+    if (is_array($values)) {
+        $original_request = $_REQUEST;
+        $_REQUEST         = array_merge($_REQUEST, $values);
     }
     foreach ($fields as $key => $field) {
         if (!\Gm2\Gm2_Capability_Manager::can_edit_field($key, $object_id)) {
@@ -882,15 +898,21 @@ function gm2_save_field_group($fields, $object_id, $context_type = 'post') {
         }
         $type  = $field['type'] ?? 'text';
         $class = gm2_get_field_type_class($type);
-        $val   = $_POST[$key] ?? null;
+        $val   = $data[$key] ?? null;
         $valid = gm2_validate_field($key, $field, $val, $object_id, $context_type);
         if (is_wp_error($valid)) {
+            if ($original_request !== null) {
+                $_REQUEST = $original_request;
+            }
             wp_die($valid->get_error_message());
         }
         if ($class && class_exists($class)) {
             $obj = new $class($key, $field);
             $obj->save($object_id, $val, $context_type);
         }
+    }
+    if ($original_request !== null) {
+        $_REQUEST = $original_request;
     }
 }
 
