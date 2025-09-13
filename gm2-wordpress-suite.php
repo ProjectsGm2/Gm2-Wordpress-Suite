@@ -196,6 +196,8 @@ add_filter('plugin_cls_dimensions_enabled', static function ($enabled) {
     }
     return $enabled;
 });
+require_once GM2_PLUGIN_DIR . 'modules/cls-reservations.php';
+add_action('init', '\\Plugin\\CLS\\Reservations\\register');
 if (get_option('gm2_pretty_versioned_urls', '0') === '1') {
     \Gm2\Gm2_Version_Route_Apache::maybe_apply();
 }
