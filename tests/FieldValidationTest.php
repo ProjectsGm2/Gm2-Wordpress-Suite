@@ -22,4 +22,37 @@ class FieldValidationTest extends WP_UnitTestCase {
         $res = gm2_validate_field('range_field', $field, $invalid);
         $this->assertInstanceOf( WP_Error::class, $res );
     }
+
+    public function test_measurement_validation_callback() {
+        $field = [
+            'type' => 'measurement',
+            'validate_callback' => function( $value ) {
+                return ($value['value'] ?? 0) >= 0 ? true : 'Must be positive';
+            },
+        ];
+        $this->assertTrue( gm2_validate_field('measure', $field, [ 'value' => 5, 'unit' => 'px' ]) );
+        $res = gm2_validate_field('measure', $field, [ 'value' => -1, 'unit' => 'px' ]);
+        $this->assertInstanceOf( WP_Error::class, $res );
+        $this->assertSame( 'Must be positive', $res->get_error_message() );
+    }
+
+    public function test_schedule_validation_callback() {
+        $field = [
+            'type' => 'schedule',
+            'validate_callback' => function( $value ) {
+                foreach ( $value as $row ) {
+                    if ( ($row['end'] ?? '') <= ($row['start'] ?? '') ) {
+                        return 'End must be after start';
+                    }
+                }
+                return true;
+            },
+        ];
+        $valid = [ [ 'day' => 'Mon', 'start' => '09:00', 'end' => '10:00' ] ];
+        $this->assertTrue( gm2_validate_field('sched', $field, $valid) );
+        $invalid = [ [ 'day' => 'Tue', 'start' => '10:00', 'end' => '09:00' ] ];
+        $res = gm2_validate_field('sched', $field, $invalid);
+        $this->assertInstanceOf( WP_Error::class, $res );
+        $this->assertSame( 'End must be after start', $res->get_error_message() );
+    }
 }
