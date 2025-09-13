@@ -1,0 +1,26 @@
+{
+  "post_types": {
+    "listing": {
+      "label": "Listing",
+      "public": true,
+      "supports": ["title", "editor", "thumbnail"]
+    }
+  },
+  "taxonomies": {
+    "listing_category": {
+      "object_type": ["listing"],
+      "label": "Listing Categories",
+      "hierarchical": true
+    }
+  },
+  "field_groups": [
+    {
+      "key": "group_listing_details",
+      "title": "Listing Details",
+      "fields": [
+        {"key": "field_phone", "label": "Phone", "name": "phone", "type": "text"},
+        {"key": "field_address", "label": "Address", "name": "address", "type": "text"}
+      ]
+    }
+  ]
+}

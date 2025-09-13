@@ -40,6 +40,30 @@ if (!function_exists('gm2_model_export')) {
     }
 }
 
+if (!function_exists('gm2_validate_blueprint')) {
+    /**
+     * Validate blueprint data against the bundled schema.
+     *
+     * @param array $data Blueprint data.
+     * @return true|WP_Error
+     */
+    function gm2_validate_blueprint(array $data) {
+        $schema_file = GM2_PLUGIN_DIR . 'assets/blueprints/schema.json';
+        if (!file_exists($schema_file)) {
+            return new \WP_Error('schema_missing', __('Blueprint schema not found.', 'gm2-wordpress-suite'));
+        }
+        $schema = json_decode(file_get_contents($schema_file), true);
+        if (!is_array($schema)) {
+            return new \WP_Error('schema_invalid', __('Invalid blueprint schema.', 'gm2-wordpress-suite'));
+        }
+        $result = rest_validate_value_from_schema($data, $schema, 'blueprint');
+        if (is_wp_error($result)) {
+            return $result;
+        }
+        return true;
+    }
+}
+
 if (!function_exists('gm2_model_import')) {
     /**
      * Import model configuration.
@@ -62,6 +86,11 @@ if (!function_exists('gm2_model_import')) {
 
         if (!is_array($data)) {
             return new \WP_Error('invalid_data', __('Invalid model data.', 'gm2-wordpress-suite'));
+        }
+
+        $valid = gm2_validate_blueprint($data);
+        if (is_wp_error($valid)) {
+            return $valid;
         }
 
         $config = [

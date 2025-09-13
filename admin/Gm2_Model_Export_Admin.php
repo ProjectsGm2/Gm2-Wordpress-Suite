@@ -12,8 +12,8 @@ class Gm2_Model_Export_Admin {
 
     public function add_tools_page() {
         add_management_page(
-            __('Gm2 Models', 'gm2-wordpress-suite'),
-            __('Gm2 Models', 'gm2-wordpress-suite'),
+            __('Gm2 Blueprints', 'gm2-wordpress-suite'),
+            __('Gm2 Blueprints', 'gm2-wordpress-suite'),
             'manage_options',
             'gm2-model-export',
             [ $this, 'render_page' ]
@@ -26,25 +26,50 @@ class Gm2_Model_Export_Admin {
         }
 
         $message = '';
-        if (!empty($_POST['gm2_export_models']) && check_admin_referer('gm2_export_models')) {
+        if (!empty($_POST['gm2_export_blueprints']) && check_admin_referer('gm2_export_blueprints')) {
             $format = sanitize_text_field($_POST['format'] ?? 'json');
             $data   = \gm2_model_export($format);
             if (is_wp_error($data)) {
                 $message = $data->get_error_message();
             } else {
                 header('Content-Type: ' . ('yaml' === $format ? 'application/x-yaml' : 'application/json'));
-                header('Content-Disposition: attachment; filename=models.' . ('yaml' === $format ? 'yml' : 'json'));
+                header('Content-Disposition: attachment; filename=blueprint.' . ('yaml' === $format ? 'yml' : 'json'));
                 echo $data;
                 exit;
             }
-        } elseif (!empty($_POST['gm2_import_models']) && check_admin_referer('gm2_import_models')) {
-            $format = sanitize_text_field($_POST['format'] ?? 'json');
-            $raw    = wp_unslash($_POST['model_data'] ?? '');
-            $result = \gm2_model_import($raw, $format);
+        } elseif (!empty($_POST['gm2_import_blueprints']) && check_admin_referer('gm2_import_blueprints')) {
+            $data = [
+                'post_types'   => [],
+                'taxonomies'   => [],
+                'field_groups' => [],
+            ];
+            if (!empty($_FILES['blueprint_files']['tmp_name'][0])) {
+                foreach ($_FILES['blueprint_files']['tmp_name'] as $tmp) {
+                    if (is_uploaded_file($tmp)) {
+                        $raw  = file_get_contents($tmp);
+                        $json = json_decode($raw, true);
+                        if (is_array($json)) {
+                            $data['post_types']   = array_merge($data['post_types'], $json['post_types'] ?? []);
+                            $data['taxonomies']   = array_merge($data['taxonomies'], $json['taxonomies'] ?? []);
+                            $data['field_groups'] = array_merge($data['field_groups'], $json['field_groups'] ?? []);
+                        }
+                    }
+                }
+            }
+            $raw_area = wp_unslash($_POST['model_data'] ?? '');
+            if ($raw_area) {
+                $json = json_decode($raw_area, true);
+                if (is_array($json)) {
+                    $data['post_types']   = array_merge($data['post_types'], $json['post_types'] ?? []);
+                    $data['taxonomies']   = array_merge($data['taxonomies'], $json['taxonomies'] ?? []);
+                    $data['field_groups'] = array_merge($data['field_groups'], $json['field_groups'] ?? []);
+                }
+            }
+            $result = \gm2_model_import($data, 'array');
             if (is_wp_error($result)) {
                 $message = $result->get_error_message();
             } else {
-                $message = esc_html__('Models imported.', 'gm2-wordpress-suite');
+                $message = esc_html__('Blueprint imported.', 'gm2-wordpress-suite');
             }
         } elseif (!empty($_POST['gm2_generate_plugin']) && check_admin_referer('gm2_generate_plugin')) {
             $mu   = !empty($_POST['as_mu']);
@@ -62,24 +87,24 @@ class Gm2_Model_Export_Admin {
             }
         }
 
-        echo '<div class="wrap"><h1>' . esc_html__('Gm2 Model Export/Import', 'gm2-wordpress-suite') . '</h1>';
+        echo '<div class="wrap"><h1>' . esc_html__('Gm2 Blueprint Export/Import', 'gm2-wordpress-suite') . '</h1>';
         if ($message) {
             echo '<div class="notice notice-info"><p>' . esc_html($message) . '</p></div>';
         }
 
         echo '<h2>' . esc_html__('Export', 'gm2-wordpress-suite') . '</h2>';
         echo '<form method="post"><p>';
-        wp_nonce_field('gm2_export_models');
+        wp_nonce_field('gm2_export_blueprints');
         echo '<select name="format"><option value="json">JSON</option><option value="yaml">YAML</option></select> ';
-        echo '<button type="submit" name="gm2_export_models" class="button">' . esc_html__('Download', 'gm2-wordpress-suite') . '</button>';
+        echo '<button type="submit" name="gm2_export_blueprints" class="button">' . esc_html__('Download', 'gm2-wordpress-suite') . '</button>';
         echo '</p></form>';
 
         echo '<h2>' . esc_html__('Import', 'gm2-wordpress-suite') . '</h2>';
-        echo '<form method="post"><p>';
-        wp_nonce_field('gm2_import_models');
-        echo '<select name="format"><option value="json">JSON</option><option value="yaml">YAML</option></select><br>';
+        echo '<form method="post" enctype="multipart/form-data"><p>';
+        wp_nonce_field('gm2_import_blueprints');
+        echo '<input type="file" name="blueprint_files[]" multiple><br>';
         echo '<textarea name="model_data" rows="10" cols="60"></textarea><br>';
-        echo '<button type="submit" name="gm2_import_models" class="button button-primary">' . esc_html__('Import', 'gm2-wordpress-suite') . '</button>';
+        echo '<button type="submit" name="gm2_import_blueprints" class="button button-primary">' . esc_html__('Import', 'gm2-wordpress-suite') . '</button>';
         echo '</p></form>';
 
         echo '<h2>' . esc_html__('Generate Plugin', 'gm2-wordpress-suite') . '</h2>';
