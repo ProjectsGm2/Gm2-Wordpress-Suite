@@ -2,6 +2,7 @@
 
 See [model-cli.md](model-cli.md) for managing custom post types, taxonomies and fields via WP-CLI.
 For a reference on field types, conditional logic and validation hooks, see [fields-and-validation.md](fields-and-validation.md).
+For guidance on using the suite with Elementor, see [using-with-elementor.md](using-with-elementor.md).
 
 For font optimization checks, review [font-performance-test-plan.md](font-performance-test-plan.md).
 
@@ -152,3 +153,4 @@ The following tasks track upcoming enhancements for the Gm2 WordPress Suite. Eac
 
 1. **Bulk AI scheduling via WP‑Cron** – queue analysis jobs in the background so large batches can run automatically.
 
+For guidance on using the suite with Elementor, see [using-with-elementor.md](using-with-elementor.md).
