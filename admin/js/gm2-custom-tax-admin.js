@@ -28,6 +28,24 @@ jQuery(function($){
             var chk = $('<label><input type="checkbox" id="gm2-tax-arg-value" value="1"/> '+key+'</label>');
             if(value){ chk.find('input').prop('checked', true); }
             wrap.append(chk);
+        }else if(key === 'rewrite'){
+            var html = '<p><label>Slug<br/><input type="text" id="gm2-tax-rewrite-slug" class="regular-text" /></label></p>';
+            $.each(['with_front','hierarchical'], function(i,opt){
+                html += '<label><input type="checkbox" id="gm2-tax-rewrite-'+opt+'" value="1"/> '+opt.replace('_',' ')+'</label><br/>';
+            });
+            html += '<p><label>ep_mask<br/><input type="text" id="gm2-tax-rewrite-ep_mask" class="regular-text" /></label></p>';
+            wrap.append(html);
+            if(value && typeof value === 'object'){
+                $('#gm2-tax-rewrite-slug').val(value.slug || '');
+                $.each(['with_front','hierarchical'], function(i,opt){ if(value[opt]) $('#gm2-tax-rewrite-'+opt).prop('checked', true); });
+                if(value.ep_mask) $('#gm2-tax-rewrite-ep_mask').val(value.ep_mask);
+            }
+        }else if(key === 'capabilities'){
+            wrap.append('<textarea id="gm2-tax-arg-value" class="large-text"></textarea>');
+            if(typeof value === 'object'){
+                value = JSON.stringify(value);
+            }
+            $('#gm2-tax-arg-value').val(value || '');
         }else{
             wrap.append('<input type="text" id="gm2-tax-arg-value" class="regular-text" />');
             $('#gm2-tax-arg-value').val(value);
@@ -84,7 +102,24 @@ jQuery(function($){
     $('#gm2-tax-arg-save').on('click', function(){
         var idx = $('#gm2-tax-arg-index').val();
         var key = $('#gm2-tax-arg-key').val();
-        var val = (key === 'public' || key === 'hierarchical') ? $('#gm2-tax-arg-value').is(':checked') : $('#gm2-tax-arg-value').val();
+        var boolKeys = ['public','hierarchical','show_ui','show_in_nav_menus','show_admin_column','show_tagcloud','show_in_quick_edit','show_in_rest'];
+        var val;
+        if(boolKeys.indexOf(key) !== -1){
+            val = $('#gm2-tax-arg-value').is(':checked');
+        }else if(key === 'rewrite'){
+            val = {
+                slug: $('#gm2-tax-rewrite-slug').val(),
+                with_front: $('#gm2-tax-rewrite-with_front').is(':checked'),
+                hierarchical: $('#gm2-tax-rewrite-hierarchical').is(':checked')
+            };
+            var ep = $('#gm2-tax-rewrite-ep_mask').val();
+            if(ep){ val.ep_mask = ep; }
+        }else if(key === 'capabilities'){
+            try { val = JSON.parse($('#gm2-tax-arg-value').val() || '{}'); }
+            catch(e){ val = {}; }
+        }else{
+            val = $('#gm2-tax-arg-value').val();
+        }
         var obj = { key:key, value:val, conditions: gm2Conditions.getData($('#gm2-tax-conditions')) };
         if(idx === ''){ args.push(obj); } else { args[idx] = obj; }
         saveAll(function(){ $('#gm2-tax-arg-form').hide(); });

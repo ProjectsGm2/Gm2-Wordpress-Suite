@@ -905,7 +905,7 @@ class Gm2_Custom_Posts_Admin {
         if (!is_array($args)) {
             return $sanitized_args;
         }
-        $bool_keys = [ 'public', 'hierarchical', 'publicly_queryable', 'show_ui', 'show_in_menu', 'show_in_nav_menus', 'show_in_admin_bar', 'exclude_from_search', 'has_archive', 'show_in_rest', 'map_meta_cap', 'show_admin_column', 'show_tagcloud', 'show_in_quick_edit' ];
+        $bool_keys = [ 'public', 'hierarchical', 'publicly_queryable', 'show_ui', 'show_in_menu', 'show_in_nav_menus', 'show_in_admin_bar', 'exclude_from_search', 'has_archive', 'show_in_rest', 'map_meta_cap', 'show_admin_column', 'show_tagcloud', 'show_in_quick_edit', 'delete_with_user', 'can_export' ];
         foreach ($args as $arg) {
             $a_key = sanitize_key($arg['key'] ?? '');
             if (!$a_key) {
@@ -943,6 +943,9 @@ class Gm2_Custom_Posts_Admin {
                     $val['hierarchical'] = !empty($value['hierarchical']);
                     $val['feeds']        = !empty($value['feeds']);
                     $val['pages']        = !empty($value['pages']);
+                    if (isset($value['ep_mask'])) {
+                        $val['ep_mask'] = sanitize_text_field($value['ep_mask']);
+                    }
                 }
             } elseif ($a_key === 'capabilities') {
                 if (is_string($value)) {
@@ -968,6 +971,20 @@ class Gm2_Custom_Posts_Admin {
                         $val = $parts[0] ?? '';
                     }
                 }
+            } elseif ($a_key === 'taxonomies') {
+                if (is_array($value)) {
+                    $val = array_values(array_filter(array_map('sanitize_key', $value)));
+                } else {
+                    $val = array_values(array_filter(array_map('sanitize_key', explode(',', (string) $value))));
+                }
+            } elseif ($a_key === 'description') {
+                $val = sanitize_textarea_field($value);
+            } elseif ($a_key === 'rest_base') {
+                $val = sanitize_key($value);
+            } elseif ($a_key === 'rest_namespace') {
+                $val = sanitize_text_field($value);
+            } elseif ($a_key === 'rest_controller_class') {
+                $val = sanitize_text_field($value);
             } elseif ($a_key === 'template') {
                 if (is_string($value)) {
                     $value = json_decode(wp_unslash($value), true);
