@@ -8,6 +8,7 @@ if (!defined('ABSPATH')) {
 class AESEO_Settings {
     public static function register(): void {
         add_action('admin_post_gm2_lcp_settings', [__CLASS__, 'save_lcp_settings']);
+        add_action('admin_post_gm2_cls_reservations', [__CLASS__, 'save_cls_reservations']);
     }
 
     public static function save_lcp_settings(): void {
@@ -35,6 +36,45 @@ class AESEO_Settings {
         $redirect = wp_get_referer();
         if (!$redirect) {
             $redirect = admin_url('admin.php?page=gm2-lcp-optimization');
+        }
+        $redirect = add_query_arg('settings-updated', 'true', $redirect);
+        wp_safe_redirect($redirect);
+        exit;
+    }
+
+    public static function save_cls_reservations(): void {
+        check_admin_referer('gm2_cls_reservations');
+
+        $rows = isset($_POST['cls_reservations']) && is_array($_POST['cls_reservations']) ? $_POST['cls_reservations'] : [];
+        $sanitized = [];
+        foreach ($rows as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $selector = sanitize_text_field($row['selector'] ?? '');
+            if ($selector === '') {
+                continue;
+            }
+            $min = isset($row['min']) ? absint($row['min']) : 0;
+            $unreserve = isset($row['unreserve']) ? '1' : '0';
+            $sanitized[] = [
+                'selector'  => $selector,
+                'min'       => $min,
+                'unreserve' => $unreserve,
+            ];
+        }
+
+        update_option('plugin_cls_reservations', $sanitized);
+
+        $sticky_header = isset($_POST['cls_sticky_header']) && $_POST['cls_sticky_header'] === '1' ? '1' : '0';
+        update_option('plugin_cls_sticky_header', $sticky_header);
+
+        $sticky_footer = isset($_POST['cls_sticky_footer']) && $_POST['cls_sticky_footer'] === '1' ? '1' : '0';
+        update_option('plugin_cls_sticky_footer', $sticky_footer);
+
+        $redirect = wp_get_referer();
+        if (!$redirect) {
+            $redirect = admin_url('admin.php?page=gm2-cls-reservations');
         }
         $redirect = add_query_arg('settings-updated', 'true', $redirect);
         wp_safe_redirect($redirect);

@@ -518,6 +518,15 @@ class Gm2_SEO_Admin {
         );
 
         add_submenu_page(
+            'gm2-seo',
+            esc_html__( 'Layout Reservations', 'gm2-wordpress-suite' ),
+            esc_html__( 'Layout Reservations', 'gm2-wordpress-suite' ),
+            'manage_options',
+            'gm2-cls-reservations',
+            [ $this, 'display_cls_reservations_page' ]
+        );
+
+        add_submenu_page(
             'gm2-ai',
             esc_html__( 'Bulk AI Review', 'gm2-wordpress-suite' ),
             esc_html__( 'Bulk AI Review', 'gm2-wordpress-suite' ),
@@ -7022,6 +7031,10 @@ class Gm2_SEO_Admin {
 
     public function display_lcp_settings_page() {
         require GM2_PLUGIN_DIR . 'admin/views/settings-lcp.php';
+    }
+
+    public function display_cls_reservations_page() {
+        require GM2_PLUGIN_DIR . 'admin/views/settings-cls-reservations.php';
     }
 
     public function cron_process_ai_tax_queue() {
