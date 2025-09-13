@@ -12,6 +12,8 @@ if (empty($reservations)) {
 }
 $sticky_header = get_option('plugin_cls_sticky_header', '0');
 $sticky_footer = get_option('plugin_cls_sticky_footer', '0');
+$sticky_header_selector = get_option('plugin_cls_sticky_header_selector', '');
+$sticky_footer_selector = get_option('plugin_cls_sticky_footer_selector', '');
 
 echo '<div class="wrap">';
 echo '<h1>' . esc_html__('Layout Reservations', 'gm2-wordpress-suite') . '</h1>';
@@ -38,8 +40,10 @@ echo '</table>';
 echo '<p><button type="button" class="button" id="add-reservation">' . esc_html__('Add Reservation', 'gm2-wordpress-suite') . '</button></p>';
 
 echo '<h2>' . esc_html__('Sticky Elements', 'gm2-wordpress-suite') . '</h2>';
-echo '<p><label><input type="checkbox" name="cls_sticky_header" value="1" ' . checked($sticky_header, '1', false) . ' /> ' . esc_html__('Reserve space for sticky header', 'gm2-wordpress-suite') . '</label></p>';
-echo '<p><label><input type="checkbox" name="cls_sticky_footer" value="1" ' . checked($sticky_footer, '1', false) . ' /> ' . esc_html__('Reserve space for sticky footer', 'gm2-wordpress-suite') . '</label></p>';
+echo '<p><label><input type="checkbox" name="cls_sticky_header" value="1" ' . checked($sticky_header, '1', false) . ' /> ' . esc_html__('Reserve space for sticky header', 'gm2-wordpress-suite') . '</label><br />';
+echo '<input type="text" name="cls_sticky_header_selector" value="' . esc_attr($sticky_header_selector) . '" placeholder="' . esc_attr__('Selector override (optional)', 'gm2-wordpress-suite') . '" class="regular-text" /></p>';
+echo '<p><label><input type="checkbox" name="cls_sticky_footer" value="1" ' . checked($sticky_footer, '1', false) . ' /> ' . esc_html__('Reserve space for sticky footer', 'gm2-wordpress-suite') . '</label><br />';
+echo '<input type="text" name="cls_sticky_footer_selector" value="' . esc_attr($sticky_footer_selector) . '" placeholder="' . esc_attr__('Selector override (optional)', 'gm2-wordpress-suite') . '" class="regular-text" /></p>';
 
 submit_button(esc_html__('Save Settings', 'gm2-wordpress-suite'));
 echo '</form>';
