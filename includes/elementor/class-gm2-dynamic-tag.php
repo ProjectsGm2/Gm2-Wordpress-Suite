@@ -79,16 +79,9 @@ class GM2_Dynamic_Tag extends Tag {
      * Register controls for the dynamic tag.
      */
     protected function register_controls() {
-        $fields  = self::get_fields();
-        $options = [];
-        foreach ($fields as $path => $data) {
-            $options[$path] = $data['label'];
-        }
-
         $this->add_control('field', [
-            'label'   => __('Field', 'gm2-wordpress-suite'),
-            'type'    => Controls_Manager::SELECT2,
-            'options' => $options,
+            'label' => __('Field', 'gm2-wordpress-suite'),
+            'type'  => GM2_Field_Key_Control::TYPE,
         ]);
 
         $this->add_control('fallback', [

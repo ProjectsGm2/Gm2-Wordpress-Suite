@@ -1,6 +1,8 @@
 <?php
 namespace Gm2\Integrations\Elementor;
 
+use Gm2\Elementor\GM2_Field_Key_Control;
+
 if (!defined('ABSPATH')) {
     exit;
 }
@@ -14,6 +16,18 @@ class GM2_CP_Elementor_Query {
      */
     public static function register() {
         add_action('elementor_pro/posts/query/gm2_cp', [__CLASS__, 'apply_query'], 10, 2);
+        add_action('elementor/element/posts/section_query/before_section_end', [__CLASS__, 'add_controls'], 10, 2);
+    }
+
+    /**
+     * Add custom query controls.
+     */
+    public static function add_controls($element, $args) {
+        $element->add_control('gm2_cp_meta_key', [
+            'label' => __('GM2 Field Key', 'gm2-wordpress-suite'),
+            'type'  => GM2_Field_Key_Control::TYPE,
+            'condition' => [ 'query_id' => 'gm2_cp' ],
+        ]);
     }
 
     /**
@@ -43,7 +57,7 @@ class GM2_CP_Elementor_Query {
         // Meta comparisons.
         if (!empty($settings['gm2_cp_meta_key'])) {
             $meta = [
-                'key' => sanitize_key($settings['gm2_cp_meta_key']),
+                'key' => sanitize_text_field($settings['gm2_cp_meta_key']),
             ];
             if ($settings['gm2_cp_meta_value'] !== '') {
                 $meta['value'] = sanitize_text_field($settings['gm2_cp_meta_value']);
