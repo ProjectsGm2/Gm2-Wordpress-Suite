@@ -2,6 +2,7 @@
 namespace Gm2\Integrations\Elementor;
 
 use Elementor\Controls_Manager;
+use Gm2\Elementor\GM2_Field_Key_Control;
 use Elementor\Core\DynamicTags\Tag;
 use Elementor\Modules\DynamicTags\Module;
 
@@ -28,7 +29,7 @@ abstract class Base_GM2_CP_Tag extends Tag {
     protected function register_controls() {
         $this->add_control('field_key', [
             'label' => __('Field Key', 'gm2-wordpress-suite'),
-            'type'  => Controls_Manager::TEXT,
+            'type'  => GM2_Field_Key_Control::TYPE,
         ]);
 
         $this->add_control('fallback', [
