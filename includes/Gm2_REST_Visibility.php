@@ -30,7 +30,22 @@ class Gm2_REST_Visibility {
     }
 
     public static function apply_visibility() : void {
-        $vis = self::get_visibility();
+        $defaults = self::defaults();
+        $groups = get_option('gm2_field_groups', []);
+        if (is_array($groups)) {
+            foreach ($groups as $group) {
+                foreach (($group['fields'] ?? []) as $key => $field) {
+                    if (!empty($field['expose_in_rest'])) {
+                        $defaults['fields'][$key] = true;
+                    }
+                }
+            }
+        }
+
+        $vis = get_option(self::OPTION, []);
+        $vis = wp_parse_args(is_array($vis) ? $vis : [], $defaults);
+        update_option(self::OPTION, $vis);
+
         if (!empty($vis['post_types'])) {
             foreach ($vis['post_types'] as $type => $show) {
                 if (post_type_exists($type)) {
