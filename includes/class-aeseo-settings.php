@@ -9,6 +9,7 @@ class AESEO_Settings {
     public static function register(): void {
         add_action('admin_post_gm2_lcp_settings', [__CLASS__, 'save_lcp_settings']);
         add_action('admin_post_gm2_cls_reservations', [__CLASS__, 'save_cls_reservations']);
+        add_action('admin_post_gm2_cls_fonts', [__CLASS__, 'save_cls_fonts']);
     }
 
     public static function save_lcp_settings(): void {
@@ -81,6 +82,43 @@ class AESEO_Settings {
         $redirect = wp_get_referer();
         if (!$redirect) {
             $redirect = admin_url('admin.php?page=gm2-cls-reservations');
+        }
+        $redirect = add_query_arg('settings-updated', 'true', $redirect);
+        wp_safe_redirect($redirect);
+        exit;
+    }
+
+    public static function save_cls_fonts(): void {
+        check_admin_referer('gm2_cls_fonts');
+
+        $enabled = isset($_POST['cls_fonts_enabled']) && $_POST['cls_fonts_enabled'] === '1' ? '1' : '0';
+        update_option('plugin_cls_fonts_enabled', $enabled);
+
+        if (isset($_POST['cls_fonts_clear'])) {
+            delete_option('plugin_cls_critical_fonts');
+            delete_transient('plugin_cls_font_faces');
+        } else {
+            $urls = isset($_POST['cls_fonts']) && is_array($_POST['cls_fonts']) ? array_slice($_POST['cls_fonts'], 0, 3) : [];
+            $urls = array_map('esc_url_raw', $urls);
+            $available = \Plugin\CLS\Fonts\get_discovered_fonts();
+            $fonts = [];
+            foreach ($urls as $url) {
+                foreach ($available as $font) {
+                    if (is_array($font) && ($font['url'] ?? '') === $url) {
+                        $fonts[] = $font;
+                        break;
+                    }
+                }
+                if (count($fonts) >= 3) {
+                    break;
+                }
+            }
+            update_option('plugin_cls_critical_fonts', $fonts);
+        }
+
+        $redirect = wp_get_referer();
+        if (!$redirect) {
+            $redirect = admin_url('admin.php?page=gm2-cls-fonts');
         }
         $redirect = add_query_arg('settings-updated', 'true', $redirect);
         wp_safe_redirect($redirect);

@@ -527,6 +527,15 @@ class Gm2_SEO_Admin {
         );
 
         add_submenu_page(
+            'gm2-seo',
+            esc_html__( 'Critical Font Preload', 'gm2-wordpress-suite' ),
+            esc_html__( 'Critical Font Preload', 'gm2-wordpress-suite' ),
+            'manage_options',
+            'gm2-cls-fonts',
+            [ $this, 'display_cls_fonts_page' ]
+        );
+
+        add_submenu_page(
             'gm2-ai',
             esc_html__( 'Bulk AI Review', 'gm2-wordpress-suite' ),
             esc_html__( 'Bulk AI Review', 'gm2-wordpress-suite' ),
@@ -7035,6 +7044,10 @@ class Gm2_SEO_Admin {
 
     public function display_cls_reservations_page() {
         require GM2_PLUGIN_DIR . 'admin/views/settings-cls-reservations.php';
+    }
+
+    public function display_cls_fonts_page() {
+        require GM2_PLUGIN_DIR . 'admin/views/settings-cls-fonts.php';
     }
 
     public function cron_process_ai_tax_queue() {

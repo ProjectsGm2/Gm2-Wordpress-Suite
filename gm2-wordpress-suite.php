@@ -200,6 +200,9 @@ require_once GM2_PLUGIN_DIR . 'modules/cls-reservations.php';
 add_action('init', '\\Plugin\\CLS\\Reservations\\register');
 require_once GM2_PLUGIN_DIR . 'modules/cls-fonts.php';
 add_action('init', '\\Plugin\\CLS\\Fonts\\register');
+add_filter('plugin_cls_fonts_enabled', static function ($enabled) {
+    return get_option('plugin_cls_fonts_enabled', '1') === '1';
+});
 require_once GM2_PLUGIN_DIR . 'includes/class-cls-fonts-rest.php';
 \Plugin\CLS\Fonts_REST::init();
 if (get_option('gm2_pretty_versioned_urls', '0') === '1') {
