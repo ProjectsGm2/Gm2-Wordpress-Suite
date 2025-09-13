@@ -146,7 +146,7 @@ jQuery(function($){
 
     function showArgControl(key, value){
         var wrap = $('#gm2-arg-value-wrap').empty();
-        var boolKeys = ['public','hierarchical','publicly_queryable','show_ui','show_in_menu','show_in_nav_menus','show_in_admin_bar','exclude_from_search','has_archive','show_in_rest','map_meta_cap'];
+        var boolKeys = ['public','hierarchical','publicly_queryable','show_ui','show_in_menu','show_in_nav_menus','show_in_admin_bar','exclude_from_search','has_archive','show_in_rest','map_meta_cap','delete_with_user','can_export'];
         if(boolKeys.indexOf(key) !== -1){
             var chk = $('<label><input type="checkbox" id="gm2-arg-value" value="1"/> '+key+'</label>');
             if(value){ chk.find('input').prop('checked', true); }
@@ -166,11 +166,23 @@ jQuery(function($){
             $.each(['with_front','hierarchical','feeds','pages'], function(i, opt){
                 html += '<label><input type="checkbox" class="gm2-rewrite-flag" id="gm2-rewrite-'+opt+'" value="1"/> '+opt.replace('_',' ')+'</label><br/>';
             });
+            html += '<p><label>ep_mask<br/><input type="text" id="gm2-rewrite-ep_mask" class="regular-text" /></label></p>';
             wrap.append(html);
             if(value && typeof value === 'object'){
                 $('#gm2-rewrite-slug').val(value.slug || '');
                 $.each(['with_front','hierarchical','feeds','pages'], function(i,opt){ if(value[opt]) $('#gm2-rewrite-'+opt).prop('checked', true); });
+                if(value.ep_mask) $('#gm2-rewrite-ep_mask').val(value.ep_mask);
             }
+        }else if(key === 'taxonomies'){
+            wrap.append('<input type="text" id="gm2-arg-value" class="regular-text" />');
+            if($.isArray(value)){
+                $('#gm2-arg-value').val(value.join(', '));
+            }else{
+                $('#gm2-arg-value').val(value);
+            }
+        }else if(key === 'description'){
+            wrap.append('<textarea id="gm2-arg-value" class="large-text"></textarea>');
+            $('#gm2-arg-value').val(value || '');
         }else{
             wrap.append('<input type="text" id="gm2-arg-value" class="regular-text" />');
             if(typeof value === 'object'){
@@ -312,7 +324,7 @@ jQuery(function($){
         var idx = $('#gm2-arg-index').val();
         var key = $('#gm2-arg-key').val();
         var val;
-        var boolKeys = ['public','hierarchical','publicly_queryable','show_ui','show_in_menu','show_in_nav_menus','show_in_admin_bar','exclude_from_search','has_archive','show_in_rest','map_meta_cap'];
+        var boolKeys = ['public','hierarchical','publicly_queryable','show_ui','show_in_menu','show_in_nav_menus','show_in_admin_bar','exclude_from_search','has_archive','show_in_rest','map_meta_cap','delete_with_user','can_export'];
         if(boolKeys.indexOf(key) !== -1){
             val = $('#gm2-arg-value').is(':checked');
         }else if(key === 'supports'){
@@ -326,6 +338,11 @@ jQuery(function($){
                 feeds: $('#gm2-rewrite-feeds').is(':checked'),
                 pages: $('#gm2-rewrite-pages').is(':checked')
             };
+            var ep = $('#gm2-rewrite-ep_mask').val();
+            if(ep){ val.ep_mask = ep; }
+        }else if(key === 'taxonomies'){
+            var rawTax = $('#gm2-arg-value').val();
+            val = rawTax.split(',').map(function(s){ return $.trim(s); }).filter(function(s){ return s.length; });
         }else if(key === 'capability_type'){
             var raw = $('#gm2-arg-value').val();
             var parts = raw.split(',').map(function(s){ return $.trim(s); }).filter(function(s){ return s.length; });

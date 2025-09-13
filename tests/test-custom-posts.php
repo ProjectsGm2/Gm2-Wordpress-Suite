@@ -324,12 +324,18 @@ class CustomPostsFieldsTest extends WP_UnitTestCase {
                         'capabilities' => [ 'value' => [ 'edit_post' => 'edit_movie' ] ],
                         'template' => [ 'value' => [ [ 'core/paragraph', [ 'placeholder' => 'Add summary...' ] ] ] ],
                         'template_lock' => [ 'value' => 'all' ],
+                        'description' => [ 'value' => 'Film posts' ],
+                        'delete_with_user' => [ 'value' => true ],
+                        'rest_namespace' => [ 'value' => 'gm2/v1' ],
+                        'taxonomies' => [ 'value' => [ 'genre' ] ],
+                        'can_export' => [ 'value' => true ],
                     ],
                 ],
             ],
             'taxonomies' => [],
         ]);
 
+        register_taxonomy('genre', []);
         gm2_register_custom_posts();
         $pt = get_post_type_object('movie');
 
@@ -349,6 +355,7 @@ class CustomPostsFieldsTest extends WP_UnitTestCase {
         $this->assertTrue($pt->show_in_rest);
         $this->assertSame('film', $pt->rest_base);
         $this->assertSame('WP_REST_Posts_Controller', $pt->rest_controller_class);
+        $this->assertSame('gm2/v1', $pt->rest_namespace);
         $this->assertSame('films', $pt->rewrite['slug']);
         $this->assertTrue($pt->rewrite['with_front']);
         $this->assertTrue($pt->rewrite['hierarchical']);
@@ -359,5 +366,9 @@ class CustomPostsFieldsTest extends WP_UnitTestCase {
         $this->assertSame('edit_movie', $pt->cap->edit_post);
         $this->assertSame([ [ 'core/paragraph', [ 'placeholder' => 'Add summary...' ] ] ], $pt->template);
         $this->assertSame('all', $pt->template_lock);
+        $this->assertSame('Film posts', $pt->description);
+        $this->assertTrue($pt->delete_with_user);
+        $this->assertTrue($pt->can_export);
+        $this->assertContains('genre', $pt->taxonomies);
     }
 }
