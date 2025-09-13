@@ -80,6 +80,7 @@ require_once GM2_PLUGIN_DIR . 'includes/gm2-query-builder.php';
 require_once GM2_PLUGIN_DIR . 'includes/gm2-theme-tools.php';
 require_once GM2_PLUGIN_DIR . 'includes/gm2-open-in-code.php';
 require_once GM2_PLUGIN_DIR . 'includes/gm2-field-renderers.php';
+require_once GM2_PLUGIN_DIR . 'includes/elementor/class-gm2-dynamic-tag.php';
 require_once GM2_PLUGIN_DIR . 'includes/gm2-schema-tooltips.php';
 require_once GM2_PLUGIN_DIR . 'includes/gm2-editorial-comments.php';
 require_once GM2_PLUGIN_DIR . 'includes/gm2-model-export.php';
