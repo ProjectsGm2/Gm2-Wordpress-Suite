@@ -69,8 +69,14 @@ class AESEO_Settings {
         $sticky_header = isset($_POST['cls_sticky_header']) && $_POST['cls_sticky_header'] === '1' ? '1' : '0';
         update_option('plugin_cls_sticky_header', $sticky_header);
 
+        $sticky_header_selector = isset($_POST['cls_sticky_header_selector']) ? sanitize_text_field((string) $_POST['cls_sticky_header_selector']) : '';
+        update_option('plugin_cls_sticky_header_selector', $sticky_header_selector);
+
         $sticky_footer = isset($_POST['cls_sticky_footer']) && $_POST['cls_sticky_footer'] === '1' ? '1' : '0';
         update_option('plugin_cls_sticky_footer', $sticky_footer);
+
+        $sticky_footer_selector = isset($_POST['cls_sticky_footer_selector']) ? sanitize_text_field((string) $_POST['cls_sticky_footer_selector']) : '';
+        update_option('plugin_cls_sticky_footer_selector', $sticky_footer_selector);
 
         $redirect = wp_get_referer();
         if (!$redirect) {

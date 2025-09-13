@@ -5,25 +5,38 @@ document.addEventListener('DOMContentLoaded', () => {
     const cfg = window.clsReservations || {};
     const reservations = Array.isArray(cfg.reservations) ? cfg.reservations : [];
 
-    const updateStickyPadding = () => {
-        if (!cfg.stickyHeader && !cfg.stickyFooter) {
-            return;
-        }
-        let top = 0;
-        let bottom = 0;
-        document.querySelectorAll('.cls-reserved-box').forEach((box) => {
-            const style = getComputedStyle(box);
-            const rect = box.getBoundingClientRect();
-            if (cfg.stickyHeader && style.position === 'fixed' && Math.abs(rect.top) < 1) {
-                top = Math.max(top, rect.height);
-            }
-            if (cfg.stickyFooter && style.position === 'fixed' && Math.abs(rect.bottom - window.innerHeight) < 1) {
-                bottom = Math.max(bottom, rect.height);
+    const detectSticky = (selector, isHeader) => {
+        const nodes = document.querySelectorAll(selector);
+        let height = 0;
+        nodes.forEach((el) => {
+            const style = getComputedStyle(el);
+            const rect = el.getBoundingClientRect();
+            if (style.position === 'fixed') {
+                if (isHeader && Math.abs(rect.top) < 1) {
+                    height = Math.max(height, rect.height);
+                }
+                if (!isHeader && Math.abs(rect.bottom - window.innerHeight) < 1) {
+                    height = Math.max(height, rect.height);
+                }
             }
         });
-        document.body.style.paddingTop = top ? `${top}px` : '';
-        document.body.style.paddingBottom = bottom ? `${bottom}px` : '';
+        if (height) {
+            if (isHeader) {
+                document.body.style.paddingTop = `${height}px`;
+            } else {
+                document.body.style.paddingBottom = `${height}px`;
+            }
+        }
     };
+
+    window.requestAnimationFrame(() => {
+        if (cfg.stickyHeader) {
+            detectSticky(cfg.stickyHeaderSelector || '[data-sticky="true"]', true);
+        }
+        if (cfg.stickyFooter) {
+            detectSticky(cfg.stickyFooterSelector || '[data-sticky="true"]', false);
+        }
+    });
 
     const reserve = (el, res) => {
         if (el.classList.contains('cls-reserved-box')) {
@@ -33,7 +46,6 @@ document.addEventListener('DOMContentLoaded', () => {
             el.style.minHeight = `${res.min}px`;
         }
         el.classList.add('cls-reserved-box');
-        updateStickyPadding();
         if (!res.unreserve) {
             return;
         }
@@ -49,7 +61,6 @@ document.addEventListener('DOMContentLoaded', () => {
             adsObs.disconnect();
             clearInterval(interval);
             clearTimeout(timer);
-            updateStickyPadding();
         };
         el.addEventListener('load', release, true);
         const checkAds = () => {

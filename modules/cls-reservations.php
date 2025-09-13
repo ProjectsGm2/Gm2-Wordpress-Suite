@@ -23,6 +23,8 @@ function enqueue_assets(): void {
         'reservations' => get_reservations(),
         'stickyHeader' => is_sticky_header_enabled(),
         'stickyFooter' => is_sticky_footer_enabled(),
+        'stickyHeaderSelector' => get_sticky_header_selector(),
+        'stickyFooterSelector' => get_sticky_footer_selector(),
     ]);
 }
 
@@ -61,4 +63,16 @@ function is_sticky_footer_enabled(): bool {
     $val = get_option('plugin_cls_sticky_footer', '0');
     $val = sanitize_text_field((string) $val);
     return $val === '1';
+}
+
+function get_sticky_header_selector(): string {
+    $val = get_option('plugin_cls_sticky_header_selector', '');
+    $val = sanitize_text_field((string) $val);
+    return $val;
+}
+
+function get_sticky_footer_selector(): string {
+    $val = get_option('plugin_cls_sticky_footer_selector', '');
+    $val = sanitize_text_field((string) $val);
+    return $val;
 }
