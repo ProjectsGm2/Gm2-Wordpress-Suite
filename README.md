@@ -56,6 +56,17 @@ The build step appends a content hash to each filename so browsers can cache ass
 
 When the **Enable Replacements** option is active (`ae_js_replacements`), front‑end scripts execute callbacks on matched elements. Use the `ae_seo/js/replacements` filter to return an associative array where keys are CSS selectors and values are callback names available on `window`. Each callback receives the matched element as its only argument. The plugin also ships a `vanilla-helpers.js` module with tiny DOM utilities for these callbacks.
 
+## Blueprints
+
+Export and import custom post types, taxonomies and field groups as JSON blueprints. Use the **Tools → Gm2 Blueprints** page in wp-admin or WP-CLI:
+
+```bash
+wp gm2 blueprint export blueprint.json
+wp gm2 blueprint import assets/blueprints/samples/directory.json assets/blueprints/samples/events.json
+```
+
+Imports are validated against `assets/blueprints/schema.json` and sample blueprints live in `assets/blueprints/samples/`.
+
 ## Network Payload Optimizer
 
 The Network Payload Optimizer records Resource Timing data from the admin and tracks a rolling seven‑day average of transferred bytes. Configure the module under **Gm2 → Network Payload** where you can toggle:

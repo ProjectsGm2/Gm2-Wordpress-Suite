@@ -1,0 +1,27 @@
+{
+  "post_types": {
+    "event": {
+      "label": "Event",
+      "public": true,
+      "supports": ["title", "editor", "thumbnail", "excerpt"]
+    }
+  },
+  "taxonomies": {
+    "event_type": {
+      "object_type": ["event"],
+      "label": "Event Types",
+      "hierarchical": false
+    }
+  },
+  "field_groups": [
+    {
+      "key": "group_event_details",
+      "title": "Event Details",
+      "fields": [
+        {"key": "field_start", "label": "Start Date", "name": "start_date", "type": "date"},
+        {"key": "field_end", "label": "End Date", "name": "end_date", "type": "date"},
+        {"key": "field_location", "label": "Location", "name": "location", "type": "text"}
+      ]
+    }
+  ]
+}

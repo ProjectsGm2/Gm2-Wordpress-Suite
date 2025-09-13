@@ -35,9 +35,19 @@ Key features include:
 * Option to load jQuery only when required with URL-based overrides and debug logging; pages with Elementor or other jQuery-dependent assets still enqueue it
 * DOM replacements via the `ae_seo/js/replacements` filter and bundled `vanilla-helpers.js` helpers
 * Hashed build pipeline with `ae_seo_register_asset` helper and debug sourcemaps
+* Blueprint export/import for custom post types, taxonomies and field groups
 * Tools → Server Hints page with one-click `.htaccess` writer, backup/rollback button and diagnostic REST endpoint
 * `wp ae-seo js:audit` CLI command audits recent posts for script counts, dequeued handles, jQuery and module usage
 * `wp ae-seo js:smoketest` runs internal requests and logs `registered`, `enqueued`, `dequeued`, `lazy`, `jquery` and `polyfills` metrics to `wp-content/ae-seo/logs/js-optimizer.log`; view the **Performance → JavaScript** report for Lighthouse-style hints like enabling lazy-load for Analytics, spotting jQuery without dependents or detecting unnecessary polyfills to troubleshoot script loading
+
+== Blueprints ==
+Export and import custom post types, taxonomies and field groups as JSON files. Use **Tools → Gm2 Blueprints** in wp-admin or WP-CLI:
+
+`wp gm2 blueprint export <file>`
+
+`wp gm2 blueprint import <file> [<file>...]`
+
+Blueprints validate against `assets/blueprints/schema.json`. Sample files are provided under `assets/blueprints/samples/`.
 
 == Third-Party Script Optimization ==
 * Audit UI lists detected third-party scripts and lets you enable, disable, or lazy-load them.

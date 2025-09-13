@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Gm2 Blueprint",
+  "type": "object",
+  "properties": {
+    "post_types": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/definitions/postType" }
+    },
+    "taxonomies": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/definitions/taxonomy" }
+    },
+    "field_groups": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/fieldGroup" }
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "postType": {
+      "type": "object",
+      "properties": {
+        "label": { "type": "string" },
+        "public": { "type": "boolean" },
+        "supports": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": true
+    },
+    "taxonomy": {
+      "type": "object",
+      "properties": {
+        "object_type": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": true
+    },
+    "fieldGroup": {
+      "type": "object",
+      "properties": {
+        "key": { "type": "string" },
+        "title": { "type": "string" },
+        "fields": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/field" }
+        }
+      },
+      "required": ["key", "title", "fields"],
+      "additionalProperties": true
+    },
+    "field": {
+      "type": "object",
+      "properties": {
+        "key": { "type": "string" },
+        "label": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string" }
+      },
+      "required": ["key", "label", "name", "type"],
+      "additionalProperties": true
+    }
+  }
+}

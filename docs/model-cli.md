@@ -56,6 +56,17 @@ wp gm2 model export <file> [--format=<json|yaml>]
 wp gm2 model import <file> [--format=<json|yaml>]
 ```
 
+## Blueprints
+
+The `gm2 blueprint` command provides a shortcut for working with JSON blueprints that describe post types, taxonomies and field groups.
+
+```bash
+wp gm2 blueprint export blueprint.json
+wp gm2 blueprint import directory.json events.json
+```
+
+Imports are validated against `assets/blueprints/schema.json` and sample blueprints are available in `assets/blueprints/samples/`.
+
 ## Seeding data
 
 ```bash
