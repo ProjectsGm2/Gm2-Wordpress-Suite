@@ -15,6 +15,7 @@ function register(): void {
     }
     add_action('init', __NAMESPACE__ . '\\init');
     add_action('wp_head', __NAMESPACE__ . '\\print_links', 20);
+    add_action('wp_head', __NAMESPACE__ . '\\inline_script', 1);
 }
 
 function init(): void {
@@ -80,11 +81,16 @@ function parse_stylesheets(): array {
                 if (preg_match('/font-style:\s*([^;]+);/i', $block, $sm)) {
                     $style_val = trim($sm[1]);
                 }
+                $family = '';
+                if (preg_match('/font-family:\s*([^;]+);/i', $block, $fm)) {
+                    $family = trim($fm[1], "'\" ");
+                }
                 detect_google_fonts($font_url);
                 $fonts[$font_url] = [
                     'url'    => $font_url,
                     'weight' => $weight,
                     'style'  => $style_val,
+                    'family' => $family,
                 ];
             }
         }
@@ -114,6 +120,17 @@ function detect_google_fonts(string $url): void {
     if (strpos($url, 'fonts.gstatic.com') !== false) {
         $needs_gstatic = true;
     }
+}
+
+function inline_script(): void {
+    if (false === apply_filters('plugin_cls_fonts_report_enabled', true)) {
+        return;
+    }
+    $nonce        = wp_create_nonce('wp_rest');
+    $theme        = wp_get_theme();
+    $cache_key    = 'cls-fonts-' . md5($theme->get('Version'));
+    $script = '(function(){if(!("fonts" in document))return;const key="' . esc_js($cache_key) . '";if(localStorage.getItem(key))return;const used=new Map;const start=performance.now();function scan(){const sels=["h1","h2","h3","nav","header",".hero"];for(const sel of sels){document.querySelectorAll(sel).forEach(el=>{const cs=getComputedStyle(el);let fam=(cs.fontFamily||"").split(",")[0].replace(/[\"\']/g,"").trim();if(!fam)return;const weight=cs.fontWeight||"400";const style=cs.fontStyle||"normal";const id=fam+"|"+weight+"|"+style;if(used.has(id))return;if(document.fonts.check(style+" "+weight+" 1em "+fam)){used.set(id,{family:fam,weight:weight,style:style});}});}if(performance.now()-start<1200){requestAnimationFrame(scan);}else{report();}}async function report(){await document.fonts.ready;if(!used.size)return;fetch("/wp-json/gm2/v1/above-fold-fonts",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json","X-WP-Nonce":"' . esc_js($nonce) . '"},body:JSON.stringify({fonts:Array.from(used.values())})}).then(()=>{localStorage.setItem(key,"1");}).catch(()=>{});}scan();})();';
+    wp_print_inline_script_tag($script);
 }
 
 function print_links(): void {
