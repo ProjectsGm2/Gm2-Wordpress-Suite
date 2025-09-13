@@ -21,12 +21,18 @@
                 echo '<div class="notice notice-error"><p>' . esc_html__( 'Failed to delete post type.', 'gm2-wordpress-suite' ) . '</p></div>';
             }
         }
+        if (!empty($_GET['gm2_pt_converted'])) {
+            echo '<div class="notice notice-info"><p>' . esc_html__( 'Posts converted before deletion.', 'gm2-wordpress-suite' ) . '</p></div>';
+        }
         if (isset($_GET['gm2_tax_deleted'])) {
             if ($_GET['gm2_tax_deleted'] === '1') {
                 echo '<div class="notice notice-success"><p>' . esc_html__( 'Taxonomy deleted.', 'gm2-wordpress-suite' ) . '</p></div>';
             } else {
                 echo '<div class="notice notice-error"><p>' . esc_html__( 'Failed to delete taxonomy.', 'gm2-wordpress-suite' ) . '</p></div>';
             }
+        }
+        if (!empty($_GET['gm2_tax_converted'])) {
+            echo '<div class="notice notice-info"><p>' . esc_html__( 'Terms converted before deletion.', 'gm2-wordpress-suite' ) . '</p></div>';
         }
 
         if (!empty($_GET['gm2_pt_too_many'])) {
