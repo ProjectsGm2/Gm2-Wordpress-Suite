@@ -1,6 +1,7 @@
 # Gm2 WordPress Suite Updates
 
 See [model-cli.md](model-cli.md) for managing custom post types, taxonomies and fields via WP-CLI.
+For a reference on field types, conditional logic and validation hooks, see [fields-and-validation.md](fields-and-validation.md).
 
 For font optimization checks, review [font-performance-test-plan.md](font-performance-test-plan.md).
 
