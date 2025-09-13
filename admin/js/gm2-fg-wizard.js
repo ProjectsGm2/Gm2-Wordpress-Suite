@@ -1,7 +1,7 @@
 (function(wp){
     const { createElement: el, useState, useEffect } = wp.element;
     const { render } = wp.element;
-    const { Button, TextControl, SelectControl, FormTokenField, PanelBody, Panel, Card, CardBody, Sortable } = wp.components;
+    const { Button, TextControl, SelectControl, FormTokenField, PanelBody, Panel, Card, CardBody, Sortable, ToggleControl } = wp.components;
     const { dispatch } = wp.data;
     const addPassive = !window.AE_PERF_DISABLE_PASSIVE && window.aePerf?.addPassive
         ? window.aePerf.addPassive
@@ -132,7 +132,7 @@
     };
 
     const FieldsStep = ({ data, setData }) => {
-        const [ field, setField ] = useState({ label: '', slug: '', type: 'text' });
+        const [ field, setField ] = useState({ label: '', slug: '', type: 'text', expose_in_rest: false });
         const [ editIndex, setEditIndex ] = useState(null);
         const [ error, setError ] = useState('');
         const [ fieldsOpen, setFieldsOpen ] = useState(true);
@@ -163,12 +163,12 @@
                 fields.push(field);
             }
             setData({ ...data, fields });
-            setField({ label: '', slug: '', type: 'text' });
+            setField({ label: '', slug: '', type: 'text', expose_in_rest: false });
             setEditIndex(null);
         };
 
         const editField = (i) => {
-            setField(data.fields[i]);
+            setField({ expose_in_rest: false, ...data.fields[i] });
             setEditIndex(i);
         };
 
@@ -219,6 +219,12 @@
                 value: field.type,
                 options: fieldTypes,
                 onChange: v => setField({ ...field, type: v })
+            }),
+            el(ToggleControl, {
+                label: 'Expose in REST API',
+                id: 'gm2-field-expose',
+                checked: !!field.expose_in_rest,
+                onChange: v => setField({ ...field, expose_in_rest: v })
             }),
             el(Button, { isPrimary: true, onClick: addField }, editIndex !== null ? 'Update Field' : 'Add Field')
         );
@@ -422,7 +428,8 @@
             const fields = Object.keys(group.fields || {}).map(key => ({
                 slug: key,
                 label: group.fields[key].label || '',
-                type: group.fields[key].type || 'text'
+                type: group.fields[key].type || 'text',
+                expose_in_rest: !!group.fields[key].expose_in_rest
             }));
             const objects = group.objects || [];
             setData({ slug: slug, title: group.title || '', scope: group.scope || 'post_type', objects, fields, location: group.location || [] });

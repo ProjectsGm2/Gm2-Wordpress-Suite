@@ -946,6 +946,31 @@ function gm2_register_field_groups() {
             if (!empty($field['pii'])) {
                 \Gm2\Gm2_Audit_Log::tag_field_as_pii($key, $field['retention'] ?? null);
             }
+            if (!empty($field['expose_in_rest'])) {
+                switch ($scope) {
+                    case 'taxonomy':
+                    case 'term':
+                        foreach (($group['objects'] ?? []) as $tax) {
+                            register_meta('term', $key, [ 'show_in_rest' => true, 'object_subtype' => $tax ]);
+                        }
+                        break;
+                    case 'user':
+                        register_meta('user', $key, [ 'show_in_rest' => true ]);
+                        break;
+                    case 'comment':
+                        register_meta('comment', $key, [ 'show_in_rest' => true ]);
+                        break;
+                    case 'media':
+                        register_meta('post', $key, [ 'show_in_rest' => true, 'object_subtype' => 'attachment' ]);
+                        break;
+                    case 'post_type':
+                    default:
+                        foreach (($group['objects'] ?? []) as $pt) {
+                            register_meta('post', $key, [ 'show_in_rest' => true, 'object_subtype' => $pt ]);
+                        }
+                        break;
+                }
+            }
         }
 
         switch ($scope) {

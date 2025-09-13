@@ -986,6 +986,7 @@ class Gm2_Custom_Posts_Admin {
                 'quick_edit'   => !empty($field['quick_edit']),
                 'bulk_edit'    => !empty($field['bulk_edit']),
                 'filter'       => !empty($field['filter']),
+                'expose_in_rest' => !empty($field['expose_in_rest']),
             ];
             if ($type === 'date') {
                 $sanitized['date_min'] = sanitize_text_field($field['date_min'] ?? '');
