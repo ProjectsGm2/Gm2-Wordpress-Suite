@@ -15,6 +15,7 @@ $defaults = [
     'responsive_picture_nextgen' => '0',
     'add_preconnect'           => '0',
     'add_preload'              => '0',
+    'fix_media_dimensions'     => '1',
 ];
 $settings = array_merge($defaults, $settings);
 
@@ -36,6 +37,7 @@ $fields = [
     'responsive_picture_nextgen' => esc_html__('Serve responsive <picture> with next-gen formats', 'gm2-wordpress-suite'),
     'add_preconnect'           => esc_html__('Preconnect to LCP origin', 'gm2-wordpress-suite'),
     'add_preload'              => esc_html__('Preload LCP image', 'gm2-wordpress-suite'),
+    'fix_media_dimensions'     => esc_html__('Fix image & media dimensions to prevent layout shifts', 'gm2-wordpress-suite'),
 ];
 
 foreach ($fields as $key => $label) {

@@ -183,6 +183,19 @@ if (is_dir($gm2_netpayload_dir) && file_exists($gm2_netpayload_dir . 'Module.php
     register_activation_hook(__FILE__, ['\\Gm2\\NetworkPayload\\Module', 'activate']);
     register_deactivation_hook(__FILE__, ['\\Gm2\\NetworkPayload\\Module', 'deactivate']);
 }
+
+require_once GM2_PLUGIN_DIR . 'modules/cls-dimensions.php';
+add_action('init', '\\Plugin\\CLS\\Dimensions\\register');
+add_filter('plugin_cls_dimensions_enabled', static function ($enabled) {
+    $settings = get_option('aeseo_lcp_settings', []);
+    if (!is_array($settings)) {
+        $settings = [];
+    }
+    if (isset($settings['fix_media_dimensions'])) {
+        return $settings['fix_media_dimensions'] === '1';
+    }
+    return $enabled;
+});
 if (get_option('gm2_pretty_versioned_urls', '0') === '1') {
     \Gm2\Gm2_Version_Route_Apache::maybe_apply();
 }

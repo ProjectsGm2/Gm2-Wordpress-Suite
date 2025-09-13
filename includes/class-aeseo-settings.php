@@ -20,6 +20,7 @@ class AESEO_Settings {
             'responsive_picture_nextgen' => '0',
             'add_preconnect'           => '0',
             'add_preload'              => '0',
+            'fix_media_dimensions'     => '1',
         ];
 
         $submitted = isset($_POST['aeseo_lcp_settings']) && is_array($_POST['aeseo_lcp_settings']) ? $_POST['aeseo_lcp_settings'] : [];
