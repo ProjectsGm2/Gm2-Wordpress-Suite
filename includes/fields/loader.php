@@ -43,6 +43,12 @@ require_once __DIR__ . '/class-field-gradient.php';
 require_once __DIR__ . '/class-field-icon.php';
 require_once __DIR__ . '/class-field-badge.php';
 require_once __DIR__ . '/class-field-rating.php';
+require_once __DIR__ . '/class-field-measurement.php';
+require_once __DIR__ . '/class-field-schedule.php';
+require_once __DIR__ . '/class-field-json.php';
+require_once __DIR__ . '/class-field-post-object.php';
+require_once __DIR__ . '/class-field-taxonomy-terms.php';
+require_once __DIR__ . '/class-field-user.php';
 
 $gm2_field_types = array();
 
@@ -96,5 +102,11 @@ function gm2_register_default_field_types() {
     gm2_register_field_type( 'icon', 'GM2_Field_Icon' );
     gm2_register_field_type( 'badge', 'GM2_Field_Badge' );
     gm2_register_field_type( 'rating', 'GM2_Field_Rating' );
+    gm2_register_field_type( 'measurement', 'GM2_Field_Measurement' );
+    gm2_register_field_type( 'schedule', 'GM2_Field_Schedule' );
+    gm2_register_field_type( 'json', 'GM2_Field_JSON' );
+    gm2_register_field_type( 'post_object', 'GM2_Field_Post_Object' );
+    gm2_register_field_type( 'taxonomy_terms', 'GM2_Field_Taxonomy_Terms' );
+    gm2_register_field_type( 'user', 'GM2_Field_User' );
 }
 add_action( 'init', 'gm2_register_default_field_types' );
