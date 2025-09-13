@@ -147,7 +147,9 @@ class Gm2_Custom_Posts_Admin {
             esc_html__( 'Gm2 Custom Posts', 'gm2-wordpress-suite' ),
             $cap,
             'gm2-custom-posts',
-            [ $this, 'display_page' ],
+            function () {
+                require __DIR__ . '/pages/post-types.php';
+            },
             'dashicons-admin-post'
         );
 
@@ -157,7 +159,9 @@ class Gm2_Custom_Posts_Admin {
             esc_html__( 'Overview', 'gm2-wordpress-suite' ),
             $cap,
             'gm2_cpt_overview',
-            [ $this, 'display_page' ]
+            function () {
+                require __DIR__ . '/pages/post-types.php';
+            }
         );
 
         add_submenu_page(
@@ -193,7 +197,9 @@ class Gm2_Custom_Posts_Admin {
             esc_html__( 'Edit Taxonomy', 'gm2-wordpress-suite' ),
             $cap,
             'gm2_tax_args',
-            [ $this, 'display_taxonomy_page' ]
+            function () {
+                require __DIR__ . '/pages/taxonomies.php';
+            }
         );
 
         add_submenu_page(
@@ -366,102 +372,7 @@ class Gm2_Custom_Posts_Admin {
     }
 
     public function display_taxonomy_page() {
-        if ($this->is_locked()) {
-            $this->display_locked_page(esc_html__( 'Edit Taxonomy', 'gm2-wordpress-suite' ));
-            return;
-        }
-        if (!$this->can_manage()) {
-            wp_die(esc_html__( 'Permission denied', 'gm2-wordpress-suite' ));
-        }
-
-        $slug   = sanitize_key($_GET['tax'] ?? '');
-        $config = $this->get_config();
-
-        if (!$slug) {
-            $taxonomies = $config['taxonomies'];
-            if (!$taxonomies) {
-                wp_safe_redirect(admin_url('admin.php?page=gm2-custom-posts'));
-                exit;
-            }
-            echo '<div class="wrap"><h1>' . esc_html__( 'Select a Taxonomy', 'gm2-wordpress-suite' ) . '</h1><ul>';
-            foreach ($taxonomies as $tax_slug => $tax) {
-                $label = $tax['label'] ?? $tax_slug;
-                $url   = admin_url('admin.php?page=gm2_tax_args&tax=' . $tax_slug);
-                echo '<li><a href="' . esc_url($url) . '">' . esc_html($label) . '</a></li>';
-            }
-            echo '</ul></div>';
-            return;
-        }
-
-        $taxonomy = $config['taxonomies'][$slug] ?? null;
-        if (!$taxonomy) {
-            echo '<div class="wrap"><h1>' . esc_html__( 'Invalid taxonomy.', 'gm2-wordpress-suite' ) . '</h1></div>';
-            return;
-        }
-
-        echo '<div class="wrap">';
-        echo '<h1>' . sprintf(esc_html__( '%s Taxonomy', 'gm2-wordpress-suite' ), esc_html($taxonomy['label'] ?? $slug)) . '</h1>';
-        echo '<p><label>' . esc_html__( 'Label', 'gm2-wordpress-suite' ) . '<br /><input type="text" id="gm2-tax-label" class="regular-text" value="' . esc_attr($taxonomy['label'] ?? '') . '" /></label></p>';
-        echo '<p><label>' . esc_html__( 'Post Types (comma separated)', 'gm2-wordpress-suite' ) . '<br /><input type="text" id="gm2-tax-post-types" class="regular-text" value="' . esc_attr(implode(',', $taxonomy['post_types'] ?? [])) . '" /></label></p>';
-
-        $hier = !empty($taxonomy['args']['hierarchical']['value'] ?? $taxonomy['args']['hierarchical'] ?? false);
-        echo '<p><label><input type="checkbox" id="gm2-tax-hierarchical" value="1"' . checked($hier, true, false) . ' /> ' . esc_html__( 'Hierarchical', 'gm2-wordpress-suite' ) . '</label></p>';
-
-        echo '<fieldset><legend>' . esc_html__( 'Visibility', 'gm2-wordpress-suite' ) . '</legend>';
-        foreach ([ 'public', 'show_ui', 'show_in_nav_menus', 'show_admin_column', 'show_tagcloud', 'show_in_quick_edit' ] as $vis) {
-            $checked = !empty($taxonomy['args'][$vis]['value'] ?? $taxonomy['args'][$vis] ?? false);
-            echo '<label><input type="checkbox" id="gm2-tax-' . esc_attr($vis) . '" value="1"' . checked($checked, true, false) . ' /> ' . esc_html( ucwords(str_replace('_', ' ', $vis)) ) . '</label><br />';
-        }
-        echo '</fieldset>';
-
-        echo '<fieldset><legend>' . esc_html__( 'REST API', 'gm2-wordpress-suite' ) . '</legend>';
-        $rest_checked = !empty($taxonomy['args']['show_in_rest']['value'] ?? $taxonomy['args']['show_in_rest'] ?? false);
-        echo '<p><label><input type="checkbox" id="gm2-tax-show-rest" value="1"' . checked($rest_checked, true, false) . ' /> ' . esc_html__( 'Show in REST', 'gm2-wordpress-suite' ) . '</label></p>';
-        echo '</fieldset>';
-
-        $rewrite_slug = '';
-        if (!empty($taxonomy['args']['rewrite']['value']['slug'])) {
-            $rewrite_slug = $taxonomy['args']['rewrite']['value']['slug'];
-        } elseif (!empty($taxonomy['args']['rewrite']['slug'])) {
-            $rewrite_slug = $taxonomy['args']['rewrite']['slug'];
-        }
-        echo '<fieldset><legend>' . esc_html__( 'Rewrite', 'gm2-wordpress-suite' ) . '</legend>';
-        echo '<p><label>' . esc_html__( 'Slug', 'gm2-wordpress-suite' ) . '<br /><input type="text" id="gm2-tax-rewrite-slug" class="regular-text" value="' . esc_attr($rewrite_slug) . '" /></label></p>';
-        echo '</fieldset>';
-
-        $orderby = $taxonomy['args']['orderby']['value'] ?? $taxonomy['args']['orderby'] ?? '';
-        $order   = $taxonomy['args']['order']['value'] ?? $taxonomy['args']['order'] ?? '';
-        echo '<fieldset><legend>' . esc_html__( 'Ordering', 'gm2-wordpress-suite' ) . '</legend>';
-        echo '<p><label>' . esc_html__( 'Order By', 'gm2-wordpress-suite' ) . '<br /><select id="gm2-tax-orderby"><option value="">' . esc_html__( 'Default', 'gm2-wordpress-suite' ) . '</option><option value="name"' . selected($orderby, 'name', false) . '>Name</option><option value="slug"' . selected($orderby, 'slug', false) . '>Slug</option><option value="term_order"' . selected($orderby, 'term_order', false) . '>Term Order</option></select></label></p>';
-        echo '<p><label>' . esc_html__( 'Order', 'gm2-wordpress-suite' ) . '<br /><select id="gm2-tax-order"><option value="">' . esc_html__( 'Default', 'gm2-wordpress-suite' ) . '</option><option value="ASC"' . selected(strtoupper($order), 'ASC', false) . '>ASC</option><option value="DESC"' . selected(strtoupper($order), 'DESC', false) . '>DESC</option></select></label></p>';
-        echo '</fieldset>';
-
-        $default_terms = !empty($taxonomy['default_terms']) ? wp_json_encode($taxonomy['default_terms']) : '';
-        echo '<p><label>' . esc_html__( 'Default Terms (JSON)', 'gm2-wordpress-suite' ) . '<br /><textarea id="gm2-tax-default-terms" class="large-text code" rows="5">' . esc_textarea($default_terms) . '</textarea></label></p>';
-
-        $term_fields = !empty($taxonomy['term_fields']) ? wp_json_encode($taxonomy['term_fields']) : '';
-        echo '<p><label>' . esc_html__( 'Term Meta Fields (JSON)', 'gm2-wordpress-suite' ) . '<br /><textarea id="gm2-tax-term-fields" class="large-text code" rows="5">' . esc_textarea($term_fields) . '</textarea></label></p>';
-
-        echo '<h2>' . esc_html__( 'Registration Arguments', 'gm2-wordpress-suite' ) . '</h2>';
-        echo '<table class="widefat fixed" id="gm2-tax-args-table">';
-        echo '<thead><tr>';
-        echo '<th>' . esc_html__( 'Argument', 'gm2-wordpress-suite' ) . '</th>';
-        echo '<th>' . esc_html__( 'Value', 'gm2-wordpress-suite' ) . '</th>';
-        echo '<th>' . esc_html__( 'Actions', 'gm2-wordpress-suite' ) . '</th>';
-        echo '</tr></thead><tbody></tbody></table>';
-        echo '<p><button type="button" id="gm2-add-tax-arg" class="button">' . esc_html__( 'Add New', 'gm2-wordpress-suite' ) . '</button></p>';
-
-        echo '<div id="gm2-tax-arg-form" style="display:none;">';
-        echo '<input type="hidden" id="gm2-tax-arg-index" />';
-        echo '<p><label>' . esc_html__( 'Key', 'gm2-wordpress-suite' ) . '<br /><input type="text" id="gm2-tax-arg-key" class="regular-text" /></label></p>';
-        echo '<div id="gm2-tax-arg-value-wrap"></div>';
-        echo '<h3>' . esc_html__( 'Display Conditions', 'gm2-wordpress-suite' ) . '</h3>';
-        echo '<div id="gm2-tax-conditions" class="gm2-conditions"><div class="gm2-condition-groups"></div><p><button type="button" class="button gm2-add-condition-group">' . esc_html__( 'Add Condition Group', 'gm2-wordpress-suite' ) . '</button></p></div>';
-        echo '<p><button type="button" class="button button-primary" id="gm2-tax-arg-save">' . esc_html__( 'Save', 'gm2-wordpress-suite' ) . '</button> <button type="button" class="button" id="gm2-tax-arg-cancel">' . esc_html__( 'Cancel', 'gm2-wordpress-suite' ) . '</button></p>';
-        echo '</div>';
-
-        echo '<p><button type="button" class="button button-primary" id="gm2-tax-save">' . esc_html__( 'Save Taxonomy', 'gm2-wordpress-suite' ) . '</button></p>';
-        echo '</div>';
+        require __DIR__ . '/pages/taxonomies.php';
     }
 
     public function display_query_builder() {
@@ -900,274 +811,7 @@ class Gm2_Custom_Posts_Admin {
     }
 
     public function display_page() {
-        if ($this->is_locked()) {
-            $this->display_locked_page(esc_html__( 'Gm2 Custom Posts', 'gm2-wordpress-suite' ));
-            return;
-        }
-        if (!$this->can_manage()) {
-            wp_die( esc_html__( 'Permission denied', 'gm2-wordpress-suite' ) );
-        }
-
-        $config = $this->get_config();
-        if (!empty($_GET['gm2_pt_saved'])) {
-            echo '<div class="notice notice-success"><p>' . esc_html__( 'Post type saved.', 'gm2-wordpress-suite' ) . '</p></div>';
-        }
-        if (!empty($_GET['gm2_tax_saved'])) {
-            echo '<div class="notice notice-success"><p>' . esc_html__( 'Taxonomy saved.', 'gm2-wordpress-suite' ) . '</p></div>';
-        }
-        if (isset($_GET['gm2_pt_deleted'])) {
-            if ($_GET['gm2_pt_deleted'] === '1') {
-                echo '<div class="notice notice-success"><p>' . esc_html__( 'Post type deleted.', 'gm2-wordpress-suite' ) . '</p></div>';
-            } else {
-                echo '<div class="notice notice-error"><p>' . esc_html__( 'Failed to delete post type.', 'gm2-wordpress-suite' ) . '</p></div>';
-            }
-        }
-        if (isset($_GET['gm2_tax_deleted'])) {
-            if ($_GET['gm2_tax_deleted'] === '1') {
-                echo '<div class="notice notice-success"><p>' . esc_html__( 'Taxonomy deleted.', 'gm2-wordpress-suite' ) . '</p></div>';
-            } else {
-                echo '<div class="notice notice-error"><p>' . esc_html__( 'Failed to delete taxonomy.', 'gm2-wordpress-suite' ) . '</p></div>';
-            }
-        }
-
-        if (!empty($_GET['gm2_pt_too_many'])) {
-            echo '<div class="notice notice-warning"><p>' . esc_html__( 'Too many post types selected. Delete in smaller batches or increase max_input_vars in php.ini.', 'gm2-wordpress-suite' ) . '</p></div>';
-        }
-
-        if (isset($_POST['gm2_add_post_type']) && check_admin_referer('gm2_add_post_type')) {
-            $slug   = sanitize_key($_POST['pt_slug'] ?? '');
-            $label  = sanitize_text_field($_POST['pt_label'] ?? '');
-            $fields = json_decode(wp_unslash($_POST['pt_fields'] ?? ''), true);
-            if (!is_array($fields)) {
-                $fields = [];
-            }
-            $fields = $this->sanitize_fields_array($fields);
-
-            $args_input = [];
-            $labels = json_decode(wp_unslash($_POST['pt_labels'] ?? ''), true);
-            if (is_array($labels)) {
-                $args_input[] = [ 'key' => 'labels', 'value' => $labels ];
-            }
-            $menu_icon = sanitize_text_field($_POST['pt_menu_icon'] ?? '');
-            if ($menu_icon !== '') {
-                $args_input[] = [ 'key' => 'menu_icon', 'value' => $menu_icon ];
-            }
-            $menu_position = isset($_POST['pt_menu_position']) ? sanitize_text_field($_POST['pt_menu_position']) : '';
-            if ($menu_position !== '') {
-                $args_input[] = [ 'key' => 'menu_position', 'value' => $menu_position ];
-            }
-            $supports = [];
-            if (!empty($_POST['pt_supports']) && is_array($_POST['pt_supports'])) {
-                $supports = array_filter(array_map('sanitize_key', (array) $_POST['pt_supports']));
-            }
-            if ($supports) {
-                $args_input[] = [ 'key' => 'supports', 'value' => $supports ];
-            }
-            if (!empty($_POST['pt_hierarchical'])) {
-                $args_input[] = [ 'key' => 'hierarchical', 'value' => true ];
-            }
-            foreach ([ 'public', 'publicly_queryable', 'show_ui', 'show_in_menu', 'show_in_nav_menus', 'show_in_admin_bar', 'exclude_from_search', 'has_archive' ] as $vis_key) {
-                if (!empty($_POST['pt_' . $vis_key])) {
-                    $args_input[] = [ 'key' => $vis_key, 'value' => true ];
-                }
-            }
-            if (!empty($_POST['pt_show_in_rest'])) {
-                $args_input[] = [ 'key' => 'show_in_rest', 'value' => true ];
-            }
-            $rest_base = sanitize_key($_POST['pt_rest_base'] ?? '');
-            if ($rest_base !== '') {
-                $args_input[] = [ 'key' => 'rest_base', 'value' => $rest_base ];
-            }
-            $rest_controller = sanitize_text_field($_POST['pt_rest_controller_class'] ?? '');
-            if ($rest_controller !== '') {
-                $args_input[] = [ 'key' => 'rest_controller_class', 'value' => $rest_controller ];
-            }
-            $rewrite = [];
-            $rewrite_slug = sanitize_title_with_dashes($_POST['pt_rewrite_slug'] ?? '');
-            if ($rewrite_slug !== '') {
-                $rewrite['slug'] = $rewrite_slug;
-            }
-            foreach ( [ 'with_front', 'hierarchical', 'feeds', 'pages' ] as $r_key ) {
-                if (!empty($_POST['pt_rewrite_' . $r_key])) {
-                    $rewrite[$r_key] = true;
-                }
-            }
-            if (!empty($rewrite)) {
-                $args_input[] = [ 'key' => 'rewrite', 'value' => $rewrite ];
-            }
-            if (!empty($_POST['pt_map_meta_cap'])) {
-                $args_input[] = [ 'key' => 'map_meta_cap', 'value' => true ];
-            }
-            $cap_type_raw = sanitize_text_field($_POST['pt_capability_type'] ?? '');
-            if ($cap_type_raw !== '') {
-                $parts = array_filter(array_map('sanitize_key', array_map('trim', explode(',', $cap_type_raw))));
-                $cap_type = count($parts) > 1 ? array_slice($parts, 0, 2) : ($parts[0] ?? '');
-                if ($cap_type !== '') {
-                    $args_input[] = [ 'key' => 'capability_type', 'value' => $cap_type ];
-                }
-            }
-            $caps = json_decode(wp_unslash($_POST['pt_capabilities'] ?? ''), true);
-            if (is_array($caps)) {
-                $args_input[] = [ 'key' => 'capabilities', 'value' => $caps ];
-            }
-            $template = json_decode(wp_unslash($_POST['pt_template'] ?? ''), true);
-            if (is_array($template)) {
-                $args_input[] = [ 'key' => 'template', 'value' => $template ];
-            }
-            $template_lock = sanitize_key($_POST['pt_template_lock'] ?? '');
-            if (in_array($template_lock, [ 'all', 'insert' ], true)) {
-                $args_input[] = [ 'key' => 'template_lock', 'value' => $template_lock ];
-            }
-
-            $args = $this->sanitize_args_array($args_input);
-
-            if ($slug) {
-                $config['post_types'][$slug] = [
-                    'label'  => $label ?: ucfirst($slug),
-                    'fields' => $fields,
-                    'args'   => $args,
-                ];
-                update_option('gm2_custom_posts_config', $config);
-                echo '<div class="notice notice-success"><p>' . esc_html__( 'Post type saved.', 'gm2-wordpress-suite' ) . '</p></div>';
-            }
-        }
-
-        if (isset($_POST['gm2_add_taxonomy']) && check_admin_referer('gm2_add_taxonomy')) {
-            $slug       = sanitize_key($_POST['tax_slug'] ?? '');
-            $label      = sanitize_text_field($_POST['tax_label'] ?? '');
-            $post_types = array_filter(array_map('sanitize_key', explode(',', $_POST['tax_post_types'] ?? '')));
-            $args       = json_decode(wp_unslash($_POST['tax_args'] ?? ''), true);
-            if (!is_array($args)) {
-                $args = [];
-            }
-            $args = $this->sanitize_args_array($args);
-            if ($slug) {
-                $config['taxonomies'][$slug] = [
-                    'label'      => $label ?: ucfirst($slug),
-                    'post_types' => $post_types,
-                    'args'       => $args,
-                ];
-                update_option('gm2_custom_posts_config', $config);
-                echo '<div class="notice notice-success"><p>' . esc_html__( 'Taxonomy saved.', 'gm2-wordpress-suite' ) . '</p></div>';
-            }
-        }
-
-        echo '<div class="wrap">';
-        echo '<h1>' . esc_html__( 'Gm2 Custom Posts', 'gm2-wordpress-suite' ) . '</h1>';
-
-        echo '<h2>' . esc_html__( 'Existing Post Types', 'gm2-wordpress-suite' ) . '</h2>';
-        require_once __DIR__ . '/class-gm2-cpt-list-table.php';
-        $table = new GM2_CPT_List_Table();
-        $table->prepare_items();
-        echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
-        echo '<input type="hidden" name="action" value="gm2_delete_post_type" />';
-        $table->display();
-        echo '</form>';
-
-        echo '<h2>' . esc_html__( 'Existing Taxonomies', 'gm2-wordpress-suite' ) . '</h2>';
-        if (!empty($config['taxonomies'])) {
-            echo '<ul>';
-            foreach ($config['taxonomies'] as $slug => $tax) {
-                $link = admin_url('admin.php?page=gm2_tax_args&tax=' . $slug);
-                echo '<li><a href="' . esc_url($link) . '">' . esc_html($slug . ' - ' . ($tax['label'] ?? $slug)) . '</a> <a href="#" class="gm2-edit-tax" data-slug="' . esc_attr($slug) . '">' . esc_html__( 'Edit', 'gm2-wordpress-suite' ) . '</a> ';
-                echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="gm2-delete-tax-form" style="display:inline;">';
-                echo '<input type="hidden" name="action" value="gm2_delete_taxonomy" />';
-                echo '<input type="hidden" name="slug" value="' . esc_attr($slug) . '" />';
-                wp_nonce_field('gm2_delete_taxonomy_' . $slug);
-                echo '<button type="submit" class="button-link delete-link">' . esc_html__( 'Delete', 'gm2-wordpress-suite' ) . '</button>';
-                echo '</form></li>';
-            }
-            echo '</ul>';
-        } else {
-            echo '<p>' . esc_html__( 'No custom taxonomies defined.', 'gm2-wordpress-suite' ) . '</p>';
-        }
-
-        echo '<hr />';
-
-        echo '<h2>' . esc_html__( 'Add / Edit Post Type', 'gm2-wordpress-suite' ) . '</h2>';
-        echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" id="gm2-post-type-form">';
-        wp_nonce_field('gm2_edit_post_type');
-        echo '<input type="hidden" name="action" value="gm2_edit_post_type" />';
-        echo '<input type="hidden" name="pt_original" id="gm2-pt-original" />';
-        echo '<p><label>' . esc_html__( 'Slug', 'gm2-wordpress-suite' ) . '<br />';
-        echo '<input type="text" name="pt_slug" class="regular-text" /></label></p>';
-        echo '<p><label>' . esc_html__( 'Label', 'gm2-wordpress-suite' ) . '<br />';
-        echo '<input type="text" name="pt_label" class="regular-text" /></label></p>';
-        echo '<p><label>' . esc_html__( 'Labels (JSON)', 'gm2-wordpress-suite' ) . '<br />';
-        echo '<textarea name="pt_labels" class="large-text code" rows="5"></textarea></label></p>';
-        echo '<p><label>' . esc_html__( 'Menu Icon', 'gm2-wordpress-suite' ) . '<br />';
-        echo '<input type="text" name="pt_menu_icon" class="regular-text" /></label></p>';
-        echo '<p><label>' . esc_html__( 'Menu Position', 'gm2-wordpress-suite' ) . '<br />';
-        echo '<input type="number" name="pt_menu_position" class="small-text" /></label></p>';
-        echo '<fieldset><legend>' . esc_html__( 'Supports', 'gm2-wordpress-suite' ) . '</legend>';
-        foreach ([ 'title', 'editor', 'excerpt', 'author', 'thumbnail', 'page-attributes', 'custom-fields', 'revisions' ] as $sup) {
-            echo '<label><input type="checkbox" name="pt_supports[]" value="' . esc_attr($sup) . '" /> ' . esc_html( ucwords(str_replace('-', ' ', $sup)) ) . '</label><br />';
-        }
-        echo '</fieldset>';
-        echo '<p><label><input type="checkbox" name="pt_hierarchical" value="1" /> ' . esc_html__( 'Hierarchical', 'gm2-wordpress-suite' ) . '</label></p>';
-        echo '<fieldset><legend>' . esc_html__( 'Visibility', 'gm2-wordpress-suite' ) . '</legend>';
-        foreach ([ 'public', 'publicly_queryable', 'show_ui', 'show_in_menu', 'show_in_nav_menus', 'show_in_admin_bar', 'exclude_from_search', 'has_archive' ] as $vis) {
-            echo '<label><input type="checkbox" name="pt_' . esc_attr($vis) . '" value="1" /> ' . esc_html( ucwords(str_replace('_', ' ', $vis)) ) . '</label><br />';
-        }
-        echo '</fieldset>';
-        echo '<fieldset><legend>' . esc_html__( 'REST API', 'gm2-wordpress-suite' ) . '</legend>';
-        echo '<p><label><input type="checkbox" name="pt_show_in_rest" value="1" /> ' . esc_html__( 'Show in REST', 'gm2-wordpress-suite' ) . '</label></p>';
-        echo '<p><label>' . esc_html__( 'REST Base', 'gm2-wordpress-suite' ) . '<br />';
-        echo '<input type="text" name="pt_rest_base" class="regular-text" /></label></p>';
-        echo '<p><label>' . esc_html__( 'REST Controller Class', 'gm2-wordpress-suite' ) . '<br />';
-        echo '<input type="text" name="pt_rest_controller_class" class="regular-text" /></label></p>';
-        echo '</fieldset>';
-        echo '<fieldset><legend>' . esc_html__( 'Rewrite', 'gm2-wordpress-suite' ) . '</legend>';
-        echo '<p><label>' . esc_html__( 'Slug', 'gm2-wordpress-suite' ) . '<br />';
-        echo '<input type="text" name="pt_rewrite_slug" class="regular-text" /></label></p>';
-        foreach ([ 'with_front', 'hierarchical', 'feeds', 'pages' ] as $rw ) {
-            echo '<label><input type="checkbox" name="pt_rewrite_' . esc_attr($rw) . '" value="1" /> ' . esc_html( ucwords(str_replace('_', ' ', $rw)) ) . '</label><br />';
-        }
-        echo '</fieldset>';
-        echo '<fieldset><legend>' . esc_html__( 'Capabilities', 'gm2-wordpress-suite' ) . '</legend>';
-        echo '<p><label><input type="checkbox" name="pt_map_meta_cap" value="1" /> ' . esc_html__( 'Map Meta Cap', 'gm2-wordpress-suite' ) . '</label></p>';
-        echo '<p><label>' . esc_html__( 'Capability Type', 'gm2-wordpress-suite' ) . '<br />';
-        echo '<input type="text" name="pt_capability_type" class="regular-text" /></label></p>';
-        echo '<p><label>' . esc_html__( 'Capabilities (JSON)', 'gm2-wordpress-suite' ) . '<br />';
-        echo '<textarea name="pt_capabilities" class="large-text code" rows="5"></textarea></label></p>';
-        echo '</fieldset>';
-        echo '<fieldset><legend>' . esc_html__( 'Templates', 'gm2-wordpress-suite' ) . '</legend>';
-        echo '<p><label>' . esc_html__( 'Template (JSON)', 'gm2-wordpress-suite' ) . '<br />';
-        echo '<textarea name="pt_template" class="large-text code" rows="5"></textarea></label></p>';
-        echo '<p><label>' . esc_html__( 'Template Lock', 'gm2-wordpress-suite' ) . '<br />';
-        echo '<select name="pt_template_lock" class="regular-text">';
-        echo '<option value="">' . esc_html__( 'None', 'gm2-wordpress-suite' ) . '</option>';
-        echo '<option value="insert">' . esc_html__( 'Insert', 'gm2-wordpress-suite' ) . '</option>';
-        echo '<option value="all">' . esc_html__( 'All', 'gm2-wordpress-suite' ) . '</option>';
-        echo '</select></label></p>';
-        echo '</fieldset>';
-        echo '<p><label>' . esc_html__( 'Fields (JSON)', 'gm2-wordpress-suite' ) . '<br />';
-        echo '<textarea name="pt_fields" class="large-text code" rows="5" placeholder="{\n  \"field_key\": {\n    \"label\": \"Field Label\",\n    \"type\": \"text\"\n  }\n}"></textarea></label></p>';
-        echo '<p><input type="submit" class="button button-primary" value="' . esc_attr__( 'Save Post Type', 'gm2-wordpress-suite' ) . '" /></p>';
-        echo '</form>';
-
-        echo '<h2>' . esc_html__( 'Add / Edit Taxonomy', 'gm2-wordpress-suite' ) . '</h2>';
-        echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" id="gm2-tax-form">';
-        wp_nonce_field('gm2_edit_taxonomy');
-        echo '<input type="hidden" name="action" value="gm2_edit_taxonomy" />';
-        echo '<input type="hidden" name="tax_original" id="gm2-tax-original" />';
-        echo '<p><label>' . esc_html__( 'Slug', 'gm2-wordpress-suite' ) . '<br />';
-        echo '<input type="text" name="tax_slug" class="regular-text" /></label></p>';
-        echo '<p><label>' . esc_html__( 'Label', 'gm2-wordpress-suite' ) . '<br />';
-        echo '<input type="text" name="tax_label" class="regular-text" /></label></p>';
-        echo '<p><label>' . esc_html__( 'Post Types (comma separated)', 'gm2-wordpress-suite' ) . '<br />';
-        echo '<input type="text" name="tax_post_types" class="regular-text" /></label></p>';
-        echo '<p><label>' . esc_html__( 'Args (JSON)', 'gm2-wordpress-suite' ) . '<br />';
-        echo '<textarea name="tax_args" class="large-text code" rows="5"></textarea></label></p>';
-        echo '<p><input type="submit" class="button button-primary" value="' . esc_attr__( 'Save Taxonomy', 'gm2-wordpress-suite' ) . '" /></p>';
-        echo '</form>';
-
-        echo '<hr />';
-        echo '<h2>' . esc_html__( 'Thumbnail Regeneration', 'gm2-wordpress-suite' ) . '</h2>';
-        echo '<p><button type="button" class="button" id="gm2-start-thumb-regeneration">' . esc_html__( 'Regenerate Thumbnails', 'gm2-wordpress-suite' ) . '</button></p>';
-        echo '<div id="gm2-thumb-progress" style="display:none"><progress value="0" max="100"></progress> <span class="percent">0%</span></div>';
-
-        echo '</div>';
+        require __DIR__ . '/pages/post-types.php';
     }
 
     public function add_meta_boxes() {
@@ -1685,6 +1329,14 @@ class Gm2_Custom_Posts_Admin {
                 'taxUrl'   => admin_url('admin-post.php?action=gm2_edit_taxonomy'),
                 'deleteConfirm' => esc_html__( 'Are you sure you want to delete this item?', 'gm2-wordpress-suite' ),
             ]);
+            $admin_js = GM2_PLUGIN_DIR . 'admin/js/gm2-custom-posts-admin.js';
+            wp_enqueue_script(
+                'gm2-custom-posts-admin',
+                GM2_PLUGIN_URL . 'admin/js/gm2-custom-posts-admin.js',
+                [ 'jquery' ],
+                file_exists($admin_js) ? filemtime($admin_js) : GM2_VERSION,
+                true
+            );
             return;
         }
 
@@ -1903,6 +1555,14 @@ class Gm2_Custom_Posts_Admin {
                 GM2_PLUGIN_URL . 'admin/js/gm2-custom-tax-admin.js',
                 [ 'jquery', 'gm2-conditions' ],
                 file_exists($tax_js) ? filemtime($tax_js) : GM2_VERSION,
+                true
+            );
+            $admin_js = GM2_PLUGIN_DIR . 'admin/js/gm2-custom-posts-admin.js';
+            wp_enqueue_script(
+                'gm2-custom-posts-admin',
+                GM2_PLUGIN_URL . 'admin/js/gm2-custom-posts-admin.js',
+                [ 'jquery', 'gm2-conditions' ],
+                file_exists($admin_js) ? filemtime($admin_js) : GM2_VERSION,
                 true
             );
 
