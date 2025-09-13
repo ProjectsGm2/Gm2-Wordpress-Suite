@@ -14,7 +14,7 @@ class GM2_Field_File extends GM2_Field {
         echo '<div class="gm2-media-field"><input type="hidden" name="' . esc_attr( $this->key ) . '" value="' . esc_attr( $value ) . '"' . $disabled . $placeholder_attr . ' />' . $button . $preview . '</div>';
     }
 
-    public function sanitize( $value ) {
+    public function sanitize_field_value( $value ) {
         return absint( $value );
     }
 }

@@ -10,7 +10,7 @@ class GM2_Field_Number extends GM2_Field {
         echo '<input type="number" name="' . esc_attr( $this->key ) . '" value="' . esc_attr( $value ) . '"' . $disabled . $placeholder_attr . ' />';
     }
 
-    public function sanitize( $value ) {
+    public function sanitize_field_value( $value ) {
         return is_numeric( $value ) ? $value : '';
     }
 }

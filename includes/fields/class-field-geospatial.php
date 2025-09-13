@@ -48,7 +48,7 @@ class GM2_Field_Geospatial extends GM2_Field {
         echo '</div>';
     }
 
-    public function sanitize( $value ) {
+    public function sanitize_field_value( $value ) {
         if ( ! is_array( $value ) ) {
             return array();
         }

@@ -24,7 +24,7 @@ class GM2_Field_Select extends GM2_Field {
         echo '</select>';
     }
 
-    public function sanitize( $value ) {
+    public function sanitize_field_value( $value ) {
         $multiple = ! empty( $this->args['multiple'] );
         $options  = $this->args['options'] ?? array();
 

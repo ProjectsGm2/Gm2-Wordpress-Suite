@@ -17,7 +17,7 @@ class GM2_Field_Post_Object extends GM2_Field {
         echo '</select>';
     }
 
-    public function sanitize( $value ) {
+    public function sanitize_field_value( $value ) {
         $post_id = intval( $value );
         return get_post( $post_id ) ? $post_id : 0;
     }

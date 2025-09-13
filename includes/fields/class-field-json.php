@@ -10,7 +10,7 @@ class GM2_Field_JSON extends GM2_Field {
         echo '<textarea name="' . esc_attr( $this->key ) . '" rows="5" cols="40"' . $disabled . $placeholder_attr . '>' . esc_textarea( $value ) . '</textarea>';
     }
 
-    public function sanitize( $value ) {
+    public function sanitize_field_value( $value ) {
         if ( '' === trim( $value ) ) {
             return '';
         }

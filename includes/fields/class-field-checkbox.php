@@ -11,7 +11,7 @@ class GM2_Field_Checkbox extends GM2_Field {
         echo '<input type="checkbox" name="' . esc_attr( $this->key ) . '" value="1"' . $checked . $disabled . $placeholder_attr . ' />';
     }
 
-    public function sanitize( $value ) {
+    public function sanitize_field_value( $value ) {
         return $value ? '1' : '';
     }
 }

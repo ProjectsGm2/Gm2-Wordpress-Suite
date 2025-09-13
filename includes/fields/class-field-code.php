@@ -20,7 +20,7 @@ class GM2_Field_Code extends GM2_Field {
         }
     }
 
-    public function sanitize( $value ) {
+    public function sanitize_field_value( $value ) {
         return (string) $value;
     }
 }

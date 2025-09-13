@@ -51,7 +51,7 @@ class GM2_Field_Rating extends GM2_Field {
         return $html;
     }
 
-    public function sanitize( $value ) {
+    public function sanitize_field_value( $value ) {
         $value = intval( $value );
         if ( $value < 0 ) {
             $value = 0;

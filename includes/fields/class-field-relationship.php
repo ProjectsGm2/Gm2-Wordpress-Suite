@@ -33,7 +33,7 @@ class GM2_Field_Relationship extends GM2_Field {
         echo '<input type="text" name="' . esc_attr( $this->key ) . '[]" value="' . esc_attr( implode( ',', $vals ) ) . '" class="gm2-relationship"' . $disabled . $placeholder_attr . ' />';
     }
 
-    public function sanitize( $value ) {
+    public function sanitize_field_value( $value ) {
         $value = is_array( $value ) ? $value : array( $value );
         $out   = array();
         foreach ( $value as $v ) {

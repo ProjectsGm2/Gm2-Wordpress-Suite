@@ -91,7 +91,7 @@ class GM2_Field_Flexible extends GM2_Field {
      * @param mixed $value Submitted value.
      * @return array       Sanitized value.
      */
-    public function sanitize( $value ) {
+    public function sanitize_field_value( $value ) {
         $layouts = $this->args['layouts'] ?? array();
         $clean   = array();
 

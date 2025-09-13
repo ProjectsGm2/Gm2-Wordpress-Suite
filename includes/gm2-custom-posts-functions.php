@@ -359,6 +359,18 @@ function gm2_validate_field($key, $field, $value, $object_id = 0, $context_type 
         }
     }
 
+    /**
+     * Fires after a field value passes validation.
+     *
+     * The dynamic portion of the hook name, {$type}, refers to the field type.
+     *
+     * @param mixed  $value        The value being validated.
+     * @param array  $field        Field definition array.
+     * @param int    $object_id    Object ID for context.
+     * @param string $context_type Context type (post, user, etc.).
+     */
+    do_action( "gm2_cp_field_validate_{$type}", $value, $field, $object_id, $context_type );
+
     return true;
 }
 

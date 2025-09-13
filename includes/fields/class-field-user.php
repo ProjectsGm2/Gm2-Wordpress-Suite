@@ -16,7 +16,7 @@ class GM2_Field_User extends GM2_Field {
         echo '</select>';
     }
 
-    public function sanitize( $value ) {
+    public function sanitize_field_value( $value ) {
         $user_id = intval( $value );
         return get_user_by( 'id', $user_id ) ? $user_id : 0;
     }

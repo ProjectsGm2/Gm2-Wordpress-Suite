@@ -21,7 +21,7 @@ class GM2_Field_Measurement extends GM2_Field {
         echo '</select>';
     }
 
-    public function sanitize( $value ) {
+    public function sanitize_field_value( $value ) {
         $units = $this->args['units'] ?? array( 'px', 'em', '%' );
         if ( ! is_array( $value ) ) {
             return array( 'value' => '', 'unit' => $units[0] );

@@ -12,7 +12,7 @@ class GM2_Field_Price extends GM2_Field {
         echo ' <span class="gm2-price-currency">' . $currency . '</span>';
     }
 
-    public function sanitize( $value ) {
+    public function sanitize_field_value( $value ) {
         $value = filter_var( $value, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION );
         return is_numeric( $value ) ? $value : '';
     }
