@@ -90,6 +90,7 @@ require_once GM2_PLUGIN_DIR . 'includes/gm2-model-export.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Github_Client.php';
 require_once GM2_PLUGIN_DIR . 'includes/gm2-apply-patch.php';
 require_once GM2_PLUGIN_DIR . 'includes/gm2-config-versions.php';
+require_once GM2_PLUGIN_DIR . 'includes/seo/class-gm2-cp-schema.php';
 // Temporarily disable Recovery Email Queue.
 // require_once GM2_PLUGIN_DIR . 'includes/Gm2_Abandoned_Carts_Messaging.php';
 require_once GM2_PLUGIN_DIR . 'admin/Gm2_Abandoned_Carts_Admin.php';
