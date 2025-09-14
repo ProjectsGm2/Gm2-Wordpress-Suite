@@ -19,10 +19,15 @@ if (!function_exists('gm2_model_export')) {
         if (!is_array($field_groups)) {
             $field_groups = [];
         }
+        $schema_maps = get_option('gm2_cp_schema_map', []);
+        if (!is_array($schema_maps)) {
+            $schema_maps = [];
+        }
         $data = [
-            'post_types'   => $config['post_types'] ?? [],
-            'taxonomies'   => $config['taxonomies'] ?? [],
-            'field_groups' => $field_groups,
+            'post_types'      => $config['post_types'] ?? [],
+            'taxonomies'      => $config['taxonomies'] ?? [],
+            'field_groups'    => $field_groups,
+            'schema_mappings' => $schema_maps,
         ];
         switch ($format) {
             case 'array':
@@ -99,6 +104,7 @@ if (!function_exists('gm2_model_import')) {
         ];
         update_option('gm2_custom_posts_config', $config);
         update_option('gm2_field_groups', $data['field_groups'] ?? []);
+        update_option('gm2_cp_schema_map', $data['schema_mappings'] ?? []);
         return true;
     }
 }
@@ -130,6 +136,9 @@ if (!function_exists('gm2_model_generate_plugin')) {
         $code .= "    \$groups = " . var_export($data['field_groups'] ?? [], true) . ";\n";
         $code .= "    \$existing = get_option('gm2_field_groups', []);\n";
         $code .= "    update_option('gm2_field_groups', array_merge(\$existing, \$groups));\n";
+        $code .= "    \$maps = " . var_export($data['schema_mappings'] ?? [], true) . ";\n";
+        $code .= "    \$existing_maps = get_option('gm2_cp_schema_map', []);\n";
+        $code .= "    update_option('gm2_cp_schema_map', array_merge(\$existing_maps, \$maps));\n";
         $code .= "});\n";
 
         $tmp_dir = sys_get_temp_dir() . '/gm2_model_' . uniqid();

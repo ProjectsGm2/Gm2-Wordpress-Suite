@@ -1,33 +1,33 @@
 {
   "post_types": {
-    "listing": {
-      "label": "Listing",
+    "property": {
+      "label": "Property",
       "public": true,
       "supports": ["title", "editor", "thumbnail"]
     }
   },
   "taxonomies": {
-    "listing_category": {
-      "object_type": ["listing"],
-      "label": "Listing Categories",
+    "property_type": {
+      "object_type": ["property"],
+      "label": "Property Types",
       "hierarchical": true
     }
   },
   "field_groups": [
     {
-      "key": "group_listing_details",
-      "title": "Listing Details",
+      "key": "group_property_details",
+      "title": "Property Details",
       "fields": [
-        {"key": "field_phone", "label": "Phone", "name": "phone", "type": "text"},
+        {"key": "field_price", "label": "Price", "name": "price", "type": "number"},
         {"key": "field_address", "label": "Address", "name": "address", "type": "text"}
       ]
     }
   ],
   "schema_mappings": {
-    "listing": {
-      "type": "LocalBusiness",
+    "property": {
+      "type": "RealEstateListing",
       "map": {
-        "telephone": "phone",
+        "price": "price",
         "address": "address"
       }
     }

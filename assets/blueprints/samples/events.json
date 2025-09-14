@@ -23,5 +23,15 @@
         {"key": "field_location", "label": "Location", "name": "location", "type": "text"}
       ]
     }
-  ]
+  ],
+  "schema_mappings": {
+    "event": {
+      "type": "Event",
+      "map": {
+        "startDate": "start_date",
+        "endDate": "end_date",
+        "location": "location"
+      }
+    }
+  }
 }
