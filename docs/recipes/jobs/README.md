@@ -2,6 +2,8 @@
 
 Job board example using schema tooltips.
 
+See the [Schema Mapping and SEO guide](../../schema-mapping-and-seo.md) for mapping presets, JSON-LD examples and SEO hooks.
+
 ```php
 register_post_type( 'gm2_job', [
     'label' => 'Job',

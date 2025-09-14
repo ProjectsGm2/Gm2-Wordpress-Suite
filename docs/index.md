@@ -3,6 +3,7 @@
 See [model-cli.md](model-cli.md) for managing custom post types, taxonomies and fields via WP-CLI.
 For a reference on field types, conditional logic and validation hooks, see [fields-and-validation.md](fields-and-validation.md).
 For guidance on using the suite with Elementor, see [using-with-elementor.md](using-with-elementor.md).
+For schema mapping and SEO integration examples, see [schema-mapping-and-seo.md](schema-mapping-and-seo.md).
 
 For font optimization checks, review [font-performance-test-plan.md](font-performance-test-plan.md).
 
