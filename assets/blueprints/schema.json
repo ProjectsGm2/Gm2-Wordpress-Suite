@@ -30,7 +30,15 @@
         "supports": {
           "type": "array",
           "items": { "type": "string" }
-        }
+        },
+        "labels": { "type": "object", "additionalProperties": { "type": "string" } },
+        "has_archive": { "type": ["boolean", "string"] },
+        "rewrite": {
+          "type": "object",
+          "properties": { "slug": { "type": "string" } },
+          "additionalProperties": { "type": ["string", "boolean"] }
+        },
+        "menu_icon": { "type": "string" }
       },
       "additionalProperties": true
     },
@@ -40,6 +48,13 @@
         "object_type": {
           "type": "array",
           "items": { "type": "string" }
+        },
+        "labels": { "type": "object", "additionalProperties": { "type": "string" } },
+        "hierarchical": { "type": "boolean" },
+        "rewrite": {
+          "type": "object",
+          "properties": { "slug": { "type": "string" } },
+          "additionalProperties": { "type": ["string", "boolean"] }
         }
       },
       "additionalProperties": true
@@ -57,13 +72,18 @@
       "required": ["key", "title", "fields"],
       "additionalProperties": true
     },
-    "field": {
+      "field": {
       "type": "object",
       "properties": {
         "key": { "type": "string" },
         "label": { "type": "string" },
         "name": { "type": "string" },
-        "type": { "type": "string" }
+        "type": { "type": "string" },
+        "required": { "type": "boolean" },
+        "regex": { "type": "string" },
+        "min": { "type": ["number", "integer"] },
+        "max": { "type": ["number", "integer"] },
+        "expose_in_rest": { "type": "boolean" }
       },
       "required": ["key", "label", "name", "type"],
       "additionalProperties": true
