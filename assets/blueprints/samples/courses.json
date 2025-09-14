@@ -1,0 +1,37 @@
+{
+  "post_types": {
+    "course": {
+      "label": "Course",
+      "public": true,
+      "supports": ["title", "editor", "thumbnail"]
+    }
+  },
+  "taxonomies": {
+    "course_category": {
+      "object_type": ["course"],
+      "label": "Course Categories",
+      "hierarchical": false
+    }
+  },
+  "field_groups": [
+    {
+      "key": "group_course_details",
+      "title": "Course Details",
+      "fields": [
+        {"key": "field_provider", "label": "Provider", "name": "provider", "type": "text"},
+        {"key": "field_course_code", "label": "Course Code", "name": "course_code", "type": "text"},
+        {"key": "field_course_url", "label": "Course URL", "name": "course_url", "type": "url"}
+      ]
+    }
+  ],
+  "schema_mappings": {
+    "course": {
+      "type": "Course",
+      "map": {
+        "provider": "provider",
+        "courseCode": "course_code",
+        "url": "course_url"
+      }
+    }
+  }
+}
