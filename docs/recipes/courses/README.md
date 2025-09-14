@@ -2,6 +2,8 @@
 
 Course listing with Open in Code output.
 
+See the [Schema Mapping and SEO guide](../../schema-mapping-and-seo.md) for mapping presets, JSON-LD examples and SEO hooks.
+
 ```php
 register_post_type( 'gm2_course', [
     'label' => 'Course',
