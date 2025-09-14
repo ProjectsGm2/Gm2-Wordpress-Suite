@@ -41,4 +41,25 @@ class BreadcrumbsTest extends WP_UnitTestCase {
         $this->assertIsArray($data);
         $this->assertSame('BreadcrumbList', $data['@type']);
     }
+
+    public function test_breadcrumb_items_filter_modifies_output() {
+        $post_id = self::factory()->post->create([
+            'post_title'   => 'Filter Example',
+            'post_content' => 'Content',
+        ]);
+        $seo = new Gm2_SEO_Public();
+        $this->go_to(get_permalink($post_id));
+        setup_postdata(get_post($post_id));
+
+        add_filter('gm2_breadcrumb_items', function ($items) {
+            $items[] = [
+                'name' => 'Filtered Item',
+                'url'  => 'https://example.com/filtered',
+            ];
+            return $items;
+        });
+
+        $output = $seo->gm2_breadcrumbs_shortcode();
+        $this->assertStringContainsString('Filtered Item', $output);
+    }
 }
