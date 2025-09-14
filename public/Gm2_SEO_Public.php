@@ -410,6 +410,23 @@ class Gm2_SEO_Public {
             $focus_keywords    = get_post_meta($post_id, '_gm2_focus_keywords', true);
             $long_tail_keywords = get_post_meta($post_id, '_gm2_long_tail_keywords', true);
 
+            if (!$title || !$description) {
+                $pt              = get_post_type($post_id);
+                $title_templates = get_option('gm2_title_templates', []);
+                $desc_templates  = get_option('gm2_description_templates', []);
+                $replacements    = [
+                    '{site_name}'    => get_bloginfo('name'),
+                    '{post_title}'   => get_the_title($post_id),
+                    '{post_excerpt}' => wp_strip_all_tags(get_the_excerpt($post_id)),
+                ];
+                if (!$title && !empty($title_templates[$pt])) {
+                    $title = strtr($title_templates[$pt], $replacements);
+                }
+                if (!$description && !empty($desc_templates[$pt])) {
+                    $description = strtr($desc_templates[$pt], $replacements);
+                }
+            }
+
             if (class_exists('WooCommerce') && function_exists('is_product') && is_product()) {
                 $product = wc_get_product($post_id);
                 if ($product) {
@@ -478,6 +495,9 @@ class Gm2_SEO_Public {
     }
 
     public function output_meta_tags() {
+        if (apply_filters('gm2_seo_disable_output', false)) {
+            return;
+        }
         $data        = $this->get_seo_meta();
         $title       = $data['title'];
         $description = $data['description'];
@@ -524,7 +544,7 @@ class Gm2_SEO_Public {
         $twitter_creator = trim(get_option('gm2_twitter_creator', ''));
 
         // Output the canonical link tag first if it isn't already hooked.
-        if (!has_action('wp_head', [$this, 'output_canonical_url'])) {
+        if (!has_action('wp_head', [$this, 'output_canonical_url']) && !apply_filters('gm2_seo_disable_canonical', false)) {
             $this->output_canonical_url();
         }
 
@@ -541,28 +561,37 @@ class Gm2_SEO_Public {
         $url  = $canonical;
         $type = is_singular() ? 'article' : 'website';
 
-        $html .= '<meta property="og:title" content="' . esc_attr($title) . '" />' . "\n";
-        $html .= '<meta property="og:description" content="' . esc_attr($description) . '" />' . "\n";
-        $html .= '<meta property="og:url" content="' . esc_url($url) . '" />' . "\n";
-        $html .= '<meta property="og:type" content="' . esc_attr($type) . '" />' . "\n";
+        $og_html = '';
+        $og_html .= '<meta property="og:title" content="' . esc_attr($title) . '" />' . "\n";
+        $og_html .= '<meta property="og:description" content="' . esc_attr($description) . '" />' . "\n";
+        $og_html .= '<meta property="og:url" content="' . esc_url($url) . '" />' . "\n";
+        $og_html .= '<meta property="og:type" content="' . esc_attr($type) . '" />' . "\n";
         $site_name = get_bloginfo('name');
         $locale    = str_replace('_', '-', get_locale());
-        $html     .= '<meta property="og:site_name" content="' . esc_attr($site_name) . '" />' . "\n";
-        $html     .= '<meta property="og:locale" content="' . esc_attr($locale) . '" />' . "\n";
-
+        $og_html  .= '<meta property="og:site_name" content="' . esc_attr($site_name) . '" />' . "\n";
+        $og_html  .= '<meta property="og:locale" content="' . esc_attr($locale) . '" />' . "\n";
         if ($og_image_url) {
-            $html .= '<meta property="og:image" content="' . esc_url($og_image_url) . '" />' . "\n";
-            $html .= '<meta name="twitter:image" content="' . esc_url($og_image_url) . '" />' . "\n";
+            $og_html .= '<meta property="og:image" content="' . esc_url($og_image_url) . '" />' . "\n";
+        }
+        if (!apply_filters('gm2_seo_disable_og_tags', false)) {
+            $html .= $og_html;
         }
 
-        $html .= '<meta name="twitter:card" content="' . esc_attr($card) . '" />' . "\n";
-        $html .= '<meta name="twitter:title" content="' . esc_attr($title) . '" />' . "\n";
-        $html .= '<meta name="twitter:description" content="' . esc_attr($description) . '" />' . "\n";
+        $tw_html  = '';
+        if ($og_image_url) {
+            $tw_html .= '<meta name="twitter:image" content="' . esc_url($og_image_url) . '" />' . "\n";
+        }
+        $tw_html .= '<meta name="twitter:card" content="' . esc_attr($card) . '" />' . "\n";
+        $tw_html .= '<meta name="twitter:title" content="' . esc_attr($title) . '" />' . "\n";
+        $tw_html .= '<meta name="twitter:description" content="' . esc_attr($description) . '" />' . "\n";
         if ($twitter_site) {
-            $html .= '<meta name="twitter:site" content="' . esc_attr($twitter_site) . '" />' . "\n";
+            $tw_html .= '<meta name="twitter:site" content="' . esc_attr($twitter_site) . '" />' . "\n";
         }
         if ($twitter_creator) {
-            $html .= '<meta name="twitter:creator" content="' . esc_attr($twitter_creator) . '" />' . "\n";
+            $tw_html .= '<meta name="twitter:creator" content="' . esc_attr($twitter_creator) . '" />' . "\n";
+        }
+        if (!apply_filters('gm2_seo_disable_twitter_tags', false)) {
+            $html .= $tw_html;
         }
 
         echo apply_filters('gm2_meta_tags', $html, $data);
@@ -1281,6 +1310,9 @@ class Gm2_SEO_Public {
     }
 
     public function output_canonical_url() {
+        if (apply_filters('gm2_seo_disable_canonical', false)) {
+            return;
+        }
         $data = $this->get_seo_meta();
         $canonical = $data['canonical'];
         if ($canonical) {

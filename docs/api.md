@@ -691,10 +691,38 @@ apply_filters( 'gm2_lazy_meta_loader', ... );
 ```
 
 ### `gm2_meta_tags` (filter)
-Location: `public/Gm2_SEO_Public.php:568`
+Location: `public/Gm2_SEO_Public.php:597`
 
 ```php
 apply_filters( 'gm2_meta_tags', ... );
+```
+
+### `gm2_seo_disable_output` (filter)
+Location: `public/Gm2_SEO_Public.php:498`
+
+```php
+apply_filters( 'gm2_seo_disable_output', false );
+```
+
+### `gm2_seo_disable_canonical` (filter)
+Location: `public/Gm2_SEO_Public.php:1313`
+
+```php
+apply_filters( 'gm2_seo_disable_canonical', false );
+```
+
+### `gm2_seo_disable_og_tags` (filter)
+Location: `public/Gm2_SEO_Public.php:576`
+
+```php
+apply_filters( 'gm2_seo_disable_og_tags', false );
+```
+
+### `gm2_seo_disable_twitter_tags` (filter)
+Location: `public/Gm2_SEO_Public.php:593`
+
+```php
+apply_filters( 'gm2_seo_disable_twitter_tags', false );
 ```
 
 ### `gm2_model_locked` (filter)

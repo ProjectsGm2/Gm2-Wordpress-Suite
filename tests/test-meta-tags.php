@@ -285,5 +285,62 @@ class MetaTagsTest extends WP_UnitTestCase {
 
         $this->assertStringContainsString('<link rel="canonical" href="https://example.com/custom" />', $output);
     }
+
+    public function test_title_description_template_fallback() {
+        register_post_type('book');
+        update_option('gm2_title_templates', ['book' => 'Book: {post_title} | {site_name}']);
+        update_option('gm2_description_templates', ['book' => 'About {post_title}: {post_excerpt}']);
+        $post_id = self::factory()->post->create([
+            'post_type'    => 'book',
+            'post_title'   => 'My Book',
+            'post_content' => 'Great story',
+            'post_excerpt' => 'Great story',
+        ]);
+        $seo = new Gm2_SEO_Public();
+        $this->go_to(get_permalink($post_id));
+        setup_postdata(get_post($post_id));
+        remove_theme_support('title-tag');
+        ob_start();
+        $seo->output_meta_tags();
+        $output = ob_get_clean();
+        add_theme_support('title-tag');
+        $blog = get_bloginfo('name');
+        $this->assertStringContainsString('<title>Book: My Book | ' . $blog . '</title>', $output);
+        $this->assertStringContainsString('content="About My Book: Great story"', $output);
+    }
+
+    public function test_filters_disable_meta_output() {
+        $post_id = self::factory()->post->create([
+            'post_title'   => 'Filtered',
+            'post_content' => 'Content',
+        ]);
+        $seo = new Gm2_SEO_Public();
+        $this->go_to(get_permalink($post_id));
+        setup_postdata(get_post($post_id));
+        add_filter('gm2_seo_disable_canonical', '__return_true');
+        add_filter('gm2_seo_disable_og_tags', '__return_true');
+        add_filter('gm2_seo_disable_twitter_tags', '__return_true');
+        ob_start();
+        $seo->output_meta_tags();
+        $output = ob_get_clean();
+        $this->assertStringNotContainsString('rel="canonical"', $output);
+        $this->assertStringNotContainsString('og:title', $output);
+        $this->assertStringNotContainsString('twitter:title', $output);
+    }
+
+    public function test_disable_entire_output() {
+        $post_id = self::factory()->post->create([
+            'post_title'   => 'No Output',
+            'post_content' => 'Content',
+        ]);
+        $seo = new Gm2_SEO_Public();
+        $this->go_to(get_permalink($post_id));
+        setup_postdata(get_post($post_id));
+        add_filter('gm2_seo_disable_output', '__return_true');
+        ob_start();
+        $seo->output_meta_tags();
+        $output = ob_get_clean();
+        $this->assertSame('', $output);
+    }
 }
 
