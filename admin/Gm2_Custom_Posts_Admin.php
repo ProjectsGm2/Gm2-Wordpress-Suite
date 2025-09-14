@@ -25,6 +25,8 @@ class Gm2_Custom_Posts_Admin {
         add_action('wp_ajax_gm2_delete_field_group', [ $this, 'ajax_delete_field_group' ]);
         add_action('wp_ajax_gm2_rename_field_group', [ $this, 'ajax_rename_field_group' ]);
         add_action('wp_ajax_gm2_regenerate_thumbnails', [ $this, 'ajax_regenerate_thumbnails' ]);
+        add_action('wp_ajax_gm2_get_schema_map', [ $this, 'ajax_get_schema_map' ]);
+        add_action('wp_ajax_gm2_save_schema_map', [ $this, 'ajax_save_schema_map' ]);
         add_action('enqueue_block_editor_assets', [ $this, 'enqueue_block_editor_assets' ]);
         add_action('restrict_manage_posts', [ $this, 'restrict_manage_posts' ]);
         add_action('pre_get_posts', [ $this, 'pre_get_posts' ]);
@@ -139,6 +141,24 @@ class Gm2_Custom_Posts_Admin {
         echo '</div>';
     }
 
+    private function get_fields_for_post_type($slug) {
+        $groups = get_option('gm2_field_groups', []);
+        if (!is_array($groups)) {
+            return [];
+        }
+        $keys = [];
+        foreach ($groups as $group) {
+            $scope = $group['scope'] ?? 'post_type';
+            $objects = $group['objects'] ?? [];
+            if ($scope === 'post_type' && in_array($slug, $objects, true)) {
+                foreach ($group['fields'] ?? [] as $key => $_) {
+                    $keys[] = $key;
+                }
+            }
+        }
+        return $keys;
+    }
+
     public function add_menu() {
         $cap = current_user_can('gm2_manage_cpts') ? 'gm2_manage_cpts' : 'manage_options';
 
@@ -227,6 +247,17 @@ class Gm2_Custom_Posts_Admin {
             $cap,
             'gm2_field_caps',
             [ $this, 'display_field_caps_page' ]
+        );
+
+        add_submenu_page(
+            'gm2-custom-posts',
+            esc_html__( 'Schema Mapping', 'gm2-wordpress-suite' ),
+            esc_html__( 'Schema Mapping', 'gm2-wordpress-suite' ),
+            $cap,
+            'gm2_schema_mapping',
+            function () {
+                require __DIR__ . '/pages/schema-mapping.php';
+            }
         );
     }
 
@@ -1634,6 +1665,35 @@ class Gm2_Custom_Posts_Admin {
             ]);
         }
 
+        if ($hook === 'gm2-custom-posts_page_gm2_schema_mapping') {
+            $file = GM2_PLUGIN_DIR . 'admin/js/gm2-schema-mapping.js';
+            wp_enqueue_script(
+                'gm2-schema-mapping',
+                GM2_PLUGIN_URL . 'admin/js/gm2-schema-mapping.js',
+                [ 'jquery' ],
+                file_exists($file) ? filemtime($file) : GM2_VERSION,
+                true
+            );
+            $config = $this->get_config();
+            $post_types = [];
+            foreach ($config['post_types'] as $slug => $pt) {
+                $post_types[$slug] = $pt['label'] ?? $slug;
+            }
+            wp_localize_script('gm2-schema-mapping', 'gm2SchemaMap', [
+                'nonce' => wp_create_nonce('gm2_schema_map'),
+                'ajax'  => admin_url('admin-ajax.php'),
+                'postTypes' => $post_types,
+                'presets' => [
+                    'LocalBusiness'     => [ 'name', 'image', 'address', 'telephone', 'url' ],
+                    'Event'             => [ 'name', 'startDate', 'endDate', 'location', 'image' ],
+                    'RealEstateListing' => [ 'name', 'description', 'url', 'address', 'price' ],
+                    'JobPosting'        => [ 'title', 'description', 'datePosted', 'employmentType', 'hiringOrganization' ],
+                    'Course'            => [ 'name', 'description', 'provider', 'url', 'courseCode' ],
+                ],
+                'saved' => esc_html__( 'Schema mapping saved.', 'gm2-wordpress-suite' ),
+            ]);
+        }
+
         if ($hook === 'gm2-custom-posts_page_gm2_query_builder') {
             $file = GM2_PLUGIN_DIR . 'admin/js/gm2-query-builder.js';
             wp_enqueue_script(
@@ -2038,6 +2098,65 @@ class Gm2_Custom_Posts_Admin {
         wp_send_json_success([
             'groups' => $groups,
         ]);
+    }
+
+    public function ajax_get_schema_map() {
+        if (!$this->can_manage()) {
+            wp_send_json_error('permission');
+        }
+        $nonce = $_GET['nonce'] ?? '';
+        if (!wp_verify_nonce($nonce, 'gm2_schema_map')) {
+            wp_send_json_error('nonce');
+        }
+        $slug = sanitize_key($_GET['cpt'] ?? '');
+        if (!$slug) {
+            wp_send_json_error('data');
+        }
+        $maps = get_option('gm2_cp_schema_map', []);
+        if (!is_array($maps)) {
+            $maps = [];
+        }
+        $current = $maps[$slug] ?? [ 'type' => '', 'map' => [] ];
+        $fields = $this->get_fields_for_post_type($slug);
+        wp_send_json_success([
+            'type'   => $current['type'] ?? '',
+            'map'    => $current['map'] ?? [],
+            'fields' => $fields,
+        ]);
+    }
+
+    public function ajax_save_schema_map() {
+        if (!$this->can_manage()) {
+            wp_send_json_error('permission');
+        }
+        $nonce = $_POST['nonce'] ?? '';
+        if (!wp_verify_nonce($nonce, 'gm2_schema_map')) {
+            wp_send_json_error('nonce');
+        }
+        $slug = sanitize_key($_POST['cpt'] ?? '');
+        $type = sanitize_text_field($_POST['type'] ?? '');
+        $map  = $_POST['map'] ?? [];
+        if (!$slug || !is_array($map)) {
+            wp_send_json_error('data');
+        }
+        $sanitized = [];
+        foreach ($map as $prop => $field) {
+            $p = sanitize_text_field($prop);
+            $f = sanitize_key($field);
+            if ($p && $f) {
+                $sanitized[$p] = $f;
+            }
+        }
+        $maps = get_option('gm2_cp_schema_map', []);
+        if (!is_array($maps)) {
+            $maps = [];
+        }
+        $maps[$slug] = [
+            'type' => $type,
+            'map'  => $sanitized,
+        ];
+        update_option('gm2_cp_schema_map', $maps);
+        wp_send_json_success();
     }
 
     public function ajax_regenerate_thumbnails() {
