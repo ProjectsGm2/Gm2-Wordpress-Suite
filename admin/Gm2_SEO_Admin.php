@@ -106,6 +106,8 @@ class Gm2_SEO_Admin {
         add_option('ae_perf_no_thrash', '0');
         add_option('ae_perf_passive_listeners', '0');
         add_option('ae_perf_dom_audit', '0');
+        add_option('gm2_title_templates', []);
+        add_option('gm2_description_templates', []);
 
         $this->migrate_js_option_names();
 
@@ -1011,6 +1013,19 @@ class Gm2_SEO_Admin {
             echo '<tr><th scope="row">' . esc_html__( 'Noindex out-of-stock products', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="gm2_noindex_oos" value="1" ' . checked($oos, '1', false) . '></td></tr>';
             echo '<tr><th scope="row">' . esc_html__( 'Variation canonical points to parent', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="gm2_variation_canonical_parent" value="1" ' . checked($canon_parent, '1', false) . '></td></tr>';
             echo '<tr><th scope="row">' . esc_html__( 'Enable meta keywords tag', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="gm2_meta_keywords_enabled" value="1" ' . checked($meta_keywords, '1', false) . '></td></tr>';
+
+            echo '<tr><th colspan="2">' . esc_html__( 'Title & Description Templates', 'gm2-wordpress-suite' ) . '</th></tr>';
+            $title_templates = get_option('gm2_title_templates', []);
+            $desc_templates  = get_option('gm2_description_templates', []);
+            $post_types      = get_post_types(['public' => true], 'objects');
+            foreach ($post_types as $slug => $pt_obj) {
+                $label       = $pt_obj->labels->singular_name ?? $slug;
+                $title_value = $title_templates[$slug] ?? '';
+                $desc_value  = $desc_templates[$slug] ?? '';
+                echo '<tr><th scope="row">' . sprintf(esc_html__( 'Title Template (%s)', 'gm2-wordpress-suite' ), esc_html($label)) . '</th><td><input type="text" name="gm2_title_templates[' . esc_attr($slug) . ']" value="' . esc_attr($title_value) . '" class="large-text" /></td></tr>';
+                echo '<tr><th scope="row">' . sprintf(esc_html__( 'Description Template (%s)', 'gm2-wordpress-suite' ), esc_html($label)) . '</th><td><textarea name="gm2_description_templates[' . esc_attr($slug) . ']" rows="2" class="large-text">' . esc_textarea($desc_value) . '</textarea></td></tr>';
+            }
+            echo '<tr><td colspan="2"><p class="description">' . esc_html__( 'Available placeholders: {site_name}, {post_title}, {post_excerpt}', 'gm2-wordpress-suite' ) . '</p></td></tr>';
             echo '</tbody></table>';
             submit_button( esc_html__( 'Save Settings', 'gm2-wordpress-suite' ) );
             echo '</form>';
@@ -2977,6 +2992,20 @@ class Gm2_SEO_Admin {
 
         $meta_keywords = isset($_POST['gm2_meta_keywords_enabled']) ? '1' : '0';
         update_option('gm2_meta_keywords_enabled', $meta_keywords);
+
+        $title_templates = isset($_POST['gm2_title_templates']) ? (array) $_POST['gm2_title_templates'] : [];
+        $clean_titles    = [];
+        foreach ($title_templates as $pt => $tpl) {
+            $clean_titles[sanitize_key($pt)] = sanitize_text_field($tpl);
+        }
+        update_option('gm2_title_templates', $clean_titles);
+
+        $desc_templates = isset($_POST['gm2_description_templates']) ? (array) $_POST['gm2_description_templates'] : [];
+        $clean_desc     = [];
+        foreach ($desc_templates as $pt => $tpl) {
+            $clean_desc[sanitize_key($pt)] = sanitize_textarea_field($tpl);
+        }
+        update_option('gm2_description_templates', $clean_desc);
 
         wp_redirect(admin_url('admin.php?page=gm2-seo&tab=meta&updated=1'));
         exit;
