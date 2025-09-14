@@ -298,6 +298,15 @@ class Gm2_SEO_Public {
         }
     }
 
+    /**
+     * Generate an array of breadcrumb items for the current request.
+     *
+     * Each item in the array must contain `name` and `url` keys. The final
+     * array can be modified via the `gm2_breadcrumb_items` filter to allow
+     * external code to customize or replace the breadcrumb trail.
+     *
+     * @return array<int, array{name:string, url:string}> Breadcrumb items.
+     */
     private function get_breadcrumb_items() {
         if (is_array($this->breadcrumbs_cache)) {
             return $this->breadcrumbs_cache;
@@ -310,7 +319,10 @@ class Gm2_SEO_Public {
         ];
 
         if (is_front_page() || is_home()) {
-            return $breadcrumbs;
+            $breadcrumbs = apply_filters('gm2_breadcrumb_items', $breadcrumbs);
+            $this->breadcrumbs_cache = $breadcrumbs;
+
+            return $this->breadcrumbs_cache;
         }
 
         if (is_singular()) {
@@ -357,6 +369,8 @@ class Gm2_SEO_Public {
                 'url'  => home_url(add_query_arg([], $GLOBALS['wp']->request)),
             ];
         }
+
+        $breadcrumbs = apply_filters('gm2_breadcrumb_items', $breadcrumbs);
 
         $this->breadcrumbs_cache = $breadcrumbs;
 

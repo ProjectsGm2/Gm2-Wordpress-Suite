@@ -366,6 +366,9 @@ Open **Tools → Site Health** to run these diagnostics automatically. The Gm2 S
 Display a breadcrumb trail anywhere using the `[gm2_breadcrumbs]` shortcode. The output
 is an ordered list wrapped in a `<nav>` element with accompanying JSON-LD for search engines.
 You can enable automatic breadcrumbs in the footer from **SEO → Schema**.
+Developers can modify or replace the trail by filtering `gm2_breadcrumb_items`. The
+filter receives an array of items with `name` and `url` keys, allowing custom post
+type modules to supply their own breadcrumb structure.
 
 == Caching ==
 Enable HTML, CSS, and JavaScript minification from the SEO &gt; Performance
