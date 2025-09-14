@@ -1,0 +1,62 @@
+{
+  "post_types": {
+    "property": {
+      "labels": { "name": "Properties", "singular_name": "Property" },
+      "supports": ["title", "editor", "thumbnail"],
+      "has_archive": true,
+      "rewrite": { "slug": "properties" },
+      "menu_icon": "dashicons-admin-home"
+    }
+  },
+  "taxonomies": {
+    "property_type": {
+      "object_type": ["property"],
+      "labels": { "name": "Property Types", "singular_name": "Property Type" },
+      "hierarchical": true,
+      "rewrite": { "slug": "property-type" }
+    }
+  },
+  "field_groups": [
+    {
+      "key": "group_property_details",
+      "title": "Property Details",
+      "fields": [
+        {
+          "key": "field_price",
+          "label": "Price",
+          "name": "price",
+          "type": "number",
+          "min": 0,
+          "required": true,
+          "expose_in_rest": true
+        },
+        {
+          "key": "field_address",
+          "label": "Address",
+          "name": "address",
+          "type": "text",
+          "required": true,
+          "expose_in_rest": true
+        },
+        {
+          "key": "field_bedrooms",
+          "label": "Bedrooms",
+          "name": "bedrooms",
+          "type": "number",
+          "min": 0,
+          "expose_in_rest": true
+        }
+      ]
+    }
+  ],
+  "schema_mappings": {
+    "property": {
+      "type": "RealEstateListing",
+      "map": {
+        "price": "price",
+        "address.streetAddress": "address",
+        "numberOfRooms": "bedrooms"
+      }
+    }
+  }
+}
