@@ -17,7 +17,10 @@ class GM2_CP_Elementor_Query {
      */
     public static function register() {
         add_action('elementor_pro/posts/query/gm2_cp', [__CLASS__, 'apply_query'], 10, 2);
+        add_action('elementor/query/gm2_cp', [__CLASS__, 'apply_query'], 10, 2);
         add_action('elementor/element/posts/section_query/before_section_end', [__CLASS__, 'add_controls'], 10, 2);
+        add_action('elementor/element/loop-grid/section_query/before_section_end', [__CLASS__, 'add_controls'], 10, 2);
+        add_action('elementor/element/archive-posts/section_query/before_section_end', [__CLASS__, 'add_controls'], 10, 2);
     }
 
     /**
