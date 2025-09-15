@@ -112,6 +112,7 @@ require_once GM2_PLUGIN_DIR . 'includes/Gm2_Capability_Manager.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Workflow_Manager.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Audit_Log.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Ajax_Upload.php';
+require_once GM2_PLUGIN_DIR . 'frontend/class-gm2-cp-form.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Cache_Audit.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Script_Attributes.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Lazy_Embeds.php';
