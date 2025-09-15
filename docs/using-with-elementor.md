@@ -7,47 +7,88 @@ Elementor layouts.
 
 ## Dynamic Tags
 
-GM2 registers a **GM2 Field** dynamic tag that reads values from any registered
-field group.
+GM2 exposes two dynamic tag groups inside Elementor so you can read custom
+field values anywhere dynamic content is supported.
 
-1. In Elementor choose a control that supports dynamic data.
-2. Select **GM2 Field** from the dynamic tags menu under the "GM2" group.
-3. Pick a field key. Nested fields use dot notation such as `address.city` or
-   `slides.0.image` for repeater items.
-4. Optionally supply a fallback value to display when the field is empty.
+### GM2 Fields Group
 
-Available tag types are mapped to Elementor categories so the tag only appears
-where it is supported:
+The **GM2 Field** tag automatically adapts to the chosen field type and lives
+under the **GM2 Fields** group.
 
-- **Text** – strings and numbers.
-- **URL** – link fields.
-- **Media** – single images or files.
-- **Gallery** – arrays of images.
+1. Choose any Elementor control that allows dynamic data.
+2. Select **GM2 Field** from the dynamic tags list.
+3. Use the **Field** control to pick a key. Nested items use dot notation such
+   as `address.city` or `slides.0.image`.
+4. Supply a **Fallback** value to render when the field is empty.
+
+The tag advertises the correct Elementor categories so it only appears for
+compatible widgets (Text, URL, Media and Gallery contexts).
+
+### Gm2 CP Fields Group
+
+Custom post fields also register dedicated tags under the **Gm2 CP Fields**
+group. Each tag returns the correct structure for Elementor's built-in
+controls:
+
+- **GM2 CP Text** – text, textarea and number strings.
+- **GM2 CP URL** – outputs a URL array (`['url' => 'https://…']`).
+- **GM2 CP Image** – returns attachment ID and URL for image controls.
+- **GM2 CP Media** – works with audio, video and file widgets.
+- **GM2 CP Number** – numeric values with optional fallbacks.
+- **GM2 CP Color** – hex or rgba color strings.
+- **GM2 CP Gallery** – arrays of image IDs/URLs.
+- **GM2 CP Date** – date or datetime strings.
+
+All CP tags share the **Field Key** selector (with dot notation support) and a
+**Fallback** control so you can handle empty values gracefully.
 
 ## Query Builder
 
-Elementor Pro's Posts widget gains a **GM2 CP** query ID that converts additional
-controls into `WP_Query` arguments. Key controls include:
+Elementor Pro's Posts, Loop Grid and Archive Posts widgets gain a **GM2 CP**
+query ID. Selecting it reveals additional controls that translate directly into
+`WP_Query` arguments:
 
-- **Post Type** – choose the post type to display.
-- **Taxonomy** – select terms to build a `tax_query`.
-- **Meta Key/Compare/Value** – add custom `meta_query` conditions.
-- **Price Min/Max** – restrict results to a numeric range.
-- **Date After/Before** – filter by publish date.
-- **Latitude/Longitude/Radius** – query posts within a geodistance box.
+- **Post Types** – choose one or more public post types.
+- **Taxonomy** – pick the taxonomy used for term filtering.
+- **Terms** – select specific term IDs once a taxonomy is chosen.
+- **GM2 Field Key** – select a field for meta comparisons via the Field Key
+  control.
+- **Meta Compare** – comparison operator (e.g. `=`, `BETWEEN`, `LIKE`).
+- **Meta Type** – specify how to cast values (`NUMERIC`, `DATE`, etc.).
+- **Meta Value** – value used with the selected comparison.
+- **Date After / Date Before** – inclusive publish date range pickers.
+- **Minimum Price / Maximum Price** – numeric price filters using the configured
+  meta key.
+- **Price Meta Key** – override the price meta key (defaults to `_price`).
+- **Latitude / Longitude / Radius (km)** – centre point and radius for
+  geospatial searches.
+- **Latitude Meta Key / Longitude Meta Key** – override default coordinate keys
+  (`gm2_geo_lat`/`gm2_geo_lng`).
 
 ### Sample Configurations
 
-1. **Events in New York**
-   - Post Type: `event`
-   - Taxonomy: `location` terms `12`, `34`
+1. **Events in New York (Posts widget)**
+   - Post Types: `event`
+   - Taxonomy: `location`
+   - Terms: IDs `12`, `34`
    - Date After: `2024-01-01`
-   - Latitude: `40.7128`, Longitude: `-74.0060`, Radius: `25`
+   - Latitude: `40.7128`, Longitude: `-74.0060`, Radius (km): `25`
 
-2. **Products in Stock**
-   - Post Type: `product`
-   - Meta Key: `_stock`, Compare: `>`, Value: `0`
-   - Price Min: `10`, Price Max: `100`
+2. **Products in Stock (Loop Grid)**
+   - Set your Loop Grid template to display the product card layout.
+   - Under Query → Query ID choose **GM2 CP**.
+   - Post Types: `product`
+   - GM2 Field Key: `_stock`
+   - Meta Compare: `>`
+   - Meta Value: `0`
+   - Minimum Price: `10`, Maximum Price: `100`
+   - Price Meta Key: `_price`
+
+3. **Team Members by Department (Archive Posts)**
+   - Query ID: **GM2 CP**
+   - Post Types: `team_member`
+   - Taxonomy: `department`
+   - Terms: IDs `3`, `7`
 
 These options allow complex queries without writing PHP.
 
