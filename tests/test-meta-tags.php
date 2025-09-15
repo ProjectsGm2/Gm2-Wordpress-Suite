@@ -309,6 +309,85 @@ class MetaTagsTest extends WP_UnitTestCase {
         $this->assertStringContainsString('content="About My Book: Great story"', $output);
     }
 
+    public function test_social_meta_skipped_when_wpseo_head_has_run() {
+        $post_id = self::factory()->post->create([
+            'post_title'   => 'Yoast Conflict',
+            'post_content' => 'Content',
+        ]);
+
+        $seo = new Gm2_SEO_Public();
+        $this->go_to(get_permalink($post_id));
+        setup_postdata(get_post($post_id));
+
+        $previous_count = isset($GLOBALS['wp_actions']['wpseo_head']) ? $GLOBALS['wp_actions']['wpseo_head'] : null;
+        do_action('wpseo_head');
+
+        ob_start();
+        $seo->output_meta_tags();
+        $output = ob_get_clean();
+
+        if ($previous_count !== null) {
+            $GLOBALS['wp_actions']['wpseo_head'] = $previous_count;
+        } else {
+            unset($GLOBALS['wp_actions']['wpseo_head']);
+        }
+
+        $this->assertStringNotContainsString('property="og:title"', $output);
+        $this->assertStringNotContainsString('name="twitter:title"', $output);
+    }
+
+    public function test_social_meta_skipped_when_existing_tags_detected_in_buffer() {
+        $post_id = self::factory()->post->create([
+            'post_title'   => 'Existing Meta',
+            'post_content' => 'Content',
+        ]);
+
+        $seo = new Gm2_SEO_Public();
+        $this->go_to(get_permalink($post_id));
+        setup_postdata(get_post($post_id));
+
+        ob_start();
+        echo '<meta property="og:title" content="Existing OG" />' . "\n";
+        echo '<meta name="twitter:title" content="Existing Twitter" />' . "\n";
+        $seo->output_meta_tags();
+        $output = ob_get_clean();
+
+        $this->assertStringContainsString('Existing OG', $output);
+        $this->assertStringContainsString('Existing Twitter', $output);
+        $this->assertStringNotContainsString('property="og:type"', $output);
+        $this->assertStringNotContainsString('name="twitter:card"', $output);
+    }
+
+    public function test_social_meta_replacement_filter_can_restore_markup() {
+        $post_id = self::factory()->post->create([
+            'post_title'   => 'Filter Social',
+            'post_content' => 'Content',
+        ]);
+
+        $seo = new Gm2_SEO_Public();
+        $this->go_to(get_permalink($post_id));
+        setup_postdata(get_post($post_id));
+
+        $filter = function ($social_html, $data, $head_buffer, $has_existing, $should_output, $og_html, $tw_html) {
+            if ($has_existing && !$should_output) {
+                return '<!-- replaced -->' . $og_html . $tw_html;
+            }
+            return $social_html;
+        };
+        add_filter('gm2_seo_social_meta_html', $filter, 10, 7);
+
+        ob_start();
+        echo '<meta property="og:title" content="Existing OG" />' . "\n";
+        $seo->output_meta_tags();
+        $output = ob_get_clean();
+
+        remove_filter('gm2_seo_social_meta_html', $filter, 10);
+
+        $this->assertStringContainsString('<!-- replaced -->', $output);
+        $this->assertStringContainsString('property="og:type"', $output);
+        $this->assertStringContainsString('name="twitter:card"', $output);
+    }
+
     public function test_filters_disable_meta_output() {
         $post_id = self::factory()->post->create([
             'post_title'   => 'Filtered',
