@@ -117,10 +117,11 @@ class Gm2_Recovered_Carts_Admin {
         global $wpdb;
         $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}wc_ac_recovered");
 
-        wp_redirect(admin_url('admin.php?page=gm2-recovered-carts&logs_reset=1'));
         if (defined('GM2_TESTING') && GM2_TESTING) {
             return;
         }
+
+        wp_redirect(admin_url('admin.php?page=gm2-recovered-carts&logs_reset=1'));
         exit;
     }
 }
