@@ -20,6 +20,12 @@ class Gm2_SEO_Public {
      * @var bool
      */
     private $primary_schema_output = false;
+    /**
+     * Cached sanitized request URI for the current request.
+     *
+     * @var string|null
+     */
+    private $sanitized_request_uri = null;
 
     public static function default_product_template() {
         return [
@@ -268,7 +274,9 @@ class Gm2_SEO_Public {
             return;
         }
 
-        $current = untrailingslashit(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
+        $request_uri = $this->get_sanitized_request_uri();
+        $current_path = parse_url($request_uri, PHP_URL_PATH);
+        $current = untrailingslashit(is_string($current_path) ? $current_path : '');
         foreach ($redirects as $r) {
             $source = untrailingslashit(parse_url($r['source'], PHP_URL_PATH));
             if ($source === $current) {
@@ -287,7 +295,9 @@ class Gm2_SEO_Public {
     public function log_404_url() {
         if (is_404()) {
             $logs  = get_option('gm2_404_logs', []);
-            $path  = untrailingslashit(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
+            $request_uri = $this->get_sanitized_request_uri();
+            $path_value = parse_url($request_uri, PHP_URL_PATH);
+            $path  = untrailingslashit(is_string($path_value) ? $path_value : '');
             if (!in_array($path, $logs, true)) {
                 $logs[] = $path;
                 if (count($logs) > 100) {
@@ -296,6 +306,20 @@ class Gm2_SEO_Public {
                 update_option('gm2_404_logs', $logs);
             }
         }
+    }
+
+    /**
+     * Retrieve the sanitized request URI for the current request.
+     *
+     * @return string
+     */
+    private function get_sanitized_request_uri() {
+        if ($this->sanitized_request_uri === null) {
+            $raw_request_uri = isset($_SERVER['REQUEST_URI']) ? wp_unslash($_SERVER['REQUEST_URI']) : '';
+            $this->sanitized_request_uri = sanitize_text_field($raw_request_uri);
+        }
+
+        return $this->sanitized_request_uri;
     }
 
     /**
