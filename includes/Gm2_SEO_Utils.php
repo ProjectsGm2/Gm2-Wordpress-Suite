@@ -106,26 +106,61 @@ namespace {
     }
 
     /**
+     * Retrieve the batch size used for SEO-related post queries.
+     *
+     * Developers can adjust the default batch size (500) by filtering
+     * `gm2_seo_post_batch_size`.
+     *
+     * @return int
+     */
+    function gm2_get_seo_post_batch_size(): int {
+        /**
+         * Filters the batch size used for SEO-related post queries.
+         *
+         * @param int $size Number of posts processed per query. Default 500.
+         */
+        $size = (int) apply_filters('gm2_seo_post_batch_size', 500);
+        if ($size < 1) {
+            $size = 500;
+        }
+        return $size;
+    }
+
+    /**
      * Retrieve a deduplicated list of all focus keywords used across posts and terms.
      *
      * @return string[] Lowercase focus keywords.
      */
     function gm2_get_used_focus_keywords() {
-        $values = [];
+        $values     = [];
+        $post_types = get_post_types(['public' => true], 'names');
+        $batch_size = gm2_get_seo_post_batch_size();
+        $paged      = 1;
 
-        $post_ids = get_posts([
-            'post_type'      => get_post_types(['public' => true], 'names'),
-            'post_status'    => 'any',
-            'meta_key'       => '_gm2_focus_keywords',
-            'posts_per_page' => -1,
-            'fields'         => 'ids',
-        ]);
-        foreach ($post_ids as $pid) {
-            $val = get_post_meta($pid, '_gm2_focus_keywords', true);
-            if ($val !== '') {
-                $values[] = $val;
+        do {
+            $query = new \WP_Query([
+                'post_type'      => $post_types,
+                'post_status'    => 'any',
+                'meta_key'       => '_gm2_focus_keywords',
+                'fields'         => 'ids',
+                'posts_per_page' => $batch_size,
+                'paged'          => $paged,
+                'no_found_rows'  => true,
+            ]);
+            $post_ids = $query->posts;
+            if (empty($post_ids)) {
+                break;
             }
-        }
+
+            foreach ($post_ids as $pid) {
+                $val = get_post_meta($pid, '_gm2_focus_keywords', true);
+                if ($val !== '') {
+                    $values[] = $val;
+                }
+            }
+
+            $paged++;
+        } while (count($post_ids) === $batch_size);
 
         $term_ids = get_terms([
             'taxonomy'   => get_taxonomies([], 'names'),
@@ -175,16 +210,31 @@ namespace {
     }
 
     function gm2_ai_clear() {
-        $post_ids = get_posts([
-            'post_type'      => get_post_types(['public' => true], 'names'),
-            'post_status'    => 'any',
-            'meta_key'       => '_gm2_ai_research',
-            'posts_per_page' => -1,
-            'fields'         => 'ids',
-        ]);
-        foreach ($post_ids as $pid) {
-            delete_post_meta($pid, '_gm2_ai_research');
-        }
+        $post_types = get_post_types(['public' => true], 'names');
+        $batch_size = gm2_get_seo_post_batch_size();
+        $paged      = 1;
+
+        do {
+            $query = new \WP_Query([
+                'post_type'      => $post_types,
+                'post_status'    => 'any',
+                'meta_key'       => '_gm2_ai_research',
+                'fields'         => 'ids',
+                'posts_per_page' => $batch_size,
+                'paged'          => $paged,
+                'no_found_rows'  => true,
+            ]);
+            $post_ids = $query->posts;
+            if (empty($post_ids)) {
+                break;
+            }
+
+            foreach ($post_ids as $pid) {
+                delete_post_meta($pid, '_gm2_ai_research');
+            }
+
+            $paged++;
+        } while (count($post_ids) === $batch_size);
 
         $terms = get_terms([
             'taxonomy'   => get_taxonomies([], 'names'),
