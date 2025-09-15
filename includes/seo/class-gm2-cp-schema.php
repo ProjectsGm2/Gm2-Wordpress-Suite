@@ -160,6 +160,10 @@ class Gm2_CP_Schema {
             }
             $ref =& $ref[$seg];
         }
+        if (is_array($ref) && is_array($value)) {
+            $ref = array_replace($ref, $value);
+            return;
+        }
         $ref = $value;
     }
 
@@ -169,13 +173,15 @@ class Gm2_CP_Schema {
     private static function nested_type(string $segment): ?string {
         return match ($segment) {
             'address' => 'PostalAddress',
+            'baseSalary' => 'MonetaryAmount',
+            'courseInstance' => 'CourseInstance',
             'geo' => 'GeoCoordinates',
+            'hiringOrganization' => 'Organization',
             'jobLocation' => 'Place',
             'location' => 'Place',
-            'openingHoursSpecification' => 'OpeningHoursSpecification',
             'offers' => 'Offer',
+            'openingHoursSpecification' => 'OpeningHoursSpecification',
             'organizer' => 'Organization',
-            'courseInstance' => 'CourseInstance',
             default => null,
         };
     }
