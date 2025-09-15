@@ -55,9 +55,14 @@ function gm2_evaluate_conditions($item, $post_id = 0) {
             }
             // Determine the current value from request or post meta.
             if (isset($_REQUEST[$target])) {
-                $current = $_REQUEST[$target];
+                $current = wp_unslash($_REQUEST[$target]);
                 if (is_array($current)) {
                     $current = reset($current);
+                }
+                if (is_scalar($current) || $current === null) {
+                    $current = sanitize_text_field((string) $current);
+                } else {
+                    $current = '';
                 }
             } else {
                 $current = ($post_id) ? get_post_meta($post_id, $target, true) : '';
