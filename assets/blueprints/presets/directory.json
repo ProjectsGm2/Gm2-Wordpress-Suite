@@ -5,7 +5,47 @@
       "supports": ["title", "editor", "thumbnail", "custom-fields"],
       "has_archive": true,
       "rewrite": { "slug": "listings" },
-      "menu_icon": "dashicons-store"
+      "menu_icon": "dashicons-store",
+      "template": [
+        [
+          "core/group",
+          {
+            "metadata": { "name": "Listing Layout" },
+            "layout": { "type": "constrained" }
+          },
+          [
+            [
+              "core/heading",
+              { "level": 2, "placeholder": "Business headline or tagline" }
+            ],
+            [
+              "core/paragraph",
+              { "placeholder": "Spotlight the listing or switch to Elementor to customise." }
+            ],
+            [
+              "core/shortcode",
+              { "text": "[elementor-template id=\"\"]" }
+            ]
+          ]
+        ]
+      ],
+      "template_lock": "insert",
+      "seo": {
+        "meta_title": "{{title}} – Business Listing",
+        "meta_description": "{{description}}",
+        "canonical": "{{permalink}}",
+        "open_graph": {
+          "title": "{{title}}",
+          "description": "{{description}}",
+          "image": "{{image}}"
+        },
+        "twitter": {
+          "card": "summary_large_image",
+          "title": "{{title}}",
+          "description": "{{description}}",
+          "image": "{{image}}"
+        }
+      }
     }
   },
   "taxonomies": {

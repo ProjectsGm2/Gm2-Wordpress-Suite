@@ -5,7 +5,47 @@
       "supports": ["title", "editor", "thumbnail", "excerpt"],
       "has_archive": true,
       "rewrite": { "slug": "events" },
-      "menu_icon": "dashicons-calendar-alt"
+      "menu_icon": "dashicons-calendar-alt",
+      "template": [
+        [
+          "core/group",
+          {
+            "metadata": { "name": "Event Layout" },
+            "layout": { "type": "constrained" }
+          },
+          [
+            [
+              "core/heading",
+              { "level": 2, "placeholder": "Event headline or hero" }
+            ],
+            [
+              "core/paragraph",
+              { "placeholder": "Share key event highlights or switch to Elementor for a custom design." }
+            ],
+            [
+              "core/shortcode",
+              { "text": "[elementor-template id=\"\"]" }
+            ]
+          ]
+        ]
+      ],
+      "template_lock": "insert",
+      "seo": {
+        "meta_title": "{{title}} – Event Details",
+        "meta_description": "{{description}}",
+        "canonical": "{{permalink}}",
+        "open_graph": {
+          "title": "{{title}}",
+          "description": "{{description}}",
+          "image": "{{image}}"
+        },
+        "twitter": {
+          "card": "summary_large_image",
+          "title": "{{title}}",
+          "description": "{{description}}",
+          "image": "{{image}}"
+        }
+      }
     }
   },
   "taxonomies": {
