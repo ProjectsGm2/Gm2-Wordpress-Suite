@@ -56,10 +56,15 @@ class GM2_AC_Table extends \WP_List_Table {
         ];
     }
 
+    public function render_bulk_actions_nonce_field() {
+        wp_nonce_field('bulk-' . $this->_args['plural']);
+    }
+
     public function process_bulk_action() {
         if ($this->current_action() !== 'delete') {
             return;
         }
+        check_admin_referer('bulk-' . $this->_args['plural']);
         $ids = isset($_REQUEST['id']) ? (array) $_REQUEST['id'] : [];
         $ids = array_map('absint', $ids);
         $ids = array_filter($ids);
