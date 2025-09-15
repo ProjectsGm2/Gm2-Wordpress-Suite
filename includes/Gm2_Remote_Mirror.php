@@ -27,6 +27,9 @@ class Gm2_Remote_Mirror {
     /** @var bool Tracks if rewrite hooks are applied */
     protected $hooks_applied = false;
 
+    /** @var int|null Records the output buffer level started by this class */
+    protected $buffer_level = null;
+
     /**
      * Vendor registry.
      * @var array<string, array{urls: array<int, string>, tos: string}>
@@ -202,14 +205,31 @@ class Gm2_Remote_Mirror {
      * Start output buffering to capture hardcoded script tags.
      */
     public function start_buffer(): void {
-        ob_start();
+        if ($this->buffer_level !== null) {
+            return;
+        }
+
+        if (ob_get_level() === 0 && ob_start()) {
+            $this->buffer_level = ob_get_level();
+        }
     }
 
     /**
      * Process the buffer and replace hardcoded vendor scripts.
      */
     public function end_buffer(): void {
+        if ($this->buffer_level === null) {
+            return;
+        }
+
+        if (ob_get_level() !== $this->buffer_level) {
+            $this->buffer_level = null;
+            return;
+        }
+
         $buffer = ob_get_clean();
+        $this->buffer_level = null;
+
         if ($buffer === false) {
             return;
         }
