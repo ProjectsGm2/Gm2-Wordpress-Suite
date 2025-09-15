@@ -1,7 +1,7 @@
 (function(wp){
     const { createElement: el, useState, useEffect } = wp.element;
     const { render } = wp.element;
-    const { Button, TextControl, SelectControl, FormTokenField, PanelBody, Panel, Card, CardBody, Sortable, ToggleControl } = wp.components;
+    const { Button, TextControl, SelectControl, FormTokenField, PanelBody, Panel, Card, CardBody, Sortable, ToggleControl, Modal, CheckboxControl } = wp.components;
     const { dispatch } = wp.data;
     const addPassive = !window.AE_PERF_DISABLE_PASSIVE && window.aePerf?.addPassive
         ? window.aePerf.addPassive
@@ -23,6 +23,10 @@
         const source = data.scope === 'taxonomy' ? wizard.taxonomies : wizard.postTypes;
         const suggestions = Object.keys(source || {});
         const [ slugError, setSlugError ] = useState('');
+        const [ exportOpen, setExportOpen ] = useState(false);
+        const [ exportSelection, setExportSelection ] = useState([]);
+        const [ exportError, setExportError ] = useState('');
+        const [ exporting, setExporting ] = useState(false);
         const onSlugChange = (v) => {
             const duplicate = existing[v] && v !== data.slug;
             if(!v){
@@ -87,6 +91,67 @@
             });
         };
 
+        const openExportModal = () => {
+            const initial = data.slug && existing[data.slug] ? [ data.slug ] : [];
+            setExportSelection(initial);
+            setExportError('');
+            setExportOpen(true);
+        };
+
+        const toggleExportGroup = (slug) => {
+            setExportSelection(prev => {
+                if(prev.includes(slug)){
+                    return prev.filter(item => item !== slug);
+                }
+                return [ ...prev, slug ];
+            });
+        };
+
+        const performExport = () => {
+            if(exporting) return;
+            if(exportSelection.length === 0){
+                setExportError('Select at least one field group to export.');
+                return;
+            }
+            setExportError('');
+            setExporting(true);
+            const payload = new URLSearchParams();
+            payload.append('action','gm2_export_field_groups');
+            payload.append('nonce', window.gm2FGWizard.exportNonce || window.gm2FGWizard.nonce);
+            payload.append('groups', JSON.stringify(exportSelection));
+            fetch(window.gm2FGWizard.ajax, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: payload.toString()
+            }).then(r => r.json()).then(resp => {
+                if(resp && resp.success && resp.data && resp.data.content){
+                    const filename = resp.data.filename || 'gm2-field-groups.json';
+                    const blob = new Blob([resp.data.content], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = filename;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                    dispatch('core/notices').createNotice('success', 'Field groups exported');
+                    setExportOpen(false);
+                } else {
+                    const msg = resp && resp.data && resp.data.message ? resp.data.message : 'Error exporting field groups';
+                    setExportError(msg);
+                    dispatch('core/notices').createNotice('error', msg);
+                }
+            }).catch(() => {
+                const msg = 'Error exporting field groups';
+                setExportError(msg);
+                dispatch('core/notices').createNotice('error', msg);
+            }).finally(() => {
+                setExporting(false);
+            });
+        };
+
         return el('div', {},
             options.length > 1 && el(SelectControl, {
                 label: 'Existing Groups',
@@ -126,7 +191,29 @@
             }),
             existing[data.slug] && el('div', { className: 'gm2-fg-group-actions' },
                 el(Button, { isDestructive: true, onClick: deleteGroup }, 'Delete Group'),
-                el(Button, { onClick: renameGroup }, 'Rename')
+                el(Button, { onClick: renameGroup }, 'Rename'),
+                el(Button, { onClick: openExportModal }, 'Export JSON')
+            ),
+            exportOpen && el(Modal, {
+                title: 'Export Field Groups',
+                onRequestClose: () => { if(!exporting){ setExportOpen(false); } },
+                shouldCloseOnClickOutside: !exporting,
+                shouldCloseOnEsc: !exporting
+            },
+                el('p', {}, 'Select the field groups to include in the JSON export.'),
+                Object.keys(existing).length ? el('div', { className: 'gm2-fg-export-list' },
+                    Object.keys(existing).sort().map(sl => el(CheckboxControl, {
+                        key: sl,
+                        label: existing[sl].title || sl,
+                        checked: exportSelection.includes(sl),
+                        onChange: () => toggleExportGroup(sl)
+                    }))
+                ) : el('p', {}, 'No field groups available.'),
+                exportError && el('p', { className: 'gm2-fg-error' }, exportError),
+                el('div', { className: 'gm2-fg-export-actions' },
+                    el(Button, { onClick: () => setExportOpen(false), disabled: exporting }, 'Cancel'),
+                    el(Button, { isPrimary: true, onClick: performExport, disabled: exporting || exportSelection.length === 0, isBusy: exporting }, 'Download JSON')
+                )
             )
         );
     };

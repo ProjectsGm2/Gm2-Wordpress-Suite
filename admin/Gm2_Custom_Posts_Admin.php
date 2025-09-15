@@ -25,6 +25,7 @@ class Gm2_Custom_Posts_Admin {
         add_action('wp_ajax_gm2_save_field_group', [ $this, 'ajax_save_field_group' ]);
         add_action('wp_ajax_gm2_delete_field_group', [ $this, 'ajax_delete_field_group' ]);
         add_action('wp_ajax_gm2_rename_field_group', [ $this, 'ajax_rename_field_group' ]);
+        add_action('wp_ajax_gm2_export_field_groups', [ $this, 'ajax_export_field_groups' ]);
         add_action('wp_ajax_gm2_regenerate_thumbnails', [ $this, 'ajax_regenerate_thumbnails' ]);
         add_action('wp_ajax_gm2_get_schema_map', [ $this, 'ajax_get_schema_map' ]);
         add_action('wp_ajax_gm2_save_schema_map', [ $this, 'ajax_save_schema_map' ]);
@@ -1665,7 +1666,8 @@ class Gm2_Custom_Posts_Admin {
                 $taxonomies[$slug] = $tax_obj->labels->singular_name ?? $slug;
             }
             wp_localize_script('gm2-fg-wizard', 'gm2FGWizard', [
-                'nonce'      => wp_create_nonce('gm2_save_field_group'),
+                'nonce'       => wp_create_nonce('gm2_save_field_group'),
+                'exportNonce' => wp_create_nonce('gm2_export_field_group'),
                 'ajax'       => admin_url('admin-ajax.php'),
                 'groups'     => $groups,
                 'postTypes'  => $post_types,
@@ -2144,6 +2146,79 @@ class Gm2_Custom_Posts_Admin {
         update_option('gm2_field_groups', $groups);
         wp_send_json_success([
             'groups' => $groups,
+        ]);
+    }
+
+    public function ajax_export_field_groups() {
+        if (!$this->can_manage()) {
+            wp_send_json_error([
+                'code'    => 'permission',
+                'message' => __('You do not have permission to export field groups.', 'gm2-wordpress-suite'),
+            ]);
+        }
+        $nonce = $_POST['nonce'] ?? '';
+        if (!wp_verify_nonce($nonce, 'gm2_export_field_group')) {
+            wp_send_json_error([
+                'code'    => 'nonce',
+                'message' => __('Security check failed. Please refresh and try again.', 'gm2-wordpress-suite'),
+            ]);
+        }
+        $raw = wp_unslash($_POST['groups'] ?? '[]');
+        $requested = json_decode($raw, true);
+        if (!is_array($requested)) {
+            $requested = [];
+        }
+        $slugs = [];
+        foreach ($requested as $slug) {
+            $sanitized = sanitize_key($slug);
+            if ($sanitized) {
+                $slugs[$sanitized] = true;
+            }
+        }
+        $slugs = array_keys($slugs);
+        if (!$slugs) {
+            wp_send_json_error([
+                'code'    => 'empty',
+                'message' => __('Select at least one field group to export.', 'gm2-wordpress-suite'),
+            ]);
+        }
+        $export = \gm2_model_export('array');
+        if (is_wp_error($export)) {
+            wp_send_json_error([
+                'code'    => 'export_failed',
+                'message' => $export->get_error_message(),
+            ]);
+        }
+        $groups = $export['field_groups'] ?? [];
+        $selected = [];
+        foreach ($slugs as $slug) {
+            if (isset($groups[$slug])) {
+                $selected[$slug] = $groups[$slug];
+            }
+        }
+        if (!$selected) {
+            wp_send_json_error([
+                'code'    => 'not_found',
+                'message' => __('The selected field groups could not be found.', 'gm2-wordpress-suite'),
+            ]);
+        }
+        $data = [
+            'post_types'      => [],
+            'taxonomies'      => [],
+            'field_groups'    => $selected,
+            'schema_mappings' => [],
+        ];
+        $json = wp_json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        if (false === $json) {
+            wp_send_json_error([
+                'code'    => 'json_encode_failed',
+                'message' => __('Could not encode field groups to JSON.', 'gm2-wordpress-suite'),
+            ]);
+        }
+        $filename = 'gm2-field-groups-' . gmdate('Y-m-d') . '.json';
+        wp_send_json_success([
+            'content'  => $json,
+            'filename' => $filename,
         ]);
     }
 
