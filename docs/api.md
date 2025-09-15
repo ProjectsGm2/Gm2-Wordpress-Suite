@@ -557,12 +557,14 @@ Location: `modules/network-payload/Compression.php:122`
 apply_filters( 'gm2_compression_htaccess_path', ... );
 ```
 
-### `gm2_cp_field_sanitize_{$this->type}` (filter)
+### `gm2_cp_field_sanitize_{$type}` (filter)
 Location: `includes/fields/class-field-base.php:56`
 
 ```php
-apply_filters( 'gm2_cp_field_sanitize_{$this->type}', ... );
+apply_filters( 'gm2_cp_field_sanitize_{$type}', ... );
 ```
+
+See [Fields and Validation](fields-and-validation.md#rest-exposure) for opting specific fields into REST responses with the `expose_in_rest` flag.
 
 ### `gm2_cp_field_sanitize_{$this->key}` (filter)
 Location: `includes/fields/class-field-base.php:67`
