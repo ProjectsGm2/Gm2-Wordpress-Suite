@@ -282,7 +282,11 @@ class Gm2_Remote_Mirror {
 
         $body = wp_remote_retrieve_body($response);
         wp_mkdir_p(dirname($path));
-        file_put_contents($path, $body);
+
+        $bytes_written = file_put_contents($path, $body);
+        if ($bytes_written === false) {
+            return new \WP_Error('gm2_remote_mirror_write_failed', 'Failed to write remote script to cache.');
+        }
 
         return [
             'path' => $path,
