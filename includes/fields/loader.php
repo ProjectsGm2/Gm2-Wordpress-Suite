@@ -17,6 +17,7 @@ require_once __DIR__ . '/class-field-audio.php';
 require_once __DIR__ . '/class-field-video.php';
 require_once __DIR__ . '/class-field-gallery.php';
 require_once __DIR__ . '/class-field-checkbox.php';
+require_once __DIR__ . '/class-field-color.php';
 require_once __DIR__ . '/class-field-radio.php';
 require_once __DIR__ . '/class-field-date.php';
 require_once __DIR__ . '/class-field-time.php';
@@ -113,6 +114,7 @@ function gm2_register_default_field_types() {
     gm2_register_field_type( 'toggle', 'GM2_Field_Toggle' );
     gm2_register_field_type( 'markdown', 'GM2_Field_Markdown' );
     gm2_register_field_type( 'code', 'GM2_Field_Code' );
+    gm2_register_field_type( 'color', 'GM2_Field_Color' );
     gm2_register_field_type( 'oembed', 'GM2_Field_Oembed' );
     gm2_register_field_type( 'gradient', 'GM2_Field_Gradient' );
     gm2_register_field_type( 'icon', 'GM2_Field_Icon' );
