@@ -182,6 +182,7 @@ class Gm2_Abandoned_Carts_Admin {
         if (!empty($_REQUEST['paged'])) {
             echo '<input type="hidden" name="paged" value="' . absint($_REQUEST['paged']) . '" />';
         }
+        $table->render_bulk_actions_nonce_field();
         $table->display();
         echo '</form></div>';
     }
