@@ -59,6 +59,16 @@ if (!function_exists('gm2_enqueue_open_in_code_assets')) {
             GM2_VERSION,
             true
         );
+
+        wp_localize_script(
+            'gm2-open-in-code',
+            'gm2OpenInCodeL10n',
+            [
+                'close'     => esc_html__('Close', 'gm2-wordpress-suite'),
+                'copied'    => esc_html__('Copied!', 'gm2-wordpress-suite'),
+                'copyError' => esc_html__('Copy failed', 'gm2-wordpress-suite'),
+            ]
+        );
     }
     add_action('admin_enqueue_scripts', 'gm2_enqueue_open_in_code_assets');
 }
