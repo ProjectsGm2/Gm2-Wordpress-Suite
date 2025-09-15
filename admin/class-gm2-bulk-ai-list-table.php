@@ -221,11 +221,30 @@ class Gm2_Bulk_Ai_List_Table extends \WP_List_Table {
             $args['meta_query'] = array_merge([ 'relation' => 'AND' ], $meta_query);
         }
 
-        $orderby = $_REQUEST['orderby'] ?? '';
-        $order   = $_REQUEST['order'] ?? 'asc';
-        if ($orderby === 'title') {
-            $args['orderby'] = 'title';
-            $args['order']   = $order;
+        $sortable_columns = $sortable;
+        $default_orderby  = 'title';
+        $orderby_key      = $default_orderby;
+
+        if (isset($_REQUEST['orderby'])) {
+            $requested_orderby = sanitize_key(wp_unslash($_REQUEST['orderby']));
+            if (isset($sortable_columns[$requested_orderby])) {
+                $orderby_key = $requested_orderby;
+            }
+        }
+
+        if (isset($sortable_columns[$orderby_key])) {
+            $orderby_value = $sortable_columns[$orderby_key][0] ?? $orderby_key;
+            $args['orderby'] = $orderby_value;
+
+            $order = 'asc';
+            if (isset($_REQUEST['order'])) {
+                $requested_order = sanitize_key(wp_unslash($_REQUEST['order']));
+                if (in_array($requested_order, [ 'asc', 'desc' ], true)) {
+                    $order = $requested_order;
+                }
+            }
+
+            $args['order'] = $order;
         }
 
         $query = new \WP_Query($args);
