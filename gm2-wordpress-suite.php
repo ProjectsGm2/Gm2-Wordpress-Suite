@@ -376,6 +376,8 @@ function gm2_deactivate_plugin() {
         wp_unschedule_event($ts, 'gm2_analytics_purge');
     }
 
+    wp_clear_scheduled_hook('gm2_remote_mirror_refresh');
+
     Gm2_Abandoned_Carts::clear_scheduled_event();
 }
 register_deactivation_hook(__FILE__, 'gm2_deactivate_plugin');
