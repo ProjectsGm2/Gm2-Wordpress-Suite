@@ -1739,10 +1739,18 @@ class Gm2_Custom_Posts_Admin {
                         'provider',
                         'url',
                         'courseCode',
+                        'courseInstance.name',
+                        'courseInstance.description',
+                        'courseInstance.courseMode',
+                        'courseInstance.courseWorkload',
                         'courseInstance.startDate',
                         'courseInstance.endDate',
                         'courseInstance.location.name',
+                        'courseInstance.location.address',
+                        'courseInstance.instructor.name',
                         'courseInstance.offers.price',
+                        'courseInstance.offers.priceCurrency',
+                        'courseInstance.offers.url',
                     ],
                 ],
                 'saved' => esc_html__( 'Schema mapping saved.', 'gm2-wordpress-suite' ),
@@ -2300,9 +2308,17 @@ class Gm2_Custom_Posts_Admin {
         if (!wp_verify_nonce($nonce, 'gm2_schema_map')) {
             wp_send_json_error('nonce');
         }
-        $slug = sanitize_key($_POST['cpt'] ?? '');
-        $type = sanitize_text_field($_POST['type'] ?? '');
-        $map  = $_POST['map'] ?? [];
+        $slug = sanitize_key(wp_unslash($_POST['cpt'] ?? ''));
+        $type = sanitize_text_field(wp_unslash($_POST['type'] ?? ''));
+        $raw_map = $_POST['map'] ?? [];
+        if (is_string($raw_map)) {
+            $decoded = json_decode(wp_unslash($raw_map), true);
+            $map = is_array($decoded) ? $decoded : null;
+        } elseif (is_array($raw_map)) {
+            $map = wp_unslash($raw_map);
+        } else {
+            $map = null;
+        }
         if (!$slug || !is_array($map)) {
             wp_send_json_error('data');
         }
