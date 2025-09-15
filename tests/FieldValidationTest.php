@@ -55,4 +55,30 @@ class FieldValidationTest extends WP_UnitTestCase {
         $this->assertInstanceOf( WP_Error::class, $res );
         $this->assertSame( 'End must be after start', $res->get_error_message() );
     }
+
+    public function test_text_field_sanitize_filter_value_saved() {
+        $post_id = self::factory()->post->create();
+        $fields = [
+            'custom_text' => [
+                'type'  => 'text',
+                'label' => 'Custom Text',
+            ],
+        ];
+
+        $filtered_values = [];
+        $callback = function( $value, $field = null ) use ( &$filtered_values ) {
+            $filtered = 'filtered-' . $value;
+            $filtered_values[] = $filtered;
+            return $filtered;
+        };
+
+        add_filter( 'gm2_cp_field_sanitize_text', $callback, 10, 2 );
+
+        gm2_save_field_group( $fields, $post_id, 'post', [ 'custom_text' => 'RawValue' ] );
+
+        remove_filter( 'gm2_cp_field_sanitize_text', $callback, 10 );
+
+        $this->assertNotEmpty( $filtered_values, 'The gm2_cp_field_sanitize_text filter should run.' );
+        $this->assertSame( 'filtered-RawValue', get_post_meta( $post_id, 'custom_text', true ) );
+    }
 }
