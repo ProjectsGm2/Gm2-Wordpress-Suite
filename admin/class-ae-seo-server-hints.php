@@ -72,7 +72,11 @@ NGINX;
         }
         $file = $dir . '/js-optimizer.log';
         $time = gmdate('Y-m-d H:i:s');
-        file_put_contents($file, '[' . $time . '] ' . $message . PHP_EOL, FILE_APPEND);
+        $result = file_put_contents($file, '[' . $time . '] ' . $message . PHP_EOL, FILE_APPEND);
+
+        if ($result === false) {
+            error_log('[AE SEO Server Hints] Failed to write log entry to ' . $file . ' for message: ' . $message);
+        }
     }
 
     private function asset_compression_enabled(): bool {
