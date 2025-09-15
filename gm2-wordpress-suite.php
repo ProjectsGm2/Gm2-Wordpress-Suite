@@ -84,6 +84,7 @@ require_once GM2_PLUGIN_DIR . 'includes/elementor/class-gm2-field-key-control.ph
 require_once GM2_PLUGIN_DIR . 'includes/elementor/class-gm2-dynamic-tag.php';
 require_once GM2_PLUGIN_DIR . 'integrations/elementor/class-gm2-cp-elementor-tags.php';
 require_once GM2_PLUGIN_DIR . 'integrations/elementor/class-gm2-cp-elementor-query.php';
+require_once GM2_PLUGIN_DIR . 'integrations/elementor/class-gm2-cp-form-action.php';
 require_once GM2_PLUGIN_DIR . 'includes/gm2-schema-tooltips.php';
 require_once GM2_PLUGIN_DIR . 'includes/gm2-editorial-comments.php';
 require_once GM2_PLUGIN_DIR . 'includes/gm2-model-export.php';

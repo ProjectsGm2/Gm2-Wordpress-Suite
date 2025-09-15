@@ -32,7 +32,10 @@ function _manually_load_plugin() {
         eval('namespace Elementor; abstract class Base_Data_Control { public function get_type(){return "";} public function enqueue(){} public function content_template(){} protected function get_default_settings(){return [];} }');
     }
     if (!class_exists('Elementor\\Controls_Manager')) {
-        eval('namespace Elementor; class Controls_Manager { const TEXT = "text"; }');
+        eval('namespace Elementor; class Controls_Manager { const TEXT = "text"; const HIDDEN = "hidden"; const SELECT = "select"; const SELECT2 = "select2"; const NUMBER = "number"; const REPEATER = "repeater"; }');
+    }
+    if (!class_exists('Elementor\\Repeater')) {
+        eval('namespace Elementor; class Repeater { private $controls = []; public function add_control($id, $args = []) { $this->controls[$id] = $args; } public function get_controls() { return $this->controls; } }');
     }
     if (!class_exists('Elementor\\Plugin')) {
         eval('namespace Elementor; class Plugin { public static $instance; public $widgets_manager; public function __construct(){ self::$instance=$this; $this->widgets_manager=new class { public function register_control($id,$ctrl){} public function register_tag($tag){} public function register_group($n,$a=[]){} }; } }');
@@ -43,6 +46,9 @@ function _manually_load_plugin() {
     }
     if (!class_exists('Elementor\\Modules\\DynamicTags\\Module')) {
         eval('namespace Elementor\\Modules\\DynamicTags; class Module { const TEXT_CATEGORY="text"; const URL_CATEGORY="url"; const IMAGE_CATEGORY="image"; const MEDIA_CATEGORY="media"; const NUMBER_CATEGORY="number"; const COLOR_CATEGORY="color"; const GALLERY_CATEGORY="gallery"; const DATETIME_CATEGORY="date"; public function register_tag($tag){} public function register_group($name,$args=[]){} }');
+    }
+    if (!class_exists('ElementorPro\\Modules\\Forms\\Classes\\Action_Base')) {
+        eval('namespace ElementorPro\\Modules\\Forms\\Classes; abstract class Action_Base { abstract public function get_name(); abstract public function get_label(); public function register_settings_section($widget) {} abstract public function run($record, $ajax_handler); public function on_export($element) {} }');
     }
     if (!class_exists('ElementorPro\\Modules\\Posts\\Widgets\\Posts')) {
         eval('namespace ElementorPro\\Modules\\Posts\\Widgets; class Posts { public function get_settings(){ return []; } }');
