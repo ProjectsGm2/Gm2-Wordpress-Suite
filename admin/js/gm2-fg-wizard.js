@@ -141,7 +141,8 @@
             { label: 'Text', value: 'text' },
             { label: 'Textarea', value: 'textarea' },
             { label: 'Select', value: 'select' },
-            { label: 'Number', value: 'number' }
+            { label: 'Number', value: 'number' },
+            { label: 'Color', value: 'color' }
         ];
 
         const addField = () => {
