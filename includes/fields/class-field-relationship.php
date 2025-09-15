@@ -21,7 +21,7 @@ class GM2_Field_Relationship extends GM2_Field {
     private $sync = 'two-way';
 
     public function __construct( $key, $args = array() ) {
-        parent::__construct( $key, $args );
+        parent::__construct( $key, $args, 'relationship' );
         $this->rel_type = in_array( $args['relationship_type'] ?? 'post', array( 'post', 'term', 'user', 'role' ), true ) ? $args['relationship_type'] : 'post';
         $this->sync     = in_array( $args['sync'] ?? 'two-way', array( 'none', 'one-way', 'two-way' ), true ) ? $args['sync'] : 'two-way';
     }

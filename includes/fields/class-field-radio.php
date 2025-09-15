@@ -4,6 +4,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 class GM2_Field_Radio extends GM2_Field {
+    public function __construct( $key, $args = array() ) {
+        parent::__construct( $key, $args, 'radio' );
+    }
+
     protected function render_field( $value, $object_id, $context_type, $placeholder = '' ) {
         $options  = $this->args['options'] ?? array();
         $disabled = disabled( $this->args['disabled'] ?? false, true, false );

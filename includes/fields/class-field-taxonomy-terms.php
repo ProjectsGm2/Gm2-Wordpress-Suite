@@ -4,6 +4,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 class GM2_Field_Taxonomy_Terms extends GM2_Field {
+    public function __construct( $key, $args = array() ) {
+        parent::__construct( $key, $args, 'taxonomy_terms' );
+    }
+
     protected function render_field( $value, $object_id, $context_type, $placeholder = '' ) {
         $value    = is_array( $value ) ? $value : array();
         $disabled = disabled( $this->args['disabled'] ?? false, true, false );

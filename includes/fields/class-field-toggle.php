@@ -4,6 +4,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 class GM2_Field_Toggle extends GM2_Field {
+    public function __construct( $key, $args = array() ) {
+        parent::__construct( $key, $args, 'toggle' );
+    }
+
     protected function render_field( $value, $object_id, $context_type, $placeholder = '' ) {
         $checked  = checked( $value, '1', false );
         $disabled = disabled( $this->args['disabled'] ?? false, true, false );

@@ -86,8 +86,17 @@ add_action( 'gm2_cp_register_field_type', function ( $type, $class ) {
 } );
 ```
 
+### `gm2_cp_field_sanitize_{$type}`
+Filters the sanitized value for every field of a given type.
+
+```php
+add_filter( 'gm2_cp_field_sanitize_text', function ( $value, $field ) {
+    return wp_strip_all_tags( $value );
+}, 10, 2 );
+```
+
 ### `gm2_cp_field_sanitize_{$slug}`
-Filters the sanitized value before saving.
+Filters the sanitized value before saving. Runs after the type-level filter above so individual slugs can override shared logic.
 
 ```php
 add_filter( 'gm2_cp_field_sanitize_custom_slug', function ( $value, $field ) {

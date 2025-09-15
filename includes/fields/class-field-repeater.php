@@ -4,6 +4,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 class GM2_Field_Repeater extends GM2_Field {
+    public function __construct( $key, $args = array() ) {
+        parent::__construct( $key, $args, 'repeater' );
+    }
+
     protected function render_field( $value, $object_id, $context_type, $placeholder = '' ) {
         $rows     = is_array( $value ) ? $value : array();
         $disabled = $this->args['disabled'] ?? false ? ' data-disabled="1"' : '';

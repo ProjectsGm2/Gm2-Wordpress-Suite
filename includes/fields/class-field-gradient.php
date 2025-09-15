@@ -7,7 +7,7 @@ class GM2_Field_Gradient extends GM2_Field {
     private static $assets_hooked = false;
 
     public function __construct( $key, $args = array() ) {
-        parent::__construct( $key, $args );
+        parent::__construct( $key, $args, 'gradient' );
         if ( ! self::$assets_hooked ) {
             add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue_assets' ) );
             add_action( 'wp_enqueue_scripts', array( __CLASS__, 'enqueue_assets' ) );
