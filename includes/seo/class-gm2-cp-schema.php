@@ -170,8 +170,12 @@ class Gm2_CP_Schema {
         return match ($segment) {
             'address' => 'PostalAddress',
             'geo' => 'GeoCoordinates',
+            'jobLocation' => 'Place',
+            'location' => 'Place',
             'openingHoursSpecification' => 'OpeningHoursSpecification',
             'offers' => 'Offer',
+            'organizer' => 'Organization',
+            'courseInstance' => 'CourseInstance',
             default => null,
         };
     }
