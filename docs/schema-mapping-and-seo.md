@@ -13,6 +13,18 @@ Open **Gm2 → Schema Mapping** in the WordPress admin to map custom post types 
 
 Presets provide a quick starting point for popular verticals while still allowing individual fields to be customised.
 
+### Preset property reference
+
+| Preset | Key properties pre-filled |
+| --- | --- |
+| LocalBusiness | `name`, `image`, `address`, `geo`, `telephone`, `openingHoursSpecification`, `url`, `sameAs`, `priceRange` |
+| Event | `name`, `startDate`, `endDate`, `location`, `image`, `offers`, `organizer` |
+| RealEstateListing | `name`, `description`, `url`, `address`, `geo`, `price`, `offers` |
+| JobPosting | `title`, `description`, `datePosted`, `validThrough`, `employmentType`, `jobLocation`, `baseSalary`, `hiringOrganization` |
+| Course | `name`, `description`, `provider`, `url`, `courseCode`, `courseInstance.startDate`, `courseInstance.endDate`, `courseInstance.location.name`, `courseInstance.offers.price` |
+
+Use dotted paths (for example `courseInstance.startDate`) to target nested objects; the suite automatically infers the correct `@type` for nested structures such as `Place`, `Offer`, and `CourseInstance`.
+
 ## JSON‑LD Output Examples
 
 ### Singular Page
