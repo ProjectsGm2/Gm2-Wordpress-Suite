@@ -238,9 +238,16 @@ function gm2_validate_field($key, $field, $value, $object_id = 0, $context_type 
         return new WP_Error('gm2_max', $msg);
     }
 
-    if (!empty($field['regex']) && is_string($value) && !preg_match($field['regex'], $value)) {
-        $msg = $messages['regex'] ?? __('Invalid format.', 'gm2-wordpress-suite');
-        return new WP_Error('gm2_regex', $msg);
+    if (!empty($field['regex']) && is_string($field['regex']) && is_string($value)) {
+        $match = @preg_match($field['regex'], $value);
+        if ($match === false) {
+            $msg = $messages['regex'] ?? __('Invalid format.', 'gm2-wordpress-suite');
+            return new WP_Error('gm2_regex_invalid', $msg);
+        }
+        if ($match === 0) {
+            $msg = $messages['regex'] ?? __('Invalid format.', 'gm2-wordpress-suite');
+            return new WP_Error('gm2_regex', $msg);
+        }
     }
 
     $type = $field['type'] ?? '';

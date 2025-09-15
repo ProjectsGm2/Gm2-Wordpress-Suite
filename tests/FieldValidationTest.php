@@ -23,6 +23,26 @@ class FieldValidationTest extends WP_UnitTestCase {
         $this->assertInstanceOf( WP_Error::class, $res );
     }
 
+    public function test_regex_invalid_pattern_returns_error() {
+        $field = [ 'regex' => '/(unclosed' ];
+        $res   = gm2_validate_field('regex_field', $field, 'value');
+
+        $this->assertInstanceOf( WP_Error::class, $res );
+        $this->assertSame( 'gm2_regex_invalid', $res->get_error_code() );
+    }
+
+    public function test_regex_invalid_pattern_uses_custom_message() {
+        $field = [
+            'regex'    => '/(unclosed',
+            'messages' => [ 'regex' => 'Custom invalid format.' ],
+        ];
+        $res = gm2_validate_field('regex_field', $field, 'value');
+
+        $this->assertInstanceOf( WP_Error::class, $res );
+        $this->assertSame( 'gm2_regex_invalid', $res->get_error_code() );
+        $this->assertSame( 'Custom invalid format.', $res->get_error_message() );
+    }
+
     public function test_measurement_validation_callback() {
         $field = [
             'type' => 'measurement',
