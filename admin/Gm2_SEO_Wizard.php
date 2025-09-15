@@ -23,10 +23,13 @@ class Gm2_SEO_Wizard {
     }
 
     public function handle_redirect() {
+        $get_action = isset($_GET['action']) ? sanitize_key(wp_unslash($_GET['action'])) : '';
+        $post_action = isset($_POST['action']) ? sanitize_key(wp_unslash($_POST['action'])) : '';
+
         // Bail out when handling wizard form submissions.
         if (
-            (isset($_GET['action']) && $_GET['action'] === 'gm2_save_wizard') ||
-            (isset($_POST['action']) && $_POST['action'] === 'gm2_save_wizard') ||
+            ($get_action === 'gm2_save_wizard') ||
+            ($post_action === 'gm2_save_wizard') ||
             (isset($_SERVER['SCRIPT_NAME']) && basename($_SERVER['SCRIPT_NAME']) === 'admin-post.php')
         ) {
             return;
