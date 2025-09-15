@@ -616,9 +616,6 @@ class Gm2_SEO_Public {
         if ($og_image_url) {
             $og_html .= '<meta property="og:image" content="' . esc_url($og_image_url) . '" />' . "\n";
         }
-        if (!apply_filters('gm2_seo_disable_og_tags', false)) {
-            $html .= $og_html;
-        }
 
         $tw_html  = '';
         if ($og_image_url) {
@@ -633,9 +630,76 @@ class Gm2_SEO_Public {
         if ($twitter_creator) {
             $tw_html .= '<meta name="twitter:creator" content="' . esc_attr($twitter_creator) . '" />' . "\n";
         }
-        if (!apply_filters('gm2_seo_disable_twitter_tags', false)) {
-            $html .= $tw_html;
+
+        $head_buffer = '';
+        if (ob_get_level() > 0) {
+            $buffer_contents = ob_get_contents();
+            if (is_string($buffer_contents)) {
+                $head_buffer = $buffer_contents;
+            }
         }
+
+        $has_existing_social_meta = did_action('wpseo_head') > 0;
+        if (!$has_existing_social_meta && $head_buffer !== '') {
+            $has_existing_social_meta = preg_match('/<meta\s+property=["\']og:/i', $head_buffer) === 1
+                || preg_match('/<meta\s+name=["\']twitter:/i', $head_buffer) === 1;
+        }
+
+        $has_existing_social_meta = apply_filters(
+            'gm2_seo_has_existing_social_meta',
+            $has_existing_social_meta,
+            $head_buffer,
+            $data
+        );
+
+        $should_output_social_meta = !$has_existing_social_meta;
+        $should_output_social_meta = apply_filters(
+            'gm2_seo_should_output_social_meta',
+            $should_output_social_meta,
+            $data,
+            $head_buffer,
+            $has_existing_social_meta
+        );
+
+        $social_html = '';
+        if ($should_output_social_meta) {
+            $disable_og = apply_filters('gm2_seo_disable_og_tags', false);
+            if (!$disable_og) {
+                $social_html .= apply_filters(
+                    'gm2_seo_og_meta_html',
+                    $og_html,
+                    $data,
+                    $head_buffer,
+                    $has_existing_social_meta,
+                    $should_output_social_meta
+                );
+            }
+
+            $disable_twitter = apply_filters('gm2_seo_disable_twitter_tags', false);
+            if (!$disable_twitter) {
+                $social_html .= apply_filters(
+                    'gm2_seo_twitter_meta_html',
+                    $tw_html,
+                    $data,
+                    $head_buffer,
+                    $has_existing_social_meta,
+                    $should_output_social_meta
+                );
+            }
+        }
+
+        $social_html = apply_filters(
+            'gm2_seo_social_meta_html',
+            $social_html,
+            $data,
+            $head_buffer,
+            $has_existing_social_meta,
+            $should_output_social_meta,
+            $og_html,
+            $tw_html
+        );
+
+        $html .= $social_html;
 
         echo apply_filters('gm2_meta_tags', $html, $data);
     }
