@@ -68,6 +68,9 @@ jQuery(function ($) {
     $('#gm2-save-schema').on('click', function (e) {
         e.preventDefault();
         const slug = $cpt.val();
+        if (!slug) {
+            return;
+        }
         const map = {};
         $table.find('tr').each(function () {
             const prop = $(this).find('.gm2-prop').val();
@@ -76,7 +79,14 @@ jQuery(function ($) {
                 map[prop] = field;
             }
         });
-        $.post(data.ajax, { action: 'gm2_save_schema_map', nonce: data.nonce, cpt: slug, type: $type.val(), map: map }, function (r) {
+        const payload = {
+            action: 'gm2_save_schema_map',
+            nonce: data.nonce,
+            cpt: slug,
+            type: $type.val(),
+            map: JSON.stringify(map),
+        };
+        $.post(data.ajax, payload, function (r) {
             if (r && r.success) {
                 alert(data.saved || 'Saved');
             }
