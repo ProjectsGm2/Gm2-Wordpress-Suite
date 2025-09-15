@@ -557,8 +557,15 @@ Location: `modules/network-payload/Compression.php:122`
 apply_filters( 'gm2_compression_htaccess_path', ... );
 ```
 
+### `gm2_cp_field_sanitize_{$this->type}` (filter)
+Location: `includes/fields/class-field-base.php:56`
+
+```php
+apply_filters( 'gm2_cp_field_sanitize_{$this->type}', ... );
+```
+
 ### `gm2_cp_field_sanitize_{$this->key}` (filter)
-Location: `includes/fields/class-field-base.php:53`
+Location: `includes/fields/class-field-base.php:67`
 
 ```php
 apply_filters( 'gm2_cp_field_sanitize_{$this->key}', ... );

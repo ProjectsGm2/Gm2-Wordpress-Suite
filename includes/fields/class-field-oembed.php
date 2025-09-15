@@ -4,6 +4,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 class GM2_Field_Oembed extends GM2_Field {
+    public function __construct( $key, $args = array() ) {
+        parent::__construct( $key, $args, 'oembed' );
+    }
+
     protected function render_field( $value, $object_id, $context_type, $placeholder = '' ) {
         if ( $context_type === 'public' ) {
             echo gm2_render_oembed( (string) $value );

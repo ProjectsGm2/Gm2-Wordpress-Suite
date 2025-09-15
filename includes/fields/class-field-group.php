@@ -4,6 +4,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 class GM2_Field_Group extends GM2_Field {
+    public function __construct( $key, $args = array() ) {
+        parent::__construct( $key, $args, 'group' );
+    }
+
     protected function render_field( $value, $object_id, $context_type, $placeholder = '' ) {
         $disabled = $this->args['disabled'] ?? false ? ' data-disabled="1"' : '';
         echo '<div class="gm2-field-group" data-key="' . esc_attr( $this->key ) . '"' . $disabled . '>';

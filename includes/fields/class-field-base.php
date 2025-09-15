@@ -6,10 +6,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 abstract class GM2_Field {
     protected $key;
     protected $args;
+    /**
+     * Field type identifier.
+     *
+     * @var string
+     */
+    protected $type;
 
-    public function __construct( $key, $args = array() ) {
+    public function __construct( $key, $args = array(), $type = '' ) {
         $this->key  = $key;
         $this->args = is_array( $args ) ? $args : array();
+        $this->type = $type;
     }
 
     public function render_admin( $value, $object_id, $context_type ) {
@@ -41,6 +48,18 @@ abstract class GM2_Field {
      */
     public function sanitize( $value ) {
         $value = $this->sanitize_field_value( $value );
+
+        /**
+         * Filters the sanitized value for a field type.
+         *
+         * The dynamic portion of the hook name, {$this->type}, refers to the field type.
+         *
+         * @param mixed     $value Sanitized value.
+         * @param GM2_Field $this  Field instance.
+         */
+        if ( $this->type ) {
+            $value = apply_filters( "gm2_cp_field_sanitize_{$this->type}", $value, $this );
+        }
 
         /**
          * Filters the sanitized value for a field.

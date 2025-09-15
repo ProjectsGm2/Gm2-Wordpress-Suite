@@ -4,6 +4,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 class GM2_Field_Select extends GM2_Field {
+    public function __construct( $key, $args = array() ) {
+        parent::__construct( $key, $args, 'select' );
+    }
+
     protected function render_field( $value, $object_id, $context_type, $placeholder = '' ) {
         $options  = $this->args['options'] ?? array();
         $multiple = ! empty( $this->args['multiple'] );

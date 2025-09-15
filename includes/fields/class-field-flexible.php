@@ -32,6 +32,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  * values for the fields defined within that layout.
  */
 class GM2_Field_Flexible extends GM2_Field {
+    public function __construct( $key, $args = array() ) {
+        parent::__construct( $key, $args, 'flexible' );
+    }
+
     /**
      * Render the flexible content field.
      *

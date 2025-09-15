@@ -4,6 +4,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 class GM2_Field_Code extends GM2_Field {
+    public function __construct( $key, $args = array() ) {
+        parent::__construct( $key, $args, 'code' );
+    }
+
     protected function render_field( $value, $object_id, $context_type, $placeholder = '' ) {
         $language = $this->args['language'] ?? 'php';
         if ( $context_type === 'public' ) {

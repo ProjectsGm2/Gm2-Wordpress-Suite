@@ -4,6 +4,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 class GM2_Field_Measurement extends GM2_Field {
+    public function __construct( $key, $args = array() ) {
+        parent::__construct( $key, $args, 'measurement' );
+    }
+
     protected function render_field( $value, $object_id, $context_type, $placeholder = '' ) {
         $value    = is_array( $value ) ? $value : array();
         $val      = $value['value'] ?? '';

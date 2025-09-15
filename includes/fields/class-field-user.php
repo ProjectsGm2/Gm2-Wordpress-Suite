@@ -4,6 +4,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 class GM2_Field_User extends GM2_Field {
+    public function __construct( $key, $args = array() ) {
+        parent::__construct( $key, $args, 'user' );
+    }
+
     protected function render_field( $value, $object_id, $context_type, $placeholder = '' ) {
         $disabled = disabled( $this->args['disabled'] ?? false, true, false );
         $users = get_users();

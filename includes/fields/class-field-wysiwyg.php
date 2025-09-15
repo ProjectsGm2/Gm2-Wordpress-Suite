@@ -4,6 +4,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 class GM2_Field_Wysiwyg extends GM2_Field {
+    public function __construct( $key, $args = array() ) {
+        parent::__construct( $key, $args, 'wysiwyg' );
+    }
+
     protected function render_field( $value, $object_id, $context_type, $placeholder = '' ) {
         $settings = array(
             'textarea_name' => $this->key,
