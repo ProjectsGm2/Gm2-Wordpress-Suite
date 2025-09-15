@@ -67,6 +67,14 @@ wp gm2 blueprint import assets/blueprints/samples/directory.json assets/blueprin
 
 Imports are validated against `assets/blueprints/schema.json` and sample blueprints live in `assets/blueprints/samples/`.
 
+Detailed reference sheets for the bundled presets are available in [docs/presets/](docs/presets/):
+
+- [Directory](docs/presets/directory.md)
+- [Events](docs/presets/events.md)
+- [Real Estate](docs/presets/real-estate.md)
+- [Jobs](docs/presets/jobs.md)
+- [Courses](docs/presets/courses.md)
+
 ## Network Payload Optimizer
 
 The Network Payload Optimizer records Resource Timing data from the admin and tracks a rolling seven‑day average of transferred bytes. Configure the module under **Gm2 → Network Payload** where you can toggle:
