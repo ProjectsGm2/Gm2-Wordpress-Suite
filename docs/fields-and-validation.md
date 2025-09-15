@@ -77,6 +77,16 @@ Field values are private in the REST API unless you opt in. Setting `'expose_in_
 
 Omitting the flag (or leaving it `false`) keeps the field hidden from REST responses.
 
+## Exporting Field Groups
+
+The field-group wizard includes an **Export JSON** button so administrators can move definitions between environments without leaving the editor:
+
+1. Open **Custom Posts → Field Group Wizard** and select an existing group from the *Existing Groups* dropdown.
+2. Click **Export JSON**. A modal appears listing every saved group.
+3. Check one or more groups to include, then choose **Download JSON**.
+
+The plugin generates a blueprint-formatted JSON file containing the selected groups only. Import the file through **Tools → Gm2 Blueprints** or commit it to version control for deployment.
+
 ## Hooks
 
 ### `gm2_cp_register_field_type`
