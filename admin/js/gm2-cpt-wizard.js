@@ -14,6 +14,138 @@
         Object.keys(existing).forEach(sl => {
             options.push({ label: existing[sl].label || sl, value: sl });
         });
+        const [ selectedPreset, setSelectedPreset ] = useState('');
+        const [ importingPreset, setImportingPreset ] = useState(false);
+        const presetSource = (window.gm2CPTWizard && window.gm2CPTWizard.presets) || [];
+        const humanizePreset = (value) => {
+            if(!value || typeof value !== 'string'){ return value; }
+            return value.replace(/\.json$/,'').replace(/[-_]+/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        };
+        const presetOptions = Array.isArray(presetSource)
+            ? presetSource.map(item => {
+                if(typeof item === 'string'){
+                    return { value: item, label: humanizePreset(item) };
+                }
+                if(item && typeof item === 'object'){
+                    if(item.value){
+                        return { value: item.value, label: item.label || humanizePreset(item.value) };
+                    }
+                    if(item.file){
+                        return { value: item.file, label: item.label || humanizePreset(item.file) };
+                    }
+                }
+                return null;
+            }).filter(Boolean)
+            : Object.keys(presetSource).map(key => {
+                const val = presetSource[key];
+                const value = val && typeof val === 'object' && val.value ? val.value : key;
+                const label = (val && typeof val === 'object' && (val.label || val.name)) || (typeof val === 'string' ? val : null) || humanizePreset(value);
+                return { value, label };
+            });
+        const validFieldTypes = [ 'text', 'textarea', 'number', 'select', 'checkbox', 'radio', 'email', 'url', 'date' ];
+        const parsePreset = (raw) => {
+            if(!raw){
+                throw new Error('Preset data missing.');
+            }
+            let blueprint = raw;
+            if(typeof raw === 'string'){
+                try {
+                    blueprint = JSON.parse(raw);
+                } catch (err) {
+                    throw new Error('Invalid preset JSON.');
+                }
+            }
+            if(!blueprint || typeof blueprint !== 'object'){
+                throw new Error('Invalid preset data.');
+            }
+            const postTypes = blueprint.post_types || {};
+            const slugs = Object.keys(postTypes);
+            if(!slugs.length){
+                throw new Error('Preset is missing a post type.');
+            }
+            const presetSlug = slugify(slugs[0]);
+            const presetPT = postTypes[slugs[0]] || {};
+            const presetLabel = presetPT.label || (presetPT.labels && (presetPT.labels.singular_name || presetPT.labels.name)) || humanizePreset(presetSlug);
+            const seenFields = new Set();
+            const fields = [];
+            (blueprint.field_groups || []).forEach(group => {
+                (group && group.fields || []).forEach(field => {
+                    if(!field){ return; }
+                    const slug = slugify(field.name || field.key || '');
+                    if(!slug || seenFields.has(slug)){ return; }
+                    let type = String(field.type || 'text').toLowerCase();
+                    if(type === 'datetime' || type === 'datetime-local'){ type = 'date'; }
+                    if(!validFieldTypes.includes(type)){
+                        type = 'text';
+                    }
+                    fields.push({
+                        label: field.label || humanizePreset(slug),
+                        slug,
+                        type
+                    });
+                    seenFields.add(slug);
+                });
+            });
+            const taxonomies = [];
+            const presetTax = blueprint.taxonomies || {};
+            Object.keys(presetTax).forEach(taxSlug => {
+                const tax = presetTax[taxSlug] || {};
+                const objects = Array.isArray(tax.object_type) ? tax.object_type : [];
+                if(objects.includes(slugs[0])){
+                    taxonomies.push({
+                        slug: slugify(taxSlug),
+                        label: (tax.labels && (tax.labels.singular_name || tax.labels.name)) || tax.label || humanizePreset(taxSlug)
+                    });
+                }
+            });
+            return { slug: presetSlug, label: presetLabel, fields, taxonomies };
+        };
+        const notify = (status, message) => {
+            dispatch('core/notices').createNotice(status, message, { isDismissible: true, type: 'snackbar' });
+        };
+        const importPreset = () => {
+            if(!selectedPreset){
+                notify('error', 'Please select a preset to import.');
+                return;
+            }
+            const nonce = (window.gm2CPTWizard && (window.gm2CPTWizard.importNonce || window.gm2CPTWizard.presetNonce));
+            if(!nonce){
+                notify('error', 'Preset import is not available.');
+                return;
+            }
+            const payload = new URLSearchParams();
+            payload.append('action', 'gm2_import_preset');
+            payload.append('nonce', nonce);
+            payload.append('file', selectedPreset);
+            setImportingPreset(true);
+            fetch(window.gm2CPTWizard.ajax, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: payload.toString()
+            }).then(r => r.json()).then(resp => {
+                if(resp && resp.success){
+                    const blueprint = resp.data && (resp.data.blueprint || resp.data.preset || resp.data);
+                    try {
+                        const parsed = parsePreset(blueprint);
+                        setCurrentModel('');
+                        setStepOneErrors({});
+                        setData({ slug: parsed.slug, label: parsed.label, fields: parsed.fields, taxonomies: parsed.taxonomies });
+                        setRawSlug(parsed.slug);
+                        notify('success', (resp.data && resp.data.message) || 'Preset applied.');
+                    } catch (err) {
+                        notify('error', err.message || 'Failed to apply preset.');
+                    }
+                } else {
+                    const message = resp && resp.data && resp.data.message ? resp.data.message : 'Failed to import preset.';
+                    notify('error', message);
+                }
+            }).catch(() => {
+                notify('error', 'Failed to import preset.');
+            }).finally(() => {
+                setImportingPreset(false);
+            });
+        };
         return el('div', {},
             options.length > 1 && el(SelectControl, {
                 label: 'Existing Models',
@@ -21,6 +153,21 @@
                 options: options,
                 onChange: v => { setCurrentModel(v); loadModel(v); }
             }),
+            el('div', { className: 'gm2-cpt-preset-import' },
+                el(SelectControl, {
+                    label: 'Blueprint Presets',
+                    value: selectedPreset,
+                    options: [ { label: presetOptions.length ? 'Select a preset' : 'No presets available', value: '' }, ...presetOptions ],
+                    onChange: v => setSelectedPreset(v),
+                    disabled: !presetOptions.length
+                }),
+                el(Button, {
+                    isSecondary: true,
+                    onClick: importPreset,
+                    disabled: !presetOptions.length || importingPreset,
+                    isBusy: importingPreset
+                }, 'Add from Preset')
+            ),
             el(TextControl, {
                 label: 'Post Type Slug',
                 value: rawSlug,
