@@ -17,7 +17,18 @@ class Gm2_REST_Fields {
         register_rest_route('gm2/v1', '/fields/(?P<id>\\d+)', [
             'methods'  => \WP_REST_Server::READABLE,
             'callback' => [ __CLASS__, 'rest_get' ],
-            'permission_callback' => '__return_true',
+            'permission_callback' => static function (\WP_REST_Request $request) {
+                $can_access = apply_filters('gm2_rest_fields_permission', current_user_can('read'), $request);
+                if ($can_access) {
+                    return true;
+                }
+
+                return new \WP_Error(
+                    'rest_forbidden',
+                    __('Sorry, you are not allowed to access GM2 fields.', 'gm2-wordpress-suite'),
+                    [ 'status' => rest_authorization_required_code() ]
+                );
+            },
             'args' => [
                 'id' => [
                     'type' => 'integer',
