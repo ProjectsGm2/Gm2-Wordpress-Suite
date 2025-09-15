@@ -18,7 +18,20 @@ class Gm2_REST_Rate_Limiter {
         if (strpos($route, '/gm2/v1') !== 0) {
             return $result;
         }
-        $ip  = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+        $ip = '';
+        if (\function_exists('rest_get_ip_address')) {
+            $ip = (string) \rest_get_ip_address();
+        }
+        if ($ip === '') {
+            $raw_ip = $_SERVER['REMOTE_ADDR'] ?? '';
+            if (!\is_string($raw_ip)) {
+                $raw_ip = ''; // Ensure the value is always a string.
+            }
+            $ip = \sanitize_text_field(\wp_unslash($raw_ip));
+        }
+        if ($ip === '') {
+            $ip = 'unknown';
+        }
         $key = 'gm2_rl_' . md5($ip);
         $count = (int) get_transient($key);
         if ($count >= self::LIMIT) {
