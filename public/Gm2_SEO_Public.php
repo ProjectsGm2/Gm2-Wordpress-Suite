@@ -433,11 +433,40 @@ class Gm2_SEO_Public {
                     '{post_title}'   => get_the_title($post_id),
                     '{post_excerpt}' => wp_strip_all_tags(get_the_excerpt($post_id)),
                 ];
-                if (!$title && !empty($title_templates[$pt])) {
-                    $title = strtr($title_templates[$pt], $replacements);
+
+                $title_template = $title_templates[$pt] ?? '';
+                /**
+                 * Filters the meta title template used for fallback generation for a post type.
+                 *
+                 * The stored template for the post type is provided as the default value.
+                 *
+                 * @param string $title_template Template string retrieved from plugin settings.
+                 * @param int    $post_id        The current post ID.
+                 */
+                $title_template = apply_filters("gm2_meta_title_template_{$pt}", $title_template, $post_id);
+                if (null === $title_template) {
+                    $title_template = $title_templates[$pt] ?? '';
                 }
-                if (!$description && !empty($desc_templates[$pt])) {
-                    $description = strtr($desc_templates[$pt], $replacements);
+
+                $description_template = $desc_templates[$pt] ?? '';
+                /**
+                 * Filters the meta description template used for fallback generation for a post type.
+                 *
+                 * The stored template for the post type is provided as the default value.
+                 *
+                 * @param string $description_template Template string retrieved from plugin settings.
+                 * @param int    $post_id              The current post ID.
+                 */
+                $description_template = apply_filters("gm2_meta_description_template_{$pt}", $description_template, $post_id);
+                if (null === $description_template) {
+                    $description_template = $desc_templates[$pt] ?? '';
+                }
+
+                if (!$title && !empty($title_template)) {
+                    $title = strtr($title_template, $replacements);
+                }
+                if (!$description && !empty($description_template)) {
+                    $description = strtr($description_template, $replacements);
                 }
             }
 
