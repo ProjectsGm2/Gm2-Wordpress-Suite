@@ -5,7 +5,7 @@
 | Acceptance Criteria | Status | Notes |
 |---------------------|--------|-------|
 | CPT & Taxonomy Builder (UI + API) with export/import of JSON blueprints | Present | Admin builder and CLI export/import functions |
-| Field Groups & Field Types engine, validation, conditional logic, REST visibility, Elementor Dynamic Tags | Partial | Field engine exists with many types and REST visibility but lacks Elementor dynamic tags |
+| Field Groups & Field Types engine, validation, conditional logic, REST visibility, Elementor Dynamic Tags | Partial | Field engine exists with many types and optional REST exposure via `expose_in_rest` but lacks Elementor dynamic tags |
 | Elementor integration (dynamic tags for custom fields, query controls, template helpers, loop compatibility) | Partial | Contains Elementor widgets and SEO panel; missing dynamic tags and query controls |
 | SEO/schema mapping layer per CPT, JSON-LD output for Directory, Event, RealEstateListing, JobPosting, Course, meta title/description templates, canonical/OG/Twitter | Partial | SEO meta and schema templates present; CPT-specific schema types missing |
 | Preset “Blueprints” for Directory, Events, Real Estate, Jobs, Courses | Missing | Recipes documented but no bundled presets |

@@ -62,18 +62,20 @@ Field groups can be restricted to specific contexts using `location` rules. Each
 
 A group passes when all its rules evaluate true. The field group renders when any group passes.
 
-## REST Visibility
+## REST Exposure
 
-Meta fields are registered with `show_in_rest` enabled by default so values appear in the REST API. Set `'show_in_rest' => false` within a field's `args` to hide it:
+Field values are private in the REST API unless you opt in. Setting `'expose_in_rest' => true` on a field definition registers the meta key so WordPress exposes it over REST with `show_in_rest` enabled:
 
 ```php
 [
-    'slug'  => 'internal_notes',
-    'type'  => 'textarea',
-    'label' => 'Internal Notes',
-    'args'  => [ 'show_in_rest' => false ],
+    'slug'           => 'internal_notes',
+    'type'           => 'textarea',
+    'label'          => 'Internal Notes',
+    'expose_in_rest' => true,
 ]
 ```
+
+Omitting the flag (or leaving it `false`) keeps the field hidden from REST responses.
 
 ## Hooks
 
@@ -86,16 +88,21 @@ add_action( 'gm2_cp_register_field_type', function ( $type, $class ) {
 } );
 ```
 
-### `gm2_cp_field_sanitize_{$type}`
+### `gm2_cp_field_sanitize_{type}`
 Filters the sanitized value for every field of a given type.
 
 ```php
-add_filter( 'gm2_cp_field_sanitize_text', function ( $value, $field ) {
-    return wp_strip_all_tags( $value );
-}, 10, 2 );
+add_filter(
+    'gm2_cp_field_sanitize_{type}', // Replace {type} with the field type slug, e.g. `text`.
+    function ( $value, $field ) {
+        return wp_strip_all_tags( $value );
+    },
+    10,
+    2
+);
 ```
 
-### `gm2_cp_field_sanitize_{$slug}`
+### `gm2_cp_field_sanitize_{slug}`
 Filters the sanitized value before saving. Runs after the type-level filter above so individual slugs can override shared logic.
 
 ```php
