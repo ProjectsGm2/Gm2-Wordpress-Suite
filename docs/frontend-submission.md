@@ -47,23 +47,27 @@ correct control for each field type so the front-end mirrors the admin editor.�
 ## Elementor Forms action
 
 Elementor Pro users can drive submissions through the **Gm2: Create/Update
-Post** action registered under **Form → Actions After Submit**.【F:integrations/elementor/class-gm2-cp-form-action.php†L61-L190】
+Post** action registered under **Form → Actions After Submit**.【F:src/Elementor/Forms/Action/CreateOrUpdatePost.php†L50-L157】
 Configure it by:
 
 1. Selecting the target post type and desired status (defaults to
-   `pending`).【F:integrations/elementor/class-gm2-cp-form-action.php†L100-L118】【F:integrations/elementor/class-gm2-cp-form-action.php†L707-L735】
-2. Optionally supplying a form identifier and site ID for multisite targets.
+   `pending`).【F:src/Elementor/Forms/Action/CreateOrUpdatePost.php†L178-L197】【F:src/Elementor/Forms/Action/CreateOrUpdatePost.php†L849-L869】
+2. Optionally supplying a form identifier and site ID for multisite targets.【F:src/Elementor/Forms/Action/CreateOrUpdatePost.php†L170-L208】
 3. Mapping Elementor field IDs to GM2 meta keys via the repeater so the action
-   knows which custom fields to update.【F:integrations/elementor/class-gm2-cp-form-action.php†L200-L220】【F:integrations/elementor/class-gm2-cp-form-action.php†L333-L372】
-4. Adding hidden fields whose IDs match `gm2_cp_nonce` and `gm2_cp_hp`. The
+   knows which custom fields to update.【F:src/Elementor/Forms/Action/CreateOrUpdatePost.php†L270-L298】【F:src/Elementor/Forms/Action/CreateOrUpdatePost.php†L465-L532】
+4. Mapping Elementor field IDs to taxonomy slugs, including whether multiple
+   terms should be processed, to automatically assign taxonomy relationships
+   after saving.【F:src/Elementor/Forms/Action/CreateOrUpdatePost.php†L300-L337】【F:src/Elementor/Forms/Action/CreateOrUpdatePost.php†L1288-L1404】
+5. Adding hidden fields whose IDs match `gm2_cp_nonce` and `gm2_cp_hp`. The
    nonce should store `wp_create_nonce( 'gm2_cp_form|{form_id}' )`; any value
-   entered into the honeypot cancels the submission.【F:integrations/elementor/class-gm2-cp-form-action.php†L170-L205】【F:integrations/elementor/class-gm2-cp-form-action.php†L573-L613】
-5. (Optional) Supplying field IDs for title, content, excerpt, or an existing
-   post ID to support edits and drafts.【F:integrations/elementor/class-gm2-cp-form-action.php†L133-L319】【F:integrations/elementor/class-gm2-cp-form-action.php†L640-L735】
+   entered into the honeypot cancels the submission.【F:src/Elementor/Forms/Action/CreateOrUpdatePost.php†L248-L266】【F:src/Elementor/Forms/Action/CreateOrUpdatePost.php†L716-L747】
+6. (Optional) Supplying field IDs for title, content, excerpt, or an existing
+   post ID to support edits and drafts.【F:src/Elementor/Forms/Action/CreateOrUpdatePost.php†L211-L246】【F:src/Elementor/Forms/Action/CreateOrUpdatePost.php†L435-L447】
 
 When the form fires, the action sanitizes each field, validates file uploads,
-updates post meta, and queues media uploads exactly like the shortcode flow,
-so both entry points share the same review and notification pipeline.【F:integrations/elementor/class-gm2-cp-form-action.php†L253-L427】【F:integrations/elementor/class-gm2-cp-form-action.php†L788-L1103】
+updates post meta, assigns taxonomy terms, and queues media uploads exactly
+like the shortcode flow, so both entry points share the same review and
+notification pipeline.【F:src/Elementor/Forms/Action/CreateOrUpdatePost.php†L404-L556】【F:src/Elementor/Forms/Action/CreateOrUpdatePost.php†L1132-L1479】
 
 ## Review workflow and statuses
 
@@ -99,7 +103,7 @@ add_filter('gm2_cp_form_under_review_status', function ($status, $post_type) {
 ```
 
 The same status slug can be passed to Elementor's action or injected via the
-`gm2_cp_elementor_post_status` filter when using Elementor forms.【F:frontend/class-gm2-cp-form.php†L383-L385】【F:integrations/elementor/class-gm2-cp-form-action.php†L707-L735】
+`gm2_cp_elementor_post_status` filter when using Elementor forms.【F:frontend/class-gm2-cp-form.php†L383-L385】【F:src/Elementor/Forms/Action/CreateOrUpdatePost.php†L849-L869】
 
 ## Email notifications
 
@@ -146,15 +150,15 @@ You can further customize the outgoing payloads with
 Both delivery mechanisms share a hardened pipeline:
 
 * Nonces (`gm2_cp_nonce`) and honeypot fields (`gm2_cp_hp`) block replay and
-  automated submissions.【F:frontend/class-gm2-cp-form.php†L97-L114】【F:integrations/elementor/class-gm2-cp-form-action.php†L573-L613】
+  automated submissions.【F:frontend/class-gm2-cp-form.php†L97-L114】【F:src/Elementor/Forms/Action/CreateOrUpdatePost.php†L248-L266】【F:src/Elementor/Forms/Action/CreateOrUpdatePost.php†L716-L747】
 * Optional login enforcement combines configuration defaults with per-form
   overrides before rendering the form or processing the payload.【F:frontend/class-gm2-cp-form.php†L474-L496】【F:frontend/class-gm2-cp-form.php†L116-L123】
 * Capability checks ensure users can only edit posts and fields they are
   allowed to touch.【F:frontend/class-gm2-cp-form.php†L125-L175】
 * Field values pass through the same sanitizers and validation classes used by
   the admin editor, including file-type/size checks and upload handling.【F:frontend/class-gm2-cp-form.php†L185-L217】【F:frontend/class-gm2-cp-form.php†L880-L1008】
-* Elementor submissions reuse similar sanitization, file validation, and media
-  attachment routines before metadata is stored.【F:integrations/elementor/class-gm2-cp-form-action.php†L253-L427】【F:integrations/elementor/class-gm2-cp-form-action.php†L922-L1103】
+* Elementor submissions reuse similar sanitization, file validation, taxonomy
+  assignment, and media attachment routines before metadata is stored.【F:src/Elementor/Forms/Action/CreateOrUpdatePost.php†L404-L556】【F:src/Elementor/Forms/Action/CreateOrUpdatePost.php†L1288-L1479】
 * Default success and error messages may be filtered to plug into custom
   moderation queues or redirect flows.【F:frontend/class-gm2-cp-form.php†L224-L349】
 
