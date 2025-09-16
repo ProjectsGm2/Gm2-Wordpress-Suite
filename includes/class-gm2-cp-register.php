@@ -1,4 +1,9 @@
 <?php
+
+use Gm2\Content\Model\Definition;
+use Gm2\Content\Registry\PostTypeRegistry;
+use Gm2\Content\Registry\TaxonomyRegistry;
+
 /**
  * Custom Post type and taxonomy registration helpers.
  *
@@ -15,6 +20,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Normalises supported arguments, merges them with any existing
  * configuration stored in the `gm2_custom_posts_config` option and
  * finally registers the post type via WordPress' `register_post_type()`.
+ *
+ * @deprecated 1.6.26 Use the content registry (`gm2/content/register`) to register post types.
  *
  * @param string $slug Post type slug.
  * @param array  $args Arguments to pass to `register_post_type()`.
@@ -101,15 +108,87 @@ function gm2_cp_register_type( $slug, array $args ) {
     }
 
     $merged = array_merge( $existing, $clean );
+
+    if ( isset( $merged['taxonomies'] ) ) {
+        $merged['taxonomies'] = array_values( array_unique( array_filter( array_map( 'sanitize_key', (array) $merged['taxonomies'] ) ) ) );
+    }
+
     $config['post_types'][ $slug ]['args'] = $merged;
 
     update_option( 'gm2_custom_posts_config', $config );
 
-    register_post_type( $slug, $merged );
+    $labels = isset( $merged['labels'] ) && is_array( $merged['labels'] ) ? $merged['labels'] : [];
+    $default_label = ucwords( str_replace( [ '-', '_' ], ' ', $slug ) );
+    $singular = isset( $labels['singular_name'] ) && is_string( $labels['singular_name'] ) ? $labels['singular_name'] : '';
+    $plural   = isset( $labels['name'] ) && is_string( $labels['name'] ) ? $labels['name'] : '';
+
+    if ( '' === $singular ) {
+        $singular = '' !== $plural ? $plural : $default_label;
+    }
+
+    if ( '' === $plural ) {
+        $plural = '' !== $singular ? $singular : $default_label;
+    }
+
+    $supports    = isset( $merged['supports'] ) ? (array) $merged['supports'] : [];
+    $has_archive = $merged['has_archive'] ?? null;
+    $menu_icon   = isset( $merged['menu_icon'] ) ? (string) $merged['menu_icon'] : null;
+    $rewrite     = isset( $merged['rewrite'] ) && is_array( $merged['rewrite'] ) ? $merged['rewrite'] : [];
+    $cap_type    = isset( $merged['capability_type'] ) ? (string) $merged['capability_type'] : 'post';
+    $taxonomies  = isset( $merged['taxonomies'] ) ? (array) $merged['taxonomies'] : [];
+
+    $feeds_flag = $rewrite['feeds'] ?? null;
+    $pages_flag = $rewrite['pages'] ?? null;
+
+    $registry = new PostTypeRegistry();
+    $definition = new Definition(
+        $slug,
+        $singular,
+        $plural,
+        $labels,
+        $supports,
+        $has_archive,
+        $menu_icon,
+        $rewrite,
+        $cap_type,
+        $taxonomies,
+        $merged
+    );
+
+    $filter = null;
+    if ( null !== $feeds_flag || null !== $pages_flag ) {
+        $filter = static function ( $args ) use ( $feeds_flag, $pages_flag ) {
+            if ( ! isset( $args['rewrite'] ) || ! is_array( $args['rewrite'] ) ) {
+                $args['rewrite'] = [];
+            }
+            if ( null !== $feeds_flag ) {
+                $args['rewrite']['feeds'] = (bool) $feeds_flag;
+            }
+            if ( null !== $pages_flag ) {
+                $args['rewrite']['pages'] = (bool) $pages_flag;
+            }
+
+            return $args;
+        };
+
+        add_filter( 'gm2/content/post_type_args', $filter, 10, 1 );
+    }
+
+    if ( null !== $filter ) {
+        try {
+            $registry->register( $definition );
+        } finally {
+            remove_filter( 'gm2/content/post_type_args', $filter, 10 );
+        }
+    } else {
+        $registry->register( $definition );
+    }
 }
 
 /**
  * Register a custom taxonomy and persist its configuration.
+ *
+ * @deprecated 1.6.26 Use the content registry (`gm2/content/register`) to register taxonomies.
  *
  * @param string       $slug        Taxonomy slug.
  * @param string|array $object_type Object type or array of object types the taxonomy applies to.
@@ -187,12 +266,26 @@ function gm2_cp_register_taxonomy( $slug, $object_type, array $args ) {
     }
 
     $merged_args   = array_merge( $existing_args, $clean );
-    $merged_object = array_unique( array_merge( $existing_object_map, $object_type ) );
+    $merged_object = array_values( array_unique( array_merge( $existing_object_map, $object_type ) ) );
 
     $config['taxonomies'][ $slug ]['args']       = $merged_args;
     $config['taxonomies'][ $slug ]['post_types'] = $merged_object;
 
     update_option( 'gm2_custom_posts_config', $config );
 
-    register_taxonomy( $slug, $merged_object, $merged_args );
+    $labels = isset( $merged_args['labels'] ) && is_array( $merged_args['labels'] ) ? $merged_args['labels'] : [];
+    $default_label = ucwords( str_replace( [ '-', '_' ], ' ', $slug ) );
+    $singular = isset( $labels['singular_name'] ) && is_string( $labels['singular_name'] ) ? $labels['singular_name'] : '';
+    $plural   = isset( $labels['name'] ) && is_string( $labels['name'] ) ? $labels['name'] : '';
+
+    if ( '' === $singular ) {
+        $singular = '' !== $plural ? $plural : $default_label;
+    }
+
+    if ( '' === $plural ) {
+        $plural = '' !== $singular ? $singular : $default_label;
+    }
+
+    $registry = new TaxonomyRegistry();
+    $registry->register( $slug, $singular, $plural, $merged_object, $merged_args );
 }
