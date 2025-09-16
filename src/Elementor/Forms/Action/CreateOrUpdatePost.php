@@ -296,6 +296,45 @@ class CreateOrUpdatePost extends Action_Base {
                     'description' => __('Pairs of Elementor field IDs and GM2 meta keys to update.', 'gm2-wordpress-suite'),
                 ]
             );
+
+            $taxonomy_repeater = new Repeater();
+            $taxonomy_repeater->add_control(
+                'form_field',
+                [
+                    'label'       => __('Form Field ID', 'gm2-wordpress-suite'),
+                    'type'        => self::control_constant('TEXT', 'text'),
+                    'label_block' => true,
+                ]
+            );
+            $taxonomy_repeater->add_control(
+                'taxonomy',
+                [
+                    'label'       => __('Taxonomy Slug', 'gm2-wordpress-suite'),
+                    'type'        => self::control_constant('TEXT', 'text'),
+                    'label_block' => true,
+                ]
+            );
+            $taxonomy_repeater->add_control(
+                'allow_multiple',
+                [
+                    'label'        => __('Allow Multiple Terms', 'gm2-wordpress-suite'),
+                    'type'         => self::control_constant('SWITCHER', 'switcher'),
+                    'return_value' => 'yes',
+                    'label_on'     => __('Yes', 'gm2-wordpress-suite'),
+                    'label_off'    => __('No', 'gm2-wordpress-suite'),
+                ]
+            );
+
+            $widget->add_control(
+                'gm2_cp_taxonomy_map',
+                [
+                    'label'       => __('Field → Taxonomy Map', 'gm2-wordpress-suite'),
+                    'type'        => self::control_constant('REPEATER', 'repeater'),
+                    'fields'      => $taxonomy_repeater->get_controls(),
+                    'title_field' => '{{{ taxonomy }}}',
+                    'description' => __('Assign Elementor field values to taxonomy terms.', 'gm2-wordpress-suite'),
+                ]
+            );
         } else {
             $widget->add_control(
                 'gm2_cp_meta_map',
@@ -303,6 +342,14 @@ class CreateOrUpdatePost extends Action_Base {
                     'label'       => __('Field → Meta Map', 'gm2-wordpress-suite'),
                     'type'        => self::control_constant('TEXT', 'text'),
                     'description' => __('Configure field mappings once Elementor assets are loaded.', 'gm2-wordpress-suite'),
+                ]
+            );
+            $widget->add_control(
+                'gm2_cp_taxonomy_map',
+                [
+                    'label'       => __('Field → Taxonomy Map', 'gm2-wordpress-suite'),
+                    'type'        => self::control_constant('TEXT', 'text'),
+                    'description' => __('Configure taxonomy mappings once Elementor assets are loaded.', 'gm2-wordpress-suite'),
                 ]
             );
         }
@@ -318,6 +365,9 @@ class CreateOrUpdatePost extends Action_Base {
     public function on_export($element): array {
         if (isset($element['gm2_cp_meta_map'])) {
             $element['gm2_cp_meta_map'] = [];
+        }
+        if (isset($element['gm2_cp_taxonomy_map'])) {
+            $element['gm2_cp_taxonomy_map'] = [];
         }
         return $element;
     }
@@ -489,16 +539,23 @@ class CreateOrUpdatePost extends Action_Base {
                 }
             }
 
+            $taxonomy_result = $this->assign_taxonomies($post_id, $post_type, $settings, $fields);
+            if ($taxonomy_result['errors']) {
+                $this->record_error($record, $ajax_handler, implode(' ', array_unique($taxonomy_result['errors'])));
+                return;
+            }
+
             /**
              * Fires after the Elementor submission is stored.
              *
-             * @param int    $post_id     Saved post ID.
-             * @param string $post_type   Post type slug.
-             * @param array  $meta_updates Saved meta values.
-             * @param array  $settings    Action settings.
-             * @param bool   $updating    Whether an existing post was updated.
+             * @param int    $post_id       Saved post ID.
+             * @param string $post_type     Post type slug.
+             * @param array  $meta_updates  Saved meta values.
+             * @param array  $settings      Action settings.
+             * @param bool   $updating      Whether an existing post was updated.
+             * @param array  $assigned_terms Map of taxonomy slugs to assigned terms.
              */
-            do_action('gm2_cp_elementor_after_save', $post_id, $post_type, $meta_updates, $settings, $updating);
+            do_action('gm2_cp_elementor_after_save', $post_id, $post_type, $meta_updates, $settings, $updating, $taxonomy_result['assigned']);
 
             if (is_object($ajax_handler) && method_exists($ajax_handler, 'add_success_message')) {
                 $ajax_handler->add_success_message(__('Submission saved successfully.', 'gm2-wordpress-suite'));
@@ -864,6 +921,116 @@ class CreateOrUpdatePost extends Action_Base {
     }
 
     /**
+     * Normalize taxonomy slug input.
+     *
+     * @param mixed $value Raw value.
+     * @return string
+     */
+    private function normalize_taxonomy($value): string {
+        if (!is_string($value)) {
+            return '';
+        }
+        $value = trim($value);
+        return sanitize_key($value);
+    }
+
+    /**
+     * Normalize switcher/boolean values.
+     *
+     * @param mixed $value Raw value.
+     * @return bool
+     */
+    private function normalize_switch_value($value): bool {
+        if (is_bool($value)) {
+            return $value;
+        }
+        if (is_int($value)) {
+            return $value === 1;
+        }
+        if (!is_string($value)) {
+            return false;
+        }
+        $value = strtolower(trim($value));
+        return in_array($value, ['1', 'true', 'yes', 'on'], true);
+    }
+
+    /**
+     * Normalize taxonomy term values from a submission.
+     *
+     * @param mixed $raw            Submitted value.
+     * @param bool  $allow_multiple Whether multiple terms should be processed.
+     * @return array<int, int|string>
+     */
+    private function normalize_taxonomy_terms($raw, bool $allow_multiple): array {
+        $values = [];
+
+        if (is_array($raw)) {
+            foreach ($raw as $item) {
+                if (is_array($item)) {
+                    $item = $item['value'] ?? '';
+                }
+                $values = array_merge($values, $this->normalize_taxonomy_terms($item, true));
+            }
+        } elseif (is_string($raw) || is_numeric($raw)) {
+            $pieces = preg_split('/[\r\n,]+/', (string) $raw);
+            if ($pieces) {
+                foreach ($pieces as $piece) {
+                    $sanitized = $this->sanitize_term_input($piece);
+                    if ('' === $sanitized || null === $sanitized) {
+                        continue;
+                    }
+                    $values[] = $sanitized;
+                    if (!$allow_multiple) {
+                        break;
+                    }
+                }
+            }
+        }
+
+        $normalized = [];
+        foreach ($values as $value) {
+            if ($value === '' || $value === null || $value === 0) {
+                continue;
+            }
+            if (!in_array($value, $normalized, true)) {
+                $normalized[] = $value;
+            }
+        }
+
+        if (!$allow_multiple && $normalized) {
+            return [ $normalized[0] ];
+        }
+
+        return $normalized;
+    }
+
+    /**
+     * Sanitize a single taxonomy term value.
+     *
+     * @param mixed $value Raw value.
+     * @return int|string
+     */
+    private function sanitize_term_input($value) {
+        if (is_int($value)) {
+            return $value;
+        }
+        if (is_numeric($value) && !is_string($value)) {
+            return (int) $value;
+        }
+        if (!is_string($value)) {
+            return '';
+        }
+        $value = trim(wp_unslash($value));
+        if ($value === '') {
+            return '';
+        }
+        if (ctype_digit($value)) {
+            return (int) $value;
+        }
+        return sanitize_text_field($value);
+    }
+
+    /**
      * Determine whether the field contains file uploads.
      *
      * @param array $field Field data.
@@ -1107,6 +1274,137 @@ class CreateOrUpdatePost extends Action_Base {
          * @param object $record   Form record instance.
          */
         return apply_filters('gm2_cp_elementor_meta_value', $value, $meta_key, $field, $settings, $record);
+    }
+
+    /**
+     * Assign taxonomy terms to the saved post.
+     *
+     * @param int    $post_id   Saved post ID.
+     * @param string $post_type Post type slug.
+     * @param array  $settings  Action settings.
+     * @param array  $fields    Normalized form fields.
+     * @return array{errors: array<int,string>, assigned: array<string, array<int|string>>}
+     */
+    private function assign_taxonomies(int $post_id, string $post_type, array $settings, array $fields): array {
+        $result = [
+            'errors'   => [],
+            'assigned' => [],
+        ];
+
+        $mapping = $settings['gm2_cp_taxonomy_map'] ?? [];
+        if (!is_array($mapping) || !$mapping) {
+            return $result;
+        }
+
+        foreach ($mapping as $map) {
+            if (!is_array($map)) {
+                continue;
+            }
+
+            $field_id = $this->normalize_field_id($map['form_field'] ?? '');
+            $taxonomy = $this->normalize_taxonomy($map['taxonomy'] ?? '');
+
+            if (!$field_id || !$taxonomy) {
+                continue;
+            }
+
+            $taxonomy_object = get_taxonomy($taxonomy);
+            if (!$taxonomy_object) {
+                $result['errors'][] = sprintf(__('Taxonomy "%s" does not exist.', 'gm2-wordpress-suite'), $taxonomy);
+                continue;
+            }
+
+            if (!is_object_in_taxonomy($post_type, $taxonomy)) {
+                $result['errors'][] = sprintf(
+                    __('Taxonomy "%1$s" cannot be assigned to %2$s posts.', 'gm2-wordpress-suite'),
+                    $taxonomy,
+                    $post_type
+                );
+                continue;
+            }
+
+            $raw_value = $this->resolve_field_value($fields, $field_id);
+            if (null === $raw_value) {
+                continue;
+            }
+
+            $allow_multiple = $this->normalize_switch_value($map['allow_multiple'] ?? '');
+            $terms          = $this->normalize_taxonomy_terms($raw_value, $allow_multiple);
+
+            /**
+             * Filter the sanitized taxonomy terms prior to assignment.
+             *
+             * @param array<int,string|int> $terms      Sanitized term identifiers.
+             * @param string                $taxonomy   Taxonomy slug being updated.
+             * @param array                 $map        Raw mapping configuration.
+             * @param array                 $fields     Normalized submission fields.
+             * @param int                   $post_id    Saved post ID.
+             * @param string                $post_type  Post type slug.
+             * @param array                 $settings   Action settings.
+             */
+            $terms = apply_filters(
+                'gm2_cp_elementor_taxonomy_terms',
+                $terms,
+                $taxonomy,
+                $map,
+                $fields,
+                $post_id,
+                $post_type,
+                $settings
+            );
+
+            if ($terms === null || $terms === '') {
+                $terms = [];
+            }
+
+            if (!is_array($terms)) {
+                $terms = [ $terms ];
+            }
+
+            $normalized_terms = [];
+            foreach ($terms as $term) {
+                if (is_int($term)) {
+                    if ($term <= 0) {
+                        continue;
+                    }
+                    if (!in_array($term, $normalized_terms, true)) {
+                        $normalized_terms[] = $term;
+                    }
+                    continue;
+                }
+
+                if (!is_string($term)) {
+                    continue;
+                }
+
+                $term = trim($term);
+                if ($term === '') {
+                    continue;
+                }
+
+                if (!in_array($term, $normalized_terms, true)) {
+                    $normalized_terms[] = $term;
+                }
+            }
+
+            if (!$allow_multiple && $normalized_terms) {
+                $normalized_terms = [ $normalized_terms[0] ];
+            }
+
+            $set = wp_set_object_terms($post_id, $normalized_terms, $taxonomy, false);
+            if (is_wp_error($set)) {
+                $result['errors'][] = sprintf(
+                    __('Failed to assign terms for %1$s: %2$s', 'gm2-wordpress-suite'),
+                    $taxonomy,
+                    $set->get_error_message()
+                );
+                continue;
+            }
+
+            $result['assigned'][ $taxonomy ] = $normalized_terms;
+        }
+
+        return $result;
     }
 
     /**

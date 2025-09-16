@@ -65,10 +65,19 @@ class ElementorGm2FormActionTest extends WP_UnitTestCase {
             'public'   => true,
             'supports' => ['title', 'editor', 'excerpt'],
         ]);
+        register_taxonomy('genre', 'book', [
+            'public'      => true,
+            'hierarchical'=> true,
+        ]);
+        register_taxonomy('audience', 'book', [
+            'public' => true,
+        ]);
     }
 
     public function tearDown(): void {
         unregister_post_type('book');
+        unregister_taxonomy('genre');
+        unregister_taxonomy('audience');
         $_FILES = [];
         parent::tearDown();
     }
@@ -117,6 +126,90 @@ class ElementorGm2FormActionTest extends WP_UnitTestCase {
         $this->assertSame('Library Book', $post->post_title);
         $this->assertSame('Summary content', $post->post_content);
         $this->assertSame('9781234567897', get_post_meta($post->ID, 'isbn', true));
+    }
+
+    public function test_action_assigns_taxonomy_terms_from_fields(): void {
+        $form_id = 'gm2_elementor_tax_form';
+        $nonce   = wp_create_nonce('gm2_cp_form|' . $form_id);
+
+        $fields = [
+            'gm2_cp_nonce'   => [ 'id' => 'gm2_cp_nonce', 'value' => $nonce, 'raw_value' => $nonce, 'type' => 'hidden' ],
+            'gm2_cp_hp'      => [ 'id' => 'gm2_cp_hp', 'value' => '', 'raw_value' => '', 'type' => 'hidden' ],
+            'title'          => [ 'id' => 'title', 'value' => 'Filed Story', 'raw_value' => 'Filed Story', 'type' => 'text' ],
+            'genre_field'    => [ 'id' => 'genre_field', 'value' => 'Mystery', 'raw_value' => ' Mystery ', 'type' => 'text' ],
+            'audience_field' => [ 'id' => 'audience_field', 'value' => ['Teachers', 'Students '], 'raw_value' => ['Teachers', 'Students '], 'type' => 'select' ],
+        ];
+
+        $settings = [
+            'gm2_cp_form_id'        => $form_id,
+            'gm2_cp_post_type'      => 'book',
+            'gm2_cp_title_field'    => 'title',
+            'gm2_cp_nonce_field'    => 'gm2_cp_nonce',
+            'gm2_cp_honeypot_field' => 'gm2_cp_hp',
+            'gm2_cp_post_status'    => 'publish',
+            'gm2_cp_taxonomy_map'   => [
+                [ 'form_field' => 'genre_field', 'taxonomy' => 'genre' ],
+                [ 'form_field' => 'audience_field', 'taxonomy' => 'audience', 'allow_multiple' => 'yes' ],
+            ],
+        ];
+
+        $record = new Elementor_Test_Form_Record($fields, $settings);
+        $ajax   = new Elementor_Test_Ajax_Handler();
+
+        $action = new CreateOrUpdatePost();
+        $action->run($record, $ajax);
+
+        $posts = get_posts([
+            'post_type'   => 'book',
+            'post_status' => 'publish',
+            'numberposts' => 1,
+            'orderby'     => 'ID',
+            'order'       => 'DESC',
+        ]);
+        $this->assertNotEmpty($posts, 'Post should be created with taxonomy terms.');
+        $post = $posts[0];
+
+        $genre_terms = wp_get_object_terms($post->ID, 'genre', [ 'fields' => 'slugs' ]);
+        $this->assertSame(['mystery'], $genre_terms, 'Genre term should be assigned.');
+
+        $audience_terms = wp_get_object_terms($post->ID, 'audience', [ 'fields' => 'slugs' ]);
+        sort($audience_terms);
+        $this->assertSame(['students', 'teachers'], $audience_terms, 'Audience terms should be assigned.');
+        $this->assertEmpty($ajax->errors, 'No taxonomy errors expected.');
+    }
+
+    public function test_action_reports_taxonomy_validation_errors(): void {
+        $form_id = 'gm2_elementor_tax_error_form';
+        $nonce   = wp_create_nonce('gm2_cp_form|' . $form_id);
+
+        $fields = [
+            'gm2_cp_nonce'    => [ 'id' => 'gm2_cp_nonce', 'value' => $nonce, 'raw_value' => $nonce, 'type' => 'hidden' ],
+            'gm2_cp_hp'       => [ 'id' => 'gm2_cp_hp', 'value' => '', 'raw_value' => '', 'type' => 'hidden' ],
+            'title'           => [ 'id' => 'title', 'value' => 'Mismatched Story', 'raw_value' => 'Mismatched Story', 'type' => 'text' ],
+            'category_field'  => [ 'id' => 'category_field', 'value' => 'news', 'raw_value' => 'news', 'type' => 'text' ],
+        ];
+
+        $settings = [
+            'gm2_cp_form_id'        => $form_id,
+            'gm2_cp_post_type'      => 'book',
+            'gm2_cp_title_field'    => 'title',
+            'gm2_cp_nonce_field'    => 'gm2_cp_nonce',
+            'gm2_cp_honeypot_field' => 'gm2_cp_hp',
+            'gm2_cp_taxonomy_map'   => [
+                [ 'form_field' => 'category_field', 'taxonomy' => 'category' ],
+            ],
+        ];
+
+        $record = new Elementor_Test_Form_Record($fields, $settings);
+        $ajax   = new Elementor_Test_Ajax_Handler();
+
+        $action = new CreateOrUpdatePost();
+        $action->run($record, $ajax);
+
+        $this->assertNotEmpty($ajax->errors, 'Taxonomy validation error should be reported.');
+        $this->assertStringContainsString('Taxonomy "category" cannot be assigned to book posts.', $ajax->errors[0]);
+        $this->assertArrayHasKey('gm2_cp_form_action', $record->get_errors());
+        $this->assertEmpty($ajax->success, 'Submission should not report success.');
     }
 
     public function test_action_updates_post_on_target_site_with_upload(): void {
