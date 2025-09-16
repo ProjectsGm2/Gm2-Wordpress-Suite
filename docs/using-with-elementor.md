@@ -42,6 +42,41 @@ controls:
 All CP tags share the **Field Key** selector (with dot notation support) and a
 **Fallback** control so you can handle empty values gracefully.
 
+## Widgets
+
+In addition to dynamic tags, the suite provides Elementor widgets that render
+GM2 data without manual templating.
+
+### GM2 Field widget
+
+The **GM2 Field** widget mirrors the dynamic tag controls so you can drop a
+single field into layouts that expect native widgets. Choose a post type,
+select a field, and optionally override the HTML tag or fallback text. The
+widget formats each field type automatically (images produce `<img>` tags,
+links render anchors, and WYSIWYG content is printed as sanitized HTML).【F:src/Elementor/Widgets/Field.php†L20-L129】【F:src/Elementor/Widgets/AbstractFieldWidget.php†L30-L209】
+
+### GM2 Loop Card widget
+
+Use the **GM2 Loop Card** widget inside Elementor loop templates to assemble a
+complete card from multiple fields. It supports configurable layouts, featured
+images, title/subtitle sources, body text, meta rows, and an optional button
+link. Each value is sanitized and formatted according to its field type so the
+card stays consistent across posts.【F:src/Elementor/Widgets/LoopCard.php†L18-L278】
+
+### GM2 Map widget
+
+The **GM2 Map** widget accepts geopoint or address fields, builds a provider URL
+using `{{lat}}`, `{{lng}}`, or `{{query}}` tokens, and renders either an embed
+iframe or a link. You can change the provider template, tweak the embed height,
+or supply fallback text when no coordinates exist.【F:src/Elementor/Widgets/Map.php†L18-L154】
+
+### GM2 Opening Hours widget
+
+The **GM2 Opening Hours** widget normalizes repeater-based schedules (day,
+start, and end values) or plain text fields into a definition list. Closed days
+use a customizable label and times are formatted with the site time settings
+when possible, falling back to sanitized strings when parsing fails.【F:src/Elementor/Widgets/OpeningHours.php†L18-L192】
+
 ## Query Builder
 
 Elementor Pro's Posts, Loop Grid and Archive Posts widgets gain a **GM2 CP**
