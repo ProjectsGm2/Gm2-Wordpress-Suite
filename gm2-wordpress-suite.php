@@ -60,6 +60,12 @@ use Gm2\Gm2_Loader;
 use Gm2\Gm2_SEO_Public;
 use Gm2\Gm2_Sitemap;
 use Gm2\Gm2_Abandoned_Carts;
+use Gm2\Fields\FieldGroupRegistry;
+use Gm2\Fields\FieldTypeRegistry;
+use Gm2\Fields\Renderer\AdminMetaBox;
+use Gm2\Fields\Sanitizers\SanitizerRegistry;
+use Gm2\Fields\Storage\MetaRegistrar;
+use Gm2\Fields\Validation\ValidatorRegistry;
 $gm2_autoload = GM2_PLUGIN_DIR . 'vendor/autoload.php';
 if (file_exists($gm2_autoload)) {
     require_once $gm2_autoload;
@@ -203,6 +209,24 @@ function gm2_bootstrap_content_registry(): void {
     do_action('gm2/content/register', $registrar, $postTypes, $taxonomies);
 }
 add_action('init', 'gm2_bootstrap_content_registry', 9);
+
+function gm2_bootstrap_field_groups(): void {
+    $registry = new FieldGroupRegistry(
+        new MetaRegistrar(),
+        FieldTypeRegistry::withDefaults(),
+        ValidatorRegistry::withDefaults(),
+        SanitizerRegistry::withDefaults(),
+        new AdminMetaBox()
+    );
+
+    /**
+     * Allow third parties to register field groups before they are booted.
+     */
+    do_action('gm2/fields/register', $registry);
+
+    $registry->boot();
+}
+add_action('init', 'gm2_bootstrap_field_groups', 11);
 
 $gm2_font_perf_dir = GM2_PLUGIN_DIR . 'modules/font-performance/';
 if (is_dir($gm2_font_perf_dir) && !class_exists('\\Gm2\\Font_Performance\\Font_Performance')) {
