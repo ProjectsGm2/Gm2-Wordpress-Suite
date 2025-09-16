@@ -75,6 +75,10 @@ Detailed reference sheets for the bundled presets are available in [docs/presets
 - [Jobs](docs/presets/jobs.md)
 - [Courses](docs/presets/courses.md)
 
+### Content registry rewrite rules
+
+The content registry wires activation and deactivation hooks that call `flush_rewrite_rules()` so custom structures become available immediately after the plugin toggles. When a new post type or taxonomy is registered, the registry schedules a single rewrite flush after `init` and guards it with `did_action( 'init' )` so the work only runs once per request. Avoid adding extra `flush_rewrite_rules()` calls in your own hooks or performing manual flushes on every request—those patterns can trigger unnecessary database writes and slow responses. Rely on the built-in guard and only trigger manual flushes when debugging rewrite issues.
+
 ## Network Payload Optimizer
 
 The Network Payload Optimizer records Resource Timing data from the admin and tracks a rolling seven‑day average of transferred bytes. Configure the module under **Gm2 → Network Payload** where you can toggle:

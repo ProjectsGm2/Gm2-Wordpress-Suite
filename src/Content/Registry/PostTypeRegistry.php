@@ -8,6 +8,11 @@ use RuntimeException;
 
 final class PostTypeRegistry
 {
+    public function __construct()
+    {
+        RewriteRulesFlusher::registerHooks();
+    }
+
     public function register(Definition $definition): void
     {
         if (!function_exists('register_post_type')) {
@@ -64,6 +69,8 @@ final class PostTypeRegistry
         register_post_type($slug, $args);
 
         $this->bindTaxonomies($slug, $taxonomies);
+
+        RewriteRulesFlusher::flush();
     }
 
     private function resolveSlug(Definition $definition): string

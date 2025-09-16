@@ -7,6 +7,11 @@ use RuntimeException;
 
 final class TaxonomyRegistry
 {
+    public function __construct()
+    {
+        RewriteRulesFlusher::registerHooks();
+    }
+
     public function register(
         string $slug,
         string $singular,
@@ -54,6 +59,8 @@ final class TaxonomyRegistry
         $args = apply_filters('gm2/content/taxonomy_args', $args, $slug, $objectTypes);
 
         register_taxonomy($slug, $objectTypes, $args);
+
+        RewriteRulesFlusher::flush();
     }
 
     private function resolveSlug(string $slug, string $singular, string $plural): string
