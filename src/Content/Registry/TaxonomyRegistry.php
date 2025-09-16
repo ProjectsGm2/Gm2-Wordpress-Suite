@@ -2,6 +2,9 @@
 
 namespace Gm2\Content\Registry;
 
+use InvalidArgumentException;
+use RuntimeException;
+
 final class TaxonomyRegistry
 {
     public function register(
@@ -15,9 +18,10 @@ final class TaxonomyRegistry
             return;
         }
 
-        $slug = sanitize_key($slug);
-        if ($slug === '') {
-            return;
+        $slug = $this->resolveSlug($slug, $singular, $plural);
+
+        if (taxonomy_exists($slug)) {
+            throw new RuntimeException(sprintf('Taxonomy "%s" already exists.', $slug));
         }
 
         $objectTypes = $this->prepareObjectTypes($objectTypes);
@@ -50,6 +54,53 @@ final class TaxonomyRegistry
         $args = apply_filters('gm2/content/taxonomy_args', $args, $slug, $objectTypes);
 
         register_taxonomy($slug, $objectTypes, $args);
+    }
+
+    private function resolveSlug(string $slug, string $singular, string $plural): string
+    {
+        $slug = trim($slug);
+
+        if ($slug === '') {
+            $slug = $this->generateSlugFromLabels($singular, $plural);
+        }
+
+        $slug = sanitize_key($slug);
+
+        $this->assertValidKey($slug, 'taxonomy');
+
+        return $slug;
+    }
+
+    private function generateSlugFromLabels(string $singular, string $plural): string
+    {
+        $label = trim($singular) !== '' ? $singular : $plural;
+
+        if ($label === '') {
+            throw new InvalidArgumentException('Taxonomy slug could not be determined from empty labels.');
+        }
+
+        $generated = sanitize_title($label);
+
+        if ($generated === '') {
+            throw new InvalidArgumentException('Taxonomy slug could not be generated from the provided labels.');
+        }
+
+        return $generated;
+    }
+
+    private function assertValidKey(string $key, string $type): void
+    {
+        if ($key === '') {
+            throw new InvalidArgumentException(sprintf('The %s key cannot be empty.', $type));
+        }
+
+        if (strlen($key) > 20) {
+            throw new InvalidArgumentException(sprintf('The %s key "%s" exceeds the maximum length of 20 characters.', $type, $key));
+        }
+
+        if (!preg_match('/^[a-z0-9_-]+$/', $key)) {
+            throw new InvalidArgumentException(sprintf('The %s key "%s" must contain only lowercase letters, numbers, underscores, or dashes.', $type, $key));
+        }
     }
 
     private function buildLabels(string $singular, string $plural, array $overrides = []): array
