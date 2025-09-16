@@ -2,7 +2,11 @@
 namespace Gm2\Integrations\Elementor;
 
 use Elementor\Controls_Manager;
-use Gm2\Elementor\GM2_Field_Key_Control;
+use Gm2\Elementor\Controls\MetaKeySelect;
+use Gm2\Elementor\Controls\PostTypeSelect;
+use Gm2\Elementor\Controls\Price as PriceControl;
+use Gm2\Elementor\Controls\TaxonomyTermMulti;
+use Gm2\Elementor\Controls\Unit;
 
 if (!defined('ABSPATH')) {
     exit;
@@ -27,33 +31,26 @@ class GM2_CP_Elementor_Query {
      * Add custom query controls.
      */
     public static function add_controls($element, $args) {
-        $post_type_options = self::get_post_type_options();
-        $taxonomy_options  = self::get_taxonomy_options();
-        $terms_options     = self::get_terms_options(array_keys($taxonomy_options));
-
         $element->add_control('gm2_cp_post_type', [
             'label'       => __('Post Types', 'gm2-wordpress-suite'),
-            'type'        => Controls_Manager::SELECT2,
+            'type'        => PostTypeSelect::TYPE,
             'multiple'    => true,
-            'options'     => $post_type_options,
-            'label_block' => true,
             'condition'   => [ 'query_id' => 'gm2_cp' ],
         ]);
 
         $element->add_control('gm2_cp_taxonomy', [
             'label'       => __('Taxonomy', 'gm2-wordpress-suite'),
-            'type'        => Controls_Manager::SELECT,
-            'options'     => $taxonomy_options,
-            'label_block' => true,
+            'type'        => TaxonomyTermMulti::TYPE,
+            'mode'        => 'taxonomy',
             'condition'   => [ 'query_id' => 'gm2_cp' ],
         ]);
 
         $element->add_control('gm2_cp_terms', [
             'label'       => __('Terms', 'gm2-wordpress-suite'),
-            'type'        => Controls_Manager::SELECT2,
+            'type'        => TaxonomyTermMulti::TYPE,
+            'mode'        => 'terms',
+            'taxonomy_control' => 'gm2_cp_taxonomy',
             'multiple'    => true,
-            'options'     => $terms_options,
-            'label_block' => true,
             'condition'   => [
                 'query_id'         => 'gm2_cp',
                 'gm2_cp_taxonomy!' => '',
@@ -61,8 +58,9 @@ class GM2_CP_Elementor_Query {
         ]);
 
         $element->add_control('gm2_cp_meta_key', [
-            'label'     => __('GM2 Field Key', 'gm2-wordpress-suite'),
-            'type'      => GM2_Field_Key_Control::TYPE,
+            'label'     => __('Meta Key', 'gm2-wordpress-suite'),
+            'type'      => MetaKeySelect::TYPE,
+            'post_type_control' => 'gm2_cp_post_type',
             'condition' => [ 'query_id' => 'gm2_cp' ],
         ]);
 
@@ -110,23 +108,15 @@ class GM2_CP_Elementor_Query {
             'condition'   => [ 'query_id' => 'gm2_cp' ],
         ]);
 
-        $element->add_control('gm2_cp_price_min', [
-            'label'     => __('Minimum Price', 'gm2-wordpress-suite'),
-            'type'      => Controls_Manager::NUMBER,
-            'condition' => [ 'query_id' => 'gm2_cp' ],
-        ]);
-
-        $element->add_control('gm2_cp_price_max', [
-            'label'     => __('Maximum Price', 'gm2-wordpress-suite'),
-            'type'      => Controls_Manager::NUMBER,
-            'condition' => [ 'query_id' => 'gm2_cp' ],
-        ]);
-
-        $element->add_control('gm2_cp_price_key', [
-            'label'       => __('Price Meta Key', 'gm2-wordpress-suite'),
-            'type'        => Controls_Manager::TEXT,
-            'label_block' => true,
+        $element->add_control('gm2_cp_price', [
+            'label'       => __('Price Range', 'gm2-wordpress-suite'),
+            'type'        => PriceControl::TYPE,
             'condition'   => [ 'query_id' => 'gm2_cp' ],
+            'default'     => [
+                'key' => '_price',
+                'min' => '',
+                'max' => '',
+            ],
         ]);
 
         $element->add_control('gm2_cp_geo_lat', [
@@ -142,8 +132,16 @@ class GM2_CP_Elementor_Query {
         ]);
 
         $element->add_control('gm2_cp_geo_radius', [
-            'label'     => __('Radius (km)', 'gm2-wordpress-suite'),
-            'type'      => Controls_Manager::NUMBER,
+            'label'     => __('Radius', 'gm2-wordpress-suite'),
+            'type'      => Unit::TYPE,
+            'units'     => [
+                'km' => __('Kilometers', 'gm2-wordpress-suite'),
+                'mi' => __('Miles', 'gm2-wordpress-suite'),
+            ],
+            'default'   => [
+                'value' => '',
+                'unit'  => 'km',
+            ],
             'condition' => [ 'query_id' => 'gm2_cp' ],
         ]);
 
@@ -174,16 +172,27 @@ class GM2_CP_Elementor_Query {
 
         // Post type selection.
         if (!empty($settings['gm2_cp_post_type'])) {
-            $args['post_type'] = array_map('sanitize_key', (array) $settings['gm2_cp_post_type']);
+            $post_types = array_filter((array) $settings['gm2_cp_post_type'], static function ($value) {
+                return $value !== '' && $value !== null;
+            });
+            if ($post_types) {
+                $args['post_type'] = array_map('sanitize_key', $post_types);
+            }
         }
 
         // Taxonomy terms.
-        if (!empty($settings['gm2_cp_taxonomy']) && !empty($settings['gm2_cp_terms'])) {
-            $args['tax_query'][] = [
-                'taxonomy' => sanitize_key($settings['gm2_cp_taxonomy']),
-                'field'    => 'term_id',
-                'terms'    => array_map('absint', (array) $settings['gm2_cp_terms']),
-            ];
+        $taxonomy = $settings['gm2_cp_taxonomy'] ?? '';
+        $terms    = $settings['gm2_cp_terms'] ?? [];
+        $taxonomy = $taxonomy !== '' ? sanitize_key($taxonomy) : '';
+        if ($taxonomy && !empty($terms)) {
+            $term_ids = array_filter(array_map('absint', (array) $terms));
+            if ($term_ids) {
+                $args['tax_query'][] = [
+                    'taxonomy' => $taxonomy,
+                    'field'    => 'term_id',
+                    'terms'    => $term_ids,
+                ];
+            }
         }
 
         // Meta comparisons.
@@ -216,19 +225,34 @@ class GM2_CP_Elementor_Query {
         }
 
         // Price range.
-        if ($settings['gm2_cp_price_min'] !== '' || $settings['gm2_cp_price_max'] !== '') {
-            $min   = $settings['gm2_cp_price_min'] !== '' ? floatval($settings['gm2_cp_price_min']) : null;
-            $max   = $settings['gm2_cp_price_max'] !== '' ? floatval($settings['gm2_cp_price_max']) : null;
-            $range = array_filter([$min, $max], static function ($v) {
-                return $v !== null;
+        $price_settings = [];
+        if (!empty($settings['gm2_cp_price']) && is_array($settings['gm2_cp_price'])) {
+            $price_settings = $settings['gm2_cp_price'];
+        }
+
+        $price_key = $price_settings['key'] ?? ($settings['gm2_cp_price_key'] ?? '_price');
+        $price_min = $price_settings['min'] ?? ($settings['gm2_cp_price_min'] ?? '');
+        $price_max = $price_settings['max'] ?? ($settings['gm2_cp_price_max'] ?? '');
+
+        $has_min = $price_min !== '' && $price_min !== null;
+        $has_max = $price_max !== '' && $price_max !== null;
+
+        if ($has_min || $has_max) {
+            $min = $has_min ? floatval((string) $price_min) : null;
+            $max = $has_max ? floatval((string) $price_max) : null;
+
+            $range = array_filter([$min, $max], static function ($value) {
+                return $value !== null;
             });
+
             if ($range) {
                 $compare = 'BETWEEN';
                 if (count($range) === 1) {
                     $compare = $min !== null ? '>=' : '<=';
                 }
+
                 $args['meta_query'][] = [
-                    'key'     => sanitize_key($settings['gm2_cp_price_key'] ?? '_price'),
+                    'key'     => $price_key !== '' ? sanitize_key((string) $price_key) : '_price',
                     'value'   => $range,
                     'compare' => $compare,
                     'type'    => 'NUMERIC',
@@ -242,27 +266,41 @@ class GM2_CP_Elementor_Query {
             $settings['gm2_cp_geo_lng'] !== '' &&
             $settings['gm2_cp_geo_radius'] !== ''
         ) {
-            $lat     = floatval($settings['gm2_cp_geo_lat']);
-            $lng     = floatval($settings['gm2_cp_geo_lng']);
-            $radius  = floatval($settings['gm2_cp_geo_radius']);
-            $lat_key = sanitize_key($settings['gm2_cp_geo_lat_key'] ?? 'gm2_geo_lat');
-            $lng_key = sanitize_key($settings['gm2_cp_geo_lng_key'] ?? 'gm2_geo_lng');
+            $lat    = floatval($settings['gm2_cp_geo_lat']);
+            $lng    = floatval($settings['gm2_cp_geo_lng']);
+            $radius = $settings['gm2_cp_geo_radius'];
 
-            $lat_range = [$lat - ($radius / 111.045), $lat + ($radius / 111.045)];
-            $lng_range = [$lng - ($radius / (111.045 * cos(deg2rad($lat)))), $lng + ($radius / (111.045 * cos(deg2rad($lat))))];
+            if (is_array($radius)) {
+                $value = $radius['value'] ?? '';
+                $unit  = isset($radius['unit']) ? sanitize_key((string) $radius['unit']) : 'km';
+                $radius = $value !== '' && $value !== null ? floatval((string) $value) : 0.0;
+                if ($unit === 'mi') {
+                    $radius *= 1.609344; // convert miles to kilometers
+                }
+            } else {
+                $radius = floatval((string) $radius);
+            }
 
-            $args['meta_query'][] = [
-                'key'     => $lat_key,
-                'value'   => $lat_range,
-                'compare' => 'BETWEEN',
-                'type'    => 'DECIMAL',
-            ];
-            $args['meta_query'][] = [
-                'key'     => $lng_key,
-                'value'   => $lng_range,
-                'compare' => 'BETWEEN',
-                'type'    => 'DECIMAL',
-            ];
+            if ($radius > 0) {
+                $lat_key = sanitize_key($settings['gm2_cp_geo_lat_key'] ?? 'gm2_geo_lat');
+                $lng_key = sanitize_key($settings['gm2_cp_geo_lng_key'] ?? 'gm2_geo_lng');
+
+                $lat_range = [$lat - ($radius / 111.045), $lat + ($radius / 111.045)];
+                $lng_range = [$lng - ($radius / (111.045 * cos(deg2rad($lat)))), $lng + ($radius / (111.045 * cos(deg2rad($lat))))];
+
+                $args['meta_query'][] = [
+                    'key'     => $lat_key,
+                    'value'   => $lat_range,
+                    'compare' => 'BETWEEN',
+                    'type'    => 'DECIMAL',
+                ];
+                $args['meta_query'][] = [
+                    'key'     => $lng_key,
+                    'value'   => $lng_range,
+                    'compare' => 'BETWEEN',
+                    'type'    => 'DECIMAL',
+                ];
+            }
         }
 
         // Merge with existing query vars.
