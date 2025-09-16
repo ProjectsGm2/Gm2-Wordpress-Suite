@@ -52,6 +52,10 @@ if (!defined('GM2_SERVICE_ACCOUNT_JSON')) {
     define('GM2_SERVICE_ACCOUNT_JSON', $json);
 }
 
+use Gm2\Content\Contracts\RegistersContent;
+use Gm2\Content\Model\Definition;
+use Gm2\Content\Registry\PostTypeRegistry;
+use Gm2\Content\Registry\TaxonomyRegistry;
 use Gm2\Gm2_Loader;
 use Gm2\Gm2_SEO_Public;
 use Gm2\Gm2_Sitemap;
@@ -168,6 +172,37 @@ add_action('init', 'gm2_css_optimizer_init');
 \Gm2\Perf\Enqueue::init();
 \Gm2\Perf\Settings::init();
 \Gm2\AE_Utility_CSS::init();
+
+function gm2_bootstrap_content_registry(): void {
+    $postTypes = new PostTypeRegistry();
+    $taxonomies = new TaxonomyRegistry();
+
+    $registrar = new class($postTypes, $taxonomies) implements RegistersContent {
+        public function __construct(
+            private PostTypeRegistry $postTypes,
+            private TaxonomyRegistry $taxonomies
+        ) {
+        }
+
+        public function registerPostType(Definition $definition): void
+        {
+            $this->postTypes->register($definition);
+        }
+
+        public function registerTaxonomy(
+            string $slug,
+            string $singular,
+            string $plural,
+            array $objectTypes,
+            array $args = []
+        ): void {
+            $this->taxonomies->register($slug, $singular, $plural, $objectTypes, $args);
+        }
+    };
+
+    do_action('gm2/content/register', $registrar, $postTypes, $taxonomies);
+}
+add_action('init', 'gm2_bootstrap_content_registry', 9);
 
 $gm2_font_perf_dir = GM2_PLUGIN_DIR . 'modules/font-performance/';
 if (is_dir($gm2_font_perf_dir) && !class_exists('\\Gm2\\Font_Performance\\Font_Performance')) {
