@@ -3,6 +3,8 @@
 namespace Gm2\Content\Registry;
 
 use Gm2\Content\Model\Definition;
+use InvalidArgumentException;
+use RuntimeException;
 
 final class PostTypeRegistry
 {
@@ -12,9 +14,10 @@ final class PostTypeRegistry
             return;
         }
 
-        $slug = sanitize_key($definition->getSlug());
-        if ($slug === '') {
-            return;
+        $slug = $this->resolveSlug($definition);
+
+        if (post_type_exists($slug)) {
+            throw new RuntimeException(sprintf('Post type "%s" already exists.', $slug));
         }
 
         $labels = $this->buildLabels($definition);
@@ -61,6 +64,53 @@ final class PostTypeRegistry
         register_post_type($slug, $args);
 
         $this->bindTaxonomies($slug, $taxonomies);
+    }
+
+    private function resolveSlug(Definition $definition): string
+    {
+        $slug = trim($definition->getSlug());
+
+        if ($slug === '') {
+            $slug = $this->generateSlugFromLabels($definition->getSingular(), $definition->getPlural());
+        }
+
+        $slug = sanitize_key($slug);
+
+        $this->assertValidKey($slug, 'post type');
+
+        return $slug;
+    }
+
+    private function generateSlugFromLabels(string $singular, string $plural): string
+    {
+        $label = trim($singular) !== '' ? $singular : $plural;
+
+        if ($label === '') {
+            throw new InvalidArgumentException('Post type slug could not be determined from empty labels.');
+        }
+
+        $generated = sanitize_title($label);
+
+        if ($generated === '') {
+            throw new InvalidArgumentException('Post type slug could not be generated from the provided labels.');
+        }
+
+        return $generated;
+    }
+
+    private function assertValidKey(string $key, string $type): void
+    {
+        if ($key === '') {
+            throw new InvalidArgumentException(sprintf('The %s key cannot be empty.', $type));
+        }
+
+        if (strlen($key) > 20) {
+            throw new InvalidArgumentException(sprintf('The %s key "%s" exceeds the maximum length of 20 characters.', $type, $key));
+        }
+
+        if (!preg_match('/^[a-z0-9_-]+$/', $key)) {
+            throw new InvalidArgumentException(sprintf('The %s key "%s" must contain only lowercase letters, numbers, underscores, or dashes.', $type, $key));
+        }
     }
 
     private function buildLabels(Definition $definition): array
