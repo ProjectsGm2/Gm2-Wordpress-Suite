@@ -1,4 +1,19 @@
 <?php
+namespace Gm2;
+
+if (!function_exists(__NAMESPACE__ . '\\parse_url')) {
+    function parse_url($url, $component = -1) {
+        if ($url === 'https://connect.facebook.net/en_US/fbevents.js?gm2-invalid') {
+            if ($component === -1) {
+                return false;
+            }
+            return \parse_url($url, $component);
+        }
+        return $component === -1 ? \parse_url($url) : \parse_url($url, $component);
+    }
+}
+
+namespace;
 use Gm2\Gm2_Remote_Mirror;
 
 class RemoteMirrorTest extends WP_UnitTestCase {
@@ -24,6 +39,25 @@ class RemoteMirrorTest extends WP_UnitTestCase {
         }
         wp_clear_scheduled_hook('gm2_remote_mirror_refresh');
         parent::tearDown();
+    }
+
+    private function assertNoWarnings(callable $callback) {
+        $result = null;
+        set_error_handler(function ($severity, $message, $file = '', $line = 0) {
+            if ($severity === E_WARNING) {
+                throw new \ErrorException($message, 0, $severity, $file, $line);
+            }
+            return false;
+        });
+        try {
+            $result = $callback();
+        } catch (\ErrorException $exception) {
+            $this->fail('Unexpected PHP warning: ' . $exception->getMessage());
+        } finally {
+            restore_error_handler();
+        }
+
+        return $result;
     }
 
     public function mock_http($pre, $args, $url) {
@@ -88,5 +122,25 @@ class RemoteMirrorTest extends WP_UnitTestCase {
         update_option('gm2_remote_mirror_vendors', []);
         $rewritten = apply_filters('script_loader_src', $remote, 'fb');
         $this->assertSame($remote, $rewritten);
+    }
+
+    public function test_rewrite_malformed_url_returns_original_without_warnings() {
+        $src = 'https://connect.facebook.net/en_US/fbevents.js?gm2-invalid';
+        $rewritten = $this->assertNoWarnings(function () use ($src) {
+            return $this->mirror->rewrite($src, 'fb');
+        });
+        $this->assertSame($src, $rewritten);
+    }
+
+    public function test_replace_hardcoded_script_malformed_url_without_warnings() {
+        $html = '<script src="https://connect.facebook.net/en_US/fbevents.js?gm2-invalid"></script>';
+        $method = new \ReflectionMethod(Gm2_Remote_Mirror::class, 'replace_hardcoded_scripts');
+        $method->setAccessible(true);
+
+        $rewritten = $this->assertNoWarnings(function () use ($method, $html) {
+            return $method->invoke($this->mirror, $html);
+        });
+
+        $this->assertSame($html, $rewritten);
     }
 }

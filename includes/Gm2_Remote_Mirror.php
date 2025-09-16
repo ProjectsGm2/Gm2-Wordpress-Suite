@@ -192,6 +192,9 @@ class Gm2_Remote_Mirror {
                         return $src;
                     }
                     $parts = parse_url($src);
+                    if (!is_array($parts)) {
+                        return $src;
+                    }
                     $query = isset($parts['query']) ? '?' . $parts['query'] : '';
                     $frag  = isset($parts['fragment']) ? '#' . $parts['fragment'] : '';
                     return $result['url'] . $query . $frag;
@@ -255,6 +258,9 @@ class Gm2_Remote_Mirror {
                             return $matches[0];
                         }
                         $parts = parse_url($src);
+                        if (!is_array($parts)) {
+                            return $matches[0];
+                        }
                         $query = isset($parts['query']) ? '?' . $parts['query'] : '';
                         $frag  = isset($parts['fragment']) ? '#' . $parts['fragment'] : '';
                         $local = $result['url'] . $query . $frag;
