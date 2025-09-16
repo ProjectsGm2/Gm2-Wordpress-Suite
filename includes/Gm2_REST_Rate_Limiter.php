@@ -33,11 +33,31 @@ class Gm2_REST_Rate_Limiter {
             $ip = 'unknown';
         }
         $key = 'gm2_rl_' . md5($ip);
-        $count = (int) get_transient($key);
-        if ($count >= self::LIMIT) {
+        $now = time();
+        $data = get_transient($key);
+        $window_remaining = self::WINDOW;
+        if (!\is_array($data) || !isset($data['count'], $data['start'])) {
+            $data = [
+                'count' => 0,
+                'start' => $now,
+            ];
+        } else {
+            $data['count'] = (int) $data['count'];
+            $data['start'] = (int) $data['start'];
+            $elapsed = max(0, $now - $data['start']);
+            if ($elapsed >= self::WINDOW) {
+                $data['count'] = 0;
+                $data['start'] = $now;
+                $window_remaining = self::WINDOW;
+            } else {
+                $window_remaining = self::WINDOW - $elapsed;
+            }
+        }
+        if ($data['count'] >= self::LIMIT) {
             return new \WP_Error('gm2_rate_limited', __('Too many requests.', 'gm2-wordpress-suite'), [ 'status' => 429 ]);
         }
-        set_transient($key, $count + 1, self::WINDOW);
+        $data['count']++;
+        set_transient($key, $data, max(1, (int) $window_remaining));
         return $result;
     }
 }
