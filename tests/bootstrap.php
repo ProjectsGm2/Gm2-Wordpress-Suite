@@ -37,8 +37,11 @@ function _manually_load_plugin() {
     if (!class_exists('Elementor\\Repeater')) {
         eval('namespace Elementor; class Repeater { private $controls = []; public function add_control($id, $args = []) { $this->controls[$id] = $args; } public function get_controls() { return $this->controls; } }');
     }
+    if (!class_exists('Elementor\\Widget_Base')) {
+        eval('namespace Elementor; abstract class Widget_Base { protected array $settings = []; public function __construct($data = [], $args = null) {} abstract public function get_name(); abstract public function get_title(); abstract public function get_icon(); public function get_categories(){ return []; } public function get_keywords(){ return []; } protected function register_controls(): void {} protected function start_controls_section($id, $args = []){} protected function end_controls_section(){} protected function add_control($id, $args = []){} protected function add_inline_editing_attributes($key, $args = []){} public function set_settings(array $settings): void { $this->settings = $settings; } public function get_settings($key = null){ if ($key === null) { return $this->settings; } return $this->settings[$key] ?? null; } public function get_settings_for_display($key = null){ return $this->get_settings($key); } }');
+    }
     if (!class_exists('Elementor\\Plugin')) {
-        eval('namespace Elementor; class Plugin { public static $instance; public $widgets_manager; public function __construct(){ self::$instance=$this; $this->widgets_manager=new class { public function register_control($id,$ctrl){} public function register_tag($tag){} public function register_group($n,$a=[]){} }; } }');
+        eval('namespace Elementor; class Plugin { public static $instance; public $widgets_manager; public function __construct(){ self::$instance=$this; $this->widgets_manager=new class { public function register_control($id,$ctrl){} public function register_tag($tag){} public function register_group($n,$a=[]){} public function register($widget){} public function register_widget_type($widget){} }; } }');
         new \Elementor\Plugin();
     }
     if (!class_exists('Elementor\\Core\\DynamicTags\\Tag')) {
