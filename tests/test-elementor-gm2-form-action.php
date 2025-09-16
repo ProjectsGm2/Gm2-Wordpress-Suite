@@ -1,6 +1,6 @@
 <?php
 
-use Gm2\Integrations\Elementor\GM2_CP_Form_Action;
+use Gm2\Elementor\Forms\Action\CreateOrUpdatePost;
 
 if (!class_exists('Elementor_Test_Form_Record')) {
     class Elementor_Test_Form_Record {
@@ -55,6 +55,9 @@ if (!class_exists('Elementor_Test_Ajax_Handler')) {
     }
 }
 
+/**
+ * @covers \Gm2\Elementor\Forms\Action\CreateOrUpdatePost
+ */
 class ElementorGm2FormActionTest extends WP_UnitTestCase {
     public function setUp(): void {
         parent::setUp();
@@ -98,7 +101,7 @@ class ElementorGm2FormActionTest extends WP_UnitTestCase {
         $record = new Elementor_Test_Form_Record($fields, $settings);
         $ajax   = new Elementor_Test_Ajax_Handler();
 
-        $action = new GM2_CP_Form_Action();
+        $action = new CreateOrUpdatePost();
         $action->run($record, $ajax);
 
         $posts = get_posts([
@@ -179,7 +182,7 @@ class ElementorGm2FormActionTest extends WP_UnitTestCase {
         $record = new Elementor_Test_Form_Record($fields, $settings);
         $ajax   = new Elementor_Test_Ajax_Handler();
 
-        $action = new GM2_CP_Form_Action();
+        $action = new CreateOrUpdatePost();
         $action->run($record, $ajax);
 
         try {

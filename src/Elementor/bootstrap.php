@@ -10,6 +10,7 @@ use Gm2\Elementor\Controls\PostTypeSelect;
 use Gm2\Elementor\Controls\Price;
 use Gm2\Elementor\Controls\TaxonomyTermMulti;
 use Gm2\Elementor\Controls\Unit;
+use Gm2\Elementor\Forms\Action\CreateOrUpdatePost;
 use Gm2\Elementor\DynamicTags\GM2_Dynamic_Tag_Group;
 use Gm2\Elementor\Query\Filters;
 use ReflectionMethod;
@@ -32,6 +33,26 @@ if (!defined('ABSPATH')) {
 }
 
 require_once __DIR__ . '/Query/Filters.php';
+
+$register_elementor_form_action = static function (): void {
+    if (!class_exists('\\ElementorPro\\Modules\\Forms\\Classes\\Action_Base')) {
+        return;
+    }
+
+    if (!class_exists('Gm2\\Elementor\\Forms\\Action\\CreateOrUpdatePost')) {
+        class_exists('Gm2\\Elementor\\Forms\\Action\\CreateOrUpdatePost');
+    }
+
+    if (class_exists('Gm2\\Elementor\\Forms\\Action\\CreateOrUpdatePost')) {
+        CreateOrUpdatePost::register_hooks();
+    }
+};
+
+if (did_action('elementor_pro/init')) {
+    $register_elementor_form_action();
+} else {
+    add_action('elementor_pro/init', $register_elementor_form_action);
+}
 
 add_action(
     'elementor/dynamic_tags/register',
