@@ -915,6 +915,7 @@ if (defined('WP_CLI') && WP_CLI) {
     require_once GM2_PLUGIN_DIR . 'includes/cli/class-gm2-migrate.php';
     require_once GM2_PLUGIN_DIR . 'includes/cli/class-gm2-model.php';
     require_once GM2_PLUGIN_DIR . 'includes/cli/class-gm2-blueprint-cli.php';
+    require_once GM2_PLUGIN_DIR . 'includes/cli/class-gm2-presets-cli.php';
     require_once GM2_PLUGIN_DIR . 'includes/cli/class-gm2-schema-audit.php';
     require_once GM2_PLUGIN_DIR . 'includes/cli/class-ae-css-cli.php';
     require_once GM2_PLUGIN_DIR . 'includes/cli/class-ae-seo-critical-cli.php';
