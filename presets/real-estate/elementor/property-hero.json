@@ -1,0 +1,48 @@
+{
+  "version": "0.4",
+  "title": "Property Highlight",
+  "type": "section",
+  "content": [
+    {
+      "id": "property-section",
+      "elType": "section",
+      "isInner": false,
+      "settings": {
+        "layout": "full_width"
+      },
+      "elements": [
+        {
+          "id": "property-column",
+          "elType": "column",
+          "isInner": false,
+          "settings": {
+            "_column_size": 100
+          },
+          "elements": [
+            {
+              "id": "property-heading",
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "Featured Property",
+                "tag": "h2"
+              },
+              "elements": [],
+              "isInner": false
+            },
+            {
+              "id": "property-text",
+              "elType": "widget",
+              "widgetType": "text-editor",
+              "settings": {
+                "editor": "<p>Share the selling points for this listing.</p>"
+              },
+              "elements": [],
+              "isInner": false
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -21,7 +21,6 @@ class Gm2_Custom_Posts_Admin {
         add_action('wp_ajax_gm2_save_tax_args', [ $this, 'ajax_save_tax_args' ]);
         add_action('wp_ajax_gm2_save_query', [ $this, 'ajax_save_query' ]);
         add_action('wp_ajax_gm2_save_cpt_model', [ $this, 'ajax_save_cpt_model' ]);
-        add_action('wp_ajax_gm2_import_preset', [ $this, 'ajax_import_preset' ]);
         add_action('wp_ajax_gm2_save_field_group', [ $this, 'ajax_save_field_group' ]);
         add_action('wp_ajax_gm2_delete_field_group', [ $this, 'ajax_delete_field_group' ]);
         add_action('wp_ajax_gm2_rename_field_group', [ $this, 'ajax_rename_field_group' ]);
@@ -44,11 +43,11 @@ class Gm2_Custom_Posts_Admin {
 
     private function init_help() {
         $this->register_help('toplevel_page_gm2-custom-posts',
-            '<p>' . esc_html__( 'Manage custom post types and taxonomies. Use the preset control to import example models.', 'gm2-wordpress-suite' ) . '</p>',
+            '<p>' . esc_html__( 'Manage custom post types and taxonomies. Use the preset wizard to import example models.', 'gm2-wordpress-suite' ) . '</p>',
             [
                 'input[name="pt_slug"]'  => esc_html__( 'Unique identifier for the post type.', 'gm2-wordpress-suite' ),
                 'input[name="tax_slug"]' => esc_html__( 'Unique identifier for the taxonomy.', 'gm2-wordpress-suite' ),
-                '#gm2-import-preset'       => esc_html__( 'Import a predefined blueprint preset.', 'gm2-wordpress-suite' ),
+                '#gm2-preset-wizard-root'  => esc_html__( 'Launch the preset wizard to preview and import bundled models.', 'gm2-wordpress-suite' ),
             ]
         );
 
@@ -1505,12 +1504,6 @@ class Gm2_Custom_Posts_Admin {
                 file_exists($admin_js) ? filemtime($admin_js) : GM2_VERSION,
                 true
             );
-            wp_localize_script('gm2-custom-posts-admin', 'gm2CPTImport', [
-                'ajax'    => admin_url('admin-ajax.php'),
-                'nonce'   => wp_create_nonce('gm2_import_preset'),
-                'success' => esc_html__('Preset imported.', 'gm2-wordpress-suite'),
-                'error'   => esc_html__('Failed to import preset.', 'gm2-wordpress-suite'),
-            ]);
             return;
         }
 
@@ -2083,68 +2076,6 @@ class Gm2_Custom_Posts_Admin {
         update_option('gm2_custom_posts_config', $config);
         wp_send_json_success([
             'post_type' => $config['post_types'][$slug],
-        ]);
-    }
-
-    public function ajax_import_preset() {
-        if (!$this->can_manage()) {
-            wp_send_json_error([
-                'code'    => 'permission',
-                'message' => __( 'You do not have permission to import presets.', 'gm2-wordpress-suite' ),
-            ]);
-        }
-        $nonce = $_POST['nonce'] ?? '';
-        if (!wp_verify_nonce($nonce, 'gm2_import_preset')) {
-            wp_send_json_error([
-                'code'    => 'nonce',
-                'message' => __( 'Security check failed. Please refresh and try again.', 'gm2-wordpress-suite' ),
-            ]);
-        }
-        $raw  = isset($_POST['preset']) ? $_POST['preset'] : ($_POST['file'] ?? '');
-        $slug = sanitize_key(str_replace('.json', '', (string) $raw));
-        if (!$slug) {
-            wp_send_json_error([
-                'code'    => 'file',
-                'message' => __( 'No preset selected.', 'gm2-wordpress-suite' ),
-            ]);
-        }
-        $blueprint = null;
-        $manager   = apply_filters('gm2/presets/manager', null);
-        if ($manager instanceof \Gm2\Presets\PresetManager) {
-            $blueprint = $manager->get($slug);
-        }
-        if ($blueprint !== null) {
-            $json = wp_json_encode($blueprint);
-        } else {
-            $path = GM2_PLUGIN_DIR . 'presets/' . $slug . '/blueprint.json';
-            if (!file_exists($path)) {
-                wp_send_json_error([
-                    'code'    => 'missing',
-                    'message' => __( 'Preset not found.', 'gm2-wordpress-suite' ),
-                ]);
-            }
-            $json = file_get_contents($path);
-            if ($json === false) {
-                wp_send_json_error([
-                    'code'    => 'missing',
-                    'message' => __( 'Preset not found.', 'gm2-wordpress-suite' ),
-                ]);
-            }
-            $decoded = json_decode($json, true);
-            if (is_array($decoded)) {
-                $blueprint = $decoded;
-            }
-        }
-        $result = \gm2_model_import($json);
-        if (is_wp_error($result)) {
-            wp_send_json_error([
-                'code'    => 'import',
-                'message' => $result->get_error_message(),
-            ]);
-        }
-        wp_send_json_success([
-            'blueprint' => $blueprint,
-            'message'   => __( 'Preset imported.', 'gm2-wordpress-suite' ),
         ]);
     }
 

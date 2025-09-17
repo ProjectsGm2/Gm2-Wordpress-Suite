@@ -187,7 +187,8 @@
     "templates": {
       "single_course": {
         "type": "shortcode",
-        "description": "Insert a saved Elementor template ID to enhance the course hero."
+        "description": "Insert a saved Elementor template ID to enhance the course hero.",
+        "file": "elementor/course-hero.json"
       }
     }
   },

@@ -201,7 +201,8 @@
     "templates": {
       "single_job": {
         "type": "shortcode",
-        "description": "Use a saved Elementor template ID in the shortcode for a tailored hero."
+        "description": "Use a saved Elementor template ID in the shortcode for a tailored hero.",
+        "file": "elementor/job-hero.json"
       }
     }
   },

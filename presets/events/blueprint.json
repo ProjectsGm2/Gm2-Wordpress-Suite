@@ -195,7 +195,8 @@
     "templates": {
       "single_event": {
         "type": "shortcode",
-        "description": "Populate the shortcode with a saved Elementor template for the event hero."
+        "description": "Populate the shortcode with a saved Elementor template for the event hero.",
+        "file": "elementor/event-hero.json"
       }
     }
   },

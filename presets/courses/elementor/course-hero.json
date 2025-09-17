@@ -1,0 +1,48 @@
+{
+  "version": "0.4",
+  "title": "Course Hero Section",
+  "type": "section",
+  "content": [
+    {
+      "id": "course-section",
+      "elType": "section",
+      "isInner": false,
+      "settings": {
+        "layout": "full_width"
+      },
+      "elements": [
+        {
+          "id": "course-column",
+          "elType": "column",
+          "isInner": false,
+          "settings": {
+            "_column_size": 100
+          },
+          "elements": [
+            {
+              "id": "course-heading",
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "Course Overview",
+                "tag": "h2"
+              },
+              "elements": [],
+              "isInner": false
+            },
+            {
+              "id": "course-text",
+              "elType": "widget",
+              "widgetType": "text-editor",
+              "settings": {
+                "editor": "<p>Highlight what learners gain from this course.</p>"
+              },
+              "elements": [],
+              "isInner": false
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

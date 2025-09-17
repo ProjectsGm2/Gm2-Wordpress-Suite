@@ -2,6 +2,8 @@
 
 namespace Gm2;
 
+use Gm2\Presets\Wizard as PresetWizard;
+
 if (!defined('ABSPATH')) {
     exit;
 }
@@ -89,6 +91,8 @@ class Gm2_Loader {
                 $cp_admin->run();
                 $model_export = new Gm2_Model_Export_Admin();
                 $model_export->run();
+                $preset_wizard = new PresetWizard();
+                $preset_wizard->run();
             }
             $cp_public = new Gm2_Custom_Posts_Public();
             $cp_public->run();
