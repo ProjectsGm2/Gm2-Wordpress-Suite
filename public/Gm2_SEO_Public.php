@@ -441,10 +441,7 @@ class Gm2_SEO_Public {
     }
 
     public function run() {
-        add_action('init', [$this, 'add_sitemap_rewrite']);
-        add_filter('query_vars', [$this, 'add_query_vars']);
         add_action('template_redirect', [$this, 'maybe_apply_redirects'], 0);
-        add_action('template_redirect', [$this, 'maybe_output_sitemap']);
         add_action('template_redirect', [$this, 'log_404_url'], 99);
         add_action('wp_head', [$this, 'output_canonical_url'], 5);
         add_action('wp_head', [$this, 'output_hreflang_links'], 5);
@@ -472,22 +469,6 @@ class Gm2_SEO_Public {
         add_action('shutdown', [$this, 'maybe_flush_buffer'], 0);
         add_action('send_headers', [$this, 'send_cache_headers']);
         add_filter('robots_txt', [$this, 'filter_robots_txt'], 10, 2);
-    }
-
-    public function add_sitemap_rewrite() {
-        add_rewrite_rule('sitemap\\.xml$', 'index.php?gm2_sitemap=1', 'top');
-    }
-
-    public function add_query_vars($vars) {
-        $vars[] = 'gm2_sitemap';
-        return $vars;
-    }
-
-    public function maybe_output_sitemap() {
-        if (get_query_var('gm2_sitemap')) {
-            $s = new Gm2_Sitemap();
-            $s->output();
-        }
     }
 
     public function maybe_apply_redirects() {

@@ -303,8 +303,6 @@ function gm2_add_ac_schedule($schedules) {
 add_filter('cron_schedules', 'gm2_add_ac_schedule');
 
 function gm2_activate_plugin() {
-    $public = new Gm2_SEO_Public();
-    $public->add_sitemap_rewrite();
     flush_rewrite_rules();
     $result = gm2_generate_sitemap();
     if (is_wp_error($result) && defined('WP_DEBUG') && WP_DEBUG) {
