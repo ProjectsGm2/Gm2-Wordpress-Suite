@@ -66,6 +66,42 @@
           "image": "{{image}}"
         }
       }
+    },
+    "agent": {
+      "labels": {
+        "name": "Agents",
+        "singular_name": "Agent"
+      },
+      "supports": [
+        "title",
+        "editor",
+        "thumbnail"
+      ],
+      "has_archive": true,
+      "rewrite": {
+        "slug": "agents"
+      },
+      "menu_icon": "dashicons-id",
+      "show_in_rest": true,
+      "rest_base": "agents"
+    },
+    "agency": {
+      "labels": {
+        "name": "Agencies",
+        "singular_name": "Agency"
+      },
+      "supports": [
+        "title",
+        "editor",
+        "thumbnail"
+      ],
+      "has_archive": true,
+      "rewrite": {
+        "slug": "agencies"
+      },
+      "menu_icon": "dashicons-building",
+      "show_in_rest": true,
+      "rest_base": "agencies"
     }
   },
   "taxonomies": {
@@ -125,6 +161,34 @@
           "type": "number",
           "min": 0,
           "expose_in_rest": true
+        },
+        {
+          "key": "field_property_agent",
+          "label": "Listing Agent",
+          "name": "agent",
+          "type": "relationship",
+          "relationship_type": "post",
+          "post_types": [
+            "agent"
+          ],
+          "max": 1,
+          "sync": "two-way",
+          "instructions": "Assign the agent representing this property.",
+          "expose_in_rest": true
+        },
+        {
+          "key": "field_property_agency",
+          "label": "Listing Agency",
+          "name": "agency",
+          "type": "relationship",
+          "relationship_type": "post",
+          "post_types": [
+            "agency"
+          ],
+          "max": 1,
+          "sync": "two-way",
+          "instructions": "Select the agency marketing this property.",
+          "expose_in_rest": true
         }
       ]
     }
@@ -171,12 +235,57 @@
             "type": "number",
             "min": 0,
             "expose_in_rest": true
+          },
+          {
+            "key": "field_property_agent",
+            "label": "Listing Agent",
+            "name": "agent",
+            "type": "relationship",
+            "relationship_type": "post",
+            "post_types": [
+              "agent"
+            ],
+            "max": 1,
+            "sync": "two-way",
+            "instructions": "Assign the agent representing this property.",
+            "expose_in_rest": true
+          },
+          {
+            "key": "field_property_agency",
+            "label": "Listing Agency",
+            "name": "agency",
+            "type": "relationship",
+            "relationship_type": "post",
+            "post_types": [
+              "agency"
+            ],
+            "max": 1,
+            "sync": "two-way",
+            "instructions": "Select the agency marketing this property.",
+            "expose_in_rest": true
           }
         ]
       }
     ]
   },
-  "relationships": [],
+  "relationships": [
+    {
+      "from": "property",
+      "to": "agent",
+      "type": "property_to_agent",
+      "direction": "property_to_agent",
+      "label": "Listing Agent",
+      "cardinality": "many-to-one"
+    },
+    {
+      "from": "property",
+      "to": "agency",
+      "type": "property_to_agency",
+      "direction": "property_to_agency",
+      "label": "Listing Agency",
+      "cardinality": "many-to-one"
+    }
+  ],
   "default_terms": {
     "property_type": [
       {
