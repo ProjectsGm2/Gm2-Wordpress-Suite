@@ -116,19 +116,73 @@
       "title": "Listing Details",
       "fields": [
         {
-          "key": "field_phone",
-          "label": "Phone",
-          "name": "phone",
-          "type": "text",
-          "regex": "^\\+?[0-9\\-\\s]+$",
-          "expose_in_rest": true
-        },
-        {
-          "key": "field_address",
-          "label": "Address",
+          "key": "field_address_street",
+          "label": "Street Address",
           "name": "address",
           "type": "text",
           "required": true,
+          "expose_in_rest": true
+        },
+        {
+          "key": "field_address_city",
+          "label": "City",
+          "name": "city",
+          "type": "text",
+          "required": true,
+          "expose_in_rest": true
+        },
+        {
+          "key": "field_address_region",
+          "label": "Region / State",
+          "name": "region",
+          "type": "text",
+          "expose_in_rest": true
+        },
+        {
+          "key": "field_address_postal_code",
+          "label": "Postal Code",
+          "name": "postal_code",
+          "type": "text",
+          "regex": "^[A-Za-z0-9\\-\\s]+$",
+          "expose_in_rest": true
+        },
+        {
+          "key": "field_address_country",
+          "label": "Country",
+          "name": "country",
+          "type": "text",
+          "expose_in_rest": true
+        },
+        {
+          "key": "field_geo_latitude",
+          "label": "Latitude",
+          "name": "latitude",
+          "type": "number",
+          "min": -90,
+          "max": 90,
+          "expose_in_rest": true
+        },
+        {
+          "key": "field_geo_longitude",
+          "label": "Longitude",
+          "name": "longitude",
+          "type": "number",
+          "min": -180,
+          "max": 180,
+          "expose_in_rest": true
+        },
+        {
+          "key": "field_phone",
+          "label": "Phone",
+          "name": "phone",
+          "type": "phone",
+          "expose_in_rest": true
+        },
+        {
+          "key": "field_email",
+          "label": "Email",
+          "name": "email",
+          "type": "email",
           "expose_in_rest": true
         },
         {
@@ -136,6 +190,90 @@
           "label": "Website",
           "name": "website",
           "type": "url",
+          "expose_in_rest": true
+        },
+        {
+          "key": "field_opening_hours",
+          "label": "Opening Hours",
+          "name": "opening_hours",
+          "type": "repeater",
+          "instructions": "Add each day's schedule as its own row.",
+          "sub_fields": {
+            "day": {
+              "type": "select",
+              "label": "Day of Week",
+              "options": {
+                "Monday": "Monday",
+                "Tuesday": "Tuesday",
+                "Wednesday": "Wednesday",
+                "Thursday": "Thursday",
+                "Friday": "Friday",
+                "Saturday": "Saturday",
+                "Sunday": "Sunday"
+              }
+            },
+            "opens": {
+              "type": "time",
+              "label": "Opens"
+            },
+            "closes": {
+              "type": "time",
+              "label": "Closes"
+            }
+          },
+          "expose_in_rest": true
+        },
+        {
+          "key": "field_price_level",
+          "label": "Price Level",
+          "name": "price_level",
+          "type": "select",
+          "options": {
+            "$": "$ (Budget)",
+            "$$": "$$ (Moderate)",
+            "$$$": "$$$ (Premium)",
+            "$$$$": "$$$$ (Luxury)"
+          },
+          "expose_in_rest": true
+        },
+        {
+          "key": "field_logo",
+          "label": "Logo Image",
+          "name": "logo",
+          "type": "media",
+          "expose_in_rest": true
+        },
+        {
+          "key": "field_gallery",
+          "label": "Gallery",
+          "name": "gallery",
+          "type": "gallery",
+          "expose_in_rest": true
+        },
+        {
+          "key": "field_same_as",
+          "label": "Social Profiles",
+          "name": "same_as",
+          "type": "textarea",
+          "instructions": "Enter one profile URL per line.",
+          "expose_in_rest": true
+        },
+        {
+          "key": "field_claimed",
+          "label": "Claimed Listing",
+          "name": "claimed",
+          "type": "toggle",
+          "instructions": "Mark when the listing has been claimed by its owner.",
+          "expose_in_rest": true
+        },
+        {
+          "key": "field_owner",
+          "label": "Owner",
+          "name": "owner",
+          "type": "relationship",
+          "relationship_type": "user",
+          "sync": "none",
+          "instructions": "Assign the WordPress user who manages this listing.",
           "expose_in_rest": true
         }
       ]
@@ -146,7 +284,18 @@
       "type": "LocalBusiness",
       "map": {
         "telephone": "phone",
+        "email": "email",
         "address.streetAddress": "address",
+        "address.addressLocality": "city",
+        "address.addressRegion": "region",
+        "address.postalCode": "postal_code",
+        "address.addressCountry": "country",
+        "geo.latitude": "latitude",
+        "geo.longitude": "longitude",
+        "openingHoursSpecification": "opening_hours",
+        "sameAs": "same_as",
+        "priceRange": "price_level",
+        "image": "logo",
         "url": "website"
       }
     }
@@ -160,19 +309,73 @@
         "title": "Listing Details",
         "fields": [
           {
-            "key": "field_phone",
-            "label": "Phone",
-            "name": "phone",
-            "type": "text",
-            "regex": "^\\+?[0-9\\-\\s]+$",
-            "expose_in_rest": true
-          },
-          {
-            "key": "field_address",
-            "label": "Address",
+            "key": "field_address_street",
+            "label": "Street Address",
             "name": "address",
             "type": "text",
             "required": true,
+            "expose_in_rest": true
+          },
+          {
+            "key": "field_address_city",
+            "label": "City",
+            "name": "city",
+            "type": "text",
+            "required": true,
+            "expose_in_rest": true
+          },
+          {
+            "key": "field_address_region",
+            "label": "Region / State",
+            "name": "region",
+            "type": "text",
+            "expose_in_rest": true
+          },
+          {
+            "key": "field_address_postal_code",
+            "label": "Postal Code",
+            "name": "postal_code",
+            "type": "text",
+            "regex": "^[A-Za-z0-9\\-\\s]+$",
+            "expose_in_rest": true
+          },
+          {
+            "key": "field_address_country",
+            "label": "Country",
+            "name": "country",
+            "type": "text",
+            "expose_in_rest": true
+          },
+          {
+            "key": "field_geo_latitude",
+            "label": "Latitude",
+            "name": "latitude",
+            "type": "number",
+            "min": -90,
+            "max": 90,
+            "expose_in_rest": true
+          },
+          {
+            "key": "field_geo_longitude",
+            "label": "Longitude",
+            "name": "longitude",
+            "type": "number",
+            "min": -180,
+            "max": 180,
+            "expose_in_rest": true
+          },
+          {
+            "key": "field_phone",
+            "label": "Phone",
+            "name": "phone",
+            "type": "phone",
+            "expose_in_rest": true
+          },
+          {
+            "key": "field_email",
+            "label": "Email",
+            "name": "email",
+            "type": "email",
             "expose_in_rest": true
           },
           {
@@ -181,12 +384,104 @@
             "name": "website",
             "type": "url",
             "expose_in_rest": true
+          },
+          {
+            "key": "field_opening_hours",
+            "label": "Opening Hours",
+            "name": "opening_hours",
+            "type": "repeater",
+            "instructions": "Add each day's schedule as its own row.",
+            "sub_fields": {
+              "day": {
+                "type": "select",
+                "label": "Day of Week",
+                "options": {
+                  "Monday": "Monday",
+                  "Tuesday": "Tuesday",
+                  "Wednesday": "Wednesday",
+                  "Thursday": "Thursday",
+                  "Friday": "Friday",
+                  "Saturday": "Saturday",
+                  "Sunday": "Sunday"
+                }
+              },
+              "opens": {
+                "type": "time",
+                "label": "Opens"
+              },
+              "closes": {
+                "type": "time",
+                "label": "Closes"
+              }
+            },
+            "expose_in_rest": true
+          },
+          {
+            "key": "field_price_level",
+            "label": "Price Level",
+            "name": "price_level",
+            "type": "select",
+            "options": {
+              "$": "$ (Budget)",
+              "$$": "$$ (Moderate)",
+              "$$$": "$$$ (Premium)",
+              "$$$$": "$$$$ (Luxury)"
+            },
+            "expose_in_rest": true
+          },
+          {
+            "key": "field_logo",
+            "label": "Logo Image",
+            "name": "logo",
+            "type": "media",
+            "expose_in_rest": true
+          },
+          {
+            "key": "field_gallery",
+            "label": "Gallery",
+            "name": "gallery",
+            "type": "gallery",
+            "expose_in_rest": true
+          },
+          {
+            "key": "field_same_as",
+            "label": "Social Profiles",
+            "name": "same_as",
+            "type": "textarea",
+            "instructions": "Enter one profile URL per line.",
+            "expose_in_rest": true
+          },
+          {
+            "key": "field_claimed",
+            "label": "Claimed Listing",
+            "name": "claimed",
+            "type": "toggle",
+            "instructions": "Mark when the listing has been claimed by its owner.",
+            "expose_in_rest": true
+          },
+          {
+            "key": "field_owner",
+            "label": "Owner",
+            "name": "owner",
+            "type": "relationship",
+            "relationship_type": "user",
+            "sync": "none",
+            "instructions": "Assign the WordPress user who manages this listing.",
+            "expose_in_rest": true
           }
         ]
       }
     ]
   },
-  "relationships": [],
+  "relationships": [
+    {
+      "from": "listing",
+      "to": "user",
+      "type": "owner",
+      "label": "Managed by",
+      "cardinality": "one-to-one"
+    }
+  ],
   "default_terms": {
     "listing_category": [
       {
@@ -271,7 +566,18 @@
       "type": "LocalBusiness",
       "map": {
         "telephone": "phone",
+        "email": "email",
         "address.streetAddress": "address",
+        "address.addressLocality": "city",
+        "address.addressRegion": "region",
+        "address.postalCode": "postal_code",
+        "address.addressCountry": "country",
+        "geo.latitude": "latitude",
+        "geo.longitude": "longitude",
+        "openingHoursSpecification": "opening_hours",
+        "sameAs": "same_as",
+        "priceRange": "price_level",
+        "image": "logo",
         "url": "website"
       }
     }
