@@ -79,6 +79,7 @@ class ElementorGm2FormActionTest extends WP_UnitTestCase {
         unregister_taxonomy('genre');
         unregister_taxonomy('audience');
         $_FILES = [];
+        unset($_SERVER['REMOTE_ADDR']);
         wp_set_current_user(0);
         parent::tearDown();
     }
@@ -160,6 +161,7 @@ class ElementorGm2FormActionTest extends WP_UnitTestCase {
 
         $this->assertNotEmpty($ajax->errors, 'Submission should be blocked when user lacks required role.');
         $this->assertStringContainsString('permission', $ajax->errors[0]);
+        $this->setExpectedDeprecated('get_page_by_title');
         $this->assertNull(get_page_by_title($title, OBJECT, 'book'));
     }
 
@@ -192,10 +194,136 @@ class ElementorGm2FormActionTest extends WP_UnitTestCase {
         $action = new CreateOrUpdatePost();
         $action->run($record, $ajax);
 
+        $this->setExpectedDeprecated('get_page_by_title');
         $post = get_page_by_title($title, OBJECT, 'book');
         $this->assertInstanceOf(WP_Post::class, $post, 'Post should be created when role matches requirement.');
         if ($post) {
             wp_delete_post($post->ID, true);
+        }
+    }
+
+    public function test_action_throttles_repeat_submissions(): void {
+        $_SERVER['REMOTE_ADDR'] = '127.0.0.10';
+        $callback = static function (array $limits): array {
+            return [
+                'limit'  => 1,
+                'window' => MINUTE_IN_SECONDS,
+            ];
+        };
+        add_filter('gm2_cp_elementor_throttle_limits', $callback, 10, 4);
+
+        $form_id = 'gm2_elementor_throttle_form';
+        $nonce   = wp_create_nonce('gm2_cp_form|' . $form_id);
+
+        $fields = [
+            'gm2_cp_nonce' => [ 'id' => 'gm2_cp_nonce', 'value' => $nonce, 'raw_value' => $nonce, 'type' => 'hidden' ],
+            'gm2_cp_hp'    => [ 'id' => 'gm2_cp_hp', 'value' => '', 'raw_value' => '', 'type' => 'hidden' ],
+            'title'        => [ 'id' => 'title', 'value' => 'Throttle First Book', 'raw_value' => 'Throttle First Book', 'type' => 'text' ],
+        ];
+
+        $settings = [
+            'gm2_cp_form_id'       => $form_id,
+            'gm2_cp_post_type'     => 'book',
+            'gm2_cp_title_field'   => 'title',
+            'gm2_cp_nonce_field'   => 'gm2_cp_nonce',
+            'gm2_cp_honeypot_field'=> 'gm2_cp_hp',
+            'gm2_cp_post_status'   => 'publish',
+        ];
+
+        $action = new CreateOrUpdatePost();
+
+        try {
+            $record1 = new Elementor_Test_Form_Record($fields, $settings);
+            $ajax1   = new Elementor_Test_Ajax_Handler();
+            $action->run($record1, $ajax1);
+            $this->assertEmpty($ajax1->errors, 'First submission should succeed.');
+
+            $record2 = new Elementor_Test_Form_Record($fields, $settings);
+            $ajax2   = new Elementor_Test_Ajax_Handler();
+            $action->run($record2, $ajax2);
+            $this->assertNotEmpty($ajax2->errors, 'Second submission should be throttled.');
+            $this->assertStringContainsString('Please wait', $ajax2->errors[0]);
+
+            $posts = get_posts([
+                'post_type'   => 'book',
+                'post_status' => 'publish',
+                'numberposts' => -1,
+            ]);
+            $this->assertCount(1, $posts, 'Only one post should be created while throttle is active.');
+        } finally {
+            $key = 'gm2_cp_form_throttle_' . md5($form_id . '|ip:' . sanitize_text_field($_SERVER['REMOTE_ADDR']));
+            delete_transient($key);
+            remove_filter('gm2_cp_elementor_throttle_limits', $callback, 10);
+        }
+    }
+
+    public function test_action_throttle_resets_after_expiry(): void {
+        $_SERVER['REMOTE_ADDR'] = '127.0.0.11';
+        $callback = static function (array $limits): array {
+            return [
+                'limit'  => 1,
+                'window' => MINUTE_IN_SECONDS,
+            ];
+        };
+        add_filter('gm2_cp_elementor_throttle_limits', $callback, 10, 4);
+
+        $form_id = 'gm2_elementor_throttle_reset_form';
+        $nonce   = wp_create_nonce('gm2_cp_form|' . $form_id);
+
+        $settings = [
+            'gm2_cp_form_id'       => $form_id,
+            'gm2_cp_post_type'     => 'book',
+            'gm2_cp_title_field'   => 'title',
+            'gm2_cp_nonce_field'   => 'gm2_cp_nonce',
+            'gm2_cp_honeypot_field'=> 'gm2_cp_hp',
+            'gm2_cp_post_status'   => 'publish',
+        ];
+
+        $action = new CreateOrUpdatePost();
+
+        try {
+            $fields_first = [
+                'gm2_cp_nonce' => [ 'id' => 'gm2_cp_nonce', 'value' => $nonce, 'raw_value' => $nonce, 'type' => 'hidden' ],
+                'gm2_cp_hp'    => [ 'id' => 'gm2_cp_hp', 'value' => '', 'raw_value' => '', 'type' => 'hidden' ],
+                'title'        => [ 'id' => 'title', 'value' => 'Throttle Window First', 'raw_value' => 'Throttle Window First', 'type' => 'text' ],
+            ];
+            $record1 = new Elementor_Test_Form_Record($fields_first, $settings);
+            $ajax1   = new Elementor_Test_Ajax_Handler();
+            $action->run($record1, $ajax1);
+            $this->assertEmpty($ajax1->errors, 'Initial submission should succeed.');
+            $this->setExpectedDeprecated('get_page_by_title');
+            $this->assertInstanceOf(WP_Post::class, get_page_by_title('Throttle Window First', OBJECT, 'book'));
+
+            $fields_second = [
+                'gm2_cp_nonce' => [ 'id' => 'gm2_cp_nonce', 'value' => $nonce, 'raw_value' => $nonce, 'type' => 'hidden' ],
+                'gm2_cp_hp'    => [ 'id' => 'gm2_cp_hp', 'value' => '', 'raw_value' => '', 'type' => 'hidden' ],
+                'title'        => [ 'id' => 'title', 'value' => 'Throttle Window Second', 'raw_value' => 'Throttle Window Second', 'type' => 'text' ],
+            ];
+            $record2 = new Elementor_Test_Form_Record($fields_second, $settings);
+            $ajax2   = new Elementor_Test_Ajax_Handler();
+            $action->run($record2, $ajax2);
+            $this->assertNotEmpty($ajax2->errors, 'Second submission should be throttled.');
+            $this->setExpectedDeprecated('get_page_by_title');
+            $this->assertNull(get_page_by_title('Throttle Window Second', OBJECT, 'book'), 'Second submission should not create a post.');
+
+            $key = 'gm2_cp_form_throttle_' . md5($form_id . '|ip:' . sanitize_text_field($_SERVER['REMOTE_ADDR']));
+            delete_transient($key);
+
+            $fields_third = [
+                'gm2_cp_nonce' => [ 'id' => 'gm2_cp_nonce', 'value' => $nonce, 'raw_value' => $nonce, 'type' => 'hidden' ],
+                'gm2_cp_hp'    => [ 'id' => 'gm2_cp_hp', 'value' => '', 'raw_value' => '', 'type' => 'hidden' ],
+                'title'        => [ 'id' => 'title', 'value' => 'Throttle Window Third', 'raw_value' => 'Throttle Window Third', 'type' => 'text' ],
+            ];
+            $record3 = new Elementor_Test_Form_Record($fields_third, $settings);
+            $ajax3   = new Elementor_Test_Ajax_Handler();
+            $action->run($record3, $ajax3);
+            $this->assertEmpty($ajax3->errors, 'Submission after throttle expiry should succeed.');
+            $this->setExpectedDeprecated('get_page_by_title');
+            $this->assertInstanceOf(WP_Post::class, get_page_by_title('Throttle Window Third', OBJECT, 'book'));
+        } finally {
+            $key = 'gm2_cp_form_throttle_' . md5($form_id . '|ip:' . sanitize_text_field($_SERVER['REMOTE_ADDR']));
+            delete_transient($key);
+            remove_filter('gm2_cp_elementor_throttle_limits', $callback, 10);
         }
     }
 
