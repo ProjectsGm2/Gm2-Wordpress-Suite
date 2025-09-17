@@ -127,19 +127,29 @@ class Gm2_SEO_Public {
      * @return array<string,string> Map of token => description.
      */
     public static function get_placeholders() {
-        return [
-            '{{title}}'         => __('Post or term title', 'gm2-wordpress-suite'),
-            '{{permalink}}'     => __('Permalink URL', 'gm2-wordpress-suite'),
-            '{{url}}'           => __('Alias of {{permalink}}', 'gm2-wordpress-suite'),
-            '{{description}}'   => __('SEO description or excerpt', 'gm2-wordpress-suite'),
-            '{{image}}'         => __('Featured image URL', 'gm2-wordpress-suite'),
-            '{{price}}'         => __('Product price', 'gm2-wordpress-suite'),
+        $placeholders = [
+            '{{title}}'          => __('Post or term title', 'gm2-wordpress-suite'),
+            '{{permalink}}'      => __('Permalink URL', 'gm2-wordpress-suite'),
+            '{{url}}'            => __('Alias of {{permalink}}', 'gm2-wordpress-suite'),
+            '{{description}}'    => __('SEO description or excerpt', 'gm2-wordpress-suite'),
+            '{{image}}'          => __('Featured image URL', 'gm2-wordpress-suite'),
+            '{{price}}'          => __('Product price', 'gm2-wordpress-suite'),
             '{{price_currency}}' => __('Currency code', 'gm2-wordpress-suite'),
-            '{{availability}}'  => __('Stock availability URL', 'gm2-wordpress-suite'),
-            '{{sku}}'           => __('Product SKU', 'gm2-wordpress-suite'),
-            '{{brand}}'         => __('Brand name', 'gm2-wordpress-suite'),
-            '{{rating}}'        => __('Review rating value', 'gm2-wordpress-suite'),
+            '{{availability}}'   => __('Stock availability URL', 'gm2-wordpress-suite'),
+            '{{sku}}'            => __('Product SKU', 'gm2-wordpress-suite'),
+            '{{brand}}'          => __('Brand name', 'gm2-wordpress-suite'),
+            '{{rating}}'         => __('Review rating value', 'gm2-wordpress-suite'),
+            '{taxonomy:taxonomy_slug}' => __('Names of terms assigned to the specified taxonomy (e.g. {taxonomy:product_cat})', 'gm2-wordpress-suite'),
+            '{field:field_key}'       => __('Value from the matching GM2 field or custom field key', 'gm2-wordpress-suite'),
+            '{location_city}'         => __('Location field value such as city, state or country (uses GM2 location fields/options)', 'gm2-wordpress-suite'),
         ];
+
+        /**
+         * Filter the placeholder descriptions displayed in the schema settings UI.
+         *
+         * @param array<string,string> $placeholders Map of token => description.
+         */
+        return apply_filters('gm2_schema_placeholders', $placeholders);
     }
 
     private function replace_placeholders($data, $context) {
@@ -149,13 +159,190 @@ class Gm2_SEO_Public {
             }
             return $data;
         }
-        if (is_string($data)) {
-            return strtr($data, $context);
+        if (!is_string($data)) {
+            return $data;
         }
-        return $data;
+
+        $replacements = [];
+        foreach ($context as $token => $value) {
+            if (!is_string($token) || substr($token, 0, 2) !== '{{' || substr($token, -2) !== '}}') {
+                continue;
+            }
+            $replacements[$token] = $this->prepare_placeholder_value($value);
+        }
+
+        $result = strtr($data, $replacements);
+
+        if (strpos($result, '{') === false) {
+            return $result;
+        }
+
+        return preg_replace_callback(
+            '/\{([a-z0-9_]+(?::[a-z0-9_\-]+)?)\}/i',
+            function ($matches) use ($context) {
+                return $this->resolve_dynamic_token($matches[1], $context);
+            },
+            $result
+        );
+    }
+
+    private function prepare_placeholder_value($value) {
+        if (is_array($value)) {
+            return '';
+        }
+        if (is_bool($value)) {
+            return $value ? '1' : '0';
+        }
+        if (is_scalar($value)) {
+            return (string) $value;
+        }
+        if (is_object($value) && method_exists($value, '__toString')) {
+            return (string) $value;
+        }
+        return '';
+    }
+
+    private function resolve_dynamic_token(string $token, array $context): string {
+        $type = $token;
+        $key  = '';
+        if (strpos($token, ':') !== false) {
+            [$type, $key] = explode(':', $token, 2);
+        }
+        $type = strtolower($type);
+
+        switch ($type) {
+            case 'taxonomy':
+                $value = $this->resolve_taxonomy_token($key, $context);
+                break;
+            case 'field':
+                $value = $this->resolve_field_token($key, $context);
+                break;
+            default:
+                if (str_starts_with($type, 'location_')) {
+                    $value = $this->resolve_location_token(substr($type, strlen('location_')), $context);
+                } else {
+                    $value = '';
+                }
+        }
+
+        /**
+         * Filter the resolved value for dynamic schema tokens.
+         *
+         * @param mixed  $value  Resolved value. Can be a scalar or array.
+         * @param string $token  Token string without braces.
+         * @param array  $context Replacement context data.
+         */
+        $value = apply_filters('gm2_schema_dynamic_token_value', $value, $token, $context);
+
+        return $this->format_dynamic_value($value);
+    }
+
+    private function resolve_taxonomy_token(string $taxonomy, array $context) {
+        $taxonomy = sanitize_key($taxonomy);
+        if ($taxonomy === '') {
+            return '';
+        }
+
+        $object_id = isset($context['gm2_context_object_id']) ? (int) $context['gm2_context_object_id'] : 0;
+        $context_type = $context['gm2_context_type'] ?? '';
+
+        if ($context_type === 'term') {
+            $term = $context['gm2_context_term'] ?? null;
+            if (!$term && $object_id) {
+                $current_tax = $context['gm2_context_taxonomy'] ?? '';
+                $term        = get_term($object_id, $current_tax ?: $taxonomy);
+            }
+            if ($term && !is_wp_error($term)) {
+                if (($context['gm2_context_taxonomy'] ?? '') === $taxonomy) {
+                    return $term->name;
+                }
+                $related = get_term($term->term_id, $taxonomy);
+                if ($related && !is_wp_error($related)) {
+                    return $related->name;
+                }
+            }
+            return '';
+        }
+
+        if ($context_type === 'post' && $object_id) {
+            $terms = wp_get_post_terms($object_id, $taxonomy, ['fields' => 'names']);
+            if (!is_wp_error($terms) && !empty($terms)) {
+                return $terms;
+            }
+        }
+
+        return '';
+    }
+
+    private function resolve_field_token(string $field_key, array $context) {
+        $field_key = trim($field_key);
+        if ($field_key === '') {
+            return '';
+        }
+
+        $object_id    = isset($context['gm2_context_object_id']) ? (int) $context['gm2_context_object_id'] : 0;
+        $context_type = $context['gm2_context_type'] ?? 'post';
+        if (!in_array($context_type, ['post', 'term', 'user', 'comment', 'option', 'site'], true)) {
+            $context_type = 'post';
+        }
+
+        $value = \gm2_field($field_key, '', $object_id > 0 ? $object_id : null, $context_type);
+        if ($value === '' || $value === null) {
+            return '';
+        }
+
+        return $value;
+    }
+
+    private function resolve_location_token(string $segment, array $context) {
+        $segment = trim($segment);
+        if ($segment === '') {
+            return '';
+        }
+
+        $field_key = 'location_' . $segment;
+        $value     = $this->resolve_field_token($field_key, $context);
+        if ($value !== '' && $value !== null) {
+            return $value;
+        }
+
+        $option_value = get_option('gm2_' . $field_key, '');
+        if ($option_value === '' || $option_value === null) {
+            $option_value = get_option($field_key, '');
+        }
+
+        return $option_value;
+    }
+
+    private function format_dynamic_value($value): string {
+        if ($value === null) {
+            return '';
+        }
+        if (is_array($value)) {
+            $parts = [];
+            foreach ($value as $item) {
+                $part = $this->format_dynamic_value($item);
+                if ($part !== '') {
+                    $parts[] = $part;
+                }
+            }
+            return $parts ? implode(', ', $parts) : '';
+        }
+        if (is_bool($value)) {
+            $value = $value ? '1' : '0';
+        } elseif (is_scalar($value)) {
+            $value = (string) $value;
+        } elseif (is_object($value) && method_exists($value, '__toString')) {
+            $value = (string) $value;
+        } else {
+            return '';
+        }
+
+        return sanitize_text_field($value);
     }
 
     private function get_post_context($post_id) {
+        $post_type = get_post_type($post_id);
         $context = [
             '{{title}}'       => get_the_title($post_id),
             '{{url}}'         => get_permalink($post_id),
@@ -186,6 +373,27 @@ class Gm2_SEO_Public {
                 $context['{{sku}}']           = $product->get_sku();
             }
         }
+        $context['gm2_context_object_id'] = (int) $post_id;
+        $context['gm2_context_type']      = 'post';
+        $context['gm2_context_post_type'] = $post_type ?: '';
+        $post_obj = get_post($post_id);
+        if ($post_obj instanceof \WP_Post) {
+            $context['gm2_context_post'] = $post_obj;
+        }
+
+        /**
+         * Filter placeholder tokens for post-based schema output.
+         *
+         * @param array $context  Token map.
+         * @param int    $post_id Post ID.
+         */
+        $context = apply_filters('gm2_schema_post_tokens', $context, $post_id);
+        $context = apply_filters('gm2_schema_tokens', $context, [
+            'type'      => 'post',
+            'id'        => (int) $post_id,
+            'post_type' => $post_type ?: '',
+        ]);
+
         return $context;
     }
 
@@ -211,6 +419,24 @@ class Gm2_SEO_Public {
         if ($rating) {
             $context['{{rating}}'] = $rating;
         }
+        $context['gm2_context_object_id'] = (int) $term->term_id;
+        $context['gm2_context_type']      = 'term';
+        $context['gm2_context_taxonomy']  = $term->taxonomy;
+        $context['gm2_context_term']      = $term;
+
+        /**
+         * Filter placeholder tokens for term-based schema output.
+         *
+         * @param array   $context Token map.
+         * @param \WP_Term $term   Term object.
+         */
+        $context = apply_filters('gm2_schema_term_tokens', $context, $term);
+        $context = apply_filters('gm2_schema_tokens', $context, [
+            'type'     => 'term',
+            'id'       => (int) $term->term_id,
+            'taxonomy' => $term->taxonomy,
+        ]);
+
         return $context;
     }
 
