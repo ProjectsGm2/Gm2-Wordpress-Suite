@@ -80,6 +80,7 @@ class Meta_Registration {
     private static function get_shared_meta_definitions(): array {
         return [
             '_gm2_title'               => self::string_definition('sanitize_text_field'),
+            '_gm2_breadcrumb_title'    => self::string_definition('sanitize_text_field'),
             '_gm2_description'         => self::string_definition('sanitize_textarea_field'),
             '_gm2_noindex'             => self::boolean_definition(),
             '_gm2_nofollow'            => self::boolean_definition(),
