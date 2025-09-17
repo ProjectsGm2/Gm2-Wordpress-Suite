@@ -163,6 +163,7 @@ add_action('init', 'gm2_css_optimizer_init');
 \Gm2\Gm2_Cache_Audit::init();
 \Gm2\Gm2_Script_Attributes::init();
 \Gm2\Gm2_Lazy_Embeds::init();
+\Gm2\SEO\Meta_Registration::init();
 \Gm2\Gm2_Search_Console::init();
 \Gm2\AE_SEO_JS_Detector::init();
 \Gm2\AE_SEO_JS_Manager::init();
