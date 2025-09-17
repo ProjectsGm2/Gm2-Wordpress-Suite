@@ -130,6 +130,32 @@
       "rewrite": {
         "slug": "property-status"
       }
+    },
+    "features": {
+      "object_type": [
+        "property"
+      ],
+      "labels": {
+        "name": "Property Features",
+        "singular_name": "Property Feature"
+      },
+      "hierarchical": false,
+      "rewrite": {
+        "slug": "property-feature"
+      }
+    },
+    "neighborhood": {
+      "object_type": [
+        "property"
+      ],
+      "labels": {
+        "name": "Neighborhoods",
+        "singular_name": "Neighborhood"
+      },
+      "hierarchical": true,
+      "rewrite": {
+        "slug": "property-neighborhood"
+      }
     }
   },
   "field_groups": [
@@ -205,6 +231,14 @@
   },
   "label": "Real Estate",
   "description": "Property listings with pricing metadata, taxonomy filtering, and Elementor hero placeholder.",
+  "metadata": {
+    "default_term_notes": {
+      "property_type": "Seeded with common categories like House, Apartment, Condo, Townhouse, Land, and Commercial.",
+      "property_status": "Covers the standard For Sale, For Rent, and Sold lifecycle statuses.",
+      "features": "Flat amenity taxonomy for items such as Pool, Garage, or Garden; no defaults provided so sites can localise options.",
+      "neighborhood": "Hierarchical location taxonomy for cities, districts, or communities; populate with local geography as needed."
+    }
+  },
   "fields": {
     "groups": [
       {
@@ -289,8 +323,24 @@
   "default_terms": {
     "property_type": [
       {
+        "name": "House",
+        "slug": "house"
+      },
+      {
         "name": "Apartment",
         "slug": "apartment"
+      },
+      {
+        "name": "Condo",
+        "slug": "condo"
+      },
+      {
+        "name": "Townhouse",
+        "slug": "townhouse"
+      },
+      {
+        "name": "Land",
+        "slug": "land"
       },
       {
         "name": "Commercial",
@@ -305,6 +355,10 @@
       {
         "name": "For Rent",
         "slug": "for-rent"
+      },
+      {
+        "name": "Sold",
+        "slug": "sold"
       }
     ]
   },
