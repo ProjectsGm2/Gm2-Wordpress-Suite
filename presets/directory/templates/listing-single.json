@@ -1,0 +1,314 @@
+{
+  "version": "0.4",
+  "title": "Directory Listing Single",
+  "type": "page",
+  "content": [
+    {
+      "id": "directory-single-hero",
+      "elType": "section",
+      "isInner": false,
+      "settings": {
+        "layout": "full_width"
+      },
+      "elements": [
+        {
+          "id": "directory-hero-column-left",
+          "elType": "column",
+          "isInner": false,
+          "settings": {
+            "_column_size": 60
+          },
+          "elements": [
+            {
+              "id": "directory-title",
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "Listing Title",
+                "header_size": "h1",
+                "dynamic": {
+                  "title": {
+                    "active": true,
+                    "tag": "post-title"
+                  }
+                }
+              },
+              "elements": [],
+              "isInner": false
+            },
+            {
+              "id": "directory-price-level",
+              "elType": "widget",
+              "widgetType": "gm2_field",
+              "settings": {
+                "post_type": "listing",
+                "field_key": "group_listing_details::price_level",
+                "html_tag": "p",
+                "fallback": "Price level"
+              },
+              "elements": [],
+              "isInner": false
+            },
+            {
+              "id": "directory-claimed",
+              "elType": "widget",
+              "widgetType": "gm2_field",
+              "settings": {
+                "post_type": "listing",
+                "field_key": "group_listing_details::claimed",
+                "html_tag": "p",
+                "fallback": "Claimed listing status"
+              },
+              "elements": [],
+              "isInner": false
+            }
+          ]
+        },
+        {
+          "id": "directory-hero-column-right",
+          "elType": "column",
+          "isInner": false,
+          "settings": {
+            "_column_size": 40
+          },
+          "elements": [
+            {
+              "id": "directory-logo",
+              "elType": "widget",
+              "widgetType": "gm2_field",
+              "settings": {
+                "post_type": "listing",
+                "field_key": "group_listing_details::logo",
+                "html_tag": "div",
+                "fallback": ""
+              },
+              "elements": [],
+              "isInner": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "directory-single-details",
+      "elType": "section",
+      "isInner": false,
+      "settings": {
+        "layout": "boxed"
+      },
+      "elements": [
+        {
+          "id": "directory-details-column-left",
+          "elType": "column",
+          "isInner": false,
+          "settings": {
+            "_column_size": 50
+          },
+          "elements": [
+            {
+              "id": "directory-contact-heading",
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "Contact",
+                "header_size": "h2"
+              },
+              "elements": [],
+              "isInner": false
+            },
+            {
+              "id": "directory-address",
+              "elType": "widget",
+              "widgetType": "gm2_field",
+              "settings": {
+                "post_type": "listing",
+                "field_key": "group_listing_details::address",
+                "html_tag": "p",
+                "fallback": "Street address"
+              },
+              "elements": [],
+              "isInner": false
+            },
+            {
+              "id": "directory-city",
+              "elType": "widget",
+              "widgetType": "gm2_field",
+              "settings": {
+                "post_type": "listing",
+                "field_key": "group_listing_details::city",
+                "html_tag": "p",
+                "fallback": "City"
+              },
+              "elements": [],
+              "isInner": false
+            },
+            {
+              "id": "directory-region",
+              "elType": "widget",
+              "widgetType": "gm2_field",
+              "settings": {
+                "post_type": "listing",
+                "field_key": "group_listing_details::region",
+                "html_tag": "p",
+                "fallback": "Region"
+              },
+              "elements": [],
+              "isInner": false
+            },
+            {
+              "id": "directory-postal-code",
+              "elType": "widget",
+              "widgetType": "gm2_field",
+              "settings": {
+                "post_type": "listing",
+                "field_key": "group_listing_details::postal_code",
+                "html_tag": "p",
+                "fallback": "Postal code"
+              },
+              "elements": [],
+              "isInner": false
+            },
+            {
+              "id": "directory-country",
+              "elType": "widget",
+              "widgetType": "gm2_field",
+              "settings": {
+                "post_type": "listing",
+                "field_key": "group_listing_details::country",
+                "html_tag": "p",
+                "fallback": "Country"
+              },
+              "elements": [],
+              "isInner": false
+            },
+            {
+              "id": "directory-phone",
+              "elType": "widget",
+              "widgetType": "gm2_field",
+              "settings": {
+                "post_type": "listing",
+                "field_key": "group_listing_details::phone",
+                "html_tag": "p",
+                "fallback": "Phone number"
+              },
+              "elements": [],
+              "isInner": false
+            },
+            {
+              "id": "directory-email",
+              "elType": "widget",
+              "widgetType": "gm2_field",
+              "settings": {
+                "post_type": "listing",
+                "field_key": "group_listing_details::email",
+                "html_tag": "p",
+                "fallback": "Email address"
+              },
+              "elements": [],
+              "isInner": false
+            },
+            {
+              "id": "directory-website",
+              "elType": "widget",
+              "widgetType": "gm2_field",
+              "settings": {
+                "post_type": "listing",
+                "field_key": "group_listing_details::website",
+                "html_tag": "p",
+                "fallback": "Website"
+              },
+              "elements": [],
+              "isInner": false
+            },
+            {
+              "id": "directory-same-as",
+              "elType": "widget",
+              "widgetType": "gm2_field",
+              "settings": {
+                "post_type": "listing",
+                "field_key": "group_listing_details::same_as",
+                "html_tag": "div",
+                "fallback": "Social profiles"
+              },
+              "elements": [],
+              "isInner": false
+            },
+            {
+              "id": "directory-opening-hours",
+              "elType": "widget",
+              "widgetType": "gm2_opening_hours",
+              "settings": {
+                "post_type": "listing",
+                "field_key": "group_listing_details::opening_hours",
+                "closed_label": "Closed",
+                "fallback_text": "Opening hours coming soon"
+              },
+              "elements": [],
+              "isInner": false
+            }
+          ]
+        },
+        {
+          "id": "directory-details-column-right",
+          "elType": "column",
+          "isInner": false,
+          "settings": {
+            "_column_size": 50
+          },
+          "elements": [
+            {
+              "id": "directory-gallery",
+              "elType": "widget",
+              "widgetType": "gm2_field",
+              "settings": {
+                "post_type": "listing",
+                "field_key": "group_listing_details::gallery",
+                "html_tag": "div",
+                "fallback": "Gallery"
+              },
+              "elements": [],
+              "isInner": false
+            },
+            {
+              "id": "directory-location-heading",
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "Location Coordinates",
+                "header_size": "h3"
+              },
+              "elements": [],
+              "isInner": false
+            },
+            {
+              "id": "directory-latitude",
+              "elType": "widget",
+              "widgetType": "gm2_field",
+              "settings": {
+                "post_type": "listing",
+                "field_key": "group_listing_details::latitude",
+                "html_tag": "p",
+                "fallback": "Latitude"
+              },
+              "elements": [],
+              "isInner": false
+            },
+            {
+              "id": "directory-longitude",
+              "elType": "widget",
+              "widgetType": "gm2_field",
+              "settings": {
+                "post_type": "listing",
+                "field_key": "group_listing_details::longitude",
+                "html_tag": "p",
+                "fallback": "Longitude"
+              },
+              "elements": [],
+              "isInner": false
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

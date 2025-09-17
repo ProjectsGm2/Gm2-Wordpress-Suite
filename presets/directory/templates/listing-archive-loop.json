@@ -1,0 +1,75 @@
+{
+  "version": "0.4",
+  "title": "Directory Listing Card",
+  "type": "loop-item",
+  "content": [
+    {
+      "id": "directory-loop-section",
+      "elType": "section",
+      "isInner": false,
+      "settings": {
+        "layout": "boxed"
+      },
+      "elements": [
+        {
+          "id": "directory-loop-column",
+          "elType": "column",
+          "isInner": false,
+          "settings": {
+            "_column_size": 100
+          },
+          "elements": [
+            {
+              "id": "directory-loop-card",
+              "elType": "widget",
+              "widgetType": "gm2_loop_card",
+              "settings": {
+                "post_type": "listing",
+                "layout": "stacked",
+                "card_tag": "article",
+                "image_field": "group_listing_details::logo",
+                "image_fallback": "",
+                "title_tag": "h3",
+                "subtitle_field": "group_listing_details::city",
+                "subtitle_tag": "p",
+                "body_field": "",
+                "body_fallback": "",
+                "meta_fields": [
+                  {
+                    "_id": "meta-address",
+                    "label": "Street",
+                    "field_key": "group_listing_details::address",
+                    "fallback": ""
+                  },
+                  {
+                    "_id": "meta-region",
+                    "label": "Region",
+                    "field_key": "group_listing_details::region",
+                    "fallback": ""
+                  },
+                  {
+                    "_id": "meta-phone",
+                    "label": "Phone",
+                    "field_key": "group_listing_details::phone",
+                    "fallback": ""
+                  },
+                  {
+                    "_id": "meta-price",
+                    "label": "Price Level",
+                    "field_key": "group_listing_details::price_level",
+                    "fallback": ""
+                  }
+                ],
+                "button_text": "View Listing",
+                "button_url_field": "group_listing_details::website",
+                "button_fallback_url": ""
+              },
+              "elements": [],
+              "isInner": false
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

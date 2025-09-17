@@ -52,7 +52,7 @@
       ],
       "template_lock": "insert",
       "seo": {
-        "meta_title": "{{title}} \u2013 Business Listing",
+        "meta_title": "{{title}} – Business Listing",
         "meta_description": "{{description}}",
         "canonical": "{{permalink}}",
         "open_graph": {
@@ -559,15 +559,6 @@
       ]
     }
   ],
-  "elementor": {
-    "templates": {
-      "single_listing": {
-        "type": "shortcode",
-        "description": "Replace the shortcode placeholder with the ID of a saved Elementor template to render a custom hero.",
-        "file": "elementor/directory-hero.json"
-      }
-    }
-  },
   "seo_mappings": [
     {
       "key": "listing",
@@ -594,42 +585,20 @@
     "listing_single": {
       "post_type": "listing",
       "lock": "insert",
-      "blocks": [
-        [
-          "core/group",
-          {
-            "metadata": {
-              "name": "Listing Layout"
-            },
-            "layout": {
-              "type": "constrained"
-            }
-          },
-          [
-            [
-              "core/heading",
-              {
-                "level": 2,
-                "placeholder": "Business headline or tagline"
-              }
-            ],
-            [
-              "core/paragraph",
-              {
-                "placeholder": "Spotlight the listing or switch to Elementor to customise."
-              }
-            ],
-            [
-              "core/shortcode",
-              {
-                "text": "[elementor-template id=\"\"]"
-              }
-            ]
-          ]
-        ]
-      ],
-      "description": "Block layout bundles a heading, intro, and Elementor shortcode placeholder.",
-      "elementor_placeholder": "[elementor-template id=\"\"]"
+      "builder": "elementor",
+      "file": "templates/listing-single.json",
+      "blocks": [],
+      "description": "Elementor single template featuring listing contact details, gallery, and opening hours.",
+      "notes": "Import via Elementor → Templates → Import Template, then assign it as the single template for listings."
+    },
+    "listing_archive_loop": {
+      "post_type": "listing",
+      "builder": "elementor",
+      "context": "loop",
+      "file": "templates/listing-archive-loop.json",
+      "blocks": [],
+      "description": "Elementor loop card for archive grids showing key listing fields.",
+      "notes": "Import into Elementor's Theme Builder as a Loop Item and select it for Listing archives."
     }
   }
 }
