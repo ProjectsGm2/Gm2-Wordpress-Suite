@@ -108,17 +108,30 @@
     }
   },
   "taxonomies": {
-    "event_type": {
+    "event_category": {
       "object_type": [
         "event"
       ],
       "labels": {
-        "name": "Event Types",
-        "singular_name": "Event Type"
+        "name": "Event Categories",
+        "singular_name": "Event Category"
+      },
+      "hierarchical": true,
+      "rewrite": {
+        "slug": "event-category"
+      }
+    },
+    "event_tag": {
+      "object_type": [
+        "event"
+      ],
+      "labels": {
+        "name": "Event Tags",
+        "singular_name": "Event Tag"
       },
       "hierarchical": false,
       "rewrite": {
-        "slug": "event-type"
+        "slug": "event-tag"
       }
     }
   },
@@ -257,7 +270,7 @@
     }
   ],
   "default_terms": {
-    "event_type": [
+    "event_category": [
       {
         "name": "Workshop",
         "slug": "workshop"
@@ -265,6 +278,16 @@
       {
         "name": "Webinar",
         "slug": "webinar"
+      }
+    ],
+    "event_tag": [
+      {
+        "name": "Networking",
+        "slug": "networking"
+      },
+      {
+        "name": "Virtual",
+        "slug": "virtual"
       }
     ]
   },

@@ -10,7 +10,8 @@
 
 | Taxonomy | Hierarchical | Purpose |
 | --- | --- | --- |
-| `event_type` | No | Labels events by type (e.g., workshop, webinar) for filtering and archive navigation. |
+| `event_category` | Yes | Hierarchical categories organize events in archives (e.g., Workshop, Webinar). |
+| `event_tag` | No | Flexible tagging surfaces keywords like `Networking` or `Virtual` for filtering. |
 
 ## Field Groups
 
