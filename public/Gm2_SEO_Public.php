@@ -323,6 +323,71 @@ class Gm2_SEO_Public {
     }
 
     /**
+     * Resolve the display label for a post breadcrumb, using overrides when available.
+     *
+     * @param int|\WP_Post $post Post ID or object.
+     * @return string
+     */
+    private function get_post_breadcrumb_name($post) {
+        if ($post instanceof \WP_Post) {
+            $post_obj = $post;
+        } else {
+            $post_obj = get_post($post);
+        }
+
+        if (!$post_obj instanceof \WP_Post) {
+            return '';
+        }
+
+        $override = get_post_meta($post_obj->ID, '_gm2_breadcrumb_title', true);
+        if (is_string($override)) {
+            $override = sanitize_text_field($override);
+            if ($override !== '') {
+                return $override;
+            }
+        }
+
+        return get_the_title($post_obj);
+    }
+
+    /**
+     * Resolve the display label for a term breadcrumb, using overrides when available.
+     *
+     * @param int|\WP_Term $term     Term ID or object.
+     * @param string        $taxonomy Optional taxonomy when a term ID is provided.
+     * @return string
+     */
+    private function get_term_breadcrumb_name($term, string $taxonomy = '') {
+        if ($term instanceof \WP_Term) {
+            $term_obj = $term;
+        } else {
+            $term_id = absint($term);
+            if ($term_id <= 0) {
+                return '';
+            }
+            if ($taxonomy !== '') {
+                $term_obj = get_term($term_id, $taxonomy);
+            } else {
+                $term_obj = get_term($term_id);
+            }
+        }
+
+        if (!$term_obj || is_wp_error($term_obj)) {
+            return '';
+        }
+
+        $override = get_term_meta($term_obj->term_id, '_gm2_breadcrumb_title', true);
+        if (is_string($override)) {
+            $override = sanitize_text_field($override);
+            if ($override !== '') {
+                return $override;
+            }
+        }
+
+        return $term_obj->name;
+    }
+
+    /**
      * Generate an array of breadcrumb items for the current request.
      *
      * Each item in the array must contain `name` and `url` keys. The final
@@ -355,12 +420,12 @@ class Gm2_SEO_Public {
             $ancestors = array_reverse($ancestors);
             foreach ($ancestors as $ancestor) {
                 $breadcrumbs[] = [
-                    'name' => get_the_title($ancestor),
+                    'name' => $this->get_post_breadcrumb_name($ancestor),
                     'url'  => get_permalink($ancestor),
                 ];
             }
             $breadcrumbs[] = [
-                'name' => get_the_title($post),
+                'name' => $this->get_post_breadcrumb_name($post),
                 'url'  => get_permalink($post),
             ];
         } elseif (is_tax() || is_category() || is_tag()) {
@@ -373,7 +438,7 @@ class Gm2_SEO_Public {
                         $ancestor_link = get_term_link($ancestor);
                         if (!is_wp_error($ancestor_link)) {
                             $breadcrumbs[] = [
-                                'name' => $ancestor->name,
+                                'name' => $this->get_term_breadcrumb_name($ancestor),
                                 'url'  => $ancestor_link,
                             ];
                         }
@@ -382,7 +447,7 @@ class Gm2_SEO_Public {
                 $term_link = get_term_link($term);
                 if (!is_wp_error($term_link)) {
                     $breadcrumbs[] = [
-                        'name' => $term->name,
+                        'name' => $this->get_term_breadcrumb_name($term),
                         'url'  => $term_link,
                     ];
                 }

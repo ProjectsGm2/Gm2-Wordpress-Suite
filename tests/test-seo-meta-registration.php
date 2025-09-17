@@ -105,6 +105,7 @@ class Seo_Meta_Registration_Test extends WP_UnitTestCase {
             '_gm2_link_rel' => '{"https://example.com/":"nofollow<script>"}',
             '_aeseo_lcp_override' => 'https://example.com/override<script>',
             '_aeseo_lcp_disable' => 'no',
+            '_gm2_breadcrumb_title' => '  <b>Trail</b>  ',
         ]);
 
         $response = $this->server->dispatch($request);
@@ -115,6 +116,7 @@ class Seo_Meta_Registration_Test extends WP_UnitTestCase {
         $this->assertSame("Linealert('x')", get_post_meta($post_id, '_gm2_description', true));
         $this->assertSame('1', get_post_meta($post_id, '_gm2_noindex', true));
         $this->assertSame('9', get_post_meta($post_id, '_gm2_focus_keyword_limit', true));
+        $this->assertSame('Trail', get_post_meta($post_id, '_gm2_breadcrumb_title', true));
 
         $link_rel = get_post_meta($post_id, '_gm2_link_rel', true);
         $this->assertIsString($link_rel);
@@ -159,6 +161,7 @@ class Seo_Meta_Registration_Test extends WP_UnitTestCase {
             '_gm2_improve_readability' => 'yes',
             '_gm2_number_of_words' => '15 words',
             '_gm2_canonical' => 'https://example.com/category<script>',
+            '_gm2_breadcrumb_title' => ' <b>Category Trail</b> ',
         ]);
 
         $response = $this->server->dispatch($request);
@@ -172,6 +175,7 @@ class Seo_Meta_Registration_Test extends WP_UnitTestCase {
             esc_url_raw('https://example.com/category<script>'),
             get_term_meta($term_id, '_gm2_canonical', true)
         );
+        $this->assertSame('Category Trail', get_term_meta($term_id, '_gm2_breadcrumb_title', true));
 
         $update = new WP_REST_Request('POST', sprintf('/wp/v2/categories/%d', $term_id));
         $update->set_param('meta', [

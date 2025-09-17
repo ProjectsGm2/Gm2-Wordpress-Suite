@@ -2575,6 +2575,7 @@ class Gm2_SEO_Admin {
         $schema_type        = '';
         $schema_brand       = '';
         $schema_rating      = '';
+        $breadcrumb_title   = '';
         $taxonomy       = is_object($term) ? $term->taxonomy : (string) $term;
 
         if (is_object($term)) {
@@ -2595,6 +2596,7 @@ class Gm2_SEO_Admin {
             $schema_type    = get_term_meta($term->term_id, '_gm2_schema_type', true);
             $schema_brand   = get_term_meta($term->term_id, '_gm2_schema_brand', true);
             $schema_rating  = get_term_meta($term->term_id, '_gm2_schema_rating', true);
+            $breadcrumb_title = get_term_meta($term->term_id, '_gm2_breadcrumb_title', true);
         }
 
         if ($schema_type === '' && in_array($taxonomy, ['brand', 'product_brand'], true)) {
@@ -2648,6 +2650,8 @@ class Gm2_SEO_Admin {
         echo '<div id="gm2-seo-settings" class="gm2-tab-panel active" role="tabpanel">';
         echo '<p><label for="gm2_seo_title">' . esc_html__( 'SEO Title', 'gm2-wordpress-suite' ) . '</label>';
         echo '<input type="text" id="gm2_seo_title" name="gm2_seo_title" value="' . esc_attr($title) . '" placeholder="' . esc_attr__( 'Best Product Ever | My Brand', 'gm2-wordpress-suite' ) . '" class="widefat" /> <span class="dashicons dashicons-info" title="' . esc_attr__( 'Include main keyword and brand', 'gm2-wordpress-suite' ) . '"></span></p>';
+        echo '<p><label for="gm2_breadcrumb_title">' . esc_html__( 'Breadcrumb Title', 'gm2-wordpress-suite' ) . '</label>';
+        echo '<input type="text" id="gm2_breadcrumb_title" name="gm2_breadcrumb_title" value="' . esc_attr($breadcrumb_title) . '" placeholder="' . esc_attr__( 'Short label for breadcrumbs', 'gm2-wordpress-suite' ) . '" class="widefat" /></p>';
         echo '<p><label for="gm2_seo_description">' . esc_html__( 'SEO Description', 'gm2-wordpress-suite' ) . '</label>';
         echo '<textarea id="gm2_seo_description" name="gm2_seo_description" class="widefat" rows="3" placeholder="' . esc_attr__( 'One sentence summary shown in search results', 'gm2-wordpress-suite' ) . '">' . esc_textarea($description) . '</textarea> <span class="dashicons dashicons-info" title="' . esc_attr__( 'Keep under 160 characters', 'gm2-wordpress-suite' ) . '"></span></p>';
 
@@ -2777,6 +2781,7 @@ class Gm2_SEO_Admin {
             $post = get_post($post_id);
         }
         $title       = isset($_POST['gm2_seo_title']) ? sanitize_text_field($_POST['gm2_seo_title']) : '';
+        $breadcrumb_title = isset($_POST['gm2_breadcrumb_title']) ? sanitize_text_field(wp_unslash($_POST['gm2_breadcrumb_title'])) : '';
         $description = isset($_POST['gm2_seo_description']) ? sanitize_textarea_field($_POST['gm2_seo_description']) : '';
         if ($description === '' && $post) {
             $sanitized_content = wp_strip_all_tags($post->post_content);
@@ -2827,6 +2832,7 @@ class Gm2_SEO_Admin {
             }
         }
         update_post_meta($post_id, '_gm2_title', $title);
+        update_post_meta($post_id, '_gm2_breadcrumb_title', $breadcrumb_title);
         update_post_meta($post_id, '_gm2_description', $description);
         update_post_meta($post_id, '_gm2_noindex', $noindex);
         update_post_meta($post_id, '_gm2_nofollow', $nofollow);
@@ -2866,6 +2872,7 @@ class Gm2_SEO_Admin {
             return;
         }
         $title       = isset($_POST['gm2_seo_title']) ? sanitize_text_field($_POST['gm2_seo_title']) : '';
+        $breadcrumb_title = isset($_POST['gm2_breadcrumb_title']) ? sanitize_text_field(wp_unslash($_POST['gm2_breadcrumb_title'])) : '';
         $description = isset($_POST['gm2_seo_description']) ? sanitize_textarea_field($_POST['gm2_seo_description']) : '';
         $noindex     = isset($_POST['gm2_noindex']) ? '1' : '0';
         $nofollow    = isset($_POST['gm2_nofollow']) ? '1' : '0';
@@ -2913,6 +2920,7 @@ class Gm2_SEO_Admin {
             }
         }
         update_term_meta($term_id, '_gm2_title', $title);
+        update_term_meta($term_id, '_gm2_breadcrumb_title', $breadcrumb_title);
         update_term_meta($term_id, '_gm2_description', $description);
         update_term_meta($term_id, '_gm2_noindex', $noindex);
         update_term_meta($term_id, '_gm2_nofollow', $nofollow);
@@ -6016,6 +6024,7 @@ class Gm2_SEO_Admin {
                 continue;
             }
             delete_post_meta($post_id, '_gm2_title');
+            delete_post_meta($post_id, '_gm2_breadcrumb_title');
             delete_post_meta($post_id, '_gm2_description');
             delete_post_meta($post_id, '_gm2_prev_title');
             delete_post_meta($post_id, '_gm2_prev_description');
@@ -6298,6 +6307,7 @@ class Gm2_SEO_Admin {
                 continue;
             }
             delete_term_meta($term_id, '_gm2_title');
+            delete_term_meta($term_id, '_gm2_breadcrumb_title');
             delete_term_meta($term_id, '_gm2_description');
             delete_term_meta($term_id, '_gm2_prev_title');
             delete_term_meta($term_id, '_gm2_prev_description');
@@ -6708,6 +6718,7 @@ class Gm2_SEO_Admin {
             $schema_brand = $this->infer_brand_name($post->ID);
         }
         $schema_rating       = get_post_meta($post->ID, '_gm2_schema_rating', true);
+        $breadcrumb_title    = get_post_meta($post->ID, '_gm2_breadcrumb_title', true);
 
         if ($schema_type === '') {
             if ($post->post_type === 'product') {
@@ -6732,6 +6743,8 @@ class Gm2_SEO_Admin {
         echo '<div id="gm2-seo-settings" class="gm2-tab-panel active" role="tabpanel">';
         echo '<p><label for="gm2_seo_title">SEO Title</label>';
         echo '<input type="text" id="gm2_seo_title" name="gm2_seo_title" value="' . esc_attr($title) . '" placeholder="' . esc_attr__( 'Best Product Ever | My Brand', 'gm2-wordpress-suite' ) . '" class="widefat" /> <span class="dashicons dashicons-info" title="' . esc_attr__( 'Include main keyword and brand', 'gm2-wordpress-suite' ) . '"></span></p>';
+        echo '<p><label for="gm2_breadcrumb_title">' . esc_html__( 'Breadcrumb Title', 'gm2-wordpress-suite' ) . '</label>';
+        echo '<input type="text" id="gm2_breadcrumb_title" name="gm2_breadcrumb_title" value="' . esc_attr($breadcrumb_title) . '" placeholder="' . esc_attr__( 'Short label for breadcrumbs', 'gm2-wordpress-suite' ) . '" class="widefat" /></p>';
         echo '<p><label for="gm2_seo_description">SEO Description</label>';
         echo '<textarea id="gm2_seo_description" name="gm2_seo_description" class="widefat" rows="3" placeholder="' . esc_attr__( 'One sentence summary shown in search results', 'gm2-wordpress-suite' ) . '">' . esc_textarea($description) . '</textarea> <span class="dashicons dashicons-info" title="' . esc_attr__( 'Keep under 160 characters', 'gm2-wordpress-suite' ) . '"></span></p>';
 
