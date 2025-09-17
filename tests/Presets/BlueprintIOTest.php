@@ -87,6 +87,23 @@ class BlueprintIOTest extends WP_UnitTestCase {
 
         $export = \gm2_model_export('array');
         $this->assertIsArray($export);
+        $this->assertArrayHasKey('elementor_query_ids', $export);
+        $exportElementorKeys = [];
+        foreach ($export['elementor_query_ids'] as $entry) {
+            if (is_array($entry) && isset($entry['key'])) {
+                $exportElementorKeys[] = $entry['key'];
+            }
+        }
+        $this->assertContains('books_recent', $exportElementorKeys);
+
+        $this->assertArrayHasKey('seo_mappings', $export);
+        $exportSeoKeys = [];
+        foreach ($export['seo_mappings'] as $entry) {
+            if (is_array($entry) && isset($entry['key'])) {
+                $exportSeoKeys[] = $entry['key'];
+            }
+        }
+        $this->assertContains('book', $exportSeoKeys);
 
         delete_option('gm2_custom_posts_config');
         delete_option('gm2_field_groups');

@@ -9,8 +9,6 @@
     "fields",
     "relationships",
     "default_terms",
-    "elementor",
-    "seo",
     "templates"
   ],
   "properties": {
@@ -52,7 +50,6 @@
     },
     "elementor": {
       "type": "object",
-      "required": ["queries", "templates"],
       "properties": {
         "queries": {
           "type": "object",
@@ -65,9 +62,12 @@
       },
       "additionalProperties": false
     },
+    "elementor_query_ids": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/elementorQueryWithKey" }
+    },
     "seo": {
       "type": "object",
-      "required": ["mappings"],
       "properties": {
         "mappings": {
           "type": "object",
@@ -75,6 +75,10 @@
         }
       },
       "additionalProperties": true
+    },
+    "seo_mappings": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/schemaMappingWithKey" }
     },
     "schema_mappings": {
       "type": "object",
@@ -86,6 +90,21 @@
     }
   },
   "additionalProperties": true,
+  "allOf": [
+    {
+      "anyOf": [
+        { "required": ["elementor_query_ids"] },
+        { "required": ["elementor"] }
+      ]
+    },
+    {
+      "anyOf": [
+        { "required": ["seo_mappings"] },
+        { "required": ["seo"] },
+        { "required": ["schema_mappings"] }
+      ]
+    }
+  ],
   "definitions": {
     "postType": {
       "type": "object",
@@ -204,6 +223,18 @@
       },
       "additionalProperties": true
     },
+    "elementorQueryWithKey": {
+      "allOf": [
+        { "$ref": "#/definitions/elementorQuery" },
+        {
+          "type": "object",
+          "required": ["key"],
+          "properties": {
+            "key": { "type": "string" }
+          }
+        }
+      ]
+    },
     "elementorTemplate": {
       "type": "object",
       "properties": {
@@ -224,6 +255,18 @@
         }
       },
       "additionalProperties": false
+    },
+    "schemaMappingWithKey": {
+      "allOf": [
+        { "$ref": "#/definitions/schemaMapping" },
+        {
+          "type": "object",
+          "required": ["key"],
+          "properties": {
+            "key": { "type": "string" }
+          }
+        }
+      ]
     },
     "template": {
       "type": "object",

@@ -116,8 +116,27 @@ class Gm2_Blueprint_CLI extends \WP_CLI_Command {
             if ( is_array( $groups ) ) {
                 $merged['field_groups'] = array_merge( $merged['field_groups'], $groups );
             }
-            $maps = $data['schema_mappings'] ?? ( $data['seo']['mappings'] ?? [] );
-            if ( is_array( $maps ) ) {
+            $maps = [];
+            if ( ! empty( $data['schema_mappings'] ) && is_array( $data['schema_mappings'] ) ) {
+                $maps = $data['schema_mappings'];
+            } elseif ( ! empty( $data['seo_mappings'] ) && is_array( $data['seo_mappings'] ) ) {
+                foreach ( $data['seo_mappings'] as $mapping ) {
+                    if ( ! is_array( $mapping ) ) {
+                        continue;
+                    }
+                    $key = $mapping['key'] ?? null;
+                    if ( ! is_string( $key ) || $key === '' ) {
+                        continue;
+                    }
+                    $definition = $mapping;
+                    unset( $definition['key'] );
+                    $maps[ $key ] = $definition;
+                }
+            } elseif ( ! empty( $data['seo']['mappings'] ) && is_array( $data['seo']['mappings'] ) ) {
+                $maps = $data['seo']['mappings'];
+            }
+
+            if ( $maps ) {
                 $merged['schema_mappings'] = array_merge( $merged['schema_mappings'], $maps );
             }
         }

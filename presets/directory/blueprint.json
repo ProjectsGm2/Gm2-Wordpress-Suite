@@ -200,16 +200,17 @@
       }
     ]
   },
+  "elementor_query_ids": [
+    {
+      "key": "nearby",
+      "id": "gm2_directory_nearby",
+      "description": "Displays listings near visitor-supplied coordinates using stored latitude and longitude fields.",
+      "post_types": [
+        "listing"
+      ]
+    }
+  ],
   "elementor": {
-    "queries": {
-      "nearby": {
-        "id": "gm2_directory_nearby",
-        "description": "Displays listings near visitor-supplied coordinates using stored latitude and longitude fields.",
-        "post_types": [
-          "listing"
-        ]
-      }
-    },
     "templates": {
       "single_listing": {
         "type": "shortcode",
@@ -218,18 +219,17 @@
       }
     }
   },
-  "seo": {
-    "mappings": {
-      "listing": {
-        "type": "LocalBusiness",
-        "map": {
-          "telephone": "phone",
-          "address.streetAddress": "address",
-          "url": "website"
-        }
+  "seo_mappings": [
+    {
+      "key": "listing",
+      "type": "LocalBusiness",
+      "map": {
+        "telephone": "phone",
+        "address.streetAddress": "address",
+        "url": "website"
       }
     }
-  },
+  ],
   "templates": {
     "listing_single": {
       "post_type": "listing",

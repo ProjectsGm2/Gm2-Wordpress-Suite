@@ -68,13 +68,12 @@ class BlueprintIO
         $meta = self::getMeta();
         $relationships = array_values(array_map([self::class, 'deepConvert'], $meta['relationships'] ?? []));
         $templates = self::deepConvert($meta['templates'] ?? []);
-        $elementor = self::normalizeElementor($meta['elementor'] ?? []);
+        $elementorMeta      = self::normalizeElementor($meta['elementor'] ?? []);
+        $elementorQueries   = self::convertElementorQueriesToList($elementorMeta['queries'] ?? []);
+        $elementorTemplates = $elementorMeta['templates'] ?? [];
 
         $schemaMappings = self::getOptionArray(self::OPTION_SCHEMA_MAP);
-
-        $seo = [
-            'mappings' => $schemaMappings,
-        ];
+        $seoMappings   = self::convertSchemaMappingsToList($schemaMappings);
 
         return [
             'post_types'      => $postTypes,
@@ -85,8 +84,15 @@ class BlueprintIO
             ],
             'relationships'   => $relationships,
             'default_terms'   => $defaultTerms,
-            'elementor'       => $elementor,
-            'seo'             => $seo,
+            'elementor_query_ids' => $elementorQueries,
+            'elementor'       => [
+                'queries'   => $elementorMeta['queries'] ?? [],
+                'templates' => $elementorTemplates,
+            ],
+            'seo_mappings'   => $seoMappings,
+            'seo'             => [
+                'mappings' => $schemaMappings,
+            ],
             'templates'       => $templates,
             'schema_mappings' => $schemaMappings,
         ];
@@ -110,10 +116,12 @@ class BlueprintIO
             ],
             'relationships'   => [],
             'default_terms'   => [],
+            'elementor_query_ids' => [],
             'elementor'       => [
                 'queries'   => [],
                 'templates' => [],
             ],
+            'seo_mappings'   => [],
             'seo'             => [
                 'mappings' => [],
             ],
@@ -146,7 +154,11 @@ class BlueprintIO
         $meta = self::getMeta();
         $meta['relationships'] = array_values(array_map([self::class, 'deepConvert'], $data['relationships'] ?? []));
         $meta['templates'] = self::deepConvert($data['templates'] ?? []);
-        $meta['elementor'] = self::normalizeElementor($data['elementor'] ?? []);
+        $elementorBlueprint = [
+            'queries'   => self::resolveElementorQueriesFromData($data),
+            'templates' => self::extractElementorTemplatesFromData($data),
+        ];
+        $meta['elementor'] = self::normalizeElementor($elementorBlueprint);
         update_option(self::OPTION_META, $meta);
 
         return true;
@@ -495,10 +507,150 @@ class BlueprintIO
         if (!empty($data['schema_mappings']) && is_array($data['schema_mappings'])) {
             return self::deepConvert($data['schema_mappings']);
         }
+        $fromList = self::seoMappingListToMap($data['seo_mappings'] ?? []);
+        if ($fromList !== []) {
+            return $fromList;
+        }
         if (!empty($data['seo']['mappings']) && is_array($data['seo']['mappings'])) {
             return self::deepConvert($data['seo']['mappings']);
         }
         return [];
+    }
+
+    /**
+     * Convert stored Elementor query map into a list with keys for blueprints.
+     *
+     * @param array<string, array> $queries
+     * @return array<int, array<string, mixed>>
+     */
+    private static function convertElementorQueriesToList(array $queries): array
+    {
+        $result = [];
+        foreach ($queries as $key => $definition) {
+            if (!is_string($key) || $key === '' || !is_array($definition)) {
+                continue;
+            }
+            $item = self::deepConvert($definition);
+            $item['key'] = $key;
+            $result[] = $item;
+        }
+        return $result;
+    }
+
+    /**
+     * Convert stored schema mappings into a list with keys for blueprints.
+     *
+     * @param array<string, array> $mappings
+     * @return array<int, array<string, mixed>>
+     */
+    private static function convertSchemaMappingsToList(array $mappings): array
+    {
+        $result = [];
+        foreach ($mappings as $key => $definition) {
+            if (!is_string($key) || $key === '' || !is_array($definition)) {
+                continue;
+            }
+            $item = self::deepConvert($definition);
+            $item['key'] = $key;
+            $result[] = $item;
+        }
+        return $result;
+    }
+
+    /**
+     * Resolve Elementor query definitions from blueprint data.
+     *
+     * @param array<string, mixed> $data
+     * @return array<string, array>
+     */
+    private static function resolveElementorQueriesFromData(array $data): array
+    {
+        $queries = self::elementorQueryListToMap($data['elementor_query_ids'] ?? []);
+
+        if (!empty($data['elementor']['queries']) && is_array($data['elementor']['queries'])) {
+            foreach ($data['elementor']['queries'] as $key => $definition) {
+                if (!is_string($key) || $key === '' || !is_array($definition)) {
+                    continue;
+                }
+                if (!isset($queries[$key])) {
+                    $queries[$key] = self::deepConvert($definition);
+                }
+            }
+        }
+
+        return $queries;
+    }
+
+    /**
+     * Extract Elementor templates from blueprint data.
+     *
+     * @param array<string, mixed> $data
+     * @return array<string, array>
+     */
+    private static function extractElementorTemplatesFromData(array $data): array
+    {
+        if (!empty($data['elementor']['templates']) && is_array($data['elementor']['templates'])) {
+            return self::deepConvert($data['elementor']['templates']);
+        }
+        return [];
+    }
+
+    /**
+     * Convert an Elementor query list into a keyed map.
+     *
+     * @param mixed $value
+     * @return array<string, array>
+     */
+    private static function elementorQueryListToMap(mixed $value): array
+    {
+        if (!is_array($value)) {
+            return [];
+        }
+
+        $result = [];
+        foreach ($value as $entry) {
+            if (!is_array($entry)) {
+                continue;
+            }
+            $key = $entry['key'] ?? ($entry['id'] ?? null);
+            if (!is_string($key) || $key === '') {
+                continue;
+            }
+            $definition = self::deepConvert($entry);
+            unset($definition['key']);
+            $result[$key] = $definition;
+        }
+
+        return $result;
+    }
+
+    /**
+     * Convert SEO mapping list entries into a keyed map.
+     *
+     * @param mixed $value
+     * @return array<string, array>
+     */
+    private static function seoMappingListToMap(mixed $value): array
+    {
+        if (!is_array($value)) {
+            return [];
+        }
+
+        $result = [];
+        foreach ($value as $entry) {
+            if (!is_array($entry)) {
+                continue;
+            }
+            $key = $entry['key'] ?? null;
+            if (!is_string($key) || $key === '') {
+                continue;
+            }
+            $definition = self::deepConvert($entry);
+            unset($definition['key']);
+            $result[$key] = $definition;
+        }
+
+        return $result;
     }
 
     /**

@@ -174,16 +174,17 @@
       }
     ]
   },
+  "elementor_query_ids": [
+    {
+      "key": "active_courses",
+      "id": "gm2_courses_active",
+      "description": "Published courses flagged as active.",
+      "post_types": [
+        "course"
+      ]
+    }
+  ],
   "elementor": {
-    "queries": {
-      "active_courses": {
-        "id": "gm2_courses_active",
-        "description": "Published courses flagged as active.",
-        "post_types": [
-          "course"
-        ]
-      }
-    },
     "templates": {
       "single_course": {
         "type": "shortcode",
@@ -192,18 +193,17 @@
       }
     }
   },
-  "seo": {
-    "mappings": {
-      "course": {
-        "type": "Course",
-        "map": {
-          "provider": "provider",
-          "courseCode": "course_code",
-          "url": "course_url"
-        }
+  "seo_mappings": [
+    {
+      "key": "course",
+      "type": "Course",
+      "map": {
+        "provider": "provider",
+        "courseCode": "course_code",
+        "url": "course_url"
       }
     }
-  },
+  ],
   "templates": {
     "course_single": {
       "post_type": "course",
