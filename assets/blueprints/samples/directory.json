@@ -107,6 +107,13 @@
         "post_types": [
           "listing"
         ]
+      },
+      "by_category": {
+        "id": "gm2_directory_by_category",
+        "description": "Displays listings assigned to specific listing_category slugs supplied via gm2_listing_category or gm2_directory_category query vars.",
+        "post_types": [
+          "listing"
+        ]
       }
     },
     "templates": {

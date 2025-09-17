@@ -34,3 +34,8 @@
 ## Elementor Notes
 
 The template encourages pairing native blocks with Elementor by leaving `[elementor-template id=""]` in place. Replace the blank ID with a saved Elementor template to render a richer hero while the locked group preserves consistent structure across listings.
+
+## Elementor Query Presets
+
+- `gm2_directory_nearby` keeps the listing archive focused on locations near visitor-provided coordinates and respects optional keyword searches via `gm2_directory_search` or `gm2_search` query vars.【F:presets/directory/blueprint.json†L546-L554】【F:src/Elementor/Query/Filters.php†L145-L174】
+- `gm2_directory_by_category` loads listings from specific `listing_category` slugs passed in `gm2_listing_category`, `gm2_directory_category`, or Elementor's native `listing_category` query arguments while maintaining the alphabetical default order.【F:presets/directory/blueprint.json†L555-L566】【F:src/Elementor/Query/Filters.php†L181-L212】
