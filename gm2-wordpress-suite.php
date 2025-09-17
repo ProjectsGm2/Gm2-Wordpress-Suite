@@ -92,6 +92,7 @@ require_once GM2_PLUGIN_DIR . 'includes/gm2-open-in-code.php';
 require_once GM2_PLUGIN_DIR . 'includes/gm2-field-renderers.php';
 require_once GM2_PLUGIN_DIR . 'includes/elementor/class-gm2-field-key-control.php';
 require_once GM2_PLUGIN_DIR . 'src/Elementor/bootstrap.php';
+require_once GM2_PLUGIN_DIR . 'src/SEO/bootstrap.php';
 require_once GM2_PLUGIN_DIR . 'integrations/elementor/class-gm2-cp-elementor-tags.php';
 require_once GM2_PLUGIN_DIR . 'integrations/elementor/class-gm2-cp-elementor-query.php';
 require_once GM2_PLUGIN_DIR . 'includes/gm2-schema-tooltips.php';
