@@ -18,7 +18,6 @@
     "description": { "type": "string" },
     "post_types": {
       "type": "object",
-      "minProperties": 1,
       "additionalProperties": { "$ref": "#/definitions/postType" }
     },
     "taxonomies": {
