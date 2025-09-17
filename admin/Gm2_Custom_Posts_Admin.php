@@ -1621,10 +1621,23 @@ class Gm2_Custom_Posts_Admin {
                     'taxonomies' => $taxes,
                 ];
             }
+            $presetManager = apply_filters('gm2/presets/manager', null);
+            $presetOptions = [];
+            if ($presetManager instanceof \Gm2\Presets\PresetManager) {
+                foreach ($presetManager->getList() as $slug => $meta) {
+                    $presetOptions[] = [
+                        'value'       => $slug,
+                        'label'       => $meta['label'] ?? $slug,
+                        'description' => $meta['description'] ?? '',
+                    ];
+                }
+            }
             wp_localize_script('gm2-cpt-wizard', 'gm2CPTWizard', [
-                'nonce'  => wp_create_nonce('gm2_save_cpt_model'),
-                'ajax'   => admin_url('admin-ajax.php'),
-                'models' => $models,
+                'nonce'       => wp_create_nonce('gm2_save_cpt_model'),
+                'ajax'        => admin_url('admin-ajax.php'),
+                'models'      => $models,
+                'presets'     => $presetOptions,
+                'importNonce' => wp_create_nonce('gm2_import_preset'),
             ]);
             $css = GM2_PLUGIN_DIR . 'admin/css/gm2-cpt-wizard.css';
             wp_enqueue_style(
@@ -2087,21 +2100,41 @@ class Gm2_Custom_Posts_Admin {
                 'message' => __( 'Security check failed. Please refresh and try again.', 'gm2-wordpress-suite' ),
             ]);
         }
-        $file = sanitize_file_name($_POST['file'] ?? '');
-        if (!$file) {
+        $raw  = isset($_POST['preset']) ? $_POST['preset'] : ($_POST['file'] ?? '');
+        $slug = sanitize_key(str_replace('.json', '', (string) $raw));
+        if (!$slug) {
             wp_send_json_error([
                 'code'    => 'file',
                 'message' => __( 'No preset selected.', 'gm2-wordpress-suite' ),
             ]);
         }
-        $path = GM2_PLUGIN_DIR . 'assets/blueprints/presets/' . $file;
-        if (!file_exists($path)) {
-            wp_send_json_error([
-                'code'    => 'missing',
-                'message' => __( 'Preset not found.', 'gm2-wordpress-suite' ),
-            ]);
+        $blueprint = null;
+        $manager   = apply_filters('gm2/presets/manager', null);
+        if ($manager instanceof \Gm2\Presets\PresetManager) {
+            $blueprint = $manager->get($slug);
         }
-        $json = file_get_contents($path);
+        if ($blueprint !== null) {
+            $json = wp_json_encode($blueprint);
+        } else {
+            $path = GM2_PLUGIN_DIR . 'presets/' . $slug . '/blueprint.json';
+            if (!file_exists($path)) {
+                wp_send_json_error([
+                    'code'    => 'missing',
+                    'message' => __( 'Preset not found.', 'gm2-wordpress-suite' ),
+                ]);
+            }
+            $json = file_get_contents($path);
+            if ($json === false) {
+                wp_send_json_error([
+                    'code'    => 'missing',
+                    'message' => __( 'Preset not found.', 'gm2-wordpress-suite' ),
+                ]);
+            }
+            $decoded = json_decode($json, true);
+            if (is_array($decoded)) {
+                $blueprint = $decoded;
+            }
+        }
         $result = \gm2_model_import($json);
         if (is_wp_error($result)) {
             wp_send_json_error([
@@ -2109,7 +2142,10 @@ class Gm2_Custom_Posts_Admin {
                 'message' => $result->get_error_message(),
             ]);
         }
-        wp_send_json_success();
+        wp_send_json_success([
+            'blueprint' => $blueprint,
+            'message'   => __( 'Preset imported.', 'gm2-wordpress-suite' ),
+        ]);
     }
 
     public function ajax_save_field_group() {

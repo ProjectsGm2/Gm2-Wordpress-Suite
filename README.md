@@ -65,7 +65,8 @@ wp gm2 blueprint export blueprint.json
 wp gm2 blueprint import assets/blueprints/samples/directory.json assets/blueprints/samples/events.json
 ```
 
-Imports are validated against `assets/blueprints/schema.json` and sample blueprints live in `assets/blueprints/samples/`.
+Imports are validated against `presets/schema.json` and sample blueprints live in `assets/blueprints/samples/`.
+Bundled presets ship under `presets/{preset}/blueprint.json`.
 
 Detailed reference sheets for the bundled presets are available in [docs/presets/](docs/presets/):
 

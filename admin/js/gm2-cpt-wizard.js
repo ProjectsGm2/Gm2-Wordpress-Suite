@@ -116,7 +116,7 @@
             const payload = new URLSearchParams();
             payload.append('action', 'gm2_import_preset');
             payload.append('nonce', nonce);
-            payload.append('file', selectedPreset);
+            payload.append('preset', selectedPreset);
             setImportingPreset(true);
             fetch(window.gm2CPTWizard.ajax, {
                 method: 'POST',

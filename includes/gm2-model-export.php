@@ -28,6 +28,12 @@ if (!function_exists('gm2_model_export')) {
             'taxonomies'      => $config['taxonomies'] ?? [],
             'field_groups'    => $field_groups,
             'schema_mappings' => $schema_maps,
+            'fields'          => [
+                'groups' => $field_groups,
+            ],
+            'seo'             => [
+                'mappings' => $schema_maps,
+            ],
         ];
         switch ($format) {
             case 'array':
@@ -53,7 +59,10 @@ if (!function_exists('gm2_validate_blueprint')) {
      * @return true|WP_Error
      */
     function gm2_validate_blueprint(array $data) {
-        $schema_file = GM2_PLUGIN_DIR . 'assets/blueprints/schema.json';
+        $schema_file = GM2_PLUGIN_DIR . 'presets/schema.json';
+        if (!file_exists($schema_file)) {
+            $schema_file = GM2_PLUGIN_DIR . 'assets/blueprints/schema.json';
+        }
         if (!file_exists($schema_file)) {
             return new \WP_Error('schema_missing', __('Blueprint schema not found.', 'gm2-wordpress-suite'));
         }
@@ -103,8 +112,16 @@ if (!function_exists('gm2_model_import')) {
             'taxonomies' => $data['taxonomies'] ?? [],
         ];
         update_option('gm2_custom_posts_config', $config);
-        update_option('gm2_field_groups', $data['field_groups'] ?? []);
-        update_option('gm2_cp_schema_map', $data['schema_mappings'] ?? []);
+        $field_groups = $data['field_groups'] ?? [];
+        if (!$field_groups && isset($data['fields']['groups'])) {
+            $field_groups = $data['fields']['groups'];
+        }
+        $schema_mappings = $data['schema_mappings'] ?? [];
+        if (!$schema_mappings && isset($data['seo']['mappings'])) {
+            $schema_mappings = $data['seo']['mappings'];
+        }
+        update_option('gm2_field_groups', is_array($field_groups) ? $field_groups : []);
+        update_option('gm2_cp_schema_map', is_array($schema_mappings) ? $schema_mappings : []);
         return true;
     }
 }

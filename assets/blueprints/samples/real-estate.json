@@ -3,14 +3,33 @@
     "property": {
       "label": "Property",
       "public": true,
-      "supports": ["title", "editor", "thumbnail"]
+      "supports": [
+        "title",
+        "editor",
+        "thumbnail"
+      ]
     }
   },
   "taxonomies": {
     "property_type": {
-      "object_type": ["property"],
+      "object_type": [
+        "property"
+      ],
       "label": "Property Types",
       "hierarchical": true
+    },
+    "property_status": {
+      "object_type": [
+        "property"
+      ],
+      "labels": {
+        "name": "Property Statuses",
+        "singular_name": "Property Status"
+      },
+      "hierarchical": false,
+      "rewrite": {
+        "slug": "property-status"
+      }
     }
   },
   "field_groups": [
@@ -18,8 +37,18 @@
       "key": "group_property_details",
       "title": "Property Details",
       "fields": [
-        {"key": "field_price", "label": "Price", "name": "price", "type": "number"},
-        {"key": "field_address", "label": "Address", "name": "address", "type": "text"}
+        {
+          "key": "field_price",
+          "label": "Price",
+          "name": "price",
+          "type": "number"
+        },
+        {
+          "key": "field_address",
+          "label": "Address",
+          "name": "address",
+          "type": "text"
+        }
       ]
     }
   ],
@@ -31,5 +60,92 @@
         "address": "address"
       }
     }
-  }
+  },
+  "label": "Real Estate",
+  "description": "Property listings with pricing metadata, taxonomy filtering, and Elementor hero placeholder.",
+  "fields": {
+    "groups": [
+      {
+        "key": "group_property_details",
+        "title": "Property Details",
+        "fields": [
+          {
+            "key": "field_price",
+            "label": "Price",
+            "name": "price",
+            "type": "number"
+          },
+          {
+            "key": "field_address",
+            "label": "Address",
+            "name": "address",
+            "type": "text"
+          }
+        ]
+      }
+    ]
+  },
+  "relationships": [],
+  "default_terms": {
+    "property_type": [
+      {
+        "name": "Apartment",
+        "slug": "apartment"
+      },
+      {
+        "name": "Commercial",
+        "slug": "commercial"
+      }
+    ],
+    "property_status": [
+      {
+        "name": "For Sale",
+        "slug": "for-sale"
+      },
+      {
+        "name": "For Rent",
+        "slug": "for-rent"
+      }
+    ]
+  },
+  "elementor": {
+    "queries": {
+      "for_sale": {
+        "id": "gm2_properties_sale",
+        "description": "Filters properties assigned to the \"for-sale\" status term.",
+        "post_types": [
+          "property"
+        ],
+        "taxonomy": "property_status",
+        "term": "for-sale"
+      },
+      "for_rent": {
+        "id": "gm2_properties_rent",
+        "description": "Filters properties assigned to the \"for-rent\" status term.",
+        "post_types": [
+          "property"
+        ],
+        "taxonomy": "property_status",
+        "term": "for-rent"
+      }
+    },
+    "templates": {
+      "single_property": {
+        "type": "shortcode",
+        "description": "Replace the shortcode with a gallery-centric Elementor template ID."
+      }
+    }
+  },
+  "seo": {
+    "mappings": {
+      "property": {
+        "type": "RealEstateListing",
+        "map": {
+          "price": "price",
+          "address": "address"
+        }
+      }
+    }
+  },
+  "templates": {}
 }

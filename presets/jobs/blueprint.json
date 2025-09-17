@@ -1,0 +1,263 @@
+{
+  "post_types": {
+    "job": {
+      "labels": {
+        "name": "Jobs",
+        "singular_name": "Job"
+      },
+      "supports": [
+        "title",
+        "editor"
+      ],
+      "has_archive": true,
+      "rewrite": {
+        "slug": "jobs"
+      },
+      "menu_icon": "dashicons-businessperson",
+      "template": [
+        [
+          "core/group",
+          {
+            "metadata": {
+              "name": "Job Layout"
+            },
+            "layout": {
+              "type": "constrained"
+            }
+          },
+          [
+            [
+              "core/heading",
+              {
+                "level": 2,
+                "placeholder": "Role headline or strapline"
+              }
+            ],
+            [
+              "core/paragraph",
+              {
+                "placeholder": "Outline the opportunity or jump into Elementor for a richer layout."
+              }
+            ],
+            [
+              "core/shortcode",
+              {
+                "text": "[elementor-template id=\"\"]"
+              }
+            ]
+          ]
+        ]
+      ],
+      "template_lock": "insert",
+      "seo": {
+        "meta_title": "{{title}} \u2013 Job Opportunity",
+        "meta_description": "{{description}}",
+        "canonical": "{{permalink}}",
+        "open_graph": {
+          "title": "{{title}}",
+          "description": "{{description}}",
+          "image": "{{image}}"
+        },
+        "twitter": {
+          "card": "summary_large_image",
+          "title": "{{title}}",
+          "description": "{{description}}",
+          "image": "{{image}}"
+        }
+      }
+    }
+  },
+  "taxonomies": {
+    "job_category": {
+      "object_type": [
+        "job"
+      ],
+      "labels": {
+        "name": "Job Categories",
+        "singular_name": "Job Category"
+      },
+      "hierarchical": false,
+      "rewrite": {
+        "slug": "job-category"
+      }
+    }
+  },
+  "field_groups": [
+    {
+      "key": "group_job_details",
+      "title": "Job Details",
+      "fields": [
+        {
+          "key": "field_date_posted",
+          "label": "Date Posted",
+          "name": "date_posted",
+          "type": "date",
+          "required": true,
+          "expose_in_rest": true
+        },
+        {
+          "key": "field_employment_type",
+          "label": "Employment Type",
+          "name": "employment_type",
+          "type": "text",
+          "required": true,
+          "expose_in_rest": true
+        },
+        {
+          "key": "field_company",
+          "label": "Company",
+          "name": "company",
+          "type": "text",
+          "required": true,
+          "expose_in_rest": true
+        },
+        {
+          "key": "field_apply_url",
+          "label": "Apply URL",
+          "name": "apply_url",
+          "type": "url",
+          "expose_in_rest": true
+        }
+      ]
+    }
+  ],
+  "schema_mappings": {
+    "job": {
+      "type": "JobPosting",
+      "map": {
+        "datePosted": "date_posted",
+        "employmentType": "employment_type",
+        "hiringOrganization": "company",
+        "url": "apply_url"
+      }
+    }
+  },
+  "label": "Job Board",
+  "description": "Job listings with schema mapping, default categories, and Elementor hero support.",
+  "fields": {
+    "groups": [
+      {
+        "key": "group_job_details",
+        "title": "Job Details",
+        "fields": [
+          {
+            "key": "field_date_posted",
+            "label": "Date Posted",
+            "name": "date_posted",
+            "type": "date",
+            "required": true,
+            "expose_in_rest": true
+          },
+          {
+            "key": "field_employment_type",
+            "label": "Employment Type",
+            "name": "employment_type",
+            "type": "text",
+            "required": true,
+            "expose_in_rest": true
+          },
+          {
+            "key": "field_company",
+            "label": "Company",
+            "name": "company",
+            "type": "text",
+            "required": true,
+            "expose_in_rest": true
+          },
+          {
+            "key": "field_apply_url",
+            "label": "Apply URL",
+            "name": "apply_url",
+            "type": "url",
+            "expose_in_rest": true
+          }
+        ]
+      }
+    ]
+  },
+  "relationships": [],
+  "default_terms": {
+    "job_category": [
+      {
+        "name": "Full Time",
+        "slug": "full-time"
+      },
+      {
+        "name": "Part Time",
+        "slug": "part-time"
+      }
+    ]
+  },
+  "elementor": {
+    "queries": {
+      "open_positions": {
+        "id": "gm2_open_jobs",
+        "description": "Published job posts flagged as open.",
+        "post_types": [
+          "job"
+        ]
+      }
+    },
+    "templates": {
+      "single_job": {
+        "type": "shortcode",
+        "description": "Use a saved Elementor template ID in the shortcode for a tailored hero."
+      }
+    }
+  },
+  "seo": {
+    "mappings": {
+      "job": {
+        "type": "JobPosting",
+        "map": {
+          "datePosted": "date_posted",
+          "employmentType": "employment_type",
+          "hiringOrganization": "company",
+          "url": "apply_url"
+        }
+      }
+    }
+  },
+  "templates": {
+    "job_single": {
+      "post_type": "job",
+      "lock": "insert",
+      "blocks": [
+        [
+          "core/group",
+          {
+            "metadata": {
+              "name": "Job Layout"
+            },
+            "layout": {
+              "type": "constrained"
+            }
+          },
+          [
+            [
+              "core/heading",
+              {
+                "level": 2,
+                "placeholder": "Role headline or strapline"
+              }
+            ],
+            [
+              "core/paragraph",
+              {
+                "placeholder": "Outline the opportunity or jump into Elementor for a richer layout."
+              }
+            ],
+            [
+              "core/shortcode",
+              {
+                "text": "[elementor-template id=\"\"]"
+              }
+            ]
+          ]
+        ]
+      ],
+      "description": "Starter layout highlights the role summary and invites Elementor customization.",
+      "elementor_placeholder": "[elementor-template id=\"\"]"
+    }
+  }
+}

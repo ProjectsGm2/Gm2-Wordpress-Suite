@@ -1,0 +1,284 @@
+{
+  "post_types": {
+    "property": {
+      "labels": {
+        "name": "Properties",
+        "singular_name": "Property"
+      },
+      "supports": [
+        "title",
+        "editor",
+        "thumbnail"
+      ],
+      "has_archive": true,
+      "rewrite": {
+        "slug": "properties"
+      },
+      "menu_icon": "dashicons-admin-home",
+      "template": [
+        [
+          "core/group",
+          {
+            "metadata": {
+              "name": "Property Layout"
+            },
+            "layout": {
+              "type": "constrained"
+            }
+          },
+          [
+            [
+              "core/heading",
+              {
+                "level": 2,
+                "placeholder": "Property highlight or strapline"
+              }
+            ],
+            [
+              "core/paragraph",
+              {
+                "placeholder": "Showcase the property or open Elementor to craft a custom hero."
+              }
+            ],
+            [
+              "core/shortcode",
+              {
+                "text": "[elementor-template id=\"\"]"
+              }
+            ]
+          ]
+        ]
+      ],
+      "template_lock": "insert",
+      "seo": {
+        "meta_title": "{{title}} \u2013 Property Listing",
+        "meta_description": "{{description}}",
+        "canonical": "{{permalink}}",
+        "open_graph": {
+          "title": "{{title}}",
+          "description": "{{description}}",
+          "image": "{{image}}"
+        },
+        "twitter": {
+          "card": "summary_large_image",
+          "title": "{{title}}",
+          "description": "{{description}}",
+          "image": "{{image}}"
+        }
+      }
+    }
+  },
+  "taxonomies": {
+    "property_type": {
+      "object_type": [
+        "property"
+      ],
+      "labels": {
+        "name": "Property Types",
+        "singular_name": "Property Type"
+      },
+      "hierarchical": true,
+      "rewrite": {
+        "slug": "property-type"
+      }
+    },
+    "property_status": {
+      "object_type": [
+        "property"
+      ],
+      "labels": {
+        "name": "Property Statuses",
+        "singular_name": "Property Status"
+      },
+      "hierarchical": false,
+      "rewrite": {
+        "slug": "property-status"
+      }
+    }
+  },
+  "field_groups": [
+    {
+      "key": "group_property_details",
+      "title": "Property Details",
+      "fields": [
+        {
+          "key": "field_price",
+          "label": "Price",
+          "name": "price",
+          "type": "number",
+          "min": 0,
+          "required": true,
+          "expose_in_rest": true
+        },
+        {
+          "key": "field_address",
+          "label": "Address",
+          "name": "address",
+          "type": "text",
+          "required": true,
+          "expose_in_rest": true
+        },
+        {
+          "key": "field_bedrooms",
+          "label": "Bedrooms",
+          "name": "bedrooms",
+          "type": "number",
+          "min": 0,
+          "expose_in_rest": true
+        }
+      ]
+    }
+  ],
+  "schema_mappings": {
+    "property": {
+      "type": "RealEstateListing",
+      "map": {
+        "price": "price",
+        "address.streetAddress": "address",
+        "numberOfRooms": "bedrooms"
+      }
+    }
+  },
+  "label": "Real Estate",
+  "description": "Property listings with pricing metadata, taxonomy filtering, and Elementor hero placeholder.",
+  "fields": {
+    "groups": [
+      {
+        "key": "group_property_details",
+        "title": "Property Details",
+        "fields": [
+          {
+            "key": "field_price",
+            "label": "Price",
+            "name": "price",
+            "type": "number",
+            "min": 0,
+            "required": true,
+            "expose_in_rest": true
+          },
+          {
+            "key": "field_address",
+            "label": "Address",
+            "name": "address",
+            "type": "text",
+            "required": true,
+            "expose_in_rest": true
+          },
+          {
+            "key": "field_bedrooms",
+            "label": "Bedrooms",
+            "name": "bedrooms",
+            "type": "number",
+            "min": 0,
+            "expose_in_rest": true
+          }
+        ]
+      }
+    ]
+  },
+  "relationships": [],
+  "default_terms": {
+    "property_type": [
+      {
+        "name": "Apartment",
+        "slug": "apartment"
+      },
+      {
+        "name": "Commercial",
+        "slug": "commercial"
+      }
+    ],
+    "property_status": [
+      {
+        "name": "For Sale",
+        "slug": "for-sale"
+      },
+      {
+        "name": "For Rent",
+        "slug": "for-rent"
+      }
+    ]
+  },
+  "elementor": {
+    "queries": {
+      "for_sale": {
+        "id": "gm2_properties_sale",
+        "description": "Filters properties assigned to the \"for-sale\" status term.",
+        "post_types": [
+          "property"
+        ],
+        "taxonomy": "property_status",
+        "term": "for-sale"
+      },
+      "for_rent": {
+        "id": "gm2_properties_rent",
+        "description": "Filters properties assigned to the \"for-rent\" status term.",
+        "post_types": [
+          "property"
+        ],
+        "taxonomy": "property_status",
+        "term": "for-rent"
+      }
+    },
+    "templates": {
+      "single_property": {
+        "type": "shortcode",
+        "description": "Replace the shortcode with a gallery-centric Elementor template ID."
+      }
+    }
+  },
+  "seo": {
+    "mappings": {
+      "property": {
+        "type": "RealEstateListing",
+        "map": {
+          "price": "price",
+          "address.streetAddress": "address",
+          "numberOfRooms": "bedrooms"
+        }
+      }
+    }
+  },
+  "templates": {
+    "property_single": {
+      "post_type": "property",
+      "lock": "insert",
+      "blocks": [
+        [
+          "core/group",
+          {
+            "metadata": {
+              "name": "Property Layout"
+            },
+            "layout": {
+              "type": "constrained"
+            }
+          },
+          [
+            [
+              "core/heading",
+              {
+                "level": 2,
+                "placeholder": "Property highlight or strapline"
+              }
+            ],
+            [
+              "core/paragraph",
+              {
+                "placeholder": "Showcase the property or open Elementor to craft a custom hero."
+              }
+            ],
+            [
+              "core/shortcode",
+              {
+                "text": "[elementor-template id=\"\"]"
+              }
+            ]
+          ]
+        ]
+      ],
+      "description": "Locked property layout keeps core elements consistent while allowing Elementor overrides.",
+      "elementor_placeholder": "[elementor-template id=\"\"]"
+    }
+  }
+}

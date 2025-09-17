@@ -47,7 +47,7 @@ Export and import custom post types, taxonomies and field groups as JSON files. 
 
 `wp gm2 blueprint import <file> [<file>...]`
 
-Blueprints validate against `assets/blueprints/schema.json`. Sample files are provided under `assets/blueprints/samples/`.
+Blueprints validate against `presets/schema.json`. Sample files are provided under `assets/blueprints/samples/` and bundled presets live under `presets/{preset}/blueprint.json`.
 
 == Third-Party Script Optimization ==
 * Audit UI lists detected third-party scripts and lets you enable, disable, or lazy-load them.

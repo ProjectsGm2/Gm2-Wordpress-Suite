@@ -3,12 +3,19 @@
     "event": {
       "label": "Event",
       "public": true,
-      "supports": ["title", "editor", "thumbnail", "excerpt"]
+      "supports": [
+        "title",
+        "editor",
+        "thumbnail",
+        "excerpt"
+      ]
     }
   },
   "taxonomies": {
     "event_type": {
-      "object_type": ["event"],
+      "object_type": [
+        "event"
+      ],
       "label": "Event Types",
       "hierarchical": false
     }
@@ -18,9 +25,24 @@
       "key": "group_event_details",
       "title": "Event Details",
       "fields": [
-        {"key": "field_start", "label": "Start Date", "name": "start_date", "type": "date"},
-        {"key": "field_end", "label": "End Date", "name": "end_date", "type": "date"},
-        {"key": "field_location", "label": "Location", "name": "location", "type": "text"}
+        {
+          "key": "field_start",
+          "label": "Start Date",
+          "name": "start_date",
+          "type": "date"
+        },
+        {
+          "key": "field_end",
+          "label": "End Date",
+          "name": "end_date",
+          "type": "date"
+        },
+        {
+          "key": "field_location",
+          "label": "Location",
+          "name": "location",
+          "type": "text"
+        }
       ]
     }
   ],
@@ -33,5 +55,85 @@
         "location": "location"
       }
     }
-  }
+  },
+  "label": "Events Calendar",
+  "description": "Event schedule with structured data and Elementor-ready hero.",
+  "fields": {
+    "groups": [
+      {
+        "key": "group_event_details",
+        "title": "Event Details",
+        "fields": [
+          {
+            "key": "field_start",
+            "label": "Start Date",
+            "name": "start_date",
+            "type": "date"
+          },
+          {
+            "key": "field_end",
+            "label": "End Date",
+            "name": "end_date",
+            "type": "date"
+          },
+          {
+            "key": "field_location",
+            "label": "Location",
+            "name": "location",
+            "type": "text"
+          }
+        ]
+      }
+    ]
+  },
+  "relationships": [],
+  "default_terms": {
+    "event_type": [
+      {
+        "name": "Workshop",
+        "slug": "workshop"
+      },
+      {
+        "name": "Webinar",
+        "slug": "webinar"
+      }
+    ]
+  },
+  "elementor": {
+    "queries": {
+      "upcoming": {
+        "id": "gm2_upcoming_events",
+        "description": "Future events ordered by start date in ascending order.",
+        "post_types": [
+          "event"
+        ]
+      },
+      "past": {
+        "id": "gm2_past_events",
+        "description": "Historic events ordered by start date descending.",
+        "post_types": [
+          "event"
+        ]
+      }
+    },
+    "templates": {
+      "single_event": {
+        "type": "shortcode",
+        "description": "Populate the shortcode with a saved Elementor template for the event hero."
+      }
+    }
+  },
+  "seo": {
+    "mappings": {
+      "event": {
+        "type": "Event",
+        "map": {
+          "startDate": "start_date",
+          "endDate": "end_date",
+          "location": "location"
+        }
+      }
+    }
+  },
+  "templates": {}
 }
