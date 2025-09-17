@@ -144,9 +144,24 @@ if (!function_exists('gm2_model_generate_plugin')) {
         $code .= "    \$groups = " . var_export($groups, true) . ";\n";
         $code .= "    \$existing = get_option('gm2_field_groups', []);\n";
         $code .= "    update_option('gm2_field_groups', array_merge(\$existing, \$groups));\n";
-        $maps = $data['schema_mappings'] ?? ($data['seo']['mappings'] ?? []);
-        if (!is_array($maps)) {
-            $maps = [];
+        $maps = [];
+        if (!empty($data['schema_mappings']) && is_array($data['schema_mappings'])) {
+            $maps = $data['schema_mappings'];
+        } elseif (!empty($data['seo_mappings']) && is_array($data['seo_mappings'])) {
+            foreach ($data['seo_mappings'] as $mapping) {
+                if (!is_array($mapping)) {
+                    continue;
+                }
+                $key = $mapping['key'] ?? null;
+                if (!is_string($key) || $key === '') {
+                    continue;
+                }
+                $definition = $mapping;
+                unset($definition['key']);
+                $maps[$key] = $definition;
+            }
+        } elseif (!empty($data['seo']['mappings']) && is_array($data['seo']['mappings'])) {
+            $maps = $data['seo']['mappings'];
         }
         $code .= "    \$maps = " . var_export($maps, true) . ";\n";
         $code .= "    \$existing_maps = get_option('gm2_cp_schema_map', []);\n";

@@ -188,16 +188,17 @@
       }
     ]
   },
+  "elementor_query_ids": [
+    {
+      "key": "open_positions",
+      "id": "gm2_open_jobs",
+      "description": "Published job posts flagged as open.",
+      "post_types": [
+        "job"
+      ]
+    }
+  ],
   "elementor": {
-    "queries": {
-      "open_positions": {
-        "id": "gm2_open_jobs",
-        "description": "Published job posts flagged as open.",
-        "post_types": [
-          "job"
-        ]
-      }
-    },
     "templates": {
       "single_job": {
         "type": "shortcode",
@@ -206,19 +207,18 @@
       }
     }
   },
-  "seo": {
-    "mappings": {
-      "job": {
-        "type": "JobPosting",
-        "map": {
-          "datePosted": "date_posted",
-          "employmentType": "employment_type",
-          "hiringOrganization": "company",
-          "url": "apply_url"
-        }
+  "seo_mappings": [
+    {
+      "key": "job",
+      "type": "JobPosting",
+      "map": {
+        "datePosted": "date_posted",
+        "employmentType": "employment_type",
+        "hiringOrganization": "company",
+        "url": "apply_url"
       }
     }
-  },
+  ],
   "templates": {
     "job_single": {
       "post_type": "job",

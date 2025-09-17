@@ -175,23 +175,25 @@
       }
     ]
   },
-  "elementor": {
-    "queries": {
-      "upcoming": {
-        "id": "gm2_upcoming_events",
-        "description": "Future events ordered by start date in ascending order.",
-        "post_types": [
-          "event"
-        ]
-      },
-      "past": {
-        "id": "gm2_past_events",
-        "description": "Historic events ordered by start date descending.",
-        "post_types": [
-          "event"
-        ]
-      }
+  "elementor_query_ids": [
+    {
+      "key": "upcoming",
+      "id": "gm2_upcoming_events",
+      "description": "Future events ordered by start date in ascending order.",
+      "post_types": [
+        "event"
+      ]
     },
+    {
+      "key": "past",
+      "id": "gm2_past_events",
+      "description": "Historic events ordered by start date descending.",
+      "post_types": [
+        "event"
+      ]
+    }
+  ],
+  "elementor": {
     "templates": {
       "single_event": {
         "type": "shortcode",
@@ -200,18 +202,17 @@
       }
     }
   },
-  "seo": {
-    "mappings": {
-      "event": {
-        "type": "Event",
-        "map": {
-          "startDate": "start_date",
-          "endDate": "end_date",
-          "location": "location"
-        }
+  "seo_mappings": [
+    {
+      "key": "event",
+      "type": "Event",
+      "map": {
+        "startDate": "start_date",
+        "endDate": "end_date",
+        "location": "location"
       }
     }
-  },
+  ],
   "templates": {
     "event_single": {
       "post_type": "event",

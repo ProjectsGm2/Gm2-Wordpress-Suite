@@ -199,27 +199,29 @@
       }
     ]
   },
-  "elementor": {
-    "queries": {
-      "for_sale": {
-        "id": "gm2_properties_sale",
-        "description": "Filters properties assigned to the \"for-sale\" status term.",
-        "post_types": [
-          "property"
-        ],
-        "taxonomy": "property_status",
-        "term": "for-sale"
-      },
-      "for_rent": {
-        "id": "gm2_properties_rent",
-        "description": "Filters properties assigned to the \"for-rent\" status term.",
-        "post_types": [
-          "property"
-        ],
-        "taxonomy": "property_status",
-        "term": "for-rent"
-      }
+  "elementor_query_ids": [
+    {
+      "key": "for_sale",
+      "id": "gm2_properties_sale",
+      "description": "Filters properties assigned to the \"for-sale\" status term.",
+      "post_types": [
+        "property"
+      ],
+      "taxonomy": "property_status",
+      "term": "for-sale"
     },
+    {
+      "key": "for_rent",
+      "id": "gm2_properties_rent",
+      "description": "Filters properties assigned to the \"for-rent\" status term.",
+      "post_types": [
+        "property"
+      ],
+      "taxonomy": "property_status",
+      "term": "for-rent"
+    }
+  ],
+  "elementor": {
     "templates": {
       "single_property": {
         "type": "shortcode",
@@ -228,18 +230,17 @@
       }
     }
   },
-  "seo": {
-    "mappings": {
-      "property": {
-        "type": "RealEstateListing",
-        "map": {
-          "price": "price",
-          "address.streetAddress": "address",
-          "numberOfRooms": "bedrooms"
-        }
+  "seo_mappings": [
+    {
+      "key": "property",
+      "type": "RealEstateListing",
+      "map": {
+        "price": "price",
+        "address.streetAddress": "address",
+        "numberOfRooms": "bedrooms"
       }
     }
-  },
+  ],
   "templates": {
     "property_single": {
       "post_type": "property",

@@ -14,8 +14,25 @@ class PresetManagerTest extends WP_UnitTestCase {
         $directory = $manager->get('directory');
         $this->assertIsArray($directory, 'Directory preset should return an array.');
         $this->assertArrayHasKey('default_terms', $directory);
-        $this->assertArrayHasKey('elementor', $directory);
-        $this->assertArrayHasKey('seo', $directory);
+        $this->assertArrayHasKey('elementor_query_ids', $directory);
+        $this->assertNotEmpty($directory['elementor_query_ids']);
+        $this->assertArrayHasKey('seo_mappings', $directory);
+        $this->assertNotEmpty($directory['seo_mappings']);
+        $elementorKeys = [];
+        foreach ($directory['elementor_query_ids'] as $entry) {
+            if (is_array($entry) && isset($entry['key'])) {
+                $elementorKeys[] = $entry['key'];
+            }
+        }
+        $this->assertContains('nearby', $elementorKeys, 'Expected Elementor query list to include the "nearby" definition.');
+
+        $seoKeys = [];
+        foreach ($directory['seo_mappings'] as $entry) {
+            if (is_array($entry) && isset($entry['key'])) {
+                $seoKeys[] = $entry['key'];
+            }
+        }
+        $this->assertContains('listing', $seoKeys, 'Expected SEO mappings to include the "listing" schema map.');
         $this->assertArrayHasKey('templates', $directory);
 
         $this->assertTrue(true === $manager->validate($directory, 'directory'));
@@ -33,6 +50,11 @@ class PresetManagerTest extends WP_UnitTestCase {
 
         $queryIds = apply_filters('gm2/presets/elementor/query_ids', []);
         $this->assertArrayHasKey('gm2_directory_nearby', $queryIds);
+        $this->assertSame('directory', $queryIds['gm2_directory_nearby']['preset']);
+
+        $seoMappings = apply_filters('gm2/presets/seo/mappings', []);
+        $this->assertArrayHasKey('directory', $seoMappings);
+        $this->assertArrayHasKey('listing', $seoMappings['directory']);
     }
 
     public function test_invalid_blueprint_reports_error(): void {

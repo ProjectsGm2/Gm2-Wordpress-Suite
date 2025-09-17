@@ -212,11 +212,7 @@ class PresetManager
     {
         $result = [];
         foreach ($this->selectPresets($slug) as $presetSlug => $preset) {
-            if (isset($preset['elementor']['queries']) && is_array($preset['elementor']['queries'])) {
-                $result[$presetSlug] = $preset['elementor']['queries'];
-            } else {
-                $result[$presetSlug] = [];
-            }
+            $result[$presetSlug] = $this->parseElementorQueries($preset);
         }
         return $result;
     }
@@ -229,7 +225,8 @@ class PresetManager
     public function getElementorQueryIds(?string $slug = null): array
     {
         $result = [];
-        foreach ($this->getElementorQueries($slug) as $presetSlug => $queries) {
+        foreach ($this->selectPresets($slug) as $presetSlug => $preset) {
+            $queries = $this->parseElementorQueries($preset);
             foreach ($queries as $key => $definition) {
                 if (!is_array($definition)) {
                     continue;
@@ -255,15 +252,7 @@ class PresetManager
     {
         $result = [];
         foreach ($this->selectPresets($slug) as $presetSlug => $preset) {
-            $mappings = $preset['seo']['mappings'] ?? [];
-            if (!$mappings && isset($preset['schema_mappings'])) {
-                $mappings = $preset['schema_mappings'];
-            }
-            if (is_array($mappings)) {
-                $result[$presetSlug] = $mappings;
-            } else {
-                $result[$presetSlug] = [];
-            }
+            $result[$presetSlug] = $this->parseSeoMappings($preset);
         }
         return $result;
     }
@@ -579,5 +568,96 @@ class PresetManager
             return [];
         }
         return [ $slug => $this->presets[$slug] ];
+    }
+
+    /**
+     * Normalize Elementor query definitions from a preset blueprint.
+     *
+     * @param array<string, mixed> $preset
+     * @return array<string, array>
+     */
+    private function parseElementorQueries(array $preset): array
+    {
+        $queries = [];
+
+        if (isset($preset['elementor_query_ids']) && is_array($preset['elementor_query_ids'])) {
+            foreach ($preset['elementor_query_ids'] as $entry) {
+                if (!is_array($entry)) {
+                    continue;
+                }
+                $key = $entry['key'] ?? null;
+                if (!is_string($key) || $key === '') {
+                    $fallback = $entry['id'] ?? null;
+                    $key = is_string($fallback) && $fallback !== '' ? $fallback : null;
+                }
+                if (!is_string($key) || $key === '') {
+                    continue;
+                }
+                $definition = $entry;
+                unset($definition['key']);
+                $queries[$key] = $definition;
+            }
+        }
+
+        if (isset($preset['elementor']['queries']) && is_array($preset['elementor']['queries'])) {
+            foreach ($preset['elementor']['queries'] as $key => $definition) {
+                if (!is_string($key) || $key === '' || !is_array($definition)) {
+                    continue;
+                }
+                if (!isset($queries[$key])) {
+                    $queries[$key] = $definition;
+                }
+            }
+        }
+
+        return $queries;
+    }
+
+    /**
+     * Normalize SEO mapping definitions from a preset blueprint.
+     *
+     * @param array<string, mixed> $preset
+     * @return array<string, array>
+     */
+    private function parseSeoMappings(array $preset): array
+    {
+        $mappings = [];
+
+        if (isset($preset['seo_mappings']) && is_array($preset['seo_mappings'])) {
+            foreach ($preset['seo_mappings'] as $entry) {
+                if (!is_array($entry)) {
+                    continue;
+                }
+                $key = $entry['key'] ?? null;
+                if (!is_string($key) || $key === '') {
+                    continue;
+                }
+                $definition = $entry;
+                unset($definition['key']);
+                $mappings[$key] = $definition;
+            }
+        }
+
+        if (isset($preset['seo']['mappings']) && is_array($preset['seo']['mappings'])) {
+            foreach ($preset['seo']['mappings'] as $key => $definition) {
+                if (!is_string($key) || $key === '' || !is_array($definition)) {
+                    continue;
+                }
+                if (!isset($mappings[$key])) {
+                    $mappings[$key] = $definition;
+                }
+            }
+        }
+
+        if ($mappings === [] && isset($preset['schema_mappings']) && is_array($preset['schema_mappings'])) {
+            foreach ($preset['schema_mappings'] as $key => $definition) {
+                if (!is_string($key) || $key === '' || !is_array($definition)) {
+                    continue;
+                }
+                $mappings[$key] = $definition;
+            }
+        }
+
+        return $mappings;
     }
 }
