@@ -3,12 +3,18 @@
     "listing": {
       "label": "Listing",
       "public": true,
-      "supports": ["title", "editor", "thumbnail"]
+      "supports": [
+        "title",
+        "editor",
+        "thumbnail"
+      ]
     }
   },
   "taxonomies": {
     "listing_category": {
-      "object_type": ["listing"],
+      "object_type": [
+        "listing"
+      ],
       "label": "Listing Categories",
       "hierarchical": true
     }
@@ -18,8 +24,18 @@
       "key": "group_listing_details",
       "title": "Listing Details",
       "fields": [
-        {"key": "field_phone", "label": "Phone", "name": "phone", "type": "text"},
-        {"key": "field_address", "label": "Address", "name": "address", "type": "text"}
+        {
+          "key": "field_phone",
+          "label": "Phone",
+          "name": "phone",
+          "type": "text"
+        },
+        {
+          "key": "field_address",
+          "label": "Address",
+          "name": "address",
+          "type": "text"
+        }
       ]
     }
   ],
@@ -31,5 +47,85 @@
         "address": "address"
       }
     }
-  }
+  },
+  "label": "Business Directory",
+  "description": "Local business listings with categories and proximity search.",
+  "fields": {
+    "groups": [
+      {
+        "key": "group_listing_details",
+        "title": "Listing Details",
+        "fields": [
+          {
+            "key": "field_phone",
+            "label": "Phone",
+            "name": "phone",
+            "type": "text"
+          },
+          {
+            "key": "field_address",
+            "label": "Address",
+            "name": "address",
+            "type": "text"
+          }
+        ]
+      }
+    ]
+  },
+  "relationships": [],
+  "default_terms": {
+    "listing_category": [
+      {
+        "name": "Restaurants",
+        "slug": "restaurants"
+      },
+      {
+        "name": "Retail",
+        "slug": "retail"
+      },
+      {
+        "name": "Services",
+        "slug": "services"
+      }
+    ],
+    "listing_location": [
+      {
+        "name": "City Centre",
+        "slug": "city-centre"
+      },
+      {
+        "name": "Remote",
+        "slug": "remote"
+      }
+    ]
+  },
+  "elementor": {
+    "queries": {
+      "nearby": {
+        "id": "gm2_directory_nearby",
+        "description": "Displays listings near visitor-supplied coordinates using stored latitude and longitude fields.",
+        "post_types": [
+          "listing"
+        ]
+      }
+    },
+    "templates": {
+      "single_listing": {
+        "type": "shortcode",
+        "description": "Replace the shortcode placeholder with the ID of a saved Elementor template to render a custom hero."
+      }
+    }
+  },
+  "seo": {
+    "mappings": {
+      "listing": {
+        "type": "LocalBusiness",
+        "map": {
+          "telephone": "phone",
+          "address": "address"
+        }
+      }
+    }
+  },
+  "templates": {}
 }

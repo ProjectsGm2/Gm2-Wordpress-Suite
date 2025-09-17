@@ -1,0 +1,256 @@
+{
+  "post_types": {
+    "event": {
+      "labels": {
+        "name": "Events",
+        "singular_name": "Event"
+      },
+      "supports": [
+        "title",
+        "editor",
+        "thumbnail",
+        "excerpt"
+      ],
+      "has_archive": true,
+      "rewrite": {
+        "slug": "events"
+      },
+      "menu_icon": "dashicons-calendar-alt",
+      "template": [
+        [
+          "core/group",
+          {
+            "metadata": {
+              "name": "Event Layout"
+            },
+            "layout": {
+              "type": "constrained"
+            }
+          },
+          [
+            [
+              "core/heading",
+              {
+                "level": 2,
+                "placeholder": "Event headline or hero"
+              }
+            ],
+            [
+              "core/paragraph",
+              {
+                "placeholder": "Share key event highlights or switch to Elementor for a custom design."
+              }
+            ],
+            [
+              "core/shortcode",
+              {
+                "text": "[elementor-template id=\"\"]"
+              }
+            ]
+          ]
+        ]
+      ],
+      "template_lock": "insert",
+      "seo": {
+        "meta_title": "{{title}} \u2013 Event Details",
+        "meta_description": "{{description}}",
+        "canonical": "{{permalink}}",
+        "open_graph": {
+          "title": "{{title}}",
+          "description": "{{description}}",
+          "image": "{{image}}"
+        },
+        "twitter": {
+          "card": "summary_large_image",
+          "title": "{{title}}",
+          "description": "{{description}}",
+          "image": "{{image}}"
+        }
+      }
+    }
+  },
+  "taxonomies": {
+    "event_type": {
+      "object_type": [
+        "event"
+      ],
+      "labels": {
+        "name": "Event Types",
+        "singular_name": "Event Type"
+      },
+      "hierarchical": false,
+      "rewrite": {
+        "slug": "event-type"
+      }
+    }
+  },
+  "field_groups": [
+    {
+      "key": "group_event_details",
+      "title": "Event Details",
+      "fields": [
+        {
+          "key": "field_start_date",
+          "label": "Start Date",
+          "name": "start_date",
+          "type": "datetime",
+          "required": true,
+          "expose_in_rest": true
+        },
+        {
+          "key": "field_end_date",
+          "label": "End Date",
+          "name": "end_date",
+          "type": "datetime",
+          "required": true,
+          "expose_in_rest": true
+        },
+        {
+          "key": "field_location",
+          "label": "Location",
+          "name": "location",
+          "type": "text",
+          "required": true,
+          "expose_in_rest": true
+        }
+      ]
+    }
+  ],
+  "schema_mappings": {
+    "event": {
+      "type": "Event",
+      "map": {
+        "startDate": "start_date",
+        "endDate": "end_date",
+        "location": "location"
+      }
+    }
+  },
+  "label": "Events Calendar",
+  "description": "Event schedule with structured data and Elementor-ready hero.",
+  "fields": {
+    "groups": [
+      {
+        "key": "group_event_details",
+        "title": "Event Details",
+        "fields": [
+          {
+            "key": "field_start_date",
+            "label": "Start Date",
+            "name": "start_date",
+            "type": "datetime",
+            "required": true,
+            "expose_in_rest": true
+          },
+          {
+            "key": "field_end_date",
+            "label": "End Date",
+            "name": "end_date",
+            "type": "datetime",
+            "required": true,
+            "expose_in_rest": true
+          },
+          {
+            "key": "field_location",
+            "label": "Location",
+            "name": "location",
+            "type": "text",
+            "required": true,
+            "expose_in_rest": true
+          }
+        ]
+      }
+    ]
+  },
+  "relationships": [],
+  "default_terms": {
+    "event_type": [
+      {
+        "name": "Workshop",
+        "slug": "workshop"
+      },
+      {
+        "name": "Webinar",
+        "slug": "webinar"
+      }
+    ]
+  },
+  "elementor": {
+    "queries": {
+      "upcoming": {
+        "id": "gm2_upcoming_events",
+        "description": "Future events ordered by start date in ascending order.",
+        "post_types": [
+          "event"
+        ]
+      },
+      "past": {
+        "id": "gm2_past_events",
+        "description": "Historic events ordered by start date descending.",
+        "post_types": [
+          "event"
+        ]
+      }
+    },
+    "templates": {
+      "single_event": {
+        "type": "shortcode",
+        "description": "Populate the shortcode with a saved Elementor template for the event hero."
+      }
+    }
+  },
+  "seo": {
+    "mappings": {
+      "event": {
+        "type": "Event",
+        "map": {
+          "startDate": "start_date",
+          "endDate": "end_date",
+          "location": "location"
+        }
+      }
+    }
+  },
+  "templates": {
+    "event_single": {
+      "post_type": "event",
+      "lock": "insert",
+      "blocks": [
+        [
+          "core/group",
+          {
+            "metadata": {
+              "name": "Event Layout"
+            },
+            "layout": {
+              "type": "constrained"
+            }
+          },
+          [
+            [
+              "core/heading",
+              {
+                "level": 2,
+                "placeholder": "Event headline or hero"
+              }
+            ],
+            [
+              "core/paragraph",
+              {
+                "placeholder": "Share key event highlights or switch to Elementor for a custom design."
+              }
+            ],
+            [
+              "core/shortcode",
+              {
+                "text": "[elementor-template id=\"\"]"
+              }
+            ]
+          ]
+        ]
+      ],
+      "description": "Locked group keeps the event layout consistent while enabling Elementor hero swaps.",
+      "elementor_placeholder": "[elementor-template id=\"\"]"
+    }
+  }
+}

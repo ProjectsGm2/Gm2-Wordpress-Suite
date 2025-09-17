@@ -3,12 +3,18 @@
     "course": {
       "label": "Course",
       "public": true,
-      "supports": ["title", "editor", "thumbnail"]
+      "supports": [
+        "title",
+        "editor",
+        "thumbnail"
+      ]
     }
   },
   "taxonomies": {
     "course_category": {
-      "object_type": ["course"],
+      "object_type": [
+        "course"
+      ],
       "label": "Course Categories",
       "hierarchical": false
     }
@@ -18,9 +24,24 @@
       "key": "group_course_details",
       "title": "Course Details",
       "fields": [
-        {"key": "field_provider", "label": "Provider", "name": "provider", "type": "text"},
-        {"key": "field_course_code", "label": "Course Code", "name": "course_code", "type": "text"},
-        {"key": "field_course_url", "label": "Course URL", "name": "course_url", "type": "url"}
+        {
+          "key": "field_provider",
+          "label": "Provider",
+          "name": "provider",
+          "type": "text"
+        },
+        {
+          "key": "field_course_code",
+          "label": "Course Code",
+          "name": "course_code",
+          "type": "text"
+        },
+        {
+          "key": "field_course_url",
+          "label": "Course URL",
+          "name": "course_url",
+          "type": "url"
+        }
       ]
     }
   ],
@@ -33,5 +54,78 @@
         "url": "course_url"
       }
     }
-  }
+  },
+  "label": "Courses",
+  "description": "Course catalogue blueprint with provider metadata and Elementor hero placeholder.",
+  "fields": {
+    "groups": [
+      {
+        "key": "group_course_details",
+        "title": "Course Details",
+        "fields": [
+          {
+            "key": "field_provider",
+            "label": "Provider",
+            "name": "provider",
+            "type": "text"
+          },
+          {
+            "key": "field_course_code",
+            "label": "Course Code",
+            "name": "course_code",
+            "type": "text"
+          },
+          {
+            "key": "field_course_url",
+            "label": "Course URL",
+            "name": "course_url",
+            "type": "url"
+          }
+        ]
+      }
+    ]
+  },
+  "relationships": [],
+  "default_terms": {
+    "course_category": [
+      {
+        "name": "On Demand",
+        "slug": "on-demand"
+      },
+      {
+        "name": "In Person",
+        "slug": "in-person"
+      }
+    ]
+  },
+  "elementor": {
+    "queries": {
+      "active_courses": {
+        "id": "gm2_courses_active",
+        "description": "Published courses flagged as active.",
+        "post_types": [
+          "course"
+        ]
+      }
+    },
+    "templates": {
+      "single_course": {
+        "type": "shortcode",
+        "description": "Insert a saved Elementor template ID to enhance the course hero."
+      }
+    }
+  },
+  "seo": {
+    "mappings": {
+      "course": {
+        "type": "Course",
+        "map": {
+          "provider": "provider",
+          "courseCode": "course_code",
+          "url": "course_url"
+        }
+      }
+    }
+  },
+  "templates": {}
 }

@@ -1,0 +1,244 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Gm2 Preset Blueprint",
+  "type": "object",
+  "required": [
+    "post_types",
+    "taxonomies",
+    "field_groups",
+    "fields",
+    "relationships",
+    "default_terms",
+    "elementor",
+    "seo",
+    "templates"
+  ],
+  "properties": {
+    "label": { "type": "string" },
+    "description": { "type": "string" },
+    "post_types": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": { "$ref": "#/definitions/postType" }
+    },
+    "taxonomies": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/definitions/taxonomy" }
+    },
+    "field_groups": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/fieldGroup" }
+    },
+    "fields": {
+      "type": "object",
+      "required": ["groups"],
+      "properties": {
+        "groups": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/fieldGroup" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "relationships": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/relationship" }
+    },
+    "default_terms": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": { "$ref": "#/definitions/defaultTerm" }
+      }
+    },
+    "elementor": {
+      "type": "object",
+      "required": ["queries", "templates"],
+      "properties": {
+        "queries": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/definitions/elementorQuery" }
+        },
+        "templates": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/definitions/elementorTemplate" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "seo": {
+      "type": "object",
+      "required": ["mappings"],
+      "properties": {
+        "mappings": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/definitions/schemaMapping" }
+        }
+      },
+      "additionalProperties": true
+    },
+    "schema_mappings": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/definitions/schemaMapping" }
+    },
+    "templates": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/definitions/template" }
+    }
+  },
+  "additionalProperties": true,
+  "definitions": {
+    "postType": {
+      "type": "object",
+      "properties": {
+        "label": { "type": "string" },
+        "labels": { "type": "object", "additionalProperties": { "type": "string" } },
+        "public": { "type": "boolean" },
+        "supports": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "has_archive": { "type": ["boolean", "string"] },
+        "rewrite": {
+          "type": "object",
+          "properties": { "slug": { "type": "string" } },
+          "additionalProperties": { "type": ["string", "boolean"] }
+        },
+        "menu_icon": { "type": "string" },
+        "menu_position": { "type": ["integer", "number"] },
+        "template": {
+          "type": "array"
+        },
+        "template_lock": {
+          "type": "string",
+          "enum": ["", "all", "insert"],
+          "default": ""
+        },
+        "seo": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "taxonomy": {
+      "type": "object",
+      "properties": {
+        "label": { "type": "string" },
+        "labels": { "type": "object", "additionalProperties": { "type": "string" } },
+        "object_type": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "hierarchical": { "type": "boolean" },
+        "rewrite": {
+          "type": "object",
+          "properties": { "slug": { "type": "string" } },
+          "additionalProperties": { "type": ["string", "boolean"] }
+        }
+      },
+      "additionalProperties": true
+    },
+    "fieldGroup": {
+      "type": "object",
+      "required": ["key", "title", "fields"],
+      "properties": {
+        "key": { "type": "string" },
+        "title": { "type": "string" },
+        "fields": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/field" }
+        }
+      },
+      "additionalProperties": true
+    },
+    "field": {
+      "type": "object",
+      "required": ["key", "label", "name", "type"],
+      "properties": {
+        "key": { "type": "string" },
+        "label": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string" },
+        "required": { "type": "boolean" },
+        "regex": { "type": "string" },
+        "min": { "type": ["number", "integer"] },
+        "max": { "type": ["number", "integer"] },
+        "expose_in_rest": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+    "relationship": {
+      "type": "object",
+      "required": ["from", "to", "type"],
+      "properties": {
+        "from": { "type": "string" },
+        "to": { "type": "string" },
+        "type": { "type": "string" },
+        "label": { "type": "string" },
+        "cardinality": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "defaultTerm": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "slug": { "type": "string" },
+        "description": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "elementorQuery": {
+      "type": "object",
+      "required": ["id"],
+      "properties": {
+        "id": { "type": "string" },
+        "description": { "type": "string" },
+        "post_types": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "taxonomy": { "type": "string" },
+        "term": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "elementorTemplate": {
+      "type": "object",
+      "properties": {
+        "type": { "type": "string" },
+        "description": { "type": "string" },
+        "file": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "schemaMapping": {
+      "type": "object",
+      "required": ["type", "map"],
+      "properties": {
+        "type": { "type": "string" },
+        "map": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "template": {
+      "type": "object",
+      "required": ["post_type", "blocks"],
+      "properties": {
+        "post_type": { "type": "string" },
+        "lock": { "type": "string" },
+        "blocks": {
+          "type": "array"
+        },
+        "description": { "type": "string" },
+        "elementor_placeholder": { "type": "string" }
+      },
+      "additionalProperties": true
+    }
+  }
+}

@@ -1,0 +1,274 @@
+{
+  "post_types": {
+    "listing": {
+      "labels": {
+        "name": "Listings",
+        "singular_name": "Listing"
+      },
+      "supports": [
+        "title",
+        "editor",
+        "thumbnail",
+        "custom-fields"
+      ],
+      "has_archive": true,
+      "rewrite": {
+        "slug": "listings"
+      },
+      "menu_icon": "dashicons-store",
+      "template": [
+        [
+          "core/group",
+          {
+            "metadata": {
+              "name": "Listing Layout"
+            },
+            "layout": {
+              "type": "constrained"
+            }
+          },
+          [
+            [
+              "core/heading",
+              {
+                "level": 2,
+                "placeholder": "Business headline or tagline"
+              }
+            ],
+            [
+              "core/paragraph",
+              {
+                "placeholder": "Spotlight the listing or switch to Elementor to customise."
+              }
+            ],
+            [
+              "core/shortcode",
+              {
+                "text": "[elementor-template id=\"\"]"
+              }
+            ]
+          ]
+        ]
+      ],
+      "template_lock": "insert",
+      "seo": {
+        "meta_title": "{{title}} \u2013 Business Listing",
+        "meta_description": "{{description}}",
+        "canonical": "{{permalink}}",
+        "open_graph": {
+          "title": "{{title}}",
+          "description": "{{description}}",
+          "image": "{{image}}"
+        },
+        "twitter": {
+          "card": "summary_large_image",
+          "title": "{{title}}",
+          "description": "{{description}}",
+          "image": "{{image}}"
+        }
+      }
+    }
+  },
+  "taxonomies": {
+    "listing_category": {
+      "object_type": [
+        "listing"
+      ],
+      "labels": {
+        "name": "Listing Categories",
+        "singular_name": "Listing Category"
+      },
+      "hierarchical": true,
+      "rewrite": {
+        "slug": "listing-category"
+      }
+    },
+    "listing_location": {
+      "object_type": [
+        "listing"
+      ],
+      "labels": {
+        "name": "Locations",
+        "singular_name": "Location"
+      },
+      "hierarchical": false,
+      "rewrite": {
+        "slug": "listing-location"
+      }
+    }
+  },
+  "field_groups": [
+    {
+      "key": "group_listing_details",
+      "title": "Listing Details",
+      "fields": [
+        {
+          "key": "field_phone",
+          "label": "Phone",
+          "name": "phone",
+          "type": "text",
+          "regex": "^\\+?[0-9\\-\\s]+$",
+          "expose_in_rest": true
+        },
+        {
+          "key": "field_address",
+          "label": "Address",
+          "name": "address",
+          "type": "text",
+          "required": true,
+          "expose_in_rest": true
+        },
+        {
+          "key": "field_website",
+          "label": "Website",
+          "name": "website",
+          "type": "url",
+          "expose_in_rest": true
+        }
+      ]
+    }
+  ],
+  "schema_mappings": {
+    "listing": {
+      "type": "LocalBusiness",
+      "map": {
+        "telephone": "phone",
+        "address.streetAddress": "address",
+        "url": "website"
+      }
+    }
+  },
+  "label": "Business Directory",
+  "description": "Local business listings with categories and proximity search.",
+  "fields": {
+    "groups": [
+      {
+        "key": "group_listing_details",
+        "title": "Listing Details",
+        "fields": [
+          {
+            "key": "field_phone",
+            "label": "Phone",
+            "name": "phone",
+            "type": "text",
+            "regex": "^\\+?[0-9\\-\\s]+$",
+            "expose_in_rest": true
+          },
+          {
+            "key": "field_address",
+            "label": "Address",
+            "name": "address",
+            "type": "text",
+            "required": true,
+            "expose_in_rest": true
+          },
+          {
+            "key": "field_website",
+            "label": "Website",
+            "name": "website",
+            "type": "url",
+            "expose_in_rest": true
+          }
+        ]
+      }
+    ]
+  },
+  "relationships": [],
+  "default_terms": {
+    "listing_category": [
+      {
+        "name": "Restaurants",
+        "slug": "restaurants"
+      },
+      {
+        "name": "Retail",
+        "slug": "retail"
+      },
+      {
+        "name": "Services",
+        "slug": "services"
+      }
+    ],
+    "listing_location": [
+      {
+        "name": "City Centre",
+        "slug": "city-centre"
+      },
+      {
+        "name": "Remote",
+        "slug": "remote"
+      }
+    ]
+  },
+  "elementor": {
+    "queries": {
+      "nearby": {
+        "id": "gm2_directory_nearby",
+        "description": "Displays listings near visitor-supplied coordinates using stored latitude and longitude fields.",
+        "post_types": [
+          "listing"
+        ]
+      }
+    },
+    "templates": {
+      "single_listing": {
+        "type": "shortcode",
+        "description": "Replace the shortcode placeholder with the ID of a saved Elementor template to render a custom hero."
+      }
+    }
+  },
+  "seo": {
+    "mappings": {
+      "listing": {
+        "type": "LocalBusiness",
+        "map": {
+          "telephone": "phone",
+          "address.streetAddress": "address",
+          "url": "website"
+        }
+      }
+    }
+  },
+  "templates": {
+    "listing_single": {
+      "post_type": "listing",
+      "lock": "insert",
+      "blocks": [
+        [
+          "core/group",
+          {
+            "metadata": {
+              "name": "Listing Layout"
+            },
+            "layout": {
+              "type": "constrained"
+            }
+          },
+          [
+            [
+              "core/heading",
+              {
+                "level": 2,
+                "placeholder": "Business headline or tagline"
+              }
+            ],
+            [
+              "core/paragraph",
+              {
+                "placeholder": "Spotlight the listing or switch to Elementor to customise."
+              }
+            ],
+            [
+              "core/shortcode",
+              {
+                "text": "[elementor-template id=\"\"]"
+              }
+            ]
+          ]
+        ]
+      ],
+      "description": "Block layout bundles a heading, intro, and Elementor shortcode placeholder.",
+      "elementor_placeholder": "[elementor-template id=\"\"]"
+    }
+  }
+}

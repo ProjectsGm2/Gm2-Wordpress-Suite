@@ -85,11 +85,11 @@ jQuery(function($){
     }
 
     $('#gm2-import-preset').on('click', function(){
-        var file = $('#gm2-preset-select').val();
-        if(!file){ return; }
+        var preset = $('#gm2-preset-select').val();
+        if(!preset){ return; }
         $.post(gm2CPTImport.ajax, {
             action: 'gm2_import_preset',
-            file: file,
+            preset: preset,
             nonce: gm2CPTImport.nonce
         }, function(resp){
             $('.gm2-import-notice').remove();

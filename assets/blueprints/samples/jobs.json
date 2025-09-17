@@ -3,12 +3,17 @@
     "job": {
       "label": "Job",
       "public": true,
-      "supports": ["title", "editor"]
+      "supports": [
+        "title",
+        "editor"
+      ]
     }
   },
   "taxonomies": {
     "job_category": {
-      "object_type": ["job"],
+      "object_type": [
+        "job"
+      ],
       "label": "Job Categories",
       "hierarchical": false
     }
@@ -18,9 +23,24 @@
       "key": "group_job_details",
       "title": "Job Details",
       "fields": [
-        {"key": "field_date_posted", "label": "Date Posted", "name": "date_posted", "type": "date"},
-        {"key": "field_employment_type", "label": "Employment Type", "name": "employment_type", "type": "text"},
-        {"key": "field_company", "label": "Company", "name": "company", "type": "text"}
+        {
+          "key": "field_date_posted",
+          "label": "Date Posted",
+          "name": "date_posted",
+          "type": "date"
+        },
+        {
+          "key": "field_employment_type",
+          "label": "Employment Type",
+          "name": "employment_type",
+          "type": "text"
+        },
+        {
+          "key": "field_company",
+          "label": "Company",
+          "name": "company",
+          "type": "text"
+        }
       ]
     }
   ],
@@ -33,5 +53,78 @@
         "hiringOrganization": "company"
       }
     }
-  }
+  },
+  "label": "Job Board",
+  "description": "Job listings with schema mapping, default categories, and Elementor hero support.",
+  "fields": {
+    "groups": [
+      {
+        "key": "group_job_details",
+        "title": "Job Details",
+        "fields": [
+          {
+            "key": "field_date_posted",
+            "label": "Date Posted",
+            "name": "date_posted",
+            "type": "date"
+          },
+          {
+            "key": "field_employment_type",
+            "label": "Employment Type",
+            "name": "employment_type",
+            "type": "text"
+          },
+          {
+            "key": "field_company",
+            "label": "Company",
+            "name": "company",
+            "type": "text"
+          }
+        ]
+      }
+    ]
+  },
+  "relationships": [],
+  "default_terms": {
+    "job_category": [
+      {
+        "name": "Full Time",
+        "slug": "full-time"
+      },
+      {
+        "name": "Part Time",
+        "slug": "part-time"
+      }
+    ]
+  },
+  "elementor": {
+    "queries": {
+      "open_positions": {
+        "id": "gm2_open_jobs",
+        "description": "Published job posts flagged as open.",
+        "post_types": [
+          "job"
+        ]
+      }
+    },
+    "templates": {
+      "single_job": {
+        "type": "shortcode",
+        "description": "Use a saved Elementor template ID in the shortcode for a tailored hero."
+      }
+    }
+  },
+  "seo": {
+    "mappings": {
+      "job": {
+        "type": "JobPosting",
+        "map": {
+          "datePosted": "date_posted",
+          "employmentType": "employment_type",
+          "hiringOrganization": "company"
+        }
+      }
+    }
+  },
+  "templates": {}
 }

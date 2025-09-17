@@ -189,14 +189,20 @@
 
         echo '<hr />';
 
-        $preset_files = glob(GM2_PLUGIN_DIR . 'assets/blueprints/presets/*.json');
+        $preset_files = apply_filters('gm2/presets/list', []);
         echo '<h2>' . esc_html__( 'Add / Edit Post Type', 'gm2-wordpress-suite' );
         if ($preset_files) {
             echo ' <select id="gm2-preset-select"><option value="">' . esc_html__( 'Select Preset', 'gm2-wordpress-suite' ) . '</option>';
-            foreach ($preset_files as $path) {
-                $file  = basename($path);
-                $label = ucwords(str_replace(['-', '_', '.json'], [' ', ' ', ''], $file));
-                echo '<option value="' . esc_attr($file) . '">' . esc_html($label) . '</option>';
+            foreach ($preset_files as $slug => $meta) {
+                if (is_array($meta)) {
+                    $label = $meta['label'] ?? ucwords(str_replace(['-', '_'], ' ', (string) $slug));
+                } else {
+                    $label = (string) $meta;
+                }
+                if ($label === '') {
+                    $label = ucwords(str_replace(['-', '_'], ' ', (string) $slug));
+                }
+                echo '<option value="' . esc_attr($slug) . '">' . esc_html($label) . '</option>';
             }
             echo '</select> <button type="button" class="button" id="gm2-import-preset">' . esc_html__( 'Import Preset', 'gm2-wordpress-suite' ) . '</button>';
         }
