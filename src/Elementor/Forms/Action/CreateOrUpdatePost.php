@@ -196,6 +196,18 @@ class CreateOrUpdatePost extends Action_Base {
             ]
         );
 
+        $widget->add_control(
+            'gm2_cp_required_permissions',
+            [
+                'label'       => __('Allowed Roles / Capabilities', 'gm2-wordpress-suite'),
+                'type'        => self::control_constant('SELECT2', 'select2'),
+                'label_block' => true,
+                'multiple'    => true,
+                'options'     => $this->get_role_capability_options(),
+                'description' => __('Restrict submissions to users who match one of the selected roles or capabilities.', 'gm2-wordpress-suite'),
+            ]
+        );
+
         if (is_multisite()) {
             $widget->add_control(
                 'gm2_cp_site_id',
@@ -422,6 +434,11 @@ class CreateOrUpdatePost extends Action_Base {
                 }
             }
 
+            if (!$this->user_has_required_permissions($settings, $post_id, $updating)) {
+                $this->record_error($record, $ajax_handler, __('You do not have permission to submit this form.', 'gm2-wordpress-suite'));
+                return;
+            }
+
             $post_data = [
                 'post_type'   => $post_type,
                 'post_status' => $this->resolve_post_status($settings, $updating, $post_id),
@@ -619,6 +636,53 @@ class CreateOrUpdatePost extends Action_Base {
             ];
         }
         return $choices;
+    }
+
+    /**
+     * Retrieve available role and capability options for the permissions control.
+     *
+     * @return array<string,string>
+     */
+    private function get_role_capability_options(): array {
+        $role_options = [];
+        $capabilities = [];
+
+        if (function_exists('wp_roles')) {
+            $wp_roles = wp_roles();
+            if ($wp_roles instanceof \WP_Roles) {
+                foreach ($wp_roles->roles as $slug => $details) {
+                    $name = $details['name'] ?? $slug;
+                    $role_options[ 'role:' . sanitize_key($slug) ] = sprintf(__('Role: %s', 'gm2-wordpress-suite'), translate_user_role($name));
+                }
+
+                foreach ($wp_roles->role_objects as $role) {
+                    if (!$role instanceof \WP_Role) {
+                        continue;
+                    }
+                    foreach ($role->capabilities as $capability => $grant) {
+                        if ($grant) {
+                            $capabilities[ sanitize_key($capability) ] = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        $options = $role_options;
+
+        if ($capabilities) {
+            $cap_keys = array_keys($capabilities);
+            sort($cap_keys);
+            foreach ($cap_keys as $capability) {
+                $options[ 'cap:' . $capability ] = sprintf(__('Capability: %s', 'gm2-wordpress-suite'), $capability);
+            }
+        }
+
+        if (!$options) {
+            $options['cap:read'] = __('Capability: read', 'gm2-wordpress-suite');
+        }
+
+        return $options;
     }
 
     /**
@@ -867,6 +931,114 @@ class CreateOrUpdatePost extends Action_Base {
          * @param int    $post_id  Existing post ID (0 for new submissions).
          */
         return apply_filters('gm2_cp_elementor_post_status', $status, $settings, $updating, $post_id);
+    }
+
+    /**
+     * Normalize configured permission requirements.
+     *
+     * @param mixed $value Raw setting value.
+     * @return array<int, array{type:string,value:string}>
+     */
+    private function normalize_permission_requirements($value): array {
+        if (is_string($value)) {
+            $value = $value === '' ? [] : [ $value ];
+        }
+        if (!is_array($value)) {
+            return [];
+        }
+
+        $normalized = [];
+
+        foreach ($value as $item) {
+            if (is_array($item)) {
+                $item = $item['value'] ?? '';
+            }
+            if (!is_scalar($item)) {
+                continue;
+            }
+            $item = trim((string) $item);
+            if ('' === $item) {
+                continue;
+            }
+
+            if (0 === strncmp($item, 'role:', 5)) {
+                $slug = sanitize_key(substr($item, 5));
+                if ('' === $slug) {
+                    continue;
+                }
+                $normalized[] = [
+                    'type'  => 'role',
+                    'value' => $slug,
+                ];
+                continue;
+            }
+
+            if (0 === strncmp($item, 'cap:', 4)) {
+                $capability = sanitize_key(substr($item, 4));
+                if ('' === $capability) {
+                    continue;
+                }
+                $normalized[] = [
+                    'type'  => 'cap',
+                    'value' => $capability,
+                ];
+            }
+        }
+
+        if (!$normalized) {
+            return [];
+        }
+
+        $unique = [];
+        foreach ($normalized as $requirement) {
+            $key = $requirement['type'] . ':' . $requirement['value'];
+            if (isset($unique[ $key ])) {
+                continue;
+            }
+            $unique[ $key ] = $requirement;
+        }
+
+        return array_values($unique);
+    }
+
+    /**
+     * Determine whether the current user satisfies configured permissions.
+     *
+     * @param array $settings Action settings.
+     * @param int   $post_id  Existing post ID when updating.
+     * @param bool  $updating Whether an existing post is being updated.
+     * @return bool
+     */
+    private function user_has_required_permissions(array $settings, int $post_id, bool $updating): bool {
+        $requirements = $this->normalize_permission_requirements($settings['gm2_cp_required_permissions'] ?? []);
+        if (!$requirements) {
+            return true;
+        }
+
+        if ($updating && $post_id > 0 && current_user_can('edit_post', $post_id)) {
+            return true;
+        }
+
+        $user       = wp_get_current_user();
+        $user_roles = [];
+        if ($user && $user instanceof \WP_User && is_array($user->roles)) {
+            $user_roles = $user->roles;
+        }
+
+        foreach ($requirements as $requirement) {
+            if ('role' === $requirement['type']) {
+                if (in_array($requirement['value'], $user_roles, true)) {
+                    return true;
+                }
+                continue;
+            }
+
+            if (current_user_can($requirement['value'])) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

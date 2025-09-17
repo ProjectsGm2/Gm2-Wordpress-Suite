@@ -79,6 +79,7 @@ class ElementorGm2FormActionTest extends WP_UnitTestCase {
         unregister_taxonomy('genre');
         unregister_taxonomy('audience');
         $_FILES = [];
+        wp_set_current_user(0);
         parent::tearDown();
     }
 
@@ -126,6 +127,119 @@ class ElementorGm2FormActionTest extends WP_UnitTestCase {
         $this->assertSame('Library Book', $post->post_title);
         $this->assertSame('Summary content', $post->post_content);
         $this->assertSame('9781234567897', get_post_meta($post->ID, 'isbn', true));
+    }
+
+    public function test_action_requires_matching_role_before_creating_post(): void {
+        $user_id = self::factory()->user->create([ 'role' => 'subscriber' ]);
+        wp_set_current_user($user_id);
+
+        $form_id = 'gm2_elementor_permission_form';
+        $nonce   = wp_create_nonce('gm2_cp_form|' . $form_id);
+        $title   = 'Restricted Story';
+
+        $fields = [
+            'gm2_cp_nonce' => [ 'id' => 'gm2_cp_nonce', 'value' => $nonce, 'raw_value' => $nonce, 'type' => 'hidden' ],
+            'gm2_cp_hp'    => [ 'id' => 'gm2_cp_hp', 'value' => '', 'raw_value' => '', 'type' => 'hidden' ],
+            'title'        => [ 'id' => 'title', 'value' => $title, 'raw_value' => $title, 'type' => 'text' ],
+        ];
+
+        $settings = [
+            'gm2_cp_form_id'             => $form_id,
+            'gm2_cp_post_type'           => 'book',
+            'gm2_cp_title_field'         => 'title',
+            'gm2_cp_nonce_field'         => 'gm2_cp_nonce',
+            'gm2_cp_honeypot_field'      => 'gm2_cp_hp',
+            'gm2_cp_required_permissions'=> ['role:author'],
+        ];
+
+        $record = new Elementor_Test_Form_Record($fields, $settings);
+        $ajax   = new Elementor_Test_Ajax_Handler();
+
+        $action = new CreateOrUpdatePost();
+        $action->run($record, $ajax);
+
+        $this->assertNotEmpty($ajax->errors, 'Submission should be blocked when user lacks required role.');
+        $this->assertStringContainsString('permission', $ajax->errors[0]);
+        $this->assertNull(get_page_by_title($title, OBJECT, 'book'));
+    }
+
+    public function test_action_allows_submission_for_matching_role(): void {
+        $user_id = self::factory()->user->create([ 'role' => 'author' ]);
+        wp_set_current_user($user_id);
+
+        $form_id = 'gm2_elementor_permission_allow_form';
+        $nonce   = wp_create_nonce('gm2_cp_form|' . $form_id);
+        $title   = 'Permitted Story';
+
+        $fields = [
+            'gm2_cp_nonce' => [ 'id' => 'gm2_cp_nonce', 'value' => $nonce, 'raw_value' => $nonce, 'type' => 'hidden' ],
+            'gm2_cp_hp'    => [ 'id' => 'gm2_cp_hp', 'value' => '', 'raw_value' => '', 'type' => 'hidden' ],
+            'title'        => [ 'id' => 'title', 'value' => $title, 'raw_value' => $title, 'type' => 'text' ],
+        ];
+
+        $settings = [
+            'gm2_cp_form_id'             => $form_id,
+            'gm2_cp_post_type'           => 'book',
+            'gm2_cp_title_field'         => 'title',
+            'gm2_cp_nonce_field'         => 'gm2_cp_nonce',
+            'gm2_cp_honeypot_field'      => 'gm2_cp_hp',
+            'gm2_cp_required_permissions'=> ['role:author'],
+        ];
+
+        $record = new Elementor_Test_Form_Record($fields, $settings);
+        $ajax   = new Elementor_Test_Ajax_Handler();
+
+        $action = new CreateOrUpdatePost();
+        $action->run($record, $ajax);
+
+        $post = get_page_by_title($title, OBJECT, 'book');
+        $this->assertInstanceOf(WP_Post::class, $post, 'Post should be created when role matches requirement.');
+        if ($post) {
+            wp_delete_post($post->ID, true);
+        }
+    }
+
+    public function test_action_allows_editors_to_update_existing_posts(): void {
+        $editor_id = self::factory()->user->create([ 'role' => 'editor' ]);
+        wp_set_current_user($editor_id);
+
+        $existing_id = wp_insert_post([
+            'post_type'   => 'book',
+            'post_status' => 'draft',
+            'post_title'  => 'Original Draft',
+        ]);
+
+        $form_id = 'gm2_elementor_permission_update_form';
+        $nonce   = wp_create_nonce('gm2_cp_form|' . $form_id);
+        $title   = 'Updated Draft';
+
+        $fields = [
+            'gm2_cp_nonce' => [ 'id' => 'gm2_cp_nonce', 'value' => $nonce, 'raw_value' => $nonce, 'type' => 'hidden' ],
+            'gm2_cp_hp'    => [ 'id' => 'gm2_cp_hp', 'value' => '', 'raw_value' => '', 'type' => 'hidden' ],
+            'title'        => [ 'id' => 'title', 'value' => $title, 'raw_value' => $title, 'type' => 'text' ],
+            'existing'     => [ 'id' => 'existing', 'value' => (string) $existing_id, 'raw_value' => (string) $existing_id, 'type' => 'hidden' ],
+        ];
+
+        $settings = [
+            'gm2_cp_form_id'             => $form_id,
+            'gm2_cp_post_type'           => 'book',
+            'gm2_cp_post_id_field'       => 'existing',
+            'gm2_cp_title_field'         => 'title',
+            'gm2_cp_nonce_field'         => 'gm2_cp_nonce',
+            'gm2_cp_honeypot_field'      => 'gm2_cp_hp',
+            'gm2_cp_required_permissions'=> ['role:subscriber'],
+        ];
+
+        $record = new Elementor_Test_Form_Record($fields, $settings);
+        $ajax   = new Elementor_Test_Ajax_Handler();
+
+        $action = new CreateOrUpdatePost();
+        $action->run($record, $ajax);
+
+        $post = get_post($existing_id);
+        $this->assertSame($title, $post->post_title, 'Editor should be able to update despite restrictions.');
+        $this->assertEmpty($ajax->errors, 'No permission errors expected when editor can edit post.');
+        wp_delete_post($existing_id, true);
     }
 
     public function test_action_assigns_taxonomy_terms_from_fields(): void {
