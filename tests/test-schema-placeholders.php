@@ -74,4 +74,41 @@ class SchemaPlaceholderTest extends WP_UnitTestCase {
         $this->assertSame('10', $data['offers']['price']);
         $this->assertSame(get_permalink($post_id), $data['offers']['url']);
     }
+
+    public function test_dynamic_tokens_replace_taxonomy_field_and_location() {
+        register_post_type('product');
+        register_taxonomy('product_cat', 'product');
+        $post_id = self::factory()->post->create(['post_type' => 'product', 'post_title' => 'Token Product']);
+        $term_id = self::factory()->term->create(['taxonomy' => 'product_cat', 'name' => 'Accessories']);
+        wp_set_post_terms($post_id, [$term_id], 'product_cat');
+        update_post_meta($post_id, 'custom_field', 'Custom Value');
+        update_post_meta($post_id, 'location_city', 'Seattle');
+
+        $tpl = [
+            '@context'      => 'https://schema.org/',
+            '@type'         => 'Product',
+            'name'          => '{{title}}',
+            'category'      => '{taxonomy:product_cat}',
+            'customField'   => '{field:custom_field}',
+            'locationCity'  => '{location_city}',
+        ];
+        update_option('gm2_schema_template_product', wp_json_encode($tpl));
+
+        $seo = new Gm2_SEO_Public();
+        $this->go_to(get_permalink($post_id));
+        setup_postdata(get_post($post_id));
+        update_option('gm2_schema_product', '1');
+
+        ob_start();
+        $seo->output_product_schema();
+        $output = ob_get_clean();
+        $this->assertNotEmpty($output);
+        preg_match('/<script type="application\/ld\+json">(.*?)<\/script>/', $output, $m);
+        $data = json_decode($m[1], true);
+
+        $this->assertSame('Accessories', $data['category']);
+        $this->assertSame('Custom Value', $data['customField']);
+        $this->assertSame('Seattle', $data['locationCity']);
+        wp_reset_postdata();
+    }
 }
