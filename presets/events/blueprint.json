@@ -797,7 +797,14 @@
       "map": {
         "startDate": "start_date",
         "endDate": "end_date",
-        "location": "location"
+        "eventStatus": "status",
+        "eventAttendanceMode": "attendance_mode",
+        "location.name": "location",
+        "location.address.streetAddress": "location",
+        "virtualLocation.url": "virtual_event_url",
+        "onlineEventUrl": "virtual_event_url",
+        "organizer": "organizer",
+        "offers": "ticket_offers"
       }
     }
   ],

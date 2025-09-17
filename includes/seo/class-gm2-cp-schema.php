@@ -182,6 +182,7 @@ class Gm2_CP_Schema {
             'offers' => 'Offer',
             'openingHoursSpecification' => 'OpeningHoursSpecification',
             'organizer' => 'Organization',
+            'virtualLocation' => 'VirtualLocation',
             default => null,
         };
     }
