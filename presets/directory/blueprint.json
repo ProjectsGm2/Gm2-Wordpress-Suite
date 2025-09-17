@@ -213,7 +213,8 @@
     "templates": {
       "single_listing": {
         "type": "shortcode",
-        "description": "Replace the shortcode placeholder with the ID of a saved Elementor template to render a custom hero."
+        "description": "Replace the shortcode placeholder with the ID of a saved Elementor template to render a custom hero.",
+        "file": "elementor/directory-hero.json"
       }
     }
   },

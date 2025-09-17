@@ -223,7 +223,8 @@
     "templates": {
       "single_property": {
         "type": "shortcode",
-        "description": "Replace the shortcode with a gallery-centric Elementor template ID."
+        "description": "Replace the shortcode with a gallery-centric Elementor template ID.",
+        "file": "elementor/property-hero.json"
       }
     }
   },

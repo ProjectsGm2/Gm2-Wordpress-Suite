@@ -189,24 +189,9 @@
 
         echo '<hr />';
 
-        $preset_files = apply_filters('gm2/presets/list', []);
-        echo '<h2>' . esc_html__( 'Add / Edit Post Type', 'gm2-wordpress-suite' );
-        if ($preset_files) {
-            echo ' <select id="gm2-preset-select"><option value="">' . esc_html__( 'Select Preset', 'gm2-wordpress-suite' ) . '</option>';
-            foreach ($preset_files as $slug => $meta) {
-                if (is_array($meta)) {
-                    $label = $meta['label'] ?? ucwords(str_replace(['-', '_'], ' ', (string) $slug));
-                } else {
-                    $label = (string) $meta;
-                }
-                if ($label === '') {
-                    $label = ucwords(str_replace(['-', '_'], ' ', (string) $slug));
-                }
-                echo '<option value="' . esc_attr($slug) . '">' . esc_html($label) . '</option>';
-            }
-            echo '</select> <button type="button" class="button" id="gm2-import-preset">' . esc_html__( 'Import Preset', 'gm2-wordpress-suite' ) . '</button>';
-        }
-        echo '</h2>';
+        echo '<h2>' . esc_html__( 'Add / Edit Post Type', 'gm2-wordpress-suite' ) . '</h2>';
+        echo '<div id="gm2-preset-wizard-root"></div>';
+        echo '<noscript><p>' . esc_html__( 'The preset wizard requires JavaScript. Enable it to import bundled models.', 'gm2-wordpress-suite' ) . '</p></noscript>';
         echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" id="gm2-post-type-form">';
         wp_nonce_field('gm2_edit_post_type');
         echo '<input type="hidden" name="action" value="gm2_edit_post_type" />';

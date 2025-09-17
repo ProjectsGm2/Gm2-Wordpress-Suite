@@ -1,0 +1,48 @@
+{
+  "version": "0.4",
+  "title": "Event Spotlight",
+  "type": "section",
+  "content": [
+    {
+      "id": "event-section",
+      "elType": "section",
+      "isInner": false,
+      "settings": {
+        "layout": "full_width"
+      },
+      "elements": [
+        {
+          "id": "event-column",
+          "elType": "column",
+          "isInner": false,
+          "settings": {
+            "_column_size": 100
+          },
+          "elements": [
+            {
+              "id": "event-heading",
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "Upcoming Event",
+                "tag": "h2"
+              },
+              "elements": [],
+              "isInner": false
+            },
+            {
+              "id": "event-text",
+              "elType": "widget",
+              "widgetType": "text-editor",
+              "settings": {
+                "editor": "<p>Share the headline details to entice visitors to register.</p>"
+              },
+              "elements": [],
+              "isInner": false
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

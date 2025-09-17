@@ -1,0 +1,48 @@
+{
+  "version": "0.4",
+  "title": "Directory Spotlight",
+  "type": "section",
+  "content": [
+    {
+      "id": "directory-section",
+      "elType": "section",
+      "isInner": false,
+      "settings": {
+        "layout": "full_width"
+      },
+      "elements": [
+        {
+          "id": "directory-column",
+          "elType": "column",
+          "isInner": false,
+          "settings": {
+            "_column_size": 100
+          },
+          "elements": [
+            {
+              "id": "directory-heading",
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "Featured Directory Listing",
+                "tag": "h2"
+              },
+              "elements": [],
+              "isInner": false
+            },
+            {
+              "id": "directory-text",
+              "elType": "widget",
+              "widgetType": "text-editor",
+              "settings": {
+                "editor": "<p>Introduce the business and encourage visitors to explore the listing.</p>"
+              },
+              "elements": [],
+              "isInner": false
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

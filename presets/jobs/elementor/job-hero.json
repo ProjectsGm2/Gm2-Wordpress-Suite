@@ -1,0 +1,48 @@
+{
+  "version": "0.4",
+  "title": "Job Overview",
+  "type": "section",
+  "content": [
+    {
+      "id": "job-section",
+      "elType": "section",
+      "isInner": false,
+      "settings": {
+        "layout": "full_width"
+      },
+      "elements": [
+        {
+          "id": "job-column",
+          "elType": "column",
+          "isInner": false,
+          "settings": {
+            "_column_size": 100
+          },
+          "elements": [
+            {
+              "id": "job-heading",
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": {
+                "title": "Role at a Glance",
+                "tag": "h2"
+              },
+              "elements": [],
+              "isInner": false
+            },
+            {
+              "id": "job-text",
+              "elType": "widget",
+              "widgetType": "text-editor",
+              "settings": {
+                "editor": "<p>Summarize the role and invite candidates to apply.</p>"
+              },
+              "elements": [],
+              "isInner": false
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

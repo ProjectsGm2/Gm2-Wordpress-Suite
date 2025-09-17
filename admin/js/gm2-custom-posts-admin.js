@@ -84,26 +84,6 @@ jQuery(function($){
         });
     }
 
-    $('#gm2-import-preset').on('click', function(){
-        var preset = $('#gm2-preset-select').val();
-        if(!preset){ return; }
-        $.post(gm2CPTImport.ajax, {
-            action: 'gm2_import_preset',
-            preset: preset,
-            nonce: gm2CPTImport.nonce
-        }, function(resp){
-            $('.gm2-import-notice').remove();
-            if(resp && resp.success){
-                $('<div class="notice notice-success gm2-import-notice"><p>'+esc(gm2CPTImport.success)+'</p></div>').insertBefore('#gm2-post-type-form');
-                window.scrollTo(0,0);
-            }else{
-                var msg = resp && resp.data && resp.data.message ? resp.data.message : gm2CPTImport.error;
-                $('<div class="notice notice-error gm2-import-notice"><p>'+esc(msg)+'</p></div>').insertBefore('#gm2-post-type-form');
-                window.scrollTo(0,0);
-            }
-        });
-    });
-
     function toggleFieldOptions(type){
         $('#gm2-field-date-options').toggle(type === 'date');
         $('#gm2-field-wysiwyg-options').toggle(type === 'wysiwyg');
