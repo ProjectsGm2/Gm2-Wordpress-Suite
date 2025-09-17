@@ -25,6 +25,7 @@ class PresetManagerTest extends WP_UnitTestCase {
             }
         }
         $this->assertContains('nearby', $elementorKeys, 'Expected Elementor query list to include the "nearby" definition.');
+        $this->assertContains('by_category', $elementorKeys, 'Expected Elementor query list to include the "by_category" definition.');
 
         $seoKeys = [];
         foreach ($directory['seo_mappings'] as $entry) {
@@ -51,6 +52,8 @@ class PresetManagerTest extends WP_UnitTestCase {
         $queryIds = apply_filters('gm2/presets/elementor/query_ids', []);
         $this->assertArrayHasKey('gm2_directory_nearby', $queryIds);
         $this->assertSame('directory', $queryIds['gm2_directory_nearby']['preset']);
+        $this->assertArrayHasKey('gm2_directory_by_category', $queryIds);
+        $this->assertSame('directory', $queryIds['gm2_directory_by_category']['preset']);
 
         $seoMappings = apply_filters('gm2/presets/seo/mappings', []);
         $this->assertArrayHasKey('directory', $seoMappings);

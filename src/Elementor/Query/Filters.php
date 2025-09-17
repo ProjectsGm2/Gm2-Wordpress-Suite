@@ -10,6 +10,7 @@ use function add_action;
 use function current_time;
 use function deg2rad;
 use function cos;
+use function sanitize_title;
 use function sanitize_text_field;
 
 /**
@@ -34,6 +35,7 @@ class Filters
         add_action('elementor/query/gm2_properties_sale', [self::class, 'handlePropertiesForSale'], 10, 2);
         add_action('elementor/query/gm2_properties_rent', [self::class, 'handlePropertiesForRent'], 10, 2);
         add_action('elementor/query/gm2_directory_nearby', [self::class, 'handleDirectoryNearby'], 10, 2);
+        add_action('elementor/query/gm2_directory_by_category', [self::class, 'handleDirectoryByCategory'], 10, 2);
         add_action('elementor/query/gm2_courses_active', [self::class, 'handleActiveCourses'], 10, 2);
     }
 
@@ -167,6 +169,41 @@ class Filters
                 'value'   => [$lng - $lngRange, $lng + $lngRange],
                 'compare' => 'BETWEEN',
                 'type'    => 'DECIMAL',
+            ]);
+        }
+
+        self::ensureOrdering($query, 'title', 'ASC');
+    }
+
+    /**
+     * Directory listings filtered by taxonomy slugs.
+     */
+    public static function handleDirectoryByCategory($query, $widget = null): void
+    {
+        if (!$query instanceof WP_Query) {
+            return;
+        }
+
+        self::ensurePostType($query, 'listing');
+        self::ensureStatus($query, 'publish');
+        self::ensurePagination($query, self::DEFAULT_DIRECTORY_PER_PAGE);
+        self::applySearch($query, ['gm2_directory_search', 'gm2_search']);
+
+        $terms = self::normaliseTaxonomyTerms($query->get('gm2_listing_category'));
+
+        if (empty($terms)) {
+            $terms = self::normaliseTaxonomyTerms($query->get('gm2_directory_category'));
+        }
+
+        if (empty($terms)) {
+            $terms = self::normaliseTaxonomyTerms($query->get('listing_category'));
+        }
+
+        if (!empty($terms)) {
+            self::appendTaxQuery($query, [
+                'taxonomy' => 'listing_category',
+                'field'    => 'slug',
+                'terms'    => $terms,
             ]);
         }
 
@@ -343,5 +380,40 @@ class Filters
         }
 
         return null;
+    }
+
+    /**
+     * Normalise taxonomy slug input from query vars to an array of sanitized terms.
+     *
+     * @param mixed $value Raw query variable value.
+     */
+    private static function normaliseTaxonomyTerms($value): array
+    {
+        if (is_string($value)) {
+            $value = trim($value);
+            if ($value === '') {
+                return [];
+            }
+
+            $value = array_map('trim', explode(',', $value));
+        }
+
+        if (!is_array($value)) {
+            return [];
+        }
+
+        $terms = [];
+        foreach ($value as $term) {
+            if (!is_string($term)) {
+                continue;
+            }
+
+            $term = sanitize_title($term);
+            if ($term !== '') {
+                $terms[] = $term;
+            }
+        }
+
+        return array_values(array_unique($terms));
     }
 }

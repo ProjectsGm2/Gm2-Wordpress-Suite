@@ -12,6 +12,7 @@ class FiltersTest extends WP_UnitTestCase
         register_post_type('property', ['public' => true]);
         register_taxonomy('property_status', 'property', ['public' => true]);
         register_post_type('listing', ['public' => true]);
+        register_taxonomy('listing_category', 'listing', ['public' => true]);
         register_post_type('course', ['public' => true]);
     }
 
@@ -22,6 +23,7 @@ class FiltersTest extends WP_UnitTestCase
         unregister_post_type('property');
         unregister_taxonomy('property_status');
         unregister_post_type('listing');
+        unregister_taxonomy('listing_category');
         unregister_post_type('course');
         parent::tearDown();
     }
@@ -136,6 +138,27 @@ class FiltersTest extends WP_UnitTestCase
         $this->assertCount(2, $lngClause['value']);
         $this->assertLessThan($lngClause['value'][1], 0.2);
         $this->assertGreaterThan($lngClause['value'][0], -0.3);
+    }
+
+    public function test_directory_by_category_filters_listing_terms(): void
+    {
+        $query = new WP_Query();
+        $query->set('gm2_listing_category', 'cafes, FOOD-TRUCKS');
+        $query->set('gm2_directory_search', 'Brunch Spots');
+
+        do_action('elementor/query/gm2_directory_by_category', $query);
+
+        $this->assertSame('listing', $query->get('post_type'));
+        $this->assertSame('publish', $query->get('post_status'));
+        $this->assertSame(12, $query->get('posts_per_page'));
+        $this->assertSame('title', $query->get('orderby'));
+        $this->assertSame('ASC', $query->get('order'));
+        $this->assertSame('Brunch Spots', $query->get('s'));
+
+        $taxQuery = $query->get('tax_query');
+        $this->assertIsArray($taxQuery);
+        $this->assertSame('listing_category', $taxQuery[0]['taxonomy']);
+        $this->assertSame(['cafes', 'food-trucks'], $taxQuery[0]['terms']);
     }
 
     public function test_courses_active_apply_status_and_search_default(): void

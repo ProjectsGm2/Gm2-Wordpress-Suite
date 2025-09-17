@@ -102,6 +102,21 @@ The Gm2 WordPress Suite registers preset query IDs for Elementor's Posts, Loop G
 2. Build a form or buttons that pass `gm2_lat`, `gm2_lng`, and `gm2_radius` in the URL—for example `/directory/?gm2_lat=51.5&gm2_lng=-0.1&gm2_radius=10`—so the preset can calculate the bounding box.【F:src/Elementor/Query/Filters.php†L150-L173】
 3. Provide a search box wired to `?gm2_directory_search=` or the shared `?gm2_search=` parameter for keyword filtering on top of the geo fence.【F:src/Elementor/Query/Filters.php†L147-L149】
 
+### Directory listings by category (`gm2_directory_by_category`)
+
+**What it does:** Displays published `listing` posts assigned to the `listing_category` terms supplied via preset-specific query vars, keeps the twelve item default, and sorts results alphabetically by title.【F:src/Elementor/Query/Filters.php†L181-L212】
+
+**Required data:**
+
+- Custom post type `listing` with the hierarchical `listing_category` taxonomy from the Directory preset so the query can filter by slug.【F:presets/directory/blueprint.json†L68-L87】【F:src/Elementor/Query/Filters.php†L189-L205】
+- Links or UI that expose category slugs to visitors—for example cards that link to `/directory/?gm2_listing_category=restaurants`—to drive the taxonomy filter.【F:src/Elementor/Query/Filters.php†L189-L205】
+
+**Elementor setup:**
+
+1. Enter `gm2_directory_by_category` into the widget's **Query ID** to activate the preset filters.【F:src/Elementor/Query/Filters.php†L181-L205】
+2. Pass category slugs through `?gm2_listing_category=` or `?gm2_directory_category=` query vars (the preset also honours Elementor's native `listing_category` argument) to control which listings appear.【F:src/Elementor/Query/Filters.php†L189-L205】
+3. Layer keyword search by appending `?gm2_directory_search=` or the shared `?gm2_search=` parameter—the preset maps the values to Elementor's search field before applying the taxonomy clause.【F:src/Elementor/Query/Filters.php†L186-L189】【F:src/Elementor/Query/Filters.php†L203-L205】
+
 ### Active courses (`gm2_courses_active`)
 
 **What it does:** Lists published `course` posts whose `status` meta value is `active`, uses nine items per page, and sorts by publish date descending so the freshest course appears first.【F:src/Elementor/Query/Filters.php†L185-L196】
