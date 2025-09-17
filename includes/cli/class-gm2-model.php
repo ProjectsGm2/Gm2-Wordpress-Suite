@@ -22,6 +22,9 @@ class Gm2_Model_CLI extends \WP_CLI_Command {
      *
      * [--format=<format>]
      * : Output format: json or yaml. Defaults to json.
+     *
+     * [--field-groups]
+     * : Export only field group definitions.
      */
     public function export( $args, $assoc_args ) {
         $file = $args[0] ?? '';
@@ -29,12 +32,16 @@ class Gm2_Model_CLI extends \WP_CLI_Command {
             \WP_CLI::error( __( 'Missing file argument.', 'gm2-wordpress-suite' ) );
         }
         $format = $assoc_args['format'] ?? 'json';
-        $data   = \gm2_model_export( $format );
+        $fields_only = ! empty( $assoc_args['field-groups'] );
+        $data   = $fields_only ? \gm2_field_groups_export( $format ) : \gm2_model_export( $format );
         if ( is_wp_error( $data ) ) {
             \WP_CLI::error( $data->get_error_message() );
         }
         file_put_contents( $file, $data );
-        \WP_CLI::success( sprintf( __( 'Models exported to %s', 'gm2-wordpress-suite' ), $file ) );
+        $message = $fields_only
+            ? sprintf( __( 'Field groups exported to %s', 'gm2-wordpress-suite' ), $file )
+            : sprintf( __( 'Models exported to %s', 'gm2-wordpress-suite' ), $file );
+        \WP_CLI::success( $message );
     }
 
     /**
@@ -47,6 +54,12 @@ class Gm2_Model_CLI extends \WP_CLI_Command {
      *
      * [--format=<format>]
      * : File format: json or yaml. Defaults to json or guessed from extension.
+     *
+     * [--field-groups]
+     * : Import field group definitions instead of full blueprints.
+     *
+     * [--replace]
+     * : Replace existing field groups instead of merging (only used with --field-groups).
      */
     public function import( $args, $assoc_args ) {
         $file = $args[0] ?? '';
@@ -57,7 +70,17 @@ class Gm2_Model_CLI extends \WP_CLI_Command {
         if ( ! $format ) {
             $format = preg_match( '/\.ya?ml$/i', $file ) ? 'yaml' : 'json';
         }
+        $fields_only = ! empty( $assoc_args['field-groups'] );
+        $replace     = ! empty( $assoc_args['replace'] );
         $contents = file_get_contents( $file );
+        if ( $fields_only ) {
+            $result = \gm2_field_groups_import( $contents, $format, ! $replace ? true : false );
+            if ( is_wp_error( $result ) ) {
+                \WP_CLI::error( $result->get_error_message() );
+            }
+            \WP_CLI::success( sprintf( __( 'Field groups imported from %s', 'gm2-wordpress-suite' ), $file ) );
+            return;
+        }
         $result   = \gm2_model_import( $contents, $format );
         if ( is_wp_error( $result ) ) {
             \WP_CLI::error( $result->get_error_message() );

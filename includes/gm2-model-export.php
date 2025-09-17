@@ -1,53 +1,45 @@
 <?php
+
+use Gm2\Presets\BlueprintIO;
+
 if (!defined('ABSPATH')) {
     exit;
 }
 
 if (!function_exists('gm2_model_export')) {
     /**
-     * Export model configuration including post types, taxonomies and field groups.
+     * Export the full blueprint definition.
      *
      * @param string $format Output format: json, yaml or array.
      * @return string|array|WP_Error
      */
     function gm2_model_export(string $format = 'json') {
-        $config = get_option('gm2_custom_posts_config', []);
-        if (!is_array($config)) {
-            $config = [];
+        $blueprint = BlueprintIO::exportBlueprint();
+
+        if ($format === 'array') {
+            return $blueprint;
         }
-        $field_groups = get_option('gm2_field_groups', []);
-        if (!is_array($field_groups)) {
-            $field_groups = [];
+
+        return BlueprintIO::encode($blueprint, $format);
+    }
+}
+
+if (!function_exists('gm2_field_groups_export')) {
+    /**
+     * Export only field group definitions.
+     *
+     * @param string               $format Output format: json, yaml or array.
+     * @param array<int, string>|null $slugs Optional list of group slugs to include.
+     * @return string|array|WP_Error
+     */
+    function gm2_field_groups_export(string $format = 'json', ?array $slugs = null) {
+        $blueprint = BlueprintIO::exportFieldGroups($slugs);
+
+        if ($format === 'array') {
+            return $blueprint;
         }
-        $schema_maps = get_option('gm2_cp_schema_map', []);
-        if (!is_array($schema_maps)) {
-            $schema_maps = [];
-        }
-        $data = [
-            'post_types'      => $config['post_types'] ?? [],
-            'taxonomies'      => $config['taxonomies'] ?? [],
-            'field_groups'    => $field_groups,
-            'schema_mappings' => $schema_maps,
-            'fields'          => [
-                'groups' => $field_groups,
-            ],
-            'seo'             => [
-                'mappings' => $schema_maps,
-            ],
-        ];
-        switch ($format) {
-            case 'array':
-                return $data;
-            case 'yaml':
-                if (function_exists('yaml_emit')) {
-                    return yaml_emit($data);
-                }
-                return new \WP_Error('yaml_unavailable', __('YAML support is not available.', 'gm2-wordpress-suite'));
-            case 'json':
-            default:
-                $encode = function_exists('wp_json_encode') ? 'wp_json_encode' : 'json_encode';
-                return $encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        }
+
+        return BlueprintIO::encode($blueprint, $format);
     }
 }
 
@@ -66,40 +58,34 @@ if (!function_exists('gm2_validate_blueprint')) {
         if (!file_exists($schema_file)) {
             return new \WP_Error('schema_missing', __('Blueprint schema not found.', 'gm2-wordpress-suite'));
         }
+
         $schema = json_decode(file_get_contents($schema_file), true);
         if (!is_array($schema)) {
             return new \WP_Error('schema_invalid', __('Invalid blueprint schema.', 'gm2-wordpress-suite'));
         }
-        $result = rest_validate_value_from_schema($data, $schema, 'blueprint');
+
+        $prepared = BlueprintIO::prepareForSchema($data);
+        $result = rest_validate_value_from_schema($prepared, $schema, 'blueprint');
         if (is_wp_error($result)) {
             return $result;
         }
+
         return true;
     }
 }
 
 if (!function_exists('gm2_model_import')) {
     /**
-     * Import model configuration.
+     * Import a full blueprint definition.
      *
      * @param string|array $input  Model data.
      * @param string       $format Input format: json, yaml or array.
      * @return true|WP_Error
      */
     function gm2_model_import($input, string $format = 'json') {
-        if ('array' === $format) {
-            $data = $input;
-        } elseif ('yaml' === $format) {
-            if (!function_exists('yaml_parse')) {
-                return new \WP_Error('yaml_unavailable', __('YAML support is not available.', 'gm2-wordpress-suite'));
-            }
-            $data = yaml_parse($input);
-        } else {
-            $data = json_decode($input, true);
-        }
-
-        if (!is_array($data)) {
-            return new \WP_Error('invalid_data', __('Invalid model data.', 'gm2-wordpress-suite'));
+        $data = BlueprintIO::decode($input, $format);
+        if (is_wp_error($data)) {
+            return $data;
         }
 
         $valid = gm2_validate_blueprint($data);
@@ -107,22 +93,26 @@ if (!function_exists('gm2_model_import')) {
             return $valid;
         }
 
-        $config = [
-            'post_types' => $data['post_types'] ?? [],
-            'taxonomies' => $data['taxonomies'] ?? [],
-        ];
-        update_option('gm2_custom_posts_config', $config);
-        $field_groups = $data['field_groups'] ?? [];
-        if (!$field_groups && isset($data['fields']['groups'])) {
-            $field_groups = $data['fields']['groups'];
+        return BlueprintIO::importBlueprint($data);
+    }
+}
+
+if (!function_exists('gm2_field_groups_import')) {
+    /**
+     * Import only field group definitions.
+     *
+     * @param string|array $input Field group data.
+     * @param string       $format Input format.
+     * @param bool         $merge  Whether to merge with existing groups.
+     * @return true|WP_Error
+     */
+    function gm2_field_groups_import($input, string $format = 'json', bool $merge = true) {
+        $data = BlueprintIO::decode($input, $format);
+        if (is_wp_error($data)) {
+            return $data;
         }
-        $schema_mappings = $data['schema_mappings'] ?? [];
-        if (!$schema_mappings && isset($data['seo']['mappings'])) {
-            $schema_mappings = $data['seo']['mappings'];
-        }
-        update_option('gm2_field_groups', is_array($field_groups) ? $field_groups : []);
-        update_option('gm2_cp_schema_map', is_array($schema_mappings) ? $schema_mappings : []);
-        return true;
+
+        return BlueprintIO::importFieldGroups($data, $merge);
     }
 }
 
@@ -142,18 +132,23 @@ if (!function_exists('gm2_model_generate_plugin')) {
         $code .= "/*\nPlugin Name: {$plugin_name}\n*/\n";
         $code .= "if (!defined('ABSPATH')) { exit; }\n";
         $code .= "add_action('init', function() {\n";
-        foreach ($data['post_types'] as $pt_slug => $args) {
+        foreach ($data['post_types'] ?? [] as $pt_slug => $args) {
             $code .= "    register_post_type('" . $pt_slug . "', " . var_export($args, true) . ");\n";
         }
-        foreach ($data['taxonomies'] as $tax_slug => $tax_args) {
+        foreach ($data['taxonomies'] ?? [] as $tax_slug => $tax_args) {
             $objects = $tax_args['object_type'] ?? [];
             unset($tax_args['object_type']);
             $code .= "    register_taxonomy('" . $tax_slug . "', " . var_export($objects, true) . ', ' . var_export($tax_args, true) . ");\n";
         }
-        $code .= "    \$groups = " . var_export($data['field_groups'] ?? [], true) . ";\n";
+        $groups = BlueprintIO::prepareFieldGroupsForStorage($data);
+        $code .= "    \$groups = " . var_export($groups, true) . ";\n";
         $code .= "    \$existing = get_option('gm2_field_groups', []);\n";
         $code .= "    update_option('gm2_field_groups', array_merge(\$existing, \$groups));\n";
-        $code .= "    \$maps = " . var_export($data['schema_mappings'] ?? [], true) . ";\n";
+        $maps = $data['schema_mappings'] ?? ($data['seo']['mappings'] ?? []);
+        if (!is_array($maps)) {
+            $maps = [];
+        }
+        $code .= "    \$maps = " . var_export($maps, true) . ";\n";
         $code .= "    \$existing_maps = get_option('gm2_cp_schema_map', []);\n";
         $code .= "    update_option('gm2_cp_schema_map', array_merge(\$existing_maps, \$maps));\n";
         $code .= "});\n";

@@ -2202,42 +2202,16 @@ class Gm2_Custom_Posts_Admin {
                 'message' => __('Select at least one field group to export.', 'gm2-wordpress-suite'),
             ]);
         }
-        $export = \gm2_model_export('array');
+        $export = \gm2_field_groups_export('json', $slugs);
         if (is_wp_error($export)) {
             wp_send_json_error([
                 'code'    => 'export_failed',
                 'message' => $export->get_error_message(),
             ]);
         }
-        $groups = $export['field_groups'] ?? [];
-        $selected = [];
-        foreach ($slugs as $slug) {
-            if (isset($groups[$slug])) {
-                $selected[$slug] = $groups[$slug];
-            }
-        }
-        if (!$selected) {
-            wp_send_json_error([
-                'code'    => 'not_found',
-                'message' => __('The selected field groups could not be found.', 'gm2-wordpress-suite'),
-            ]);
-        }
-        $data = [
-            'post_types'      => [],
-            'taxonomies'      => [],
-            'field_groups'    => $selected,
-            'schema_mappings' => [],
-        ];
-        $json = wp_json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        if (false === $json) {
-            wp_send_json_error([
-                'code'    => 'json_encode_failed',
-                'message' => __('Could not encode field groups to JSON.', 'gm2-wordpress-suite'),
-            ]);
-        }
         $filename = 'gm2-field-groups-' . gmdate('Y-m-d') . '.json';
         wp_send_json_success([
-            'content'  => $json,
+            'content'  => $export,
             'filename' => $filename,
         ]);
     }
