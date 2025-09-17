@@ -149,12 +149,100 @@
           "expose_in_rest": true
         },
         {
+          "key": "field_start_time_zone",
+          "label": "Start Time Zone",
+          "name": "start_time_zone",
+          "type": "text",
+          "required": true,
+          "format": "timezone",
+          "regex": "^[-A-Za-z0-9_/+]+$",
+          "instructions": "Provide the IANA time zone identifier for the event start time.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "string",
+              "pattern": "^[-A-Za-z0-9_/+]+$"
+            }
+          }
+        },
+        {
           "key": "field_end_date",
           "label": "End Date",
           "name": "end_date",
           "type": "datetime",
           "required": true,
           "expose_in_rest": true
+        },
+        {
+          "key": "field_end_time_zone",
+          "label": "End Time Zone",
+          "name": "end_time_zone",
+          "type": "text",
+          "required": true,
+          "format": "timezone",
+          "regex": "^[-A-Za-z0-9_/+]+$",
+          "instructions": "Provide the IANA time zone identifier for the event end time.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "string",
+              "pattern": "^[-A-Za-z0-9_/+]+$"
+            }
+          }
+        },
+        {
+          "key": "field_event_status",
+          "label": "Event Status",
+          "name": "status",
+          "type": "select",
+          "required": true,
+          "default": "EventScheduled",
+          "options": {
+            "EventScheduled": "Scheduled",
+            "EventCancelled": "Cancelled",
+            "EventPostponed": "Postponed",
+            "EventRescheduled": "Rescheduled",
+            "EventMovedOnline": "Moved Online"
+          },
+          "instructions": "Set the current publication status of the event.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "EventScheduled",
+                "EventCancelled",
+                "EventPostponed",
+                "EventRescheduled",
+                "EventMovedOnline"
+              ]
+            }
+          }
+        },
+        {
+          "key": "field_attendance_mode",
+          "label": "Attendance Mode",
+          "name": "attendance_mode",
+          "type": "select",
+          "required": true,
+          "default": "OfflineEventAttendanceMode",
+          "options": {
+            "OfflineEventAttendanceMode": "In Person",
+            "OnlineEventAttendanceMode": "Online",
+            "MixedEventAttendanceMode": "Hybrid"
+          },
+          "instructions": "Describe whether the event is in-person, online, or hybrid.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "OfflineEventAttendanceMode",
+                "OnlineEventAttendanceMode",
+                "MixedEventAttendanceMode"
+              ]
+            }
+          }
         },
         {
           "key": "field_location",
@@ -170,6 +258,9 @@
           "name": "venue",
           "type": "relationship",
           "relationship_type": "post",
+          "post_types": [
+            "venue"
+          ],
           "sync": "two-way",
           "instructions": "Select the venue hosting this event.",
           "expose_in_rest": true
@@ -180,9 +271,151 @@
           "name": "organizer",
           "type": "relationship",
           "relationship_type": "post",
+          "post_types": [
+            "organizer"
+          ],
           "sync": "two-way",
           "instructions": "Assign the organizer responsible for this event.",
           "expose_in_rest": true
+        },
+        {
+          "key": "field_recurrence_rule",
+          "label": "Recurrence Rule",
+          "name": "recurrence_rule",
+          "type": "text",
+          "regex": "^(FREQ=(DAILY|WEEKLY|MONTHLY|YEARLY))(;[A-Z]+=[^;]+)*$",
+          "instructions": "Optional RFC5545 RRULE string that defines how the event repeats.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "string",
+              "pattern": "^(FREQ=(DAILY|WEEKLY|MONTHLY|YEARLY))(;[A-Z]+=[^;]+)*$"
+            }
+          }
+        },
+        {
+          "key": "field_virtual_event_url",
+          "label": "Virtual Event URL",
+          "name": "virtual_event_url",
+          "type": "url",
+          "instructions": "Link to the livestream or webinar room when the event is accessible online.",
+          "conditions": {
+            "relation": "or",
+            "attendance_online": {
+              "field": "attendance_mode",
+              "operator": "==",
+              "value": "OnlineEventAttendanceMode"
+            },
+            "attendance_hybrid": {
+              "field": "attendance_mode",
+              "operator": "==",
+              "value": "MixedEventAttendanceMode"
+            }
+          },
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "string",
+              "format": "uri"
+            }
+          }
+        },
+        {
+          "key": "field_ticket_offers",
+          "label": "Ticket Offers",
+          "name": "ticket_offers",
+          "type": "repeater",
+          "instructions": "Add ticket price options and where attendees can purchase them.",
+          "sub_fields": {
+            "price": {
+              "type": "number",
+              "label": "Price",
+              "min": 0,
+              "step": 0.01,
+              "required": true
+            },
+            "currency": {
+              "type": "select",
+              "label": "Currency",
+              "required": true,
+              "options": {
+                "USD": "USD (US Dollar)",
+                "EUR": "EUR (Euro)",
+                "GBP": "GBP (British Pound)",
+                "AUD": "AUD (Australian Dollar)",
+                "CAD": "CAD (Canadian Dollar)"
+              }
+            },
+            "url": {
+              "type": "url",
+              "label": "Purchase URL",
+              "instructions": "Optional link to an external ticketing page.",
+              "format": "uri"
+            }
+          },
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "price": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "currency": {
+                    "type": "string",
+                    "enum": [
+                      "USD",
+                      "EUR",
+                      "GBP",
+                      "AUD",
+                      "CAD"
+                    ]
+                  },
+                  "url": {
+                    "type": "string",
+                    "format": "uri"
+                  }
+                },
+                "required": [
+                  "price",
+                  "currency"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        {
+          "key": "field_next_occurrence",
+          "label": "Next Occurrence",
+          "name": "next_occurrence",
+          "type": "computed",
+          "computed": {
+            "dependencies": [
+              "start_date",
+              "start_time_zone",
+              "end_date",
+              "end_time_zone",
+              "recurrence_rule"
+            ],
+            "callback": "Gm2\\Presets\\Events\\EventComputed::computeNextOccurrence",
+            "return_type": "string",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          "instructions": "Automatically calculates the next upcoming occurrence based on the recurrence pattern.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
         }
       ]
     }
@@ -193,7 +426,13 @@
       "map": {
         "startDate": "start_date",
         "endDate": "end_date",
-        "location": "location"
+        "location": "location",
+        "eventStatus": "status",
+        "eventAttendanceMode": "attendance_mode",
+        "onlineEventUrl": "virtual_event_url",
+        "offers": "ticket_offers",
+        "organizer": "organizer",
+        "nextStartDate": "next_occurrence"
       }
     }
   },
@@ -214,12 +453,100 @@
             "expose_in_rest": true
           },
           {
+            "key": "field_start_time_zone",
+            "label": "Start Time Zone",
+            "name": "start_time_zone",
+            "type": "text",
+            "required": true,
+            "format": "timezone",
+            "regex": "^[-A-Za-z0-9_/+]+$",
+            "instructions": "Provide the IANA time zone identifier for the event start time.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "string",
+                "pattern": "^[-A-Za-z0-9_/+]+$"
+              }
+            }
+          },
+          {
             "key": "field_end_date",
             "label": "End Date",
             "name": "end_date",
             "type": "datetime",
             "required": true,
             "expose_in_rest": true
+          },
+          {
+            "key": "field_end_time_zone",
+            "label": "End Time Zone",
+            "name": "end_time_zone",
+            "type": "text",
+            "required": true,
+            "format": "timezone",
+            "regex": "^[-A-Za-z0-9_/+]+$",
+            "instructions": "Provide the IANA time zone identifier for the event end time.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "string",
+                "pattern": "^[-A-Za-z0-9_/+]+$"
+              }
+            }
+          },
+          {
+            "key": "field_event_status",
+            "label": "Event Status",
+            "name": "status",
+            "type": "select",
+            "required": true,
+            "default": "EventScheduled",
+            "options": {
+              "EventScheduled": "Scheduled",
+              "EventCancelled": "Cancelled",
+              "EventPostponed": "Postponed",
+              "EventRescheduled": "Rescheduled",
+              "EventMovedOnline": "Moved Online"
+            },
+            "instructions": "Set the current publication status of the event.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "EventScheduled",
+                  "EventCancelled",
+                  "EventPostponed",
+                  "EventRescheduled",
+                  "EventMovedOnline"
+                ]
+              }
+            }
+          },
+          {
+            "key": "field_attendance_mode",
+            "label": "Attendance Mode",
+            "name": "attendance_mode",
+            "type": "select",
+            "required": true,
+            "default": "OfflineEventAttendanceMode",
+            "options": {
+              "OfflineEventAttendanceMode": "In Person",
+              "OnlineEventAttendanceMode": "Online",
+              "MixedEventAttendanceMode": "Hybrid"
+            },
+            "instructions": "Describe whether the event is in-person, online, or hybrid.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "OfflineEventAttendanceMode",
+                  "OnlineEventAttendanceMode",
+                  "MixedEventAttendanceMode"
+                ]
+              }
+            }
           },
           {
             "key": "field_location",
@@ -235,6 +562,9 @@
             "name": "venue",
             "type": "relationship",
             "relationship_type": "post",
+            "post_types": [
+              "venue"
+            ],
             "sync": "two-way",
             "instructions": "Select the venue hosting this event.",
             "expose_in_rest": true
@@ -245,9 +575,151 @@
             "name": "organizer",
             "type": "relationship",
             "relationship_type": "post",
+            "post_types": [
+              "organizer"
+            ],
             "sync": "two-way",
             "instructions": "Assign the organizer responsible for this event.",
             "expose_in_rest": true
+          },
+          {
+            "key": "field_recurrence_rule",
+            "label": "Recurrence Rule",
+            "name": "recurrence_rule",
+            "type": "text",
+            "regex": "^(FREQ=(DAILY|WEEKLY|MONTHLY|YEARLY))(;[A-Z]+=[^;]+)*$",
+            "instructions": "Optional RFC5545 RRULE string that defines how the event repeats.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "string",
+                "pattern": "^(FREQ=(DAILY|WEEKLY|MONTHLY|YEARLY))(;[A-Z]+=[^;]+)*$"
+              }
+            }
+          },
+          {
+            "key": "field_virtual_event_url",
+            "label": "Virtual Event URL",
+            "name": "virtual_event_url",
+            "type": "url",
+            "instructions": "Link to the livestream or webinar room when the event is accessible online.",
+            "conditions": {
+              "relation": "or",
+              "attendance_online": {
+                "field": "attendance_mode",
+                "operator": "==",
+                "value": "OnlineEventAttendanceMode"
+              },
+              "attendance_hybrid": {
+                "field": "attendance_mode",
+                "operator": "==",
+                "value": "MixedEventAttendanceMode"
+              }
+            },
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "string",
+                "format": "uri"
+              }
+            }
+          },
+          {
+            "key": "field_ticket_offers",
+            "label": "Ticket Offers",
+            "name": "ticket_offers",
+            "type": "repeater",
+            "instructions": "Add ticket price options and where attendees can purchase them.",
+            "sub_fields": {
+              "price": {
+                "type": "number",
+                "label": "Price",
+                "min": 0,
+                "step": 0.01,
+                "required": true
+              },
+              "currency": {
+                "type": "select",
+                "label": "Currency",
+                "required": true,
+                "options": {
+                  "USD": "USD (US Dollar)",
+                  "EUR": "EUR (Euro)",
+                  "GBP": "GBP (British Pound)",
+                  "AUD": "AUD (Australian Dollar)",
+                  "CAD": "CAD (Canadian Dollar)"
+                }
+              },
+              "url": {
+                "type": "url",
+                "label": "Purchase URL",
+                "instructions": "Optional link to an external ticketing page.",
+                "format": "uri"
+              }
+            },
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "price": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "currency": {
+                      "type": "string",
+                      "enum": [
+                        "USD",
+                        "EUR",
+                        "GBP",
+                        "AUD",
+                        "CAD"
+                      ]
+                    },
+                    "url": {
+                      "type": "string",
+                      "format": "uri"
+                    }
+                  },
+                  "required": [
+                    "price",
+                    "currency"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "key": "field_next_occurrence",
+            "label": "Next Occurrence",
+            "name": "next_occurrence",
+            "type": "computed",
+            "computed": {
+              "dependencies": [
+                "start_date",
+                "start_time_zone",
+                "end_date",
+                "end_time_zone",
+                "recurrence_rule"
+              ],
+              "callback": "Gm2\\Presets\\Events\\EventComputed::computeNextOccurrence",
+              "return_type": "string",
+              "schema": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "instructions": "Automatically calculates the next upcoming occurrence based on the recurrence pattern.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
           }
         ]
       }
