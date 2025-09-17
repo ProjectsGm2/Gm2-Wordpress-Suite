@@ -2,6 +2,14 @@
 
 namespace Gm2;
 
+use Gm2\SEO\Schema\Manager as SchemaManager;
+use Gm2\SEO\Schema\Mapper\CourseMapper;
+use Gm2\SEO\Schema\Mapper\DirectoryMapper;
+use Gm2\SEO\Schema\Mapper\EventMapper;
+use Gm2\SEO\Schema\Mapper\JobMapper;
+use Gm2\SEO\Schema\Mapper\MapperInterface;
+use Gm2\SEO\Schema\Mapper\RealEstateMapper;
+
 
 if (!defined('ABSPATH')) {
     exit;
@@ -10,6 +18,7 @@ if (!defined('ABSPATH')) {
 class Gm2_SEO_Admin {
     private $elementor_initialized = false;
     private static $notices = [];
+    private bool $schema_notice_scanned = false;
     const AI_CRON_HOOK = 'gm2_ai_batch_process';
     const AI_QUEUE_OPTION = 'gm2_ai_batch_queue';
     const AI_TAX_CRON_HOOK = 'gm2_ai_tax_batch_process';
@@ -108,6 +117,11 @@ class Gm2_SEO_Admin {
         add_option('ae_perf_dom_audit', '0');
         add_option('gm2_title_templates', []);
         add_option('gm2_description_templates', []);
+        add_option('gm2_schema_directory', '1');
+        add_option('gm2_schema_event', '1');
+        add_option('gm2_schema_job', '1');
+        add_option('gm2_schema_course', '1');
+        add_option('gm2_schema_real_estate', '1');
 
         $this->migrate_js_option_names();
 
@@ -1062,6 +1076,11 @@ class Gm2_SEO_Admin {
             $taxonomy_list = get_option('gm2_schema_taxonomy', '1');
             $article       = get_option('gm2_schema_article', '1');
             $review        = get_option('gm2_schema_review', '1');
+            $directory     = get_option('gm2_schema_directory', '1');
+            $event         = get_option('gm2_schema_event', '1');
+            $job           = get_option('gm2_schema_job', '1');
+            $course        = get_option('gm2_schema_course', '1');
+            $real_estate   = get_option('gm2_schema_real_estate', '1');
             $footer_bc     = get_option('gm2_show_footer_breadcrumbs', '1');
             if (!empty($_GET['updated'])) {
                 echo '<div class="updated notice"><p>' . esc_html__('Settings saved.', 'gm2-wordpress-suite') . '</p></div>';
@@ -1076,6 +1095,11 @@ class Gm2_SEO_Admin {
             echo '<tr><th scope="row">' . esc_html__( 'Breadcrumb Schema', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="gm2_schema_breadcrumbs" value="1" ' . checked($breadcrumbs, '1', false) . '></td></tr>';
             echo '<tr><th scope="row">' . esc_html__( 'Taxonomy ItemList Schema', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="gm2_schema_taxonomy" value="1" ' . checked($taxonomy_list, '1', false) . '></td></tr>';
             echo '<tr><th scope="row">' . esc_html__( 'Article Schema', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="gm2_schema_article" value="1" ' . checked($article, '1', false) . '></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Directory Schema', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="gm2_schema_directory" value="1" ' . checked($directory, '1', false) . '></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Event Schema', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="gm2_schema_event" value="1" ' . checked($event, '1', false) . '></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Job Schema', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="gm2_schema_job" value="1" ' . checked($job, '1', false) . '></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Course Schema', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="gm2_schema_course" value="1" ' . checked($course, '1', false) . '></td></tr>';
+            echo '<tr><th scope="row">' . esc_html__( 'Real Estate Schema', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="gm2_schema_real_estate" value="1" ' . checked($real_estate, '1', false) . '></td></tr>';
             echo '<tr><th scope="row">' . esc_html__( 'Show Breadcrumbs in Footer', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="gm2_show_footer_breadcrumbs" value="1" ' . checked($footer_bc, '1', false) . '></td></tr>';
             echo '<tr><th scope="row">' . esc_html__( 'Review Schema', 'gm2-wordpress-suite' ) . '</th><td><input type="checkbox" name="gm2_schema_review" value="1" ' . checked($review, '1', false) . '></td></tr>';
             echo '</tbody></table>';
@@ -3042,6 +3066,21 @@ class Gm2_SEO_Admin {
 
         $article = isset($_POST['gm2_schema_article']) ? '1' : '0';
         update_option('gm2_schema_article', $article);
+
+        $directory = isset($_POST['gm2_schema_directory']) ? '1' : '0';
+        update_option('gm2_schema_directory', $directory);
+
+        $event = isset($_POST['gm2_schema_event']) ? '1' : '0';
+        update_option('gm2_schema_event', $event);
+
+        $job = isset($_POST['gm2_schema_job']) ? '1' : '0';
+        update_option('gm2_schema_job', $job);
+
+        $course = isset($_POST['gm2_schema_course']) ? '1' : '0';
+        update_option('gm2_schema_course', $course);
+
+        $real_estate = isset($_POST['gm2_schema_real_estate']) ? '1' : '0';
+        update_option('gm2_schema_real_estate', $real_estate);
 
         $footer_bc = isset($_POST['gm2_show_footer_breadcrumbs']) ? '1' : '0';
         update_option('gm2_show_footer_breadcrumbs', $footer_bc);
@@ -6863,7 +6902,88 @@ class Gm2_SEO_Admin {
         self::$notices[] = [ 'message' => $msg, 'type' => $type ];
     }
 
+    /**
+     * Surface notices when required schema fields are missing.
+     */
+    private function maybe_add_schema_mapping_notices(): void
+    {
+        if ($this->schema_notice_scanned) {
+            return;
+        }
+
+        $this->schema_notice_scanned = true;
+
+        if (!function_exists('get_current_screen')) {
+            return;
+        }
+
+        $screen = get_current_screen();
+        if (!$screen || $screen->id !== 'toplevel_page_gm2-seo') {
+            return;
+        }
+
+        $tab = isset($_GET['tab']) ? sanitize_key(wp_unslash((string) $_GET['tab'])) : '';
+        if ($tab !== 'schema') {
+            return;
+        }
+
+        foreach ($this->getSchemaMappersForValidation() as $mapper) {
+            if (!$mapper instanceof MapperInterface) {
+                continue;
+            }
+
+            if (get_option($mapper->getOptionName(), '1') !== '1') {
+                continue;
+            }
+
+            if (!post_type_exists($mapper->getPostType())) {
+                continue;
+            }
+
+            $missing = [];
+            foreach ($mapper->getRequiredFieldMap() as $key => $label) {
+                if (!gm2_find_field_definition($key)) {
+                    $missing[] = sprintf('%s (%s)', $label, $key);
+                }
+            }
+
+            if ($missing) {
+                self::add_notice(
+                    sprintf(
+                        /* translators: 1: schema label, 2: comma separated list of missing fields */
+                        __('%1$s schema requires field mappings for: %2$s', 'gm2-wordpress-suite'),
+                        $mapper->getLabel(),
+                        implode(', ', $missing)
+                    )
+                );
+            }
+        }
+    }
+
+    /**
+     * Retrieve the schema mappers available for validation.
+     *
+     * @return MapperInterface[]
+     */
+    private function getSchemaMappersForValidation(): array
+    {
+        $manager = SchemaManager::instance();
+        $mappers = $manager->getMappers();
+        if (!empty($mappers)) {
+            return $mappers;
+        }
+
+        return [
+            new DirectoryMapper(),
+            new EventMapper(),
+            new JobMapper(),
+            new CourseMapper(),
+            new RealEstateMapper(),
+        ];
+    }
+
     public function admin_notices() {
+        $this->maybe_add_schema_mapping_notices();
         foreach (self::$notices as $n) {
             echo '<div class="notice notice-' . esc_attr($n['type']) . '"><p>' . esc_html($n['message']) . '</p></div>';
         }
