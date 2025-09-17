@@ -25,6 +25,8 @@ class CreateOrUpdatePost extends Action_Base {
     private const NONCE_ACTION = 'gm2_cp_form';
     private const DEFAULT_NONCE_FIELD = 'gm2_cp_nonce';
     private const DEFAULT_HONEYPOT_FIELD = 'gm2_cp_hp';
+    private const DEFAULT_THROTTLE_LIMIT = 3;
+    private const DEFAULT_THROTTLE_WINDOW = 60;
 
     private static bool $hooksRegistered = false;
 
@@ -407,6 +409,10 @@ class CreateOrUpdatePost extends Action_Base {
 
         if (!$this->check_honeypot($fields, $settings)) {
             $this->record_error($record, $ajax_handler, __('Submission blocked by anti-spam checks.', 'gm2-wordpress-suite'));
+            return;
+        }
+
+        if (!$this->check_submission_throttle($form_id, $settings, $record, $ajax_handler)) {
             return;
         }
 
@@ -809,6 +815,85 @@ class CreateOrUpdatePost extends Action_Base {
             $value = wp_unslash((string) $_POST['form_fields'][ $field_id ]);
         }
         return '' === trim((string) $value);
+    }
+
+    /**
+     * Check whether the current request exceeds the submission throttle.
+     *
+     * @param string $form_id  Form identifier.
+     * @param array  $settings Action settings.
+     * @param object $record   Form record instance.
+     * @param object $ajax_handler Ajax handler instance.
+     * @return bool
+     */
+    private function check_submission_throttle(string $form_id, array $settings, $record, $ajax_handler): bool {
+        $limits = [
+            'limit'  => self::DEFAULT_THROTTLE_LIMIT,
+            'window' => self::DEFAULT_THROTTLE_WINDOW,
+        ];
+
+        /**
+         * Filter the submission throttle limits.
+         *
+         * @param array  $limits    Array containing `limit` and `window` keys.
+         * @param string $form_id   Form identifier.
+         * @param array  $settings  Action settings.
+         * @param object $record    Form record instance.
+         */
+        $limits = apply_filters('gm2_cp_elementor_throttle_limits', $limits, $form_id, $settings, $record);
+
+        $limit  = isset($limits['limit']) ? (int) $limits['limit'] : 0;
+        $window = isset($limits['window']) ? (int) $limits['window'] : 0;
+
+        if ($limit < 1 || $window < 1) {
+            return true;
+        }
+
+        $identifier = $this->resolve_throttle_identifier();
+        $key        = 'gm2_cp_form_throttle_' . md5($form_id . '|' . $identifier);
+        $now        = time();
+
+        $data = get_transient($key);
+        if (!is_array($data) || !isset($data['start'], $data['count']) || ($data['start'] + $window) <= $now) {
+            $data = [
+                'start' => $now,
+                'count' => 1,
+            ];
+            set_transient($key, $data, $window);
+            return true;
+        }
+
+        if ($data['count'] >= $limit) {
+            $expires_in = max($data['start'] + $window - $now, 1);
+            set_transient($key, $data, $expires_in);
+            $this->record_error($record, $ajax_handler, __('Please wait before submitting the form again.', 'gm2-wordpress-suite'));
+            return false;
+        }
+
+        $data['count']++;
+        $expires_in = max($data['start'] + $window - $now, 1);
+        set_transient($key, $data, $expires_in);
+
+        return true;
+    }
+
+    /**
+     * Resolve the throttle identifier for the current visitor.
+     *
+     * @return string
+     */
+    private function resolve_throttle_identifier(): string {
+        $user_id = get_current_user_id();
+        if ($user_id > 0) {
+            return 'user:' . $user_id;
+        }
+
+        $ip = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field((string) $_SERVER['REMOTE_ADDR']) : '';
+        if ('' !== $ip) {
+            return 'ip:' . $ip;
+        }
+
+        return 'anonymous';
     }
 
     /**
