@@ -83,6 +83,19 @@
         "slug": "listing-category"
       }
     },
+    "listing_amenity": {
+      "object_type": [
+        "listing"
+      ],
+      "labels": {
+        "name": "Amenities",
+        "singular_name": "Amenity"
+      },
+      "hierarchical": false,
+      "rewrite": {
+        "slug": "listing-amenity"
+      }
+    },
     "listing_location": {
       "object_type": [
         "listing"
@@ -91,7 +104,7 @@
         "name": "Locations",
         "singular_name": "Location"
       },
-      "hierarchical": false,
+      "hierarchical": true,
       "rewrite": {
         "slug": "listing-location"
       }
@@ -139,7 +152,7 @@
     }
   },
   "label": "Business Directory",
-  "description": "Local business listings with categories and proximity search.",
+  "description": "Local business listings with categories, amenities, and layered location filters for proximity search.",
   "fields": {
     "groups": [
       {
@@ -191,12 +204,45 @@
     ],
     "listing_location": [
       {
-        "name": "City Centre",
-        "slug": "city-centre"
+        "name": "Northern Region",
+        "slug": "northern-region"
       },
       {
-        "name": "Remote",
-        "slug": "remote"
+        "name": "Springfield",
+        "slug": "springfield",
+        "parent": "northern-region"
+      },
+      {
+        "name": "Coastal Region",
+        "slug": "coastal-region"
+      },
+      {
+        "name": "Bayview",
+        "slug": "bayview",
+        "parent": "coastal-region"
+      },
+      {
+        "name": "Harbor City",
+        "slug": "harbor-city",
+        "parent": "coastal-region"
+      }
+    ],
+    "listing_amenity": [
+      {
+        "name": "Free Wi-Fi",
+        "slug": "free-wi-fi"
+      },
+      {
+        "name": "Parking",
+        "slug": "parking"
+      },
+      {
+        "name": "Wheelchair Accessible",
+        "slug": "wheelchair-accessible"
+      },
+      {
+        "name": "Pet Friendly",
+        "slug": "pet-friendly"
       }
     ]
   },
