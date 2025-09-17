@@ -169,16 +169,46 @@
           "name": "price",
           "type": "number",
           "min": 0,
+          "step": 1,
           "required": true,
-          "expose_in_rest": true
+          "instructions": "Enter the listing price without currency symbols.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
         },
         {
-          "key": "field_address",
-          "label": "Address",
-          "name": "address",
-          "type": "text",
-          "required": true,
-          "expose_in_rest": true
+          "key": "field_price_currency",
+          "label": "Currency",
+          "name": "price_currency",
+          "type": "select",
+          "default": "USD",
+          "options": {
+            "USD": "USD (US Dollar)",
+            "CAD": "CAD (Canadian Dollar)",
+            "EUR": "EUR (Euro)",
+            "GBP": "GBP (British Pound)",
+            "AUD": "AUD (Australian Dollar)",
+            "NZD": "NZD (New Zealand Dollar)"
+          },
+          "instructions": "Choose the currency used when displaying the price.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "USD",
+                "CAD",
+                "EUR",
+                "GBP",
+                "AUD",
+                "NZD"
+              ]
+            }
+          }
         },
         {
           "key": "field_bedrooms",
@@ -186,7 +216,360 @@
           "name": "bedrooms",
           "type": "number",
           "min": 0,
-          "expose_in_rest": true
+          "step": 1,
+          "instructions": "Total number of bedrooms in the property.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "key": "field_bathrooms",
+          "label": "Bathrooms",
+          "name": "bathrooms",
+          "type": "number",
+          "min": 0,
+          "step": 0.5,
+          "instructions": "Include full and half baths; half baths can be entered as .5.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "number",
+              "minimum": 0,
+              "multipleOf": 0.5
+            }
+          }
+        },
+        {
+          "key": "field_floor_size",
+          "label": "Interior Area",
+          "name": "floor_size",
+          "type": "number",
+          "min": 0,
+          "step": 1,
+          "instructions": "Interior living area for the property.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "key": "field_floor_size_unit",
+          "label": "Interior Area Unit",
+          "name": "floor_size_unit",
+          "type": "select",
+          "default": "sqft",
+          "options": {
+            "sqft": "Square Feet",
+            "sqm": "Square Metres",
+            "sqyd": "Square Yards"
+          },
+          "instructions": "Unit of measurement for the interior area.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "sqft",
+                "sqm",
+                "sqyd"
+              ]
+            }
+          }
+        },
+        {
+          "key": "field_lot_size",
+          "label": "Lot Size",
+          "name": "lot_size",
+          "type": "number",
+          "min": 0,
+          "step": 0.01,
+          "instructions": "Total exterior lot size.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "key": "field_lot_size_unit",
+          "label": "Lot Size Unit",
+          "name": "lot_size_unit",
+          "type": "select",
+          "default": "sqft",
+          "options": {
+            "sqft": "Square Feet",
+            "sqm": "Square Metres",
+            "acre": "Acres",
+            "hectare": "Hectares"
+          },
+          "instructions": "Unit of measurement for the lot size.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "sqft",
+                "sqm",
+                "acre",
+                "hectare"
+              ]
+            }
+          }
+        },
+        {
+          "key": "field_year_built",
+          "label": "Year Built",
+          "name": "year_built",
+          "type": "number",
+          "min": 1600,
+          "max": 2100,
+          "step": 1,
+          "instructions": "Four-digit year construction was completed.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "integer",
+              "minimum": 1600,
+              "maximum": 2100
+            }
+          }
+        },
+        {
+          "key": "field_mls_id",
+          "label": "MLS ID",
+          "name": "mls_id",
+          "type": "text",
+          "regex": "^[A-Za-z0-9\\-]{3,32}$",
+          "instructions": "Enter the multiple listing service or brokerage identifier.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9\\-]{3,32}$"
+            }
+          }
+        },
+        {
+          "key": "field_parking_options",
+          "label": "Parking Options",
+          "name": "parking_options",
+          "type": "multiselect",
+          "options": {
+            "attached_garage": "Attached Garage",
+            "detached_garage": "Detached Garage",
+            "carport": "Carport",
+            "driveway": "Driveway",
+            "off_street": "Off-Street",
+            "on_street": "On-Street",
+            "assigned": "Assigned Space",
+            "parking_lot": "Parking Lot"
+          },
+          "instructions": "Select the available parking arrangements.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "attached_garage",
+                  "detached_garage",
+                  "carport",
+                  "driveway",
+                  "off_street",
+                  "on_street",
+                  "assigned",
+                  "parking_lot"
+                ]
+              },
+              "uniqueItems": true
+            }
+          }
+        },
+        {
+          "key": "field_heating_types",
+          "label": "Heating",
+          "name": "heating_types",
+          "type": "multiselect",
+          "options": {
+            "central": "Central",
+            "forced_air": "Forced Air",
+            "radiant": "Radiant",
+            "heat_pump": "Heat Pump",
+            "baseboard": "Baseboard",
+            "geothermal": "Geothermal",
+            "none": "None"
+          },
+          "instructions": "Select the installed heating systems.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "central",
+                  "forced_air",
+                  "radiant",
+                  "heat_pump",
+                  "baseboard",
+                  "geothermal",
+                  "none"
+                ]
+              },
+              "uniqueItems": true
+            }
+          }
+        },
+        {
+          "key": "field_cooling_types",
+          "label": "Cooling",
+          "name": "cooling_types",
+          "type": "multiselect",
+          "options": {
+            "central_air": "Central Air",
+            "wall_unit": "Wall/Window Unit",
+            "evaporative": "Evaporative Cooler",
+            "geothermal": "Geothermal",
+            "ductless": "Ductless Mini-Split",
+            "none": "None"
+          },
+          "instructions": "Select the cooling options available.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "central_air",
+                  "wall_unit",
+                  "evaporative",
+                  "geothermal",
+                  "ductless",
+                  "none"
+                ]
+              },
+              "uniqueItems": true
+            }
+          }
+        },
+        {
+          "key": "field_address_street",
+          "label": "Street Address",
+          "name": "address",
+          "type": "text",
+          "required": true,
+          "instructions": "Primary street address for the property.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            }
+          }
+        },
+        {
+          "key": "field_address_city",
+          "label": "City",
+          "name": "city",
+          "type": "text",
+          "required": true,
+          "instructions": "Municipality where the property is located.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "string",
+              "maxLength": 120
+            }
+          }
+        },
+        {
+          "key": "field_address_region",
+          "label": "State / Province",
+          "name": "region",
+          "type": "text",
+          "instructions": "State, province, or region.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "string",
+              "maxLength": 120
+            }
+          }
+        },
+        {
+          "key": "field_address_postal_code",
+          "label": "Postal Code",
+          "name": "postal_code",
+          "type": "text",
+          "regex": "^[A-Za-z0-9\\-\\s]{3,12}$",
+          "instructions": "Postal or ZIP code for the property.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9\\-\\s]{3,12}$"
+            }
+          }
+        },
+        {
+          "key": "field_address_country",
+          "label": "Country",
+          "name": "country",
+          "type": "text",
+          "regex": "^[A-Za-z]{2}$",
+          "instructions": "Two-letter ISO country code.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z]{2}$"
+            }
+          }
+        },
+        {
+          "key": "field_geo_latitude",
+          "label": "Latitude",
+          "name": "latitude",
+          "type": "number",
+          "min": -90,
+          "max": 90,
+          "instructions": "Decimal latitude for map widgets and queries.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "number",
+              "minimum": -90,
+              "maximum": 90
+            }
+          }
+        },
+        {
+          "key": "field_geo_longitude",
+          "label": "Longitude",
+          "name": "longitude",
+          "type": "number",
+          "min": -180,
+          "max": 180,
+          "instructions": "Decimal longitude for map widgets and queries.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "number",
+              "minimum": -180,
+              "maximum": 180
+            }
+          }
         },
         {
           "key": "field_property_agent",
@@ -215,6 +598,80 @@
           "sync": "two-way",
           "instructions": "Select the agency marketing this property.",
           "expose_in_rest": true
+        },
+        {
+          "key": "field_property_gallery",
+          "label": "Gallery",
+          "name": "gallery",
+          "type": "gallery",
+          "instructions": "Upload the primary property gallery.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          }
+        },
+        {
+          "key": "field_floor_plans",
+          "label": "Floor Plans",
+          "name": "floor_plans",
+          "type": "repeater",
+          "instructions": "Upload optional floor plans with descriptive labels.",
+          "sub_fields": {
+            "title": {
+              "type": "text",
+              "label": "Title",
+              "instructions": "Name of the floor or plan level."
+            },
+            "file": {
+              "type": "file",
+              "label": "Plan File",
+              "required": true,
+              "instructions": "Upload an image or PDF of the floor plan."
+            }
+          },
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "maxLength": 120
+                  },
+                  "file": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "file"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        {
+          "key": "field_virtual_tour_url",
+          "label": "Virtual Tour URL",
+          "name": "virtual_tour_url",
+          "type": "url",
+          "instructions": "Link to a hosted 3D tour or video walkthrough.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "string",
+              "format": "uri"
+            }
+          }
         }
       ]
     }
@@ -224,8 +681,20 @@
       "type": "RealEstateListing",
       "map": {
         "price": "price",
+        "priceCurrency": "price_currency",
         "address.streetAddress": "address",
-        "numberOfRooms": "bedrooms"
+        "address.addressLocality": "city",
+        "address.addressRegion": "region",
+        "address.postalCode": "postal_code",
+        "address.addressCountry": "country",
+        "geo.latitude": "latitude",
+        "geo.longitude": "longitude",
+        "numberOfRooms": "bedrooms",
+        "numberOfBathroomsTotal": "bathrooms",
+        "floorSize.value": "floor_size",
+        "floorSize.unitText": "floor_size_unit",
+        "identifier": "mls_id",
+        "yearBuilt": "year_built"
       }
     }
   },
@@ -251,16 +720,46 @@
             "name": "price",
             "type": "number",
             "min": 0,
+            "step": 1,
             "required": true,
-            "expose_in_rest": true
+            "instructions": "Enter the listing price without currency symbols.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
           },
           {
-            "key": "field_address",
-            "label": "Address",
-            "name": "address",
-            "type": "text",
-            "required": true,
-            "expose_in_rest": true
+            "key": "field_price_currency",
+            "label": "Currency",
+            "name": "price_currency",
+            "type": "select",
+            "default": "USD",
+            "options": {
+              "USD": "USD (US Dollar)",
+              "CAD": "CAD (Canadian Dollar)",
+              "EUR": "EUR (Euro)",
+              "GBP": "GBP (British Pound)",
+              "AUD": "AUD (Australian Dollar)",
+              "NZD": "NZD (New Zealand Dollar)"
+            },
+            "instructions": "Choose the currency used when displaying the price.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "USD",
+                  "CAD",
+                  "EUR",
+                  "GBP",
+                  "AUD",
+                  "NZD"
+                ]
+              }
+            }
           },
           {
             "key": "field_bedrooms",
@@ -268,7 +767,360 @@
             "name": "bedrooms",
             "type": "number",
             "min": 0,
-            "expose_in_rest": true
+            "step": 1,
+            "instructions": "Total number of bedrooms in the property.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          },
+          {
+            "key": "field_bathrooms",
+            "label": "Bathrooms",
+            "name": "bathrooms",
+            "type": "number",
+            "min": 0,
+            "step": 0.5,
+            "instructions": "Include full and half baths; half baths can be entered as .5.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "number",
+                "minimum": 0,
+                "multipleOf": 0.5
+              }
+            }
+          },
+          {
+            "key": "field_floor_size",
+            "label": "Interior Area",
+            "name": "floor_size",
+            "type": "number",
+            "min": 0,
+            "step": 1,
+            "instructions": "Interior living area for the property.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          },
+          {
+            "key": "field_floor_size_unit",
+            "label": "Interior Area Unit",
+            "name": "floor_size_unit",
+            "type": "select",
+            "default": "sqft",
+            "options": {
+              "sqft": "Square Feet",
+              "sqm": "Square Metres",
+              "sqyd": "Square Yards"
+            },
+            "instructions": "Unit of measurement for the interior area.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "sqft",
+                  "sqm",
+                  "sqyd"
+                ]
+              }
+            }
+          },
+          {
+            "key": "field_lot_size",
+            "label": "Lot Size",
+            "name": "lot_size",
+            "type": "number",
+            "min": 0,
+            "step": 0.01,
+            "instructions": "Total exterior lot size.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          },
+          {
+            "key": "field_lot_size_unit",
+            "label": "Lot Size Unit",
+            "name": "lot_size_unit",
+            "type": "select",
+            "default": "sqft",
+            "options": {
+              "sqft": "Square Feet",
+              "sqm": "Square Metres",
+              "acre": "Acres",
+              "hectare": "Hectares"
+            },
+            "instructions": "Unit of measurement for the lot size.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "sqft",
+                  "sqm",
+                  "acre",
+                  "hectare"
+                ]
+              }
+            }
+          },
+          {
+            "key": "field_year_built",
+            "label": "Year Built",
+            "name": "year_built",
+            "type": "number",
+            "min": 1600,
+            "max": 2100,
+            "step": 1,
+            "instructions": "Four-digit year construction was completed.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "integer",
+                "minimum": 1600,
+                "maximum": 2100
+              }
+            }
+          },
+          {
+            "key": "field_mls_id",
+            "label": "MLS ID",
+            "name": "mls_id",
+            "type": "text",
+            "regex": "^[A-Za-z0-9\\-]{3,32}$",
+            "instructions": "Enter the multiple listing service or brokerage identifier.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9\\-]{3,32}$"
+              }
+            }
+          },
+          {
+            "key": "field_parking_options",
+            "label": "Parking Options",
+            "name": "parking_options",
+            "type": "multiselect",
+            "options": {
+              "attached_garage": "Attached Garage",
+              "detached_garage": "Detached Garage",
+              "carport": "Carport",
+              "driveway": "Driveway",
+              "off_street": "Off-Street",
+              "on_street": "On-Street",
+              "assigned": "Assigned Space",
+              "parking_lot": "Parking Lot"
+            },
+            "instructions": "Select the available parking arrangements.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "attached_garage",
+                    "detached_garage",
+                    "carport",
+                    "driveway",
+                    "off_street",
+                    "on_street",
+                    "assigned",
+                    "parking_lot"
+                  ]
+                },
+                "uniqueItems": true
+              }
+            }
+          },
+          {
+            "key": "field_heating_types",
+            "label": "Heating",
+            "name": "heating_types",
+            "type": "multiselect",
+            "options": {
+              "central": "Central",
+              "forced_air": "Forced Air",
+              "radiant": "Radiant",
+              "heat_pump": "Heat Pump",
+              "baseboard": "Baseboard",
+              "geothermal": "Geothermal",
+              "none": "None"
+            },
+            "instructions": "Select the installed heating systems.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "central",
+                    "forced_air",
+                    "radiant",
+                    "heat_pump",
+                    "baseboard",
+                    "geothermal",
+                    "none"
+                  ]
+                },
+                "uniqueItems": true
+              }
+            }
+          },
+          {
+            "key": "field_cooling_types",
+            "label": "Cooling",
+            "name": "cooling_types",
+            "type": "multiselect",
+            "options": {
+              "central_air": "Central Air",
+              "wall_unit": "Wall/Window Unit",
+              "evaporative": "Evaporative Cooler",
+              "geothermal": "Geothermal",
+              "ductless": "Ductless Mini-Split",
+              "none": "None"
+            },
+            "instructions": "Select the cooling options available.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "central_air",
+                    "wall_unit",
+                    "evaporative",
+                    "geothermal",
+                    "ductless",
+                    "none"
+                  ]
+                },
+                "uniqueItems": true
+              }
+            }
+          },
+          {
+            "key": "field_address_street",
+            "label": "Street Address",
+            "name": "address",
+            "type": "text",
+            "required": true,
+            "instructions": "Primary street address for the property.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "string",
+                "maxLength": 200
+              }
+            }
+          },
+          {
+            "key": "field_address_city",
+            "label": "City",
+            "name": "city",
+            "type": "text",
+            "required": true,
+            "instructions": "Municipality where the property is located.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "string",
+                "maxLength": 120
+              }
+            }
+          },
+          {
+            "key": "field_address_region",
+            "label": "State / Province",
+            "name": "region",
+            "type": "text",
+            "instructions": "State, province, or region.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "string",
+                "maxLength": 120
+              }
+            }
+          },
+          {
+            "key": "field_address_postal_code",
+            "label": "Postal Code",
+            "name": "postal_code",
+            "type": "text",
+            "regex": "^[A-Za-z0-9\\-\\s]{3,12}$",
+            "instructions": "Postal or ZIP code for the property.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9\\-\\s]{3,12}$"
+              }
+            }
+          },
+          {
+            "key": "field_address_country",
+            "label": "Country",
+            "name": "country",
+            "type": "text",
+            "regex": "^[A-Za-z]{2}$",
+            "instructions": "Two-letter ISO country code.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "string",
+                "pattern": "^[A-Za-z]{2}$"
+              }
+            }
+          },
+          {
+            "key": "field_geo_latitude",
+            "label": "Latitude",
+            "name": "latitude",
+            "type": "number",
+            "min": -90,
+            "max": 90,
+            "instructions": "Decimal latitude for map widgets and queries.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "number",
+                "minimum": -90,
+                "maximum": 90
+              }
+            }
+          },
+          {
+            "key": "field_geo_longitude",
+            "label": "Longitude",
+            "name": "longitude",
+            "type": "number",
+            "min": -180,
+            "max": 180,
+            "instructions": "Decimal longitude for map widgets and queries.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "number",
+                "minimum": -180,
+                "maximum": 180
+              }
+            }
           },
           {
             "key": "field_property_agent",
@@ -297,6 +1149,80 @@
             "sync": "two-way",
             "instructions": "Select the agency marketing this property.",
             "expose_in_rest": true
+          },
+          {
+            "key": "field_property_gallery",
+            "label": "Gallery",
+            "name": "gallery",
+            "type": "gallery",
+            "instructions": "Upload the primary property gallery.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          },
+          {
+            "key": "field_floor_plans",
+            "label": "Floor Plans",
+            "name": "floor_plans",
+            "type": "repeater",
+            "instructions": "Upload optional floor plans with descriptive labels.",
+            "sub_fields": {
+              "title": {
+                "type": "text",
+                "label": "Title",
+                "instructions": "Name of the floor or plan level."
+              },
+              "file": {
+                "type": "file",
+                "label": "Plan File",
+                "required": true,
+                "instructions": "Upload an image or PDF of the floor plan."
+              }
+            },
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "title": {
+                      "type": "string",
+                      "maxLength": 120
+                    },
+                    "file": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  },
+                  "required": [
+                    "file"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "key": "field_virtual_tour_url",
+            "label": "Virtual Tour URL",
+            "name": "virtual_tour_url",
+            "type": "url",
+            "instructions": "Link to a hosted 3D tour or video walkthrough.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "string",
+                "format": "uri"
+              }
+            }
           }
         ]
       }
@@ -399,8 +1325,20 @@
       "type": "RealEstateListing",
       "map": {
         "price": "price",
+        "priceCurrency": "price_currency",
         "address.streetAddress": "address",
-        "numberOfRooms": "bedrooms"
+        "address.addressLocality": "city",
+        "address.addressRegion": "region",
+        "address.postalCode": "postal_code",
+        "address.addressCountry": "country",
+        "geo.latitude": "latitude",
+        "geo.longitude": "longitude",
+        "numberOfRooms": "bedrooms",
+        "numberOfBathroomsTotal": "bathrooms",
+        "floorSize.value": "floor_size",
+        "floorSize.unitText": "floor_size_unit",
+        "identifier": "mls_id",
+        "yearBuilt": "year_built"
       }
     }
   ],
