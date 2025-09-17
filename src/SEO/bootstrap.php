@@ -8,6 +8,7 @@ use Gm2\SEO\Schema\Mapper\DirectoryMapper;
 use Gm2\SEO\Schema\Mapper\EventMapper;
 use Gm2\SEO\Schema\Mapper\JobMapper;
 use Gm2\SEO\Schema\Mapper\RealEstateMapper;
+use Gm2\SEO\Sitemaps\CoreProvider;
 
 if (!defined('ABSPATH')) {
     return;
@@ -33,3 +34,4 @@ function bootstrap_schema_manager(): Manager
 }
 
 bootstrap_schema_manager();
+CoreProvider::bootstrap();
