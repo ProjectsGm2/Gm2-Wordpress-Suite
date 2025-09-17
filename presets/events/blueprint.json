@@ -67,6 +67,44 @@
           "image": "{{image}}"
         }
       }
+    },
+    "venue": {
+      "labels": {
+        "name": "Venues",
+        "singular_name": "Venue"
+      },
+      "supports": [
+        "title",
+        "editor",
+        "thumbnail",
+        "excerpt"
+      ],
+      "has_archive": true,
+      "rewrite": {
+        "slug": "venues"
+      },
+      "menu_icon": "dashicons-location-alt",
+      "show_in_rest": true,
+      "rest_base": "venues"
+    },
+    "organizer": {
+      "labels": {
+        "name": "Organizers",
+        "singular_name": "Organizer"
+      },
+      "supports": [
+        "title",
+        "editor",
+        "thumbnail",
+        "excerpt"
+      ],
+      "has_archive": true,
+      "rewrite": {
+        "slug": "organizers"
+      },
+      "menu_icon": "dashicons-groups",
+      "show_in_rest": true,
+      "rest_base": "organizers"
     }
   },
   "taxonomies": {
@@ -111,6 +149,26 @@
           "name": "location",
           "type": "text",
           "required": true,
+          "expose_in_rest": true
+        },
+        {
+          "key": "field_event_venue",
+          "label": "Venue",
+          "name": "venue",
+          "type": "relationship",
+          "relationship_type": "post",
+          "sync": "two-way",
+          "instructions": "Select the venue hosting this event.",
+          "expose_in_rest": true
+        },
+        {
+          "key": "field_event_organizer",
+          "label": "Organizer",
+          "name": "organizer",
+          "type": "relationship",
+          "relationship_type": "post",
+          "sync": "two-way",
+          "instructions": "Assign the organizer responsible for this event.",
           "expose_in_rest": true
         }
       ]
@@ -157,12 +215,47 @@
             "type": "text",
             "required": true,
             "expose_in_rest": true
+          },
+          {
+            "key": "field_event_venue",
+            "label": "Venue",
+            "name": "venue",
+            "type": "relationship",
+            "relationship_type": "post",
+            "sync": "two-way",
+            "instructions": "Select the venue hosting this event.",
+            "expose_in_rest": true
+          },
+          {
+            "key": "field_event_organizer",
+            "label": "Organizer",
+            "name": "organizer",
+            "type": "relationship",
+            "relationship_type": "post",
+            "sync": "two-way",
+            "instructions": "Assign the organizer responsible for this event.",
+            "expose_in_rest": true
           }
         ]
       }
     ]
   },
-  "relationships": [],
+  "relationships": [
+    {
+      "from": "event",
+      "to": "venue",
+      "type": "event_to_venue",
+      "label": "Hosted at",
+      "cardinality": "many-to-one"
+    },
+    {
+      "from": "event",
+      "to": "organizer",
+      "type": "event_to_organizer",
+      "label": "Organized by",
+      "cardinality": "many-to-one"
+    }
+  ],
   "default_terms": {
     "event_type": [
       {
