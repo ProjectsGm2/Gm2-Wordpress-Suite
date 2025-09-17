@@ -6,13 +6,16 @@ namespace Gm2\Presets;
 
 use WP_Error;
 
+use function __;
 use function add_filter;
 use function array_key_exists;
 use function basename;
 use function dirname;
 use function file_exists;
 use function file_get_contents;
+use function get_option;
 use function glob;
+use function gm2_model_import;
 use function is_array;
 use function is_dir;
 use function is_string;
@@ -314,6 +317,39 @@ class PresetManager
     }
 
     /**
+     * Apply a preset blueprint to the site's stored content definitions.
+     */
+    public function apply(string $slug, bool $force = false): true|WP_Error
+    {
+        $blueprint = $this->get($slug);
+        if ($blueprint === null) {
+            return new WP_Error(
+                'gm2_preset_missing',
+                sprintf(__('Preset "%s" not found.', 'gm2-wordpress-suite'), $slug)
+            );
+        }
+
+        $validation = $this->validate($blueprint, $slug);
+        if (is_wp_error($validation)) {
+            return $validation;
+        }
+
+        if (!$force && $this->hasExistingContentDefinitions()) {
+            return new WP_Error(
+                'gm2_preset_conflict',
+                __('Existing content definitions detected. Re-run with --force to overwrite them.', 'gm2-wordpress-suite')
+            );
+        }
+
+        $result = gm2_model_import($blueprint, 'array');
+        if (is_wp_error($result)) {
+            return $result;
+        }
+
+        return true;
+    }
+
+    /**
      * Provide the manager instance via filter.
      */
     public function filterManager($existing = null): self
@@ -501,6 +537,32 @@ class PresetManager
             }
             $this->presets[$slug] = $data;
         }
+    }
+
+    /**
+     * Determine whether stored content definitions already exist.
+     */
+    private function hasExistingContentDefinitions(): bool
+    {
+        $config = get_option('gm2_custom_posts_config', []);
+        if (!is_array($config)) {
+            $config = [];
+        }
+        if (!empty($config['post_types']) || !empty($config['taxonomies'])) {
+            return true;
+        }
+
+        $fieldGroups = get_option('gm2_field_groups', []);
+        if (is_array($fieldGroups) && !empty($fieldGroups)) {
+            return true;
+        }
+
+        $schemaMappings = get_option('gm2_cp_schema_map', []);
+        if (is_array($schemaMappings) && !empty($schemaMappings)) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
