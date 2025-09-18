@@ -66,6 +66,42 @@
           "image": "{{image}}"
         }
       }
+    },
+    "lesson": {
+      "labels": {
+        "name": "Lessons",
+        "singular_name": "Lesson"
+      },
+      "supports": [
+        "title",
+        "editor",
+        "thumbnail"
+      ],
+      "has_archive": true,
+      "rewrite": {
+        "slug": "lessons"
+      },
+      "menu_icon": "dashicons-welcome-learn-more",
+      "show_in_rest": true,
+      "rest_base": "lessons"
+    },
+    "instructor": {
+      "labels": {
+        "name": "Instructors",
+        "singular_name": "Instructor"
+      },
+      "supports": [
+        "title",
+        "editor",
+        "thumbnail"
+      ],
+      "has_archive": true,
+      "rewrite": {
+        "slug": "instructors"
+      },
+      "menu_icon": "dashicons-welcome-learn-more",
+      "show_in_rest": true,
+      "rest_base": "instructors"
     }
   },
   "taxonomies": {
@@ -111,6 +147,108 @@
           "name": "course_url",
           "type": "url",
           "expose_in_rest": true
+        },
+        {
+          "key": "field_course_lessons",
+          "label": "Lessons",
+          "name": "lessons",
+          "type": "relationship",
+          "relationship_type": "post",
+          "post_types": [
+            "lesson"
+          ],
+          "sync": "two-way",
+          "instructions": "Select lessons that belong to this course.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          }
+        },
+        {
+          "key": "field_course_instructors",
+          "label": "Instructors",
+          "name": "instructors",
+          "type": "relationship",
+          "relationship_type": "post",
+          "post_types": [
+            "instructor"
+          ],
+          "sync": "two-way",
+          "instructions": "Assign instructors leading this course.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "group_lesson_details",
+      "title": "Lesson Details",
+      "fields": [
+        {
+          "key": "field_lesson_course",
+          "label": "Parent Course",
+          "name": "course",
+          "type": "relationship",
+          "relationship_type": "post",
+          "post_types": [
+            "course"
+          ],
+          "max": 1,
+          "sync": "two-way",
+          "instructions": "Associate this lesson with its primary course.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "maxItems": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "group_instructor_details",
+      "title": "Instructor Details",
+      "fields": [
+        {
+          "key": "field_instructor_courses",
+          "label": "Courses",
+          "name": "courses",
+          "type": "relationship",
+          "relationship_type": "post",
+          "post_types": [
+            "course"
+          ],
+          "sync": "two-way",
+          "instructions": "Select the courses this instructor teaches.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          }
         }
       ]
     }
@@ -156,12 +294,133 @@
             "name": "course_url",
             "type": "url",
             "expose_in_rest": true
+          },
+          {
+            "key": "field_course_lessons",
+            "label": "Lessons",
+            "name": "lessons",
+            "type": "relationship",
+            "relationship_type": "post",
+            "post_types": [
+              "lesson"
+            ],
+            "sync": "two-way",
+            "instructions": "Select lessons that belong to this course.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          },
+          {
+            "key": "field_course_instructors",
+            "label": "Instructors",
+            "name": "instructors",
+            "type": "relationship",
+            "relationship_type": "post",
+            "post_types": [
+              "instructor"
+            ],
+            "sync": "two-way",
+            "instructions": "Assign instructors leading this course.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "key": "group_lesson_details",
+        "title": "Lesson Details",
+        "fields": [
+          {
+            "key": "field_lesson_course",
+            "label": "Parent Course",
+            "name": "course",
+            "type": "relationship",
+            "relationship_type": "post",
+            "post_types": [
+              "course"
+            ],
+            "max": 1,
+            "sync": "two-way",
+            "instructions": "Associate this lesson with its primary course.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "maxItems": 1
+              }
+            }
+          }
+        ]
+      },
+      {
+        "key": "group_instructor_details",
+        "title": "Instructor Details",
+        "fields": [
+          {
+            "key": "field_instructor_courses",
+            "label": "Courses",
+            "name": "courses",
+            "type": "relationship",
+            "relationship_type": "post",
+            "post_types": [
+              "course"
+            ],
+            "sync": "two-way",
+            "instructions": "Select the courses this instructor teaches.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
           }
         ]
       }
     ]
   },
-  "relationships": [],
+  "relationships": [
+    {
+      "from": "course",
+      "to": "lesson",
+      "type": "course_to_lesson",
+      "direction": "course_to_lesson",
+      "label": "Lessons",
+      "reverse_label": "Parent Course",
+      "cardinality": "one-to-many"
+    },
+    {
+      "from": "course",
+      "to": "instructor",
+      "type": "course_to_instructor",
+      "direction": "course_to_instructor",
+      "label": "Instructors",
+      "reverse_label": "Courses",
+      "cardinality": "many-to-many"
+    }
+  ],
   "default_terms": {
     "course_category": [
       {
