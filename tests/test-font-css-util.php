@@ -24,12 +24,16 @@ class FontCssUtilTest extends WP_UnitTestCase {
     }
 
     public function test_process_font_faces(): void {
-        $css = "@font-face{font-family:'Foo';src:url('/wp-content/fonts/foo.woff2');font-weight:400;}" .
-               "@font-face{font-family:'Foo';src:url('/wp-content/fonts/foo-bold.woff2');font-weight:700;}";
+        $uploads = wp_upload_dir();
+        $base    = trailingslashit($uploads['baseurl']) . 'gm2seo-fonts';
+        $css = "@font-face{font-family:'Foo';src:url('{$base}/foo/foo.woff2');font-weight:400;}" .
+               "@font-face{font-family:'Foo';src:url('{$base}/foo/foo-bold.woff2');font-weight:700;}";
         $out = Font_CSS_Util::process($css);
 
         $this->assertStringContainsString('font-display:swap', $out);
-        $this->assertStringContainsString('gm2seo/v1/font?file=' . rawurlencode('wp-content/fonts/foo.woff2'), $out);
+        $this->assertStringContainsString('gm2seo/v1/font?', $out);
+        $this->assertStringContainsString('file=' . rawurlencode('foo/foo.woff2'), $out);
+        $this->assertStringContainsString('token=', $out);
         $this->assertStringNotContainsString('foo-bold.woff2', $out);
     }
 }

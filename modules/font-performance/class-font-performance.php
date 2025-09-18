@@ -13,6 +13,8 @@ if (class_exists(__NAMESPACE__ . '\\Font_Performance')) {
 
 class Font_Performance {
     private const OPTION_KEY = 'gm2seo_fonts';
+    private const FONT_TOKEN_SALT = 'gm2seo-font-cache';
+    private const ALLOWED_FONT_EXTENSIONS = ['woff2', 'ttf', 'otf'];
 
     /**
      * Selected plugin directories to inspect for font usage. Only these
@@ -447,18 +449,64 @@ class Font_Performance {
             '/font',
             [
                 'methods'             => 'GET',
-                'permission_callback' => '__return_true',
+                'permission_callback' => [__CLASS__, 'authorize_font_request'],
                 'callback'            => [__CLASS__, 'serve_font'],
             ]
         );
     }
 
+    /** Ensure the request is authorized via capability or signed token. */
+    public static function authorize_font_request(\WP_REST_Request $req) {
+        if (current_user_can('manage_options')) {
+            return true;
+        }
+
+        $file = self::normalize_font_subpath((string) $req->get_param('file'));
+        if ($file === '') {
+            return new \WP_Error('gm2_font_invalid', 'Invalid font path.', ['status' => 403]);
+        }
+
+        $token = (string) $req->get_param('token');
+        if ($token === '') {
+            return new \WP_Error('gm2_font_unauthorized', 'Missing font token.', ['status' => 403]);
+        }
+
+        $expected = self::sign_font_path($file);
+        if (!$expected || !hash_equals($expected, $token)) {
+            return new \WP_Error('gm2_font_unauthorized', 'Invalid font token.', ['status' => 403]);
+        }
+
+        $req->set_param('file', $file);
+        return true;
+    }
+
     /** Stream the requested font file with long-term cache headers. */
     public static function serve_font(\WP_REST_Request $req) {
-        $file = sanitize_text_field($req->get_param('file'));
-        $path = wp_normalize_path(ABSPATH . $file);
+        $file = self::normalize_font_subpath((string) $req->get_param('file'));
+        if ($file === '') {
+            return new \WP_Error('not_found', 'Font not found', ['status' => 404]);
+        }
+
+        $extension = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+        if (!in_array($extension, self::ALLOWED_FONT_EXTENSIONS, true)) {
+            return new \WP_Error('not_found', 'Font not found', ['status' => 404]);
+        }
+
+        $base_dir = self::get_font_cache_dir();
+        $base_real = realpath($base_dir);
+        if (!$base_real) {
+            return new \WP_Error('not_found', 'Font not found', ['status' => 404]);
+        }
+        $base_real = trailingslashit(wp_normalize_path($base_real));
+
+        $path = wp_normalize_path($base_dir . $file);
         $real = realpath($path);
-        if (!$real || 0 !== strpos($real, ABSPATH) || !is_readable($real)) {
+        if (!$real) {
+            return new \WP_Error('not_found', 'Font not found', ['status' => 404]);
+        }
+
+        $real = wp_normalize_path($real);
+        if (strpos($real, $base_real) !== 0 || !is_readable($real)) {
             return new \WP_Error('not_found', 'Font not found', ['status' => 404]);
         }
         $mime = wp_check_filetype($real);
@@ -475,6 +523,7 @@ class Font_Performance {
         if (empty(self::$options['enabled'])) {
             return $src;
         }
+        self::get_settings();
         return self::endpoint_url($src);
     }
 
@@ -485,15 +534,80 @@ class Font_Performance {
         }
         $parts = wp_parse_url($src);
         $path  = $parts['path'] ?? '';
-        if (!$path || !preg_match('/\.(woff2?|ttf|otf)$/i', $path)) {
+        if (!$path || !preg_match('/\.(woff2|ttf|otf)$/i', $path)) {
             return $src;
         }
         $home_host = wp_parse_url(home_url(), PHP_URL_HOST);
         if (!empty($parts['host']) && $parts['host'] !== $home_host) {
             return $src;
         }
+        $uploads     = wp_upload_dir();
+        $uploads_path = wp_parse_url(trailingslashit($uploads['baseurl']), PHP_URL_PATH) ?: '';
+        $normalized_path = ltrim(wp_normalize_path($path), '/');
+        $cache_prefix = trim($uploads_path, '/');
+        if ($cache_prefix !== '') {
+            $cache_prefix .= '/gm2seo-fonts/';
+        } else {
+            $cache_prefix = 'gm2seo-fonts/';
+        }
+
+        if (stripos($normalized_path, $cache_prefix) !== 0) {
+            return $src;
+        }
+
+        $relative = substr($normalized_path, strlen($cache_prefix));
+        if ($relative === false || $relative === '') {
+            return $src;
+        }
+
+        if (str_contains($relative, '..')) {
+            return $src;
+        }
+
+        $relative = self::normalize_font_subpath($relative);
+        if ($relative === '') {
+            return $src;
+        }
+
+        $token = self::sign_font_path($relative);
+        if (!$token) {
+            return $src;
+        }
+
+        return add_query_arg(
+            [
+                'file'  => $relative,
+                'token' => $token,
+            ],
+            rest_url('gm2seo/v1/font')
+        );
+    }
+
+    /** Compute the absolute plugin font cache directory. */
+    private static function get_font_cache_dir(): string {
+        $uploads = wp_upload_dir();
+        $basedir = wp_normalize_path($uploads['basedir']);
+        return trailingslashit($basedir) . 'gm2seo-fonts/';
+    }
+
+    /** Normalise relative font paths to a canonical form. */
+    private static function normalize_font_subpath(string $path): string {
+        $path = wp_normalize_path($path);
         $path = ltrim($path, '/');
-        return rest_url('gm2seo/v1/font?file=' . rawurlencode($path));
+        if ($path === '' || str_contains($path, '..')) {
+            return '';
+        }
+        $path = preg_replace('#/+#', '/', $path);
+        return $path ?: '';
+    }
+
+    /** Generate an HMAC signature for a given font path. */
+    private static function sign_font_path(string $path): string {
+        $path = self::normalize_font_subpath($path);
+        if ($path === '') {
+            return '';
+        }
+        return hash_hmac('sha256', $path, wp_salt(self::FONT_TOKEN_SALT));
     }
 
     /** Toggle the feature and persist the option. */
