@@ -680,8 +680,6 @@
     "property": {
       "type": "RealEstateListing",
       "map": {
-        "price": "price",
-        "priceCurrency": "price_currency",
         "address.streetAddress": "address",
         "address.addressLocality": "city",
         "address.addressRegion": "region",
@@ -693,8 +691,23 @@
         "numberOfBathroomsTotal": "bathrooms",
         "floorSize.value": "floor_size",
         "floorSize.unitText": "floor_size_unit",
+        "offers.price": "price",
+        "offers.priceCurrency": "price_currency",
+        "offers.availability": "property_status",
+        "offers.itemOffered.numberOfRooms": "bedrooms",
+        "offers.itemOffered.numberOfBathroomsTotal": "bathrooms",
+        "offers.itemOffered.floorSize.value": "floor_size",
+        "offers.itemOffered.floorSize.unitText": "floor_size_unit",
+        "offers.itemOffered.propertyType": "property_type",
+        "offers.itemOffered.floorPlan": "floor_plans",
+        "offers.itemOffered.image": "gallery",
+        "offers.itemOffered.tourBookingPage": "virtual_tour_url",
+        "image": "gallery",
+        "tourBookingPage": "virtual_tour_url",
         "identifier": "mls_id",
-        "yearBuilt": "year_built"
+        "yearBuilt": "year_built",
+        "lotSize.value": "lot_size",
+        "lotSize.unitText": "lot_size_unit"
       }
     }
   },
