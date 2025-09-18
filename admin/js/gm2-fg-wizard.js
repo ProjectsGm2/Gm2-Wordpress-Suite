@@ -2,23 +2,24 @@
     const { createElement: el, useState, useEffect } = wp.element;
     const { render } = wp.element;
     const { Button, TextControl, SelectControl, FormTokenField, PanelBody, Panel, Card, CardBody, Sortable, ToggleControl, Modal, CheckboxControl } = wp.components;
+    const { __, sprintf } = wp.i18n;
     const { dispatch } = wp.data;
     const addPassive = !window.AE_PERF_DISABLE_PASSIVE && window.aePerf?.addPassive
         ? window.aePerf.addPassive
         : (el, type, handler, options) => el.addEventListener(type, handler, options);
 
     const StepOne = ({ data, setData, existing, loadGroup, setExisting }) => {
-        const options = [ { label: 'New', value: '' } ];
+        const options = [ { label: __('New', 'gm2-wordpress-suite'), value: '' } ];
         Object.keys(existing).forEach(sl => {
             options.push({ label: existing[sl].title || sl, value: sl });
         });
         const wizard = window.gm2FGWizard || {};
         const scopeOptions = [];
         if (wizard.postTypes && Object.keys(wizard.postTypes).length) {
-            scopeOptions.push({ label: 'Post Types', value: 'post_type' });
+            scopeOptions.push({ label: __('Post Types', 'gm2-wordpress-suite'), value: 'post_type' });
         }
         if (wizard.taxonomies && Object.keys(wizard.taxonomies).length) {
-            scopeOptions.push({ label: 'Taxonomies', value: 'taxonomy' });
+            scopeOptions.push({ label: __('Taxonomies', 'gm2-wordpress-suite'), value: 'taxonomy' });
         }
         const source = data.scope === 'taxonomy' ? wizard.taxonomies : wizard.postTypes;
         const suggestions = Object.keys(source || {});
@@ -30,9 +31,9 @@
         const onSlugChange = (v) => {
             const duplicate = existing[v] && v !== data.slug;
             if(!v){
-                setSlugError('Slug is required');
+                setSlugError(__('Slug is required', 'gm2-wordpress-suite'));
             } else if(duplicate){
-                setSlugError('Slug must be unique');
+                setSlugError(__('Slug must be unique', 'gm2-wordpress-suite'));
             } else {
                 setSlugError('');
             }
@@ -41,7 +42,7 @@
 
         const deleteGroup = () => {
             if(!data.slug) return;
-            if(!window.confirm('Delete this group?')) return;
+            if(!window.confirm(__('Delete this group?', 'gm2-wordpress-suite'))) return;
             const payload = new URLSearchParams();
             payload.append('action','gm2_delete_field_group');
             payload.append('nonce', window.gm2FGWizard.nonce);
@@ -55,18 +56,18 @@
                 if(resp && resp.success){
                     setExisting(resp.data.groups || {});
                     loadGroup('');
-                    dispatch('core/notices').createNotice('success', 'Field group deleted');
+                    dispatch('core/notices').createNotice('success', __('Field group deleted', 'gm2-wordpress-suite'));
                 } else {
-                    dispatch('core/notices').createNotice('error', 'Error deleting group');
+                    dispatch('core/notices').createNotice('error', __('Error deleting group', 'gm2-wordpress-suite'));
                 }
             }).catch(() => {
-                dispatch('core/notices').createNotice('error', 'Error deleting group');
+                dispatch('core/notices').createNotice('error', __('Error deleting group', 'gm2-wordpress-suite'));
             });
         };
 
         const renameGroup = () => {
             if(!data.slug) return;
-            const newSlug = window.prompt('Enter new slug', data.slug);
+            const newSlug = window.prompt(__('Enter new slug', 'gm2-wordpress-suite'), data.slug);
             if(!newSlug || newSlug === data.slug) return;
             const payload = new URLSearchParams();
             payload.append('action','gm2_rename_field_group');
@@ -82,12 +83,12 @@
                 if(resp && resp.success){
                     setExisting(resp.data.groups || {});
                     loadGroup(newSlug);
-                    dispatch('core/notices').createNotice('success', 'Field group renamed');
+                    dispatch('core/notices').createNotice('success', __('Field group renamed', 'gm2-wordpress-suite'));
                 } else {
-                    dispatch('core/notices').createNotice('error', 'Error renaming group');
+                    dispatch('core/notices').createNotice('error', __('Error renaming group', 'gm2-wordpress-suite'));
                 }
             }).catch(() => {
-                dispatch('core/notices').createNotice('error', 'Error renaming group');
+                dispatch('core/notices').createNotice('error', __('Error renaming group', 'gm2-wordpress-suite'));
             });
         };
 
@@ -110,7 +111,7 @@
         const performExport = () => {
             if(exporting) return;
             if(exportSelection.length === 0){
-                setExportError('Select at least one field group to export.');
+                setExportError(__('Select at least one field group to export.', 'gm2-wordpress-suite'));
                 return;
             }
             setExportError('');
@@ -136,15 +137,15 @@
                     link.click();
                     document.body.removeChild(link);
                     URL.revokeObjectURL(url);
-                    dispatch('core/notices').createNotice('success', 'Field groups exported');
+                    dispatch('core/notices').createNotice('success', __('Field groups exported', 'gm2-wordpress-suite'));
                     setExportOpen(false);
                 } else {
-                    const msg = resp && resp.data && resp.data.message ? resp.data.message : 'Error exporting field groups';
+                    const msg = resp && resp.data && resp.data.message ? resp.data.message : __('Error exporting field groups', 'gm2-wordpress-suite');
                     setExportError(msg);
                     dispatch('core/notices').createNotice('error', msg);
                 }
             }).catch(() => {
-                const msg = 'Error exporting field groups';
+                const msg = __('Error exporting field groups', 'gm2-wordpress-suite');
                 setExportError(msg);
                 dispatch('core/notices').createNotice('error', msg);
             }).finally(() => {
@@ -154,53 +155,56 @@
 
         return el('div', {},
             options.length > 1 && el(SelectControl, {
-                label: 'Existing Groups',
+                label: __('Existing Groups', 'gm2-wordpress-suite'),
                 id: 'gm2-existing-groups',
                 value: data.slug && existing[data.slug] ? data.slug : '',
                 options: options,
                 onChange: v => loadGroup(v)
             }),
             el(TextControl, {
-                label: 'Group Slug',
+                label: __('Group Slug', 'gm2-wordpress-suite'),
                 id: 'gm2-group-slug',
                 value: data.slug,
                 onChange: onSlugChange,
                 help: slugError
             }),
             el(TextControl, {
-                label: 'Title',
+                label: __('Title', 'gm2-wordpress-suite'),
                 id: 'gm2-group-title',
                 value: data.title,
                 onChange: v => setData({ ...data, title: v })
             }),
             el(SelectControl, {
-                label: 'Scope',
+                label: __('Scope', 'gm2-wordpress-suite'),
                 id: 'gm2-group-scope',
                 value: data.scope,
                 options: scopeOptions,
                 onChange: v => setData({ ...data, scope: v, objects: [] }),
-                help: 'Scope determines the type of content (post types or taxonomies) this field group attaches to.'
+                help: __('Scope determines the type of content (post types or taxonomies) this field group attaches to.', 'gm2-wordpress-suite')
             }),
             el(FormTokenField, {
-                label: 'Objects',
+                label: __('Objects', 'gm2-wordpress-suite'),
                 id: 'gm2-group-objects',
                 value: data.objects,
                 suggestions: suggestions,
                 onChange: tokens => setData({ ...data, objects: tokens }),
-                help: 'Select the specific ' + (data.scope === 'taxonomy' ? 'taxonomies' : 'post types') + ' where this field group should appear.'
+                help: sprintf(
+                    __('Select the specific %s where this field group should appear.', 'gm2-wordpress-suite'),
+                    data.scope === 'taxonomy' ? __('taxonomies', 'gm2-wordpress-suite') : __('post types', 'gm2-wordpress-suite')
+                )
             }),
             existing[data.slug] && el('div', { className: 'gm2-fg-group-actions' },
-                el(Button, { isDestructive: true, onClick: deleteGroup }, 'Delete Group'),
-                el(Button, { onClick: renameGroup }, 'Rename'),
-                el(Button, { onClick: openExportModal }, 'Export JSON')
+                el(Button, { isDestructive: true, onClick: deleteGroup }, __('Delete Group', 'gm2-wordpress-suite')),
+                el(Button, { onClick: renameGroup }, __('Rename', 'gm2-wordpress-suite')),
+                el(Button, { onClick: openExportModal }, __('Export JSON', 'gm2-wordpress-suite'))
             ),
             exportOpen && el(Modal, {
-                title: 'Export Field Groups',
+                title: __('Export Field Groups', 'gm2-wordpress-suite'),
                 onRequestClose: () => { if(!exporting){ setExportOpen(false); } },
                 shouldCloseOnClickOutside: !exporting,
                 shouldCloseOnEsc: !exporting
             },
-                el('p', {}, 'Select the field groups to include in the JSON export.'),
+                el('p', {}, __('Select the field groups to include in the JSON export.', 'gm2-wordpress-suite')),
                 Object.keys(existing).length ? el('div', { className: 'gm2-fg-export-list' },
                     Object.keys(existing).sort().map(sl => el(CheckboxControl, {
                         key: sl,
@@ -208,11 +212,11 @@
                         checked: exportSelection.includes(sl),
                         onChange: () => toggleExportGroup(sl)
                     }))
-                ) : el('p', {}, 'No field groups available.'),
+                ) : el('p', {}, __('No field groups available.', 'gm2-wordpress-suite')),
                 exportError && el('p', { className: 'gm2-fg-error' }, exportError),
                 el('div', { className: 'gm2-fg-export-actions' },
-                    el(Button, { onClick: () => setExportOpen(false), disabled: exporting }, 'Cancel'),
-                    el(Button, { isPrimary: true, onClick: performExport, disabled: exporting || exportSelection.length === 0, isBusy: exporting }, 'Download JSON')
+                    el(Button, { onClick: () => setExportOpen(false), disabled: exporting }, __('Cancel', 'gm2-wordpress-suite')),
+                    el(Button, { isPrimary: true, onClick: performExport, disabled: exporting || exportSelection.length === 0, isBusy: exporting }, __('Download JSON', 'gm2-wordpress-suite'))
                 )
             )
         );
@@ -225,22 +229,22 @@
         const [ fieldsOpen, setFieldsOpen ] = useState(true);
 
         const fieldTypes = [
-            { label: 'Text', value: 'text' },
-            { label: 'Textarea', value: 'textarea' },
-            { label: 'Select', value: 'select' },
-            { label: 'Number', value: 'number' },
-            { label: 'Color', value: 'color' }
+            { label: __('Text', 'gm2-wordpress-suite'), value: 'text' },
+            { label: __('Textarea', 'gm2-wordpress-suite'), value: 'textarea' },
+            { label: __('Select', 'gm2-wordpress-suite'), value: 'select' },
+            { label: __('Number', 'gm2-wordpress-suite'), value: 'number' },
+            { label: __('Color', 'gm2-wordpress-suite'), value: 'color' }
         ];
 
         const addField = () => {
             if(!field.slug){
-                setError('Field slug is required');
-                dispatch('core/notices').createNotice('error', 'Field slug is required');
+                setError(__('Field slug is required', 'gm2-wordpress-suite'));
+                dispatch('core/notices').createNotice('error', __('Field slug is required', 'gm2-wordpress-suite'));
                 return;
             }
             if(data.fields.some((f,i) => f.slug === field.slug && i !== editIndex)){
-                setError('Field slug must be unique');
-                dispatch('core/notices').createNotice('error', 'Field slug must be unique');
+                setError(__('Field slug must be unique', 'gm2-wordpress-suite'));
+                dispatch('core/notices').createNotice('error', __('Field slug must be unique', 'gm2-wordpress-suite'));
                 return;
             }
             setError('');
@@ -273,48 +277,48 @@
         };
 
         return el('div', {},
-            data.fields.length > 0 && el(PanelBody, { title: 'Fields', opened: fieldsOpen, onToggle: () => setFieldsOpen(!fieldsOpen), 'aria-expanded': fieldsOpen, role: 'region' },
+            data.fields.length > 0 && el(PanelBody, { title: __('Fields', 'gm2-wordpress-suite'), opened: fieldsOpen, onToggle: () => setFieldsOpen(!fieldsOpen), 'aria-expanded': fieldsOpen, role: 'region' },
                 el(Sortable, { onSortEnd },
                     data.fields.map((f,i) => el(Sortable.Item, { key: f.slug || i },
                         el(Card, { className: 'gm2-field-item' },
                             el(CardBody, {},
-                                el('strong', {}, f.label || '(no label)'),
-                                el('div', {}, 'Slug: ' + f.slug),
-                                el('div', {}, 'Type: ' + f.type),
-                                el(Button, { isLink: true, onClick: () => editField(i) }, 'Edit'),
-                                el(Button, { isLink: true, onClick: () => removeField(i) }, 'Delete')
+                                el('strong', {}, f.label || __('(no label)', 'gm2-wordpress-suite')),
+                                el('div', {}, sprintf(__('Slug: %s', 'gm2-wordpress-suite'), f.slug)),
+                                el('div', {}, sprintf(__('Type: %s', 'gm2-wordpress-suite'), f.type)),
+                                el(Button, { isLink: true, onClick: () => editField(i) }, __('Edit', 'gm2-wordpress-suite')),
+                                el(Button, { isLink: true, onClick: () => removeField(i) }, __('Delete', 'gm2-wordpress-suite'))
                             )
                         )
                     ))
                 )
             ),
             el(TextControl, {
-                label: 'Field Label',
+                label: __('Field Label', 'gm2-wordpress-suite'),
                 id: 'gm2-field-label',
                 value: field.label,
                 onChange: v => setField({ ...field, label: v })
             }),
             el(TextControl, {
-                label: 'Field Slug',
+                label: __('Field Slug', 'gm2-wordpress-suite'),
                 id: 'gm2-field-slug',
                 value: field.slug,
                 onChange: v => setField({ ...field, slug: v }),
                 help: error
             }),
             el(SelectControl, {
-                label: 'Field Type',
+                label: __('Field Type', 'gm2-wordpress-suite'),
                 id: 'gm2-field-type',
                 value: field.type,
                 options: fieldTypes,
                 onChange: v => setField({ ...field, type: v })
             }),
             el(ToggleControl, {
-                label: 'Expose in REST API',
+                label: __('Expose in REST API', 'gm2-wordpress-suite'),
                 id: 'gm2-field-expose',
                 checked: !!field.expose_in_rest,
                 onChange: v => setField({ ...field, expose_in_rest: v })
             }),
-            el(Button, { isPrimary: true, onClick: addField }, editIndex !== null ? 'Update Field' : 'Add Field')
+            el(Button, { isPrimary: true, onClick: addField }, editIndex !== null ? __('Update Field', 'gm2-wordpress-suite') : __('Add Field', 'gm2-wordpress-suite'))
         );
     };
 
@@ -323,9 +327,9 @@
     const LocationStep = ({ data, setData }) => {
         const wizard = window.gm2FGWizard || {};
         const paramOptions = [
-            { label: 'Post Type', value: 'post_type' },
-            { label: 'Taxonomy', value: 'taxonomy' },
-            { label: 'Template', value: 'template' }
+            { label: __('Post Type', 'gm2-wordpress-suite'), value: 'post_type' },
+            { label: __('Taxonomy', 'gm2-wordpress-suite'), value: 'taxonomy' },
+            { label: __('Template', 'gm2-wordpress-suite'), value: 'template' }
         ];
         const operatorOptions = [
             { label: '==', value: '==' },
@@ -362,7 +366,7 @@
         const ValueControl = ({ rule, onChange, idBase }) => {
             if(rule.param === 'post_type'){
                 const options = Object.keys(wizard.postTypes || {}).map(slug => ({ label: wizard.postTypes[slug], value: slug }));
-                return el(SelectControl, { label: 'Value', id: idBase, value: rule.value, options, onChange });
+                return el(SelectControl, { label: __('Value', 'gm2-wordpress-suite'), id: idBase, value: rule.value, options, onChange });
             }
             if(rule.param === 'taxonomy'){
                 const taxOptions = Object.keys(wizard.taxonomies || {}).map(slug => ({ label: wizard.taxonomies[slug], value: slug }));
@@ -379,14 +383,14 @@
                 }, [selectedTax]);
                 return el('div', {},
                     el(SelectControl, {
-                        label: 'Taxonomy',
+                        label: __('Taxonomy', 'gm2-wordpress-suite'),
                         id: idBase + '-taxonomy',
                         value: selectedTax,
                         options: taxOptions,
                         onChange: v => { setSelectedTax(v); onChange(v + ':'); }
                     }),
                     selectedTax && el(SelectControl, {
-                        label: 'Term',
+                        label: __('Term', 'gm2-wordpress-suite'),
                         id: idBase + '-term',
                         value: term,
                         options: terms,
@@ -394,31 +398,31 @@
                     })
                 );
             }
-            return el(TextControl, { label: 'Value', id: idBase, value: rule.value, onChange });
+            return el(TextControl, { label: __('Value', 'gm2-wordpress-suite'), id: idBase, value: rule.value, onChange });
         };
         return el('div', {},
-            el('p', { className: 'gm2-location-help' }, 'Each group is evaluated separately. Rules inside a group use the selected relation, and the field group is displayed when any group matches.'),
-            data.location.map((g,gi) => el(Card, { key: gi, className: 'gm2-location-group', role: 'group', 'aria-label': 'Location group ' + (gi + 1) },
+            el('p', { className: 'gm2-location-help' }, __('Each group is evaluated separately. Rules inside a group use the selected relation, and the field group is displayed when any group matches.', 'gm2-wordpress-suite')),
+            data.location.map((g,gi) => el(Card, { key: gi, className: 'gm2-location-group', role: 'group', 'aria-label': sprintf(__('Location group %d', 'gm2-wordpress-suite'), gi + 1) },
                 el(CardBody, {},
                     el(SelectControl, {
-                        label: 'Group Relation',
+                        label: __('Group Relation', 'gm2-wordpress-suite'),
                         id: 'gm2-group-relation-' + gi,
                         value: g.relation || 'AND',
-                        options: [ { label: 'AND', value: 'AND' }, { label: 'OR', value: 'OR' } ],
+                        options: [ { label: __('AND', 'gm2-wordpress-suite'), value: 'AND' }, { label: __('OR', 'gm2-wordpress-suite'), value: 'OR' } ],
                         onChange: v => updateGroupRel(gi,v),
-                        help: 'Choose how rules in this group are combined.'
+                        help: __('Choose how rules in this group are combined.', 'gm2-wordpress-suite')
                     }),
-                    g.rules.map((r,ri) => el(Card, { key: ri, className: 'gm2-location-rule', role: 'group', 'aria-label': 'Rule ' + (ri + 1) },
+                    g.rules.map((r,ri) => el(Card, { key: ri, className: 'gm2-location-rule', role: 'group', 'aria-label': sprintf(__('Rule %d', 'gm2-wordpress-suite'), ri + 1) },
                         el(CardBody, {},
                             el(SelectControl, {
-                                label: 'Parameter',
+                                label: __('Parameter', 'gm2-wordpress-suite'),
                                 id: 'gm2-rule-param-' + gi + '-' + ri,
                                 value: r.param,
                                 options: paramOptions,
                                 onChange: v => updateRule(gi,ri,'param',v)
                             }),
                             el(SelectControl, {
-                                label: 'Operator',
+                                label: __('Operator', 'gm2-wordpress-suite'),
                                 id: 'gm2-rule-operator-' + gi + '-' + ri,
                                 value: r.operator,
                                 options: operatorOptions,
@@ -429,14 +433,14 @@
                                 idBase: 'gm2-rule-value-' + gi + '-' + ri,
                                 onChange: v => updateRule(gi,ri,'value',v)
                             }),
-                            el(Button, { isLink: true, onClick: () => removeRule(gi,ri) }, 'Delete Rule')
+                            el(Button, { isLink: true, onClick: () => removeRule(gi,ri) }, __('Delete Rule', 'gm2-wordpress-suite'))
                         )
                     )),
-                    el(Button, { isSecondary: true, onClick: () => addRule(gi) }, 'Add Rule'),
-                    el(Button, { isDestructive: true, onClick: () => removeGroup(gi) }, 'Remove Group')
+                    el(Button, { isSecondary: true, onClick: () => addRule(gi) }, __('Add Rule', 'gm2-wordpress-suite')),
+                    el(Button, { isDestructive: true, onClick: () => removeGroup(gi) }, __('Remove Group', 'gm2-wordpress-suite'))
                 )
             )),
-            el(Button, { isPrimary: true, onClick: addGroup }, 'Add Location Group')
+            el(Button, { isPrimary: true, onClick: addGroup }, __('Add Location Group', 'gm2-wordpress-suite'))
         );
     };
 
@@ -445,9 +449,9 @@
             el('table', { className: 'gm2-fg-review-fields' },
                 el('thead', {},
                     el('tr', {},
-                        el('th', {}, 'Label'),
-                        el('th', {}, 'Slug'),
-                        el('th', {}, 'Type')
+                        el('th', {}, __('Label', 'gm2-wordpress-suite')),
+                        el('th', {}, __('Slug', 'gm2-wordpress-suite')),
+                        el('th', {}, __('Type', 'gm2-wordpress-suite'))
                     )
                 ),
                 el('tbody', {},
@@ -457,29 +461,34 @@
                         el('td', {}, f.type)
                     ))
                 )
-            ) : el('p', {}, 'No fields defined.');
+            ) : el('p', {}, __('No fields defined.', 'gm2-wordpress-suite'));
 
         const locationSummary = data.location.length ?
-            data.location.map((g,gi) => el('div', { key: gi },
-                el('strong', {}, 'Group ' + (gi + 1) + ' (' + (g.relation || 'AND') + ')'),
-                el('ul', {},
-                    g.rules.map((r,ri) => el('li', { key: ri },
-                        r.param + ' ' + r.operator + ' ' + (Array.isArray(r.value) ? r.value.join(', ') : r.value)
-                    ))
-                )
-            )) : el('p', {}, 'No location rules.');
+            data.location.map((g,gi) => {
+                const relationLabel = g.relation === 'OR' ? __('OR', 'gm2-wordpress-suite') : __('AND', 'gm2-wordpress-suite');
+                return el('div', { key: gi },
+                    el('strong', {}, sprintf(__('Group %1$d (%2$s)', 'gm2-wordpress-suite'), gi + 1, relationLabel)),
+                    el('ul', {},
+                        g.rules.map((r,ri) => el('li', { key: ri },
+                            sprintf(__('%1$s %2$s %3$s', 'gm2-wordpress-suite'), r.param, r.operator, Array.isArray(r.value) ? r.value.join(', ') : r.value)
+                        ))
+                    )
+                );
+            }) : el('p', {}, __('No location rules.', 'gm2-wordpress-suite'));
+
+        const scopeLabel = data.scope === 'taxonomy' ? __('Taxonomy', 'gm2-wordpress-suite') : data.scope === 'template' ? __('Template', 'gm2-wordpress-suite') : __('Post Type', 'gm2-wordpress-suite');
 
         return el('div', {},
-            el('h3', {}, 'General ', el(Button, { isLink: true, onClick: () => onEdit(1) }, 'Edit')),
+            el('h3', {}, __('General', 'gm2-wordpress-suite'), ' ', el(Button, { isLink: true, onClick: () => onEdit(1) }, __('Edit', 'gm2-wordpress-suite'))),
             el('ul', {},
-                el('li', {}, 'Slug: ' + data.slug),
-                el('li', {}, 'Title: ' + data.title),
-                el('li', {}, 'Scope: ' + data.scope),
-                el('li', {}, 'Objects: ' + (data.objects.join(', ') || 'None'))
+                el('li', {}, sprintf(__('Slug: %s', 'gm2-wordpress-suite'), data.slug)),
+                el('li', {}, sprintf(__('Title: %s', 'gm2-wordpress-suite'), data.title)),
+                el('li', {}, sprintf(__('Scope: %s', 'gm2-wordpress-suite'), scopeLabel)),
+                el('li', {}, sprintf(__('Objects: %s', 'gm2-wordpress-suite'), data.objects.length ? data.objects.join(', ') : __('None', 'gm2-wordpress-suite')))
             ),
-            el('h3', {}, 'Fields ', el(Button, { isLink: true, onClick: () => onEdit(2) }, 'Edit')),
+            el('h3', {}, __('Fields', 'gm2-wordpress-suite'), ' ', el(Button, { isLink: true, onClick: () => onEdit(2) }, __('Edit', 'gm2-wordpress-suite'))),
             fieldsTable,
-            el('h3', {}, 'Location Rules ', el(Button, { isLink: true, onClick: () => onEdit(3) }, 'Edit')),
+            el('h3', {}, __('Location Rules', 'gm2-wordpress-suite'), ' ', el(Button, { isLink: true, onClick: () => onEdit(3) }, __('Edit', 'gm2-wordpress-suite'))),
             locationSummary
         );
     };
@@ -490,15 +499,20 @@
         const [ data, setData ] = useState({ slug: '', title: '', scope: 'post_type', objects: [], fields: [], location: [] });
         const [ saving, setSaving ] = useState(false);
         const [ error, setError ] = useState('');
-        const steps = [ 'Details', 'Fields', 'Location', 'Review' ];
+        const steps = [
+            __('Details', 'gm2-wordpress-suite'),
+            __('Fields', 'gm2-wordpress-suite'),
+            __('Location', 'gm2-wordpress-suite'),
+            __('Review', 'gm2-wordpress-suite')
+        ];
 
         const next = () => {
             if(step === 1 && !data.slug){
-                setError('Slug is required');
+                setError(__('Slug is required', 'gm2-wordpress-suite'));
                 return;
             }
             if(step === 2 && data.fields.length === 0){
-                setError('At least one field is required');
+                setError(__('At least one field is required', 'gm2-wordpress-suite'));
                 return;
             }
             setError('');
@@ -533,7 +547,7 @@
         const save = () => {
             if(saving) return;
             if(!data.slug){
-                setError('Slug is required');
+                setError(__('Slug is required', 'gm2-wordpress-suite'));
                 setStep(1);
                 return;
             }
@@ -555,16 +569,16 @@
                 body: payload.toString()
             }).then(r => r.json()).then(resp => {
                 if(resp && resp.success){
-                    dispatch('core/notices').createNotice('success', 'Field group saved', { type: 'snackbar' });
+                    dispatch('core/notices').createNotice('success', __('Field group saved', 'gm2-wordpress-suite'), { type: 'snackbar' });
                     setTimeout(() => {
                         window.location.href = (window.gm2FGWizard && window.gm2FGWizard.listUrl) || 'admin.php?page=gm2-custom-posts';
                     }, 1500);
                 } else {
-                    const msg = resp && resp.data && resp.data.message ? resp.data.message : 'Error saving';
+                    const msg = resp && resp.data && resp.data.message ? resp.data.message : __('Error saving', 'gm2-wordpress-suite');
                     setError(msg);
                 }
             }).catch(() => {
-                setError('Error saving');
+                setError(__('Error saving', 'gm2-wordpress-suite'));
             }).finally(() => {
                 setSaving(false);
             });
@@ -572,17 +586,17 @@
 
         return el('div', { className: 'gm2-fg-wizard' },
             el(Panel, {},
-                el(PanelBody, { title: 'Field Group Wizard', initialOpen: true },
+                el(PanelBody, { title: __('Field Group Wizard', 'gm2-wordpress-suite'), initialOpen: true },
                     el('div', { className: 'gm2-fg-stepper' },
-                        el('div', { className: 'gm2-fg-stepper-label' }, 'Step ' + step + ' of ' + steps.length),
+                        el('div', { className: 'gm2-fg-stepper-label' }, sprintf(__('Step %1$d of %2$d', 'gm2-wordpress-suite'), step, steps.length)),
                         el('progress', { max: steps.length, value: step })
                     ),
                     renderStep(),
                     error && el('p', { className: 'gm2-fg-error' }, error),
                     el('div', { className: 'gm2-fg-wizard-buttons' }, [
-                        step > 1 && el(Button, { onClick: back, disabled: saving }, 'Back'),
-                        step < steps.length && el(Button, { isPrimary: true, onClick: next, disabled: saving }, 'Next'),
-                        step === steps.length && el(Button, { isPrimary: true, onClick: save, isBusy: saving, disabled: saving }, 'Finish')
+                        step > 1 && el(Button, { onClick: back, disabled: saving }, __('Back', 'gm2-wordpress-suite')),
+                        step < steps.length && el(Button, { isPrimary: true, onClick: next, disabled: saving }, __('Next', 'gm2-wordpress-suite')),
+                        step === steps.length && el(Button, { isPrimary: true, onClick: save, isBusy: saving, disabled: saving }, __('Finish', 'gm2-wordpress-suite'))
                     ])
                 )
             )
