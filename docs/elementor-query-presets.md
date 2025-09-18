@@ -44,11 +44,11 @@ The Gm2 WordPress Suite registers preset query IDs for Elementor's Posts, Loop G
 
 ### Open jobs (`gm2_open_jobs`)
 
-**What it does:** Returns published `job` posts tagged with a `status` meta value of `open`, limits the loop to ten entries, and sorts by the publish date descending so the most recent listing appears first.【F:src/Elementor/Query/Filters.php†L96-L112】
+**What it does:** Returns published `job` posts tagged with a `job_status` meta value of `open`, limits the loop to ten entries, and sorts by the publish date descending so the most recent listing appears first.【F:src/Elementor/Query/Filters.php†L96-L112】
 
 **Required data:**
 
-- Custom post type `job` with a `status` text field that stores `open` for active roles so the preset knows which listings to display.【F:src/Elementor/Query/Filters.php†L96-L112】
+- Custom post type `job` with a `job_status` select field that stores `open` for active roles so the preset knows which listings to display.【F:src/Elementor/Query/Filters.php†L96-L112】【F:presets/jobs/blueprint.json†L170-L199】
 - Fields like `date_posted`, `employment_type`, and `company` from the Jobs preset help populate the loop output.【F:docs/presets/jobs.md†L5-L24】
 
 **Elementor setup:**

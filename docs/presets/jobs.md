@@ -19,6 +19,7 @@
 | Field | Type | Validation & Notes |
 | --- | --- | --- |
 | `date_posted` | Date | Required posting date exposed in REST feeds. |
+| `job_status` | Select | Required open/closed flag exposed in REST so queries can hide filled roles. |
 | `employment_type` | Text | Required employment type (full-time, contract, etc.) exposed in REST. |
 | `company` | Text | Required hiring organisation name available through REST. |
 | `apply_url` | URL | Optional application link exposed in REST. |

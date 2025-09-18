@@ -105,7 +105,7 @@ class Filters
         self::applySearch($query, ['gm2_job_search', 'gm2_search']);
 
         self::appendMetaQuery($query, [
-            'key'   => 'status',
+            'key'   => 'job_status',
             'value' => 'open',
         ]);
 

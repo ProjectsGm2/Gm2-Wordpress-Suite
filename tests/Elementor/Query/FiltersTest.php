@@ -84,8 +84,38 @@ class FiltersTest extends WP_UnitTestCase
         $this->assertSame('Engineer', $query->get('s'));
 
         $metaQuery = $query->get('meta_query');
-        $this->assertSame('status', $metaQuery[0]['key']);
+        $this->assertSame('job_status', $metaQuery[0]['key']);
         $this->assertSame('open', $metaQuery[0]['value']);
+    }
+
+    public function test_open_jobs_returns_only_open_posts(): void
+    {
+        $openId = self::factory()->post->create([
+            'post_type'   => 'job',
+            'post_status' => 'publish',
+            'post_title'  => 'Open Role',
+        ]);
+        add_post_meta($openId, 'job_status', 'open');
+
+        $closedId = self::factory()->post->create([
+            'post_type'   => 'job',
+            'post_status' => 'publish',
+            'post_title'  => 'Closed Role',
+        ]);
+        add_post_meta($closedId, 'job_status', 'closed');
+
+        $query = new WP_Query();
+
+        do_action('elementor/query/gm2_open_jobs', $query);
+
+        $query->query($query->query_vars);
+
+        $postIds = wp_list_pluck($query->posts, 'ID');
+
+        $this->assertContains($openId, $postIds);
+        $this->assertNotContains($closedId, $postIds);
+
+        wp_reset_postdata();
     }
 
     public function test_properties_for_sale_filter_by_status_taxonomy(): void

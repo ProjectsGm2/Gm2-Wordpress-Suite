@@ -165,6 +165,29 @@
           }
         },
         {
+          "key": "field_job_status",
+          "label": "Job Status",
+          "name": "job_status",
+          "type": "select",
+          "default": "open",
+          "options": {
+            "open": "Open",
+            "closed": "Closed"
+          },
+          "required": true,
+          "instructions": "Mark roles as open or closed to drive Elementor presets and REST responses.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "open",
+                "closed"
+              ]
+            }
+          }
+        },
+        {
           "key": "field_employment_type",
           "label": "Employment Type",
           "name": "employment_type",
@@ -647,6 +670,29 @@
               "schema": {
                 "type": "string",
                 "format": "date"
+              }
+            }
+          },
+          {
+            "key": "field_job_status",
+            "label": "Job Status",
+            "name": "job_status",
+            "type": "select",
+            "default": "open",
+            "options": {
+              "open": "Open",
+              "closed": "Closed"
+            },
+            "required": true,
+            "instructions": "Mark roles as open or closed to drive Elementor presets and REST responses.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "open",
+                  "closed"
+                ]
               }
             }
           },
@@ -1138,7 +1184,7 @@
     {
       "key": "open_positions",
       "id": "gm2_open_jobs",
-      "description": "Published job posts flagged as open.",
+      "description": "Published job posts where the job_status meta is set to open.",
       "post_types": [
         "job"
       ]

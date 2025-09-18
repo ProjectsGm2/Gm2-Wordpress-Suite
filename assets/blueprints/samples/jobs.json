@@ -101,7 +101,7 @@
     "queries": {
       "open_positions": {
         "id": "gm2_open_jobs",
-        "description": "Published job posts flagged as open.",
+        "description": "Published job posts where the job_status meta is set to open.",
         "post_types": [
           "job"
         ]
