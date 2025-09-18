@@ -2,6 +2,7 @@
 
 namespace Gm2\Content\Registry;
 
+use Gm2\GraphQL\Registry as GraphQLRegistry;
 use InvalidArgumentException;
 use RuntimeException;
 
@@ -54,6 +55,34 @@ final class TaxonomyRegistry
             if ($sanitizedType !== '') {
                 $args['capabilities'] = $args['capabilities'] ?? $this->generateCapabilities($sanitizedType);
             }
+        }
+
+        if (!isset($args['show_in_graphql'])) {
+            $args['show_in_graphql'] = true;
+        }
+
+        if (!isset($args['graphql_single_name'])) {
+            $defaultSingleName = GraphQLRegistry::defaultSingleName($slug, $singular);
+            $args['graphql_single_name'] = apply_filters(
+                'gm2/graphql/taxonomy_single_name',
+                $defaultSingleName,
+                $slug,
+                $singular,
+                $plural,
+                $objectTypes
+            );
+        }
+
+        if (!isset($args['graphql_plural_name'])) {
+            $defaultPluralName = GraphQLRegistry::defaultPluralName($slug, $plural);
+            $args['graphql_plural_name'] = apply_filters(
+                'gm2/graphql/taxonomy_plural_name',
+                $defaultPluralName,
+                $slug,
+                $singular,
+                $plural,
+                $objectTypes
+            );
         }
 
         $args = apply_filters('gm2/content/taxonomy_args', $args, $slug, $objectTypes);

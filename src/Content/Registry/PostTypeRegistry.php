@@ -3,6 +3,7 @@
 namespace Gm2\Content\Registry;
 
 use Gm2\Content\Model\Definition;
+use Gm2\GraphQL\Registry as GraphQLRegistry;
 use InvalidArgumentException;
 use RuntimeException;
 
@@ -61,6 +62,30 @@ final class PostTypeRegistry
             $args['has_archive'] = is_string($hasArchive)
                 ? sanitize_title($hasArchive)
                 : (bool) $hasArchive;
+        }
+
+        if (!isset($args['show_in_graphql'])) {
+            $args['show_in_graphql'] = true;
+        }
+
+        if (!isset($args['graphql_single_name'])) {
+            $defaultSingleName = GraphQLRegistry::defaultSingleName($slug, $definition->getSingular());
+            $args['graphql_single_name'] = apply_filters(
+                'gm2/graphql/post_type_single_name',
+                $defaultSingleName,
+                $slug,
+                $definition
+            );
+        }
+
+        if (!isset($args['graphql_plural_name'])) {
+            $defaultPluralName = GraphQLRegistry::defaultPluralName($slug, $definition->getPlural());
+            $args['graphql_plural_name'] = apply_filters(
+                'gm2/graphql/post_type_plural_name',
+                $defaultPluralName,
+                $slug,
+                $definition
+            );
         }
 
         $args = apply_filters('gm2/content/post_type_args', $args, $definition);

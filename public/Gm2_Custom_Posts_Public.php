@@ -1,6 +1,8 @@
 <?php
 namespace Gm2;
 
+use Gm2\GraphQL\Registry as GraphQLRegistry;
+
 if (!defined('ABSPATH')) {
     exit;
 }
@@ -34,7 +36,28 @@ class Gm2_Custom_Posts_Public {
                 $label = $pt['label'] ?? ucfirst($slug);
                 $args['labels']['name'] = $label;
                 $args['labels']['singular_name'] = $label;
+                $singular = is_string($args['labels']['singular_name']) ? $args['labels']['singular_name'] : $label;
+                $plural = is_string($args['labels']['name']) ? $args['labels']['name'] : $label;
                 $args = array_merge(['public' => true, 'show_in_rest' => true], $args);
+                if (!isset($args['show_in_graphql'])) {
+                    $args['show_in_graphql'] = true;
+                }
+                if (!isset($args['graphql_single_name'])) {
+                    $args['graphql_single_name'] = apply_filters(
+                        'gm2/graphql/post_type_single_name',
+                        GraphQLRegistry::defaultSingleName($slug, $singular),
+                        $slug,
+                        $args
+                    );
+                }
+                if (!isset($args['graphql_plural_name'])) {
+                    $args['graphql_plural_name'] = apply_filters(
+                        'gm2/graphql/post_type_plural_name',
+                        GraphQLRegistry::defaultPluralName($slug, $plural),
+                        $slug,
+                        $args
+                    );
+                }
                 register_post_type($slug, $args);
             }
         }
@@ -55,8 +78,33 @@ class Gm2_Custom_Posts_Public {
                 $label = $tax['label'] ?? ucfirst($slug);
                 $args['labels']['name'] = $label;
                 $args['labels']['singular_name'] = $label;
+                $singular = is_string($args['labels']['singular_name']) ? $args['labels']['singular_name'] : $label;
+                $plural = is_string($args['labels']['name']) ? $args['labels']['name'] : $label;
                 $args = array_merge(['public' => true, 'show_in_rest' => true], $args);
                 $post_types = $tax['post_types'] ?? [];
+                if (!isset($args['show_in_graphql'])) {
+                    $args['show_in_graphql'] = true;
+                }
+                if (!isset($args['graphql_single_name'])) {
+                    $args['graphql_single_name'] = apply_filters(
+                        'gm2/graphql/taxonomy_single_name',
+                        GraphQLRegistry::defaultSingleName($slug, $singular),
+                        $slug,
+                        $singular,
+                        $plural,
+                        $post_types
+                    );
+                }
+                if (!isset($args['graphql_plural_name'])) {
+                    $args['graphql_plural_name'] = apply_filters(
+                        'gm2/graphql/taxonomy_plural_name',
+                        GraphQLRegistry::defaultPluralName($slug, $plural),
+                        $slug,
+                        $singular,
+                        $plural,
+                        $post_types
+                    );
+                }
                 register_taxonomy($slug, $post_types, $args);
             }
         }
