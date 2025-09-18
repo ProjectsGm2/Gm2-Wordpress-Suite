@@ -8,9 +8,6 @@ if (!defined('ABSPATH')) {
 class Gm2_REST_Fields {
     public static function init(): void {
         add_action('rest_api_init', [ __CLASS__, 'register_routes' ]);
-        if (class_exists('WPGraphQL')) {
-            add_action('graphql_register_types', [ __CLASS__, 'register_graphql' ]);
-        }
     }
 
     public static function register_routes(): void {
@@ -102,51 +99,4 @@ class Gm2_REST_Fields {
         ];
     }
 
-    public static function register_graphql(): void {
-        if (!function_exists('register_graphql_field') || !function_exists('register_graphql_object_type')) {
-            return;
-        }
-        $visibility = Gm2_REST_Visibility::get_visibility();
-        foreach (array_keys(array_filter($visibility['post_types'] ?? [])) as $type) {
-            if (!post_type_exists($type)) {
-                continue;
-            }
-            $graphql_type = self::graphql_type_name($type);
-            register_graphql_object_type($graphql_type, [
-                'fields' => [
-                    'id' => [ 'type' => 'ID' ],
-                ],
-            ]);
-        }
-        foreach (array_keys(array_filter($visibility['taxonomies'] ?? [])) as $tax) {
-            if (!taxonomy_exists($tax)) {
-                continue;
-            }
-            $graphql_type = self::graphql_type_name($tax);
-            register_graphql_object_type($graphql_type, [
-                'fields' => [
-                    'id' => [ 'type' => 'ID' ],
-                ],
-            ]);
-        }
-        foreach (array_keys(array_filter($visibility['fields'] ?? [])) as $field) {
-            register_graphql_field('ContentNode', $field, [
-                'type'        => 'String',
-                'description' => sprintf(__('GM2 field %s', 'gm2-wordpress-suite'), $field),
-                'resolve'     => function ($post) use ($field) {
-                    if (!isset($post->ID) || !Gm2_Capability_Manager::can_read_field($field, (int) $post->ID)) {
-                        return null;
-                    }
-                    $value = get_post_meta((int) $post->ID, $field, true);
-                    return is_scalar($value) ? (string) $value : $value;
-                },
-            ]);
-        }
-    }
-
-    protected static function graphql_type_name(string $name): string {
-        $parts = preg_split('/[_-]/', $name);
-        $parts = array_map('ucfirst', array_filter($parts));
-        return implode('', $parts);
-    }
 }

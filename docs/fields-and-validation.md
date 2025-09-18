@@ -77,6 +77,13 @@ Field values are private in the REST API unless you opt in. Setting `'expose_in_
 
 Omitting the flag (or leaving it `false`) keeps the field hidden from REST responses.
 
+## GraphQL Exposure
+
+When [WPGraphQL](https://www.wpgraphql.com/) is active the suite automatically registers any visible custom fields with the GraphQL schema. The registry derives GraphQL field types from the field meta schema, creating nested object types for complex data and mapping lists to GraphQL lists. Field resolvers re-use `Gm2_Capability_Manager::can_read_field()` so restricted fields resolve to `null` instead of leaking data.
+
+Field names default to camelCase, but you can tailor them with the `gm2/graphql/field_name` filter. Nested object type names are generated from the parent type and field key and can be customised with `gm2/graphql/object_type_name`. Post types and taxonomies registered through the suite are marked with `show_in_graphql` automatically; use the `gm2/graphql/post_type_single_name`, `gm2/graphql/post_type_plural_name`, `gm2/graphql/taxonomy_single_name`, and `gm2/graphql/taxonomy_plural_name` filters to override the generated type names when needed.
+Use `gm2/graphql/register_field` to skip registration for specific meta keys when the defaults do not fit your API surface.
+
 ## Exporting Field Groups
 
 The field-group wizard includes an **Export JSON** button so administrators can move definitions between environments without leaving the editor:

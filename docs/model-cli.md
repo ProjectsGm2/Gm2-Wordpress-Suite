@@ -67,6 +67,10 @@ wp gm2 blueprint import directory.json events.json
 
 Imports are validated against `presets/schema.json` and sample blueprints are available in `assets/blueprints/samples/`. Bundled presets ship under `presets/{preset}/blueprint.json`.
 
+## GraphQL naming
+
+Models created via the CLI now expose their data to WPGraphQL automatically. Post types and taxonomies are registered with `show_in_graphql` enabled and receive PascalCase single/plural names derived from their labels. Override those names when necessary with the `gm2/graphql/post_type_single_name`, `gm2/graphql/post_type_plural_name`, `gm2/graphql/taxonomy_single_name`, and `gm2/graphql/taxonomy_plural_name` filters. Field keys become camelCase GraphQL fields, and the `gm2/graphql/field_name` filter allows projects to customise them before registration.
+
 ## Seeding data
 
 ```bash
