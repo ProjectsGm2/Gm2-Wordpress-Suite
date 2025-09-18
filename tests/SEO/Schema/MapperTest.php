@@ -179,6 +179,15 @@ class SchemaMapperTest extends WP_UnitTestCase
     public function test_real_estate_mapper_builds_offer(): void
     {
         $this->registerPostType('property');
+        $this->registerPostType('agent');
+        $this->registerPostType('agency');
+
+        register_taxonomy('property_type', 'property', ['public' => true]);
+        register_taxonomy('property_status', 'property', ['public' => true]);
+
+        wp_insert_term('House', 'property_type', ['slug' => 'house']);
+        wp_insert_term('For Sale', 'property_status', ['slug' => 'for-sale']);
+
         $post_id = self::factory()->post->create([
             'post_type' => 'property',
             'post_title' => 'Luxury Condo',
@@ -189,15 +198,72 @@ class SchemaMapperTest extends WP_UnitTestCase
         update_post_meta($post_id, 'price', '750000');
         update_post_meta($post_id, 'price_currency', 'USD');
         update_post_meta($post_id, 'bedrooms', '3');
+        update_post_meta($post_id, 'bathrooms', '2.5');
+        update_post_meta($post_id, 'virtual_tour_url', 'https://example.com/tour');
+        update_post_meta($post_id, 'parking_options', ['attached_garage']);
+        update_post_meta($post_id, 'heating_types', ['forced_air']);
+        update_post_meta($post_id, 'cooling_types', ['central_air']);
+
+        $agent_id = self::factory()->post->create([
+            'post_type' => 'agent',
+            'post_title' => 'Agent Jane',
+        ]);
+        update_post_meta($agent_id, 'phone', '(555) 555-0101');
+        update_post_meta($agent_id, 'email', 'jane@example.com');
+        update_post_meta($agent_id, 'website', 'https://example.com/agents/jane');
+
+        $agency_id = self::factory()->post->create([
+            'post_type' => 'agency',
+            'post_title' => 'Prime Realty',
+        ]);
+        update_post_meta($agency_id, 'phone', '(555) 555-0200');
+        update_post_meta($agency_id, 'email', 'office@example.com');
+        update_post_meta($agency_id, 'website', 'https://example.com');
+
+        update_post_meta($post_id, 'agent', [$agent_id]);
+        update_post_meta($post_id, 'agency', [$agency_id]);
+
+        wp_set_object_terms($post_id, 'house', 'property_type');
+        wp_set_object_terms($post_id, 'for-sale', 'property_status');
+
+        $gallery_id = self::factory()->attachment->create_upload_object(DIR_TESTDATA . '/images/canola.jpg', $post_id);
+        $floorplan_id = self::factory()->attachment->create_upload_object(DIR_TESTDATA . '/images/codeispoetry.png', $post_id);
+
+        update_post_meta($post_id, 'gallery', [$gallery_id]);
+        update_post_meta($post_id, 'floor_plans', [
+            [
+                'title' => 'Main Level',
+                'file'  => $floorplan_id,
+            ],
+        ]);
 
         $mapper = new RealEstateMapper();
         $result = $mapper->map(get_post($post_id));
+
+        unregister_taxonomy('property_type');
+        unregister_taxonomy('property_status');
 
         $this->assertIsArray($result);
         $this->assertSame('RealEstateListing', $result['@type']);
         $this->assertSame(3, $result['numberOfRooms']);
         $this->assertSame(750000.0, $result['offers']['price']);
         $this->assertSame('USD', $result['offers']['priceCurrency']);
-        $this->assertSame('Residence', $result['offers']['itemOffered']['@type']);
+        $this->assertSame('SingleFamilyResidence', $result['offers']['itemOffered']['@type']);
+        $this->assertSame('House', $result['offers']['itemOffered']['propertyType']);
+        $this->assertSame('https://schema.org/InStock', $result['offers']['availability']);
+        $this->assertSame('https://example.com/tour', $result['tourBookingPage']);
+        $this->assertSame('https://example.com/tour', $result['offers']['itemOffered']['tourBookingPage']);
+        $this->assertNotEmpty($result['image']);
+        $this->assertSame($result['image'], $result['offers']['itemOffered']['image']);
+        $this->assertSame('FloorPlan', $result['offers']['itemOffered']['floorPlan'][0]['@type']);
+        $this->assertSame('Main Level', $result['offers']['itemOffered']['floorPlan'][0]['name']);
+        $categories = wp_list_pluck($result['offers']['itemOffered']['amenityFeature'], 'category');
+        $this->assertContains('Parking', $categories);
+        $this->assertContains('Heating', $categories);
+        $this->assertContains('Cooling', $categories);
+        $this->assertSame('RealEstateAgent', $result['offers']['seller']['@type']);
+        $this->assertSame('Agent Jane', $result['offers']['seller']['name']);
+        $this->assertSame('RealEstateAgent', $result['provider']['@type']);
+        $this->assertSame('Prime Realty', $result['provider']['name']);
     }
 }
