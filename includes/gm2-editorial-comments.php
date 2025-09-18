@@ -68,6 +68,10 @@ function gm2_editorial_notify_mentions($user_ids, $comment_id) {
  * @return int|false Comment ID on success, false on failure.
  */
 function gm2_add_editorial_comment($post_id, $message, $context = '') {
+    if (!current_user_can('edit_post', $post_id)) {
+        return false;
+    }
+
     $comment_id = wp_insert_comment([
         'comment_post_ID' => $post_id,
         'comment_content' => $message,
@@ -94,6 +98,10 @@ function gm2_add_editorial_comment($post_id, $message, $context = '') {
  * @return array Array of comment data.
  */
 function gm2_get_editorial_comments($post_id, $context = '') {
+    if (!current_user_can('edit_post', $post_id)) {
+        return [];
+    }
+
     $args = [
         'post_id' => $post_id,
         'type'    => 'gm2_editorial',
@@ -129,6 +137,11 @@ function gm2_ajax_add_editorial_comment() {
     if (!$post_id || $message === '') {
         wp_send_json_error();
     }
+    if (!current_user_can('edit_post', $post_id)) {
+        wp_send_json_error([
+            'message' => __('You are not allowed to edit this post.', 'gm2-wordpress-suite'),
+        ], 403);
+    }
     $comment_id = gm2_add_editorial_comment($post_id, $message, $context);
     $comments   = gm2_get_editorial_comments($post_id, $context);
     wp_send_json_success($comments);
@@ -144,6 +157,11 @@ function gm2_ajax_get_editorial_comments() {
     $context = isset($_GET['context']) ? sanitize_text_field($_GET['context']) : '';
     if (!$post_id) {
         wp_send_json_error();
+    }
+    if (!current_user_can('edit_post', $post_id)) {
+        wp_send_json_error([
+            'message' => __('You are not allowed to edit this post.', 'gm2-wordpress-suite'),
+        ], 403);
     }
     $comments = gm2_get_editorial_comments($post_id, $context);
     wp_send_json_success($comments);
