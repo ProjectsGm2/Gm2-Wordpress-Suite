@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gm2\Elementor\Query;
 
+use Gm2\Performance\QueryCache;
 use WP_Query;
 
 use function add_action;
@@ -63,6 +64,8 @@ class Filters
         ]);
 
         self::ensureMetaOrdering($query, 'start_date', 'meta_value', 'ASC');
+
+        self::enableCaching($query, 'gm2_upcoming_events');
     }
 
     /**
@@ -88,6 +91,8 @@ class Filters
         ]);
 
         self::ensureMetaOrdering($query, 'start_date', 'meta_value', 'DESC');
+
+        self::enableCaching($query, 'gm2_past_events');
     }
 
     /**
@@ -110,6 +115,8 @@ class Filters
         ]);
 
         self::ensureOrdering($query, 'date', 'DESC');
+
+        self::enableCaching($query, 'gm2_open_jobs');
     }
 
     /**
@@ -122,6 +129,8 @@ class Filters
         }
 
         self::preparePropertyQuery($query, 'for-sale');
+
+        self::enableCaching($query, 'gm2_properties_sale');
     }
 
     /**
@@ -134,6 +143,8 @@ class Filters
         }
 
         self::preparePropertyQuery($query, 'for-rent');
+
+        self::enableCaching($query, 'gm2_properties_rent');
     }
 
     /**
@@ -174,6 +185,8 @@ class Filters
         }
 
         self::ensureOrdering($query, 'title', 'ASC');
+
+        self::enableCaching($query, 'gm2_properties_nearby');
     }
 
     /**
@@ -214,6 +227,8 @@ class Filters
         }
 
         self::ensureOrdering($query, 'title', 'ASC');
+
+        self::enableCaching($query, 'gm2_directory_nearby');
     }
 
     /**
@@ -249,6 +264,8 @@ class Filters
         }
 
         self::ensureOrdering($query, 'title', 'ASC');
+
+        self::enableCaching($query, 'gm2_directory_by_category');
     }
 
     /**
@@ -271,6 +288,8 @@ class Filters
         ]);
 
         self::ensureOrdering($query, 'date', 'DESC');
+
+        self::enableCaching($query, 'gm2_courses_active');
     }
 
     /**
@@ -386,6 +405,17 @@ class Filters
         }
 
         self::ensureOrdering($query, $orderby, $order);
+    }
+
+    /**
+     * Enable caching for the prepared query.
+     */
+    private static function enableCaching(WP_Query $query, string $identifier): void
+    {
+        QueryCache::prepareQuery($query, [
+            'source'   => 'elementor',
+            'query_id' => $identifier,
+        ]);
     }
 
     /**
