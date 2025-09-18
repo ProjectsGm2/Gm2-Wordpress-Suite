@@ -34,6 +34,7 @@ class Filters
         add_action('elementor/query/gm2_open_jobs', [self::class, 'handleOpenJobs'], 10, 2);
         add_action('elementor/query/gm2_properties_sale', [self::class, 'handlePropertiesForSale'], 10, 2);
         add_action('elementor/query/gm2_properties_rent', [self::class, 'handlePropertiesForRent'], 10, 2);
+        add_action('elementor/query/gm2_properties_nearby', [self::class, 'handlePropertiesNearby'], 10, 2);
         add_action('elementor/query/gm2_directory_nearby', [self::class, 'handleDirectoryNearby'], 10, 2);
         add_action('elementor/query/gm2_directory_by_category', [self::class, 'handleDirectoryByCategory'], 10, 2);
         add_action('elementor/query/gm2_courses_active', [self::class, 'handleActiveCourses'], 10, 2);
@@ -133,6 +134,46 @@ class Filters
         }
 
         self::preparePropertyQuery($query, 'for-rent');
+    }
+
+    /**
+     * Nearby properties use a geo bounding box to limit results.
+     */
+    public static function handlePropertiesNearby($query, $widget = null): void
+    {
+        if (!$query instanceof WP_Query) {
+            return;
+        }
+
+        self::ensurePostType($query, 'property');
+        self::ensureStatus($query, 'publish');
+        self::ensurePagination($query, self::DEFAULT_PROPERTIES_PER_PAGE);
+        self::applySearch($query, ['gm2_property_search', 'gm2_search']);
+
+        $lat    = self::floatQueryVar($query, 'gm2_lat');
+        $lng    = self::floatQueryVar($query, 'gm2_lng');
+        $radius = self::floatQueryVar($query, 'gm2_radius');
+
+        if ($lat !== null && $lng !== null && $radius !== null && $radius > 0) {
+            $latRange = $radius / 111.045;
+            $lngRange = $radius / (111.045 * max(cos(deg2rad($lat)), 0.00001));
+
+            self::appendMetaQuery($query, [
+                'key'     => 'latitude',
+                'value'   => [$lat - $latRange, $lat + $latRange],
+                'compare' => 'BETWEEN',
+                'type'    => 'DECIMAL',
+            ]);
+
+            self::appendMetaQuery($query, [
+                'key'     => 'longitude',
+                'value'   => [$lng - $lngRange, $lng + $lngRange],
+                'compare' => 'BETWEEN',
+                'type'    => 'DECIMAL',
+            ]);
+        }
+
+        self::ensureOrdering($query, 'title', 'ASC');
     }
 
     /**
