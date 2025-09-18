@@ -348,6 +348,38 @@
           }
         },
         {
+          "key": "field_course_status",
+          "label": "Course Status",
+          "name": "course_status",
+          "type": "select",
+          "default": "active",
+          "options": {
+            "active": "Active",
+            "upcoming": "Upcoming",
+            "archived": "Archived"
+          },
+          "validation": {
+            "required": true,
+            "enum": [
+              "active",
+              "upcoming",
+              "archived"
+            ]
+          },
+          "instructions": "Status value used by Elementor \"Active Courses\" queries.",
+          "expose_in_rest": true,
+          "show_in_rest": {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "active",
+                "upcoming",
+                "archived"
+              ]
+            }
+          }
+        },
+        {
           "key": "field_course_level",
           "label": "Course Level",
           "name": "course_level",
@@ -910,7 +942,7 @@
     }
   },
   "label": "Courses",
-  "description": "Course catalogue blueprint with provider metadata, subject and level taxonomies, and Elementor hero placeholder.",
+  "description": "Course catalogue blueprint with provider metadata, subject and level taxonomies, Elementor hero placeholder, and \"course_status\" meta powering active course listings.",
   "fields": {
     "groups": [
       {
@@ -1105,6 +1137,38 @@
               "schema": {
                 "type": "string",
                 "format": "uri"
+              }
+            }
+          },
+          {
+            "key": "field_course_status",
+            "label": "Course Status",
+            "name": "course_status",
+            "type": "select",
+            "default": "active",
+            "options": {
+              "active": "Active",
+              "upcoming": "Upcoming",
+              "archived": "Archived"
+            },
+            "validation": {
+              "required": true,
+              "enum": [
+                "active",
+                "upcoming",
+                "archived"
+              ]
+            },
+            "instructions": "Status value used by Elementor \"Active Courses\" queries.",
+            "expose_in_rest": true,
+            "show_in_rest": {
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "active",
+                  "upcoming",
+                  "archived"
+                ]
               }
             }
           },

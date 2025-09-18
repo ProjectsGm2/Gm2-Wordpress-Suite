@@ -252,7 +252,7 @@ class Filters
     }
 
     /**
-     * Active courses are published entries with an "active" status flag.
+     * Active courses are published entries with a "course_status" meta of "active".
      */
     public static function handleActiveCourses($query, $widget = null): void
     {
@@ -266,7 +266,7 @@ class Filters
         self::applySearch($query, ['gm2_course_search', 'gm2_search']);
 
         self::appendMetaQuery($query, [
-            'key'   => 'status',
+            'key'   => 'course_status',
             'value' => 'active',
         ]);
 

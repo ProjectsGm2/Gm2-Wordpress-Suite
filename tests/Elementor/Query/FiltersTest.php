@@ -241,7 +241,37 @@ class FiltersTest extends WP_UnitTestCase
         $this->assertSame('Design', $query->get('s'));
 
         $metaQuery = $query->get('meta_query');
-        $this->assertSame('status', $metaQuery[0]['key']);
+        $this->assertSame('course_status', $metaQuery[0]['key']);
         $this->assertSame('active', $metaQuery[0]['value']);
+    }
+
+    public function test_courses_active_returns_only_active_posts(): void
+    {
+        $activeId = self::factory()->post->create([
+            'post_type'   => 'course',
+            'post_status' => 'publish',
+            'post_title'  => 'Active Course',
+        ]);
+        add_post_meta($activeId, 'course_status', 'active');
+
+        $inactiveId = self::factory()->post->create([
+            'post_type'   => 'course',
+            'post_status' => 'publish',
+            'post_title'  => 'Inactive Course',
+        ]);
+        add_post_meta($inactiveId, 'course_status', 'archived');
+
+        $query = new WP_Query();
+
+        do_action('elementor/query/gm2_courses_active', $query);
+
+        $query->query($query->query_vars);
+
+        $postIds = wp_list_pluck($query->posts, 'ID');
+
+        $this->assertContains($activeId, $postIds);
+        $this->assertNotContains($inactiveId, $postIds);
+
+        wp_reset_postdata();
     }
 }
