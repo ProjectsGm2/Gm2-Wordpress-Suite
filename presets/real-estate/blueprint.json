@@ -1308,6 +1308,19 @@
       ],
       "taxonomy": "property_status",
       "term": "for-rent"
+    },
+    {
+      "key": "nearby",
+      "id": "gm2_properties_nearby",
+      "description": "Displays properties near visitor-supplied coordinates using gm2_lat, gm2_lng, and gm2_radius query vars.",
+      "post_types": [
+        "property"
+      ],
+      "query_vars": [
+        "gm2_lat",
+        "gm2_lng",
+        "gm2_radius"
+      ]
     }
   ],
   "elementor": {

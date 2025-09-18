@@ -107,6 +107,41 @@ class FiltersTest extends WP_UnitTestCase
         $this->assertSame(['for-sale'], $taxQuery[0]['terms']);
     }
 
+    public function test_properties_nearby_adds_geo_bounding_box(): void
+    {
+        $query = new WP_Query();
+        $query->set('gm2_property_search', 'Downtown');
+        $query->set('gm2_lat', '34.05');
+        $query->set('gm2_lng', '-118.24');
+        $query->set('gm2_radius', '15');
+
+        do_action('elementor/query/gm2_properties_nearby', $query);
+
+        $this->assertSame('property', $query->get('post_type'));
+        $this->assertSame('publish', $query->get('post_status'));
+        $this->assertSame(12, $query->get('posts_per_page'));
+        $this->assertSame('title', $query->get('orderby'));
+        $this->assertSame('ASC', $query->get('order'));
+        $this->assertSame('Downtown', $query->get('s'));
+
+        $metaQuery = $query->get('meta_query');
+        $this->assertCount(2, array_filter($metaQuery, 'is_array'));
+        $latClause = $metaQuery[0];
+        $lngClause = $metaQuery[1];
+
+        $this->assertSame('latitude', $latClause['key']);
+        $this->assertSame('BETWEEN', $latClause['compare']);
+        $this->assertCount(2, $latClause['value']);
+        $this->assertGreaterThan(33.9, $latClause['value'][0]);
+        $this->assertLessThan(34.2, $latClause['value'][1]);
+
+        $this->assertSame('longitude', $lngClause['key']);
+        $this->assertSame('BETWEEN', $lngClause['compare']);
+        $this->assertCount(2, $lngClause['value']);
+        $this->assertGreaterThan(-118.5, $lngClause['value'][0]);
+        $this->assertLessThan(-118.0, $lngClause['value'][1]);
+    }
+
     public function test_directory_nearby_adds_geo_bounding_box(): void
     {
         $query = new WP_Query();
