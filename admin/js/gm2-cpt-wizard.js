@@ -2,6 +2,7 @@
     const { createElement: el, useState, useEffect } = wp.element;
     const { render } = wp.element;
     const { Button, TextControl, SelectControl, PanelBody, Panel, NoticeList, SnackbarList } = wp.components;
+    const { __, sprintf } = wp.i18n;
     const { dispatch, useSelect } = wp.data;
     const addPassive = !window.AE_PERF_DISABLE_PASSIVE && window.aePerf?.addPassive
         ? window.aePerf.addPassive
@@ -10,7 +11,7 @@
     const slugify = (str) => str.toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '');
 
     const StepOne = ({ existing, currentModel, setCurrentModel, loadModel, rawSlug, setRawSlug, stepOneErrors, data, setData, setStepOneErrors }) => {
-        const options = [ { label: 'New', value: '' } ];
+        const options = [ { label: __('New', 'gm2-wordpress-suite'), value: '' } ];
         Object.keys(existing).forEach(sl => {
             options.push({ label: existing[sl].label || sl, value: sl });
         });
@@ -45,23 +46,23 @@
         const validFieldTypes = [ 'text', 'textarea', 'number', 'select', 'checkbox', 'radio', 'email', 'url', 'date' ];
         const parsePreset = (raw) => {
             if(!raw){
-                throw new Error('Preset data missing.');
+                throw new Error(__('Preset data missing.', 'gm2-wordpress-suite'));
             }
             let blueprint = raw;
             if(typeof raw === 'string'){
                 try {
                     blueprint = JSON.parse(raw);
                 } catch (err) {
-                    throw new Error('Invalid preset JSON.');
+                    throw new Error(__('Invalid preset JSON.', 'gm2-wordpress-suite'));
                 }
             }
             if(!blueprint || typeof blueprint !== 'object'){
-                throw new Error('Invalid preset data.');
+                throw new Error(__('Invalid preset data.', 'gm2-wordpress-suite'));
             }
             const postTypes = blueprint.post_types || {};
             const slugs = Object.keys(postTypes);
             if(!slugs.length){
-                throw new Error('Preset is missing a post type.');
+                throw new Error(__('Preset is missing a post type.', 'gm2-wordpress-suite'));
             }
             const presetSlug = slugify(slugs[0]);
             const presetPT = postTypes[slugs[0]] || {};
@@ -105,12 +106,12 @@
         };
         const importPreset = () => {
             if(!selectedPreset){
-                notify('error', 'Please select a preset to import.');
+                notify('error', __('Please select a preset to import.', 'gm2-wordpress-suite'));
                 return;
             }
             const nonce = (window.gm2CPTWizard && (window.gm2CPTWizard.importNonce || window.gm2CPTWizard.presetNonce));
             if(!nonce){
-                notify('error', 'Preset import is not available.');
+                notify('error', __('Preset import is not available.', 'gm2-wordpress-suite'));
                 return;
             }
             const payload = new URLSearchParams();
@@ -132,32 +133,32 @@
                         setStepOneErrors({});
                         setData({ slug: parsed.slug, label: parsed.label, fields: parsed.fields, taxonomies: parsed.taxonomies });
                         setRawSlug(parsed.slug);
-                        notify('success', (resp.data && resp.data.message) || 'Preset applied.');
+                        notify('success', (resp.data && resp.data.message) || __('Preset applied.', 'gm2-wordpress-suite'));
                     } catch (err) {
-                        notify('error', err.message || 'Failed to apply preset.');
+                        notify('error', err.message || __('Failed to apply preset.', 'gm2-wordpress-suite'));
                     }
                 } else {
-                    const message = resp && resp.data && resp.data.message ? resp.data.message : 'Failed to import preset.';
+                    const message = resp && resp.data && resp.data.message ? resp.data.message : __('Failed to import preset.', 'gm2-wordpress-suite');
                     notify('error', message);
                 }
             }).catch(() => {
-                notify('error', 'Failed to import preset.');
+                notify('error', __('Failed to import preset.', 'gm2-wordpress-suite'));
             }).finally(() => {
                 setImportingPreset(false);
             });
         };
         return el('div', {},
             options.length > 1 && el(SelectControl, {
-                label: 'Existing Models',
+                label: __('Existing Models', 'gm2-wordpress-suite'),
                 value: currentModel,
                 options: options,
                 onChange: v => { setCurrentModel(v); loadModel(v); }
             }),
             el('div', { className: 'gm2-cpt-preset-import' },
                 el(SelectControl, {
-                    label: 'Blueprint Presets',
+                    label: __('Blueprint Presets', 'gm2-wordpress-suite'),
                     value: selectedPreset,
-                    options: [ { label: presetOptions.length ? 'Select a preset' : 'No presets available', value: '' }, ...presetOptions ],
+                    options: [ { label: presetOptions.length ? __('Select a preset', 'gm2-wordpress-suite') : __('No presets available', 'gm2-wordpress-suite'), value: '' }, ...presetOptions ],
                     onChange: v => setSelectedPreset(v),
                     disabled: !presetOptions.length
                 }),
@@ -166,17 +167,17 @@
                     onClick: importPreset,
                     disabled: !presetOptions.length || importingPreset,
                     isBusy: importingPreset
-                }, 'Add from Preset')
+                }, __('Add from Preset', 'gm2-wordpress-suite'))
             ),
             el(TextControl, {
-                label: 'Post Type Slug',
+                label: __('Post Type Slug', 'gm2-wordpress-suite'),
                 value: rawSlug,
                 onChange: v => { setRawSlug(v); setStepOneErrors(e => ({ ...e, slug: undefined })); },
                 onBlur: () => setRawSlug(slugify(rawSlug)),
                 help: stepOneErrors.slug
             }),
             el(TextControl, {
-                label: 'Label',
+                label: __('Label', 'gm2-wordpress-suite'),
                 value: data.label,
                 onChange: v => {
                     setData(d => ({ ...d, label: v }));
@@ -192,7 +193,12 @@
 
     const Wizard = () => {
         const [ existing, setExisting ] = useState((window.gm2CPTWizard && window.gm2CPTWizard.models) || {});
-        const steps = ['Post Type', 'Fields', 'Taxonomies', 'Review'];
+        const steps = [
+            __('Post Type', 'gm2-wordpress-suite'),
+            __('Fields', 'gm2-wordpress-suite'),
+            __('Taxonomies', 'gm2-wordpress-suite'),
+            __('Review', 'gm2-wordpress-suite')
+        ];
         const [ step, setStep ] = useState(1);
         const [ data, setData ] = useState({ slug: '', label: '', fields: [], taxonomies: [] });
         const [ rawSlug, setRawSlug ] = useState('');
@@ -201,9 +207,9 @@
         const [ showNewButton, setShowNewButton ] = useState(false);
         const [ saving, setSaving ] = useState(false);
         const errorMap = {
-            permission: 'You do not have permission to save models.',
-            nonce: 'Security check failed. Please refresh and try again.',
-            data: 'Invalid data provided. Please check your inputs and try again.'
+            permission: __('You do not have permission to save models.', 'gm2-wordpress-suite'),
+            nonce: __('Security check failed. Please refresh and try again.', 'gm2-wordpress-suite'),
+            data: __('Invalid data provided. Please check your inputs and try again.', 'gm2-wordpress-suite')
         };
         const notices = useSelect( select => select('core/notices').getNotices(), [] );
         const { removeNotice } = dispatch('core/notices');
@@ -213,14 +219,14 @@
         const validateStepOne = () => {
             const errs = {};
             if(!data.label.trim()){
-                errs.label = 'Label is required';
+                errs.label = __('Label is required', 'gm2-wordpress-suite');
             }
             if(!data.slug.trim()){
-                errs.slug = 'Slug is required';
+                errs.slug = __('Slug is required', 'gm2-wordpress-suite');
             } else if(!/^[a-z][a-z0-9_-]*$/.test(data.slug)){
-                errs.slug = 'Slug must start with a letter and contain only lowercase letters, numbers, hyphens, or underscores';
+                errs.slug = __('Slug must start with a letter and contain only lowercase letters, numbers, hyphens, or underscores', 'gm2-wordpress-suite');
             } else if(existing[data.slug] && data.slug !== currentModel){
-                errs.slug = 'Slug already exists';
+                errs.slug = __('Slug already exists', 'gm2-wordpress-suite');
             }
             setStepOneErrors(errs);
             return Object.keys(errs).length === 0;
@@ -260,15 +266,15 @@
             const [ dragIndex, setDragIndex ] = useState(null);
             const [ fieldError, setFieldError ] = useState('');
             const typeOptions = [
-                { label: 'Text', value: 'text' },
-                { label: 'Textarea', value: 'textarea' },
-                { label: 'Number', value: 'number' },
-                { label: 'Select', value: 'select' },
-                { label: 'Checkbox', value: 'checkbox' },
-                { label: 'Radio', value: 'radio' },
-                { label: 'Email', value: 'email' },
-                { label: 'URL', value: 'url' },
-                { label: 'Date', value: 'date' }
+                { label: __('Text', 'gm2-wordpress-suite'), value: 'text' },
+                { label: __('Textarea', 'gm2-wordpress-suite'), value: 'textarea' },
+                { label: __('Number', 'gm2-wordpress-suite'), value: 'number' },
+                { label: __('Select', 'gm2-wordpress-suite'), value: 'select' },
+                { label: __('Checkbox', 'gm2-wordpress-suite'), value: 'checkbox' },
+                { label: __('Radio', 'gm2-wordpress-suite'), value: 'radio' },
+                { label: __('Email', 'gm2-wordpress-suite'), value: 'email' },
+                { label: __('URL', 'gm2-wordpress-suite'), value: 'url' },
+                { label: __('Date', 'gm2-wordpress-suite'), value: 'date' }
             ];
             const validTypes = typeOptions.map(o => o.value);
             const addField = () => {
@@ -276,7 +282,7 @@
                 const copy = data.fields.slice();
                 const isDuplicate = copy.some((f,i) => f.slug === field.slug && i !== editIndex);
                 if(isDuplicate){
-                    setFieldError('Field slug must be unique');
+                    setFieldError(__('Field slug must be unique', 'gm2-wordpress-suite'));
                     return;
                 }
                 if(editIndex !== null){
@@ -319,29 +325,29 @@
                     onDragEnd,
                     className: 'gm2-sortable-item'
                 },
-                    `${f.label} (${f.slug})`,
-                    el(Button, { isLink: true, onClick: () => editField(i) }, 'Edit'),
-                    el(Button, { isLink: true, onClick: () => removeField(i) }, 'Delete')
+                    sprintf(__('%1$s (%2$s)', 'gm2-wordpress-suite'), f.label, f.slug),
+                    el(Button, { isLink: true, onClick: () => editField(i) }, __('Edit', 'gm2-wordpress-suite')),
+                    el(Button, { isLink: true, onClick: () => removeField(i) }, __('Delete', 'gm2-wordpress-suite'))
                 )),
                 el(TextControl, {
-                    label: 'Field Label',
+                    label: __('Field Label', 'gm2-wordpress-suite'),
                     value: field.label,
                     onChange: v => setField({ ...field, label: v })
                 }),
                 el(TextControl, {
-                    label: 'Field Slug',
+                    label: __('Field Slug', 'gm2-wordpress-suite'),
                     value: field.slug,
                     onChange: v => setField({ ...field, slug: slugify(v) }),
                     onBlur: () => setField({ ...field, slug: slugify(field.slug) }),
                     help: fieldError
                 }),
                 el(SelectControl, {
-                    label: 'Field Type',
+                    label: __('Field Type', 'gm2-wordpress-suite'),
                     value: field.type,
-                    options: [ { label: 'Select Type', value: '' }, ...typeOptions ],
+                    options: [ { label: __('Select Type', 'gm2-wordpress-suite'), value: '' }, ...typeOptions ],
                     onChange: v => setField({ ...field, type: v })
                 }),
-                el(Button, { isPrimary: true, onClick: addField }, editIndex !== null ? 'Update Field' : 'Add Field')
+                el(Button, { isPrimary: true, onClick: addField }, editIndex !== null ? __('Update Field', 'gm2-wordpress-suite') : __('Add Field', 'gm2-wordpress-suite'))
             );
         };
 
@@ -355,7 +361,7 @@
                 const copy = data.taxonomies.slice();
                 const isDuplicate = copy.some((t,i) => t.slug === tax.slug && i !== editIndex);
                 if(isDuplicate){
-                    setTaxError('Taxonomy slug must be unique');
+                    setTaxError(__('Taxonomy slug must be unique', 'gm2-wordpress-suite'));
                     return;
                 }
                 if(editIndex !== null){
@@ -398,49 +404,49 @@
                     onDragEnd,
                     className: 'gm2-sortable-item'
                 },
-                    `${t.label} (${t.slug})`,
-                    el(Button, { isLink: true, onClick: () => editTax(i) }, 'Edit'),
-                    el(Button, { isLink: true, onClick: () => removeTax(i) }, 'Delete')
+                    sprintf(__('%1$s (%2$s)', 'gm2-wordpress-suite'), t.label, t.slug),
+                    el(Button, { isLink: true, onClick: () => editTax(i) }, __('Edit', 'gm2-wordpress-suite')),
+                    el(Button, { isLink: true, onClick: () => removeTax(i) }, __('Delete', 'gm2-wordpress-suite'))
                 )),
                 el(TextControl, {
-                    label: 'Taxonomy Slug',
+                    label: __('Taxonomy Slug', 'gm2-wordpress-suite'),
                     value: tax.slug,
                     onChange: v => setTax({ ...tax, slug: slugify(v) }),
                     onBlur: () => setTax({ ...tax, slug: slugify(tax.slug) }),
                     help: taxError
                 }),
                 el(TextControl, {
-                    label: 'Taxonomy Label',
+                    label: __('Taxonomy Label', 'gm2-wordpress-suite'),
                     value: tax.label,
                     onChange: v => setTax({ ...tax, label: v })
                 }),
-                el(Button, { isPrimary: true, onClick: addTax }, editIndex !== null ? 'Update Taxonomy' : 'Add Taxonomy')
+                el(Button, { isPrimary: true, onClick: addTax }, editIndex !== null ? __('Update Taxonomy', 'gm2-wordpress-suite') : __('Add Taxonomy', 'gm2-wordpress-suite'))
             );
         };
 
         const ReviewStep = () => el('div', { className: 'gm2-cpt-review' },
             el('div', { className: 'gm2-cpt-review-section' },
-                el('h3', {}, 'Post Type'),
-                el('p', {}, `${data.label} (${data.slug})`),
-                el(Button, { isLink: true, onClick: () => setStep(1) }, 'Edit')
+                el('h3', {}, __('Post Type', 'gm2-wordpress-suite')),
+                el('p', {}, sprintf(__('%1$s (%2$s)', 'gm2-wordpress-suite'), data.label, data.slug)),
+                el(Button, { isLink: true, onClick: () => setStep(1) }, __('Edit', 'gm2-wordpress-suite'))
             ),
             el('div', { className: 'gm2-cpt-review-section' },
-                el('h3', {}, 'Fields'),
+                el('h3', {}, __('Fields', 'gm2-wordpress-suite')),
                 data.fields.length
                     ? el('ul', {}, data.fields.map((f,i) =>
-                        el('li', { key: i }, `${f.label} (${f.slug}) - ${f.type}`)
+                        el('li', { key: i }, sprintf(__('%1$s (%2$s) - %3$s', 'gm2-wordpress-suite'), f.label, f.slug, f.type))
                     ))
-                    : el('p', {}, 'None'),
-                el(Button, { isLink: true, onClick: () => setStep(2) }, 'Edit')
+                    : el('p', {}, __('None', 'gm2-wordpress-suite')),
+                el(Button, { isLink: true, onClick: () => setStep(2) }, __('Edit', 'gm2-wordpress-suite'))
             ),
             el('div', { className: 'gm2-cpt-review-section' },
-                el('h3', {}, 'Taxonomies'),
+                el('h3', {}, __('Taxonomies', 'gm2-wordpress-suite')),
                 data.taxonomies.length
                     ? el('ul', {}, data.taxonomies.map((t,i) =>
-                        el('li', { key: i }, `${t.label} (${t.slug})`)
+                        el('li', { key: i }, sprintf(__('%1$s (%2$s)', 'gm2-wordpress-suite'), t.label, t.slug))
                     ))
-                    : el('p', {}, 'None'),
-                el(Button, { isLink: true, onClick: () => setStep(3) }, 'Edit')
+                    : el('p', {}, __('None', 'gm2-wordpress-suite')),
+                el(Button, { isLink: true, onClick: () => setStep(3) }, __('Edit', 'gm2-wordpress-suite'))
             )
         );
 
@@ -495,18 +501,18 @@
                     const model = { ...saved, taxonomies: data.taxonomies };
                     const updated = { ...existing, [slug]: model };
                     setExisting(updated);
-                    dispatch('core/notices').createNotice('success', 'Model saved', { isDismissible: true, type: 'snackbar' });
+                    dispatch('core/notices').createNotice('success', __('Model saved', 'gm2-wordpress-suite'), { isDismissible: true, type: 'snackbar' });
                     loadModel('');
                     setStep(1);
                     setShowNewButton(true);
                 } else {
                     const code = resp && resp.data && (resp.data.code || resp.data) || '';
-                    const message = (resp && resp.data && resp.data.message) || errorMap[code] || 'Error saving';
+                    const message = (resp && resp.data && resp.data.message) || errorMap[code] || __('Error saving', 'gm2-wordpress-suite');
                     dispatch('core/notices').createNotice('error', message, { isDismissible: true, type: 'snackbar' });
                 }
                 setSaving(false);
             }).catch(() => {
-                dispatch('core/notices').createNotice('error', 'Error saving', { isDismissible: true, type: 'snackbar' });
+                dispatch('core/notices').createNotice('error', __('Error saving', 'gm2-wordpress-suite'), { isDismissible: true, type: 'snackbar' });
                 setSaving(false);
             });
         };
@@ -516,8 +522,8 @@
                 el(NoticeList, { notices: inlineNotices, onRemove: removeNotice }),
                 el(SnackbarList, { notices: snackbarNotices, onRemove: removeNotice }),
                 el('div', { className: 'gm2-cpt-success-actions' },
-                    el(Button, { isPrimary: true, onClick: () => setShowNewButton(false) }, 'Create New Model'),
-                    el(Button, { onClick: () => window.location.reload() }, 'Reload Page')
+                    el(Button, { isPrimary: true, onClick: () => setShowNewButton(false) }, __('Create New Model', 'gm2-wordpress-suite')),
+                    el(Button, { onClick: () => window.location.reload() }, __('Reload Page', 'gm2-wordpress-suite'))
                 )
             );
         }
@@ -525,13 +531,13 @@
             el(NoticeList, { notices: inlineNotices, onRemove: removeNotice }),
             el(SnackbarList, { notices: snackbarNotices, onRemove: removeNotice }),
             el(Panel, {},
-                el(PanelBody, { title: 'CPT Wizard', initialOpen: true },
+                el(PanelBody, { title: __('CPT Wizard', 'gm2-wordpress-suite'), initialOpen: true },
                     el(StepIndicator),
                     renderStep(),
                     el('div', { className: 'gm2-cpt-wizard-buttons' }, [
-                        step > 1 && el(Button, { onClick: back }, 'Back'),
-                        step < steps.length && el(Button, { isPrimary: true, onClick: next }, 'Next'),
-                        step === steps.length && el(Button, { isPrimary: true, onClick: save, isBusy: saving, disabled: saving }, 'Finish')
+                        step > 1 && el(Button, { onClick: back }, __('Back', 'gm2-wordpress-suite')),
+                        step < steps.length && el(Button, { isPrimary: true, onClick: next }, __('Next', 'gm2-wordpress-suite')),
+                        step === steps.length && el(Button, { isPrimary: true, onClick: save, isBusy: saving, disabled: saving }, __('Finish', 'gm2-wordpress-suite'))
                     ])
                 )
             )
