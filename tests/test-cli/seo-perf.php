@@ -23,15 +23,21 @@ use PHPUnit\Framework\TestCase;
 
 define( 'WP_CLI', true );
 
-class WP_CLI {
-    public static $lines = [];
-    public static function error( $msg, $code = 1 ) { throw new \Exception( $msg, $code ); }
-    public static function success( $msg ) { self::$lines[] = $msg; }
-    public static function warning( $msg ) { self::$lines[] = $msg; }
-    public static function line( $msg ) { self::$lines[] = $msg; }
-    public static function add_command( $name, $callable ) {}
+if ( ! class_exists( 'WP_CLI' ) ) {
+    class WP_CLI {
+        public static $lines = [];
+        public static $confirmations = [];
+        public static function error( $msg, $code = 1 ) { throw new \Exception( $msg, $code ); }
+        public static function success( $msg ) { self::$lines[] = $msg; }
+        public static function warning( $msg ) { self::$lines[] = $msg; }
+        public static function line( $msg ) { self::$lines[] = $msg; }
+        public static function confirm( $msg, $assoc_args = [] ) { self::$confirmations[] = $msg; }
+        public static function add_command( $name, $callable ) {}
+    }
 }
-class WP_CLI_Command {}
+if ( ! class_exists( 'WP_CLI_Command' ) ) {
+    class WP_CLI_Command {}
+}
 
 class WP_Error {
     protected $code;
@@ -49,6 +55,9 @@ function gm2_ai_send_prompt( $prompt ) { return $GLOBALS['gm2_ai_response']; }
 class SeoPerfCliTest extends TestCase {
     protected function setUp(): void {
         WP_CLI::$lines = [];
+        if ( property_exists( WP_CLI::class, 'confirmations' ) ) {
+            WP_CLI::$confirmations = [];
+        }
         $GLOBALS['apache_result'] = [ 'status' => 'written' ];
         $GLOBALS['nginx_result']  = [ 'status' => 'written', 'file' => '/tmp/nginx.conf' ];
         $GLOBALS['gm2_ai_response'] = [ 'ok' => true ];
