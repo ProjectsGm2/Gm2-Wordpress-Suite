@@ -1,6 +1,8 @@
 <?php
 namespace Gm2;
 
+use Gm2\Performance\QueryCache;
+
 if (!defined('ABSPATH')) {
     exit;
 }
@@ -51,7 +53,24 @@ function gm2_get_query_adapter() {
 
 function gm2_run_query($args) {
     $adapter = gm2_get_query_adapter();
-    return $adapter->query($args);
+    if ($adapter instanceof WP_Query_Adapter && is_array($args)) {
+        $args = QueryCache::configureArgs($args, [
+            'source'  => 'gm2_query_builder',
+            'adapter' => WP_Query_Adapter::class,
+        ]);
+    }
+
+    $query = $adapter->query($args);
+
+    if ($query instanceof \WP_Query && !is_array($query->get('gm2_query_cache'))) {
+        // Mark the query for caching if a third-party adapter swapped in a WP_Query instance.
+        QueryCache::prepareQuery($query, [
+            'source'  => 'gm2_query_builder',
+            'adapter' => get_class($adapter),
+        ]);
+    }
+
+    return $query;
 }
 
 function gm2_render_posts($query) {
