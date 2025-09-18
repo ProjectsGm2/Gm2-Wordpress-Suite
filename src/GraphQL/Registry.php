@@ -3,7 +3,6 @@
 namespace Gm2\GraphQL;
 
 use Gm2\Gm2_Capability_Manager;
-use Gm2\Gm2_REST_Visibility;
 use WP_Post_Type;
 use WP_Taxonomy;
 
@@ -62,30 +61,33 @@ final class Registry
             return;
         }
 
-        $visibility = class_exists(Gm2_REST_Visibility::class)
-            ? Gm2_REST_Visibility::get_visibility()
-            : [ 'post_types' => [], 'taxonomies' => [], 'fields' => [] ];
+        $postTypes = function_exists('get_post_types') ? get_post_types([], 'names') : [];
+        if (is_array($postTypes)) {
+            foreach ($postTypes as $postType) {
+                if (!is_string($postType)) {
+                    continue;
+                }
 
-        $allowedFields = array_filter($visibility['fields'] ?? [], static fn ($value) => (bool) $value);
-        if ($allowedFields === []) {
-            return;
+                $this->registerPostType($postType);
+            }
         }
 
-        $allowedMap = array_fill_keys(array_keys($allowedFields), true);
+        $taxonomies = function_exists('get_taxonomies') ? get_taxonomies([], 'names') : [];
+        if (is_array($taxonomies)) {
+            foreach ($taxonomies as $taxonomy) {
+                if (!is_string($taxonomy)) {
+                    continue;
+                }
 
-        foreach (array_keys(array_filter($visibility['post_types'] ?? [], static fn ($value) => (bool) $value)) as $postType) {
-            $this->registerPostType($postType, $allowedMap);
-        }
-
-        foreach (array_keys(array_filter($visibility['taxonomies'] ?? [], static fn ($value) => (bool) $value)) as $taxonomy) {
-            $this->registerTaxonomy($taxonomy, $allowedMap);
+                $this->registerTaxonomy($taxonomy);
+            }
         }
     }
 
     /**
-     * @param array<string, bool> $allowedFields
+     * @param string $slug
      */
-    private function registerPostType(string $slug, array $allowedFields): void
+    private function registerPostType(string $slug): void
     {
         if (!post_type_exists($slug)) {
             return;
@@ -93,6 +95,10 @@ final class Registry
 
         $object = get_post_type_object($slug);
         if (!$object instanceof WP_Post_Type) {
+            return;
+        }
+
+        if ($object->publicly_queryable === false) {
             return;
         }
 
@@ -118,7 +124,7 @@ final class Registry
 
         $metaKeys = $this->getRegisteredMeta('post', $slug);
         foreach ($metaKeys as $metaKey => $metaArgs) {
-            if (!$this->shouldRegisterField($metaKey, $metaArgs, $allowedFields, 'post', $slug)) {
+            if (!$this->shouldRegisterField($metaKey, $metaArgs, 'post', $slug)) {
                 continue;
             }
 
@@ -127,9 +133,9 @@ final class Registry
     }
 
     /**
-     * @param array<string, bool> $allowedFields
+     * @param string $slug
      */
-    private function registerTaxonomy(string $slug, array $allowedFields): void
+    private function registerTaxonomy(string $slug): void
     {
         if (!taxonomy_exists($slug)) {
             return;
@@ -162,7 +168,7 @@ final class Registry
 
         $metaKeys = $this->getRegisteredMeta('term', $slug);
         foreach ($metaKeys as $metaKey => $metaArgs) {
-            if (!$this->shouldRegisterField($metaKey, $metaArgs, $allowedFields, 'term', $slug)) {
+            if (!$this->shouldRegisterField($metaKey, $metaArgs, 'term', $slug)) {
                 continue;
             }
 
@@ -182,14 +188,9 @@ final class Registry
 
     /**
      * @param array<string, mixed> $metaArgs
-     * @param array<string, bool>  $allowedFields
      */
-    private function shouldRegisterField(string $metaKey, array $metaArgs, array $allowedFields, string $objectType, string $slug): bool
+    private function shouldRegisterField(string $metaKey, array $metaArgs, string $objectType, string $slug): bool
     {
-        if (!isset($allowedFields[$metaKey])) {
-            return false;
-        }
-
         if (empty($metaArgs['show_in_rest'])) {
             return false;
         }
@@ -232,7 +233,14 @@ final class Registry
         $default = $metaArgs['default'] ?? ($schema['default'] ?? null);
         $single = array_key_exists('single', $metaArgs) ? (bool) $metaArgs['single'] : true;
 
-        $resolver = function ($root, array $args, $context, $info) use ($metaKey, $objectType, $mapping, $single, $default) {
+        $authCallback = null;
+        if (isset($metaArgs['auth_callback']) && is_callable($metaArgs['auth_callback'])) {
+            $authCallback = $metaArgs['auth_callback'];
+        }
+
+        $authCap = $this->resolveAuthCapability($objectType, $objectName);
+
+        $resolver = function ($root, array $args, $context, $info) use ($metaKey, $objectType, $mapping, $single, $default, $authCallback, $authCap) {
             $objectId = $this->resolveObjectId($root, $objectType);
             if (!$objectId) {
                 return null;
@@ -240,6 +248,13 @@ final class Registry
 
             if (!Gm2_Capability_Manager::can_read_field($metaKey, $objectId)) {
                 return null;
+            }
+
+            if ($authCallback) {
+                $allowed = $authCallback(true, $metaKey, $objectId, function_exists('get_current_user_id') ? get_current_user_id() : 0, $authCap, []);
+                if (!$allowed) {
+                    return null;
+                }
             }
 
             $raw = $this->fetchMetaValue($objectType, $objectId, $metaKey, $single);
@@ -269,6 +284,42 @@ final class Registry
         );
 
         register_graphql_field($graphqlType, $fieldName, $config);
+    }
+
+    /**
+     * Resolve the capability string passed to meta auth callbacks.
+     */
+    private function resolveAuthCapability(string $objectType, string $objectName): string
+    {
+        if ($objectType === 'term') {
+            if (taxonomy_exists($objectName)) {
+                $taxonomy = get_taxonomy($objectName);
+                if ($taxonomy instanceof WP_Taxonomy && isset($taxonomy->cap) && is_object($taxonomy->cap)) {
+                    if (!empty($taxonomy->cap->read)) {
+                        return (string) $taxonomy->cap->read;
+                    }
+                    if (!empty($taxonomy->cap->manage_terms)) {
+                        return (string) $taxonomy->cap->manage_terms;
+                    }
+                }
+            }
+
+            return 'manage_terms';
+        }
+
+        if (post_type_exists($objectName)) {
+            $postType = get_post_type_object($objectName);
+            if ($postType instanceof WP_Post_Type && isset($postType->cap) && is_object($postType->cap)) {
+                if (!empty($postType->cap->read_post)) {
+                    return (string) $postType->cap->read_post;
+                }
+                if (!empty($postType->cap->read)) {
+                    return (string) $postType->cap->read;
+                }
+            }
+        }
+
+        return 'read_' . $objectType;
     }
 
     /**
