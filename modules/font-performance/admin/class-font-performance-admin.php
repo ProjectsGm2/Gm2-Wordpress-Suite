@@ -172,6 +172,11 @@ class Font_Performance_Admin {
 
     /** AJAX handler to detect variants. */
     public static function ajax_detect_variants(): void {
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error([
+                'message' => __('Insufficient permissions.', 'gm2-wordpress-suite'),
+            ], 403);
+        }
         check_ajax_referer('gm2_font_variants', 'nonce');
         $variants = \Gm2\Font_Performance\Font_Performance::detect_font_variants();
         wp_send_json_success($variants);
@@ -179,6 +184,11 @@ class Font_Performance_Admin {
 
     /** AJAX handler to compute font size savings. */
     public static function ajax_font_size_diff(): void {
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error([
+                'message' => __('Insufficient permissions.', 'gm2-wordpress-suite'),
+            ], 403);
+        }
         check_ajax_referer('gm2_font_variants', 'nonce');
         $selected = $_POST['variants'] ?? [];
         if (!is_array($selected)) {
