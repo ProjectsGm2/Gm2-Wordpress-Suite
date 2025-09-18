@@ -60,7 +60,7 @@ class AE_SEO_Render_Optimizer {
      */
     private function register_option_defaults() {
         foreach ($this->defaults as $option => $value) {
-            add_option($option, $value);
+            add_option($option, $value, '', \Gm2\Performance\AutoloadManager::get_autoload_flag($option));
         }
     }
 
@@ -94,7 +94,7 @@ class AE_SEO_Render_Optimizer {
      * @return bool
      */
     public static function add_option($option, $value) {
-        return add_option($option, $value);
+        return add_option($option, $value, '', \Gm2\Performance\AutoloadManager::get_autoload_flag($option));
     }
 
     /**
