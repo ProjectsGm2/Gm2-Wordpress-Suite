@@ -116,7 +116,39 @@
       "hierarchical": false,
       "rewrite": {
         "slug": "course-category"
-      }
+      },
+      "show_in_rest": true,
+      "rest_base": "course-category"
+    },
+    "subject": {
+      "object_type": [
+        "course"
+      ],
+      "labels": {
+        "name": "Subjects",
+        "singular_name": "Subject"
+      },
+      "hierarchical": true,
+      "rewrite": {
+        "slug": "course-subject"
+      },
+      "show_in_rest": true,
+      "rest_base": "course-subjects"
+    },
+    "level": {
+      "object_type": [
+        "course"
+      ],
+      "labels": {
+        "name": "Levels",
+        "singular_name": "Level"
+      },
+      "hierarchical": false,
+      "rewrite": {
+        "slug": "course-level"
+      },
+      "show_in_rest": true,
+      "rest_base": "course-levels"
     }
   },
   "field_groups": [
@@ -264,7 +296,7 @@
     }
   },
   "label": "Courses",
-  "description": "Course catalogue blueprint with provider metadata and Elementor hero placeholder.",
+  "description": "Course catalogue blueprint with provider metadata, subject and level taxonomies, and Elementor hero placeholder.",
   "fields": {
     "groups": [
       {
@@ -430,6 +462,34 @@
       {
         "name": "In Person",
         "slug": "in-person"
+      }
+    ],
+    "subject": [
+      {
+        "name": "Business & Management",
+        "slug": "business-management"
+      },
+      {
+        "name": "Technology",
+        "slug": "technology"
+      },
+      {
+        "name": "Creative Arts",
+        "slug": "creative-arts"
+      }
+    ],
+    "level": [
+      {
+        "name": "Beginner",
+        "slug": "beginner"
+      },
+      {
+        "name": "Intermediate",
+        "slug": "intermediate"
+      },
+      {
+        "name": "Advanced",
+        "slug": "advanced"
       }
     ]
   },
