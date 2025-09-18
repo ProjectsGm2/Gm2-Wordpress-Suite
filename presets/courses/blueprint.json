@@ -161,24 +161,612 @@
           "label": "Provider",
           "name": "provider",
           "type": "text",
+          "default": "",
           "required": true,
-          "expose_in_rest": true
+          "validation": {
+            "required": true,
+            "maxLength": 255
+          },
+          "instructions": "Primary institution or organization offering the course.",
+          "expose_in_rest": true,
+          "show_in_rest": {
+            "schema": {
+              "type": "string",
+              "maxLength": 255
+            }
+          }
+        },
+        {
+          "key": "field_provider_details",
+          "label": "Provider Details",
+          "name": "provider_details",
+          "type": "group",
+          "default": {
+            "organization_name": "",
+            "department": "",
+            "website": "",
+            "contact_email": "",
+            "contact_phone": ""
+          },
+          "validation": {
+            "required": false
+          },
+          "instructions": "Optional organization metadata used for structured data.",
+          "expose_in_rest": true,
+          "show_in_rest": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "organization_name": {
+                  "type": "string",
+                  "maxLength": 255
+                },
+                "department": {
+                  "type": "string",
+                  "maxLength": 255
+                },
+                "website": {
+                  "type": "string",
+                  "format": "uri"
+                },
+                "contact_email": {
+                  "type": "string",
+                  "format": "email"
+                },
+                "contact_phone": {
+                  "type": "string",
+                  "pattern": "^[0-9+()\\-\\s.]{0,32}$"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "fields": [
+            {
+              "key": "field_provider_details_name",
+              "label": "Organization Name",
+              "name": "organization_name",
+              "type": "text",
+              "default": "",
+              "validation": {
+                "maxLength": 255
+              },
+              "expose_in_rest": true,
+              "show_in_rest": {
+                "schema": {
+                  "type": "string",
+                  "maxLength": 255
+                }
+              }
+            },
+            {
+              "key": "field_provider_details_department",
+              "label": "Department",
+              "name": "department",
+              "type": "text",
+              "default": "",
+              "validation": {
+                "maxLength": 255
+              },
+              "expose_in_rest": true,
+              "show_in_rest": {
+                "schema": {
+                  "type": "string",
+                  "maxLength": 255
+                }
+              }
+            },
+            {
+              "key": "field_provider_details_website",
+              "label": "Website",
+              "name": "website",
+              "type": "url",
+              "default": "",
+              "validation": {
+                "format": "uri"
+              },
+              "expose_in_rest": true,
+              "show_in_rest": {
+                "schema": {
+                  "type": "string",
+                  "format": "uri"
+                }
+              }
+            },
+            {
+              "key": "field_provider_details_email",
+              "label": "Contact Email",
+              "name": "contact_email",
+              "type": "email",
+              "default": "",
+              "validation": {
+                "format": "email"
+              },
+              "expose_in_rest": true,
+              "show_in_rest": {
+                "schema": {
+                  "type": "string",
+                  "format": "email"
+                }
+              }
+            },
+            {
+              "key": "field_provider_details_phone",
+              "label": "Contact Phone",
+              "name": "contact_phone",
+              "type": "text",
+              "default": "",
+              "validation": {
+                "pattern": "^[0-9+()\\-\\s.]{0,32}$"
+              },
+              "instructions": "Include country code when possible.",
+              "expose_in_rest": true,
+              "show_in_rest": {
+                "schema": {
+                  "type": "string",
+                  "pattern": "^[0-9+()\\-\\s.]{0,32}$"
+                }
+              }
+            }
+          ]
         },
         {
           "key": "field_course_code",
           "label": "Course Code",
           "name": "course_code",
           "type": "text",
+          "default": "",
           "regex": "^[A-Z0-9-]+$",
           "required": true,
-          "expose_in_rest": true
+          "validation": {
+            "required": true,
+            "pattern": "^[A-Z0-9-]+$"
+          },
+          "expose_in_rest": true,
+          "show_in_rest": {
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z0-9-]+$"
+            }
+          }
         },
         {
           "key": "field_course_url",
           "label": "Course URL",
           "name": "course_url",
           "type": "url",
-          "expose_in_rest": true
+          "default": "",
+          "validation": {
+            "format": "uri"
+          },
+          "expose_in_rest": true,
+          "show_in_rest": {
+            "schema": {
+              "type": "string",
+              "format": "uri"
+            }
+          }
+        },
+        {
+          "key": "field_course_level",
+          "label": "Course Level",
+          "name": "course_level",
+          "type": "select",
+          "default": "beginner",
+          "options": {
+            "beginner": "Beginner",
+            "intermediate": "Intermediate",
+            "advanced": "Advanced"
+          },
+          "validation": {
+            "required": true,
+            "enum": [
+              "beginner",
+              "intermediate",
+              "advanced"
+            ]
+          },
+          "expose_in_rest": true,
+          "show_in_rest": {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "beginner",
+                "intermediate",
+                "advanced"
+              ]
+            }
+          }
+        },
+        {
+          "key": "field_course_modality",
+          "label": "Modality",
+          "name": "modality",
+          "type": "select",
+          "default": "online",
+          "options": {
+            "online": "Online",
+            "offline": "In Person",
+            "hybrid": "Hybrid"
+          },
+          "validation": {
+            "required": true,
+            "enum": [
+              "online",
+              "offline",
+              "hybrid"
+            ]
+          },
+          "instructions": "Choose how learners participate in the course.",
+          "expose_in_rest": true,
+          "show_in_rest": {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "online",
+                "offline",
+                "hybrid"
+              ]
+            }
+          }
+        },
+        {
+          "key": "field_course_duration",
+          "label": "Duration (ISO 8601)",
+          "name": "duration_iso",
+          "type": "text",
+          "default": "",
+          "validation": {
+            "pattern": "^P(?!$)(\\d+Y)?(\\d+M)?(\\d+W)?(\\d+D)?(T(\\d+H)?(\\d+M)?(\\d+S)?)?$"
+          },
+          "instructions": "Use ISO 8601 duration format such as P4W or P1Y6M.",
+          "expose_in_rest": true,
+          "show_in_rest": {
+            "schema": {
+              "type": "string",
+              "pattern": "^P(?!$)(\\d+Y)?(\\d+M)?(\\d+W)?(\\d+D)?(T(\\d+H)?(\\d+M)?(\\d+S)?)?$"
+            }
+          }
+        },
+        {
+          "key": "field_course_schedule",
+          "label": "Schedule",
+          "name": "course_schedule",
+          "type": "group",
+          "default": {
+            "start_date_time": null,
+            "start_time_zone": "",
+            "end_date_time": null,
+            "end_time_zone": ""
+          },
+          "validation": {
+            "required": false
+          },
+          "instructions": "Optional start and end details including time zone.",
+          "expose_in_rest": true,
+          "show_in_rest": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "start_date_time": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date-time"
+                },
+                "start_time_zone": {
+                  "type": "string",
+                  "pattern": "^[-A-Za-z0-9_/+]+$"
+                },
+                "end_date_time": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date-time"
+                },
+                "end_time_zone": {
+                  "type": "string",
+                  "pattern": "^[-A-Za-z0-9_/+]+$"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "fields": [
+            {
+              "key": "field_course_start",
+              "label": "Start Date",
+              "name": "start_date_time",
+              "type": "datetime",
+              "default": null,
+              "validation": {
+                "format": "date-time"
+              },
+              "expose_in_rest": true,
+              "show_in_rest": {
+                "schema": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date-time"
+                }
+              }
+            },
+            {
+              "key": "field_course_start_timezone",
+              "label": "Start Time Zone",
+              "name": "start_time_zone",
+              "type": "text",
+              "default": "",
+              "validation": {
+                "pattern": "^[-A-Za-z0-9_/+]+$"
+              },
+              "instructions": "Use an IANA time zone such as America/New_York.",
+              "expose_in_rest": true,
+              "show_in_rest": {
+                "schema": {
+                  "type": "string",
+                  "pattern": "^[-A-Za-z0-9_/+]+$"
+                }
+              }
+            },
+            {
+              "key": "field_course_end",
+              "label": "End Date",
+              "name": "end_date_time",
+              "type": "datetime",
+              "default": null,
+              "validation": {
+                "format": "date-time"
+              },
+              "expose_in_rest": true,
+              "show_in_rest": {
+                "schema": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date-time"
+                }
+              }
+            },
+            {
+              "key": "field_course_end_timezone",
+              "label": "End Time Zone",
+              "name": "end_time_zone",
+              "type": "text",
+              "default": "",
+              "validation": {
+                "pattern": "^[-A-Za-z0-9_/+]+$"
+              },
+              "instructions": "Use an IANA time zone such as America/Los_Angeles.",
+              "expose_in_rest": true,
+              "show_in_rest": {
+                "schema": {
+                  "type": "string",
+                  "pattern": "^[-A-Za-z0-9_/+]+$"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "key": "field_course_tuition",
+          "label": "Tuition",
+          "name": "tuition",
+          "type": "group",
+          "default": {
+            "amount": 0,
+            "currency": "USD"
+          },
+          "validation": {
+            "required": false
+          },
+          "instructions": "Pricing details displayed in listings and schema.",
+          "expose_in_rest": true,
+          "show_in_rest": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "amount": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "currency": {
+                  "type": "string",
+                  "enum": [
+                    "USD",
+                    "EUR",
+                    "GBP",
+                    "CAD",
+                    "AUD",
+                    "JPY"
+                  ]
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "fields": [
+            {
+              "key": "field_course_price",
+              "label": "Price",
+              "name": "amount",
+              "type": "number",
+              "default": 0,
+              "validation": {
+                "min": 0,
+                "step": 0.01
+              },
+              "expose_in_rest": true,
+              "show_in_rest": {
+                "schema": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              }
+            },
+            {
+              "key": "field_course_currency",
+              "label": "Currency",
+              "name": "currency",
+              "type": "select",
+              "default": "USD",
+              "options": {
+                "USD": "USD",
+                "EUR": "EUR",
+                "GBP": "GBP",
+                "CAD": "CAD",
+                "AUD": "AUD",
+                "JPY": "JPY"
+              },
+              "validation": {
+                "required": true,
+                "enum": [
+                  "USD",
+                  "EUR",
+                  "GBP",
+                  "CAD",
+                  "AUD",
+                  "JPY"
+                ]
+              },
+              "expose_in_rest": true,
+              "show_in_rest": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "USD",
+                    "EUR",
+                    "GBP",
+                    "CAD",
+                    "AUD",
+                    "JPY"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "key": "field_course_prerequisites",
+          "label": "Prerequisites",
+          "name": "prerequisites",
+          "type": "textarea",
+          "default": "",
+          "validation": {
+            "maxLength": 1000
+          },
+          "instructions": "Outline recommended experience or requirements for in-person or hybrid learners.",
+          "conditions": {
+            "relation": "and",
+            "requires_in_person": {
+              "field": "modality",
+              "operator": "!=",
+              "value": "online"
+            }
+          },
+          "expose_in_rest": true,
+          "show_in_rest": {
+            "schema": {
+              "type": "string",
+              "maxLength": 1000
+            }
+          }
+        },
+        {
+          "key": "field_course_syllabus",
+          "label": "Syllabus",
+          "name": "syllabus",
+          "type": "repeater",
+          "default": [],
+          "validation": {
+            "minItems": 0,
+            "maxItems": 50
+          },
+          "instructions": "Add modules or lessons learners complete throughout the course.",
+          "expose_in_rest": true,
+          "show_in_rest": {
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "maxLength": 160
+                  },
+                  "summary": {
+                    "type": "string",
+                    "maxLength": 1000
+                  },
+                  "duration": {
+                    "type": "string",
+                    "pattern": "^P(?!$)(\\d+Y)?(\\d+M)?(\\d+W)?(\\d+D)?(T(\\d+H)?(\\d+M)?(\\d+S)?)?$"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "fields": [
+            {
+              "key": "field_course_syllabus_title",
+              "label": "Module Title",
+              "name": "title",
+              "type": "text",
+              "default": "",
+              "validation": {
+                "required": true,
+                "maxLength": 160
+              },
+              "expose_in_rest": true,
+              "show_in_rest": {
+                "schema": {
+                  "type": "string",
+                  "maxLength": 160
+                }
+              }
+            },
+            {
+              "key": "field_course_syllabus_summary",
+              "label": "Summary",
+              "name": "summary",
+              "type": "textarea",
+              "default": "",
+              "validation": {
+                "maxLength": 1000
+              },
+              "expose_in_rest": true,
+              "show_in_rest": {
+                "schema": {
+                  "type": "string",
+                  "maxLength": 1000
+                }
+              }
+            },
+            {
+              "key": "field_course_syllabus_duration",
+              "label": "Module Duration",
+              "name": "duration",
+              "type": "text",
+              "default": "",
+              "validation": {
+                "pattern": "^P(?!$)(\\d+Y)?(\\d+M)?(\\d+W)?(\\d+D)?(T(\\d+H)?(\\d+M)?(\\d+S)?)?$"
+              },
+              "instructions": "ISO 8601 duration for the module (e.g. PT90M).",
+              "expose_in_rest": true,
+              "show_in_rest": {
+                "schema": {
+                  "type": "string",
+                  "pattern": "^P(?!$)(\\d+Y)?(\\d+M)?(\\d+W)?(\\d+D)?(T(\\d+H)?(\\d+M)?(\\d+S)?)?$"
+                }
+              }
+            }
+          ]
         },
         {
           "key": "field_course_lessons",
@@ -189,9 +777,22 @@
           "post_types": [
             "lesson"
           ],
+          "default": [],
           "sync": "two-way",
           "instructions": "Select lessons that belong to this course.",
+          "validation": {
+            "minItems": 0
+          },
           "expose_in_rest": true,
+          "show_in_rest": {
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          },
           "rest": {
             "schema": {
               "type": "array",
@@ -211,9 +812,22 @@
           "post_types": [
             "instructor"
           ],
+          "default": [],
           "sync": "two-way",
           "instructions": "Assign instructors leading this course.",
+          "validation": {
+            "minItems": 0
+          },
           "expose_in_rest": true,
+          "show_in_rest": {
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          },
           "rest": {
             "schema": {
               "type": "array",
@@ -308,24 +922,612 @@
             "label": "Provider",
             "name": "provider",
             "type": "text",
+            "default": "",
             "required": true,
-            "expose_in_rest": true
+            "validation": {
+              "required": true,
+              "maxLength": 255
+            },
+            "instructions": "Primary institution or organization offering the course.",
+            "expose_in_rest": true,
+            "show_in_rest": {
+              "schema": {
+                "type": "string",
+                "maxLength": 255
+              }
+            }
+          },
+          {
+            "key": "field_provider_details",
+            "label": "Provider Details",
+            "name": "provider_details",
+            "type": "group",
+            "default": {
+              "organization_name": "",
+              "department": "",
+              "website": "",
+              "contact_email": "",
+              "contact_phone": ""
+            },
+            "validation": {
+              "required": false
+            },
+            "instructions": "Optional organization metadata used for structured data.",
+            "expose_in_rest": true,
+            "show_in_rest": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "organization_name": {
+                    "type": "string",
+                    "maxLength": 255
+                  },
+                  "department": {
+                    "type": "string",
+                    "maxLength": 255
+                  },
+                  "website": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "contact_email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "contact_phone": {
+                    "type": "string",
+                    "pattern": "^[0-9+()\\-\\s.]{0,32}$"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "fields": [
+              {
+                "key": "field_provider_details_name",
+                "label": "Organization Name",
+                "name": "organization_name",
+                "type": "text",
+                "default": "",
+                "validation": {
+                  "maxLength": 255
+                },
+                "expose_in_rest": true,
+                "show_in_rest": {
+                  "schema": {
+                    "type": "string",
+                    "maxLength": 255
+                  }
+                }
+              },
+              {
+                "key": "field_provider_details_department",
+                "label": "Department",
+                "name": "department",
+                "type": "text",
+                "default": "",
+                "validation": {
+                  "maxLength": 255
+                },
+                "expose_in_rest": true,
+                "show_in_rest": {
+                  "schema": {
+                    "type": "string",
+                    "maxLength": 255
+                  }
+                }
+              },
+              {
+                "key": "field_provider_details_website",
+                "label": "Website",
+                "name": "website",
+                "type": "url",
+                "default": "",
+                "validation": {
+                  "format": "uri"
+                },
+                "expose_in_rest": true,
+                "show_in_rest": {
+                  "schema": {
+                    "type": "string",
+                    "format": "uri"
+                  }
+                }
+              },
+              {
+                "key": "field_provider_details_email",
+                "label": "Contact Email",
+                "name": "contact_email",
+                "type": "email",
+                "default": "",
+                "validation": {
+                  "format": "email"
+                },
+                "expose_in_rest": true,
+                "show_in_rest": {
+                  "schema": {
+                    "type": "string",
+                    "format": "email"
+                  }
+                }
+              },
+              {
+                "key": "field_provider_details_phone",
+                "label": "Contact Phone",
+                "name": "contact_phone",
+                "type": "text",
+                "default": "",
+                "validation": {
+                  "pattern": "^[0-9+()\\-\\s.]{0,32}$"
+                },
+                "instructions": "Include country code when possible.",
+                "expose_in_rest": true,
+                "show_in_rest": {
+                  "schema": {
+                    "type": "string",
+                    "pattern": "^[0-9+()\\-\\s.]{0,32}$"
+                  }
+                }
+              }
+            ]
           },
           {
             "key": "field_course_code",
             "label": "Course Code",
             "name": "course_code",
             "type": "text",
+            "default": "",
             "regex": "^[A-Z0-9-]+$",
             "required": true,
-            "expose_in_rest": true
+            "validation": {
+              "required": true,
+              "pattern": "^[A-Z0-9-]+$"
+            },
+            "expose_in_rest": true,
+            "show_in_rest": {
+              "schema": {
+                "type": "string",
+                "pattern": "^[A-Z0-9-]+$"
+              }
+            }
           },
           {
             "key": "field_course_url",
             "label": "Course URL",
             "name": "course_url",
             "type": "url",
-            "expose_in_rest": true
+            "default": "",
+            "validation": {
+              "format": "uri"
+            },
+            "expose_in_rest": true,
+            "show_in_rest": {
+              "schema": {
+                "type": "string",
+                "format": "uri"
+              }
+            }
+          },
+          {
+            "key": "field_course_level",
+            "label": "Course Level",
+            "name": "course_level",
+            "type": "select",
+            "default": "beginner",
+            "options": {
+              "beginner": "Beginner",
+              "intermediate": "Intermediate",
+              "advanced": "Advanced"
+            },
+            "validation": {
+              "required": true,
+              "enum": [
+                "beginner",
+                "intermediate",
+                "advanced"
+              ]
+            },
+            "expose_in_rest": true,
+            "show_in_rest": {
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "beginner",
+                  "intermediate",
+                  "advanced"
+                ]
+              }
+            }
+          },
+          {
+            "key": "field_course_modality",
+            "label": "Modality",
+            "name": "modality",
+            "type": "select",
+            "default": "online",
+            "options": {
+              "online": "Online",
+              "offline": "In Person",
+              "hybrid": "Hybrid"
+            },
+            "validation": {
+              "required": true,
+              "enum": [
+                "online",
+                "offline",
+                "hybrid"
+              ]
+            },
+            "instructions": "Choose how learners participate in the course.",
+            "expose_in_rest": true,
+            "show_in_rest": {
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "online",
+                  "offline",
+                  "hybrid"
+                ]
+              }
+            }
+          },
+          {
+            "key": "field_course_duration",
+            "label": "Duration (ISO 8601)",
+            "name": "duration_iso",
+            "type": "text",
+            "default": "",
+            "validation": {
+              "pattern": "^P(?!$)(\\d+Y)?(\\d+M)?(\\d+W)?(\\d+D)?(T(\\d+H)?(\\d+M)?(\\d+S)?)?$"
+            },
+            "instructions": "Use ISO 8601 duration format such as P4W or P1Y6M.",
+            "expose_in_rest": true,
+            "show_in_rest": {
+              "schema": {
+                "type": "string",
+                "pattern": "^P(?!$)(\\d+Y)?(\\d+M)?(\\d+W)?(\\d+D)?(T(\\d+H)?(\\d+M)?(\\d+S)?)?$"
+              }
+            }
+          },
+          {
+            "key": "field_course_schedule",
+            "label": "Schedule",
+            "name": "course_schedule",
+            "type": "group",
+            "default": {
+              "start_date_time": null,
+              "start_time_zone": "",
+              "end_date_time": null,
+              "end_time_zone": ""
+            },
+            "validation": {
+              "required": false
+            },
+            "instructions": "Optional start and end details including time zone.",
+            "expose_in_rest": true,
+            "show_in_rest": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "start_date_time": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "date-time"
+                  },
+                  "start_time_zone": {
+                    "type": "string",
+                    "pattern": "^[-A-Za-z0-9_/+]+$"
+                  },
+                  "end_date_time": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "date-time"
+                  },
+                  "end_time_zone": {
+                    "type": "string",
+                    "pattern": "^[-A-Za-z0-9_/+]+$"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "fields": [
+              {
+                "key": "field_course_start",
+                "label": "Start Date",
+                "name": "start_date_time",
+                "type": "datetime",
+                "default": null,
+                "validation": {
+                  "format": "date-time"
+                },
+                "expose_in_rest": true,
+                "show_in_rest": {
+                  "schema": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "date-time"
+                  }
+                }
+              },
+              {
+                "key": "field_course_start_timezone",
+                "label": "Start Time Zone",
+                "name": "start_time_zone",
+                "type": "text",
+                "default": "",
+                "validation": {
+                  "pattern": "^[-A-Za-z0-9_/+]+$"
+                },
+                "instructions": "Use an IANA time zone such as America/New_York.",
+                "expose_in_rest": true,
+                "show_in_rest": {
+                  "schema": {
+                    "type": "string",
+                    "pattern": "^[-A-Za-z0-9_/+]+$"
+                  }
+                }
+              },
+              {
+                "key": "field_course_end",
+                "label": "End Date",
+                "name": "end_date_time",
+                "type": "datetime",
+                "default": null,
+                "validation": {
+                  "format": "date-time"
+                },
+                "expose_in_rest": true,
+                "show_in_rest": {
+                  "schema": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "date-time"
+                  }
+                }
+              },
+              {
+                "key": "field_course_end_timezone",
+                "label": "End Time Zone",
+                "name": "end_time_zone",
+                "type": "text",
+                "default": "",
+                "validation": {
+                  "pattern": "^[-A-Za-z0-9_/+]+$"
+                },
+                "instructions": "Use an IANA time zone such as America/Los_Angeles.",
+                "expose_in_rest": true,
+                "show_in_rest": {
+                  "schema": {
+                    "type": "string",
+                    "pattern": "^[-A-Za-z0-9_/+]+$"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "key": "field_course_tuition",
+            "label": "Tuition",
+            "name": "tuition",
+            "type": "group",
+            "default": {
+              "amount": 0,
+              "currency": "USD"
+            },
+            "validation": {
+              "required": false
+            },
+            "instructions": "Pricing details displayed in listings and schema.",
+            "expose_in_rest": true,
+            "show_in_rest": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "amount": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "currency": {
+                    "type": "string",
+                    "enum": [
+                      "USD",
+                      "EUR",
+                      "GBP",
+                      "CAD",
+                      "AUD",
+                      "JPY"
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "fields": [
+              {
+                "key": "field_course_price",
+                "label": "Price",
+                "name": "amount",
+                "type": "number",
+                "default": 0,
+                "validation": {
+                  "min": 0,
+                  "step": 0.01
+                },
+                "expose_in_rest": true,
+                "show_in_rest": {
+                  "schema": {
+                    "type": "number",
+                    "minimum": 0
+                  }
+                }
+              },
+              {
+                "key": "field_course_currency",
+                "label": "Currency",
+                "name": "currency",
+                "type": "select",
+                "default": "USD",
+                "options": {
+                  "USD": "USD",
+                  "EUR": "EUR",
+                  "GBP": "GBP",
+                  "CAD": "CAD",
+                  "AUD": "AUD",
+                  "JPY": "JPY"
+                },
+                "validation": {
+                  "required": true,
+                  "enum": [
+                    "USD",
+                    "EUR",
+                    "GBP",
+                    "CAD",
+                    "AUD",
+                    "JPY"
+                  ]
+                },
+                "expose_in_rest": true,
+                "show_in_rest": {
+                  "schema": {
+                    "type": "string",
+                    "enum": [
+                      "USD",
+                      "EUR",
+                      "GBP",
+                      "CAD",
+                      "AUD",
+                      "JPY"
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "key": "field_course_prerequisites",
+            "label": "Prerequisites",
+            "name": "prerequisites",
+            "type": "textarea",
+            "default": "",
+            "validation": {
+              "maxLength": 1000
+            },
+            "instructions": "Outline recommended experience or requirements for in-person or hybrid learners.",
+            "conditions": {
+              "relation": "and",
+              "requires_in_person": {
+                "field": "modality",
+                "operator": "!=",
+                "value": "online"
+              }
+            },
+            "expose_in_rest": true,
+            "show_in_rest": {
+              "schema": {
+                "type": "string",
+                "maxLength": 1000
+              }
+            }
+          },
+          {
+            "key": "field_course_syllabus",
+            "label": "Syllabus",
+            "name": "syllabus",
+            "type": "repeater",
+            "default": [],
+            "validation": {
+              "minItems": 0,
+              "maxItems": 50
+            },
+            "instructions": "Add modules or lessons learners complete throughout the course.",
+            "expose_in_rest": true,
+            "show_in_rest": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "title": {
+                      "type": "string",
+                      "maxLength": 160
+                    },
+                    "summary": {
+                      "type": "string",
+                      "maxLength": 1000
+                    },
+                    "duration": {
+                      "type": "string",
+                      "pattern": "^P(?!$)(\\d+Y)?(\\d+M)?(\\d+W)?(\\d+D)?(T(\\d+H)?(\\d+M)?(\\d+S)?)?$"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            },
+            "fields": [
+              {
+                "key": "field_course_syllabus_title",
+                "label": "Module Title",
+                "name": "title",
+                "type": "text",
+                "default": "",
+                "validation": {
+                  "required": true,
+                  "maxLength": 160
+                },
+                "expose_in_rest": true,
+                "show_in_rest": {
+                  "schema": {
+                    "type": "string",
+                    "maxLength": 160
+                  }
+                }
+              },
+              {
+                "key": "field_course_syllabus_summary",
+                "label": "Summary",
+                "name": "summary",
+                "type": "textarea",
+                "default": "",
+                "validation": {
+                  "maxLength": 1000
+                },
+                "expose_in_rest": true,
+                "show_in_rest": {
+                  "schema": {
+                    "type": "string",
+                    "maxLength": 1000
+                  }
+                }
+              },
+              {
+                "key": "field_course_syllabus_duration",
+                "label": "Module Duration",
+                "name": "duration",
+                "type": "text",
+                "default": "",
+                "validation": {
+                  "pattern": "^P(?!$)(\\d+Y)?(\\d+M)?(\\d+W)?(\\d+D)?(T(\\d+H)?(\\d+M)?(\\d+S)?)?$"
+                },
+                "instructions": "ISO 8601 duration for the module (e.g. PT90M).",
+                "expose_in_rest": true,
+                "show_in_rest": {
+                  "schema": {
+                    "type": "string",
+                    "pattern": "^P(?!$)(\\d+Y)?(\\d+M)?(\\d+W)?(\\d+D)?(T(\\d+H)?(\\d+M)?(\\d+S)?)?$"
+                  }
+                }
+              }
+            ]
           },
           {
             "key": "field_course_lessons",
@@ -336,9 +1538,22 @@
             "post_types": [
               "lesson"
             ],
+            "default": [],
             "sync": "two-way",
             "instructions": "Select lessons that belong to this course.",
+            "validation": {
+              "minItems": 0
+            },
             "expose_in_rest": true,
+            "show_in_rest": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            },
             "rest": {
               "schema": {
                 "type": "array",
@@ -358,9 +1573,22 @@
             "post_types": [
               "instructor"
             ],
+            "default": [],
             "sync": "two-way",
             "instructions": "Assign instructors leading this course.",
+            "validation": {
+              "minItems": 0
+            },
             "expose_in_rest": true,
+            "show_in_rest": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            },
             "rest": {
               "schema": {
                 "type": "array",
