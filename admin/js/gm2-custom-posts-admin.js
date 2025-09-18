@@ -2,6 +2,8 @@ jQuery(function($){
     var fields = gm2CPTFields.fields || [];
     var args   = gm2CPTFields.args || [];
     var flexTypes = [];
+    var restMetaHelp = gm2CPTFields.restMetaHelp || '';
+    var restMetaShowHelp = gm2CPTFields.restMetaShowHelp || restMetaHelp;
 
     // Ensure various field types are available in the selector.
     var typeSelect = $('#gm2-field-type');
@@ -151,6 +153,9 @@ jQuery(function($){
             var chk = $('<label><input type="checkbox" id="gm2-arg-value" value="1"/> '+key+'</label>');
             if(value){ chk.find('input').prop('checked', true); }
             wrap.append(chk);
+            if(key === 'show_in_rest' && restMetaShowHelp){
+                wrap.append('<p class="description gm2-rest-meta-hint">'+esc(restMetaShowHelp)+'</p>');
+            }
         }else if(key === 'supports'){
             var opts = ['title','editor','excerpt','author','thumbnail','page-attributes','custom-fields','revisions'];
             $.each(opts, function(i, sup){
@@ -431,6 +436,9 @@ jQuery(function($){
     });
 
     function applyEnhancements(){
+        if(restMetaHelp && !$('#gm2-field-form .gm2-rest-meta-help').length){
+            $('#gm2-field-form').prepend('<p class="description gm2-rest-meta-help">'+esc(restMetaHelp)+'</p>');
+        }
         $('.gm2-field[data-placeholder]').each(function(){
             var ph = $(this).data('placeholder');
             $(this).find('input, textarea, select').first().attr('placeholder', ph);

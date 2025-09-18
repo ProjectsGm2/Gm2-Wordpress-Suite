@@ -1550,11 +1550,13 @@ class Gm2_Custom_Posts_Admin {
                 ];
             }
             wp_localize_script('gm2-custom-posts-admin', 'gm2CPTFields', [
-                'nonce'  => wp_create_nonce('gm2_save_cpt_fields'),
-                'ajax'   => admin_url('admin-ajax.php'),
-                'slug'   => $slug,
-                'fields' => $fields,
-                'args'   => $args,
+                'nonce'           => wp_create_nonce('gm2_save_cpt_fields'),
+                'ajax'            => admin_url('admin-ajax.php'),
+                'slug'            => $slug,
+                'fields'          => $fields,
+                'args'            => $args,
+                'restMetaHelp'    => __( 'Fields exposed through the REST API must belong to post types or taxonomies registered with "Show in REST" enabled.', 'gm2-wordpress-suite' ),
+                'restMetaShowHelp' => __( 'Enable "Show in REST" so any fields flagged for REST exposure are included in API responses.', 'gm2-wordpress-suite' ),
             ]);
 
             $admin_css = GM2_PLUGIN_DIR . 'admin/css/gm2-custom-posts-admin.css';
