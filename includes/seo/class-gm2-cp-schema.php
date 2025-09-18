@@ -173,6 +173,7 @@ class Gm2_CP_Schema {
     private static function nested_type(string $segment): ?string {
         return match ($segment) {
             'address' => 'PostalAddress',
+            'applicationContact' => 'ContactPoint',
             'baseSalary' => 'MonetaryAmount',
             'courseInstance' => 'CourseInstance',
             'geo' => 'GeoCoordinates',
@@ -182,8 +183,10 @@ class Gm2_CP_Schema {
             'offers' => 'Offer',
             'openingHoursSpecification' => 'OpeningHoursSpecification',
             'organizer' => 'Organization',
+            'priceSpecification' => 'PriceSpecification',
+            'value' => 'QuantitativeValue',
             'virtualLocation' => 'VirtualLocation',
-            default => null,
+        default => null,
         };
     }
 }
