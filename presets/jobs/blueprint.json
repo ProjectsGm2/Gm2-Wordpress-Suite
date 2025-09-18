@@ -98,6 +98,36 @@
       "rewrite": {
         "slug": "job-category"
       }
+    },
+    "job_type": {
+      "object_type": [
+        "job"
+      ],
+      "labels": {
+        "name": "Job Types",
+        "singular_name": "Job Type"
+      },
+      "hierarchical": false,
+      "show_in_rest": true,
+      "rest_base": "job-types",
+      "rewrite": {
+        "slug": "job-type"
+      }
+    },
+    "job_location": {
+      "object_type": [
+        "job"
+      ],
+      "labels": {
+        "name": "Job Locations",
+        "singular_name": "Job Location"
+      },
+      "hierarchical": true,
+      "show_in_rest": true,
+      "rest_base": "job-locations",
+      "rewrite": {
+        "slug": "job-location"
+      }
     }
   },
   "field_groups": [
@@ -158,7 +188,17 @@
     }
   },
   "label": "Job Board",
-  "description": "Job listings with schema mapping, default categories, and Elementor hero support.",
+  "description": "Job listings with schema mapping, employment taxonomies, default categories, and Elementor hero support.",
+  "metadata": {
+    "taxonomy_keys": {
+      "job_type": "Flat taxonomy covering employment formats such as full-time, part-time, contract, temporary, internship, and freelance roles.",
+      "job_location": "Hierarchical taxonomy for organising roles by region and city; seeded with example parent regions and nested cities for reference."
+    },
+    "default_term_notes": {
+      "job_type": "Seeds common employment types so filtering and structured data mapping work immediately.",
+      "job_location": "Provides sample regions with child city terms to demonstrate the hierarchy; replace with your recruiting locales."
+    }
+  },
   "fields": {
     "groups": [
       {
@@ -227,6 +267,57 @@
       {
         "name": "Part Time",
         "slug": "part-time"
+      }
+    ],
+    "job_type": [
+      {
+        "name": "Full Time",
+        "slug": "full-time"
+      },
+      {
+        "name": "Part Time",
+        "slug": "part-time"
+      },
+      {
+        "name": "Contract",
+        "slug": "contract"
+      },
+      {
+        "name": "Temporary",
+        "slug": "temporary"
+      },
+      {
+        "name": "Internship",
+        "slug": "internship"
+      },
+      {
+        "name": "Freelance",
+        "slug": "freelance"
+      }
+    ],
+    "job_location": [
+      {
+        "name": "United States",
+        "slug": "united-states"
+      },
+      {
+        "name": "New York City, NY",
+        "slug": "new-york-city-ny",
+        "parent": "united-states"
+      },
+      {
+        "name": "Austin, TX",
+        "slug": "austin-tx",
+        "parent": "united-states"
+      },
+      {
+        "name": "United Kingdom",
+        "slug": "united-kingdom"
+      },
+      {
+        "name": "London",
+        "slug": "london",
+        "parent": "united-kingdom"
       }
     ]
   },
