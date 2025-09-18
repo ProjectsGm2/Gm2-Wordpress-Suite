@@ -141,15 +141,408 @@
           "name": "date_posted",
           "type": "date",
           "required": true,
-          "expose_in_rest": true
+          "instructions": "Publishing date displayed in listings and structured data.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        },
+        {
+          "key": "field_valid_through",
+          "label": "Valid Through",
+          "name": "valid_through",
+          "type": "date",
+          "instructions": "Last date candidates should consider this role open.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
         },
         {
           "key": "field_employment_type",
           "label": "Employment Type",
           "name": "employment_type",
-          "type": "text",
+          "type": "multiselect",
+          "options": {
+            "FULL_TIME": "Full-time",
+            "PART_TIME": "Part-time",
+            "CONTRACTOR": "Contractor",
+            "TEMPORARY": "Temporary",
+            "INTERN": "Internship",
+            "VOLUNTEER": "Volunteer",
+            "PER_DIEM": "Per diem",
+            "OTHER": "Other"
+          },
           "required": true,
-          "expose_in_rest": true
+          "instructions": "Select all applicable employment classifications.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "FULL_TIME",
+                  "PART_TIME",
+                  "CONTRACTOR",
+                  "TEMPORARY",
+                  "INTERN",
+                  "VOLUNTEER",
+                  "PER_DIEM",
+                  "OTHER"
+                ]
+              },
+              "uniqueItems": true
+            }
+          }
+        },
+        {
+          "key": "field_job_location_type",
+          "label": "Job Location Type",
+          "name": "job_location_type",
+          "type": "select",
+          "default": "OnSite",
+          "options": {
+            "OnSite": "On-site",
+            "Hybrid": "Hybrid",
+            "Remote": "Remote (Telecommute)"
+          },
+          "required": true,
+          "instructions": "Choose how applicants will work for this role.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "OnSite",
+                "Hybrid",
+                "Remote"
+              ]
+            }
+          }
+        },
+        {
+          "key": "field_job_location_details",
+          "label": "Physical Location",
+          "name": "job_location",
+          "type": "group",
+          "instructions": "Provide the on-site office details when the role is not fully remote.",
+          "conditions": {
+            "relation": "and",
+            "requires_location": {
+              "field": "job_location_type",
+              "operator": "!=",
+              "value": "Remote"
+            }
+          },
+          "fields": [
+            {
+              "key": "field_job_location_name",
+              "label": "Location Name",
+              "name": "job_location_name",
+              "type": "text",
+              "instructions": "Campus, office, or facility name shown to applicants.",
+              "expose_in_rest": true,
+              "rest": {
+                "schema": {
+                  "type": "string",
+                  "maxLength": 160
+                }
+              }
+            },
+            {
+              "key": "field_job_street",
+              "label": "Street Address",
+              "name": "job_street",
+              "type": "text",
+              "required": true,
+              "instructions": "Street address for the on-site location.",
+              "expose_in_rest": true,
+              "rest": {
+                "schema": {
+                  "type": "string",
+                  "maxLength": 200
+                }
+              }
+            },
+            {
+              "key": "field_job_city",
+              "label": "City",
+              "name": "job_city",
+              "type": "text",
+              "required": true,
+              "instructions": "City or locality for the position.",
+              "expose_in_rest": true,
+              "rest": {
+                "schema": {
+                  "type": "string",
+                  "maxLength": 120
+                }
+              }
+            },
+            {
+              "key": "field_job_region",
+              "label": "State / Region",
+              "name": "job_region",
+              "type": "text",
+              "required": true,
+              "instructions": "State, province, or region of the role.",
+              "expose_in_rest": true,
+              "rest": {
+                "schema": {
+                  "type": "string",
+                  "maxLength": 120
+                }
+              }
+            },
+            {
+              "key": "field_job_postal_code",
+              "label": "Postal Code",
+              "name": "job_postal_code",
+              "type": "text",
+              "required": true,
+              "regex": "^[A-Za-z0-9\\-\\s]{3,12}$",
+              "instructions": "Postal or ZIP code for the job location.",
+              "expose_in_rest": true,
+              "rest": {
+                "schema": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9\\-\\s]{3,12}$"
+                }
+              }
+            },
+            {
+              "key": "field_job_country",
+              "label": "Country",
+              "name": "job_country",
+              "type": "text",
+              "required": true,
+              "regex": "^[A-Za-z]{2}$",
+              "instructions": "Two-letter ISO 3166-1 alpha-2 country code.",
+              "expose_in_rest": true,
+              "rest": {
+                "schema": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z]{2}$",
+                  "maxLength": 2
+                }
+              }
+            },
+            {
+              "key": "field_job_latitude",
+              "label": "Latitude",
+              "name": "job_latitude",
+              "type": "number",
+              "min": -90,
+              "max": 90,
+              "instructions": "Latitude of the job location.",
+              "expose_in_rest": true,
+              "rest": {
+                "schema": {
+                  "type": "number",
+                  "minimum": -90,
+                  "maximum": 90
+                }
+              }
+            },
+            {
+              "key": "field_job_longitude",
+              "label": "Longitude",
+              "name": "job_longitude",
+              "type": "number",
+              "min": -180,
+              "max": 180,
+              "instructions": "Longitude of the job location.",
+              "expose_in_rest": true,
+              "rest": {
+                "schema": {
+                  "type": "number",
+                  "minimum": -180,
+                  "maximum": 180
+                }
+              }
+            }
+          ]
+        },
+        {
+          "key": "field_salary_currency",
+          "label": "Salary Currency",
+          "name": "salary_currency",
+          "type": "select",
+          "default": "USD",
+          "options": {
+            "USD": "USD (US Dollar)",
+            "CAD": "CAD (Canadian Dollar)",
+            "EUR": "EUR (Euro)",
+            "GBP": "GBP (British Pound)",
+            "AUD": "AUD (Australian Dollar)",
+            "NZD": "NZD (New Zealand Dollar)"
+          },
+          "instructions": "Currency used when quoting compensation.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "USD",
+                "CAD",
+                "EUR",
+                "GBP",
+                "AUD",
+                "NZD"
+              ]
+            }
+          }
+        },
+        {
+          "key": "field_salary_min",
+          "label": "Salary Minimum",
+          "name": "salary_min",
+          "type": "number",
+          "min": 0,
+          "step": 0.01,
+          "instructions": "Lower bound of the salary or hourly range.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "key": "field_salary_max",
+          "label": "Salary Maximum",
+          "name": "salary_max",
+          "type": "number",
+          "min": 0,
+          "step": 0.01,
+          "instructions": "Upper bound of the salary or hourly range.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "key": "field_salary_unit_text",
+          "label": "Salary Period",
+          "name": "salary_unit_text",
+          "type": "select",
+          "options": {
+            "HOUR": "Per hour",
+            "DAY": "Per day",
+            "WEEK": "Per week",
+            "MONTH": "Per month",
+            "YEAR": "Per year"
+          },
+          "instructions": "How often the quoted salary is paid.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "HOUR",
+                "DAY",
+                "WEEK",
+                "MONTH",
+                "YEAR"
+              ]
+            }
+          }
+        },
+        {
+          "key": "field_apply_email",
+          "label": "Apply Email",
+          "name": "apply_email",
+          "type": "email",
+          "instructions": "Direct email address where applicants can submit.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "string",
+              "format": "email"
+            }
+          }
+        },
+        {
+          "key": "field_apply_url",
+          "label": "Apply URL",
+          "name": "apply_url",
+          "type": "url",
+          "instructions": "Link to the external application form.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "string",
+              "format": "uri"
+            }
+          }
+        },
+        {
+          "key": "field_job_benefits",
+          "label": "Benefits",
+          "name": "job_benefits",
+          "type": "textarea",
+          "instructions": "Outline benefits and perks offered with this role.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "string",
+              "maxLength": 2000
+            }
+          }
+        },
+        {
+          "key": "field_education_level",
+          "label": "Education Level",
+          "name": "education_level",
+          "type": "select",
+          "options": {
+            "HighSchool": "High school diploma",
+            "AssociateDegree": "Associate degree",
+            "BachelorsDegree": "Bachelor's degree",
+            "MastersDegree": "Master's degree",
+            "DoctorateDegree": "Doctorate",
+            "ProfessionalCertificate": "Professional certification"
+          },
+          "instructions": "Minimum education level expected for applicants.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "HighSchool",
+                "AssociateDegree",
+                "BachelorsDegree",
+                "MastersDegree",
+                "DoctorateDegree",
+                "ProfessionalCertificate"
+              ]
+            }
+          }
+        },
+        {
+          "key": "field_experience_requirements",
+          "label": "Experience Requirements",
+          "name": "experience_requirements",
+          "type": "textarea",
+          "instructions": "Describe required years of experience or specific expertise.",
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "string",
+              "maxLength": 2000
+            }
+          }
         },
         {
           "key": "field_company",
@@ -164,14 +557,18 @@
           "sync": "two-way",
           "instructions": "Select the company offering this position.",
           "required": true,
-          "expose_in_rest": true
-        },
-        {
-          "key": "field_apply_url",
-          "label": "Apply URL",
-          "name": "apply_url",
-          "type": "url",
-          "expose_in_rest": true
+          "expose_in_rest": true,
+          "rest": {
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "minItems": 1,
+              "maxItems": 1
+            }
+          }
         }
       ]
     }
@@ -181,7 +578,26 @@
       "type": "JobPosting",
       "map": {
         "datePosted": "date_posted",
+        "validThrough": "valid_through",
         "employmentType": "employment_type",
+        "jobLocationType": "job_location_type",
+        "jobLocation.name": "job_location_name",
+        "jobLocation.address.streetAddress": "job_street",
+        "jobLocation.address.addressLocality": "job_city",
+        "jobLocation.address.addressRegion": "job_region",
+        "jobLocation.address.postalCode": "job_postal_code",
+        "jobLocation.address.addressCountry": "job_country",
+        "jobLocation.geo.latitude": "job_latitude",
+        "jobLocation.geo.longitude": "job_longitude",
+        "baseSalary.currency": "salary_currency",
+        "baseSalary.value.minValue": "salary_min",
+        "baseSalary.value.maxValue": "salary_max",
+        "baseSalary.value.unitText": "salary_unit_text",
+        "jobBenefits": "job_benefits",
+        "educationRequirements": "education_level",
+        "experienceRequirements": "experience_requirements",
+        "applicationContact.email": "apply_email",
+        "applicationContact.url": "apply_url",
         "hiringOrganization": "company",
         "url": "apply_url"
       }
@@ -211,15 +627,408 @@
             "name": "date_posted",
             "type": "date",
             "required": true,
-            "expose_in_rest": true
+            "instructions": "Publishing date displayed in listings and structured data.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "string",
+                "format": "date"
+              }
+            }
+          },
+          {
+            "key": "field_valid_through",
+            "label": "Valid Through",
+            "name": "valid_through",
+            "type": "date",
+            "instructions": "Last date candidates should consider this role open.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "string",
+                "format": "date"
+              }
+            }
           },
           {
             "key": "field_employment_type",
             "label": "Employment Type",
             "name": "employment_type",
-            "type": "text",
+            "type": "multiselect",
+            "options": {
+              "FULL_TIME": "Full-time",
+              "PART_TIME": "Part-time",
+              "CONTRACTOR": "Contractor",
+              "TEMPORARY": "Temporary",
+              "INTERN": "Internship",
+              "VOLUNTEER": "Volunteer",
+              "PER_DIEM": "Per diem",
+              "OTHER": "Other"
+            },
             "required": true,
-            "expose_in_rest": true
+            "instructions": "Select all applicable employment classifications.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "FULL_TIME",
+                    "PART_TIME",
+                    "CONTRACTOR",
+                    "TEMPORARY",
+                    "INTERN",
+                    "VOLUNTEER",
+                    "PER_DIEM",
+                    "OTHER"
+                  ]
+                },
+                "uniqueItems": true
+              }
+            }
+          },
+          {
+            "key": "field_job_location_type",
+            "label": "Job Location Type",
+            "name": "job_location_type",
+            "type": "select",
+            "default": "OnSite",
+            "options": {
+              "OnSite": "On-site",
+              "Hybrid": "Hybrid",
+              "Remote": "Remote (Telecommute)"
+            },
+            "required": true,
+            "instructions": "Choose how applicants will work for this role.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "OnSite",
+                  "Hybrid",
+                  "Remote"
+                ]
+              }
+            }
+          },
+          {
+            "key": "field_job_location_details",
+            "label": "Physical Location",
+            "name": "job_location",
+            "type": "group",
+            "instructions": "Provide the on-site office details when the role is not fully remote.",
+            "conditions": {
+              "relation": "and",
+              "requires_location": {
+                "field": "job_location_type",
+                "operator": "!=",
+                "value": "Remote"
+              }
+            },
+            "fields": [
+              {
+                "key": "field_job_location_name",
+                "label": "Location Name",
+                "name": "job_location_name",
+                "type": "text",
+                "instructions": "Campus, office, or facility name shown to applicants.",
+                "expose_in_rest": true,
+                "rest": {
+                  "schema": {
+                    "type": "string",
+                    "maxLength": 160
+                  }
+                }
+              },
+              {
+                "key": "field_job_street",
+                "label": "Street Address",
+                "name": "job_street",
+                "type": "text",
+                "required": true,
+                "instructions": "Street address for the on-site location.",
+                "expose_in_rest": true,
+                "rest": {
+                  "schema": {
+                    "type": "string",
+                    "maxLength": 200
+                  }
+                }
+              },
+              {
+                "key": "field_job_city",
+                "label": "City",
+                "name": "job_city",
+                "type": "text",
+                "required": true,
+                "instructions": "City or locality for the position.",
+                "expose_in_rest": true,
+                "rest": {
+                  "schema": {
+                    "type": "string",
+                    "maxLength": 120
+                  }
+                }
+              },
+              {
+                "key": "field_job_region",
+                "label": "State / Region",
+                "name": "job_region",
+                "type": "text",
+                "required": true,
+                "instructions": "State, province, or region of the role.",
+                "expose_in_rest": true,
+                "rest": {
+                  "schema": {
+                    "type": "string",
+                    "maxLength": 120
+                  }
+                }
+              },
+              {
+                "key": "field_job_postal_code",
+                "label": "Postal Code",
+                "name": "job_postal_code",
+                "type": "text",
+                "required": true,
+                "regex": "^[A-Za-z0-9\\-\\s]{3,12}$",
+                "instructions": "Postal or ZIP code for the job location.",
+                "expose_in_rest": true,
+                "rest": {
+                  "schema": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9\\-\\s]{3,12}$"
+                  }
+                }
+              },
+              {
+                "key": "field_job_country",
+                "label": "Country",
+                "name": "job_country",
+                "type": "text",
+                "required": true,
+                "regex": "^[A-Za-z]{2}$",
+                "instructions": "Two-letter ISO 3166-1 alpha-2 country code.",
+                "expose_in_rest": true,
+                "rest": {
+                  "schema": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z]{2}$",
+                    "maxLength": 2
+                  }
+                }
+              },
+              {
+                "key": "field_job_latitude",
+                "label": "Latitude",
+                "name": "job_latitude",
+                "type": "number",
+                "min": -90,
+                "max": 90,
+                "instructions": "Latitude of the job location.",
+                "expose_in_rest": true,
+                "rest": {
+                  "schema": {
+                    "type": "number",
+                    "minimum": -90,
+                    "maximum": 90
+                  }
+                }
+              },
+              {
+                "key": "field_job_longitude",
+                "label": "Longitude",
+                "name": "job_longitude",
+                "type": "number",
+                "min": -180,
+                "max": 180,
+                "instructions": "Longitude of the job location.",
+                "expose_in_rest": true,
+                "rest": {
+                  "schema": {
+                    "type": "number",
+                    "minimum": -180,
+                    "maximum": 180
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "key": "field_salary_currency",
+            "label": "Salary Currency",
+            "name": "salary_currency",
+            "type": "select",
+            "default": "USD",
+            "options": {
+              "USD": "USD (US Dollar)",
+              "CAD": "CAD (Canadian Dollar)",
+              "EUR": "EUR (Euro)",
+              "GBP": "GBP (British Pound)",
+              "AUD": "AUD (Australian Dollar)",
+              "NZD": "NZD (New Zealand Dollar)"
+            },
+            "instructions": "Currency used when quoting compensation.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "USD",
+                  "CAD",
+                  "EUR",
+                  "GBP",
+                  "AUD",
+                  "NZD"
+                ]
+              }
+            }
+          },
+          {
+            "key": "field_salary_min",
+            "label": "Salary Minimum",
+            "name": "salary_min",
+            "type": "number",
+            "min": 0,
+            "step": 0.01,
+            "instructions": "Lower bound of the salary or hourly range.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          },
+          {
+            "key": "field_salary_max",
+            "label": "Salary Maximum",
+            "name": "salary_max",
+            "type": "number",
+            "min": 0,
+            "step": 0.01,
+            "instructions": "Upper bound of the salary or hourly range.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          },
+          {
+            "key": "field_salary_unit_text",
+            "label": "Salary Period",
+            "name": "salary_unit_text",
+            "type": "select",
+            "options": {
+              "HOUR": "Per hour",
+              "DAY": "Per day",
+              "WEEK": "Per week",
+              "MONTH": "Per month",
+              "YEAR": "Per year"
+            },
+            "instructions": "How often the quoted salary is paid.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "HOUR",
+                  "DAY",
+                  "WEEK",
+                  "MONTH",
+                  "YEAR"
+                ]
+              }
+            }
+          },
+          {
+            "key": "field_apply_email",
+            "label": "Apply Email",
+            "name": "apply_email",
+            "type": "email",
+            "instructions": "Direct email address where applicants can submit.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "string",
+                "format": "email"
+              }
+            }
+          },
+          {
+            "key": "field_apply_url",
+            "label": "Apply URL",
+            "name": "apply_url",
+            "type": "url",
+            "instructions": "Link to the external application form.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "string",
+                "format": "uri"
+              }
+            }
+          },
+          {
+            "key": "field_job_benefits",
+            "label": "Benefits",
+            "name": "job_benefits",
+            "type": "textarea",
+            "instructions": "Outline benefits and perks offered with this role.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "string",
+                "maxLength": 2000
+              }
+            }
+          },
+          {
+            "key": "field_education_level",
+            "label": "Education Level",
+            "name": "education_level",
+            "type": "select",
+            "options": {
+              "HighSchool": "High school diploma",
+              "AssociateDegree": "Associate degree",
+              "BachelorsDegree": "Bachelor's degree",
+              "MastersDegree": "Master's degree",
+              "DoctorateDegree": "Doctorate",
+              "ProfessionalCertificate": "Professional certification"
+            },
+            "instructions": "Minimum education level expected for applicants.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "HighSchool",
+                  "AssociateDegree",
+                  "BachelorsDegree",
+                  "MastersDegree",
+                  "DoctorateDegree",
+                  "ProfessionalCertificate"
+                ]
+              }
+            }
+          },
+          {
+            "key": "field_experience_requirements",
+            "label": "Experience Requirements",
+            "name": "experience_requirements",
+            "type": "textarea",
+            "instructions": "Describe required years of experience or specific expertise.",
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "string",
+                "maxLength": 2000
+              }
+            }
           },
           {
             "key": "field_company",
@@ -234,14 +1043,18 @@
             "sync": "two-way",
             "instructions": "Select the company offering this position.",
             "required": true,
-            "expose_in_rest": true
-          },
-          {
-            "key": "field_apply_url",
-            "label": "Apply URL",
-            "name": "apply_url",
-            "type": "url",
-            "expose_in_rest": true
+            "expose_in_rest": true,
+            "rest": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "minItems": 1,
+                "maxItems": 1
+              }
+            }
           }
         ]
       }
@@ -346,7 +1159,26 @@
       "type": "JobPosting",
       "map": {
         "datePosted": "date_posted",
+        "validThrough": "valid_through",
         "employmentType": "employment_type",
+        "jobLocationType": "job_location_type",
+        "jobLocation.name": "job_location_name",
+        "jobLocation.address.streetAddress": "job_street",
+        "jobLocation.address.addressLocality": "job_city",
+        "jobLocation.address.addressRegion": "job_region",
+        "jobLocation.address.postalCode": "job_postal_code",
+        "jobLocation.address.addressCountry": "job_country",
+        "jobLocation.geo.latitude": "job_latitude",
+        "jobLocation.geo.longitude": "job_longitude",
+        "baseSalary.currency": "salary_currency",
+        "baseSalary.value.minValue": "salary_min",
+        "baseSalary.value.maxValue": "salary_max",
+        "baseSalary.value.unitText": "salary_unit_text",
+        "jobBenefits": "job_benefits",
+        "educationRequirements": "education_level",
+        "experienceRequirements": "experience_requirements",
+        "applicationContact.email": "apply_email",
+        "applicationContact.url": "apply_url",
         "hiringOrganization": "company",
         "url": "apply_url"
       }
