@@ -2,6 +2,8 @@
 
 namespace Gm2;
 
+use Gm2\Performance\AutoloadManager;
+
 if (!defined('ABSPATH')) {
     exit;
 }
@@ -15,7 +17,7 @@ class Gm2_Script_Attributes {
     }
 
     public function __construct() {
-        add_option('gm2_script_attributes', []);
+        add_option('gm2_script_attributes', [], '', AutoloadManager::get_autoload_flag('gm2_script_attributes'));
         add_filter('script_loader_tag', [$this, 'filter'], 10, 3);
     }
 

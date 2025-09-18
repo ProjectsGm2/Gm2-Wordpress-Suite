@@ -45,14 +45,14 @@ class AE_SEO_Defer_JS {
      * Constructor.
      */
     public function __construct() {
-        add_option('gm2_defer_js_enabled', '1');
-        add_option('gm2_defer_js_allowlist', '');
-        add_option('gm2_defer_js_denylist', '');
-        add_option('gm2_defer_js_overrides', []);
-        add_option('ae_seo_ro_defer_allow_domains', '');
-        add_option('ae_seo_ro_defer_deny_domains', '');
-        add_option('ae_seo_ro_defer_respect_in_footer', '0');
-        add_option('ae_seo_ro_defer_preserve_jquery', '1');
+        add_option('gm2_defer_js_enabled', '1', '', \Gm2\Performance\AutoloadManager::get_autoload_flag('gm2_defer_js_enabled'));
+        add_option('gm2_defer_js_allowlist', '', '', \Gm2\Performance\AutoloadManager::get_autoload_flag('gm2_defer_js_allowlist'));
+        add_option('gm2_defer_js_denylist', '', '', \Gm2\Performance\AutoloadManager::get_autoload_flag('gm2_defer_js_denylist'));
+        add_option('gm2_defer_js_overrides', [], '', \Gm2\Performance\AutoloadManager::get_autoload_flag('gm2_defer_js_overrides'));
+        add_option('ae_seo_ro_defer_allow_domains', '', '', \Gm2\Performance\AutoloadManager::get_autoload_flag('ae_seo_ro_defer_allow_domains'));
+        add_option('ae_seo_ro_defer_deny_domains', '', '', \Gm2\Performance\AutoloadManager::get_autoload_flag('ae_seo_ro_defer_deny_domains'));
+        add_option('ae_seo_ro_defer_respect_in_footer', '0', '', \Gm2\Performance\AutoloadManager::get_autoload_flag('ae_seo_ro_defer_respect_in_footer'));
+        add_option('ae_seo_ro_defer_preserve_jquery', '1', '', \Gm2\Performance\AutoloadManager::get_autoload_flag('ae_seo_ro_defer_preserve_jquery'));
 
         add_action('wp_enqueue_scripts', [ $this, 'setup' ], 5);
         add_action('wp_head', [ $this, 'start_head_buffer' ], 0);

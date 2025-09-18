@@ -9,6 +9,7 @@ use Gm2\SEO\Schema\Mapper\EventMapper;
 use Gm2\SEO\Schema\Mapper\JobMapper;
 use Gm2\SEO\Schema\Mapper\MapperInterface;
 use Gm2\SEO\Schema\Mapper\RealEstateMapper;
+use Gm2\Performance\AutoloadManager;
 
 
 if (!defined('ABSPATH')) {
@@ -37,6 +38,10 @@ class Gm2_SEO_Admin {
         if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log($message);
         }
+    }
+
+    private function add_option_with_autoload(string $option, $value): void {
+        add_option($option, $value, '', AutoloadManager::get_autoload_flag($option));
     }
 
     private function infer_brand_name(int $post_id): string {
@@ -70,58 +75,57 @@ class Gm2_SEO_Admin {
         }
     }
     public function run() {
-        add_option('ae_seo_ro_enable_critical_css', '0');
-        add_option('ae_seo_ro_enable_defer_js', '0');
-        add_option('ae_seo_ro_enable_diff_serving', '1');
-        add_option('ae_seo_defer_js', '0');
-        add_option('ae_seo_diff_serving', '0');
-        add_option('ae_seo_ro_enable_combine_css', '0');
-        add_option('ae_seo_ro_enable_combine_js', '0');
-        add_option('ae_seo_ro_critical_strategy', 'per_home_archive_single');
-        add_option('ae_seo_ro_critical_css_map', []);
-        add_option('ae_seo_ro_async_css_method', 'preload_onload');
-        add_option('ae_seo_ro_critical_css_exclusions', []);
-        add_option('gm2_defer_js_allowlist', '');
-        add_option('gm2_defer_js_denylist', '');
-        add_option('gm2_defer_js_overrides', []);
-        add_option('ae_seo_ro_defer_allow_domains', '');
-        add_option('ae_seo_ro_defer_deny_domains', '');
-        add_option('ae_seo_ro_defer_respect_in_footer', '0');
-        add_option('ae_seo_ro_defer_preserve_jquery', '1');
-        add_option('ae_js_enable_manager', '0');
-        add_option('ae_js_lazy_load', '0');
-        add_option('ae_js_lazy_recaptcha', '0');
-        add_option('ae_js_lazy_analytics', '0');
-        add_option('ae_js_analytics_id', '');
-        add_option('ae_js_gtm_id', '');
-        add_option('ae_js_fb_id', '');
-        add_option('ae_recaptcha_site_key', '');
-        add_option('ae_hcaptcha_site_key', '');
-        add_option('ae_js_consent_key', 'aeConsent');
-        add_option('ae_js_consent_value', 'allow_analytics');
-        add_option('ae_js_replacements', '0');
-        add_option('ae_js_debug_log', '0');
-        add_option('ae_js_console_log', '0');
-        add_option('ae_js_auto_dequeue', '0');
-        add_option('ae_js_respect_safe_mode', '0');
-        add_option('ae_js_nomodule_legacy', '0');
-        add_option('ae_js_dequeue_allowlist', []);
-        add_option('ae_js_dequeue_denylist', []);
-        add_option('ae_js_jquery_on_demand', '0');
-        add_option('ae_js_jquery_url_allow', '');
-        add_option('ae_js_compat_overrides', []);
-        add_option('ae_perf_worker', '0');
-        add_option('ae_perf_long_tasks', '0');
-        add_option('ae_perf_no_thrash', '0');
-        add_option('ae_perf_passive_listeners', '0');
-        add_option('ae_perf_dom_audit', '0');
-        add_option('gm2_title_templates', []);
-        add_option('gm2_description_templates', []);
-        add_option('gm2_schema_directory', '1');
-        add_option('gm2_schema_event', '1');
-        add_option('gm2_schema_job', '1');
-        add_option('gm2_schema_course', '1');
-        add_option('gm2_schema_real_estate', '1');
+        $defaults = [
+            'ae_seo_ro_enable_critical_css'    => '0',
+            'ae_seo_ro_enable_defer_js'        => '0',
+            'ae_seo_ro_enable_diff_serving'    => '1',
+            'ae_seo_defer_js'                  => '0',
+            'ae_seo_diff_serving'              => '0',
+            'ae_seo_ro_enable_combine_css'     => '0',
+            'ae_seo_ro_enable_combine_js'      => '0',
+            'ae_seo_ro_critical_strategy'      => 'per_home_archive_single',
+            'ae_seo_ro_critical_css_map'       => [],
+            'ae_seo_ro_async_css_method'       => 'preload_onload',
+            'ae_seo_ro_critical_css_exclusions'=> [],
+            'ae_js_enable_manager'             => '0',
+            'ae_js_lazy_load'                  => '0',
+            'ae_js_lazy_recaptcha'             => '0',
+            'ae_js_lazy_analytics'             => '0',
+            'ae_js_analytics_id'               => '',
+            'ae_js_gtm_id'                     => '',
+            'ae_js_fb_id'                      => '',
+            'ae_recaptcha_site_key'            => '',
+            'ae_hcaptcha_site_key'             => '',
+            'ae_js_consent_key'                => 'aeConsent',
+            'ae_js_consent_value'              => 'allow_analytics',
+            'ae_js_replacements'               => '0',
+            'ae_js_debug_log'                  => '0',
+            'ae_js_console_log'                => '0',
+            'ae_js_auto_dequeue'               => '0',
+            'ae_js_respect_safe_mode'          => '0',
+            'ae_js_nomodule_legacy'            => '0',
+            'ae_js_dequeue_allowlist'          => [],
+            'ae_js_dequeue_denylist'           => [],
+            'ae_js_jquery_on_demand'           => '0',
+            'ae_js_jquery_url_allow'           => '',
+            'ae_js_compat_overrides'           => [],
+            'ae_perf_worker'                   => '0',
+            'ae_perf_long_tasks'               => '0',
+            'ae_perf_no_thrash'                => '0',
+            'ae_perf_passive_listeners'        => '0',
+            'ae_perf_dom_audit'                => '0',
+            'gm2_title_templates'              => [],
+            'gm2_description_templates'        => [],
+            'gm2_schema_directory'             => '1',
+            'gm2_schema_event'                 => '1',
+            'gm2_schema_job'                   => '1',
+            'gm2_schema_course'                => '1',
+            'gm2_schema_real_estate'           => '1',
+        ];
+
+        foreach ($defaults as $option => $value) {
+            $this->add_option_with_autoload($option, $value);
+        }
 
         $this->migrate_js_option_names();
 

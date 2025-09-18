@@ -66,6 +66,9 @@ use Gm2\Fields\Renderer\AdminMetaBox;
 use Gm2\Fields\Sanitizers\SanitizerRegistry;
 use Gm2\Fields\Storage\MetaRegistrar;
 use Gm2\Fields\Validation\ValidatorRegistry;
+use Gm2\Performance\AutoloadManager;
+use Gm2\Performance\AutoloadMigration;
+use Gm2\Performance\QueryCacheManager;
 $gm2_autoload = GM2_PLUGIN_DIR . 'vendor/autoload.php';
 if (file_exists($gm2_autoload)) {
     require_once $gm2_autoload;
@@ -180,6 +183,8 @@ add_action('init', 'gm2_css_optimizer_init');
 \Gm2\Perf\Enqueue::init();
 \Gm2\Perf\Settings::init();
 \Gm2\AE_Utility_CSS::init();
+AutoloadMigration::init();
+QueryCacheManager::init();
 
 function gm2_bootstrap_content_registry(): void {
     $postTypes = new PostTypeRegistry();
@@ -340,28 +345,30 @@ function gm2_activate_plugin() {
     $ac = new Gm2_Abandoned_Carts($logger);
     $ac->install();
 
-    add_option('gm2_enable_tariff', '1');
-    add_option('gm2_enable_seo', '1');
-    add_option('gm2_enable_quantity_discounts', '1');
-    add_option('gm2_enable_google_oauth', '1');
-    add_option('gm2_enable_chatgpt', '1');
-    add_option('gm2_enable_analytics', '1');
-    add_option('gm2_enable_chatgpt_logging', '0');
-    add_option('gm2_ac_enable_logging', '0');
-    add_option('gm2_enable_custom_posts', '1');
-    add_option('gm2_enable_block_templates', '0');
-    add_option('gm2_enable_theme_integration', '0');
-    add_option('gm2_analytics_retention_days', 30);
-    add_option('gm2_sitemap_path', ABSPATH . 'sitemap.xml');
-    add_option('gm2_sitemap_max_urls', 1000);
-    add_option('gm2_enable_abandoned_carts', '1');
-    add_option('gm2_enable_phone_login', '0');
-    add_option('gm2_ac_mark_abandoned_interval', 5);
-    add_option('gm2_setup_complete', '0');
-    add_option('gm2_do_activation_redirect', '1');
-    add_option('gm2_remote_mirror_vendors', []);
-    add_option('gm2_remote_mirror_custom_urls', []);
-    add_option('ae_seo_local_fonts', '0');
+    add_option('gm2_enable_tariff', '1', '', AutoloadManager::get_autoload_flag('gm2_enable_tariff'));
+    add_option('gm2_enable_seo', '1', '', AutoloadManager::get_autoload_flag('gm2_enable_seo'));
+    add_option('gm2_enable_quantity_discounts', '1', '', AutoloadManager::get_autoload_flag('gm2_enable_quantity_discounts'));
+    add_option('gm2_enable_google_oauth', '1', '', AutoloadManager::get_autoload_flag('gm2_enable_google_oauth'));
+    add_option('gm2_enable_chatgpt', '1', '', AutoloadManager::get_autoload_flag('gm2_enable_chatgpt'));
+    add_option('gm2_enable_analytics', '1', '', AutoloadManager::get_autoload_flag('gm2_enable_analytics'));
+    add_option('gm2_enable_chatgpt_logging', '0', '', AutoloadManager::get_autoload_flag('gm2_enable_chatgpt_logging'));
+    add_option('gm2_ac_enable_logging', '0', '', AutoloadManager::get_autoload_flag('gm2_ac_enable_logging'));
+    add_option('gm2_enable_custom_posts', '1', '', AutoloadManager::get_autoload_flag('gm2_enable_custom_posts'));
+    add_option('gm2_enable_block_templates', '0', '', AutoloadManager::get_autoload_flag('gm2_enable_block_templates'));
+    add_option('gm2_enable_theme_integration', '0', '', AutoloadManager::get_autoload_flag('gm2_enable_theme_integration'));
+    add_option('gm2_analytics_retention_days', 30, '', AutoloadManager::get_autoload_flag('gm2_analytics_retention_days'));
+    add_option('gm2_sitemap_path', ABSPATH . 'sitemap.xml', '', AutoloadManager::get_autoload_flag('gm2_sitemap_path'));
+    add_option('gm2_sitemap_max_urls', 1000, '', AutoloadManager::get_autoload_flag('gm2_sitemap_max_urls'));
+    add_option('gm2_enable_abandoned_carts', '1', '', AutoloadManager::get_autoload_flag('gm2_enable_abandoned_carts'));
+    add_option('gm2_enable_phone_login', '0', '', AutoloadManager::get_autoload_flag('gm2_enable_phone_login'));
+    add_option('gm2_ac_mark_abandoned_interval', 5, '', AutoloadManager::get_autoload_flag('gm2_ac_mark_abandoned_interval'));
+    add_option('gm2_setup_complete', '0', '', AutoloadManager::get_autoload_flag('gm2_setup_complete'));
+    add_option('gm2_do_activation_redirect', '1', '', AutoloadManager::get_autoload_flag('gm2_do_activation_redirect'));
+    add_option('gm2_remote_mirror_vendors', [], '', AutoloadManager::get_autoload_flag('gm2_remote_mirror_vendors'));
+    add_option('gm2_remote_mirror_custom_urls', [], '', AutoloadManager::get_autoload_flag('gm2_remote_mirror_custom_urls'));
+    add_option('ae_seo_local_fonts', '0', '', AutoloadManager::get_autoload_flag('ae_seo_local_fonts'));
+    add_option('gm2_perf_query_cache_enabled', '1', '', AutoloadManager::get_autoload_flag(QueryCacheManager::OPTION_ENABLED));
+    add_option('gm2_perf_query_cache_use_transients', '0', '', AutoloadManager::get_autoload_flag(QueryCacheManager::OPTION_FORCE_TRANSIENTS));
 
     global $wpdb;
     $table_name = $wpdb->prefix . 'gm2_analytics_log';
@@ -413,7 +420,9 @@ function gm2_activate_css_optimizer_defaults() {
             'utility_css'                   => '0',
             'critical'                      => [],
             'logs'                          => [],
-        ]
+        ],
+        '',
+        AutoloadManager::get_autoload_flag('ae_css_settings')
     );
     \AE\CSS\AE_CSS_Optimizer::get_instance()->maybe_generate_home_critical();
 }
@@ -636,10 +645,10 @@ function gm2_initialize_content_rules() {
         }
     }
 
-    add_option('gm2_content_rules', $rules);
-    add_option('gm2_min_internal_links', 1);
-    add_option('gm2_min_external_links', 1);
-    add_option('gm2_tax_min_length', 150);
+    add_option('gm2_content_rules', $rules, '', AutoloadManager::get_autoload_flag('gm2_content_rules'));
+    add_option('gm2_min_internal_links', 1, '', AutoloadManager::get_autoload_flag('gm2_min_internal_links'));
+    add_option('gm2_min_external_links', 1, '', AutoloadManager::get_autoload_flag('gm2_min_external_links'));
+    add_option('gm2_tax_min_length', 150, '', AutoloadManager::get_autoload_flag('gm2_tax_min_length'));
 }
 
 function gm2_initialize_guideline_rules() {
@@ -728,7 +737,7 @@ function gm2_initialize_guideline_rules() {
         }
     }
 
-    add_option('gm2_guideline_rules', $rules);
+    add_option('gm2_guideline_rules', $rules, '', AutoloadManager::get_autoload_flag('gm2_guideline_rules'));
 }
 
 // Initialize plugin
@@ -922,6 +931,7 @@ if (defined('WP_CLI') && WP_CLI) {
     require_once GM2_PLUGIN_DIR . 'includes/cli/class-ae-seo-js-smoketest.php';
     require_once GM2_PLUGIN_DIR . 'includes/cli/class-ae-seo-js-map.php';
     require_once GM2_PLUGIN_DIR . 'includes/cli/class-gm2-performance-cli.php';
+    require_once GM2_PLUGIN_DIR . 'includes/cli/class-gm2-perf-autoload.php';
     require_once GM2_PLUGIN_DIR . 'includes/cli/class-font-performance-cli.php';
 }
 

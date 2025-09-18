@@ -1,14 +1,61 @@
 # Performance module
 
-The Performance module exposes optional front‑end helpers that can be toggled from **SEO → Performance**.
+The Performance module exposes optional front‑end helpers and now ships with an analytics dashboard under **SEO → Performance**. The screen summarises autoload health, provides query cache toggles, and lists the heaviest `wp_options` rows so you can keep the database lean.
+
+## Autoload insights
+
+The “Autoload footprint” card aggregates `autoload = 'yes'` payloads and surfaces status badges:
+
+* **Healthy** below 500&nbsp;KB.
+* **Warning** between 500&nbsp;KB and 800&nbsp;KB.
+* **Critical** above 800&nbsp;KB.
+
+The table of “Largest autoloaded options” highlights rows over 50&nbsp;KB. Remediation tips are included directly on the page:
+
+1. Set rarely used options to `autoload = 'no'` via `update_option( $name, $value, false );` or `AutoloadManager::get_autoload_flag()`.
+2. Hook `gm2_performance_autoload_disabled_options` to enforce custom exclusions.
+3. Trim or archive legacy payloads that no longer need to load on every request.
+
+### WP‑CLI helpers
+
+Use the bundled command to inspect live data without opening the admin UI:
+
+```bash
+wp gm2 perf autoload --threshold=75000 --limit=10
+```
+
+Additional subcommands are available:
+
+* `wp gm2 perf autoload totals`&nbsp;— prints aggregate counts and flags warnings when thresholds are exceeded.
+* `wp gm2 perf autoload managed`&nbsp;— lists options that default to `autoload = 'no'` via `AutoloadManager`.
+
+Options reported by the CLI can be migrated with core helpers:
+
+```php
+update_option( 'gm2_content_rules', $payload, false ); // false sets autoload = 'no'
+```
+
+## Query cache controls
+
+The query cache section toggles the deterministic query cache and its transient fallback:
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `gm2_perf_query_cache_enabled` | `1` | When disabled `QueryCacheManager` forces a cache bypass for all requests. |
+| `gm2_perf_query_cache_use_transients` | `0` | Overrides the `gm2_query_cache_use_transients` filter, persisting payloads via transients when object caching is unavailable. |
+
+## Front‑end helpers
+
+Feature flags appear beneath the cache controls. Each toggle maps to an option that is also filterable via `ae/perf/flag`:
 
 | Flag | Option | Description |
 | --- | --- | --- |
-| `worker` | `ae_perf_worker` | Enable Web Worker offloading. |
-| `longTasks` | `ae_perf_long_tasks` | Observe and log `longtask` entries. |
-| `noThrash` | `ae_perf_no_thrash` | Batch DOM reads and writes via `aePerf.dom.measure` and `aePerf.dom.mutate`. |
-| `passive_listeners` | `ae_perf_passive_listeners` | Default scroll and touch handlers to passive. |
-| `dom_audit` | `ae_perf_dom_audit` | Log total DOM nodes after paint. |
+| `webWorker` | `ae_perf_webworker` | Enable Web Worker offloading. |
+| `longTasks` | `ae_perf_longtasks` | Observe and log `longtask` entries. |
+| `noThrash` | `ae_perf_nothrash` | Batch DOM reads and writes via `aePerf.dom.measure` and `aePerf.dom.mutate`. |
+| `passive` | `ae_perf_passive` | Default scroll and touch handlers to passive. |
+| `passivePatch` | `ae_perf_passive_patch` | Allow the passive listener patch to run. |
+| `domAudit` | `ae_perf_domaudit` | Log total DOM nodes after paint. |
 
 Enabling `longTasks` logs per‑second summaries of `longtask` entries. Lifetime totals are available via `aePerf.getLongTaskSummary()`. If `AE_PERF_FLAGS.longTaskBudgetMs` is defined, a warning is emitted when the last 10 s of long tasks exceed this budget.
 
@@ -49,7 +96,7 @@ if (window.aePerf?.runTask) {
 }
 ```
 
-Note that disabling the `worker`/`webWorker` flag prevents worker creation, causing the fallback to run on the main thread.
+Note that disabling the `webWorker` flag prevents worker creation, causing the fallback to run on the main thread.
 
 Batch DOM reads and writes:
 
@@ -66,7 +113,7 @@ Developers may override any flag:
 
 ```php
 add_filter( 'ae/perf/flag', function( $enabled, $feature ) {
-    if ( $feature === 'worker' ) {
+    if ( $feature === 'webWorker' ) {
         return false; // force disable
     }
     return $enabled;
@@ -89,7 +136,7 @@ if (window.aePerf?.addPassive) {
 
 Provide `{ passive: false }` to retain cancelable behaviour. Setting the global `window.AE_PERF_DISABLE_PASSIVE` to `true` before the bootstrap script loads disables both the helper and the patch described below.
 
-When the `passive_listeners` flag is enabled, `AE_PERF_FLAGS.passivePatch` controls whether `EventTarget.prototype.addEventListener` is patched so that `scroll`, `touchstart`, `touchmove`, and `wheel` listeners become passive when no options are supplied.
+When the `passive` flag is enabled, `AE_PERF_FLAGS.passivePatch` controls whether `EventTarget.prototype.addEventListener` is patched so that `scroll`, `touchstart`, `touchmove`, and `wheel` listeners become passive when no options are supplied.
 
 Themes or plugins can disable the patch if third‑party code misbehaves (for example, Google reCAPTCHA or other iframe‑embedded widgets) via:
 
