@@ -7,6 +7,8 @@ For front-end submission flows, review [frontend-submission.md](frontend-submiss
 the field references in [fields-and-validation.md](fields-and-validation.md) and
 [field-definition-schema.md](field-definition-schema.md), plus Elementor specifics in
 [elementor-dynamic-tags.md](elementor-dynamic-tags.md).
+For database tuning guidance on composite meta indexes see
+[performance-indexes.md](performance-indexes.md).
 For schema mapping and SEO integration examples, see [schema-mapping-and-seo.md](schema-mapping-and-seo.md).
 
 For font optimization checks, review [font-performance-test-plan.md](font-performance-test-plan.md).
