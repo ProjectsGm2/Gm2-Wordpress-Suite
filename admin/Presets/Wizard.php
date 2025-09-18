@@ -53,8 +53,8 @@ class Wizard
     public function enqueueAssets(string $hook): void
     {
         $screens = [
-            'toplevel_page_gm2-custom-posts',
-            'gm2-custom-posts_page_gm2_cpt_overview',
+            'settings_page_gm2-custom-posts',
+            'settings_page_gm2_cpt_overview',
         ];
         if (!in_array($hook, $screens, true)) {
             return;

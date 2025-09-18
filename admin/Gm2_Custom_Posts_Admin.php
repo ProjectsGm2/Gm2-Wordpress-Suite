@@ -13,7 +13,6 @@ class Gm2_Custom_Posts_Admin {
         add_action('current_screen', [ $this, 'setup_help' ]);
         add_action('admin_enqueue_scripts', [ $this, 'enqueue_help_assets' ]);
         add_action('admin_menu', [ $this, 'add_menu' ]);
-        add_action('admin_head', [ $this, 'hide_submenus' ]);
         add_action('add_meta_boxes', [ $this, 'add_meta_boxes' ]);
         add_action('save_post', [ $this, 'save_meta_boxes' ]);
         add_action('admin_enqueue_scripts', [ $this, 'enqueue_scripts' ]);
@@ -42,7 +41,7 @@ class Gm2_Custom_Posts_Admin {
     }
 
     private function init_help() {
-        $this->register_help('toplevel_page_gm2-custom-posts',
+        $this->register_help('settings_page_gm2-custom-posts',
             '<p>' . esc_html__( 'Manage custom post types and taxonomies. Use the preset wizard to import example models.', 'gm2-wordpress-suite' ) . '</p>',
             [
                 'input[name="pt_slug"]'  => esc_html__( 'Unique identifier for the post type.', 'gm2-wordpress-suite' ),
@@ -51,7 +50,7 @@ class Gm2_Custom_Posts_Admin {
             ]
         );
 
-        $this->register_help('gm2-custom-posts_page_gm2_cpt_fields',
+        $this->register_help('settings_page_gm2_cpt_fields',
             '<p>' . esc_html__( 'Edit fields and registration arguments for the selected post type.', 'gm2-wordpress-suite' ) . '</p>',
             [
                 '#gm2-add-field' => esc_html__( 'Add a new field.', 'gm2-wordpress-suite' ),
@@ -59,33 +58,33 @@ class Gm2_Custom_Posts_Admin {
             ]
         );
 
-        $this->register_help('gm2-custom-posts_page_gm2_tax_args',
+        $this->register_help('settings_page_gm2_tax_args',
             '<p>' . esc_html__( 'Modify taxonomy settings and meta fields.', 'gm2-wordpress-suite' ) . '</p>',
             [
                 '#gm2-add-tax-arg' => esc_html__( 'Add a new taxonomy argument.', 'gm2-wordpress-suite' ),
             ]
         );
 
-        $this->register_help('gm2-custom-posts_page_gm2_query_builder',
+        $this->register_help('settings_page_gm2_query_builder',
             '<p>' . esc_html__( 'Build reusable WP_Query snippets.', 'gm2-wordpress-suite' ) . '</p>',
             [
                 '#gm2-save-query' => esc_html__( 'Save the configured query.', 'gm2-wordpress-suite' ),
             ]
         );
 
-        $this->register_help('gm2-custom-posts_page_gm2_cpt_wizard',
+        $this->register_help('settings_page_gm2_cpt_wizard',
             '<p>' . esc_html__( 'Interactive model builder for custom post types.', 'gm2-wordpress-suite' ) . '</p>'
         );
 
-        $this->register_help('gm2-custom-posts_page_gm2_field_group_wizard',
+        $this->register_help('settings_page_gm2_field_group_wizard',
             '<p>' . esc_html__( 'Create reusable field groups and assign them to various objects.', 'gm2-wordpress-suite' ) . '</p>'
         );
 
-        $this->register_help('gm2-custom-posts_page_gm2_workflows',
+        $this->register_help('settings_page_gm2_workflows',
             '<p>' . esc_html__( 'Automate actions with workflows and statuses.', 'gm2-wordpress-suite' ) . '</p>'
         );
 
-        $this->register_help('gm2-custom-posts_page_gm2_field_caps',
+        $this->register_help('settings_page_gm2_field_caps',
             '<p>' . esc_html__( 'Restrict who can edit specific fields.', 'gm2-wordpress-suite' ) . '</p>'
         );
     }
@@ -164,19 +163,18 @@ class Gm2_Custom_Posts_Admin {
     public function add_menu() {
         $cap = current_user_can('gm2_manage_cpts') ? 'gm2_manage_cpts' : 'manage_options';
 
-        add_menu_page(
-            esc_html__( 'Gm2 Custom Posts', 'gm2-wordpress-suite' ),
-            esc_html__( 'Gm2 Custom Posts', 'gm2-wordpress-suite' ),
+        add_options_page(
+            esc_html__( 'GM2 Custom Posts', 'gm2-wordpress-suite' ),
+            esc_html__( 'GM2 Custom Posts', 'gm2-wordpress-suite' ),
             $cap,
             'gm2-custom-posts',
             function () {
                 require __DIR__ . '/pages/post-types.php';
-            },
-            'dashicons-admin-post'
+            }
         );
 
         add_submenu_page(
-            'gm2-custom-posts',
+            'options-general.php',
             esc_html__( 'Overview', 'gm2-wordpress-suite' ),
             esc_html__( 'Overview', 'gm2-wordpress-suite' ),
             $cap,
@@ -187,7 +185,7 @@ class Gm2_Custom_Posts_Admin {
         );
 
         add_submenu_page(
-            'gm2-custom-posts',
+            'options-general.php',
             esc_html__( 'Edit Post Type', 'gm2-wordpress-suite' ),
             esc_html__( 'Edit Post Type', 'gm2-wordpress-suite' ),
             $cap,
@@ -196,7 +194,7 @@ class Gm2_Custom_Posts_Admin {
         );
 
         add_submenu_page(
-            'gm2-custom-posts',
+            'options-general.php',
             esc_html__( 'Model Builder', 'gm2-wordpress-suite' ),
             esc_html__( 'Model Builder', 'gm2-wordpress-suite' ),
             $cap,
@@ -205,7 +203,7 @@ class Gm2_Custom_Posts_Admin {
         );
 
         add_submenu_page(
-            'gm2-custom-posts',
+            'options-general.php',
             esc_html__( 'Field Group Wizard', 'gm2-wordpress-suite' ),
             esc_html__( 'Field Group Wizard', 'gm2-wordpress-suite' ),
             $cap,
@@ -214,7 +212,7 @@ class Gm2_Custom_Posts_Admin {
         );
 
         add_submenu_page(
-            'gm2-custom-posts',
+            'options-general.php',
             esc_html__( 'Edit Taxonomy', 'gm2-wordpress-suite' ),
             esc_html__( 'Edit Taxonomy', 'gm2-wordpress-suite' ),
             $cap,
@@ -225,7 +223,7 @@ class Gm2_Custom_Posts_Admin {
         );
 
         add_submenu_page(
-            'gm2-custom-posts',
+            'options-general.php',
             esc_html__( 'Query Builder', 'gm2-wordpress-suite' ),
             esc_html__( 'Query Builder', 'gm2-wordpress-suite' ),
             $cap,
@@ -234,7 +232,7 @@ class Gm2_Custom_Posts_Admin {
         );
 
         add_submenu_page(
-            'gm2-custom-posts',
+            'options-general.php',
             esc_html__( 'Workflows', 'gm2-wordpress-suite' ),
             esc_html__( 'Workflows', 'gm2-wordpress-suite' ),
             $cap,
@@ -243,7 +241,7 @@ class Gm2_Custom_Posts_Admin {
         );
 
         add_submenu_page(
-            'gm2-custom-posts',
+            'options-general.php',
             esc_html__( 'Field Permissions', 'gm2-wordpress-suite' ),
             esc_html__( 'Field Permissions', 'gm2-wordpress-suite' ),
             $cap,
@@ -252,7 +250,7 @@ class Gm2_Custom_Posts_Admin {
         );
 
         add_submenu_page(
-            'gm2-custom-posts',
+            'options-general.php',
             esc_html__( 'Schema Mapping', 'gm2-wordpress-suite' ),
             esc_html__( 'Schema Mapping', 'gm2-wordpress-suite' ),
             $cap,
@@ -261,17 +259,6 @@ class Gm2_Custom_Posts_Admin {
                 require __DIR__ . '/pages/schema-mapping.php';
             }
         );
-    }
-
-    public function hide_submenus() {
-        global $submenu;
-        if (isset($submenu['gm2-custom-posts'])) {
-            foreach ($submenu['gm2-custom-posts'] as $index => $item) {
-                if (in_array($item[2], [ 'gm2-custom-posts', 'gm2_cpt_fields', 'gm2_tax_args' ], true)) {
-                    unset($submenu['gm2-custom-posts'][$index]);
-                }
-            }
-        }
     }
 
     public function display_cpt_wizard() {
@@ -1468,7 +1455,7 @@ class Gm2_Custom_Posts_Admin {
             return;
         }
 
-        if (in_array($hook, [ 'toplevel_page_gm2-custom-posts', 'gm2-custom-posts_page_gm2_cpt_overview' ], true)) {
+        if (in_array($hook, [ 'settings_page_gm2-custom-posts', 'settings_page_gm2_cpt_overview' ], true)) {
             $regen = GM2_PLUGIN_DIR . 'admin/js/gm2-thumbnails.js';
             wp_enqueue_script(
                 'gm2-thumbnails',
@@ -1507,7 +1494,7 @@ class Gm2_Custom_Posts_Admin {
             return;
         }
 
-        if ($hook === 'gm2-custom-posts_page_gm2_cpt_fields') {
+        if ($hook === 'settings_page_gm2_cpt_fields') {
             $cond_js = GM2_PLUGIN_DIR . 'admin/js/conditions.js';
             wp_enqueue_script(
                 'gm2-conditions',
@@ -1579,7 +1566,7 @@ class Gm2_Custom_Posts_Admin {
             );
         }
 
-        if ($hook === 'gm2-custom-posts_page_gm2_cpt_wizard') {
+        if ($hook === 'settings_page_gm2_cpt_wizard') {
             $file = GM2_PLUGIN_DIR . 'admin/js/gm2-cpt-wizard.js';
             wp_enqueue_script(
                 'gm2-cpt-wizard',
@@ -1641,7 +1628,7 @@ class Gm2_Custom_Posts_Admin {
             );
         }
 
-        if ($hook === 'gm2-custom-posts_page_gm2_field_group_wizard') {
+        if ($hook === 'settings_page_gm2_field_group_wizard') {
             $file = GM2_PLUGIN_DIR . 'admin/js/gm2-fg-wizard.js';
             wp_enqueue_script(
                 'gm2-fg-wizard',
@@ -1681,7 +1668,7 @@ class Gm2_Custom_Posts_Admin {
             ]);
         }
 
-        if ($hook === 'gm2-custom-posts_page_gm2_schema_mapping') {
+        if ($hook === 'settings_page_gm2_schema_mapping') {
             $file = GM2_PLUGIN_DIR . 'admin/js/gm2-schema-mapping.js';
             wp_enqueue_script(
                 'gm2-schema-mapping',
@@ -1763,7 +1750,7 @@ class Gm2_Custom_Posts_Admin {
             ]);
         }
 
-        if ($hook === 'gm2-custom-posts_page_gm2_query_builder') {
+        if ($hook === 'settings_page_gm2_query_builder') {
             $file = GM2_PLUGIN_DIR . 'admin/js/gm2-query-builder.js';
             wp_enqueue_script(
                 'gm2-query-builder',
@@ -1803,7 +1790,7 @@ class Gm2_Custom_Posts_Admin {
             }
         }
 
-        if ($hook === 'gm2-custom-posts_page_gm2_tax_args') {
+        if ($hook === 'settings_page_gm2_tax_args') {
             $cond_js = GM2_PLUGIN_DIR . 'admin/js/conditions.js';
             wp_enqueue_script(
                 'gm2-conditions',
