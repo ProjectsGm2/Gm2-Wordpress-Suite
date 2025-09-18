@@ -235,6 +235,8 @@
             { label: __('Number', 'gm2-wordpress-suite'), value: 'number' },
             { label: __('Color', 'gm2-wordpress-suite'), value: 'color' }
         ];
+        const restExposureMessage = __('Fields exposed to the REST API require their post type or taxonomy to enable "Show in REST" in the model settings.', 'gm2-wordpress-suite');
+        const hasRestExposure = field.expose_in_rest || data.fields.some(f => f.expose_in_rest);
 
         const addField = () => {
             if(!field.slug){
@@ -292,6 +294,7 @@
                     ))
                 )
             ),
+            hasRestExposure && el('p', { className: 'gm2-fg-rest-notice', role: 'note' }, restExposureMessage),
             el(TextControl, {
                 label: __('Field Label', 'gm2-wordpress-suite'),
                 id: 'gm2-field-label',
@@ -316,7 +319,8 @@
                 label: __('Expose in REST API', 'gm2-wordpress-suite'),
                 id: 'gm2-field-expose',
                 checked: !!field.expose_in_rest,
-                onChange: v => setField({ ...field, expose_in_rest: v })
+                onChange: v => setField({ ...field, expose_in_rest: v }),
+                help: __('Requires the related post type or taxonomy to enable "Show in REST" for the field to appear in REST responses.', 'gm2-wordpress-suite')
             }),
             el(Button, { isPrimary: true, onClick: addField }, editIndex !== null ? __('Update Field', 'gm2-wordpress-suite') : __('Add Field', 'gm2-wordpress-suite'))
         );

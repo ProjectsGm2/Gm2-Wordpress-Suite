@@ -219,6 +219,7 @@
         echo '</fieldset>';
         echo '<fieldset><legend>' . esc_html__( 'REST API', 'gm2-wordpress-suite' ) . '</legend>';
         echo '<p><label><input type="checkbox" name="pt_show_in_rest" value="1" /> ' . esc_html__( 'Show in REST', 'gm2-wordpress-suite' ) . '</label></p>';
+        echo '<p class="description gm2-rest-visibility-help">' . esc_html__( 'Enable "Show in REST" so field metadata flagged to expose itself over the REST API can appear in responses.', 'gm2-wordpress-suite' ) . '</p>';
         echo '<p><label>' . esc_html__( 'REST Base', 'gm2-wordpress-suite' ) . '<br />';
         echo '<input type="text" name="pt_rest_base" class="regular-text" /></label></p>';
         echo '<p><label>' . esc_html__( 'REST Controller Class', 'gm2-wordpress-suite' ) . '<br />';
@@ -266,6 +267,7 @@
         echo '<input type="text" name="tax_post_types" class="regular-text" /></label></p>';
         echo '<p><label>' . esc_html__( 'Args (JSON)', 'gm2-wordpress-suite' ) . '<br />';
         echo '<textarea name="tax_args" class="large-text code" rows="5"></textarea></label></p>';
+        echo '<p class="description gm2-rest-visibility-help">' . esc_html__( 'When exposing taxonomy field metadata in REST responses, remember to include "show_in_rest": true in these arguments.', 'gm2-wordpress-suite' ) . '</p>';
         echo '<p><input type="submit" class="button button-primary" value="' . esc_attr__( 'Save Taxonomy', 'gm2-wordpress-suite' ) . '" /></p>';
         echo '</form>';
 
