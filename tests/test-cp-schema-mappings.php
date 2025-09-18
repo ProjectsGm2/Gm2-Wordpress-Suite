@@ -246,14 +246,29 @@ class CPSchemaMappingsTest extends WP_UnitTestCase {
             'course' => [
                 'type' => 'Course',
                 'map'  => [
-                    'name' => 'course_name',
-                    'description' => 'course_description',
+                    'provider.name' => 'provider',
+                    'provider.alternateName' => 'organization_name',
+                    'provider.department' => 'department',
+                    'provider.url' => 'website',
+                    'provider.email' => 'contact_email',
+                    'provider.telephone' => 'contact_phone',
                     'courseCode' => 'course_code',
-                    'courseInstance.name' => 'course_instance_name',
-                    'courseInstance.startDate' => 'course_instance_start',
-                    'courseInstance.endDate' => 'course_instance_end',
-                    'courseInstance.location.name' => 'course_location_name',
-                    'courseInstance.location.address.addressRegion' => 'course_location_region',
+                    'url' => 'course_url',
+                    'coursePrerequisites' => 'prerequisites',
+                    'timeRequired' => 'duration_iso',
+                    'courseInstance.courseMode' => 'modality',
+                    'courseInstance.eventAttendanceMode' => 'modality',
+                    'courseInstance.startDate' => 'start_date_time',
+                    'courseInstance.endDate' => 'end_date_time',
+                    'courseInstance.duration' => 'duration_iso',
+                    'courseInstance.location.name' => 'provider',
+                    'courseInstance.location.url' => 'website',
+                    'courseInstance.location.email' => 'contact_email',
+                    'courseInstance.location.telephone' => 'contact_phone',
+                    'courseInstance.location.timeZone' => 'start_time_zone',
+                    'courseInstance.offers.price' => 'amount',
+                    'courseInstance.offers.priceCurrency' => 'currency',
+                    'courseInstance.offers.url' => 'course_url',
                 ],
             ],
         ]);
@@ -263,14 +278,22 @@ class CPSchemaMappingsTest extends WP_UnitTestCase {
             'post_title' => 'Intro to Robotics',
         ]);
 
-        update_post_meta($post_id, 'course_name', 'Introduction to Robotics');
-        update_post_meta($post_id, 'course_description', 'Learn the basics of building autonomous robots.');
+        update_post_meta($post_id, 'provider', 'Robotics Academy');
+        update_post_meta($post_id, 'organization_name', 'Robotics Academy Institute');
+        update_post_meta($post_id, 'department', 'School of Engineering');
+        update_post_meta($post_id, 'website', 'https://example.edu/robotics');
+        update_post_meta($post_id, 'contact_email', 'learn@example.edu');
+        update_post_meta($post_id, 'contact_phone', '(555) 123-4567');
         update_post_meta($post_id, 'course_code', 'ROB101');
-        update_post_meta($post_id, 'course_instance_name', 'Spring Cohort');
-        update_post_meta($post_id, 'course_instance_start', '2024-04-15');
-        update_post_meta($post_id, 'course_instance_end', '2024-06-15');
-        update_post_meta($post_id, 'course_location_name', 'Main Campus');
-        update_post_meta($post_id, 'course_location_region', 'CA');
+        update_post_meta($post_id, 'course_url', 'https://example.edu/courses/robotics-101');
+        update_post_meta($post_id, 'prerequisites', 'Familiarity with algebra and basic programming.');
+        update_post_meta($post_id, 'duration_iso', 'P6W');
+        update_post_meta($post_id, 'modality', 'hybrid');
+        update_post_meta($post_id, 'start_date_time', '2024-09-01T09:00:00-05:00');
+        update_post_meta($post_id, 'end_date_time', '2024-10-13T17:00:00-05:00');
+        update_post_meta($post_id, 'start_time_zone', 'America/Chicago');
+        update_post_meta($post_id, 'amount', '1999.99');
+        update_post_meta($post_id, 'currency', 'USD');
 
         $this->go_to(get_permalink($post_id));
         setup_postdata(get_post($post_id));
@@ -286,17 +309,40 @@ class CPSchemaMappingsTest extends WP_UnitTestCase {
         $this->assertIsArray($data);
         $this->assertSame('https://schema.org', $data['@context']);
         $this->assertSame('Course', $data['@type']);
-        $this->assertSame('Introduction to Robotics', $data['name']);
-        $this->assertSame('Learn the basics of building autonomous robots.', $data['description']);
         $this->assertSame('ROB101', $data['courseCode']);
-        $this->assertSame('CourseInstance', $data['courseInstance']['@type']);
-        $this->assertSame('Spring Cohort', $data['courseInstance']['name']);
-        $this->assertSame('2024-04-15', $data['courseInstance']['startDate']);
-        $this->assertSame('2024-06-15', $data['courseInstance']['endDate']);
-        $this->assertSame('Place', $data['courseInstance']['location']['@type']);
-        $this->assertSame('Main Campus', $data['courseInstance']['location']['name']);
-        $this->assertSame('PostalAddress', $data['courseInstance']['location']['address']['@type']);
-        $this->assertSame('CA', $data['courseInstance']['location']['address']['addressRegion']);
+        $this->assertSame('https://example.edu/courses/robotics-101', $data['url']);
+        $this->assertSame('Familiarity with algebra and basic programming.', $data['coursePrerequisites']);
+        $this->assertSame('P6W', $data['timeRequired']);
+
+        $this->assertSame('Organization', $data['provider']['@type']);
+        $this->assertSame('Robotics Academy', $data['provider']['name']);
+        $this->assertSame('Robotics Academy Institute', $data['provider']['alternateName']);
+        $this->assertSame('School of Engineering', $data['provider']['department']);
+        $this->assertSame('https://example.edu/robotics', $data['provider']['url']);
+        $this->assertSame('learn@example.edu', $data['provider']['email']);
+        $this->assertSame('(555) 123-4567', $data['provider']['telephone']);
+
+        $instance = $data['courseInstance'];
+        $this->assertSame('CourseInstance', $instance['@type']);
+        $this->assertSame('hybrid', $instance['courseMode']);
+        $this->assertSame('hybrid', $instance['eventAttendanceMode']);
+        $this->assertSame('2024-09-01T09:00:00-05:00', $instance['startDate']);
+        $this->assertSame('2024-10-13T17:00:00-05:00', $instance['endDate']);
+        $this->assertSame('P6W', $instance['duration']);
+
+        $location = $instance['location'];
+        $this->assertSame('Place', $location['@type']);
+        $this->assertSame('Robotics Academy', $location['name']);
+        $this->assertSame('https://example.edu/robotics', $location['url']);
+        $this->assertSame('learn@example.edu', $location['email']);
+        $this->assertSame('(555) 123-4567', $location['telephone']);
+        $this->assertSame('America/Chicago', $location['timeZone']);
+
+        $offers = $instance['offers'];
+        $this->assertSame('Offer', $offers['@type']);
+        $this->assertSame('1999.99', $offers['price']);
+        $this->assertSame('USD', $offers['priceCurrency']);
+        $this->assertSame('https://example.edu/courses/robotics-101', $offers['url']);
 
         wp_reset_postdata();
     }

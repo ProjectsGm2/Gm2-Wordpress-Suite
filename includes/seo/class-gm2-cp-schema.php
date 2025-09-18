@@ -178,6 +178,7 @@ class Gm2_CP_Schema {
             'courseInstance' => 'CourseInstance',
             'geo' => 'GeoCoordinates',
             'hiringOrganization' => 'Organization',
+            'provider' => 'Organization',
             'jobLocation' => 'Place',
             'location' => 'Place',
             'offers' => 'Offer',
