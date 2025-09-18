@@ -65,6 +65,24 @@
           "image": "{{image}}"
         }
       }
+    },
+    "company": {
+      "labels": {
+        "name": "Companies",
+        "singular_name": "Company"
+      },
+      "supports": [
+        "title",
+        "editor",
+        "thumbnail"
+      ],
+      "has_archive": true,
+      "rewrite": {
+        "slug": "companies"
+      },
+      "menu_icon": "dashicons-building",
+      "show_in_rest": true,
+      "rest_base": "companies"
     }
   },
   "taxonomies": {
@@ -107,7 +125,14 @@
           "key": "field_company",
           "label": "Company",
           "name": "company",
-          "type": "text",
+          "type": "relationship",
+          "relationship_type": "post",
+          "post_types": [
+            "company"
+          ],
+          "max": 1,
+          "sync": "two-way",
+          "instructions": "Select the company offering this position.",
           "required": true,
           "expose_in_rest": true
         },
@@ -160,7 +185,14 @@
             "key": "field_company",
             "label": "Company",
             "name": "company",
-            "type": "text",
+            "type": "relationship",
+            "relationship_type": "post",
+            "post_types": [
+              "company"
+            ],
+            "max": 1,
+            "sync": "two-way",
+            "instructions": "Select the company offering this position.",
             "required": true,
             "expose_in_rest": true
           },
@@ -175,7 +207,17 @@
       }
     ]
   },
-  "relationships": [],
+  "relationships": [
+    {
+      "from": "job",
+      "to": "company",
+      "type": "job_to_company",
+      "direction": "job_to_company",
+      "label": "Company",
+      "reverse_label": "Open Roles",
+      "cardinality": "many-to-one"
+    }
+  ],
   "default_terms": {
     "job_category": [
       {
