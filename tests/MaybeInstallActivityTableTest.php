@@ -1,9 +1,14 @@
 <?php
 namespace Gm2 {
-    function add_action($hook, $callback, $priority = 10, $accepted_args = 1) {}
+    if (!function_exists(__NAMESPACE__ . '\\add_action')) {
+        function add_action($hook, $callback, $priority = 10, $accepted_args = 1) {}
+    }
 }
 
 namespace {
+    use Gm2\Gm2_Abandoned_Carts;
+    use Tests\Phpunit\BrainMonkeyTestCase;
+
     if (!function_exists('dbDelta')) {
         function dbDelta($sql) {
             global $wpdb;
@@ -12,17 +17,12 @@ namespace {
             }
         }
     }
-    if (!class_exists('WP_UnitTestCase')) {
-        abstract class WP_UnitTestCase extends \PHPUnit\Framework\TestCase {}
-    }
     if (!defined('ABSPATH')) {
         define('ABSPATH', sys_get_temp_dir() . '/');
     }
     require_once dirname(__DIR__) . '/includes/Gm2_Abandoned_Carts.php';
 
-    use Gm2\Gm2_Abandoned_Carts;
-
-    class MaybeInstallActivityTableTest extends WP_UnitTestCase {
+    class MaybeInstallActivityTableTest extends BrainMonkeyTestCase {
         private $orig_wpdb;
         private $upgrade_file;
         private $created_upgrade = false;
@@ -30,7 +30,7 @@ namespace {
         protected function setUp(): void {
             parent::setUp();
             $this->orig_wpdb = $GLOBALS['wpdb'] ?? null;
-            $GLOBALS['wpdb'] = new FakeDB();
+            $GLOBALS['wpdb'] = new MaybeInstallActivityFakeDB();
             $root = defined('ABSPATH') ? ABSPATH : dirname(__DIR__) . '/';
             $path = $root . 'wp-admin/includes';
             if (!is_dir($path)) {
@@ -69,7 +69,7 @@ namespace {
         }
     }
 
-    class FakeDB {
+    class MaybeInstallActivityFakeDB {
         public $prefix = 'wp_';
         public $tables;
         public function __construct() {

@@ -1,11 +1,13 @@
 <?php
 
 namespace Gm2 {
-    function add_action($hook, $callback) {}
+    if (!function_exists(__NAMESPACE__ . '\\add_action')) {
+        function add_action($hook, $callback) {}
+    }
 }
 
 namespace {
-use PHPUnit\Framework\TestCase;
+use Tests\Phpunit\BrainMonkeyTestCase;
 
 if (!defined('ABSPATH')) {
     define('ABSPATH', __DIR__ . '/../');
@@ -44,7 +46,7 @@ if (!function_exists('WC')) {
 
 require_once __DIR__ . '/../includes/Gm2_Abandoned_Carts.php';
 
-final class AbandonedCartSessionTest extends TestCase {
+final class AbandonedCartSessionTest extends BrainMonkeyTestCase {
     public function test_capture_cart_handles_missing_session() {
         global $wc_obj;
         $product = new class {

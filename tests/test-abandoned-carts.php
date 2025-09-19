@@ -1,49 +1,119 @@
 <?php
 namespace Gm2 {
-    function check_ajax_referer($action, $query_arg = false, $die = true) {
-        return $GLOBALS['gm2_nonce_ok'] ?? true;
-    }
-    function wp_send_json_success($data = null) { return ['success'=>true,'data'=>$data]; }
-    function wp_send_json_error($data = null) { return ['success'=>false,'data'=>$data]; }
-    function error_log($message) { $GLOBALS['gm2_error_log'][] = $message; }
-    function do_action($tag, ...$args) {}
-    function current_time($type) {
-        if ('timestamp' === $type) {
-            return time();
+    if (!function_exists(__NAMESPACE__ . '\\check_ajax_referer')) {
+        function check_ajax_referer($action, $query_arg = false, $die = true) {
+            return $GLOBALS['gm2_nonce_ok'] ?? true;
         }
-        return gmdate('Y-m-d H:i:s');
     }
-    function current_user_can($cap = '') { return $GLOBALS['gm2_is_admin'] ?? false; }
-    function esc_url_raw($url) { return $url; }
-    function sanitize_text_field($str) { return $str; }
-    function wp_unslash($value) { return $value; }
-    function sanitize_email($email) { return $email; }
-    function home_url($path = '') { return 'https://example.com' . $path; }
-    function admin_url($path = '') { return 'https://example.com' . $path; }
-    function wp_create_nonce($action = '') { return 'nonce'; }
-    function wp_json_encode($data) { return json_encode($data); }
-    function get_current_user_id() { return 1; }
-    function is_admin() { return false; }
-    function add_action($hook, $callback, $priority = 10, $accepted_args = 1) {}
-    function wp_schedule_event() {}
-    function wp_next_scheduled() { return false; }
-    function wp_clear_scheduled_hook() {}
-    function apply_filters($tag, $value) { return $value; }
-    function get_option($option, $default = false) { return $GLOBALS['gm2_options'][$option] ?? $default; }
-    function update_option($option, $value) { $GLOBALS['gm2_options'][$option] = $value; return true; }
-    function is_ssl() { return false; }
-    function wp_doing_ajax() { return $GLOBALS['wp_doing_ajax'] ?? false; }
-    function wp_doing_cron() { return $GLOBALS['wp_doing_cron'] ?? false; }
+    if (!function_exists(__NAMESPACE__ . '\\wp_send_json_success')) {
+        function wp_send_json_success($data = null) { return ['success'=>true,'data'=>$data]; }
+    }
+    if (!function_exists(__NAMESPACE__ . '\\wp_send_json_error')) {
+        function wp_send_json_error($data = null) { return ['success'=>false,'data'=>$data]; }
+    }
+    if (!function_exists(__NAMESPACE__ . '\\error_log')) {
+        function error_log($message) { $GLOBALS['gm2_error_log'][] = $message; }
+    }
+    if (!function_exists(__NAMESPACE__ . '\\do_action')) {
+        function do_action($tag, ...$args) {}
+    }
+    if (!function_exists(__NAMESPACE__ . '\\current_time')) {
+        function current_time($type) {
+            if ('timestamp' === $type) {
+                return time();
+            }
+            return gmdate('Y-m-d H:i:s');
+        }
+    }
+    if (!function_exists(__NAMESPACE__ . '\\current_user_can')) {
+        function current_user_can($cap = '') { return $GLOBALS['gm2_is_admin'] ?? false; }
+    }
+    if (!function_exists(__NAMESPACE__ . '\\esc_url_raw')) {
+        function esc_url_raw($url) { return $url; }
+    }
+    if (!function_exists(__NAMESPACE__ . '\\sanitize_text_field')) {
+        function sanitize_text_field($str) { return $str; }
+    }
+    if (!function_exists(__NAMESPACE__ . '\\wp_unslash')) {
+        function wp_unslash($value) { return $value; }
+    }
+    if (!function_exists(__NAMESPACE__ . '\\sanitize_email')) {
+        function sanitize_email($email) { return $email; }
+    }
+    if (!function_exists(__NAMESPACE__ . '\\home_url')) {
+        function home_url($path = '') { return 'https://example.com' . $path; }
+    }
+    if (!function_exists(__NAMESPACE__ . '\\admin_url')) {
+        function admin_url($path = '') { return 'https://example.com' . $path; }
+    }
+    if (!function_exists(__NAMESPACE__ . '\\wp_create_nonce')) {
+        function wp_create_nonce($action = '') { return 'nonce'; }
+    }
+    if (!function_exists(__NAMESPACE__ . '\\wp_json_encode')) {
+        function wp_json_encode($data) { return json_encode($data); }
+    }
+    if (!function_exists(__NAMESPACE__ . '\\get_current_user_id')) {
+        function get_current_user_id() { return 1; }
+    }
+    if (!function_exists(__NAMESPACE__ . '\\is_admin')) {
+        function is_admin() { return false; }
+    }
+    if (!function_exists(__NAMESPACE__ . '\\add_action')) {
+        function add_action($hook, $callback, $priority = 10, $accepted_args = 1) {}
+    }
+    if (!function_exists(__NAMESPACE__ . '\\wp_schedule_event')) {
+        function wp_schedule_event() {}
+    }
+    if (!function_exists(__NAMESPACE__ . '\\wp_next_scheduled')) {
+        function wp_next_scheduled() { return false; }
+    }
+    if (!function_exists(__NAMESPACE__ . '\\wp_clear_scheduled_hook')) {
+        function wp_clear_scheduled_hook() {}
+    }
+    if (!function_exists(__NAMESPACE__ . '\\apply_filters')) {
+        function apply_filters($tag, $value) { return $value; }
+    }
+    if (!function_exists(__NAMESPACE__ . '\\get_option')) {
+        function get_option($option, $default = false) { return $GLOBALS['gm2_options'][$option] ?? $default; }
+    }
+    if (!function_exists(__NAMESPACE__ . '\\update_option')) {
+        function update_option($option, $value) { $GLOBALS['gm2_options'][$option] = $value; return true; }
+    }
+    if (!function_exists(__NAMESPACE__ . '\\is_ssl')) {
+        function is_ssl() { return false; }
+    }
+    if (!function_exists(__NAMESPACE__ . '\\wp_doing_ajax')) {
+        function wp_doing_ajax() { return $GLOBALS['wp_doing_ajax'] ?? false; }
+    }
+    if (!function_exists(__NAMESPACE__ . '\\wp_doing_cron')) {
+        function wp_doing_cron() { return $GLOBALS['wp_doing_cron'] ?? false; }
+    }
 }
 
 namespace {
-define('ABSPATH', __DIR__ . '/../');
-define('GM2_PLUGIN_DIR', dirname(__DIR__) . '/');
-define('GM2_PLUGIN_URL', '');
-define('GM2_VERSION', '1.0');
-define('HOUR_IN_SECONDS', 3600);
-define('COOKIEPATH', '/');
-define('COOKIE_DOMAIN', '');
+use Tests\Phpunit\BrainMonkeyTestCase;
+
+if (!defined('ABSPATH')) {
+    define('ABSPATH', __DIR__ . '/../');
+}
+if (!defined('GM2_PLUGIN_DIR')) {
+    define('GM2_PLUGIN_DIR', dirname(__DIR__) . '/');
+}
+if (!defined('GM2_PLUGIN_URL')) {
+    define('GM2_PLUGIN_URL', '');
+}
+if (!defined('GM2_VERSION')) {
+    define('GM2_VERSION', '1.0');
+}
+if (!defined('HOUR_IN_SECONDS')) {
+    define('HOUR_IN_SECONDS', 3600);
+}
+if (!defined('COOKIEPATH')) {
+    define('COOKIEPATH', '/');
+}
+if (!defined('COOKIE_DOMAIN')) {
+    define('COOKIE_DOMAIN', '');
+}
 require_once dirname(__DIR__) . '/includes/Gm2_Abandoned_Carts.php';
 if (!class_exists('WC_Session')) {
     class WC_Session {
@@ -73,41 +143,37 @@ if (!function_exists('WC')) {
 
 if (!function_exists('wc_get_order')) {
     function wc_get_order($order_id) {
-        return new FakeOrder();
+        return new AbandonedCartFakeOrder();
     }
 }
 
-class FakeOrder {
+class AbandonedCartFakeOrder {
     public function get_billing_email() { return 'user@example.com'; }
     public function get_billing_country() { return 'US'; }
     public function get_billing_state() { return 'CA'; }
 }
 
-class FakeProduct {
+class AbandonedCartFakeProduct {
     public function get_name() { return 'Test Product'; }
     public function get_price() { return 10; }
     public function get_sku() { return 'SKU'; }
 }
 
-class FakeCart {
+class AbandonedCartFakeCart {
     public function is_empty() { return false; }
     public function get_cart() {
         return [
             [
                 'product_id' => 1,
                 'quantity'   => 1,
-                'data'       => new FakeProduct(),
+                'data'       => new AbandonedCartFakeProduct(),
             ],
         ];
     }
     public function get_cart_contents_total() { return 10; }
 }
 
-if (!class_exists('WP_UnitTestCase')) {
-    abstract class WP_UnitTestCase extends \PHPUnit\Framework\TestCase {}
-}
-
-class AbandonedCartsTest extends WP_UnitTestCase {
+class AbandonedCartsTest extends BrainMonkeyTestCase {
     private $orig_wpdb;
     private $token = 'tok123';
 
@@ -324,7 +390,7 @@ class AbandonedCartsTest extends WP_UnitTestCase {
         $table = $GLOBALS['wpdb']->prefix . 'wc_ac_carts';
         $GLOBALS['wpdb']->data[$table] = [];
         global $wc_session_obj;
-        $wc_session_obj->cart = new FakeCart();
+        $wc_session_obj->cart = new AbandonedCartFakeCart();
         WC()->session->set('gm2_entry_url', null);
         $_SERVER['HTTP_HOST'] = 'example.com';
         $_SERVER['REQUEST_URI'] = '/shop/landing';
@@ -370,7 +436,7 @@ class AbandonedCartsTest extends WP_UnitTestCase {
 
         $GLOBALS['wpdb']->data[$table] = [];
         global $wc_session_obj;
-        $wc_session_obj->cart = new FakeCart();
+        $wc_session_obj->cart = new AbandonedCartFakeCart();
         $ac = new \Gm2\Gm2_Abandoned_Carts();
         $ac->capture_cart();
         $this->assertCount(0, $GLOBALS['wpdb']->data[$table]);

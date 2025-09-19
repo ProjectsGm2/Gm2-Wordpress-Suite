@@ -4,6 +4,24 @@
         <testsuite name="Plugin Test Suite">
             <directory suffix=".php">./tests</directory>
             <exclude>./tests/test-cli</exclude>
+            <exclude>./tests/AbandonedCartProcessTest.php</exclude>
+            <exclude>./tests/AbandonedCartSessionTest.php</exclude>
+            <exclude>./tests/AbandonedCartSummaryTest.php</exclude>
+            <exclude>./tests/ActivityLogPagingTest.php</exclude>
+            <exclude>./tests/ActivityTableInstallTest.php</exclude>
+            <exclude>./tests/CaptureCartActivityTest.php</exclude>
+            <exclude>./tests/MaybeInstallActivityTableTest.php</exclude>
+            <exclude>./tests/test-abandoned-carts.php</exclude>
+        </testsuite>
+        <testsuite name="Brain Monkey Test Suite">
+            <file>./tests/AbandonedCartProcessTest.php</file>
+            <file>./tests/AbandonedCartSessionTest.php</file>
+            <file>./tests/AbandonedCartSummaryTest.php</file>
+            <file>./tests/ActivityLogPagingTest.php</file>
+            <file>./tests/ActivityTableInstallTest.php</file>
+            <file>./tests/CaptureCartActivityTest.php</file>
+            <file>./tests/MaybeInstallActivityTableTest.php</file>
+            <file>./tests/test-abandoned-carts.php</file>
         </testsuite>
         <testsuite name="CLI Test Suite">
             <directory suffix=".php">./tests/test-cli</directory>
