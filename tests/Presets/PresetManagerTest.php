@@ -58,6 +58,10 @@ class PresetManagerTest extends WP_UnitTestCase {
         $seoMappings = apply_filters('gm2/presets/seo/mappings', []);
         $this->assertArrayHasKey('directory', $seoMappings);
         $this->assertArrayHasKey('listing', $seoMappings['directory']);
+
+        $relationships = apply_filters('gm2/presets/relationships', []);
+        $this->assertArrayHasKey('directory', $relationships);
+        $this->assertIsArray($relationships['directory']);
     }
 
     public function test_invalid_blueprint_reports_error(): void {
@@ -76,6 +80,13 @@ class PresetManagerTest extends WP_UnitTestCase {
         update_option('gm2_custom_posts_config', [
             'post_types' => [ 'example' => [] ],
             'taxonomies' => [ 'genre' => [] ],
+            'relationships' => [
+                'example_to_genre' => [
+                    'type' => 'example_to_genre',
+                    'from' => 'example',
+                    'to'   => 'genre',
+                ],
+            ],
         ]);
         update_option('gm2_field_groups', [ 'group' => [ 'title' => 'Group', 'fields' => [] ] ]);
         update_option('gm2_cp_schema_map', [ 'map' => [ 'type' => 'Thing' ] ]);
@@ -97,6 +108,7 @@ class PresetManagerTest extends WP_UnitTestCase {
         $this->assertIsArray($config);
         $this->assertSame([], $config['post_types'] ?? []);
         $this->assertSame([], $config['taxonomies'] ?? []);
+        $this->assertSame([], $config['relationships'] ?? []);
 
         $this->assertSame([], get_option('gm2_field_groups'));
         $this->assertSame([], get_option('gm2_cp_schema_map'));

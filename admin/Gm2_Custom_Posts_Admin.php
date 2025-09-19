@@ -24,6 +24,9 @@ class Gm2_Custom_Posts_Admin {
         add_action('wp_ajax_gm2_delete_field_group', [ $this, 'ajax_delete_field_group' ]);
         add_action('wp_ajax_gm2_rename_field_group', [ $this, 'ajax_rename_field_group' ]);
         add_action('wp_ajax_gm2_export_field_groups', [ $this, 'ajax_export_field_groups' ]);
+        add_action('wp_ajax_gm2_get_relationships', [ $this, 'ajax_get_relationships' ]);
+        add_action('wp_ajax_gm2_save_relationship', [ $this, 'ajax_save_relationship' ]);
+        add_action('wp_ajax_gm2_delete_relationship', [ $this, 'ajax_delete_relationship' ]);
         add_action('wp_ajax_gm2_regenerate_thumbnails', [ $this, 'ajax_regenerate_thumbnails' ]);
         add_action('wp_ajax_gm2_get_schema_map', [ $this, 'ajax_get_schema_map' ]);
         add_action('wp_ajax_gm2_save_schema_map', [ $this, 'ajax_save_schema_map' ]);
@@ -80,6 +83,10 @@ class Gm2_Custom_Posts_Admin {
             '<p>' . esc_html__( 'Create reusable field groups and assign them to various objects.', 'gm2-wordpress-suite' ) . '</p>'
         );
 
+        $this->register_help('settings_page_gm2_relationships',
+            '<p>' . esc_html__( 'Define reusable relationships that link your models together. These definitions are included in blueprint exports.', 'gm2-wordpress-suite' ) . '</p>'
+        );
+
         $this->register_help('settings_page_gm2_workflows',
             '<p>' . esc_html__( 'Automate actions with workflows and statuses.', 'gm2-wordpress-suite' ) . '</p>'
         );
@@ -119,9 +126,24 @@ class Gm2_Custom_Posts_Admin {
             $config = [];
         }
         $config = wp_parse_args($config, [
-            'post_types' => [],
-            'taxonomies' => [],
+            'post_types'    => [],
+            'taxonomies'    => [],
+            'relationships' => [],
         ]);
+
+        $config['relationships'] = $this->normalize_relationships($config['relationships']);
+
+        if (empty($config['relationships'])) {
+            $meta = get_option('gm2_model_blueprint_meta', []);
+            if (is_array($meta) && !empty($meta['relationships']) && is_array($meta['relationships'])) {
+                $migrated = $this->normalize_relationships($meta['relationships']);
+                if ($migrated) {
+                    $config['relationships'] = $migrated;
+                    update_option('gm2_custom_posts_config', $config);
+                }
+            }
+        }
+
         return $config;
     }
 
@@ -229,6 +251,17 @@ class Gm2_Custom_Posts_Admin {
             $cap,
             'gm2_query_builder',
             [ $this, 'display_query_builder' ]
+        );
+
+        add_submenu_page(
+            'options-general.php',
+            esc_html__( 'Relationships', 'gm2-wordpress-suite' ),
+            esc_html__( 'Relationships', 'gm2-wordpress-suite' ),
+            $cap,
+            'gm2_relationships',
+            function () {
+                require __DIR__ . '/pages/relationships.php';
+            }
         );
 
         add_submenu_page(
@@ -1249,6 +1282,97 @@ class Gm2_Custom_Posts_Admin {
         return $out;
     }
 
+    private function normalize_relationships($relationships) {
+        $normalized = [];
+        if (!is_array($relationships)) {
+            return $normalized;
+        }
+        foreach ($relationships as $key => $relationship) {
+            if (!is_array($relationship)) {
+                continue;
+            }
+            if (!isset($relationship['type']) && is_string($key)) {
+                $relationship['type'] = $key;
+            }
+            $sanitized = $this->sanitize_relationship($relationship);
+            if ($sanitized === null) {
+                continue;
+            }
+            $normalized[$sanitized['type']] = $sanitized;
+        }
+        return $normalized;
+    }
+
+    private function sanitize_relationship($relationship) {
+        if (!is_array($relationship)) {
+            return null;
+        }
+        $type = sanitize_key($relationship['type'] ?? $relationship['key'] ?? '');
+        $from = sanitize_key($relationship['from'] ?? '');
+        $to   = sanitize_key($relationship['to'] ?? '');
+        if ($type === '' || $from === '' || $to === '') {
+            return null;
+        }
+        $direction = sanitize_key($relationship['direction'] ?? '');
+        $label = isset($relationship['label']) ? sanitize_text_field($relationship['label']) : '';
+        $reverse_label = isset($relationship['reverse_label']) ? sanitize_text_field($relationship['reverse_label']) : '';
+        $cardinality = isset($relationship['cardinality']) ? sanitize_text_field($relationship['cardinality']) : '';
+        $description = isset($relationship['description']) ? sanitize_textarea_field($relationship['description']) : '';
+
+        $result = [
+            'type' => $type,
+            'from' => $from,
+            'to'   => $to,
+        ];
+        if ($direction !== '') {
+            $result['direction'] = $direction;
+        }
+        if ($label !== '') {
+            $result['label'] = $label;
+        }
+        if ($reverse_label !== '') {
+            $result['reverse_label'] = $reverse_label;
+        }
+        if ($cardinality !== '') {
+            $result['cardinality'] = $cardinality;
+        }
+        if ($description !== '') {
+            $result['description'] = $description;
+        }
+
+        return $result;
+    }
+
+    private function prepare_relationships_for_js($relationships) {
+        $list = [];
+        $normalized = $this->normalize_relationships($relationships);
+        foreach ($normalized as $definition) {
+            if (!is_array($definition)) {
+                continue;
+            }
+            $list[] = [
+                'type'          => $definition['type'],
+                'from'          => $definition['from'],
+                'to'            => $definition['to'],
+                'direction'     => $definition['direction'] ?? '',
+                'label'         => $definition['label'] ?? '',
+                'reverse_label' => $definition['reverse_label'] ?? '',
+                'cardinality'   => $definition['cardinality'] ?? '',
+                'description'   => $definition['description'] ?? '',
+            ];
+        }
+        return $list;
+    }
+
+    private function sync_relationship_meta(array $relationships) {
+        $meta = get_option('gm2_model_blueprint_meta', []);
+        if (!is_array($meta)) {
+            $meta = [];
+        }
+        $meta['relationships'] = array_values($this->normalize_relationships($relationships));
+        update_option('gm2_model_blueprint_meta', $meta);
+    }
+
     public function render_meta_box($post, $fields, $slug) {
         wp_nonce_field('gm2_save_custom_fields', 'gm2_custom_fields_nonce');
         uasort($fields, function ($a, $b) {
@@ -1714,6 +1838,51 @@ class Gm2_Custom_Posts_Admin {
             ]);
         }
 
+        if ($hook === 'settings_page_gm2_relationships') {
+            $file = GM2_PLUGIN_DIR . 'admin/js/gm2-relationships.js';
+            wp_enqueue_script(
+                'gm2-relationships',
+                GM2_PLUGIN_URL . 'admin/js/gm2-relationships.js',
+                [ 'jquery' ],
+                file_exists($file) ? filemtime($file) : GM2_VERSION,
+                true
+            );
+            $config = $this->get_config();
+            $relationships = $this->prepare_relationships_for_js($config['relationships'] ?? []);
+            $pts = get_post_types([], 'objects');
+            $taxs = get_taxonomies([], 'objects');
+            $post_types = [];
+            foreach ($pts as $slug => $pt_obj) {
+                $post_types[$slug] = $pt_obj->labels->singular_name ?? $slug;
+            }
+            $taxonomies = [];
+            foreach ($taxs as $slug => $tax_obj) {
+                $taxonomies[$slug] = $tax_obj->labels->singular_name ?? $slug;
+            }
+            wp_localize_script('gm2-relationships', 'gm2Relationships', [
+                'nonce'       => wp_create_nonce('gm2_save_relationship'),
+                'deleteNonce' => wp_create_nonce('gm2_delete_relationship'),
+                'fetchNonce'  => wp_create_nonce('gm2_get_relationships'),
+                'ajax'        => admin_url('admin-ajax.php'),
+                'relationships' => $relationships,
+                'objects'     => [
+                    'post_types' => $post_types,
+                    'taxonomies' => $taxonomies,
+                ],
+                'strings'     => [
+                    'noRelationships' => __( 'No relationships defined.', 'gm2-wordpress-suite' ),
+                    'edit'            => __( 'Edit', 'gm2-wordpress-suite' ),
+                    'delete'          => __( 'Delete', 'gm2-wordpress-suite' ),
+                    'confirmDelete'   => __( 'Delete this relationship?', 'gm2-wordpress-suite' ),
+                    'errorSaving'     => __( 'Error saving relationship.', 'gm2-wordpress-suite' ),
+                    'errorDeleting'   => __( 'Error deleting relationship.', 'gm2-wordpress-suite' ),
+                    'saved'           => __( 'Relationship saved.', 'gm2-wordpress-suite' ),
+                    'deleted'         => __( 'Relationship deleted.', 'gm2-wordpress-suite' ),
+                    'missingRequired' => __( 'Relationship key, from, and to fields are required.', 'gm2-wordpress-suite' ),
+                ],
+            ]);
+        }
+
         if ($hook === 'settings_page_gm2_schema_mapping') {
             $file = GM2_PLUGIN_DIR . 'admin/js/gm2-schema-mapping.js';
             wp_enqueue_script(
@@ -1997,6 +2166,89 @@ class Gm2_Custom_Posts_Admin {
         update_option('gm2_custom_posts_config', $config);
         wp_send_json_success([
             'args' => $sanitized_args,
+        ]);
+    }
+
+    public function ajax_get_relationships() {
+        if (!$this->can_manage()) {
+            wp_send_json_error('permission');
+        }
+        $nonce = $_REQUEST['nonce'] ?? '';
+        if (!wp_verify_nonce($nonce, 'gm2_get_relationships')) {
+            wp_send_json_error('nonce');
+        }
+        $config = $this->get_config();
+        $relationships = $config['relationships'] ?? [];
+        if (!is_array($relationships)) {
+            $relationships = [];
+        }
+        wp_send_json_success([
+            'relationships' => $this->prepare_relationships_for_js($relationships),
+        ]);
+    }
+
+    public function ajax_save_relationship() {
+        if (!$this->can_manage()) {
+            wp_send_json_error('permission');
+        }
+        $nonce = $_POST['nonce'] ?? '';
+        if (!wp_verify_nonce($nonce, 'gm2_save_relationship')) {
+            wp_send_json_error('nonce');
+        }
+        $relationship = [
+            'type'          => $_POST['type'] ?? '',
+            'from'          => $_POST['from'] ?? '',
+            'to'            => $_POST['to'] ?? '',
+            'direction'     => $_POST['direction'] ?? '',
+            'label'         => $_POST['label'] ?? '',
+            'reverse_label' => $_POST['reverse_label'] ?? '',
+            'cardinality'   => $_POST['cardinality'] ?? '',
+            'description'   => $_POST['description'] ?? '',
+        ];
+        $sanitized = $this->sanitize_relationship($relationship);
+        if ($sanitized === null) {
+            wp_send_json_error('data');
+        }
+        $original = sanitize_key($_POST['original'] ?? $sanitized['type']);
+        $config = $this->get_config();
+        $relationships = $config['relationships'] ?? [];
+        if (!is_array($relationships)) {
+            $relationships = [];
+        }
+        if ($original && $original !== $sanitized['type'] && isset($relationships[$original])) {
+            unset($relationships[$original]);
+        }
+        $relationships[$sanitized['type']] = $sanitized;
+        $config['relationships'] = $relationships;
+        update_option('gm2_custom_posts_config', $config);
+        $this->sync_relationship_meta($relationships);
+        wp_send_json_success([
+            'relationships' => $this->prepare_relationships_for_js($relationships),
+        ]);
+    }
+
+    public function ajax_delete_relationship() {
+        if (!$this->can_manage()) {
+            wp_send_json_error('permission');
+        }
+        $nonce = $_POST['nonce'] ?? '';
+        if (!wp_verify_nonce($nonce, 'gm2_delete_relationship')) {
+            wp_send_json_error('nonce');
+        }
+        $type = sanitize_key($_POST['type'] ?? '');
+        if ($type === '') {
+            wp_send_json_error('data');
+        }
+        $config = $this->get_config();
+        $relationships = $config['relationships'] ?? [];
+        if (isset($relationships[$type])) {
+            unset($relationships[$type]);
+            $config['relationships'] = $relationships;
+            update_option('gm2_custom_posts_config', $config);
+            $this->sync_relationship_meta($relationships);
+        }
+        wp_send_json_success([
+            'relationships' => $this->prepare_relationships_for_js($relationships),
         ]);
     }
 
