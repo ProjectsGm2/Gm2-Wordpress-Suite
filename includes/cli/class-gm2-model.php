@@ -347,6 +347,57 @@ class Gm2_Model_CLI extends \WP_CLI_Command {
     }
 
     /**
+     * List registered custom post types.
+     *
+     * ## OPTIONS
+     *
+     * [<slug>]
+     * : Optionally limit the output to a specific CPT slug.
+     */
+    public function cpt_list( $args, $assoc_args ) {
+        $filter_slug = $args[0] ?? ( $assoc_args['slug'] ?? '' );
+        $models      = get_option( 'gm2_models', [] );
+        $rows        = [];
+
+        foreach ( $models as $model ) {
+            $slug = $model['slug'] ?? ( $model['post_type'] ?? '' );
+            if ( ! $slug || ( $filter_slug && $slug !== $filter_slug ) ) {
+                continue;
+            }
+
+            $taxonomies = [];
+            foreach ( $model['taxonomies'] ?? [] as $tax ) {
+                $tax_slug = $tax['taxonomy'] ?? ( $tax['slug'] ?? '' );
+                if ( $tax_slug ) {
+                    $taxonomies[] = $tax_slug;
+                }
+            }
+
+            $rows[] = [
+                'slug'       => $slug,
+                'label'      => $this->resolve_model_label( $model['args'] ?? [], $slug ),
+                'version'    => (string) ( $model['version'] ?? 1 ),
+                'taxonomies' => implode( ', ', $taxonomies ),
+            ];
+        }
+
+        if ( empty( $rows ) ) {
+            \WP_CLI::warning( __( 'No custom post types found in gm2_models.', 'gm2-wordpress-suite' ) );
+            return;
+        }
+
+        $this->render_table(
+            [
+                'slug'       => __( 'Slug', 'gm2-wordpress-suite' ),
+                'label'      => __( 'Label', 'gm2-wordpress-suite' ),
+                'version'    => __( 'Version', 'gm2-wordpress-suite' ),
+                'taxonomies' => __( 'Taxonomies', 'gm2-wordpress-suite' ),
+            ],
+            $rows
+        );
+    }
+
+    /**
      * Create a taxonomy for a CPT.
      *
      * ## OPTIONS
@@ -364,7 +415,7 @@ class Gm2_Model_CLI extends \WP_CLI_Command {
         $cpt = $args[0] ?? '';
         $slug = $args[1] ?? '';
         if ( ! $cpt || ! $slug ) {
-            \WP_CLI::error( __( 'Usage: wp gm2 model taxonomy create <cpt> <slug> [--args]', 'gm2-wordpress-suite' ) );
+            \WP_CLI::error( __( 'Usage: wp gm2 tax add <cpt> <slug> [--args]', 'gm2-wordpress-suite' ) );
         }
 
         $models = get_option( 'gm2_models', [] );
@@ -440,7 +491,7 @@ class Gm2_Model_CLI extends \WP_CLI_Command {
         $cpt = $args[0] ?? '';
         $slug = $args[1] ?? '';
         if ( ! $cpt || ! $slug ) {
-            \WP_CLI::error( __( 'Usage: wp gm2 model taxonomy delete <cpt> <slug>', 'gm2-wordpress-suite' ) );
+            \WP_CLI::error( __( 'Usage: wp gm2 tax remove <cpt> <slug>', 'gm2-wordpress-suite' ) );
         }
 
         $models = get_option( 'gm2_models', [] );
@@ -462,6 +513,61 @@ class Gm2_Model_CLI extends \WP_CLI_Command {
             }
         }
         \WP_CLI::error( __( 'CPT not found.', 'gm2-wordpress-suite' ) );
+    }
+
+    /**
+     * List registered taxonomies.
+     *
+     * ## OPTIONS
+     *
+     * [<cpt>]
+     * : Optionally limit results to taxonomies attached to a specific CPT slug.
+     */
+    public function taxonomy_list( $args, $assoc_args ) {
+        $filter_cpt = $args[0] ?? ( $assoc_args['cpt'] ?? '' );
+        $models     = get_option( 'gm2_models', [] );
+        $rows       = [];
+
+        foreach ( $models as $model ) {
+            $cpt = $model['slug'] ?? ( $model['post_type'] ?? '' );
+            if ( ! $cpt || ( $filter_cpt && $filter_cpt !== $cpt ) ) {
+                continue;
+            }
+
+            foreach ( $model['taxonomies'] ?? [] as $tax ) {
+                $slug = $tax['taxonomy'] ?? ( $tax['slug'] ?? '' );
+                if ( ! $slug ) {
+                    continue;
+                }
+
+                $object_type = $tax['object_type'] ?? $cpt;
+                if ( is_array( $object_type ) ) {
+                    $object_type = implode( ', ', array_filter( array_map( 'strval', $object_type ) ) );
+                } else {
+                    $object_type = (string) $object_type;
+                }
+
+                $rows[] = [
+                    'slug'   => $slug,
+                    'cpt'    => $object_type ?: $cpt,
+                    'label'  => $this->resolve_model_label( $tax['args'] ?? [], $slug ),
+                ];
+            }
+        }
+
+        if ( empty( $rows ) ) {
+            \WP_CLI::warning( __( 'No taxonomies found in gm2_models.', 'gm2-wordpress-suite' ) );
+            return;
+        }
+
+        $this->render_table(
+            [
+                'slug'  => __( 'Slug', 'gm2-wordpress-suite' ),
+                'cpt'   => __( 'CPT', 'gm2-wordpress-suite' ),
+                'label' => __( 'Label', 'gm2-wordpress-suite' ),
+            ],
+            $rows
+        );
     }
 
     /**
@@ -578,6 +684,102 @@ class Gm2_Model_CLI extends \WP_CLI_Command {
             }
         }
         \WP_CLI::error( __( 'CPT not found.', 'gm2-wordpress-suite' ) );
+    }
+
+    /**
+     * Determine a human readable label for a model entry.
+     *
+     * @param array  $args     Arguments stored alongside the model.
+     * @param string $fallback Fallback label when none is provided.
+     * @return string
+     */
+    private function resolve_model_label( array $args, string $fallback ): string {
+        if ( isset( $args['label'] ) && is_string( $args['label'] ) && $args['label'] !== '' ) {
+            return $args['label'];
+        }
+
+        if ( isset( $args['labels'] ) && is_array( $args['labels'] ) ) {
+            foreach ( [ 'name', 'singular_name', 'menu_name' ] as $key ) {
+                if ( ! empty( $args['labels'][ $key ] ) && is_string( $args['labels'][ $key ] ) ) {
+                    return $args['labels'][ $key ];
+                }
+            }
+        }
+
+        return $fallback;
+    }
+
+    /**
+     * Render a simple table to the CLI output.
+     *
+     * @param array<string, string>    $headers Column headers keyed by field.
+     * @param array<int, array<string, string>> $rows Row data keyed by the same fields.
+     * @return void
+     */
+    private function render_table( array $headers, array $rows ) {
+        $order        = array_keys( $headers );
+        $widths       = [];
+        $normalized   = [];
+
+        foreach ( $headers as $key => $label ) {
+            $widths[ $key ] = strlen( (string) $label );
+        }
+
+        foreach ( $rows as $row ) {
+            $line = [];
+            foreach ( $order as $key ) {
+                $value        = isset( $row[ $key ] ) ? (string) $row[ $key ] : '';
+                $line[ $key ] = $value;
+                $widths[ $key ] = max( $widths[ $key ], strlen( $value ) );
+            }
+            $normalized[] = $line;
+        }
+
+        $this->render_table_line( $headers, $widths, $order );
+
+        $separator = [];
+        foreach ( $order as $key ) {
+            $separator[ $key ] = str_repeat( '-', $widths[ $key ] );
+        }
+        $this->render_table_line( $separator, $widths, $order );
+
+        foreach ( $normalized as $line ) {
+            $this->render_table_line( $line, $widths, $order );
+        }
+    }
+
+    /**
+     * Output a single row for the CLI table.
+     *
+     * @param array<string, string> $row    Row values keyed by header key.
+     * @param array<string, int>    $widths Calculated widths for each column.
+     * @param array<int, string>    $order  Column order.
+     * @return void
+     */
+    private function render_table_line( array $row, array $widths, array $order ) {
+        $cells = [];
+        foreach ( $order as $key ) {
+            $value    = isset( $row[ $key ] ) ? (string) $row[ $key ] : '';
+            $cells[] = $this->pad_table_cell( $value, $widths[ $key ] );
+        }
+
+        \WP_CLI::line( implode( '  ', $cells ) );
+    }
+
+    /**
+     * Pad a string so that all cells share the same width.
+     *
+     * @param string $value Cell contents.
+     * @param int    $width Desired width.
+     * @return string
+     */
+    private function pad_table_cell( string $value, int $width ): string {
+        $length = strlen( $value );
+        if ( $length >= $width ) {
+            return $value;
+        }
+
+        return $value . str_repeat( ' ', $width - $length );
     }
 
     /**
@@ -843,4 +1045,76 @@ class Gm2_Model_CLI extends \WP_CLI_Command {
     }
 }
 
+/**
+ * Wrapper for the `wp gm2 cpt` command namespace.
+ */
+class Gm2_CPT_CLI extends \WP_CLI_Command {
+    /**
+     * @var Gm2_Model_CLI
+     */
+    private $models;
+
+    public function __construct() {
+        $this->models = new Gm2_Model_CLI();
+    }
+
+    /**
+     * Add a new custom post type.
+     */
+    public function add( $args, $assoc_args ) {
+        $this->models->cpt_create( $args, $assoc_args );
+    }
+
+    /**
+     * Remove a registered custom post type.
+     */
+    public function remove( $args, $assoc_args ) {
+        $this->models->cpt_delete( $args, $assoc_args );
+    }
+
+    /**
+     * List registered custom post types.
+     */
+    public function list_( $args, $assoc_args ) {
+        $this->models->cpt_list( $args, $assoc_args );
+    }
+}
+
+/**
+ * Wrapper for the `wp gm2 tax` command namespace.
+ */
+class Gm2_Tax_CLI extends \WP_CLI_Command {
+    /**
+     * @var Gm2_Model_CLI
+     */
+    private $models;
+
+    public function __construct() {
+        $this->models = new Gm2_Model_CLI();
+    }
+
+    /**
+     * Add a taxonomy to a custom post type.
+     */
+    public function add( $args, $assoc_args ) {
+        $this->models->taxonomy_create( $args, $assoc_args );
+    }
+
+    /**
+     * Remove a taxonomy from a custom post type.
+     */
+    public function remove( $args, $assoc_args ) {
+        $this->models->taxonomy_delete( $args, $assoc_args );
+    }
+
+    /**
+     * List registered taxonomies.
+     */
+    public function list_( $args, $assoc_args ) {
+        $this->models->taxonomy_list( $args, $assoc_args );
+    }
+}
+
 \WP_CLI::add_command( 'gm2 model', __NAMESPACE__ . '\\Gm2_Model_CLI' );
+\WP_CLI::add_command( 'gm2 cpt', __NAMESPACE__ . '\\Gm2_CPT_CLI' );
+\WP_CLI::add_command( 'gm2 tax', __NAMESPACE__ . '\\Gm2_Tax_CLI' );

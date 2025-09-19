@@ -1,45 +1,62 @@
 # Model WP-CLI commands
 
-Manage custom post types, taxonomies, and field groups from the command line.
-All commands are run with the `wp gm2 model` prefix.
+Manage custom post types, taxonomies, and field groups from the command line. All commands share the `wp gm2` prefix.
 
-## Creating models
+## Custom post types (`wp gm2 cpt`)
 
-### Custom post type
-
-```bash
-wp gm2 model create cpt <slug> [--args=<json>]
-```
-
-### Taxonomy
+Dedicated shortcuts exist for creating, removing, and listing CPT definitions stored in the `gm2_models` option. Legacy `wp gm2 model cpt ...` subcommands continue to function, but the streamlined syntax below is preferred:
 
 ```bash
-wp gm2 model create taxonomy <cpt> <slug> [--args=<json>]
+wp gm2 cpt add <slug> [--args=<json>]
+wp gm2 model update cpt <slug> [--args=<json>] [--version=<version>]
+wp gm2 cpt remove <slug>
+wp gm2 cpt list [<slug>]
 ```
 
-### Field group
+The `list` subcommand prints a table including the CPT slug, label, version, and any attached taxonomies.
+
+## Taxonomies (`wp gm2 tax`)
+
+Taxonomies can be managed directly with the `gm2 tax` namespace:
+
+```bash
+wp gm2 tax add <cpt> <slug> [--args=<json>]
+wp gm2 model update taxonomy <cpt> <slug> [--args=<json>]
+wp gm2 tax remove <cpt> <slug>
+wp gm2 tax list [<cpt>]
+```
+
+`list` outputs a table with each taxonomy slug, its associated CPT, and label.
+
+## Field groups
+
+Field groups continue to use the nested `gm2 model field` subcommands:
 
 ```bash
 wp gm2 model create field <cpt> <key> [--args=<json>]
-```
-
-## Updating models
-
-```bash
-wp gm2 model update cpt <slug> [--args=<json>] [--version=<version>]
-wp gm2 model update taxonomy <cpt> <slug> [--args=<json>]
 wp gm2 model update field <cpt> <key> [--args=<json>]
-```
-
-`modify` is an alias for `update`.
-
-## Deleting models
-
-```bash
-wp gm2 model delete cpt <slug>
-wp gm2 model delete taxonomy <cpt> <slug>
 wp gm2 model delete field <cpt> <key>
 ```
+
+### Exporting and importing field groups
+
+Use the dedicated `gm2 fields` command when working solely with field group data:
+
+```bash
+wp gm2 fields export <file> [--format=<json|yaml>] [--slug=<slug>] [--slugs=<list>]
+wp gm2 fields import <file> [--format=<json|yaml>] [--replace]
+```
+
+`--slug` may be provided multiple times, and `--slugs` accepts a comma-separated list. Imports merge into existing groups unless `--replace` is supplied.
+
+## Exporting and importing models
+
+```bash
+wp gm2 model export <file> [--format=<json|yaml>] [--field-groups]
+wp gm2 model import <file> [--format=<json|yaml>] [--field-groups] [--replace]
+```
+
+The `--field-groups` flag retains its previous behaviour for backwards compatibility but `wp gm2 fields` provides a clearer entry point.
 
 ## Migrations
 
@@ -47,13 +64,6 @@ Run pending migrations for all models:
 
 ```bash
 wp gm2 model migrate
-```
-
-## Exporting and importing
-
-```bash
-wp gm2 model export <file> [--format=<json|yaml>]
-wp gm2 model import <file> [--format=<json|yaml>]
 ```
 
 ## Blueprints
