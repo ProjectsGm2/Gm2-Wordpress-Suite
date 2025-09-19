@@ -8,6 +8,7 @@ use WP_Error;
 
 use function __;
 use function add_filter;
+use function apply_filters;
 use function array_key_exists;
 use function basename;
 use function dirname;
@@ -339,6 +340,26 @@ class PresetManager
     }
 
     /**
+     * Restore the baseline content definitions bundled with the plugin.
+     */
+    public function restoreDefaults(): true|WP_Error
+    {
+        $baseline = $this->getBaselineBlueprint();
+
+        $validation = $this->validate($baseline, 'baseline');
+        if (is_wp_error($validation)) {
+            return $validation;
+        }
+
+        $result = gm2_model_import($baseline, 'array');
+        if (is_wp_error($result)) {
+            return $result;
+        }
+
+        return true;
+    }
+
+    /**
      * Provide the manager instance via filter.
      */
     public function filterManager($existing = null): self
@@ -659,5 +680,40 @@ class PresetManager
         }
 
         return $mappings;
+    }
+
+    /**
+     * Retrieve the baseline blueprint used when resetting definitions.
+     */
+    private function getBaselineBlueprint(): array
+    {
+        $baseline = [
+            'post_types'         => [],
+            'taxonomies'         => [],
+            'field_groups'       => [],
+            'fields'             => [
+                'groups' => [],
+            ],
+            'relationships'      => [],
+            'default_terms'      => [],
+            'templates'          => [],
+            'elementor'          => [
+                'queries'   => [],
+                'templates' => [],
+            ],
+            'elementor_query_ids' => [],
+            'seo'               => [
+                'mappings' => [],
+            ],
+            'seo_mappings'      => [],
+            'schema_mappings'   => [],
+        ];
+
+        /**
+         * Filter the baseline blueprint used when resetting content definitions.
+         *
+         * @param array<string, mixed> $baseline
+         */
+        return apply_filters('gm2/presets/baseline_blueprint', $baseline);
     }
 }
