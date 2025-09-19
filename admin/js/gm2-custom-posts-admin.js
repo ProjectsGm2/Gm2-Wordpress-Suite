@@ -4,17 +4,59 @@ jQuery(function($){
     var flexTypes = [];
     var restMetaHelp = gm2CPTFields.restMetaHelp || '';
     var restMetaShowHelp = gm2CPTFields.restMetaShowHelp || restMetaHelp;
+    var textDomain = gm2CPTFields.textDomain || 'gm2-wordpress-suite';
+    var __ = (window.wp && wp.i18n && typeof wp.i18n.__ === 'function') ? wp.i18n.__ : function(text){ return text; };
+    var strings = gm2CPTFields.strings || {};
+    var fieldTypeLabels = gm2CPTFields.fieldTypeLabels || {};
+    var rewriteLabels = gm2CPTFields.rewriteLabels || {};
+    var rewriteOptions = gm2CPTFields.rewriteOptions || {};
+    var supportLabels = gm2CPTFields.supportLabels || {};
+
+    function t(key, fallback){
+        if(strings[key]){
+            return strings[key];
+        }
+        return __(fallback, textDomain);
+    }
+
+    function getFieldTypeLabel(type, fallback){
+        if(fieldTypeLabels[type]){
+            return fieldTypeLabels[type];
+        }
+        return __(fallback, textDomain);
+    }
+
+    function getRewriteLabel(key, fallback){
+        if(rewriteLabels[key]){
+            return rewriteLabels[key];
+        }
+        return __(fallback, textDomain);
+    }
+
+    function getRewriteOptionLabel(key, fallback){
+        if(rewriteOptions[key]){
+            return rewriteOptions[key];
+        }
+        return __(fallback, textDomain);
+    }
+
+    function getSupportLabel(key, fallback){
+        if(supportLabels[key]){
+            return supportLabels[key];
+        }
+        return __(fallback, textDomain);
+    }
 
     // Ensure various field types are available in the selector.
     var typeSelect = $('#gm2-field-type');
     var opts = [
-        {val:'textarea', label:'Textarea'},
-        {val:'toggle',   label:'Toggle'},
-        {val:'file',     label:'File'},
-        {val:'audio',    label:'Audio'},
-        {val:'video',    label:'Video'},
-        {val:'gallery',  label:'Gallery'},
-        {val:'relationship', label:'Relationship'}
+        {val:'textarea', label:getFieldTypeLabel('textarea', 'Textarea')},
+        {val:'toggle',   label:getFieldTypeLabel('toggle', 'Toggle')},
+        {val:'file',     label:getFieldTypeLabel('file', 'File')},
+        {val:'audio',    label:getFieldTypeLabel('audio', 'Audio')},
+        {val:'video',    label:getFieldTypeLabel('video', 'Video')},
+        {val:'gallery',  label:getFieldTypeLabel('gallery', 'Gallery')},
+        {val:'relationship', label:getFieldTypeLabel('relationship', 'Relationship')}
     ];
     $.each(opts, function(i, o){
         if(!typeSelect.find('option[value="'+o.val+'"]').length){
@@ -23,11 +65,12 @@ jQuery(function($){
     });
 
     function esc(str){ return $('<div>').text(str).html(); }
+    function escAttr(str){ return $('<div>').text(str).html().replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
 
     function renderFields(){
         var tbody = $('#gm2-fields-table tbody').empty();
         if(!fields.length){
-            tbody.append('<tr><td colspan="6">'+esc(gm2CPTFields.noFields || 'No fields')+'</td></tr>');
+            tbody.append('<tr><td colspan="6">'+esc(t('noFields', 'No fields'))+'</td></tr>');
             return;
         }
         $.each(fields, function(i, f){
@@ -37,7 +80,7 @@ jQuery(function($){
 <td>'+esc(f.type)+'</td>\
 <td>'+esc(f.default || '')+'</td>\
 <td>'+esc(f.description || '')+'</td>\
-<td><button class="button gm2-edit-field" data-index="'+i+'">Edit</button> <button class="button gm2-delete-field" data-index="'+i+'">Delete</button></td>\
+<td><button class="button gm2-edit-field" data-index="'+i+'">'+esc(t('edit', 'Edit'))+'</button> <button class="button gm2-delete-field" data-index="'+i+'">'+esc(t('delete', 'Delete'))+'</button></td>\
 </tr>');
             tbody.append(row);
         });
@@ -46,7 +89,7 @@ jQuery(function($){
     function renderArgs(){
         var tbody = $('#gm2-args-table tbody').empty();
         if(!args.length){
-            tbody.append('<tr><td colspan="3">'+esc(gm2CPTFields.noArgs || 'No arguments')+'</td></tr>');
+            tbody.append('<tr><td colspan="3">'+esc(t('noArgs', 'No arguments'))+'</td></tr>');
             return;
         }
         $.each(args, function(i, a){
@@ -54,16 +97,16 @@ jQuery(function($){
             if($.isArray(val)){
                 val = val.join(', ');
             } else if(val === true){
-                val = 'true';
+                val = t('booleanTrue', 'True');
             } else if(val === false){
-                val = 'false';
+                val = t('booleanFalse', 'False');
             } else if(typeof val === 'object'){
                 val = JSON.stringify(val);
             }
             var row = $('<tr>\
 <td>'+esc(a.key)+'</td>\
 <td>'+esc(val)+'</td>\
-<td><button class="button gm2-edit-arg" data-index="'+i+'">Edit</button> <button class="button gm2-delete-arg" data-index="'+i+'">Delete</button></td>\
+<td><button class="button gm2-edit-arg" data-index="'+i+'">'+esc(t('edit', 'Edit'))+'</button> <button class="button gm2-delete-arg" data-index="'+i+'">'+esc(t('delete', 'Delete'))+'</button></td>\
 </tr>');
             tbody.append(row);
         });
@@ -72,13 +115,13 @@ jQuery(function($){
     function renderFlexTypes(){
         var wrap = $('#gm2-flexible-types').empty();
         if(!flexTypes.length){
-            wrap.append('<p>'+esc(gm2CPTFields.noFlex || 'No row types')+'</p>');
+            wrap.append('<p>'+esc(t('noFlex', 'No row types'))+'</p>');
             return;
         }
         $.each(flexTypes, function(i, ft){
             var row = $('<div class="gm2-flex-type" data-index="'+i+'">\
-<input type="text" class="gm2-flex-type-name" placeholder="Slug" value="'+esc(ft.name || '')+'" /> \
-<input type="text" class="gm2-flex-type-label" placeholder="Label" value="'+esc(ft.label || '')+'" /> \
+<input type="text" class="gm2-flex-type-name" placeholder="'+escAttr(t('flexNamePlaceholder', 'Slug'))+'" value="'+escAttr(ft.name || '')+'" /> \
+<input type="text" class="gm2-flex-type-label" placeholder="'+escAttr(t('flexLabelPlaceholder', 'Label'))+'" value="'+escAttr(ft.label || '')+'" /> \
 <button type="button" class="button gm2-flex-type-up">&#8593;</button> \
 <button type="button" class="button gm2-flex-type-down">&#8595;</button> \
 <button type="button" class="button gm2-flex-type-remove">&times;</button></div>');
@@ -141,7 +184,7 @@ jQuery(function($){
                 locData.push(cg);
             });
         }
-        gm2Conditions.init($('#gm2-field-location'), { targets: locTargets, data: locData, addGroupText: 'Add Location Group', addConditionText: 'Add Rule' });
+        gm2Conditions.init($('#gm2-field-location'), { targets: locTargets, data: locData, addGroupText: t('addLocationGroup', 'Add Location Group'), addConditionText: t('addRule', 'Add Rule') });
         toggleFieldOptions($('#gm2-field-type').val());
         $('#gm2-field-form').show();
     }
@@ -160,18 +203,20 @@ jQuery(function($){
             var opts = ['title','editor','excerpt','author','thumbnail','page-attributes','custom-fields','revisions'];
             $.each(opts, function(i, sup){
                 var id = 'gm2-support-'+sup;
-                var chk = $('<label><input type="checkbox" class="gm2-support-item" value="'+sup+'" id="'+id+'"/> '+sup.replace('-', ' ')+'</label><br/>');
+                var label = getSupportLabel(sup, sup.replace('-', ' '));
+                var chk = '<label><input type="checkbox" class="gm2-support-item" value="'+escAttr(sup)+'" id="'+escAttr(id)+'"/> '+esc(label)+'</label><br/>';
                 wrap.append(chk);
             });
             if($.isArray(value)){
                 $.each(value, function(i,v){ wrap.find('input[value="'+v+'"]').prop('checked', true); });
             }
         }else if(key === 'rewrite'){
-            var html = '<p><label>Slug<br/><input type="text" id="gm2-rewrite-slug" class="regular-text" /></label></p>';
+            var html = '<p><label>'+esc(getRewriteLabel('slug', 'Slug'))+'<br/><input type="text" id="gm2-rewrite-slug" class="regular-text" /></label></p>';
             $.each(['with_front','hierarchical','feeds','pages'], function(i, opt){
-                html += '<label><input type="checkbox" class="gm2-rewrite-flag" id="gm2-rewrite-'+opt+'" value="1"/> '+opt.replace('_',' ')+'</label><br/>';
+                var optId = 'gm2-rewrite-'+opt;
+                html += '<label><input type="checkbox" class="gm2-rewrite-flag" id="'+escAttr(optId)+'" value="1"/> '+esc(getRewriteOptionLabel(opt, opt.replace('_',' ')))+'</label><br/>';
             });
-            html += '<p><label>ep_mask<br/><input type="text" id="gm2-rewrite-ep_mask" class="regular-text" /></label></p>';
+            html += '<p><label>'+esc(getRewriteLabel('ep_mask', 'EP Mask'))+'<br/><input type="text" id="gm2-rewrite-ep_mask" class="regular-text" /></label></p>';
             wrap.append(html);
             if(value && typeof value === 'object'){
                 $('#gm2-rewrite-slug').val(value.slug || '');
@@ -248,7 +293,7 @@ jQuery(function($){
                 renderArgs();
                 if(cb) cb(true);
             }else{
-                alert('Error saving');
+                alert(t('errorSaving', 'Error saving'));
                 if(cb) cb(false);
             }
         });
