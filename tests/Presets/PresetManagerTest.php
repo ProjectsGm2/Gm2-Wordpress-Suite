@@ -71,4 +71,48 @@ class PresetManagerTest extends WP_UnitTestCase {
         $this->assertArrayHasKey('broken', $errors);
         $this->assertInstanceOf(WP_Error::class, $errors['broken']);
     }
+
+    public function test_restore_defaults_clears_existing_definitions(): void {
+        update_option('gm2_custom_posts_config', [
+            'post_types' => [ 'example' => [] ],
+            'taxonomies' => [ 'genre' => [] ],
+        ]);
+        update_option('gm2_field_groups', [ 'group' => [ 'title' => 'Group', 'fields' => [] ] ]);
+        update_option('gm2_cp_schema_map', [ 'map' => [ 'type' => 'Thing' ] ]);
+        update_option('gm2_model_blueprint_meta', [
+            'relationships' => [ [ 'from' => 'example', 'to' => 'genre', 'type' => 'taxonomy' ] ],
+            'templates'     => [ 'example' => [] ],
+            'elementor'     => [
+                'queries'   => [ 'sample' => [ 'id' => 'sample' ] ],
+                'templates' => [ 'sample' => [] ],
+            ],
+        ]);
+
+        $manager = new PresetManager(GM2_PLUGIN_DIR . 'presets', GM2_PLUGIN_DIR . 'presets/schema.json');
+        $result  = $manager->restoreDefaults();
+
+        $this->assertTrue($result === true);
+
+        $config = get_option('gm2_custom_posts_config');
+        $this->assertIsArray($config);
+        $this->assertSame([], $config['post_types'] ?? []);
+        $this->assertSame([], $config['taxonomies'] ?? []);
+
+        $this->assertSame([], get_option('gm2_field_groups'));
+        $this->assertSame([], get_option('gm2_cp_schema_map'));
+
+        $meta = get_option('gm2_model_blueprint_meta');
+        $this->assertIsArray($meta);
+        $this->assertSame([], $meta['relationships'] ?? []);
+        $this->assertSame([], $meta['templates'] ?? []);
+        $elementor = $meta['elementor'] ?? [];
+        $this->assertIsArray($elementor);
+        $this->assertSame([], $elementor['queries'] ?? []);
+        $this->assertSame([], $elementor['templates'] ?? []);
+
+        delete_option('gm2_custom_posts_config');
+        delete_option('gm2_field_groups');
+        delete_option('gm2_cp_schema_map');
+        delete_option('gm2_model_blueprint_meta');
+    }
 }

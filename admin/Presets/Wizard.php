@@ -48,6 +48,7 @@ class Wizard
         add_action('admin_enqueue_scripts', [$this, 'enqueueAssets']);
         add_action('wp_ajax_gm2_presets_apply', [$this, 'ajaxApply']);
         add_action('wp_ajax_gm2_presets_import_elementor', [$this, 'ajaxImportElementor']);
+        add_action('wp_ajax_gm2_presets_reset', [$this, 'ajaxReset']);
     }
 
     public function enqueueAssets(string $hook): void
@@ -78,6 +79,7 @@ class Wizard
             'ajaxUrl'         => admin_url('admin-ajax.php'),
             'applyNonce'      => wp_create_nonce('gm2_presets_apply'),
             'importNonce'     => wp_create_nonce('gm2_presets_import_elementor'),
+            'resetNonce'      => wp_create_nonce('gm2_presets_reset'),
             'locked'          => $this->isModelLocked(),
             'hasExisting'     => $this->hasExistingDefinitions(),
             'capable'         => $this->canManage(),
@@ -109,6 +111,10 @@ class Wizard
                 'elementorInactive'     => __('Elementor must be active to import templates.', 'gm2-wordpress-suite'),
                 'noPresets'             => __('No presets are currently available.', 'gm2-wordpress-suite'),
                 'templateUnavailable'   => __('Template bundle is not included with this preset.', 'gm2-wordpress-suite'),
+                'resetDefaults'         => __('Reset to defaults', 'gm2-wordpress-suite'),
+                'resetConfirm'          => __('This will remove all saved content definitions. Continue?', 'gm2-wordpress-suite'),
+                'resetSuccess'          => __('Content definitions restored to defaults.', 'gm2-wordpress-suite'),
+                'resetError'            => __('Failed to reset content definitions.', 'gm2-wordpress-suite'),
             ],
         ]);
     }
@@ -158,6 +164,44 @@ class Wizard
 
         wp_send_json_success([
             'message' => __('Preset applied.', 'gm2-wordpress-suite'),
+        ]);
+    }
+
+    public function ajaxReset(): void
+    {
+        if (!$this->canManage()) {
+            wp_send_json_error([
+                'code'    => 'permission',
+                'message' => __('You do not have permission to manage presets.', 'gm2-wordpress-suite'),
+            ]);
+        }
+
+        $nonce = $_POST['nonce'] ?? '';
+        if (!wp_verify_nonce($nonce, 'gm2_presets_reset')) {
+            wp_send_json_error([
+                'code'    => 'nonce',
+                'message' => __('Security check failed. Please refresh and try again.', 'gm2-wordpress-suite'),
+            ]);
+        }
+
+        $manager = $this->getManager();
+        if ($manager === null) {
+            wp_send_json_error([
+                'code'    => 'manager_missing',
+                'message' => __('Preset manager is unavailable.', 'gm2-wordpress-suite'),
+            ]);
+        }
+
+        $result = $manager->restoreDefaults();
+        if (is_wp_error($result)) {
+            wp_send_json_error([
+                'code'    => $result->get_error_code(),
+                'message' => $result->get_error_message(),
+            ]);
+        }
+
+        wp_send_json_success([
+            'message' => __('Content definitions restored to defaults.', 'gm2-wordpress-suite'),
         ]);
     }
 

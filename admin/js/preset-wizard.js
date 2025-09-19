@@ -195,6 +195,7 @@
         const [isApplying, setIsApplying] = useState(false);
         const [confirmVisible, setConfirmVisible] = useState(false);
         const [needsConfirmation, setNeedsConfirmation] = useState(Boolean(wizardData.hasExisting));
+        const [isResetting, setIsResetting] = useState(false);
 
         const selectedPreset = useMemo(
             () => presets.find((preset) => preset.slug === selectedSlug) || null,
@@ -216,7 +217,8 @@
             [templateSelection]
         );
 
-        const applyDisabled = !wizardData.capable || wizardData.locked || !selectedPreset || isApplying;
+        const applyDisabled = !wizardData.capable || wizardData.locked || !selectedPreset || isApplying || isResetting;
+        const resetDisabled = !wizardData.capable || wizardData.locked || isApplying || isResetting;
 
         const handleToggleTemplate = (key, checked) => {
             setTemplateSelection((prev) => ({
@@ -309,6 +311,61 @@
             }
         };
 
+        const handleReset = async () => {
+            if (!wizardData.capable || wizardData.locked || isResetting) {
+                return;
+            }
+
+            const confirmMessage =
+                strings.resetConfirm ||
+                __(
+                    'This will remove existing custom post types, taxonomies, field groups, and schema mappings. Continue?',
+                    'gm2-wordpress-suite'
+                );
+
+            if (!window.confirm(confirmMessage)) {
+                return;
+            }
+
+            setIsResetting(true);
+            setNotice(null);
+
+            try {
+                const resetResponse = await sendRequest('gm2_presets_reset', {
+                    nonce: wizardData.resetNonce,
+                });
+
+                if (!resetResponse || !resetResponse.success) {
+                    const data = resetResponse && resetResponse.data ? resetResponse.data : {};
+                    setNotice({
+                        status: 'error',
+                        text:
+                            data.message ||
+                            strings.resetError ||
+                            __('Failed to reset content definitions.', 'gm2-wordpress-suite'),
+                    });
+                    return;
+                }
+
+                setConfirmVisible(false);
+                setNeedsConfirmation(false);
+                setNotice({
+                    status: 'success',
+                    text:
+                        (resetResponse.data && resetResponse.data.message) ||
+                        strings.resetSuccess ||
+                        __('Content definitions restored to defaults.', 'gm2-wordpress-suite'),
+                });
+            } catch (error) {
+                setNotice({
+                    status: 'error',
+                    text: strings.resetError || __('Failed to reset content definitions.', 'gm2-wordpress-suite'),
+                });
+            } finally {
+                setIsResetting(false);
+            }
+        };
+
         const noticeElement = notice
             ? el(
                   Notice,
@@ -386,25 +443,45 @@
                     onToggle: handleToggleTemplate,
                 })
             );
+        }
 
-            bodyChildren.push(
+        const actionButtons = [];
+
+        if (presets.length) {
+            actionButtons.push(
                 el(
-                    'div',
-                    { key: 'actions', className: 'gm2-preset-wizard-actions' },
-                    el(
-                        Button,
-                        {
-                            variant: 'primary',
-                            onClick: () => handleApply(false),
-                            disabled: applyDisabled,
-                        },
-                        isApplying
-                            ? el(Spinner, { key: 'spinner', className: 'gm2-preset-wizard-spinner' })
-                            : strings.applyPreset || __('Apply preset', 'gm2-wordpress-suite')
-                    )
+                    Button,
+                    {
+                        key: 'apply',
+                        variant: 'primary',
+                        onClick: () => handleApply(false),
+                        disabled: applyDisabled,
+                    },
+                    isApplying
+                        ? el(Spinner, { key: 'spinner', className: 'gm2-preset-wizard-spinner' })
+                        : strings.applyPreset || __('Apply preset', 'gm2-wordpress-suite')
                 )
             );
         }
+
+        actionButtons.push(
+            el(
+                Button,
+                {
+                    key: 'reset',
+                    variant: 'secondary',
+                    onClick: handleReset,
+                    disabled: resetDisabled,
+                },
+                isResetting
+                    ? el(Spinner, { key: 'spinner', className: 'gm2-preset-wizard-spinner' })
+                    : strings.resetDefaults || __('Reset to defaults', 'gm2-wordpress-suite')
+            )
+        );
+
+        bodyChildren.push(
+            el('div', { key: 'actions', className: 'gm2-preset-wizard-actions' }, actionButtons)
+        );
 
         return el(
             'div',
