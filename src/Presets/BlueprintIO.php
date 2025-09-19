@@ -13,6 +13,8 @@ use function is_array;
 use function is_string;
 use function json_decode;
 use function sanitize_key;
+use function sanitize_text_field;
+use function sanitize_textarea_field;
 use function update_option;
 use function wp_json_encode;
 use function is_wp_error;
@@ -65,8 +67,13 @@ class BlueprintIO
             }
         }
 
+        $relationshipMap = self::getRelationshipMap();
+        $relationships = array_values($relationshipMap);
+
         $meta = self::getMeta();
-        $relationships = array_values(array_map([self::class, 'deepConvert'], $meta['relationships'] ?? []));
+        if (!$relationships) {
+            $relationships = array_values(array_map([self::class, 'deepConvert'], $meta['relationships'] ?? []));
+        }
         $templates = self::deepConvert($meta['templates'] ?? []);
         $elementorMeta      = self::normalizeElementor($meta['elementor'] ?? []);
         $elementorQueries   = self::convertElementorQueriesToList($elementorMeta['queries'] ?? []);
@@ -140,9 +147,13 @@ class BlueprintIO
         $postTypes = is_array($data['post_types'] ?? null) ? $data['post_types'] : [];
         $taxonomies = is_array($data['taxonomies'] ?? null) ? $data['taxonomies'] : [];
 
+        $relationships = is_array($data['relationships'] ?? null) ? $data['relationships'] : [];
+        $relationshipMap = self::convertRelationshipsToOptionMap($relationships);
+
         $config = self::getOptionArray(self::OPTION_CONFIG);
         $config['post_types'] = $postTypes;
         $config['taxonomies'] = $taxonomies;
+        $config['relationships'] = $relationshipMap;
         update_option(self::OPTION_CONFIG, $config);
 
         $fieldGroups = self::prepareFieldGroupsForStorage($data);
@@ -152,7 +163,7 @@ class BlueprintIO
         update_option(self::OPTION_SCHEMA_MAP, $schemaMappings);
 
         $meta = self::getMeta();
-        $meta['relationships'] = array_values(array_map([self::class, 'deepConvert'], $data['relationships'] ?? []));
+        $meta['relationships'] = array_values($relationshipMap);
         $meta['templates'] = self::deepConvert($data['templates'] ?? []);
         $elementorBlueprint = [
             'queries'   => self::resolveElementorQueriesFromData($data),
@@ -435,6 +446,119 @@ class BlueprintIO
             ];
         }
         return $result;
+    }
+
+    /**
+     * Retrieve relationships stored in the config as a normalized map.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    private static function getRelationshipMap(): array
+    {
+        $config = self::getOptionArray(self::OPTION_CONFIG);
+        $relationships = $config['relationships'] ?? [];
+        if (!is_array($relationships)) {
+            return [];
+        }
+
+        $map = [];
+        foreach ($relationships as $key => $relationship) {
+            if (!is_array($relationship)) {
+                continue;
+            }
+            if (!isset($relationship['type']) && is_string($key)) {
+                $relationship['type'] = $key;
+            }
+            $definition = self::sanitizeRelationshipDefinition($relationship);
+            if ($definition === null) {
+                continue;
+            }
+            $map[$definition['type']] = $definition;
+        }
+
+        return $map;
+    }
+
+    /**
+     * Convert relationship definitions from blueprint data to the option map format.
+     *
+     * @param array<int|string, mixed> $relationships
+     * @return array<string, array<string, mixed>>
+     */
+    private static function convertRelationshipsToOptionMap(array $relationships): array
+    {
+        $map = [];
+        foreach ($relationships as $key => $relationship) {
+            if (!is_array($relationship)) {
+                continue;
+            }
+            if (!isset($relationship['type']) && is_string($key)) {
+                $relationship['type'] = $key;
+            }
+            $definition = self::sanitizeRelationshipDefinition($relationship);
+            if ($definition === null) {
+                continue;
+            }
+            $map[$definition['type']] = $definition;
+        }
+
+        return $map;
+    }
+
+    /**
+     * Sanitize a relationship definition.
+     */
+    private static function sanitizeRelationshipDefinition(array $relationship): ?array
+    {
+        $type = sanitize_key($relationship['type'] ?? $relationship['key'] ?? '');
+        $from = sanitize_key($relationship['from'] ?? '');
+        $to   = sanitize_key($relationship['to'] ?? '');
+        if ($type === '' || $from === '' || $to === '') {
+            return null;
+        }
+
+        $definition = [
+            'type' => $type,
+            'from' => $from,
+            'to'   => $to,
+        ];
+
+        if (!empty($relationship['direction'])) {
+            $direction = sanitize_key($relationship['direction']);
+            if ($direction !== '') {
+                $definition['direction'] = $direction;
+            }
+        }
+
+        if (isset($relationship['label'])) {
+            $label = sanitize_text_field($relationship['label']);
+            if ($label !== '') {
+                $definition['label'] = $label;
+            }
+        }
+
+        if (isset($relationship['reverse_label'])) {
+            $reverse = sanitize_text_field($relationship['reverse_label']);
+            if ($reverse !== '') {
+                $definition['reverse_label'] = $reverse;
+            }
+        }
+
+        if (isset($relationship['cardinality'])) {
+            $cardinality = sanitize_text_field($relationship['cardinality']);
+            if ($cardinality !== '') {
+                $definition['cardinality'] = $cardinality;
+            }
+        }
+
+        if (isset($relationship['description'])) {
+            $description = sanitize_textarea_field($relationship['description']);
+            if ($description !== '') {
+                $definition['description'] = $description;
+            }
+        }
+
+        return $definition;
     }
 
     /**

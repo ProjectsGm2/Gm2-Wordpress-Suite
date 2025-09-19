@@ -561,6 +561,9 @@ class PresetManager
         if (!empty($config['post_types']) || !empty($config['taxonomies'])) {
             return true;
         }
+        if (!empty($config['relationships'])) {
+            return true;
+        }
 
         $fieldGroups = get_option('gm2_field_groups', []);
         if (is_array($fieldGroups) && !empty($fieldGroups)) {

@@ -113,7 +113,18 @@ class BlueprintIOTest extends WP_UnitTestCase {
         $result = \gm2_model_import($export, 'array');
         $this->assertTrue($result);
 
-        $this->assertEquals($config, get_option('gm2_custom_posts_config'));
+        $importedConfig = get_option('gm2_custom_posts_config');
+        $this->assertEquals($config['post_types'], $importedConfig['post_types']);
+        $this->assertEquals($config['taxonomies'], $importedConfig['taxonomies']);
+        $expectedRelationships = [
+            'taxonomy' => [
+                'type' => 'taxonomy',
+                'from' => 'book',
+                'to'   => 'genre',
+            ],
+        ];
+        $this->assertEquals($expectedRelationships, $importedConfig['relationships']);
+
         $this->assertEquals($field_groups, get_option('gm2_field_groups'));
         $this->assertEquals($schema_map, get_option('gm2_cp_schema_map'));
         $this->assertEquals($meta, get_option('gm2_model_blueprint_meta'));
