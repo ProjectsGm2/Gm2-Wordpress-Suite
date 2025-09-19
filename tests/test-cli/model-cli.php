@@ -59,6 +59,20 @@ if ( ! empty( $models[0]['fields'] ) ) {
     throw new Exception( 'Field delete failed.' );
 }
 
+ob_start();
+$cli->cpt_list( [], [] );
+$cpt_list_output = ob_get_clean();
+if ( strpos( $cpt_list_output, 'book' ) === false ) {
+    throw new Exception( 'CPT list did not include expected slug.' );
+}
+
+ob_start();
+$cli->taxonomy_list( [], [] );
+$tax_list_output = ob_get_clean();
+if ( strpos( $tax_list_output, 'genre' ) === false ) {
+    throw new Exception( 'Taxonomy list did not include expected slug.' );
+}
+
 // Seeding tests.
 $GLOBALS['gm2_seeded_posts'] = [];
 $GLOBALS['gm2_seeded_terms'] = [];
