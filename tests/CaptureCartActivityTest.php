@@ -36,7 +36,7 @@ namespace Gm2 {
 }
 
 namespace {
-use PHPUnit\Framework\TestCase;
+use Tests\Phpunit\BrainMonkeyTestCase;
 
 if (!defined('ABSPATH')) {
     define('ABSPATH', __DIR__ . '/../');
@@ -99,7 +99,7 @@ if (!function_exists('wc_get_product')) {
     function wc_get_product($id) { return new FakeProduct($id); }
 }
 
-class FakeDB {
+class CaptureCartFakeDB {
     public $prefix = 'wp_';
     public $data = [];
     public $insert_id = 0;
@@ -134,10 +134,11 @@ class FakeDB {
 
 require_once __DIR__.'/../includes/Gm2_Abandoned_Carts.php';
 
-final class CaptureCartActivityTest extends TestCase {
+final class CaptureCartActivityTest extends BrainMonkeyTestCase {
     private $ac; private $db; private $cart;
     protected function setUp(): void {
-        $this->db = new FakeDB();
+        parent::setUp();
+        $this->db = new CaptureCartFakeDB();
         $GLOBALS['wpdb'] = $this->db;
         $this->cart = new WC_Cart([
             [ 'product_id'=>1, 'quantity'=>1, 'data'=>new FakeProduct(1) ],

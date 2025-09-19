@@ -1,31 +1,54 @@
 <?php
 namespace Gm2 {
-    function check_ajax_referer($action, $query_arg = false, $die = true) { return true; }
-    function wp_send_json_success($data = null) { $GLOBALS['gm2_ajax_data'] = ['success'=>true,'data'=>$data]; return $GLOBALS['gm2_ajax_data']; }
-    function wp_send_json_error($data = null) { $GLOBALS['gm2_ajax_data'] = ['success'=>false,'data'=>$data]; return $GLOBALS['gm2_ajax_data']; }
-    function current_user_can($cap = '') { return true; }
-    function sanitize_text_field($str) { return $str; }
-    function wp_unslash($v) { return $v; }
-    function absint($v) { return abs((int)$v); }
-    function mysql2date($f, $d) { return $d; }
-    function get_option($n) { return 'Y-m-d H:i:s'; }
-    function add_action($hook, $callback, $priority = 10, $args = 1) {}
+    if (!function_exists(__NAMESPACE__ . '\\check_ajax_referer')) {
+        function check_ajax_referer($action, $query_arg = false, $die = true) { return true; }
+    }
+    if (!function_exists(__NAMESPACE__ . '\\wp_send_json_success')) {
+        function wp_send_json_success($data = null) { $GLOBALS['gm2_ajax_data'] = ['success'=>true,'data'=>$data]; return $GLOBALS['gm2_ajax_data']; }
+    }
+    if (!function_exists(__NAMESPACE__ . '\\wp_send_json_error')) {
+        function wp_send_json_error($data = null) { $GLOBALS['gm2_ajax_data'] = ['success'=>false,'data'=>$data]; return $GLOBALS['gm2_ajax_data']; }
+    }
+    if (!function_exists(__NAMESPACE__ . '\\current_user_can')) {
+        function current_user_can($cap = '') { return true; }
+    }
+    if (!function_exists(__NAMESPACE__ . '\\sanitize_text_field')) {
+        function sanitize_text_field($str) { return $str; }
+    }
+    if (!function_exists(__NAMESPACE__ . '\\wp_unslash')) {
+        function wp_unslash($v) { return $v; }
+    }
+    if (!function_exists(__NAMESPACE__ . '\\absint')) {
+        function absint($v) { return abs((int)$v); }
+    }
+    if (!function_exists(__NAMESPACE__ . '\\mysql2date')) {
+        function mysql2date($f, $d) { return $d; }
+    }
+    if (!function_exists(__NAMESPACE__ . '\\get_option')) {
+        function get_option($n) { return 'Y-m-d H:i:s'; }
+    }
+    if (!function_exists(__NAMESPACE__ . '\\add_action')) {
+        function add_action($hook, $callback, $priority = 10, $args = 1) {}
+    }
 }
 
 namespace {
+    use Tests\Phpunit\BrainMonkeyTestCase;
+
     if (!defined('ABSPATH')) { define('ABSPATH', __DIR__ . '/../'); }
     require_once __DIR__ . '/../includes/Gm2_Abandoned_Carts.php';
-    use PHPUnit\Framework\TestCase;
 
-    class ActivityLogPagingTest extends TestCase {
+    class ActivityLogPagingTest extends BrainMonkeyTestCase {
         private $orig_wpdb;
         protected function setUp(): void {
+            parent::setUp();
             $this->orig_wpdb = $GLOBALS['wpdb'] ?? null;
-            $GLOBALS['wpdb'] = new FakeDB();
+            $GLOBALS['wpdb'] = new ActivityLogFakeDB();
             $GLOBALS['gm2_ajax_data'] = null;
         }
         protected function tearDown(): void {
             $GLOBALS['wpdb'] = $this->orig_wpdb;
+            parent::tearDown();
         }
         public function test_returns_paged_activity_and_visits() {
             global $wpdb;
@@ -83,7 +106,7 @@ namespace {
         }
     }
 
-    class FakeDB {
+    class ActivityLogFakeDB {
         public $prefix = 'wp_';
         public $data = [];
         private $last_sql;

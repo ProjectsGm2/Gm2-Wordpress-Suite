@@ -6,7 +6,8 @@ namespace Gm2 {
     }
 }
 namespace {
-use PHPUnit\Framework\TestCase;
+use Tests\Phpunit\BrainMonkeyTestCase;
+
 if (!defined('ABSPATH')) {
     define('ABSPATH', __DIR__ . '/../');
 }
@@ -57,7 +58,7 @@ class SummaryDB {
         return [];
     }
 }
-final class AbandonedCartSummaryTest extends TestCase {
+final class AbandonedCartSummaryTest extends BrainMonkeyTestCase {
     public function test_summary_calculations(){
         $db = new SummaryDB();
         $GLOBALS['wpdb'] = $db;
