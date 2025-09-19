@@ -1507,7 +1507,7 @@ class Gm2_Custom_Posts_Admin {
             wp_enqueue_script(
                 'gm2-custom-posts-admin',
                 GM2_PLUGIN_URL . 'admin/js/gm2-custom-posts-admin.js',
-                [ 'jquery', 'gm2-conditions' ],
+                [ 'jquery', 'gm2-conditions', 'wp-i18n' ],
                 file_exists($admin_js) ? filemtime($admin_js) : GM2_VERSION,
                 true
             );
@@ -1550,13 +1550,57 @@ class Gm2_Custom_Posts_Admin {
                 ];
             }
             wp_localize_script('gm2-custom-posts-admin', 'gm2CPTFields', [
-                'nonce'           => wp_create_nonce('gm2_save_cpt_fields'),
-                'ajax'            => admin_url('admin-ajax.php'),
-                'slug'            => $slug,
-                'fields'          => $fields,
-                'args'            => $args,
-                'restMetaHelp'    => __( 'Fields exposed through the REST API must belong to post types or taxonomies registered with "Show in REST" enabled.', 'gm2-wordpress-suite' ),
+                'nonce'            => wp_create_nonce('gm2_save_cpt_fields'),
+                'ajax'             => admin_url('admin-ajax.php'),
+                'slug'             => $slug,
+                'fields'           => $fields,
+                'args'             => $args,
+                'restMetaHelp'     => __( 'Fields exposed through the REST API must belong to post types or taxonomies registered with "Show in REST" enabled.', 'gm2-wordpress-suite' ),
                 'restMetaShowHelp' => __( 'Enable "Show in REST" so any fields flagged for REST exposure are included in API responses.', 'gm2-wordpress-suite' ),
+                'textDomain'       => 'gm2-wordpress-suite',
+                'strings'          => [
+                    'noFields'             => __( 'No fields', 'gm2-wordpress-suite' ),
+                    'noArgs'               => __( 'No arguments', 'gm2-wordpress-suite' ),
+                    'noFlex'               => __( 'No row types', 'gm2-wordpress-suite' ),
+                    'edit'                 => __( 'Edit', 'gm2-wordpress-suite' ),
+                    'delete'               => __( 'Delete', 'gm2-wordpress-suite' ),
+                    'errorSaving'          => __( 'Error saving', 'gm2-wordpress-suite' ),
+                    'addLocationGroup'     => __( 'Add Location Group', 'gm2-wordpress-suite' ),
+                    'addRule'              => __( 'Add Rule', 'gm2-wordpress-suite' ),
+                    'booleanTrue'          => __( 'True', 'gm2-wordpress-suite' ),
+                    'booleanFalse'         => __( 'False', 'gm2-wordpress-suite' ),
+                    'flexNamePlaceholder'  => __( 'Slug', 'gm2-wordpress-suite' ),
+                    'flexLabelPlaceholder' => __( 'Label', 'gm2-wordpress-suite' ),
+                ],
+                'fieldTypeLabels'  => [
+                    'textarea'     => __( 'Textarea', 'gm2-wordpress-suite' ),
+                    'toggle'       => __( 'Toggle', 'gm2-wordpress-suite' ),
+                    'file'         => __( 'File', 'gm2-wordpress-suite' ),
+                    'audio'        => __( 'Audio', 'gm2-wordpress-suite' ),
+                    'video'        => __( 'Video', 'gm2-wordpress-suite' ),
+                    'gallery'      => __( 'Gallery', 'gm2-wordpress-suite' ),
+                    'relationship' => __( 'Relationship', 'gm2-wordpress-suite' ),
+                ],
+                'rewriteLabels'    => [
+                    'slug'    => __( 'Slug', 'gm2-wordpress-suite' ),
+                    'ep_mask' => __( 'EP Mask', 'gm2-wordpress-suite' ),
+                ],
+                'rewriteOptions'   => [
+                    'with_front'   => __( 'With Front', 'gm2-wordpress-suite' ),
+                    'hierarchical' => __( 'Hierarchical', 'gm2-wordpress-suite' ),
+                    'feeds'        => __( 'Feeds', 'gm2-wordpress-suite' ),
+                    'pages'        => __( 'Pages', 'gm2-wordpress-suite' ),
+                ],
+                'supportLabels'    => [
+                    'title'           => __( 'Title', 'gm2-wordpress-suite' ),
+                    'editor'          => __( 'Editor', 'gm2-wordpress-suite' ),
+                    'excerpt'         => __( 'Excerpt', 'gm2-wordpress-suite' ),
+                    'author'          => __( 'Author', 'gm2-wordpress-suite' ),
+                    'thumbnail'       => __( 'Thumbnail', 'gm2-wordpress-suite' ),
+                    'page-attributes' => __( 'Page Attributes', 'gm2-wordpress-suite' ),
+                    'custom-fields'   => __( 'Custom Fields', 'gm2-wordpress-suite' ),
+                    'revisions'       => __( 'Revisions', 'gm2-wordpress-suite' ),
+                ],
             ]);
 
             $admin_css = GM2_PLUGIN_DIR . 'admin/css/gm2-custom-posts-admin.css';
