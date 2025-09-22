@@ -25,10 +25,25 @@
 ## Schema Mapping
 
 - **Schema Type:** `RealEstateListing`
-- **Mappings:**
-  - `price` ← `price`
-  - `address.streetAddress` ← `address`
-  - `numberOfRooms` ← `bedrooms`
+- **Source:** [`presets/real-estate/blueprint.json`](../../presets/real-estate/blueprint.json) (`seo_mappings → property`)
+
+| Schema property | GM2 field slug |
+| --- | --- |
+| `price` | `price` |
+| `priceCurrency` | `price_currency` |
+| `address.streetAddress` | `address` |
+| `address.addressLocality` | `city` |
+| `address.addressRegion` | `region` |
+| `address.postalCode` | `postal_code` |
+| `address.addressCountry` | `country` |
+| `geo.latitude` | `latitude` |
+| `geo.longitude` | `longitude` |
+| `numberOfRooms` | `bedrooms` |
+| `numberOfBathroomsTotal` | `bathrooms` |
+| `floorSize.value` | `floor_size` |
+| `floorSize.unitText` | `floor_size_unit` |
+| `identifier` | `mls_id` |
+| `yearBuilt` | `year_built` |
 
 ## Elementor Notes
 

@@ -25,10 +25,35 @@
 ## Schema Mapping
 
 - **Schema Type:** `Course`
-- **Mappings:**
-  - `provider` ← `provider`
-  - `courseCode` ← `course_code`
-  - `url` ← `course_url`
+- **Source:** [`presets/courses/blueprint.json`](../../presets/courses/blueprint.json) (`seo_mappings → course`)
+
+| Schema property | GM2 field slug |
+| --- | --- |
+| `provider.name` | `provider` |
+| `provider.alternateName` | `organization_name` |
+| `provider.department` | `department` |
+| `provider.url` | `website` |
+| `provider.email` | `contact_email` |
+| `provider.telephone` | `contact_phone` |
+| `courseCode` | `course_code` |
+| `url` | `course_url` |
+| `coursePrerequisites` | `prerequisites` |
+| `timeRequired` | `duration_iso` |
+| `courseInstance.courseMode` | `modality` |
+| `courseInstance.eventAttendanceMode` | `modality` |
+| `courseInstance.startDate` | `start_date_time` |
+| `courseInstance.endDate` | `end_date_time` |
+| `courseInstance.duration` | `duration_iso` |
+| `courseInstance.location.name` | `provider` |
+| `courseInstance.location.url` | `website` |
+| `courseInstance.location.email` | `contact_email` |
+| `courseInstance.location.telephone` | `contact_phone` |
+| `courseInstance.location.timeZone` | `start_time_zone` |
+| `courseInstance.offers.price` | `amount` |
+| `courseInstance.offers.priceCurrency` | `currency` |
+| `courseInstance.offers.url` | `course_url` |
+
+Shared fields like `modality`, `provider`, and `course_url` deliberately power both the parent `Course` object and nested `CourseInstance` data so schedule details stay in sync across schema consumers.
 
 ## Elementor Notes
 
