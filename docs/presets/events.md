@@ -26,17 +26,20 @@
 ## Schema Mapping
 
 - **Schema Type:** `Event`
-- **Mappings:**
-  - `startDate` ← `start_date`
-  - `endDate` ← `end_date`
-  - `eventStatus` ← `status`
-  - `eventAttendanceMode` ← `attendance_mode`
-  - `location.name` ← `location`
-  - `location.address.streetAddress` ← `location`
-  - `virtualLocation.url` ← `virtual_event_url`
-  - `onlineEventUrl` ← `virtual_event_url`
-  - `organizer` ← `organizer`
-  - `offers` ← `ticket_offers`
+- **Source:** [`presets/events/blueprint.json`](../../presets/events/blueprint.json) (`seo_mappings → event`)
+
+| Schema property | GM2 field slug |
+| --- | --- |
+| `startDate` | `start_date` |
+| `endDate` | `end_date` |
+| `eventStatus` | `status` |
+| `eventAttendanceMode` | `attendance_mode` |
+| `location.name` | `location` |
+| `location.address.streetAddress` | `location` |
+| `virtualLocation.url` | `virtual_event_url` |
+| `onlineEventUrl` | `virtual_event_url` |
+| `organizer` | `organizer` |
+| `offers` | `ticket_offers` |
 
 The `location` text feeds the `Place` name and street address, while linking an organizer post fills the `Organization` node. Adding rows to the `ticket_offers` repeater produces `Offer` objects with price, currency, and optional purchase URLs, and supplying a virtual event link populates a `VirtualLocation` alongside `onlineEventUrl` for all-online or hybrid sessions.
 

@@ -26,10 +26,24 @@
 ## Schema Mapping
 
 - **Schema Type:** `LocalBusiness`
-- **Mappings:**
-  - `telephone` ← `phone`
-  - `address.streetAddress` ← `address`
-  - `url` ← `website`
+- **Source:** [`presets/directory/blueprint.json`](../../presets/directory/blueprint.json) (`seo_mappings → listing`)
+
+| Schema property | GM2 field slug |
+| --- | --- |
+| `telephone` | `phone` |
+| `email` | `email` |
+| `address.streetAddress` | `address` |
+| `address.addressLocality` | `city` |
+| `address.addressRegion` | `region` |
+| `address.postalCode` | `postal_code` |
+| `address.addressCountry` | `country` |
+| `geo.latitude` | `latitude` |
+| `geo.longitude` | `longitude` |
+| `openingHoursSpecification` | `opening_hours` |
+| `sameAs` | `same_as` |
+| `priceRange` | `price_level` |
+| `image` | `logo` |
+| `url` | `website` |
 
 ## Elementor Notes
 

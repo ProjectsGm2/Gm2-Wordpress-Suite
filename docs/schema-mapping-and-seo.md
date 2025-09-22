@@ -15,13 +15,13 @@ Presets provide a quick starting point for popular verticals while still allowin
 
 ### Preset property reference
 
-| Preset | Key properties pre-filled |
-| --- | --- |
-| LocalBusiness | `name`, `image`, `address`, `geo`, `telephone`, `openingHoursSpecification`, `url`, `sameAs`, `priceRange` |
-| Event | `name`, `startDate`, `endDate`, `location`, `image`, `offers`, `organizer` |
-| RealEstateListing | `name`, `description`, `url`, `address`, `geo`, `price`, `offers` |
-| JobPosting | `title`, `description`, `datePosted`, `validThrough`, `employmentType`, `jobLocation`, `baseSalary`, `hiringOrganization` |
-| Course | `name`, `description`, `provider`, `url`, `courseCode`, `courseInstance.startDate`, `courseInstance.endDate`, `courseInstance.location.name`, `courseInstance.offers.price` |
+| Preset | Key properties pre-filled | Detailed mapping |
+| --- | --- | --- |
+| LocalBusiness | `name`, `image`, `address`, `geo`, `telephone`, `openingHoursSpecification`, `url`, `sameAs`, `priceRange` | [Directory schema mapping](presets/directory.md#schema-mapping) |
+| Event | `name`, `startDate`, `endDate`, `location`, `image`, `offers`, `organizer` | [Event schema mapping](presets/events.md#schema-mapping) |
+| RealEstateListing | `name`, `description`, `url`, `address`, `geo`, `price`, `offers` | [Real estate schema mapping](presets/real-estate.md#schema-mapping) |
+| JobPosting | `title`, `description`, `datePosted`, `validThrough`, `employmentType`, `jobLocation`, `baseSalary`, `hiringOrganization` | [Job schema mapping](presets/jobs.md#schema-mapping) |
+| Course | `name`, `description`, `provider`, `url`, `courseCode`, `courseInstance.startDate`, `courseInstance.endDate`, `courseInstance.location.name`, `courseInstance.offers.price` | [Course schema mapping](presets/courses.md#schema-mapping) |
 
 Use dotted paths (for example `courseInstance.startDate`) to target nested objects; the suite automatically infers the correct `@type` for nested structures such as `Place`, `Offer`, and `CourseInstance`.
 
