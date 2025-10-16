@@ -566,32 +566,86 @@ function gm2_register_custom_posts() {
 
         // Ensure default terms exist with meta.
         if (!empty($tax['default_terms']) && taxonomy_exists($slug)) {
+            $term_ids             = [];
+            $deferred_parent_sync = [];
             foreach ($tax['default_terms'] as $term) {
                 if (!is_array($term)) {
                     continue;
                 }
-                $existing = term_exists($term['slug'], $slug);
+                $term_slug = $term['slug'] ?? '';
+                if ($term_slug === '') {
+                    continue;
+                }
+
+                $parent_slug = $term['parent'] ?? '';
+                $parent_id   = 0;
+                if ($parent_slug !== '') {
+                    if (!empty($term_ids[$parent_slug])) {
+                        $parent_id = (int) $term_ids[$parent_slug];
+                    } else {
+                        $parent_exists = term_exists($parent_slug, $slug);
+                        if ($parent_exists) {
+                            $parent_id = is_array($parent_exists) ? (int) $parent_exists['term_id'] : (int) $parent_exists;
+                            if ($parent_id) {
+                                $term_ids[$parent_slug] = $parent_id;
+                            }
+                        }
+                    }
+                }
+
+                $existing = term_exists($term_slug, $slug);
                 if ($existing && is_array($existing)) {
                     $term_id = $existing['term_id'];
+                    $updates = [];
                     if (!empty($term['description'])) {
-                        wp_update_term($term_id, $slug, [ 'description' => $term['description'] ]);
+                        $updates['description'] = $term['description'];
+                    }
+                    if ($parent_id) {
+                        $current_term = get_term($term_id, $slug);
+                        if ($current_term && (int) $current_term->parent !== $parent_id) {
+                            $updates['parent'] = $parent_id;
+                        }
+                    } elseif ($parent_slug !== '') {
+                        $deferred_parent_sync[] = [ 'slug' => $term_slug, 'parent' => $parent_slug ];
+                    }
+                    if (!empty($updates)) {
+                        wp_update_term($term_id, $slug, $updates);
                     }
                 } elseif ($existing) {
                     $term_id = $existing;
+                    $updates = [];
                     if (!empty($term['description'])) {
-                        wp_update_term($term_id, $slug, [ 'description' => $term['description'] ]);
+                        $updates['description'] = $term['description'];
+                    }
+                    if ($parent_id) {
+                        $current_term = get_term($term_id, $slug);
+                        if ($current_term && (int) $current_term->parent !== $parent_id) {
+                            $updates['parent'] = $parent_id;
+                        }
+                    } elseif ($parent_slug !== '') {
+                        $deferred_parent_sync[] = [ 'slug' => $term_slug, 'parent' => $parent_slug ];
+                    }
+                    if (!empty($updates)) {
+                        wp_update_term($term_id, $slug, $updates);
                     }
                 } else {
-                    $insert_args = [ 'slug' => $term['slug'] ];
+                    $insert_args = [ 'slug' => $term_slug ];
                     if (!empty($term['description'])) {
                         $insert_args['description'] = $term['description'];
+                    }
+                    if ($parent_id) {
+                        $insert_args['parent'] = $parent_id;
                     }
                     $inserted = wp_insert_term($term['name'], $slug, $insert_args);
                     if (is_wp_error($inserted)) {
                         continue;
                     }
                     $term_id = $inserted['term_id'];
+                    if (!$parent_id && $parent_slug !== '') {
+                        $deferred_parent_sync[] = [ 'slug' => $term_slug, 'parent' => $parent_slug ];
+                    }
                 }
+                $term_ids[$term_slug] = $term_id;
                 if (!empty($term['color'])) {
                     update_term_meta($term_id, 'color', $term['color']);
                 }
@@ -604,6 +658,29 @@ function gm2_register_custom_posts() {
                 if (!empty($term['meta']) && is_array($term['meta'])) {
                     foreach ($term['meta'] as $mk => $mv) {
                         update_term_meta($term_id, $mk, $mv);
+                    }
+                }
+            }
+            if (!empty($deferred_parent_sync)) {
+                foreach ($deferred_parent_sync as $assignment) {
+                    $child_slug   = $assignment['slug'];
+                    $parent_slug  = $assignment['parent'];
+                    $child_id     = $term_ids[$child_slug] ?? 0;
+                    $parent_id    = $term_ids[$parent_slug] ?? 0;
+                    if (!$parent_id) {
+                        $parent_exists = term_exists($parent_slug, $slug);
+                        if ($parent_exists) {
+                            $parent_id = is_array($parent_exists) ? (int) $parent_exists['term_id'] : (int) $parent_exists;
+                            if ($parent_id) {
+                                $term_ids[$parent_slug] = $parent_id;
+                            }
+                        }
+                    }
+                    if ($child_id && $parent_id) {
+                        $current_term = get_term($child_id, $slug);
+                        if ($current_term && (int) $current_term->parent !== $parent_id) {
+                            wp_update_term($child_id, $slug, [ 'parent' => $parent_id ]);
+                        }
                     }
                 }
             }
