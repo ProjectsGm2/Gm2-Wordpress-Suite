@@ -125,6 +125,20 @@ class Gm2_Custom_Posts_Admin {
         return $config;
     }
 
+    private function get_menu_page_url($page, array $args = []) {
+        $url = menu_page_url($page, false);
+        if (!$url) {
+            $base = current_user_can('manage_options') ? 'options-general.php' : 'admin.php';
+            $url  = add_query_arg('page', $page, admin_url($base));
+        }
+
+        if ($args) {
+            $url = add_query_arg($args, $url);
+        }
+
+        return $url;
+    }
+
     private function can_manage() {
         if (get_option('gm2_model_locked')) {
             return false;
@@ -161,20 +175,42 @@ class Gm2_Custom_Posts_Admin {
     }
 
     public function add_menu() {
-        $cap = current_user_can('gm2_manage_cpts') ? 'gm2_manage_cpts' : 'manage_options';
+        $has_manage_options = current_user_can('manage_options');
+        $has_gm2_cap        = current_user_can('gm2_manage_cpts');
 
-        add_options_page(
-            esc_html__( 'GM2 Custom Posts', 'gm2-wordpress-suite' ),
-            esc_html__( 'GM2 Custom Posts', 'gm2-wordpress-suite' ),
-            $cap,
-            'gm2-custom-posts',
-            function () {
-                require __DIR__ . '/pages/post-types.php';
-            }
-        );
+        if (! $has_manage_options && ! $has_gm2_cap) {
+            return;
+        }
+
+        $cap       = $has_gm2_cap ? 'gm2_manage_cpts' : 'manage_options';
+        $menu_slug = 'gm2-custom-posts';
+
+        if ($has_manage_options) {
+            add_options_page(
+                esc_html__( 'GM2 Custom Posts', 'gm2-wordpress-suite' ),
+                esc_html__( 'GM2 Custom Posts', 'gm2-wordpress-suite' ),
+                $cap,
+                $menu_slug,
+                function () {
+                    require __DIR__ . '/pages/post-types.php';
+                }
+            );
+            $parent = 'options-general.php';
+        } else {
+            add_menu_page(
+                esc_html__( 'GM2 Custom Posts', 'gm2-wordpress-suite' ),
+                esc_html__( 'GM2 Custom Posts', 'gm2-wordpress-suite' ),
+                $cap,
+                $menu_slug,
+                function () {
+                    require __DIR__ . '/pages/post-types.php';
+                }
+            );
+            $parent = $menu_slug;
+        }
 
         add_submenu_page(
-            'options-general.php',
+            $parent,
             esc_html__( 'Overview', 'gm2-wordpress-suite' ),
             esc_html__( 'Overview', 'gm2-wordpress-suite' ),
             $cap,
@@ -185,7 +221,7 @@ class Gm2_Custom_Posts_Admin {
         );
 
         add_submenu_page(
-            'options-general.php',
+            $parent,
             esc_html__( 'Edit Post Type', 'gm2-wordpress-suite' ),
             esc_html__( 'Edit Post Type', 'gm2-wordpress-suite' ),
             $cap,
@@ -194,7 +230,7 @@ class Gm2_Custom_Posts_Admin {
         );
 
         add_submenu_page(
-            'options-general.php',
+            $parent,
             esc_html__( 'Model Builder', 'gm2-wordpress-suite' ),
             esc_html__( 'Model Builder', 'gm2-wordpress-suite' ),
             $cap,
@@ -203,7 +239,7 @@ class Gm2_Custom_Posts_Admin {
         );
 
         add_submenu_page(
-            'options-general.php',
+            $parent,
             esc_html__( 'Field Group Wizard', 'gm2-wordpress-suite' ),
             esc_html__( 'Field Group Wizard', 'gm2-wordpress-suite' ),
             $cap,
@@ -212,7 +248,7 @@ class Gm2_Custom_Posts_Admin {
         );
 
         add_submenu_page(
-            'options-general.php',
+            $parent,
             esc_html__( 'Edit Taxonomy', 'gm2-wordpress-suite' ),
             esc_html__( 'Edit Taxonomy', 'gm2-wordpress-suite' ),
             $cap,
@@ -223,7 +259,7 @@ class Gm2_Custom_Posts_Admin {
         );
 
         add_submenu_page(
-            'options-general.php',
+            $parent,
             esc_html__( 'Query Builder', 'gm2-wordpress-suite' ),
             esc_html__( 'Query Builder', 'gm2-wordpress-suite' ),
             $cap,
@@ -232,7 +268,7 @@ class Gm2_Custom_Posts_Admin {
         );
 
         add_submenu_page(
-            'options-general.php',
+            $parent,
             esc_html__( 'Workflows', 'gm2-wordpress-suite' ),
             esc_html__( 'Workflows', 'gm2-wordpress-suite' ),
             $cap,
@@ -241,7 +277,7 @@ class Gm2_Custom_Posts_Admin {
         );
 
         add_submenu_page(
-            'options-general.php',
+            $parent,
             esc_html__( 'Field Permissions', 'gm2-wordpress-suite' ),
             esc_html__( 'Field Permissions', 'gm2-wordpress-suite' ),
             $cap,
@@ -250,7 +286,7 @@ class Gm2_Custom_Posts_Admin {
         );
 
         add_submenu_page(
-            'options-general.php',
+            $parent,
             esc_html__( 'Schema Mapping', 'gm2-wordpress-suite' ),
             esc_html__( 'Schema Mapping', 'gm2-wordpress-suite' ),
             $cap,
@@ -301,13 +337,13 @@ class Gm2_Custom_Posts_Admin {
         if (!$slug) {
             $post_types = $config['post_types'];
             if (!$post_types) {
-                wp_safe_redirect(admin_url('admin.php?page=gm2-custom-posts'));
+                wp_safe_redirect($this->get_menu_page_url('gm2-custom-posts'));
                 exit;
             }
             echo '<div class="wrap"><h1>' . esc_html__( 'Select a Post Type', 'gm2-wordpress-suite' ) . '</h1><ul>';
             foreach ($post_types as $pt_slug => $pt) {
                 $label = $pt['label'] ?? $pt_slug;
-                $url   = admin_url('admin.php?page=gm2_cpt_fields&cpt=' . $pt_slug);
+                $url   = $this->get_menu_page_url('gm2_cpt_fields', [ 'cpt' => $pt_slug ]);
                 echo '<li><a href="' . esc_url($url) . '">' . esc_html($label) . '</a></li>';
             }
             echo '</ul></div>';
@@ -601,7 +637,7 @@ class Gm2_Custom_Posts_Admin {
             }
         }
         update_option('gm2_field_caps', $map);
-        wp_safe_redirect(add_query_arg(['page' => 'gm2_field_caps', 'updated' => 'true'], admin_url('admin.php')));
+        wp_safe_redirect($this->get_menu_page_url('gm2_field_caps', [ 'updated' => 'true' ]));
         exit;
     }
 
@@ -717,7 +753,7 @@ class Gm2_Custom_Posts_Admin {
             ];
             update_option('gm2_custom_posts_config', $config);
         }
-        wp_safe_redirect(admin_url('admin.php?page=gm2-custom-posts&gm2_pt_saved=1'));
+        wp_safe_redirect($this->get_menu_page_url('gm2-custom-posts', [ 'gm2_pt_saved' => 1 ]));
         exit;
     }
 
@@ -758,7 +794,7 @@ class Gm2_Custom_Posts_Admin {
             ];
             update_option('gm2_custom_posts_config', $config);
         }
-        wp_safe_redirect(admin_url('admin.php?page=gm2-custom-posts&gm2_tax_saved=1'));
+        wp_safe_redirect($this->get_menu_page_url('gm2-custom-posts', [ 'gm2_tax_saved' => 1 ]));
         exit;
     }
 
@@ -776,7 +812,7 @@ class Gm2_Custom_Posts_Admin {
         $slugs = array_filter($slugs);
         $bulk_action = sanitize_text_field($_POST['gm2_bulk_action'] ?? '');
         if (!$slugs || (count($slugs) > 1 && $bulk_action !== 'delete')) {
-            wp_safe_redirect(admin_url('admin.php?page=gm2-custom-posts&gm2_pt_deleted=0'));
+            wp_safe_redirect($this->get_menu_page_url('gm2-custom-posts', [ 'gm2_pt_deleted' => 0 ]));
             exit;
         }
 
@@ -816,7 +852,7 @@ class Gm2_Custom_Posts_Admin {
                 $html .= '<input type="hidden" name="gm2_confirm_delete" value="1" />';
                 $html .= '<p><label><input type="checkbox" name="gm2_convert_to_post" value="1" /> ' . esc_html__( 'Convert posts to the default "post" type before deletion', 'gm2-wordpress-suite' ) . '</label></p>';
                 wp_nonce_field('gm2_confirm_delete_post_type');
-                $html .= '<p><button type="submit" class="button button-primary">' . esc_html__( 'Continue', 'gm2-wordpress-suite' ) . '</button> <a href="' . esc_url(admin_url('admin.php?page=gm2-custom-posts')) . '" class="button">' . esc_html__( 'Cancel', 'gm2-wordpress-suite' ) . '</a></p>';
+                $html .= '<p><button type="submit" class="button button-primary">' . esc_html__( 'Continue', 'gm2-wordpress-suite' ) . '</button> <a href="' . esc_url($this->get_menu_page_url('gm2-custom-posts')) . '" class="button">' . esc_html__( 'Cancel', 'gm2-wordpress-suite' ) . '</a></p>';
                 $html .= '</form>';
                 wp_die($html, esc_html__( 'Confirm Post Type Deletion', 'gm2-wordpress-suite' ), [ 'back_link' => false ]);
             }
@@ -856,14 +892,16 @@ class Gm2_Custom_Posts_Admin {
         if ($deleted) {
             update_option('gm2_custom_posts_config', $config);
         }
-        $redirect = 'admin.php?page=gm2-custom-posts&gm2_pt_deleted=' . ($deleted ? '1' : '0');
+        $redirect_args = [
+            'gm2_pt_deleted' => $deleted ? '1' : '0',
+        ];
         if ($converted) {
-            $redirect .= '&gm2_pt_converted=1';
+            $redirect_args['gm2_pt_converted'] = '1';
         }
         if ($too_many) {
-            $redirect .= '&gm2_pt_too_many=1';
+            $redirect_args['gm2_pt_too_many'] = '1';
         }
-        wp_safe_redirect(admin_url($redirect));
+        wp_safe_redirect($this->get_menu_page_url('gm2-custom-posts', $redirect_args));
         exit;
     }
 
@@ -873,7 +911,7 @@ class Gm2_Custom_Posts_Admin {
         }
         $slug = sanitize_key($_POST['slug'] ?? '');
         if (!$slug) {
-            wp_safe_redirect(admin_url('admin.php?page=gm2-custom-posts&gm2_tax_deleted=0'));
+            wp_safe_redirect($this->get_menu_page_url('gm2-custom-posts', [ 'gm2_tax_deleted' => 0 ]));
             exit;
         }
 
@@ -892,7 +930,7 @@ class Gm2_Custom_Posts_Admin {
                 $html .= '<input type="hidden" name="gm2_confirm_delete" value="1" />';
                 $html .= '<p><label><input type="checkbox" name="gm2_convert_to_category" value="1" /> ' . esc_html__( 'Convert terms to the default "category" taxonomy before deletion', 'gm2-wordpress-suite' ) . '</label></p>';
                 wp_nonce_field('gm2_confirm_delete_taxonomy');
-                $html .= '<p><button type="submit" class="button button-primary">' . esc_html__( 'Continue', 'gm2-wordpress-suite' ) . '</button> <a href="' . esc_url(admin_url('admin.php?page=gm2-custom-posts')) . '" class="button">' . esc_html__( 'Cancel', 'gm2-wordpress-suite' ) . '</a></p>';
+                $html .= '<p><button type="submit" class="button button-primary">' . esc_html__( 'Continue', 'gm2-wordpress-suite' ) . '</button> <a href="' . esc_url($this->get_menu_page_url('gm2-custom-posts')) . '" class="button">' . esc_html__( 'Cancel', 'gm2-wordpress-suite' ) . '</a></p>';
                 $html .= '</form>';
                 wp_die($html, esc_html__( 'Confirm Taxonomy Deletion', 'gm2-wordpress-suite' ), [ 'back_link' => false ]);
             }
@@ -938,11 +976,13 @@ class Gm2_Custom_Posts_Admin {
             $deleted = true;
             error_log('GM2: Deleted taxonomy ' . $slug);
         }
-        $redirect = 'admin.php?page=gm2-custom-posts&gm2_tax_deleted=' . ($deleted ? '1' : '0');
+        $redirect_args = [
+            'gm2_tax_deleted' => $deleted ? '1' : '0',
+        ];
         if ($converted) {
-            $redirect .= '&gm2_tax_converted=1';
+            $redirect_args['gm2_tax_converted'] = '1';
         }
-        wp_safe_redirect(admin_url($redirect));
+        wp_safe_redirect($this->get_menu_page_url('gm2-custom-posts', $redirect_args));
         exit;
     }
 
