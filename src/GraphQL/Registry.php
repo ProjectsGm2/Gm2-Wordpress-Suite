@@ -10,6 +10,7 @@ use WP_Taxonomy;
 final class Registry
 {
     private static ?self $instance = null;
+    private static bool $deferredInitRegistered = false;
 
     /**
      * Cached transformers for dynamically registered object types.
@@ -25,10 +26,19 @@ final class Registry
         }
 
         if (!class_exists('WPGraphQL')) {
+            if (!self::$deferredInitRegistered) {
+                add_action('plugins_loaded', [ self::class, 'init' ], 20);
+                self::$deferredInitRegistered = true;
+            }
+
             return;
         }
 
         self::$instance = new self();
+        if (self::$deferredInitRegistered) {
+            remove_action('plugins_loaded', [ self::class, 'init' ], 20);
+            self::$deferredInitRegistered = false;
+        }
         add_action('graphql_register_types', [ self::$instance, 'register' ]);
     }
 
