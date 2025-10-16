@@ -212,16 +212,15 @@ namespace {
     function gm2_ai_clear() {
         $post_types = get_post_types(['public' => true], 'names');
         $batch_size = gm2_get_seo_post_batch_size();
-        $paged      = 1;
 
-        do {
+        while (true) {
             $query = new \WP_Query([
                 'post_type'      => $post_types,
                 'post_status'    => 'any',
                 'meta_key'       => '_gm2_ai_research',
                 'fields'         => 'ids',
                 'posts_per_page' => $batch_size,
-                'paged'          => $paged,
+                'paged'          => 1,
                 'no_found_rows'  => true,
             ]);
             $post_ids = $query->posts;
@@ -232,9 +231,7 @@ namespace {
             foreach ($post_ids as $pid) {
                 delete_post_meta($pid, '_gm2_ai_research');
             }
-
-            $paged++;
-        } while (count($post_ids) === $batch_size);
+        }
 
         $terms = get_terms([
             'taxonomy'   => get_taxonomies([], 'names'),
