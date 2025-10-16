@@ -253,6 +253,9 @@ class Filters
 
     /**
      * Active courses are published entries with a "course_status" meta of "active".
+     *
+     * Legacy content may not yet have the new meta field applied, so fall back to
+     * courses lacking the meta or storing the historical "status" flag.
      */
     public static function handleActiveCourses($query, $widget = null): void
     {
@@ -266,8 +269,29 @@ class Filters
         self::applySearch($query, ['gm2_course_search', 'gm2_search']);
 
         self::appendMetaQuery($query, [
-            'key'   => 'course_status',
-            'value' => 'active',
+            'relation' => 'OR',
+            [
+                'key'   => 'course_status',
+                'value' => 'active',
+            ],
+            [
+                'relation' => 'AND',
+                [
+                    'key'     => 'course_status',
+                    'compare' => 'NOT EXISTS',
+                ],
+                [
+                    'relation' => 'OR',
+                    [
+                        'key'   => 'status',
+                        'value' => 'active',
+                    ],
+                    [
+                        'key'     => 'status',
+                        'compare' => 'NOT EXISTS',
+                    ],
+                ],
+            ],
         ]);
 
         self::ensureOrdering($query, 'date', 'DESC');
