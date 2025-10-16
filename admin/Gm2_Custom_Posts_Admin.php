@@ -28,6 +28,7 @@ class Gm2_Custom_Posts_Admin {
         add_action('wp_ajax_gm2_regenerate_thumbnails', [ $this, 'ajax_regenerate_thumbnails' ]);
         add_action('wp_ajax_gm2_get_schema_map', [ $this, 'ajax_get_schema_map' ]);
         add_action('wp_ajax_gm2_save_schema_map', [ $this, 'ajax_save_schema_map' ]);
+        add_action('wp_ajax_gm2_import_preset', [ $this, 'ajax_import_preset' ]);
         add_action('enqueue_block_editor_assets', [ $this, 'enqueue_block_editor_assets' ]);
         add_action('restrict_manage_posts', [ $this, 'restrict_manage_posts' ]);
         add_action('pre_get_posts', [ $this, 'pre_get_posts' ]);
@@ -2307,6 +2308,44 @@ class Gm2_Custom_Posts_Admin {
         ];
         update_option('gm2_cp_schema_map', $maps);
         wp_send_json_success();
+    }
+
+    public function ajax_import_preset() {
+        if (!$this->can_manage()) {
+            wp_send_json_error([
+                'code'    => 'forbidden',
+                'message' => __('You do not have permission to import presets.', 'gm2-wordpress-suite'),
+            ]);
+        }
+
+        $nonce = $_POST['nonce'] ?? '';
+        if (!wp_verify_nonce($nonce, 'gm2_import_preset')) {
+            wp_send_json_error([
+                'code'    => 'invalid_nonce',
+                'message' => __('Preset import is not available.', 'gm2-wordpress-suite'),
+            ]);
+        }
+
+        $slug = sanitize_key($_POST['preset'] ?? '');
+        if ($slug === '') {
+            wp_send_json_error([
+                'code'    => 'preset_missing',
+                'message' => __('No preset selected.', 'gm2-wordpress-suite'),
+            ]);
+        }
+
+        $blueprint = apply_filters('gm2/presets/blueprint', null, $slug);
+        if (!is_array($blueprint)) {
+            wp_send_json_error([
+                'code'    => 'preset_not_found',
+                'message' => __('The requested preset could not be found.', 'gm2-wordpress-suite'),
+            ]);
+        }
+
+        wp_send_json_success([
+            'message'   => __('Preset applied.', 'gm2-wordpress-suite'),
+            'blueprint' => $blueprint,
+        ]);
     }
 
     public function ajax_regenerate_thumbnails() {
