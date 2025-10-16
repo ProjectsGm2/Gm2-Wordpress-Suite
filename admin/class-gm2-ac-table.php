@@ -64,7 +64,9 @@ class GM2_AC_Table extends \WP_List_Table {
         if ($this->current_action() !== 'delete') {
             return;
         }
-        check_admin_referer('bulk-' . $this->_args['plural']);
+        if (function_exists('check_admin_referer')) {
+            check_admin_referer('bulk-' . $this->_args['plural']);
+        }
         $ids = isset($_REQUEST['id']) ? (array) $_REQUEST['id'] : [];
         $ids = array_map('absint', $ids);
         $ids = array_filter($ids);
