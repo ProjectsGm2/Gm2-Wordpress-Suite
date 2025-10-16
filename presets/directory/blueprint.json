@@ -581,24 +581,26 @@
       }
     }
   ],
-  "templates": {
-    "listing_single": {
-      "post_type": "listing",
-      "lock": "insert",
-      "builder": "elementor",
-      "file": "templates/listing-single.json",
-      "blocks": [],
-      "description": "Elementor single template featuring listing contact details, gallery, and opening hours.",
-      "notes": "Import via Elementor → Templates → Import Template, then assign it as the single template for listings."
-    },
-    "listing_archive_loop": {
-      "post_type": "listing",
-      "builder": "elementor",
-      "context": "loop",
-      "file": "templates/listing-archive-loop.json",
-      "blocks": [],
-      "description": "Elementor loop card for archive grids showing key listing fields.",
-      "notes": "Import into Elementor's Theme Builder as a Loop Item and select it for Listing archives."
+  "elementor": {
+    "templates": {
+      "listing_single": {
+        "post_type": "listing",
+        "lock": "insert",
+        "builder": "elementor",
+        "file": "templates/listing-single.json",
+        "blocks": [],
+        "description": "Elementor single template featuring listing contact details, gallery, and opening hours.",
+        "notes": "Import via Elementor → Templates → Import Template, then assign it as the single template for listings."
+      },
+      "listing_archive_loop": {
+        "post_type": "listing",
+        "builder": "elementor",
+        "context": "loop",
+        "file": "templates/listing-archive-loop.json",
+        "blocks": [],
+        "description": "Elementor loop card for archive grids showing key listing fields.",
+        "notes": "Import into Elementor's Theme Builder as a Loop Item and select it for Listing archives."
+      }
     }
   }
 }
