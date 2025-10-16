@@ -241,8 +241,23 @@ class FiltersTest extends WP_UnitTestCase
         $this->assertSame('Design', $query->get('s'));
 
         $metaQuery = $query->get('meta_query');
-        $this->assertSame('course_status', $metaQuery[0]['key']);
-        $this->assertSame('active', $metaQuery[0]['value']);
+        $this->assertIsArray($metaQuery);
+        $this->assertSame('OR', $metaQuery[0]['relation']);
+
+        $this->assertSame('course_status', $metaQuery[0][0]['key']);
+        $this->assertSame('active', $metaQuery[0][0]['value']);
+
+        $legacyFallback = $metaQuery[0][1];
+        $this->assertSame('AND', $legacyFallback['relation']);
+        $this->assertSame('course_status', $legacyFallback[0]['key']);
+        $this->assertSame('NOT EXISTS', $legacyFallback[0]['compare']);
+
+        $statusFallback = $legacyFallback[1];
+        $this->assertSame('OR', $statusFallback['relation']);
+        $this->assertSame('status', $statusFallback[0]['key']);
+        $this->assertSame('active', $statusFallback[0]['value']);
+        $this->assertSame('status', $statusFallback[1]['key']);
+        $this->assertSame('NOT EXISTS', $statusFallback[1]['compare']);
     }
 
     public function test_courses_active_returns_only_active_posts(): void
@@ -254,12 +269,32 @@ class FiltersTest extends WP_UnitTestCase
         ]);
         add_post_meta($activeId, 'course_status', 'active');
 
+        $legacyActiveId = self::factory()->post->create([
+            'post_type'   => 'course',
+            'post_status' => 'publish',
+            'post_title'  => 'Legacy Active Course',
+        ]);
+        add_post_meta($legacyActiveId, 'status', 'active');
+
+        $legacyNoMetaId = self::factory()->post->create([
+            'post_type'   => 'course',
+            'post_status' => 'publish',
+            'post_title'  => 'Legacy Course Without Meta',
+        ]);
+
         $inactiveId = self::factory()->post->create([
             'post_type'   => 'course',
             'post_status' => 'publish',
             'post_title'  => 'Inactive Course',
         ]);
         add_post_meta($inactiveId, 'course_status', 'archived');
+
+        $legacyInactiveId = self::factory()->post->create([
+            'post_type'   => 'course',
+            'post_status' => 'publish',
+            'post_title'  => 'Legacy Inactive Course',
+        ]);
+        add_post_meta($legacyInactiveId, 'status', 'archived');
 
         $query = new WP_Query();
 
@@ -270,7 +305,10 @@ class FiltersTest extends WP_UnitTestCase
         $postIds = wp_list_pluck($query->posts, 'ID');
 
         $this->assertContains($activeId, $postIds);
+        $this->assertContains($legacyActiveId, $postIds);
+        $this->assertContains($legacyNoMetaId, $postIds);
         $this->assertNotContains($inactiveId, $postIds);
+        $this->assertNotContains($legacyInactiveId, $postIds);
 
         wp_reset_postdata();
     }
