@@ -220,7 +220,11 @@ class Filters
     private static function ensurePostType(WP_Query $query, string $postType): void
     {
         $current = $query->get('post_type');
-        if (empty($current) || $current === 'any') {
+        if (
+            empty($current)
+            || $current === 'any'
+            || (is_string($current) && $current === 'post')
+        ) {
             $query->set('post_type', $postType);
         }
     }
@@ -289,11 +293,19 @@ class Filters
      */
     private static function ensureOrdering(WP_Query $query, $orderby, string $order): void
     {
-        if (!$query->get('orderby')) {
+        $currentOrderBy = $query->get('orderby');
+        if (
+            !$currentOrderBy
+            || (is_string($currentOrderBy) && in_array($currentOrderBy, ['date', 'post_date'], true))
+        ) {
             $query->set('orderby', $orderby);
         }
 
-        if (!$query->get('order')) {
+        $currentOrder = $query->get('order');
+        if (
+            !$currentOrder
+            || (is_string($currentOrder) && strtoupper($currentOrder) === 'DESC')
+        ) {
             $query->set('order', $order);
         }
     }
