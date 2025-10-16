@@ -2,7 +2,12 @@
 
 namespace Gm2\GraphQL;
 
+use ArgumentCountError;
 use Gm2\Gm2_Capability_Manager;
+use ReflectionException;
+use ReflectionFunction;
+use ReflectionFunctionAbstract;
+use ReflectionMethod;
 use WP_Post_Type;
 use WP_Taxonomy;
 
@@ -251,8 +256,7 @@ final class Registry
             }
 
             if ($authCallback) {
-                $allowed = $authCallback(true, $metaKey, $objectId, function_exists('get_current_user_id') ? get_current_user_id() : 0, $authCap, []);
-                if (!$allowed) {
+                if (!$this->invokeMetaAuthCallback($authCallback, $metaKey, $objectId, $authCap)) {
                     return null;
                 }
             }
@@ -284,6 +288,61 @@ final class Registry
         );
 
         register_graphql_field($graphqlType, $fieldName, $config);
+    }
+
+    private function invokeMetaAuthCallback(callable $authCallback, string $metaKey, int $objectId, string $authCap): bool
+    {
+        $args = [
+            true,
+            $metaKey,
+            $objectId,
+            function_exists('get_current_user_id') ? get_current_user_id() : 0,
+            $authCap,
+            [],
+        ];
+
+        $reflection = $this->reflectCallable($authCallback);
+
+        if ($reflection instanceof ReflectionFunctionAbstract && !$reflection->isVariadic()) {
+            $args = array_slice($args, 0, $reflection->getNumberOfParameters());
+        }
+
+        try {
+            return (bool) call_user_func_array($authCallback, $args);
+        } catch (ArgumentCountError $exception) {
+            return (bool) call_user_func($authCallback);
+        }
+    }
+
+    private function reflectCallable(callable $callable): ?ReflectionFunctionAbstract
+    {
+        try {
+            if ($callable instanceof \Closure) {
+                return new ReflectionFunction($callable);
+            }
+
+            if (is_string($callable)) {
+                if (strpos($callable, '::') !== false) {
+                    [$class, $method] = explode('::', $callable, 2);
+
+                    return new ReflectionMethod($class, $method);
+                }
+
+                return new ReflectionFunction($callable);
+            }
+
+            if (is_array($callable) && count($callable) === 2) {
+                return new ReflectionMethod($callable[0], (string) $callable[1]);
+            }
+
+            if (is_object($callable) && method_exists($callable, '__invoke')) {
+                return new ReflectionMethod($callable, '__invoke');
+            }
+        } catch (ReflectionException $exception) {
+            return null;
+        }
+
+        return null;
     }
 
     /**
