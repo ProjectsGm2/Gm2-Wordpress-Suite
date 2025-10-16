@@ -50,19 +50,32 @@ final class RewriteRulesFlusher
             return;
         }
 
-        if (function_exists('did_action') && did_action('init')) {
-            flush_rewrite_rules(false);
+        $flushCallback = static function (): void {
+            if (function_exists('flush_rewrite_rules')) {
+                flush_rewrite_rules(false);
+            }
+        };
+
+        if (
+            function_exists('did_action')
+            && did_action('init')
+            && (!function_exists('doing_action') || !doing_action('init'))
+        ) {
+            $flushCallback();
             self::$rewriteScheduled = true;
             return;
         }
 
-        if (function_exists('add_action')) {
-            add_action('init', static function (): void {
-                if (function_exists('flush_rewrite_rules')) {
-                    flush_rewrite_rules(false);
-                }
-            }, PHP_INT_MAX);
-            self::$rewriteScheduled = true;
+        if (!function_exists('add_action')) {
+            return;
         }
+
+        $hook = (function_exists('doing_action') && doing_action('init')) ? 'shutdown' : 'init';
+
+        add_action($hook, static function () use ($flushCallback): void {
+            $flushCallback();
+        }, PHP_INT_MAX);
+
+        self::$rewriteScheduled = true;
     }
 }
