@@ -12,6 +12,7 @@ use function count;
 use function get_option;
 use function implode;
 use function update_option;
+use function wp_cache_delete;
 
 /**
  * Updates existing options to use the preferred autoload flags.
@@ -54,11 +55,20 @@ class AutoloadMigration
             ...$options
         );
 
-        $wpdb->query($sql);
+        $updated = (int) $wpdb->query($sql);
+        if ($updated > 0) {
+            self::clear_autoload_cache();
+        }
     }
 
     private static function get_options_table(wpdb $wpdb): string
     {
         return $wpdb->options;
+    }
+
+    private static function clear_autoload_cache(): void
+    {
+        wp_cache_delete('alloptions', 'options');
+        wp_cache_delete('notoptions', 'options');
     }
 }
