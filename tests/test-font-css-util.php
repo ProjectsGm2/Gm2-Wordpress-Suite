@@ -36,4 +36,15 @@ class FontCssUtilTest extends WP_UnitTestCase {
         $this->assertStringContainsString('token=', $out);
         $this->assertStringNotContainsString('foo-bold.woff2', $out);
     }
+
+    public function test_process_font_faces_supports_woff_fonts(): void {
+        $uploads = wp_upload_dir();
+        $base    = trailingslashit($uploads['baseurl']) . 'gm2seo-fonts';
+        $css     = "@font-face{font-family:'Foo';src:url('{$base}/foo/foo.woff');font-weight:400;}";
+
+        $out = Font_CSS_Util::process($css);
+
+        $this->assertStringContainsString('gm2seo/v1/font?', $out);
+        $this->assertStringContainsString('file=' . rawurlencode('foo/foo.woff'), $out);
+    }
 }

@@ -14,7 +14,7 @@ if (class_exists(__NAMESPACE__ . '\\Font_Performance')) {
 class Font_Performance {
     private const OPTION_KEY = 'gm2seo_fonts';
     private const FONT_TOKEN_SALT = 'gm2seo-font-cache';
-    private const ALLOWED_FONT_EXTENSIONS = ['woff2', 'ttf', 'otf'];
+    private const ALLOWED_FONT_EXTENSIONS = ['woff', 'woff2', 'ttf', 'otf'];
 
     /**
      * Selected plugin directories to inspect for font usage. Only these
@@ -534,7 +534,7 @@ class Font_Performance {
         }
         $parts = wp_parse_url($src);
         $path  = $parts['path'] ?? '';
-        if (!$path || !preg_match('/\.(woff2|ttf|otf)$/i', $path)) {
+        if (!$path || !preg_match('/\.(woff2?|ttf|otf)$/i', $path)) {
             return $src;
         }
         $home_host = wp_parse_url(home_url(), PHP_URL_HOST);
