@@ -161,6 +161,23 @@ class Gm2_CP_Schema {
             $ref =& $ref[$seg];
         }
         if (is_array($ref) && is_array($value)) {
+            $is_list = function_exists('wp_is_numeric_array') ? wp_is_numeric_array($value) : self::is_list($value);
+            if (isset($ref['@type']) && $is_list) {
+                $type = $ref['@type'];
+                $ref = array_map(
+                    static function ($item) use ($type) {
+                        if (!is_array($item)) {
+                            return $item;
+                        }
+                        if (!isset($item['@type'])) {
+                            $item['@type'] = $type;
+                        }
+                        return $item;
+                    },
+                    $value
+                );
+                return;
+            }
             $ref = array_replace($ref, $value);
             return;
         }
@@ -185,6 +202,16 @@ class Gm2_CP_Schema {
             'virtualLocation' => 'VirtualLocation',
             default => null,
         };
+    }
+
+    /**
+     * Determine if an array uses sequential numeric keys.
+     */
+    private static function is_list(array $value): bool {
+        if ($value === []) {
+            return true;
+        }
+        return array_keys($value) === range(0, count($value) - 1);
     }
 }
 
