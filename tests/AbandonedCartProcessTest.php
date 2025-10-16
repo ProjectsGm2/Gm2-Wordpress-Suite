@@ -1,5 +1,8 @@
 <?php
 namespace Gm2 {
+    if (!function_exists(__NAMESPACE__ . '\\add_action')) {
+        function add_action( $hook, $callback, $priority = 10, $accepted_args = 1 ) {}
+    }
     if (!function_exists(__NAMESPACE__ . '\\current_user_can')) {
         function current_user_can( $cap ) { return true; }
     }
