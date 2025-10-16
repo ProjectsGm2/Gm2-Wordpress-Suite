@@ -66,7 +66,7 @@ final class TaxonomyRegistry
 
         $slug = sanitize_key($slug);
 
-        $this->assertValidKey($slug, 'taxonomy');
+        $this->assertValidKey($slug, 'taxonomy', 32);
 
         return $slug;
     }
@@ -88,14 +88,14 @@ final class TaxonomyRegistry
         return $generated;
     }
 
-    private function assertValidKey(string $key, string $type): void
+    private function assertValidKey(string $key, string $type, int $maxLength = 20): void
     {
         if ($key === '') {
             throw new InvalidArgumentException(sprintf('The %s key cannot be empty.', $type));
         }
 
-        if (strlen($key) > 20) {
-            throw new InvalidArgumentException(sprintf('The %s key "%s" exceeds the maximum length of 20 characters.', $type, $key));
+        if (strlen($key) > $maxLength) {
+            throw new InvalidArgumentException(sprintf('The %s key "%s" exceeds the maximum length of %d characters.', $type, $key, $maxLength));
         }
 
         if (!preg_match('/^[a-z0-9_-]+$/', $key)) {
