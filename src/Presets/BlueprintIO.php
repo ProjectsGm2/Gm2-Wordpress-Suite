@@ -6,6 +6,7 @@ namespace Gm2\Presets;
 
 use WP_Error;
 
+use function array_merge;
 use function array_values;
 use function function_exists;
 use function get_option;
@@ -174,7 +175,7 @@ class BlueprintIO
 
         if ($merge) {
             $current = self::getOptionArray(self::OPTION_FIELD_GROUPS);
-            $prepared = $current + $prepared;
+            $prepared = array_merge($current, $prepared);
         }
 
         update_option(self::OPTION_FIELD_GROUPS, $prepared);
