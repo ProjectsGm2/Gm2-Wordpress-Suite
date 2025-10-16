@@ -726,13 +726,18 @@ final class GM2_Dynamic_Tag_Group
 
     private function formatComputed(mixed $value, array $settings): mixed
     {
-        if (isset($settings['format']) && $settings['format'] === 'currency') {
-            return $this->formatCurrency($value, $settings + ['precision' => $settings['precision'] ?? 2]);
+        $computedSettings = is_array($settings['computed'] ?? null) ? $settings['computed'] : $settings;
+
+        if (isset($computedSettings['format']) && $computedSettings['format'] === 'currency') {
+            return $this->formatCurrency(
+                $value,
+                $computedSettings + ['precision' => $computedSettings['precision'] ?? 2]
+            );
         }
 
-        $returnType = is_string($settings['return_type'] ?? null) ? $settings['return_type'] : 'string';
+        $returnType = is_string($computedSettings['return_type'] ?? null) ? $computedSettings['return_type'] : 'string';
         if (in_array($returnType, ['number', 'integer'], true) && is_numeric($value)) {
-            $precision = is_numeric($settings['precision'] ?? null) ? (int) $settings['precision'] : 2;
+            $precision = is_numeric($computedSettings['precision'] ?? null) ? (int) $computedSettings['precision'] : 2;
             return number_format_i18n((float) $value, $precision);
         }
 
