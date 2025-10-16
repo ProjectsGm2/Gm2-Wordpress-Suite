@@ -115,7 +115,13 @@
 
     const selected = parseSelected($select);
 
+    const requestId = ($select.data('gm2RequestId') || 0) + 1;
+    $select.data('gm2RequestId', requestId);
+
     fetchOptions(action, payload).then((options) => {
+      if ($select.data('gm2RequestId') !== requestId) {
+        return;
+      }
       const normalizedSelected = selected.map(String);
       const preserve = normalizedSelected.length ? normalizedSelected : parseSelected($select);
       $select.empty();
