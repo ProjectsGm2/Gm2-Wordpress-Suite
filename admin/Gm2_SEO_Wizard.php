@@ -23,8 +23,21 @@ class Gm2_SEO_Wizard {
     }
 
     public function handle_redirect() {
-        $get_action = isset($_GET['action']) ? sanitize_key(wp_unslash($_GET['action'])) : '';
-        $post_action = isset($_POST['action']) ? sanitize_key(wp_unslash($_POST['action'])) : '';
+        $get_action = '';
+        if (isset($_GET['action'])) {
+            $raw_get_action = wp_unslash($_GET['action']);
+            if (is_string($raw_get_action)) {
+                $get_action = sanitize_key($raw_get_action);
+            }
+        }
+
+        $post_action = '';
+        if (isset($_POST['action'])) {
+            $raw_post_action = wp_unslash($_POST['action']);
+            if (is_string($raw_post_action)) {
+                $post_action = sanitize_key($raw_post_action);
+            }
+        }
 
         // Bail out when handling wizard form submissions.
         if (
