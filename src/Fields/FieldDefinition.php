@@ -53,6 +53,13 @@ final class FieldDefinition
         return $this->settings['default'] ?? null;
     }
 
+    public function getAuthCallback(): ?callable
+    {
+        $callback = $this->settings['auth_callback'] ?? null;
+
+        return is_callable($callback) ? $callback : null;
+    }
+
     public function isRequired(): bool
     {
         return (bool) ($this->settings['required'] ?? false);

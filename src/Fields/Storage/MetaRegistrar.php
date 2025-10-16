@@ -52,10 +52,13 @@ final class MetaRegistrar
             'single'            => $field->getType()->isSingle($field->getSettings()),
             'sanitize_callback' => $sanitize,
             'validate_callback' => $validate,
-            'auth_callback'     => static fn () => true,
             'default'           => $field->getDefault(),
             'show_in_rest'      => $showInRest,
         ];
+
+        if (($authCallback = $field->getAuthCallback()) !== null) {
+            $args['auth_callback'] = $authCallback;
+        }
 
         if ($field->getDescription() !== null) {
             $args['description'] = $field->getDescription();
