@@ -134,8 +134,15 @@ function gm2_cp_register_type( $slug, array $args ) {
     $has_archive = $merged['has_archive'] ?? null;
     $menu_icon   = isset( $merged['menu_icon'] ) ? (string) $merged['menu_icon'] : null;
     $rewrite     = isset( $merged['rewrite'] ) && is_array( $merged['rewrite'] ) ? $merged['rewrite'] : [];
-    $cap_type    = isset( $merged['capability_type'] ) ? (string) $merged['capability_type'] : 'post';
-    $taxonomies  = isset( $merged['taxonomies'] ) ? (array) $merged['taxonomies'] : [];
+    $cap_type    = 'post';
+    if ( isset( $merged['capability_type'] ) ) {
+        if ( is_array( $merged['capability_type'] ) ) {
+            $cap_type = array_values( $merged['capability_type'] );
+        } else {
+            $cap_type = (string) $merged['capability_type'];
+        }
+    }
+    $taxonomies = isset( $merged['taxonomies'] ) ? (array) $merged['taxonomies'] : [];
 
     $feeds_flag = $rewrite['feeds'] ?? null;
     $pages_flag = $rewrite['pages'] ?? null;

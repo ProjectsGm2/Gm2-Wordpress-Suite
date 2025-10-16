@@ -31,9 +31,26 @@ final class PostTypeRegistry
         $taxonomies = $this->prepareTaxonomies($definition->getTaxonomies());
         $menuIcon = $definition->getMenuIcon();
         $hasArchive = $definition->getHasArchive();
-        $capabilityType = $definition->getCapabilityType() !== ''
-            ? sanitize_key($definition->getCapabilityType())
-            : 'post';
+        $capabilityType = $definition->getCapabilityType();
+        if (is_array($capabilityType)) {
+            $capabilityType = array_values(
+                array_filter(
+                    array_map(
+                        static fn ($type) => is_string($type) ? sanitize_key($type) : null,
+                        $capabilityType
+                    )
+                )
+            );
+
+            if ($capabilityType === []) {
+                $capabilityType = 'post';
+            }
+        } else {
+            $capabilityType = (string) $capabilityType;
+            $capabilityType = $capabilityType !== ''
+                ? sanitize_key($capabilityType)
+                : 'post';
+        }
 
         $args = $definition->getArguments();
         $args['labels'] = array_merge($args['labels'] ?? [], $labels);
