@@ -84,7 +84,7 @@ class Gm2_Analytics {
         }
 
         if (!isset($_COOKIE[self::COOKIE_NAME]) || $_COOKIE[self::COOKIE_NAME] !== $id) {
-            setcookie(self::COOKIE_NAME, $id, time() + YEAR_IN_SECONDS * 2, COOKIEPATH, COOKIE_DOMAIN, is_ssl(), true);
+            setcookie(self::COOKIE_NAME, $id, time() + YEAR_IN_SECONDS * 2, COOKIEPATH, COOKIE_DOMAIN, $this->is_secure_request(), true);
             $_COOKIE[self::COOKIE_NAME] = $id;
         }
 
@@ -94,10 +94,18 @@ class Gm2_Analytics {
     private function get_session_id() {
         if (!isset($_COOKIE[self::SESSION_COOKIE])) {
             $session = wp_generate_uuid4();
-            setcookie(self::SESSION_COOKIE, $session, 0, COOKIEPATH, COOKIE_DOMAIN, is_ssl(), true);
+            setcookie(self::SESSION_COOKIE, $session, 0, COOKIEPATH, COOKIE_DOMAIN, $this->is_secure_request(), true);
             $_COOKIE[self::SESSION_COOKIE] = $session;
         }
         return sanitize_text_field($_COOKIE[self::SESSION_COOKIE]);
+    }
+
+    private function is_secure_request() {
+        if (function_exists('\is_ssl')) {
+            return \is_ssl();
+        }
+
+        return !empty($_SERVER['HTTPS']) && strtolower((string) $_SERVER['HTTPS']) !== 'off';
     }
 
     public function ajax_track() {
