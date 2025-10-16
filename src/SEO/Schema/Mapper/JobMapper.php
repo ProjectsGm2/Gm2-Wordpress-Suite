@@ -276,7 +276,9 @@ class JobMapper extends AbstractMapper
     {
         if (is_array($value)) {
             foreach ($value as $item) {
-                if (is_array($item) && isset($item['ID']) && is_numeric($item['ID'])) {
+                if ($item instanceof WP_Post) {
+                    $item = $item->ID;
+                } elseif (is_array($item) && isset($item['ID']) && is_numeric($item['ID'])) {
                     $item = $item['ID'];
                 }
 
@@ -289,6 +291,11 @@ class JobMapper extends AbstractMapper
             }
 
             return null;
+        }
+
+        if ($value instanceof WP_Post) {
+            $id = (int) $value->ID;
+            return $id > 0 ? $id : null;
         }
 
         if (is_numeric($value)) {
