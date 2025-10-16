@@ -29,7 +29,10 @@ final class Definition
      */
     private array $rewrite;
 
-    private string $capabilityType;
+    /**
+     * @var string|string[]
+     */
+    private string|array $capabilityType;
 
     /**
      * @var string[]
@@ -45,6 +48,7 @@ final class Definition
      * @param array<string, string> $labels
      * @param string[]              $supports
      * @param array<string, mixed>  $rewrite
+     * @param string|string[]       $capabilityType
      * @param string[]              $taxonomies
      * @param array<string, mixed>  $arguments
      */
@@ -57,7 +61,7 @@ final class Definition
         bool|string|null $hasArchive = null,
         ?string $menuIcon = null,
         array $rewrite = [],
-        string $capabilityType = 'post',
+        string|array $capabilityType = 'post',
         array $taxonomies = [],
         array $arguments = []
     ) {
@@ -123,7 +127,10 @@ final class Definition
         return $this->rewrite;
     }
 
-    public function getCapabilityType(): string
+    /**
+     * @return string|string[]
+     */
+    public function getCapabilityType(): string|array
     {
         return $this->capabilityType;
     }
