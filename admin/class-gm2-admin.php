@@ -40,7 +40,7 @@ class Gm2_Admin {
             check_admin_referer('gm2_chatgpt_settings');
             $api_key = sanitize_text_field($_POST['gm2_chatgpt_api_key']);
             update_option('gm2_chatgpt_api_key', $api_key);
-            $prompt = sanitize_text_field($_POST['gm2_chatgpt_prompt']);
+            $prompt = self::sanitize_prompt($_POST['gm2_chatgpt_prompt']);
             if (!empty($prompt)) {
                 $response = Gm2_ChatGPT::send_prompt($prompt);
             }
@@ -64,5 +64,15 @@ class Gm2_Admin {
             echo '<h2>Response</h2><pre>' . esc_html($response) . '</pre>';
         }
         echo '</div>';
+    }
+
+    public static function sanitize_prompt($prompt) {
+        if (function_exists('sanitize_textarea_field')) {
+            return sanitize_textarea_field($prompt);
+        }
+
+        $prompt = str_replace("\r", '', $prompt);
+
+        return trim($prompt);
     }
 }

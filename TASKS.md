@@ -14,7 +14,7 @@ The following tasks translate the issues highlighted in `CODE_REVIEW.md` into ac
   - Ensure capability checks restrict results to terms the user can edit.
   - Add tests that confirm filtered taxonomy views return matching IDs only.
 
-- [ ] **Preserve ChatGPT prompt formatting.**
+- [x] **Preserve ChatGPT prompt formatting.**
   - Replace `sanitize_text_field()` with a textarea-safe sanitizer (e.g., `sanitize_textarea_field()`) in `Gm2_Admin::display_chatgpt_page()` when saving prompts.
   - Double-check output escaping so stored prompts render with their original formatting.
   - Extend settings tests (or add new ones) covering multi-line prompt submissions.
