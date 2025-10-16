@@ -71,17 +71,70 @@ class JobMapper extends AbstractMapper
 
     private function buildHiringOrganization(WP_Post $post): array
     {
-        $name = $this->getField($post, 'company');
+        $company = $this->getField($post, 'company');
+        $name    = $this->resolveCompanyName($company);
+
         if ($this->isEmpty($name)) {
             return [];
         }
 
         return $this->filterEmpty([
             '@type' => 'Organization',
-            'name'  => $this->sanitizeText((string) $name),
+            'name'  => $this->sanitizeText($name),
             'sameAs'=> $this->normalizeSameAs($this->getField($post, 'company_same_as', [])),
             'url'   => esc_url_raw((string) $this->getField($post, 'company_url')),
         ]);
+    }
+
+    private function resolveCompanyName(mixed $company): ?string
+    {
+        $post = $this->resolveCompanyPost($company);
+
+        if ($post instanceof WP_Post) {
+            return get_the_title($post) ?: null;
+        }
+
+        if (is_string($company)) {
+            $company = trim($company);
+            return $company === '' ? null : $company;
+        }
+
+        return null;
+    }
+
+    private function resolveCompanyPost(mixed $value): ?WP_Post
+    {
+        if ($value instanceof WP_Post) {
+            return $value;
+        }
+
+        if (is_numeric($value)) {
+            return $this->getPostById((int) $value);
+        }
+
+        if (!is_array($value)) {
+            return null;
+        }
+
+        if (isset($value['ID']) && is_numeric($value['ID'])) {
+            return $this->getPostById((int) $value['ID']);
+        }
+
+        foreach ($value as $item) {
+            $post = $this->resolveCompanyPost($item);
+            if ($post instanceof WP_Post) {
+                return $post;
+            }
+        }
+
+        return null;
+    }
+
+    private function getPostById(int $postId): ?WP_Post
+    {
+        $post = get_post($postId);
+
+        return $post instanceof WP_Post ? $post : null;
     }
 
     private function buildSalary(WP_Post $post): array

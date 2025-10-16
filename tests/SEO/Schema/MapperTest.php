@@ -127,6 +127,11 @@ class SchemaMapperTest extends WP_UnitTestCase
     public function test_job_mapper_includes_salary(): void
     {
         $this->registerPostType('job');
+        $this->registerPostType('company');
+        $company_id = self::factory()->post->create([
+            'post_type'  => 'company',
+            'post_title' => 'Example Inc',
+        ]);
         $post_id = self::factory()->post->create([
             'post_type' => 'job',
             'post_title' => 'Developer',
@@ -135,7 +140,7 @@ class SchemaMapperTest extends WP_UnitTestCase
 
         update_post_meta($post_id, 'date_posted', '2024-03-01');
         update_post_meta($post_id, 'employment_type', 'Full-time');
-        update_post_meta($post_id, 'company', 'Example Inc');
+        update_post_meta($post_id, 'company', $company_id);
         update_post_meta($post_id, 'salary_currency', 'USD');
         update_post_meta($post_id, 'salary_value', '90000');
         update_post_meta($post_id, 'job_city', 'Gotham');
