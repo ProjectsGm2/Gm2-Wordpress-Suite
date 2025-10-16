@@ -35,7 +35,7 @@ class JobMapper extends AbstractMapper
             'title'           => get_the_title($post),
             'description'     => $this->sanitizeText($post->post_excerpt ?: $post->post_content),
             'datePosted'      => $this->getField($post, 'date_posted'),
-            'employmentType'  => $this->sanitizeText($this->getField($post, 'employment_type')),
+            'employmentType'  => $this->normalizeEmploymentType($this->getField($post, 'employment_type')),
             'hiringOrganization' => $hiring,
             'jobLocation'     => $location,
             'baseSalary'      => $salary,
@@ -122,6 +122,50 @@ class JobMapper extends AbstractMapper
             '@type'          => 'Country',
             'name'           => $this->sanitizeText((string) $allowed),
         ]);
+    }
+
+    /**
+     * Normalize the employment type field to a sanitized schema-compatible value.
+     */
+    private function normalizeEmploymentType(mixed $value): array|string|null
+    {
+        if ($this->isEmpty($value)) {
+            return null;
+        }
+
+        if (is_string($value)) {
+            $value = [$value];
+        }
+
+        if (!is_array($value)) {
+            return null;
+        }
+
+        $types = [];
+        foreach ($value as $type) {
+            if (!is_scalar($type)) {
+                continue;
+            }
+
+            $type = $this->sanitizeText((string) $type);
+            if ($type === '') {
+                continue;
+            }
+
+            $types[] = $type;
+        }
+
+        $types = array_values(array_unique($types));
+
+        if ($types === []) {
+            return null;
+        }
+
+        if (count($types) === 1) {
+            return $types[0];
+        }
+
+        return $types;
     }
 
     private function normalizeSameAs(mixed $value): array
