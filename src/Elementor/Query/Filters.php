@@ -105,8 +105,15 @@ class Filters
         self::applySearch($query, ['gm2_job_search', 'gm2_search']);
 
         self::appendMetaQuery($query, [
-            'key'   => 'job_status',
-            'value' => 'open',
+            'relation' => 'OR',
+            [
+                'key'   => 'job_status',
+                'value' => 'open',
+            ],
+            [
+                'key'   => 'status',
+                'value' => 'open',
+            ],
         ]);
 
         self::ensureOrdering($query, 'date', 'DESC');
