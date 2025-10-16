@@ -325,7 +325,7 @@ class CPSchemaMappingsTest extends WP_UnitTestCase {
         $instance = $data['courseInstance'];
         $this->assertSame('CourseInstance', $instance['@type']);
         $this->assertSame('hybrid', $instance['courseMode']);
-        $this->assertSame('hybrid', $instance['eventAttendanceMode']);
+        $this->assertSame('https://schema.org/MixedEventAttendanceMode', $instance['eventAttendanceMode']);
         $this->assertSame('2024-09-01T09:00:00-05:00', $instance['startDate']);
         $this->assertSame('2024-10-13T17:00:00-05:00', $instance['endDate']);
         $this->assertSame('P6W', $instance['duration']);

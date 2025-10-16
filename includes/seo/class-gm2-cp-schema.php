@@ -125,10 +125,82 @@ class Gm2_CP_Schema {
             if ($value === '' || $value === null) {
                 continue;
             }
+
+            $value = self::normalizeSchemaValue($prop, $value);
+            if ($value === '' || $value === null) {
+                continue;
+            }
+
             self::assign($schema, $prop, $value);
             $has_data = true;
         }
         return $has_data ? $schema : null;
+    }
+
+    /**
+     * Normalize mapped values for specific schema properties.
+     */
+    private static function normalizeSchemaValue(string $property, mixed $value): mixed
+    {
+        if (self::propertyMatches($property, 'eventAttendanceMode')) {
+            return self::normalizeEventAttendanceMode($value);
+        }
+
+        return $value;
+    }
+
+    /**
+     * Determine if a property path targets a specific property.
+     */
+    private static function propertyMatches(string $property, string $target): bool
+    {
+        if ($property === $target) {
+            return true;
+        }
+
+        $suffix = '.' . $target;
+
+        return substr($property, -strlen($suffix)) === $suffix;
+    }
+
+    /**
+     * Normalize EventAttendanceMode values to canonical schema URLs.
+     */
+    private static function normalizeEventAttendanceMode(mixed $value): mixed
+    {
+        if (!is_string($value)) {
+            return $value;
+        }
+
+        $value = trim($value);
+        if ($value === '') {
+            return '';
+        }
+
+        if (preg_match('#^https?://#i', $value)) {
+            return $value;
+        }
+
+        $normalized = strtolower($value);
+        $map = [
+            'online'    => 'https://schema.org/OnlineEventAttendanceMode',
+            'offline'   => 'https://schema.org/OfflineEventAttendanceMode',
+            'inperson'  => 'https://schema.org/OfflineEventAttendanceMode',
+            'in-person' => 'https://schema.org/OfflineEventAttendanceMode',
+            'onsite'    => 'https://schema.org/OfflineEventAttendanceMode',
+            'hybrid'    => 'https://schema.org/MixedEventAttendanceMode',
+            'mixed'     => 'https://schema.org/MixedEventAttendanceMode',
+        ];
+
+        if (isset($map[$normalized])) {
+            return $map[$normalized];
+        }
+
+        if (preg_match('/EventAttendanceMode$/', $value)) {
+            return 'https://schema.org/' . $value;
+        }
+
+        return $value;
     }
 
     /**
