@@ -44,7 +44,9 @@ final class MetaIndexManager
             return;
         }
 
-        global $wpdb as $globalWpdb;
+        global $wpdb;
+        $globalWpdb = $wpdb;
+
         if (!is_object($globalWpdb)) {
             throw new RuntimeException('The global $wpdb instance is not available.');
         }
