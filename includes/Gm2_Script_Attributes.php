@@ -18,12 +18,11 @@ class Gm2_Script_Attributes {
 
     public function __construct() {
         add_option('gm2_script_attributes', [], '', AutoloadManager::get_autoload_flag('gm2_script_attributes'));
+        $this->attributes = get_option('gm2_script_attributes', []);
         add_filter('script_loader_tag', [$this, 'filter'], 10, 3);
     }
 
     public function filter(string $tag, string $handle, string $src): string {
-        $this->attributes = get_option('gm2_script_attributes', []);
-        $this->resolved   = [];
         $attr = $this->determine_attribute($handle);
 
         if ($attr === 'async' || $attr === 'defer') {
