@@ -516,6 +516,22 @@ class Gm2_GitHub_Updater_Admin {
     public function ajax_update_now() {
         $this->verify_ajax_permissions();
 
+        if (!current_user_can('update_plugins')) {
+            wp_send_json_error([
+                'message' => esc_html__('You do not have permission to update plugins.', 'gm2-wordpress-suite'),
+            ], 403);
+        }
+
+        if (!function_exists('wp_is_file_mod_allowed')) {
+            require_once ABSPATH . 'wp-admin/includes/file.php';
+        }
+
+        if (function_exists('wp_is_file_mod_allowed') && !wp_is_file_mod_allowed('gm2-github-updater-update')) {
+            wp_send_json_error([
+                'message' => esc_html__('File modifications are disabled.', 'gm2-wordpress-suite'),
+            ], 403);
+        }
+
         $updater = gm2_github_updater(true);
         if (!$updater instanceof Gm2_GitHub_Updater) {
             wp_send_json_error(['message' => esc_html__('The updater is not configured.', 'gm2-wordpress-suite')], 400);
