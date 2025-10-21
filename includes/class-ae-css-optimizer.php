@@ -523,6 +523,10 @@ final class AE_CSS_Optimizer {
         if ($cached !== false) {
             return $cached === '1';
         }
+        if (!\function_exists('shell_exec')) {
+            \set_transient('ae_css_has_node', '0', DAY_IN_SECONDS);
+            return false;
+        }
         $has = false;
         foreach (['node', 'npx'] as $cmd) {
             $out = \shell_exec($cmd . ' --version 2>&1');
@@ -585,6 +589,9 @@ final class AE_CSS_Optimizer {
         }
         $url = \esc_url_raw($url);
         if ($url === '' || empty($css_paths)) {
+            return;
+        }
+        if (!\function_exists('shell_exec')) {
             return;
         }
         $script = \escapeshellarg(\dirname(__DIR__) . '/tools/node/critical.js');
