@@ -491,7 +491,7 @@ class GithubUpdaterTest extends WP_UnitTestCase {
         $response = wp_remote_post('https://api.github.com/repos/gm2/wordpress-suite/zipball');
         $this->assertSame(200, wp_remote_retrieve_response_code($response));
 
-        $expected_body = '{"ok":true}';
+        $expected_body = wp_json_encode(['ok' => true]);
 
         $this->assertSame(
             $expected_body,
