@@ -15,6 +15,7 @@
     var feedback = $('#gm2-github-updater-feedback');
     var testButton = $('#gm2-github-test');
     var checkButton = $('#gm2-github-check');
+    var updateButton = $('#gm2-github-update');
     var oauthConfig = gm2GitHubUpdaterAdmin.oauth || {};
     var loginButton = $('#gm2-github-login-button');
     var disconnectButton = $('#gm2-github-disconnect-button');
@@ -355,6 +356,9 @@
     function setButtonsDisabled(disabled) {
         testButton.prop('disabled', disabled);
         checkButton.prop('disabled', disabled);
+        if (updateButton.length) {
+            updateButton.prop('disabled', disabled);
+        }
     }
 
     function handleAjax(button, action, pendingMessage, successHandler) {
@@ -430,4 +434,17 @@
             renderMessage('success', message);
         });
     });
+
+    if (updateButton.length) {
+        updateButton.on('click', function (event) {
+            event.preventDefault();
+            handleAjax(updateButton, updateButton.data('action'), gm2GitHubUpdaterAdmin.i18n.updating, function (data) {
+                var message = gm2GitHubUpdaterAdmin.i18n.updateSuccess;
+                if (data.update && data.update.version) {
+                    message += ' ' + gm2GitHubUpdaterAdmin.i18n.versionLabel.replace('%s', data.update.version);
+                }
+                renderMessage('success', message);
+            });
+        });
+    }
 })(jQuery);

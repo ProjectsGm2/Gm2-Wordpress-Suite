@@ -111,8 +111,12 @@ class Gm2_GitHub_Updater {
         add_filter('cron_schedules', [$this, 'register_cron_schedule']);
 
         $interval = $this->get_warmup_interval();
-        if (!wp_next_scheduled('gm2_github_updater_warmup')) {
-            wp_schedule_event(time() + $interval, 'gm2_github_updater_interval', 'gm2_github_updater_warmup');
+        if ($interval > 0) {
+            if (!wp_next_scheduled('gm2_github_updater_warmup')) {
+                wp_schedule_event(time() + $interval, 'gm2_github_updater_interval', 'gm2_github_updater_warmup');
+            }
+        } else {
+            wp_clear_scheduled_hook('gm2_github_updater_warmup');
         }
 
         if (defined('WP_CLI') && WP_CLI) {
@@ -338,6 +342,10 @@ class Gm2_GitHub_Updater {
      */
     protected function get_warmup_interval() {
         $minutes = isset($this->settings['check_interval']) ? absint($this->settings['check_interval']) : 60;
+        if ($minutes === 0) {
+            return 0;
+        }
+
         if ($minutes < 5) {
             $minutes = 5;
         }
@@ -354,6 +362,11 @@ class Gm2_GitHub_Updater {
      */
     public function register_cron_schedule($schedules) {
         $interval = $this->get_warmup_interval();
+        if ($interval <= 0) {
+            unset($schedules['gm2_github_updater_interval']);
+            return $schedules;
+        }
+
         $schedules['gm2_github_updater_interval'] = [
             'interval' => $interval,
             'display'  => sprintf(

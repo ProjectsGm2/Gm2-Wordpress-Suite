@@ -16,6 +16,7 @@ class Gm2_GitHub_Updater_Admin {
     protected const MENU_SLUG = 'gm2-github-updater';
     protected const AJAX_TEST = 'gm2_github_updater_test';
     protected const AJAX_CHECK = 'gm2_github_updater_check';
+    protected const AJAX_UPDATE = 'gm2_github_updater_update';
     protected const AJAX_OAUTH_START = 'gm2_github_oauth_start';
     protected const AJAX_OAUTH_POLL = 'gm2_github_oauth_poll';
     protected const AJAX_OAUTH_DISCONNECT = 'gm2_github_oauth_disconnect';
@@ -42,6 +43,7 @@ class Gm2_GitHub_Updater_Admin {
         add_action('admin_notices', [$this, 'render_settings_notices']);
         add_action('wp_ajax_' . self::AJAX_TEST, [$this, 'ajax_test_connection']);
         add_action('wp_ajax_' . self::AJAX_CHECK, [$this, 'ajax_check_now']);
+        add_action('wp_ajax_' . self::AJAX_UPDATE, [$this, 'ajax_update_now']);
         add_action('wp_ajax_' . self::AJAX_OAUTH_START, [$this, 'ajax_oauth_start']);
         add_action('wp_ajax_' . self::AJAX_OAUTH_POLL, [$this, 'ajax_oauth_poll']);
         add_action('wp_ajax_' . self::AJAX_OAUTH_DISCONNECT, [$this, 'ajax_oauth_disconnect']);
@@ -112,7 +114,7 @@ class Gm2_GitHub_Updater_Admin {
         $branch = isset($input['branch']) ? sanitize_text_field(trim((string) $input['branch'])) : 'main';
         $sanitized['branch'] = $branch !== '' ? $branch : 'main';
 
-        $allowed_intervals = [5, 15, 30, 60, 120, 360, 720, 1440];
+        $allowed_intervals = [0, 5, 15, 30, 60, 120, 360, 720, 1440];
         $interval          = isset($input['check_interval']) ? absint($input['check_interval']) : 60;
         if (!in_array($interval, $allowed_intervals, true)) {
             $interval = 60;
@@ -141,7 +143,11 @@ class Gm2_GitHub_Updater_Admin {
             );
         }
 
-        $this->interval_seconds = max(5, $sanitized['check_interval']) * MINUTE_IN_SECONDS;
+        if ($sanitized['check_interval'] > 0) {
+            $this->interval_seconds = max(5, $sanitized['check_interval']) * MINUTE_IN_SECONDS;
+        } else {
+            $this->interval_seconds = 0;
+        }
 
         unset($sanitized['token_keep']);
 
@@ -182,8 +188,10 @@ class Gm2_GitHub_Updater_Admin {
                 'i18n'    => [
                     'testing'      => esc_html__('Testing connection…', 'gm2-wordpress-suite'),
                     'checking'     => esc_html__('Checking for updates…', 'gm2-wordpress-suite'),
+                    'updating'     => esc_html__('Updating plugin…', 'gm2-wordpress-suite'),
                     'testSuccess'  => esc_html__('Connection successful.', 'gm2-wordpress-suite'),
                     'checkSuccess' => esc_html__('Update metadata refreshed.', 'gm2-wordpress-suite'),
+                    'updateSuccess'=> esc_html__('Plugin updated successfully.', 'gm2-wordpress-suite'),
                     'unknownError' => esc_html__('An unexpected error occurred.', 'gm2-wordpress-suite'),
                     'showToken'    => esc_html__('Reveal Token Field', 'gm2-wordpress-suite'),
                     'hideToken'    => esc_html__('Hide Token Field', 'gm2-wordpress-suite'),
@@ -296,7 +304,7 @@ class Gm2_GitHub_Updater_Admin {
         $channel    = isset($settings['channel']) ? $settings['channel'] : 'release';
         $branch     = isset($settings['branch']) ? $settings['branch'] : 'main';
         $interval   = isset($settings['check_interval']) ? (int) $settings['check_interval'] : 60;
-        $intervals  = [5, 15, 30, 60, 120, 360, 720, 1440];
+        $intervals  = [0, 5, 15, 30, 60, 120, 360, 720, 1440];
         if (!in_array($interval, $intervals, true)) {
             $interval = 60;
         }
@@ -393,11 +401,14 @@ class Gm2_GitHub_Updater_Admin {
                                 <select id="gm2-github-interval" name="<?php echo esc_attr(self::OPTION_KEY); ?>[check_interval]">
                                     <?php
                                     foreach ($intervals as $minutes) {
+                                        $label = $minutes === 0
+                                            ? esc_html__('Disabled (manual updates only)', 'gm2-wordpress-suite')
+                                            : esc_html(sprintf(_n('%d minute', '%d minutes', $minutes, 'gm2-wordpress-suite'), $minutes));
                                         printf(
                                             '<option value="%1$d" %2$s>%3$s</option>',
                                             (int) $minutes,
                                             selected($interval, $minutes, false),
-                                            esc_html(sprintf(_n('%d minute', '%d minutes', $minutes, 'gm2-wordpress-suite'), $minutes))
+                                            $label
                                         );
                                     }
                                     ?>
@@ -410,6 +421,7 @@ class Gm2_GitHub_Updater_Admin {
                     <button type="submit" class="button button-primary"><?php esc_html_e('Save', 'gm2-wordpress-suite'); ?></button>
                     <button type="button" class="button" id="gm2-github-test" data-action="<?php echo esc_attr(self::AJAX_TEST); ?>"><?php esc_html_e('Test Connection', 'gm2-wordpress-suite'); ?></button>
                     <button type="button" class="button" id="gm2-github-check" data-action="<?php echo esc_attr(self::AJAX_CHECK); ?>"><?php esc_html_e('Check Now', 'gm2-wordpress-suite'); ?></button>
+                    <button type="button" class="button button-secondary" id="gm2-github-update" data-action="<?php echo esc_attr(self::AJAX_UPDATE); ?>"><?php esc_html_e('Update Now', 'gm2-wordpress-suite'); ?></button>
                 </p>
             </form>
             <div id="gm2-github-updater-feedback" aria-live="polite"></div>
@@ -496,6 +508,50 @@ class Gm2_GitHub_Updater_Admin {
         ];
 
         wp_send_json_success(['metadata' => $response]);
+    }
+
+    /**
+     * Handle "Update Now" AJAX requests.
+     */
+    public function ajax_update_now() {
+        $this->verify_ajax_permissions();
+
+        $updater = gm2_github_updater(true);
+        if (!$updater instanceof Gm2_GitHub_Updater) {
+            wp_send_json_error(['message' => esc_html__('The updater is not configured.', 'gm2-wordpress-suite')], 400);
+        }
+
+        $meta = $updater->refresh();
+        if ($meta instanceof WP_Error) {
+            wp_send_json_error(['message' => $meta->get_error_message()], 500);
+        }
+
+        if (empty($meta['package'])) {
+            wp_send_json_error(['message' => esc_html__('No download package URL found for the selected channel.', 'gm2-wordpress-suite')], 500);
+        }
+
+        require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
+        require_once ABSPATH . 'wp-admin/includes/plugin.php';
+
+        $skin     = new \Automatic_Upgrader_Skin([
+            'plugin' => $updater->get_plugin_basename(),
+        ]);
+        $upgrader = new \Plugin_Upgrader($skin);
+        $result   = $upgrader->upgrade($updater->get_plugin_basename());
+
+        if ($result instanceof WP_Error) {
+            wp_send_json_error(['message' => $result->get_error_message()], 500);
+        }
+
+        if ($result === false) {
+            wp_send_json_error(['message' => esc_html__('Plugin upgrade did not complete.', 'gm2-wordpress-suite')], 500);
+        }
+
+        $response = [
+            'version' => isset($meta['version']) ? sanitize_text_field($meta['version']) : '',
+        ];
+
+        wp_send_json_success(['update' => $response]);
     }
 
     /**
@@ -652,7 +708,11 @@ class Gm2_GitHub_Updater_Admin {
         }
 
         $runtime = self::prepare_settings_for_runtime($value);
-        $this->interval_seconds = max(5, $runtime['check_interval']) * MINUTE_IN_SECONDS;
+        if ($runtime['check_interval'] > 0) {
+            $this->interval_seconds = max(5, $runtime['check_interval']) * MINUTE_IN_SECONDS;
+        } else {
+            $this->interval_seconds = 0;
+        }
 
         if (empty($runtime['owner']) || empty($runtime['repo'])) {
             wp_clear_scheduled_hook('gm2_github_updater_warmup');
@@ -665,6 +725,11 @@ class Gm2_GitHub_Updater_Admin {
             $updater->run();
         }
 
+        if ($runtime['check_interval'] <= 0) {
+            wp_clear_scheduled_hook('gm2_github_updater_warmup');
+            return;
+        }
+
         $this->reschedule_warmup($runtime['check_interval']);
     }
 
@@ -674,10 +739,19 @@ class Gm2_GitHub_Updater_Admin {
      * @param int $minutes Interval in minutes.
      */
     protected function reschedule_warmup($minutes) {
-        $minutes = max(5, absint($minutes));
+        $minutes = absint($minutes);
+        wp_clear_scheduled_hook('gm2_github_updater_warmup');
+
+        if ($minutes === 0) {
+            return;
+        }
+
+        if ($minutes < 5) {
+            $minutes = 5;
+        }
+
         $seconds = $minutes * MINUTE_IN_SECONDS;
 
-        wp_clear_scheduled_hook('gm2_github_updater_warmup');
         wp_schedule_event(time() + $seconds, 'gm2_github_updater_interval', 'gm2_github_updater_warmup');
     }
 
@@ -690,6 +764,10 @@ class Gm2_GitHub_Updater_Admin {
      */
     public function filter_cron_schedules($schedules) {
         $seconds = $this->interval_seconds;
+        if ($seconds <= 0) {
+            unset($schedules['gm2_github_updater_interval']);
+            return $schedules;
+        }
         $schedules['gm2_github_updater_interval'] = [
             'interval' => $seconds,
             'display'  => sprintf(
@@ -724,8 +802,13 @@ class Gm2_GitHub_Updater_Admin {
             $settings['channel'] = 'release';
         }
         $settings['token'] = self::reveal_token(isset($settings['token']) ? (string) $settings['token'] : '');
-        $settings['check_interval'] = max(5, absint($settings['check_interval']));
-        $settings['cache_ttl']      = $settings['check_interval'] * MINUTE_IN_SECONDS;
+
+        $interval = isset($settings['check_interval']) ? absint($settings['check_interval']) : 60;
+        if ($interval !== 0 && $interval < 5) {
+            $interval = 5;
+        }
+        $settings['check_interval'] = $interval;
+        $settings['cache_ttl']      = $interval > 0 ? $interval * MINUTE_IN_SECONDS : 0;
 
         return $settings;
     }
@@ -742,7 +825,13 @@ class Gm2_GitHub_Updater_Admin {
         }
 
         if (isset($settings['check_interval'])) {
-            $minutes = max(5, absint($settings['check_interval']));
+            $minutes = absint($settings['check_interval']);
+            if ($minutes === 0) {
+                return 0;
+            }
+            if ($minutes < 5) {
+                $minutes = 5;
+            }
         } else {
             $minutes = 60;
         }
