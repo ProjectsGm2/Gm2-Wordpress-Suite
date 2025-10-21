@@ -9,7 +9,7 @@ if (!defined('ABSPATH')) {
 }
 
 class Gm2_Script_Attributes {
-    private array $attributes = [];
+    private ?array $attributes = null;
     private array $resolved = [];
 
     public static function init(): self {
@@ -20,6 +20,7 @@ class Gm2_Script_Attributes {
         add_option('gm2_script_attributes', [], '', AutoloadManager::get_autoload_flag('gm2_script_attributes'));
         $this->attributes = get_option('gm2_script_attributes', []);
         add_filter('script_loader_tag', [$this, 'filter'], 10, 3);
+        add_action('update_option_gm2_script_attributes', [$this, 'handle_option_update'], 10, 2);
     }
 
     public function filter(string $tag, string $handle, string $src): string {
@@ -39,7 +40,8 @@ class Gm2_Script_Attributes {
         }
         $this->resolved[$handle] = 'none';
 
-        $attr = $this->attributes[$handle] ?? 'defer';
+        $attributes = $this->get_attributes();
+        $attr = $attributes[$handle] ?? 'defer';
         if ($attr === 'blocking') {
             return $this->resolved[$handle] = 'blocking';
         }
@@ -62,5 +64,22 @@ class Gm2_Script_Attributes {
         }
 
         return $this->resolved[$handle] = $attr;
+    }
+
+    private function get_attributes(): array {
+        if ($this->attributes === null) {
+            $this->attributes = get_option('gm2_script_attributes', []);
+        }
+
+        return $this->attributes;
+    }
+
+    /**
+     * @param mixed $old_value
+     * @param mixed $value
+     */
+    public function handle_option_update($old_value, $value): void {
+        $this->attributes = is_array($value) ? $value : [];
+        $this->resolved = [];
     }
 }
