@@ -41,6 +41,32 @@ class Gm2_GitHub_OAuth {
     }
 
     /**
+     * Get the configured GitHub OAuth client secret.
+     *
+     * @return string
+     */
+    public static function get_client_secret() {
+        $client_secret = '';
+
+        if (defined('GM2_GITHUB_CLIENT_SECRET') && GM2_GITHUB_CLIENT_SECRET) {
+            $client_secret = (string) GM2_GITHUB_CLIENT_SECRET;
+        }
+
+        if ($client_secret === '') {
+            $client_secret = (string) get_option('gm2_github_client_secret', '');
+        }
+
+        /**
+         * Filter the GitHub OAuth client secret used for the device flow.
+         *
+         * @param string $client_secret Client secret value.
+         */
+        $client_secret = (string) apply_filters('gm2_github_oauth_client_secret', $client_secret);
+
+        return trim($client_secret);
+    }
+
+    /**
      * Get the scopes requested when generating a GitHub access token.
      *
      * @return string[]
@@ -92,6 +118,11 @@ class Gm2_GitHub_OAuth {
             return new WP_Error('github_oauth_client', __('GitHub OAuth client ID is not configured.', 'gm2-wordpress-suite'));
         }
 
+        $client_secret = self::get_client_secret();
+        if ($client_secret === '') {
+            return new WP_Error('github_oauth_client_secret', __('GitHub OAuth client secret is not configured.', 'gm2-wordpress-suite'));
+        }
+
         $response = wp_safe_remote_post(self::DEVICE_CODE_URL, [
             'timeout' => 20,
             'headers' => [
@@ -121,10 +152,11 @@ class Gm2_GitHub_OAuth {
         $expires_in = isset($data['expires_in']) ? max($interval, absint($data['expires_in'])) : 900;
 
         $state = [
-            'device_code' => (string) $data['device_code'],
-            'interval'    => $interval,
-            'expires_at'  => time() + $expires_in,
-            'client_id'   => $client_id,
+            'device_code'    => (string) $data['device_code'],
+            'interval'       => $interval,
+            'expires_at'     => time() + $expires_in,
+            'client_id'      => $client_id,
+            'client_secret'  => $client_secret,
         ];
 
         set_transient(self::get_transient_key($user_id), $state, $expires_in);
@@ -157,6 +189,18 @@ class Gm2_GitHub_OAuth {
             return new WP_Error('github_oauth_state', __('GitHub authorization session expired. Start again.', 'gm2-wordpress-suite'));
         }
 
+        if (empty($state['client_secret'])) {
+            $state['client_secret'] = self::get_client_secret();
+            if ($state['client_secret'] === '') {
+                delete_transient(self::get_transient_key($user_id));
+
+                return new WP_Error('github_oauth_client_secret', __('GitHub OAuth client secret is not configured.', 'gm2-wordpress-suite'));
+            }
+
+            $ttl = isset($state['expires_at']) ? max(60, (int) $state['expires_at'] - time()) : 600;
+            set_transient(self::get_transient_key($user_id), $state, $ttl);
+        }
+
         if (!empty($state['expires_at']) && time() >= (int) $state['expires_at']) {
             delete_transient(self::get_transient_key($user_id));
             return new WP_Error('github_oauth_expired', __('GitHub authorization expired. Please try again.', 'gm2-wordpress-suite'));
@@ -168,9 +212,10 @@ class Gm2_GitHub_OAuth {
                 'Accept' => 'application/json',
             ],
             'body'    => [
-                'client_id'   => (string) $state['client_id'],
-                'device_code' => (string) $state['device_code'],
-                'grant_type'  => 'urn:ietf:params:oauth:grant-type:device_code',
+                'client_id'     => (string) $state['client_id'],
+                'client_secret' => (string) $state['client_secret'],
+                'device_code'   => (string) $state['device_code'],
+                'grant_type'    => 'urn:ietf:params:oauth:grant-type:device_code',
             ],
         ]);
 

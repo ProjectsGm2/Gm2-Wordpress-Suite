@@ -198,7 +198,7 @@ class Gm2_GitHub_Updater_Admin {
                     'oauthSlowDown'=> esc_html__('GitHub requested a slower polling interval. Retrying…', 'gm2-wordpress-suite'),
                     'oauthSuccess' => esc_html__('GitHub access token saved.', 'gm2-wordpress-suite'),
                     'oauthExpired' => esc_html__('GitHub authorization expired. Please start again.', 'gm2-wordpress-suite'),
-                    'oauthMissingClientId' => esc_html__('Configure the GitHub OAuth client ID before connecting.', 'gm2-wordpress-suite'),
+                    'oauthMissingClientId' => esc_html__('Configure the GitHub OAuth client ID and secret before connecting.', 'gm2-wordpress-suite'),
                     'oauthNotConnected' => esc_html__('Not connected.', 'gm2-wordpress-suite'),
                     'oauthConnectedAs' => esc_html__('Connected as %s.', 'gm2-wordpress-suite'),
                     'oauthOpenLink' => esc_html__('Open GitHub to continue', 'gm2-wordpress-suite'),
@@ -216,11 +216,12 @@ class Gm2_GitHub_Updater_Admin {
      * @return array<string, mixed>
      */
     protected function get_oauth_localization() {
-        $client_id = Gm2_GitHub_OAuth::get_client_id();
-        $connected = $this->get_connected_github_account();
+        $client_id     = Gm2_GitHub_OAuth::get_client_id();
+        $client_secret = Gm2_GitHub_OAuth::get_client_secret();
+        $connected     = $this->get_connected_github_account();
 
         return [
-            'enabled'          => $client_id !== '',
+            'enabled'          => $client_id !== '' && $client_secret !== '',
             'startAction'      => self::AJAX_OAUTH_START,
             'pollAction'       => self::AJAX_OAUTH_POLL,
             'disconnectAction' => self::AJAX_OAUTH_DISCONNECT,

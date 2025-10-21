@@ -44,6 +44,17 @@ class Gm2_Github_Settings {
             ]
         );
 
+        register_setting(
+            'gm2_github',
+            'gm2_github_client_secret',
+            [
+                'type'              => 'string',
+                'sanitize_callback' => [ $this, 'sanitize_client_secret' ],
+                'default'           => '',
+                'capability'        => 'manage_options',
+            ]
+        );
+
         add_settings_section(
             'gm2_github_section',
             __('GitHub', 'gm2-wordpress-suite'),
@@ -55,6 +66,14 @@ class Gm2_Github_Settings {
             'gm2_github_client_id',
             __('OAuth Client ID', 'gm2-wordpress-suite'),
             [ $this, 'client_id_field' ],
+            'gm2-github-settings',
+            'gm2_github_section'
+        );
+
+        add_settings_field(
+            'gm2_github_client_secret',
+            __('OAuth Client Secret', 'gm2-wordpress-suite'),
+            [ $this, 'client_secret_field' ],
             'gm2-github-settings',
             'gm2_github_section'
         );
@@ -76,6 +95,10 @@ class Gm2_Github_Settings {
         return sanitize_text_field($client_id);
     }
 
+    public function sanitize_client_secret($client_secret) {
+        return sanitize_text_field($client_secret);
+    }
+
     public function client_id_field() {
         $client_id = get_option('gm2_github_client_id', '');
         printf(
@@ -83,6 +106,15 @@ class Gm2_Github_Settings {
             esc_attr($client_id)
         );
         echo '<p class="description">' . esc_html__( 'Register a GitHub OAuth application and copy its client ID here. The updater uses this value to launch the device authorization flow.', 'gm2-wordpress-suite' ) . '</p>';
+    }
+
+    public function client_secret_field() {
+        $client_secret = get_option('gm2_github_client_secret', '');
+        printf(
+            '<input type="password" name="gm2_github_client_secret" value="%s" class="regular-text" autocomplete="new-password" />',
+            esc_attr($client_secret)
+        );
+        echo '<p class="description">' . esc_html__( 'Copy the client secret from the same GitHub OAuth application. It is required to complete the sign-in process and store the generated access token automatically.', 'gm2-wordpress-suite' ) . '</p>';
     }
 
     public function token_field() {
