@@ -6,12 +6,14 @@ use WP_Post;
 
 class DirectoryMapper extends AbstractMapper
 {
-    protected array $requiredFields = [
-        'address' => __('Address', 'gm2-wordpress-suite'),
-    ];
+    protected array $requiredFields = [];
 
     public function __construct()
     {
+        $this->requiredFields = [
+            'address' => __('Address', 'gm2-wordpress-suite'),
+        ];
+
         parent::__construct(
             'listing',
             'LocalBusiness',
