@@ -49,6 +49,13 @@ class Gm2_GitHub_Updater {
     protected $last_error;
 
     /**
+     * Flag used to scope GitHub authentication headers to updater downloads.
+     *
+     * @var bool
+     */
+    protected $download_auth_active = false;
+
+    /**
      * Plugin basename derived from the plugin file.
      *
      * @var string
@@ -101,8 +108,8 @@ class Gm2_GitHub_Updater {
 
         add_filter('pre_set_site_transient_update_plugins', [$this, 'check_for_update']);
         add_filter('plugins_api', [$this, 'plugins_api'], 10, 3);
-        add_filter('http_request_args', [$this, 'authenticate_http'], 10, 2);
         add_filter('upgrader_pre_download', [$this, 'intercept_download'], 10, 4);
+        add_filter('upgrader_source_selection', [$this, 'normalize_source_directory'], 10, 4);
         add_action('gm2_github_updater_warmup', [$this, 'cron_warmup']);
         add_action('admin_notices', [$this, 'render_admin_notices']);
         add_action('wp_ajax_gm2_github_updater_refresh', [$this, 'handle_ajax_refresh']);
@@ -265,7 +272,7 @@ class Gm2_GitHub_Updater {
      * @return array
      */
     public function authenticate_http($args, $url) {
-        if (!$this->is_github_host($url)) {
+        if (!$this->download_auth_active || !$this->is_github_host($url)) {
             return $args;
         }
 
@@ -297,13 +304,110 @@ class Gm2_GitHub_Updater {
             return $reply;
         }
 
-        add_filter('http_request_args', [$this, 'authenticate_http'], 10, 2);
+        if (!$this->is_plugin_update_context($hook_extra) || !$this->is_github_host($package)) {
+            return $reply;
+        }
 
         if (is_wp_error($reply)) {
             $this->maybe_record_notice('download_error', sprintf(__('Download failed (%s).', 'gm2-wordpress-suite'), $reply->get_error_code()));
+            return $reply;
         }
 
+        $this->download_auth_active = true;
+        add_filter('http_request_args', [$this, 'authenticate_http'], 10, 2);
+        add_action('http_api_debug', [$this, 'maybe_cleanup_authenticated_request'], 10, 5);
+
         return $reply;
+    }
+
+    /**
+     * Ensure the extracted package directory matches the plugin slug.
+     *
+     * @param string $source        Location of the extracted package.
+     * @param string $remote_source Remote package location.
+     * @param \WP_Upgrader $upgrader     Upgrader instance.
+     * @param array  $hook_extra   Extra data about the upgrade.
+     *
+     * @return string|WP_Error
+     */
+    public function normalize_source_directory($source, $remote_source, $upgrader, $hook_extra) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
+        if (!$this->is_plugin_update_context($hook_extra) || !is_string($source) || $source === '') {
+            return $source;
+        }
+
+        $slug = dirname($this->plugin_basename);
+        if ($slug === '' || basename($source) === $slug) {
+            return $source;
+        }
+
+        if (!function_exists('WP_Filesystem')) {
+            require_once ABSPATH . 'wp-admin/includes/file.php';
+        }
+
+        global $wp_filesystem;
+        if (!is_object($wp_filesystem)) {
+            WP_Filesystem();
+        }
+
+        if (!is_object($wp_filesystem)) {
+            return new WP_Error('gm2_updater_filesystem_unavailable', __('Unable to initialize filesystem for GitHub update.', 'gm2-wordpress-suite'));
+        }
+
+        $desired = trailingslashit($remote_source) . $slug;
+
+        if ($wp_filesystem->exists($desired)) {
+            $wp_filesystem->delete($desired, true);
+        }
+
+        if (!$wp_filesystem->move($source, $desired, true)) {
+            return new WP_Error('gm2_updater_source_rename_failed', __('Unable to prepare GitHub update package.', 'gm2-wordpress-suite'));
+        }
+
+        return $desired;
+    }
+
+    /**
+     * Remove temporary authentication hooks after the package download completes.
+     *
+     * @param mixed  $response HTTP response.
+     * @param string $context  Context string.
+     * @param string $class    Transport class name.
+     * @param array  $args     Request arguments.
+     * @param string $url      Request URL.
+     */
+    public function maybe_cleanup_authenticated_request($response, $context, $class, $args, $url) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
+        if ($context !== 'response' || !$this->download_auth_active || !$this->is_github_host($url)) {
+            return;
+        }
+
+        remove_filter('http_request_args', [$this, 'authenticate_http'], 10);
+        remove_action('http_api_debug', [$this, 'maybe_cleanup_authenticated_request'], 10);
+        $this->download_auth_active = false;
+    }
+
+    /**
+     * Determine if the upgrader context relates to this plugin.
+     *
+     * @param array $hook_extra Hook context passed to upgrader callbacks.
+     *
+     * @return bool
+     */
+    protected function is_plugin_update_context($hook_extra) {
+        if (!is_array($hook_extra)) {
+            return false;
+        }
+
+        $plugin = $this->plugin_basename;
+
+        if (isset($hook_extra['plugin'])) {
+            return $hook_extra['plugin'] === $plugin;
+        }
+
+        if (!empty($hook_extra['plugins']) && is_array($hook_extra['plugins'])) {
+            return in_array($plugin, $hook_extra['plugins'], true);
+        }
+
+        return false;
     }
 
     /**
