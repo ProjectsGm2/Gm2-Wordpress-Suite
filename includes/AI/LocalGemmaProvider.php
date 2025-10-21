@@ -27,12 +27,12 @@ class LocalGemmaProvider implements ProviderInterface {
         }
         $temperature = isset($args['temperature']) ? floatval($args['temperature']) : 1.0;
         $max_tokens  = isset($args['max_tokens']) ? intval($args['max_tokens']) : (isset($args['number-of-words']) ? intval($args['number-of-words']) : 0);
-        $command = escapeshellcmd($binary)
+        $command = escapeshellarg($binary)
             . ' -m ' . escapeshellarg($model)
             . ' -p ' . escapeshellarg($prompt)
             . ' --temp ' . escapeshellarg((string)$temperature);
         if ($max_tokens > 0) {
-            $command .= ' -n ' . intval($max_tokens);
+            $command .= ' -n ' . escapeshellarg((string)intval($max_tokens));
         }
         $output = shell_exec($command);
         if ($output === null) {
