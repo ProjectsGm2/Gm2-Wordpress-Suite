@@ -157,7 +157,7 @@ class Gm2_GitHub_Updater {
             }
 
             public function update($args, $assoc_args) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
-                $meta = $this->updater->refresh();
+                $meta = $this->updater->refresh(true);
                 if (is_wp_error($meta)) {
                     WP_CLI::error($meta->get_error_message());
                 }
@@ -213,20 +213,32 @@ class Gm2_GitHub_Updater {
 
         $current_version = $this->get_local_version();
         if ($meta && version_compare($meta['version'], $current_version, '>')) {
-            $plugin              = new stdClass();
-            $plugin->slug        = dirname($this->plugin_basename);
-            $plugin->plugin      = $this->plugin_basename;
-            $plugin->new_version = $meta['version'];
-            $plugin->tested      = isset($meta['tested']) ? $meta['tested'] : '';
-            $plugin->url         = isset($meta['changelog_url']) ? $meta['changelog_url'] : '';
-            $plugin->package     = $meta['package'];
-            $plugin->icons       = [];
-            $transient->response[$this->plugin_basename] = $plugin;
+            $transient->response[$this->plugin_basename] = $this->prepare_update_payload($meta);
         } else {
             unset($transient->response[$this->plugin_basename]);
         }
 
         return $transient;
+    }
+
+    /**
+     * Build the update payload stored in the plugin update transient.
+     *
+     * @param array<string, mixed> $meta Normalised metadata.
+     *
+     * @return stdClass
+     */
+    protected function prepare_update_payload(array $meta) {
+        $plugin              = new stdClass();
+        $plugin->slug        = dirname($this->plugin_basename);
+        $plugin->plugin      = $this->plugin_basename;
+        $plugin->new_version = isset($meta['version']) ? $meta['version'] : '';
+        $plugin->tested      = isset($meta['tested']) ? $meta['tested'] : '';
+        $plugin->url         = isset($meta['changelog_url']) ? $meta['changelog_url'] : '';
+        $plugin->package     = isset($meta['package']) ? $meta['package'] : '';
+        $plugin->icons       = [];
+
+        return $plugin;
     }
 
     /**
@@ -710,9 +722,11 @@ class Gm2_GitHub_Updater {
     /**
      * Warmup helper exposed for AJAX/CLI.
      *
+     * @param bool $force_update Force the update transient to contain this plugin.
+     *
      * @return array<string, mixed>|WP_Error
      */
-    public function refresh() {
+    public function refresh($force_update = false) {
         $this->clear_cache();
         $meta = $this->get_remote_version(true);
         if (is_wp_error($meta)) {
@@ -725,6 +739,13 @@ class Gm2_GitHub_Updater {
         }
 
         $transient = $this->check_for_update($transient);
+        if ($force_update) {
+            if (!isset($transient->response)) {
+                $transient->response = [];
+            }
+
+            $transient->response[$this->plugin_basename] = $this->prepare_update_payload($meta);
+        }
         set_site_transient('update_plugins', $transient);
 
         return $meta;

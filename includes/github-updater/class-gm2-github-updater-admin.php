@@ -521,7 +521,7 @@ class Gm2_GitHub_Updater_Admin {
             wp_send_json_error(['message' => esc_html__('The updater is not configured.', 'gm2-wordpress-suite')], 400);
         }
 
-        $meta = $updater->refresh();
+        $meta = $updater->refresh(true);
         if ($meta instanceof WP_Error) {
             wp_send_json_error(['message' => $meta->get_error_message()], 500);
         }

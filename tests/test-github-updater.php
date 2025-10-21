@@ -280,6 +280,69 @@ class GithubUpdaterTest extends WP_UnitTestCase {
         remove_filter('pre_http_request', $refreshMock, 10);
     }
 
+    public function test_force_refresh_injects_update_entry_even_when_versions_match(): void {
+        $updater         = $this->create_updater(['channel' => 'release']);
+        $pluginBasename  = plugin_basename($this->pluginFile);
+        $pluginData      = get_plugin_data($this->pluginFile, false, false);
+        $localVersion    = isset($pluginData['Version']) ? $pluginData['Version'] : '0.0.0';
+        $downloadPackage = 'https://example.com/force-update.zip';
+
+        add_filter(
+            'pre_http_request',
+            $forceMock = static function ($pre, $args, $url) use ($localVersion, $downloadPackage) {
+                if (str_contains($url, '/releases/latest')) {
+                    return [
+                        'headers'  => [],
+                        'body'     => wp_json_encode([
+                            'tag_name'    => 'v' . $localVersion,
+                            'zipball_url' => $downloadPackage,
+                            'body'        => '',
+                            'html_url'    => '',
+                            'published_at'=> '2024-05-01T00:00:00Z',
+                        ]),
+                        'response' => [
+                            'code'    => 200,
+                            'message' => 'OK',
+                        ],
+                    ];
+                }
+
+                if (str_contains($url, 'readme.txt')) {
+                    return [
+                        'headers'  => [],
+                        'body'     => '',
+                        'response' => [
+                            'code'    => 404,
+                            'message' => 'Not Found',
+                        ],
+                    ];
+                }
+
+                return false;
+            },
+            10,
+            3
+        );
+
+        $meta = $updater->refresh();
+        $this->assertSame($localVersion, $meta['version']);
+
+        $transient = get_site_transient('update_plugins');
+        $this->assertIsObject($transient);
+        $this->assertArrayHasKey('response', (array) $transient);
+        $this->assertArrayNotHasKey($pluginBasename, $transient->response);
+
+        $meta = $updater->refresh(true);
+        $this->assertSame($localVersion, $meta['version']);
+
+        $transient = get_site_transient('update_plugins');
+        $this->assertIsObject($transient);
+        $this->assertArrayHasKey($pluginBasename, $transient->response);
+        $this->assertSame($downloadPackage, $transient->response[$pluginBasename]->package);
+
+        remove_filter('pre_http_request', $forceMock, 10);
+    }
+
     public function test_run_registers_cron_schedule_and_event(): void {
         $updater = $this->create_updater([
             'check_interval' => 15,
