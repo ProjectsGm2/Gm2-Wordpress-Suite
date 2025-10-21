@@ -33,11 +33,30 @@ class Gm2_Github_Settings {
             ]
         );
 
+        register_setting(
+            'gm2_github',
+            'gm2_github_client_id',
+            [
+                'type'              => 'string',
+                'sanitize_callback' => [ $this, 'sanitize_client_id' ],
+                'default'           => '',
+                'capability'        => 'manage_options',
+            ]
+        );
+
         add_settings_section(
             'gm2_github_section',
             __('GitHub', 'gm2-wordpress-suite'),
             '__return_false',
             'gm2-github-settings'
+        );
+
+        add_settings_field(
+            'gm2_github_client_id',
+            __('OAuth Client ID', 'gm2-wordpress-suite'),
+            [ $this, 'client_id_field' ],
+            'gm2-github-settings',
+            'gm2_github_section'
         );
 
         add_settings_field(
@@ -51,6 +70,19 @@ class Gm2_Github_Settings {
 
     public function sanitize_token($token) {
         return sanitize_text_field($token);
+    }
+
+    public function sanitize_client_id($client_id) {
+        return sanitize_text_field($client_id);
+    }
+
+    public function client_id_field() {
+        $client_id = get_option('gm2_github_client_id', '');
+        printf(
+            '<input type="text" name="gm2_github_client_id" value="%s" class="regular-text" autocomplete="off" />',
+            esc_attr($client_id)
+        );
+        echo '<p class="description">' . esc_html__( 'Register a GitHub OAuth application and copy its client ID here. The updater uses this value to launch the device authorization flow.', 'gm2-wordpress-suite' ) . '</p>';
     }
 
     public function token_field() {

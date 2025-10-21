@@ -121,6 +121,7 @@ require_once GM2_PLUGIN_DIR . 'includes/gm2-schema-tooltips.php';
 require_once GM2_PLUGIN_DIR . 'includes/gm2-editorial-comments.php';
 require_once GM2_PLUGIN_DIR . 'includes/gm2-model-export.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Github_Client.php';
+require_once GM2_PLUGIN_DIR . 'includes/github-updater/class-gm2-github-oauth.php';
 require_once GM2_PLUGIN_DIR . 'includes/github-updater/class-gm2-github-updater.php';
 require_once GM2_PLUGIN_DIR . 'includes/github-updater/class-gm2-github-updater-admin.php';
 require_once GM2_PLUGIN_DIR . 'includes/gm2-apply-patch.php';
