@@ -6,7 +6,7 @@ use WP_Post;
 
 class EventMapper extends AbstractMapper
 {
-    protected array $requiredFields = [];
+    protected array $requiredFields;
 
     public function __construct()
     {
