@@ -132,14 +132,6 @@ require_once GM2_PLUGIN_DIR . 'admin/gm2-config-history.php';
 function gm2_github_updater($force_reload = false) {
     static $instance = null;
 
-    if ($instance instanceof Gm2_GitHub_Updater && !$force_reload) {
-        return $instance;
-    }
-
-    if ($force_reload) {
-        $instance = null;
-    }
-
     $settings = get_option('gm2_github_updater_settings', []);
     if (!is_array($settings)) {
         $settings = [];
@@ -149,7 +141,23 @@ function gm2_github_updater($force_reload = false) {
         $settings = Gm2\Updater\Gm2_GitHub_Updater_Admin::prepare_settings_for_runtime($settings);
     }
 
-    if (empty($settings['owner']) || empty($settings['repo'])) {
+    $is_configured = !empty($settings['owner']) && !empty($settings['repo']);
+
+    if ($instance instanceof Gm2_GitHub_Updater) {
+        if ($force_reload) {
+            if ($is_configured) {
+                $instance->reload($settings);
+            } else {
+                $instance->teardown();
+                $instance = null;
+                return null;
+            }
+        }
+
+        return $instance;
+    }
+
+    if (!$is_configured) {
         return null;
     }
 
