@@ -2326,7 +2326,7 @@ class Gm2_Custom_Posts_Admin {
             ]);
         }
 
-        $slug = sanitize_title(wp_unslash($_POST['preset'] ?? ''));
+        $slug = sanitize_key(wp_unslash($_POST['preset'] ?? ''));
         if ($slug === '') {
             wp_send_json_error([
                 'code'    => 'preset_missing',
