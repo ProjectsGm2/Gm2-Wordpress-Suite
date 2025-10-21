@@ -315,7 +315,7 @@ class Gm2_GitHub_Updater {
 
         $this->download_auth_active = true;
         add_filter('http_request_args', [$this, 'authenticate_http'], 10, 2);
-        add_action('http_api_debug', [$this, 'maybe_cleanup_authenticated_request'], 10, 5);
+        add_action('upgrader_process_complete', [$this, 'maybe_cleanup_authenticated_download'], 10, 2);
 
         return $reply;
     }
@@ -369,19 +369,16 @@ class Gm2_GitHub_Updater {
     /**
      * Remove temporary authentication hooks after the package download completes.
      *
-     * @param mixed  $response HTTP response.
-     * @param string $context  Context string.
-     * @param string $class    Transport class name.
-     * @param array  $args     Request arguments.
-     * @param string $url      Request URL.
+     * @param \WP_Upgrader $upgrader   Upgrader instance handling the download.
+     * @param array        $hook_extra Context passed to upgrader callbacks.
      */
-    public function maybe_cleanup_authenticated_request($response, $context, $class, $args, $url) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
-        if ($context !== 'response' || !$this->download_auth_active || !$this->is_github_host($url)) {
+    public function maybe_cleanup_authenticated_download($upgrader, $hook_extra = []) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
+        if (!$this->download_auth_active || !$this->is_plugin_update_context($hook_extra)) {
             return;
         }
 
         remove_filter('http_request_args', [$this, 'authenticate_http'], 10);
-        remove_action('http_api_debug', [$this, 'maybe_cleanup_authenticated_request'], 10);
+        remove_action('upgrader_process_complete', [$this, 'maybe_cleanup_authenticated_download'], 10);
         $this->download_auth_active = false;
     }
 
