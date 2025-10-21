@@ -540,24 +540,41 @@ class Gm2_GitHub_Updater_Admin {
         require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
         require_once ABSPATH . 'wp-admin/includes/plugin.php';
 
+        $plugin_basename   = $updater->get_plugin_basename();
+        $was_network_active = is_multisite() && is_plugin_active_for_network($plugin_basename);
+        $was_site_active    = !$was_network_active && is_plugin_active($plugin_basename);
+
+        $reactivate_if_needed = static function () use ($plugin_basename, $was_network_active, $was_site_active) {
+            if ($was_network_active && (!is_multisite() || !is_plugin_active_for_network($plugin_basename))) {
+                activate_plugin($plugin_basename, '', true, true);
+            } elseif ($was_site_active && !is_plugin_active($plugin_basename)) {
+                activate_plugin($plugin_basename, '', false, true);
+            }
+        };
+
         $skin     = new \Automatic_Upgrader_Skin([
-            'plugin' => $updater->get_plugin_basename(),
+            'plugin' => $plugin_basename,
         ]);
         $upgrader = new \Plugin_Upgrader($skin);
-        $result   = $upgrader->upgrade($updater->get_plugin_basename());
+        $result   = $upgrader->upgrade($plugin_basename);
 
         $skin_errors = $skin->get_errors();
         if ($skin_errors instanceof WP_Error && $skin_errors->has_errors()) {
+            $reactivate_if_needed();
             wp_send_json_error(['message' => $skin_errors->get_error_message()], 500);
         }
 
         if ($result instanceof WP_Error) {
+            $reactivate_if_needed();
             wp_send_json_error(['message' => $result->get_error_message()], 500);
         }
 
         if ($result === false || $result === null) {
+            $reactivate_if_needed();
             wp_send_json_error(['message' => esc_html__('Plugin upgrade did not complete.', 'gm2-wordpress-suite')], 500);
         }
+
+        $reactivate_if_needed();
 
         $response = [
             'version' => isset($meta['version']) ? sanitize_text_field($meta['version']) : '',
