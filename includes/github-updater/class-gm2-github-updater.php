@@ -73,6 +73,7 @@ class Gm2_GitHub_Updater {
             'cache_ttl'   => 15 * MINUTE_IN_SECONDS,
             'beta'        => false,
             'private'     => false,
+            'check_interval' => 60,
         ]);
     }
 
@@ -107,12 +108,15 @@ class Gm2_GitHub_Updater {
         add_action('admin_notices', [$this, 'render_admin_notices']);
         add_action('wp_ajax_gm2_github_updater_refresh', [$this, 'handle_ajax_refresh']);
 
-        if (defined('WP_CLI') && WP_CLI) {
-            $this->register_cli_commands();
+        add_filter('cron_schedules', [$this, 'register_cron_schedule']);
+
+        $interval = $this->get_warmup_interval();
+        if (!wp_next_scheduled('gm2_github_updater_warmup')) {
+            wp_schedule_event(time() + $interval, 'gm2_github_updater_interval', 'gm2_github_updater_warmup');
         }
 
-        if (!wp_next_scheduled('gm2_github_updater_warmup')) {
-            wp_schedule_event(time() + HOUR_IN_SECONDS, 'hourly', 'gm2_github_updater_warmup');
+        if (defined('WP_CLI') && WP_CLI) {
+            $this->register_cli_commands();
         }
     }
 
@@ -328,6 +332,41 @@ class Gm2_GitHub_Updater {
     }
 
     /**
+     * Retrieve the warmup interval in seconds.
+     *
+     * @return int
+     */
+    protected function get_warmup_interval() {
+        $minutes = isset($this->settings['check_interval']) ? absint($this->settings['check_interval']) : 60;
+        if ($minutes < 5) {
+            $minutes = 5;
+        }
+
+        return $minutes * MINUTE_IN_SECONDS;
+    }
+
+    /**
+     * Register a custom cron schedule for the updater.
+     *
+     * @param array<string, array<string, mixed>> $schedules Registered schedules.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    public function register_cron_schedule($schedules) {
+        $interval = $this->get_warmup_interval();
+        $schedules['gm2_github_updater_interval'] = [
+            'interval' => $interval,
+            'display'  => sprintf(
+                /* translators: %d: interval in minutes */
+                __('Gm2 GitHub Updater (%d minutes)', 'gm2-wordpress-suite'),
+                max(1, (int) round($interval / MINUTE_IN_SECONDS))
+            ),
+        ];
+
+        return $schedules;
+    }
+
+    /**
      * Retrieve remote metadata.
      *
      * @param bool $force Force refresh.
@@ -352,6 +391,7 @@ class Gm2_GitHub_Updater {
         if ($backoff_until && $backoff_until > time()) {
             $message = __('GitHub API temporarily rate limited. Please try again later.', 'gm2-wordpress-suite');
             $this->set_last_error($message);
+            $this->maybe_record_notice('rate_limit_backoff', $message);
             return new WP_Error('gm2_updater_backoff', $message);
         }
 
@@ -388,12 +428,21 @@ class Gm2_GitHub_Updater {
             wp_cache_set($cache_key . '_backoff', $backoff, 'gm2_github_updater', $retry_after * 2);
             $message = __('GitHub API rate limit exceeded.', 'gm2-wordpress-suite');
             $this->set_last_error($message);
+            $this->maybe_record_notice('rate_limit', $message);
             return new WP_Error('gm2_updater_rate_limit', $message);
+        }
+
+        if ($code === 404) {
+            $message = __('Repository or branch not found. Confirm the owner, repository, and channel settings.', 'gm2-wordpress-suite');
+            $this->set_last_error($message);
+            $this->maybe_record_notice('invalid_repo', $message);
+            return new WP_Error('gm2_updater_missing_repo', $message);
         }
 
         if ($code < 200 || $code >= 300) {
             $message = sprintf(__('GitHub API request failed (HTTP %d).', 'gm2-wordpress-suite'), $code);
             $this->set_last_error($message);
+            $this->maybe_record_notice('http_error', $message);
             return new WP_Error('gm2_updater_http_error', __('GitHub API request failed.', 'gm2-wordpress-suite'));
         }
 
@@ -635,7 +684,11 @@ class Gm2_GitHub_Updater {
         }
 
         foreach ($notices as $code => $message) {
-            printf('<div class="notice notice-error"><p>%s</p></div>', esc_html($message));
+            printf(
+                '<div class="notice notice-error is-dismissible"><p>%1$s</p><button type="button" class="notice-dismiss"><span class="screen-reader-text">%2$s</span></button></div>',
+                esc_html($message),
+                esc_html__('Dismiss this notice.', 'gm2-wordpress-suite')
+            );
         }
 
         delete_option('gm2_github_updater_notices');

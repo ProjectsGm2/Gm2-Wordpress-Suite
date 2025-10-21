@@ -106,6 +106,7 @@ require_once GM2_PLUGIN_DIR . 'includes/gm2-editorial-comments.php';
 require_once GM2_PLUGIN_DIR . 'includes/gm2-model-export.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Github_Client.php';
 require_once GM2_PLUGIN_DIR . 'includes/github-updater/class-gm2-github-updater.php';
+require_once GM2_PLUGIN_DIR . 'includes/github-updater/class-gm2-github-updater-admin.php';
 require_once GM2_PLUGIN_DIR . 'includes/gm2-apply-patch.php';
 require_once GM2_PLUGIN_DIR . 'includes/gm2-config-versions.php';
 require_once GM2_PLUGIN_DIR . 'includes/seo/class-gm2-cp-schema.php';
@@ -124,18 +125,28 @@ require_once GM2_PLUGIN_DIR . 'admin/gm2-config-history.php';
 /**
  * Bootstrap the GitHub updater using stored settings.
  *
+ * @param bool $force_reload Whether to force a new instance.
+ *
  * @return Gm2_GitHub_Updater|null
  */
-function gm2_github_updater() {
+function gm2_github_updater($force_reload = false) {
     static $instance = null;
 
-    if ($instance instanceof Gm2_GitHub_Updater) {
+    if ($instance instanceof Gm2_GitHub_Updater && !$force_reload) {
         return $instance;
+    }
+
+    if ($force_reload) {
+        $instance = null;
     }
 
     $settings = get_option('gm2_github_updater_settings', []);
     if (!is_array($settings)) {
         $settings = [];
+    }
+
+    if (class_exists('Gm2\\Updater\\Gm2_GitHub_Updater_Admin')) {
+        $settings = Gm2\Updater\Gm2_GitHub_Updater_Admin::prepare_settings_for_runtime($settings);
     }
 
     if (empty($settings['owner']) || empty($settings['repo'])) {
@@ -149,6 +160,10 @@ function gm2_github_updater() {
 }
 
 add_action('plugins_loaded', 'gm2_github_updater', 5);
+
+if (is_admin()) {
+    (new Gm2\Updater\Gm2_GitHub_Updater_Admin())->hooks();
+}
 require_once GM2_PLUGIN_DIR . 'public/Gm2_Abandoned_Carts_Public.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_REST_Visibility.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_REST_Rate_Limiter.php';
