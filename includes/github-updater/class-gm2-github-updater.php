@@ -28,6 +28,13 @@ class Gm2_GitHub_Updater {
     protected $settings = [];
 
     /**
+     * Directory name that contains the plugin.
+     *
+     * @var string
+     */
+    protected $plugin_directory;
+
+    /**
      * Flag to ensure hooks are only registered once.
      *
      * @var bool
@@ -64,6 +71,7 @@ class Gm2_GitHub_Updater {
     public function __construct($plugin_file, array $settings) {
         $this->plugin_file     = $plugin_file;
         $this->plugin_basename = plugin_basename($plugin_file);
+        $this->plugin_directory = basename(dirname($plugin_file));
         $this->settings        = wp_parse_args($settings, [
             'owner'       => '',
             'repo'        => '',
@@ -104,6 +112,7 @@ class Gm2_GitHub_Updater {
         add_filter('plugins_api', [$this, 'plugins_api'], 10, 3);
         add_filter('http_request_args', [$this, 'authenticate_http'], 10, 2);
         add_filter('upgrader_pre_download', [$this, 'intercept_download'], 10, 4);
+        add_filter('upgrader_source_selection', [$this, 'ensure_correct_directory'], 10, 4);
         add_action('gm2_github_updater_warmup', [$this, 'cron_warmup']);
         add_action('admin_notices', [$this, 'render_admin_notices']);
         add_action('wp_ajax_gm2_github_updater_refresh', [$this, 'handle_ajax_refresh']);
@@ -300,6 +309,59 @@ class Gm2_GitHub_Updater {
         }
 
         return $args;
+    }
+
+    /**
+     * Ensure the extracted GitHub package keeps the correct directory name.
+     *
+     * @param string         $source        Filesystem path to the package source.
+     * @param string         $remote_source Remote source path.
+     * @param \WP_Upgrader   $upgrader      Upgrader instance.
+     * @param array<string,mixed> $hook_extra   Additional context data.
+     *
+     * @return string|WP_Error
+     */
+    public function ensure_correct_directory($source, $remote_source, $upgrader, $hook_extra) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
+        if (!is_string($source) || $source === '') {
+            return $source;
+        }
+
+        if (!isset($hook_extra['plugin']) || $hook_extra['plugin'] !== $this->plugin_basename) {
+            return $source;
+        }
+
+        $source_path = \wp_normalize_path($source);
+        $expected    = $this->plugin_directory;
+
+        if (basename($source_path) === $expected) {
+            return $source;
+        }
+
+        global $wp_filesystem;
+
+        if (!is_object($wp_filesystem)) {
+            require_once ABSPATH . 'wp-admin/includes/file.php';
+            \WP_Filesystem();
+        }
+
+        if (!is_object($wp_filesystem)) {
+            return new WP_Error('gm2_updater_fs_unavailable', __('Unable to access the filesystem to complete the update.', 'gm2-wordpress-suite'));
+        }
+
+        $destination = \wp_normalize_path(dirname($source_path));
+        $destination = \trailingslashit($destination) . $expected;
+
+        if ($wp_filesystem->exists($destination)) {
+            $wp_filesystem->delete($destination, true);
+        }
+
+        $moved = $wp_filesystem->move($source_path, $destination, true);
+
+        if (!$moved) {
+            return new WP_Error('gm2_updater_rename_failed', __('Unable to prepare the GitHub update package.', 'gm2-wordpress-suite'));
+        }
+
+        return $destination;
     }
 
     /**
