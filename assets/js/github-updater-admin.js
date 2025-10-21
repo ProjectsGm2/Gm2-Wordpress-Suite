@@ -404,6 +404,9 @@
                 if (data.repository.default_branch) {
                     details.push(gm2GitHubUpdaterAdmin.i18n.defaultBranch.replace('%s', data.repository.default_branch));
                 }
+                if (data.repository.channel === 'branch' && data.repository.configured_branch) {
+                    details.push(gm2GitHubUpdaterAdmin.i18n.configuredBranch.replace('%s', data.repository.configured_branch));
+                }
                 if (data.repository.private) {
                     details.push(gm2GitHubUpdaterAdmin.i18n.privateRepo);
                 }
@@ -442,6 +445,9 @@
                 var message = gm2GitHubUpdaterAdmin.i18n.updateSuccess;
                 if (data.update && data.update.version) {
                     message += ' ' + gm2GitHubUpdaterAdmin.i18n.versionLabel.replace('%s', data.update.version);
+                }
+                if (data.update && Array.isArray(data.update.messages) && data.update.messages.length) {
+                    message += ' ' + data.update.messages.join(' ');
                 }
                 renderMessage('success', message);
             });
