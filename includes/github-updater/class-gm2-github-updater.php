@@ -718,7 +718,15 @@ class Gm2_GitHub_Updater {
         if (is_wp_error($meta)) {
             return $meta;
         }
-        $this->check_for_update(new stdClass());
+
+        $transient = get_site_transient('update_plugins');
+        if (!is_object($transient)) {
+            $transient = new stdClass();
+        }
+
+        $transient = $this->check_for_update($transient);
+        set_site_transient('update_plugins', $transient);
+
         return $meta;
     }
 
