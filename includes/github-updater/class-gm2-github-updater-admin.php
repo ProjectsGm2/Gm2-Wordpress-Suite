@@ -539,14 +539,15 @@ class Gm2_GitHub_Updater_Admin {
 
         require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
         require_once ABSPATH . 'wp-admin/includes/plugin.php';
+        require_once ABSPATH . 'wp-admin/includes/class-wp-ajax-upgrader-skin.php';
 
-        $skin     = new \Automatic_Upgrader_Skin([
+        $skin     = new \WP_Ajax_Upgrader_Skin([
             'plugin' => $updater->get_plugin_basename(),
         ]);
         $upgrader = new \Plugin_Upgrader($skin);
         $result   = $upgrader->upgrade($updater->get_plugin_basename());
 
-        $skin_errors = $skin->get_errors();
+        $skin_errors = method_exists($skin, 'get_errors') ? $skin->get_errors() : null;
         if ($skin_errors instanceof WP_Error && $skin_errors->has_errors()) {
             wp_send_json_error(['message' => $skin_errors->get_error_message()], 500);
         }
