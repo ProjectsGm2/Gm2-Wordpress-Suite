@@ -16,6 +16,9 @@ class Gm2_GitHub_Updater_Admin {
     protected const MENU_SLUG = 'gm2-github-updater';
     protected const AJAX_TEST = 'gm2_github_updater_test';
     protected const AJAX_CHECK = 'gm2_github_updater_check';
+    protected const AJAX_OAUTH_START = 'gm2_github_oauth_start';
+    protected const AJAX_OAUTH_POLL = 'gm2_github_oauth_poll';
+    protected const AJAX_OAUTH_DISCONNECT = 'gm2_github_oauth_disconnect';
     protected const NONCE_ACTION = 'gm2_github_updater_actions';
 
     /**
@@ -39,6 +42,9 @@ class Gm2_GitHub_Updater_Admin {
         add_action('admin_notices', [$this, 'render_settings_notices']);
         add_action('wp_ajax_' . self::AJAX_TEST, [$this, 'ajax_test_connection']);
         add_action('wp_ajax_' . self::AJAX_CHECK, [$this, 'ajax_check_now']);
+        add_action('wp_ajax_' . self::AJAX_OAUTH_START, [$this, 'ajax_oauth_start']);
+        add_action('wp_ajax_' . self::AJAX_OAUTH_POLL, [$this, 'ajax_oauth_poll']);
+        add_action('wp_ajax_' . self::AJAX_OAUTH_DISCONNECT, [$this, 'ajax_oauth_disconnect']);
         add_action('updated_option', [$this, 'handle_option_update'], 10, 3);
         add_action('added_option', [$this, 'handle_option_add'], 10, 2);
         add_filter('cron_schedules', [$this, 'filter_cron_schedules']);
@@ -172,6 +178,7 @@ class Gm2_GitHub_Updater_Admin {
                 'optionKey' => self::OPTION_KEY,
                 'ajaxUrl' => admin_url('admin-ajax.php'),
                 'nonce'   => wp_create_nonce(self::NONCE_ACTION),
+                'oauth'   => $this->get_oauth_localization(),
                 'i18n'    => [
                     'testing'      => esc_html__('Testing connection…', 'gm2-wordpress-suite'),
                     'checking'     => esc_html__('Checking for updates…', 'gm2-wordpress-suite'),
@@ -180,14 +187,61 @@ class Gm2_GitHub_Updater_Admin {
                     'unknownError' => esc_html__('An unexpected error occurred.', 'gm2-wordpress-suite'),
                     'showToken'    => esc_html__('Reveal Token Field', 'gm2-wordpress-suite'),
                     'hideToken'    => esc_html__('Hide Token Field', 'gm2-wordpress-suite'),
+                    'addToken'     => esc_html__('Add Token', 'gm2-wordpress-suite'),
                     'defaultBranch'=> esc_html__('Default branch: %s', 'gm2-wordpress-suite'),
                     'privateRepo'  => esc_html__('Private repository', 'gm2-wordpress-suite'),
                     'versionLabel' => esc_html__('Version: %s', 'gm2-wordpress-suite'),
                     'updatedLabel' => esc_html__('Published: %s', 'gm2-wordpress-suite'),
                     'dismiss'      => esc_html__('Dismiss this notice.', 'gm2-wordpress-suite'),
+                    'oauthPrompt'  => esc_html__('Authorize access to your GitHub account to automatically generate a token.', 'gm2-wordpress-suite'),
+                    'oauthPending' => esc_html__('Waiting for GitHub authorization…', 'gm2-wordpress-suite'),
+                    'oauthSlowDown'=> esc_html__('GitHub requested a slower polling interval. Retrying…', 'gm2-wordpress-suite'),
+                    'oauthSuccess' => esc_html__('GitHub access token saved.', 'gm2-wordpress-suite'),
+                    'oauthExpired' => esc_html__('GitHub authorization expired. Please start again.', 'gm2-wordpress-suite'),
+                    'oauthMissingClientId' => esc_html__('Configure the GitHub OAuth client ID before connecting.', 'gm2-wordpress-suite'),
+                    'oauthNotConnected' => esc_html__('Not connected.', 'gm2-wordpress-suite'),
+                    'oauthConnectedAs' => esc_html__('Connected as %s.', 'gm2-wordpress-suite'),
+                    'oauthOpenLink' => esc_html__('Open GitHub to continue', 'gm2-wordpress-suite'),
+                    'oauthEnterCode' => esc_html__('Enter this code on GitHub:', 'gm2-wordpress-suite'),
+                    'oauthDisconnectConfirm' => esc_html__('Disconnecting will remove the stored GitHub access token. Continue?', 'gm2-wordpress-suite'),
+                    'oauthDisconnected' => esc_html__('GitHub access token removed.', 'gm2-wordpress-suite'),
                 ],
             ]
         );
+    }
+
+    /**
+     * Build localized configuration for the GitHub OAuth helpers.
+     *
+     * @return array<string, mixed>
+     */
+    protected function get_oauth_localization() {
+        $client_id = Gm2_GitHub_OAuth::get_client_id();
+        $connected = $this->get_connected_github_account();
+
+        return [
+            'enabled'          => $client_id !== '',
+            'startAction'      => self::AJAX_OAUTH_START,
+            'pollAction'       => self::AJAX_OAUTH_POLL,
+            'disconnectAction' => self::AJAX_OAUTH_DISCONNECT,
+            'connectedUser'    => $connected,
+        ];
+    }
+
+    /**
+     * Retrieve the login for the currently connected GitHub account.
+     *
+     * @return string
+     */
+    protected function get_connected_github_account() {
+        $client = new \Gm2\Gm2_Github_Client();
+        $user   = $client->validate_token();
+
+        if (is_wp_error($user) || !is_array($user) || empty($user['login'])) {
+            return '';
+        }
+
+        return sanitize_text_field($user['login']);
     }
 
     /**
@@ -246,6 +300,8 @@ class Gm2_GitHub_Updater_Admin {
             $interval = 60;
         }
         $token_keep = $has_token ? '1' : '0';
+        $connected_account = $this->get_connected_github_account();
+        $is_connected      = $connected_account !== '';
         ?>
         <div class="wrap">
             <h1><?php esc_html_e('GitHub Updater', 'gm2-wordpress-suite'); ?></h1>
@@ -287,6 +343,33 @@ class Gm2_GitHub_Updater_Admin {
                             <td>
                                 <input type="text" id="gm2-github-branch" name="<?php echo esc_attr(self::OPTION_KEY); ?>[branch]" value="<?php echo esc_attr($branch); ?>" class="regular-text" autocomplete="off" />
                                 <p class="description"><?php esc_html_e('Used when the channel is set to Branch.', 'gm2-wordpress-suite'); ?></p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><?php esc_html_e('GitHub Account', 'gm2-wordpress-suite'); ?></th>
+                            <td>
+                                <p id="gm2-github-account-status" class="gm2-github-account-status" data-connected="<?php echo $is_connected ? '1' : '0'; ?>">
+                                    <?php
+                                    if ($is_connected) {
+                                        printf(
+                                            '<span class="gm2-github-account-connected">%s</span>',
+                                            esc_html(sprintf(__('Connected as %s.', 'gm2-wordpress-suite'), $connected_account))
+                                        );
+                                    } else {
+                                        echo '<span class="gm2-github-account-disconnected">' . esc_html__('Not connected.', 'gm2-wordpress-suite') . '</span>';
+                                    }
+                                    ?>
+                                </p>
+                                <p class="description"><?php esc_html_e('Sign in to GitHub to automatically generate an access token for private repositories.', 'gm2-wordpress-suite'); ?></p>
+                                <div class="gm2-github-oauth-actions">
+                                    <button type="button" class="button button-secondary" id="gm2-github-login-button"><?php esc_html_e('Sign in with GitHub', 'gm2-wordpress-suite'); ?></button>
+                                    <button type="button" class="button" id="gm2-github-disconnect-button" <?php disabled(!$is_connected); ?>><?php esc_html_e('Disconnect', 'gm2-wordpress-suite'); ?></button>
+                                </div>
+                                <div id="gm2-github-login-instructions" class="gm2-github-login-instructions" aria-hidden="true" style="display:none;">
+                                    <p><?php esc_html_e('Authorize access to your GitHub account in the window that opens.', 'gm2-wordpress-suite'); ?></p>
+                                    <p><a href="#" target="_blank" rel="noopener noreferrer" id="gm2-github-login-url" class="button button-link"><?php esc_html_e('Open GitHub to continue', 'gm2-wordpress-suite'); ?></a></p>
+                                    <p><strong><?php esc_html_e('Enter this code on GitHub:', 'gm2-wordpress-suite'); ?></strong> <code id="gm2-github-login-code"></code></p>
+                                </div>
                             </td>
                         </tr>
                         <tr>
@@ -412,6 +495,109 @@ class Gm2_GitHub_Updater_Admin {
         ];
 
         wp_send_json_success(['metadata' => $response]);
+    }
+
+    /**
+     * Start the GitHub device authorization flow.
+     */
+    public function ajax_oauth_start() {
+        $this->verify_ajax_permissions();
+
+        $result = Gm2_GitHub_OAuth::begin_device_flow(get_current_user_id());
+        if (is_wp_error($result)) {
+            wp_send_json_error(['message' => $result->get_error_message()], 400);
+        }
+
+        wp_send_json_success([
+            'user_code'                 => $result['user_code'],
+            'verification_uri'          => $result['verification_uri'],
+            'verification_uri_complete' => $result['verification_uri_complete'],
+            'interval'                  => (int) $result['interval'],
+            'expires_in'                => (int) $result['expires_in'],
+        ]);
+    }
+
+    /**
+     * Poll for the GitHub device authorization result.
+     */
+    public function ajax_oauth_poll() {
+        $this->verify_ajax_permissions();
+
+        $result = Gm2_GitHub_OAuth::poll_device_flow(get_current_user_id());
+        if (is_wp_error($result)) {
+            wp_send_json_error(['message' => $result->get_error_message()], 400);
+        }
+
+        if (!is_array($result) || empty($result['status'])) {
+            wp_send_json_error(['message' => esc_html__('Unexpected response from GitHub.', 'gm2-wordpress-suite')], 400);
+        }
+
+        if ($result['status'] === 'pending' || $result['status'] === 'slow_down') {
+            wp_send_json_success([
+                'status'   => $result['status'],
+                'interval' => isset($result['interval']) ? (int) $result['interval'] : 5,
+            ]);
+        }
+
+        if ($result['status'] !== 'success' || empty($result['access_token'])) {
+            wp_send_json_error(['message' => esc_html__('GitHub authorization did not return a token.', 'gm2-wordpress-suite')], 400);
+        }
+
+        $token = (string) $result['access_token'];
+        $this->persist_github_token($token);
+
+        $user      = Gm2_GitHub_OAuth::fetch_user($token);
+        $user_data = ['login' => ''];
+        if (!is_wp_error($user) && is_array($user)) {
+            if (!empty($user['login'])) {
+                $user_data['login'] = sanitize_text_field($user['login']);
+            }
+            if (!empty($user['html_url'])) {
+                $user_data['html_url'] = esc_url_raw($user['html_url']);
+            }
+        }
+
+        wp_send_json_success([
+            'status' => 'success',
+            'user'   => $user_data,
+        ]);
+    }
+
+    /**
+     * Disconnect the stored GitHub token.
+     */
+    public function ajax_oauth_disconnect() {
+        $this->verify_ajax_permissions();
+
+        $this->persist_github_token('');
+
+        wp_send_json_success();
+    }
+
+    /**
+     * Persist the GitHub access token across the plugin settings.
+     *
+     * @param string $token Raw access token.
+     */
+    protected function persist_github_token($token) {
+        $token = trim((string) $token);
+
+        if ($token === '') {
+            update_option('gm2_github_token', '');
+        } else {
+            update_option('gm2_github_token', sanitize_text_field($token));
+        }
+
+        $settings = get_option(self::OPTION_KEY, []);
+        if (!is_array($settings)) {
+            $settings = [];
+        }
+
+        $settings['token'] = $token === '' ? '' : self::obfuscate_token($token);
+
+        update_option(self::OPTION_KEY, $settings);
+
+        \gm2_github_updater(true);
     }
 
     /**
