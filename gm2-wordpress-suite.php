@@ -70,6 +70,7 @@ use Gm2\GraphQL\Registry as GraphQLRegistry;
 use Gm2\Performance\AutoloadManager;
 use Gm2\Performance\AutoloadMigration;
 use Gm2\Performance\QueryCacheManager;
+use Gm2\Updater\Gm2_GitHub_Updater;
 $gm2_autoload = GM2_PLUGIN_DIR . 'vendor/autoload.php';
 if (file_exists($gm2_autoload)) {
     require_once $gm2_autoload;
@@ -104,6 +105,7 @@ require_once GM2_PLUGIN_DIR . 'includes/gm2-schema-tooltips.php';
 require_once GM2_PLUGIN_DIR . 'includes/gm2-editorial-comments.php';
 require_once GM2_PLUGIN_DIR . 'includes/gm2-model-export.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_Github_Client.php';
+require_once GM2_PLUGIN_DIR . 'includes/github-updater/class-gm2-github-updater.php';
 require_once GM2_PLUGIN_DIR . 'includes/gm2-apply-patch.php';
 require_once GM2_PLUGIN_DIR . 'includes/gm2-config-versions.php';
 require_once GM2_PLUGIN_DIR . 'includes/seo/class-gm2-cp-schema.php';
@@ -118,6 +120,35 @@ require_once GM2_PLUGIN_DIR . 'admin/class-gm2-github-settings.php';
 require_once GM2_PLUGIN_DIR . 'admin/class-gm2-github-comments-admin.php';
 require_once GM2_PLUGIN_DIR . 'admin/Gm2_Model_Export_Admin.php';
 require_once GM2_PLUGIN_DIR . 'admin/gm2-config-history.php';
+
+/**
+ * Bootstrap the GitHub updater using stored settings.
+ *
+ * @return Gm2_GitHub_Updater|null
+ */
+function gm2_github_updater() {
+    static $instance = null;
+
+    if ($instance instanceof Gm2_GitHub_Updater) {
+        return $instance;
+    }
+
+    $settings = get_option('gm2_github_updater_settings', []);
+    if (!is_array($settings)) {
+        $settings = [];
+    }
+
+    if (empty($settings['owner']) || empty($settings['repo'])) {
+        return null;
+    }
+
+    $instance = new Gm2_GitHub_Updater(__FILE__, $settings);
+    $instance->run();
+
+    return $instance;
+}
+
+add_action('plugins_loaded', 'gm2_github_updater', 5);
 require_once GM2_PLUGIN_DIR . 'public/Gm2_Abandoned_Carts_Public.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_REST_Visibility.php';
 require_once GM2_PLUGIN_DIR . 'includes/Gm2_REST_Rate_Limiter.php';
