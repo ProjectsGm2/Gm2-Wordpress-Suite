@@ -64,16 +64,27 @@ class Gm2_GitHub_Updater {
     public function __construct($plugin_file, array $settings) {
         $this->plugin_file     = $plugin_file;
         $this->plugin_basename = plugin_basename($plugin_file);
-        $this->settings        = wp_parse_args($settings, [
-            'owner'       => '',
-            'repo'        => '',
-            'branch'      => 'main',
-            'token'       => '',
-            'channel'     => 'release',
-            'cache_ttl'   => 15 * MINUTE_IN_SECONDS,
-            'beta'        => false,
-            'private'     => false,
-            'check_interval' => 60,
+        $this->settings        = $this->normalize_settings($settings);
+    }
+
+    /**
+     * Update the internal settings array with sane defaults.
+     *
+     * @param array<string, mixed> $settings Raw settings.
+     *
+     * @return array<string, mixed>
+     */
+    protected function normalize_settings(array $settings) {
+        return wp_parse_args($settings, [
+            'owner'         => '',
+            'repo'          => '',
+            'branch'        => 'main',
+            'token'         => '',
+            'channel'       => 'release',
+            'cache_ttl'     => 15 * MINUTE_IN_SECONDS,
+            'beta'          => false,
+            'private'       => false,
+            'check_interval'=> 60,
         ]);
     }
 
@@ -118,6 +129,58 @@ class Gm2_GitHub_Updater {
         if (defined('WP_CLI') && WP_CLI) {
             $this->register_cli_commands();
         }
+    }
+
+    /**
+     * Remove hooks registered by the updater and clear scheduled events.
+     */
+    public function teardown() {
+        if (!$this->initialized) {
+            return;
+        }
+
+        remove_filter('pre_set_site_transient_update_plugins', [$this, 'check_for_update']);
+        remove_filter('plugins_api', [$this, 'plugins_api'], 10, 3);
+        remove_filter('http_request_args', [$this, 'authenticate_http'], 10, 2);
+        remove_filter('upgrader_pre_download', [$this, 'intercept_download'], 10, 4);
+        remove_action('gm2_github_updater_warmup', [$this, 'cron_warmup']);
+        remove_action('admin_notices', [$this, 'render_admin_notices']);
+        remove_action('wp_ajax_gm2_github_updater_refresh', [$this, 'handle_ajax_refresh']);
+        remove_filter('cron_schedules', [$this, 'register_cron_schedule']);
+
+        wp_clear_scheduled_hook('gm2_github_updater_warmup');
+
+        $this->initialized = false;
+    }
+
+    /**
+     * Refresh the updater configuration without duplicating hooks.
+     *
+     * @param array<string, mixed> $settings New settings to apply.
+     */
+    public function reload(array $settings) {
+        $previous_interval = $this->get_warmup_interval();
+
+        $this->settings = $this->normalize_settings($settings);
+        $this->clear_cache();
+
+        if ($this->initialized && $previous_interval !== $this->get_warmup_interval()) {
+            $this->reschedule_warmup_event();
+        }
+    }
+
+    /**
+     * Ensure the cron warmup event interval matches the current settings.
+     */
+    protected function reschedule_warmup_event() {
+        wp_clear_scheduled_hook('gm2_github_updater_warmup');
+
+        $interval = $this->get_warmup_interval();
+        if ($interval <= 0) {
+            return;
+        }
+
+        wp_schedule_event(time() + $interval, 'gm2_github_updater_interval', 'gm2_github_updater_warmup');
     }
 
     /**
