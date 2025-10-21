@@ -197,6 +197,7 @@ class Gm2_GitHub_Updater_Admin {
                     'hideToken'    => esc_html__('Hide Token Field', 'gm2-wordpress-suite'),
                     'addToken'     => esc_html__('Add Token', 'gm2-wordpress-suite'),
                     'defaultBranch'=> esc_html__('Default branch: %s', 'gm2-wordpress-suite'),
+                    'configuredBranch' => esc_html__('Configured branch: %s', 'gm2-wordpress-suite'),
                     'privateRepo'  => esc_html__('Private repository', 'gm2-wordpress-suite'),
                     'versionLabel' => esc_html__('Version: %s', 'gm2-wordpress-suite'),
                     'updatedLabel' => esc_html__('Published: %s', 'gm2-wordpress-suite'),
@@ -475,11 +476,17 @@ class Gm2_GitHub_Updater_Admin {
         }
 
         $payload = [
-            'full_name'      => isset($data['full_name']) ? sanitize_text_field($data['full_name']) : '',
-            'default_branch' => isset($data['default_branch']) ? sanitize_text_field($data['default_branch']) : '',
-            'private'        => !empty($data['private']),
-            'description'    => isset($data['description']) ? sanitize_text_field($data['description']) : '',
+            'full_name'        => isset($data['full_name']) ? sanitize_text_field($data['full_name']) : '',
+            'default_branch'   => isset($data['default_branch']) ? sanitize_text_field($data['default_branch']) : '',
+            'configured_branch'=> '',
+            'channel'          => $settings['channel'],
+            'private'          => !empty($data['private']),
+            'description'      => isset($data['description']) ? sanitize_text_field($data['description']) : '',
         ];
+
+        if ($settings['channel'] === 'branch' && !empty($settings['branch'])) {
+            $payload['configured_branch'] = sanitize_text_field($settings['branch']);
+        }
 
         wp_send_json_success(['repository' => $payload]);
     }
@@ -539,17 +546,29 @@ class Gm2_GitHub_Updater_Admin {
         $upgrader = new \Plugin_Upgrader($skin);
         $result   = $upgrader->upgrade($updater->get_plugin_basename());
 
+        $skin_errors = $skin->get_errors();
+        if ($skin_errors instanceof WP_Error && $skin_errors->has_errors()) {
+            wp_send_json_error(['message' => $skin_errors->get_error_message()], 500);
+        }
+
         if ($result instanceof WP_Error) {
             wp_send_json_error(['message' => $result->get_error_message()], 500);
         }
 
-        if ($result === false) {
+        if ($result === false || $result === null) {
             wp_send_json_error(['message' => esc_html__('Plugin upgrade did not complete.', 'gm2-wordpress-suite')], 500);
         }
 
         $response = [
             'version' => isset($meta['version']) ? sanitize_text_field($meta['version']) : '',
         ];
+
+        $messages = method_exists($skin, 'get_upgrade_messages') ? $skin->get_upgrade_messages() : [];
+        if (is_array($messages) && !empty($messages)) {
+            $response['messages'] = array_map(static function ($message) {
+                return wp_strip_all_tags((string) $message);
+            }, $messages);
+        }
 
         wp_send_json_success(['update' => $response]);
     }
