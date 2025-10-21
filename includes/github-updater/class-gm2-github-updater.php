@@ -734,7 +734,22 @@ class Gm2_GitHub_Updater {
      * @return bool
      */
     protected function is_github_host($url) {
-        return (bool) preg_match('~https?://([^/]+\.)?github\.com/~i', $url) || (bool) preg_match('~https?://api\.github\.com/~i', $url);
+        $host = wp_parse_url($url, PHP_URL_HOST);
+        if (!$host) {
+            return false;
+        }
+
+        $host = strtolower($host);
+
+        if ($host === 'github.com' || substr($host, -11) === '.github.com') {
+            return true;
+        }
+
+        if ($host === 'githubusercontent.com' || substr($host, -22) === '.githubusercontent.com') {
+            return true;
+        }
+
+        return false;
     }
 
     /**
