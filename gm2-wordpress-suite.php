@@ -96,10 +96,14 @@ require_once GM2_PLUGIN_DIR . 'includes/gm2-theme-tools.php';
 require_once GM2_PLUGIN_DIR . 'includes/gm2-open-in-code.php';
 require_once GM2_PLUGIN_DIR . 'includes/gm2-field-renderers.php';
 
-$gm2_bootstrap_elementor = static function (): void {
-    if (!class_exists('Elementor\\Plugin') && (!defined('GM2_TESTING') || !GM2_TESTING)) {
+$gm2_load_elementor_integration = static function (): void {
+    static $loaded = false;
+
+    if ($loaded) {
         return;
     }
+
+    $loaded = true;
 
     require_once GM2_PLUGIN_DIR . 'includes/elementor/class-gm2-field-key-control.php';
     require_once GM2_PLUGIN_DIR . 'src/Elementor/bootstrap.php';
@@ -107,11 +111,20 @@ $gm2_bootstrap_elementor = static function (): void {
     require_once GM2_PLUGIN_DIR . 'integrations/elementor/class-gm2-cp-elementor-query.php';
 };
 
+$gm2_bootstrap_elementor = static function () use ($gm2_load_elementor_integration): void {
+    if (!class_exists('Elementor\\Plugin') && (!defined('GM2_TESTING') || !GM2_TESTING)) {
+        return;
+    }
+
+    $gm2_load_elementor_integration();
+};
+
 if (defined('GM2_TESTING') && GM2_TESTING) {
     $gm2_bootstrap_elementor();
-} elseif (did_action('elementor/loaded')) {
+} elseif (did_action('elementor/loaded') || did_action('elementor/init')) {
     $gm2_bootstrap_elementor();
 } else {
+    add_action('elementor/init', $gm2_bootstrap_elementor, 0, 0);
     add_action('elementor/loaded', $gm2_bootstrap_elementor, 0, 0);
 }
 
