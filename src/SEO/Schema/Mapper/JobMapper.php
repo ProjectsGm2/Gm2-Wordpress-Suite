@@ -6,14 +6,16 @@ use WP_Post;
 
 class JobMapper extends AbstractMapper
 {
-    protected array $requiredFields = [
-        'date_posted'     => __('Date posted', 'gm2-wordpress-suite'),
-        'employment_type' => __('Employment type', 'gm2-wordpress-suite'),
-        'company'         => __('Company name', 'gm2-wordpress-suite'),
-    ];
+    protected array $requiredFields = [];
 
     public function __construct()
     {
+        $this->requiredFields = [
+            'date_posted'     => __('Date posted', 'gm2-wordpress-suite'),
+            'employment_type' => __('Employment type', 'gm2-wordpress-suite'),
+            'company'         => __('Company name', 'gm2-wordpress-suite'),
+        ];
+
         parent::__construct(
             'job',
             'JobPosting',
