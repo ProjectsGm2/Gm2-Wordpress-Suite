@@ -4,6 +4,11 @@ namespace Gm2\Elementor;
 use Elementor\Base_Data_Control;
 use Elementor\Controls_Manager;
 
+// Abort early if Elementor is not active.
+if (!class_exists('Elementor\\Base_Data_Control')) {
+    return;
+}
+
 if (!defined('ABSPATH')) {
     exit;
 }
