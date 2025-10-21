@@ -18,7 +18,10 @@ class Gm2_Script_Attributes {
 
     public function __construct() {
         add_option('gm2_script_attributes', [], '', AutoloadManager::get_autoload_flag('gm2_script_attributes'));
-        $this->attributes = get_option('gm2_script_attributes', []);
+        $this->load_attributes();
+        add_action('updated_option', [$this, 'handle_option_updated'], 10, 3);
+        add_action('added_option', [$this, 'handle_option_added'], 10, 2);
+        add_action('deleted_option', [$this, 'handle_option_deleted']);
         add_filter('script_loader_tag', [$this, 'filter'], 10, 3);
     }
 
@@ -62,5 +65,32 @@ class Gm2_Script_Attributes {
         }
 
         return $this->resolved[$handle] = $attr;
+    }
+
+    private function load_attributes($value = null): void {
+        if (is_array($value)) {
+            $this->attributes = $value;
+        } else {
+            $this->attributes = get_option('gm2_script_attributes', []);
+        }
+        $this->resolved = [];
+    }
+
+    public function handle_option_updated(string $option, $old_value, $value): void {
+        if ($option === 'gm2_script_attributes') {
+            $this->load_attributes($value);
+        }
+    }
+
+    public function handle_option_added(string $option, $value): void {
+        if ($option === 'gm2_script_attributes') {
+            $this->load_attributes($value);
+        }
+    }
+
+    public function handle_option_deleted(string $option): void {
+        if ($option === 'gm2_script_attributes') {
+            $this->load_attributes([]);
+        }
     }
 }
