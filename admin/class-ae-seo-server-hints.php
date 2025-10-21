@@ -93,6 +93,16 @@ NGINX;
         return strpos($encoding, 'gzip') !== false || strpos($encoding, 'br') !== false;
     }
 
+    private function is_apache(): bool {
+        if (function_exists('is_apache')) {
+            return (bool) \is_apache();
+        }
+
+        $software = strtolower((string) ($_SERVER['SERVER_SOFTWARE'] ?? ''));
+
+        return strpos($software, 'apache') !== false || strpos($software, 'litespeed') !== false;
+    }
+
     private function write_htaccess_snippet(?array &$backups = null): bool {
         $apache       = $this->get_apache_snippet();
         $file         = ABSPATH . '.htaccess';
@@ -128,7 +138,7 @@ NGINX;
     }
 
     public function handle_notice_actions(): void {
-        if (\is_apache() && isset($_POST['ae_seo_write_htaccess']) && check_admin_referer('ae_seo_write_htaccess')) {
+        if ($this->is_apache() && isset($_POST['ae_seo_write_htaccess']) && check_admin_referer('ae_seo_write_htaccess')) {
             $success = $this->write_htaccess_snippet();
             add_action('admin_notices', function () use ($success) {
                 if ($success) {
@@ -148,7 +158,7 @@ NGINX;
         echo '<div class="notice notice-warning"><p>' . esc_html__( 'Gzip or Brotli compression is not enabled. ', 'gm2-wordpress-suite' ) . '</p>';
         $link = admin_url('tools.php?page=ae-seo-server-hints');
 
-        if (\is_apache() && $this->htaccess_writable()) {
+        if ($this->is_apache() && $this->htaccess_writable()) {
             echo '<form method="post" style="display:inline-block;margin-right:8px;">';
             wp_nonce_field('ae_seo_write_htaccess');
             echo '<input type="hidden" name="ae_seo_write_htaccess" value="1" />';
@@ -193,7 +203,7 @@ NGINX;
         echo '});';
         echo '</script>';
 
-        if (\is_apache() && isset($_POST['ae_seo_restore_htaccess']) && check_admin_referer('ae_seo_restore_htaccess')) {
+        if ($this->is_apache() && isset($_POST['ae_seo_restore_htaccess']) && check_admin_referer('ae_seo_restore_htaccess')) {
             if (!empty($backups)) {
                 rsort($backups);
                 $restore = $backups[0];
@@ -212,7 +222,7 @@ NGINX;
             $backups = glob($backup_glob) ?: [];
         }
 
-        if (\is_apache() && isset($_POST['ae_seo_write_htaccess']) && check_admin_referer('ae_seo_write_htaccess')) {
+        if ($this->is_apache() && isset($_POST['ae_seo_write_htaccess']) && check_admin_referer('ae_seo_write_htaccess')) {
             if ($this->write_htaccess_snippet($backups)) {
                 echo '<div class="updated"><p>' . esc_html__( '.htaccess updated.', 'gm2-wordpress-suite' ) . '</p></div>';
             } else {
@@ -222,7 +232,7 @@ NGINX;
 
         echo '<h2>' . esc_html__( 'Apache', 'gm2-wordpress-suite' ) . '</h2>';
         echo '<textarea rows="15" style="width:100%;">' . esc_textarea($apache) . '</textarea>';
-        if (\is_apache() && $this->htaccess_writable()) {
+        if ($this->is_apache() && $this->htaccess_writable()) {
             echo '<form method="post">';
             wp_nonce_field('ae_seo_write_htaccess');
             echo '<p><input type="submit" name="ae_seo_write_htaccess" class="button button-primary" value="' . esc_attr__( 'Write .htaccess', 'gm2-wordpress-suite' ) . '"></p>';
