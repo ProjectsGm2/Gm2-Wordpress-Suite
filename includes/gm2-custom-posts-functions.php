@@ -573,6 +573,9 @@ function gm2_register_custom_posts() {
                     continue;
                 }
                 $term_slug = $term['slug'] ?? '';
+                if ($term_slug === '' && !empty($term['name'])) {
+                    $term_slug = sanitize_title($term['name']);
+                }
                 if ($term_slug === '') {
                     continue;
                 }
