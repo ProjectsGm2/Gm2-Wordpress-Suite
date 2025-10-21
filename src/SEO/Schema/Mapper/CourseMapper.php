@@ -6,13 +6,15 @@ use WP_Post;
 
 class CourseMapper extends AbstractMapper
 {
-    protected array $requiredFields = [
-        'provider'    => __('Provider', 'gm2-wordpress-suite'),
-        'course_code' => __('Course code', 'gm2-wordpress-suite'),
-    ];
+    protected array $requiredFields = [];
 
     public function __construct()
     {
+        $this->requiredFields = [
+            'provider'    => __('Provider', 'gm2-wordpress-suite'),
+            'course_code' => __('Course code', 'gm2-wordpress-suite'),
+        ];
+
         parent::__construct(
             'course',
             'Course',

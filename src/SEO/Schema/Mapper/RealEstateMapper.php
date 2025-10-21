@@ -48,13 +48,15 @@ class RealEstateMapper extends AbstractMapper
         'offmarket'      => 'https://schema.org/OutOfStock',
     ];
 
-    protected array $requiredFields = [
-        'price'   => __('Price', 'gm2-wordpress-suite'),
-        'address' => __('Address', 'gm2-wordpress-suite'),
-    ];
+    protected array $requiredFields = [];
 
     public function __construct()
     {
+        $this->requiredFields = [
+            'price'   => __('Price', 'gm2-wordpress-suite'),
+            'address' => __('Address', 'gm2-wordpress-suite'),
+        ];
+
         parent::__construct(
             'property',
             'RealEstateListing',

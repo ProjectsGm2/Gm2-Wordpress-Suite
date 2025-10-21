@@ -6,14 +6,16 @@ use WP_Post;
 
 class EventMapper extends AbstractMapper
 {
-    protected array $requiredFields = [
-        'start_date' => __('Start date', 'gm2-wordpress-suite'),
-        'end_date'   => __('End date', 'gm2-wordpress-suite'),
-        'location'   => __('Location', 'gm2-wordpress-suite'),
-    ];
+    protected array $requiredFields = [];
 
     public function __construct()
     {
+        $this->requiredFields = [
+            'start_date' => __('Start date', 'gm2-wordpress-suite'),
+            'end_date'   => __('End date', 'gm2-wordpress-suite'),
+            'location'   => __('Location', 'gm2-wordpress-suite'),
+        ];
+
         parent::__construct(
             'event',
             'Event',
