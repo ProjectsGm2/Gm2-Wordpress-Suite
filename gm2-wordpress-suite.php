@@ -789,9 +789,11 @@ function gm2_initialize_guideline_rules() {
 }
 
 // Initialize plugin
-function gm2_init_plugin() {
-    $plugin = new Gm2_Loader();
-    $plugin->run();
+if (!function_exists('gm2_init_plugin')) {
+    function gm2_init_plugin() {
+        $plugin = new Gm2_Loader();
+        $plugin->run();
+    }
 }
 add_action('plugins_loaded', 'gm2_init_plugin');
 
