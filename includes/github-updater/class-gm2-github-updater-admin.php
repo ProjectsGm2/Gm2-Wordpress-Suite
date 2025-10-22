@@ -760,10 +760,10 @@ class Gm2_GitHub_Updater_Admin {
         $upgrader = new \Plugin_Upgrader($skin);
         $result   = $upgrader->upgrade($plugin_basename);
 
-        $skin_errors = $skin->get_errors();
-        if ($skin_errors instanceof WP_Error && $skin_errors->has_errors()) {
+        $skin_error = $this->get_skin_error($skin);
+        if ($skin_error instanceof WP_Error) {
             $reactivate_if_needed();
-            wp_send_json_error(['message' => $skin_errors->get_error_message()], 500);
+            wp_send_json_error(['message' => $skin_error->get_error_message()], 500);
         }
 
         if ($result instanceof WP_Error) {
@@ -790,6 +790,32 @@ class Gm2_GitHub_Updater_Admin {
         }
 
         wp_send_json_success(['update' => $response]);
+    }
+
+    /**
+     * Retrieve a WP_Error instance from the upgrader skin when available.
+     *
+     * @param object $skin Upgrader skin instance.
+     *
+     * @return WP_Error|null
+     */
+    protected function get_skin_error($skin) {
+        if (!is_object($skin)) {
+            return null;
+        }
+
+        if (method_exists($skin, 'get_errors')) {
+            $errors = $skin->get_errors();
+            if ($errors instanceof WP_Error && $errors->has_errors()) {
+                return $errors;
+            }
+        }
+
+        if (isset($skin->result) && $skin->result instanceof WP_Error && $skin->result->has_errors()) {
+            return $skin->result;
+        }
+
+        return null;
     }
 
     /**

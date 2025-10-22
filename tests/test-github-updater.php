@@ -3,8 +3,10 @@
 declare(strict_types=1);
 
 use Gm2\Updater\Gm2_GitHub_Updater;
+use Gm2\Updater\Gm2_GitHub_Updater_Admin;
 use PHPUnit\Framework\AssertionFailedError;
 use ReflectionClass;
+use ReflectionMethod;
 
 /**
  * @group github-updater
@@ -556,6 +558,35 @@ class GithubUpdaterTest extends WP_UnitTestCase {
         $this->assertSame('{"ok":true}', wp_remote_retrieve_body($response));
 
         remove_filter('pre_http_request', $mock, 10);
+    }
+
+    public function test_get_skin_error_handles_various_skins(): void {
+        $admin  = new Gm2_GitHub_Updater_Admin();
+        $method = new ReflectionMethod($admin, 'get_skin_error');
+        $method->setAccessible(true);
+
+        $skinWithResult = new class {
+            /** @var WP_Error|null */
+            public $result;
+        };
+        $skinWithResult->result = new WP_Error('gm2_updater_failed', 'Upgrade failed via result.');
+
+        $error = $method->invoke($admin, $skinWithResult);
+        $this->assertInstanceOf(WP_Error::class, $error);
+        $this->assertSame('Upgrade failed via result.', $error->get_error_message());
+
+        $skinWithMethod = new class {
+            public function get_errors() {
+                return new WP_Error('gm2_updater_failed', 'Upgrade failed via method.');
+            }
+        };
+
+        $errorFromMethod = $method->invoke($admin, $skinWithMethod);
+        $this->assertInstanceOf(WP_Error::class, $errorFromMethod);
+        $this->assertSame('Upgrade failed via method.', $errorFromMethod->get_error_message());
+
+        $skinWithoutIssues = new class {};
+        $this->assertNull($method->invoke($admin, $skinWithoutIssues));
     }
 
     /**
