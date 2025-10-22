@@ -7,12 +7,15 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-if (!class_exists('\\WP_Upgrader_Skin')) {
-    require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
+if (!class_exists('\\Automatic_Upgrader_Skin')) {
+    $upgrader_path = ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
+    if (file_exists($upgrader_path)) {
+        require_once $upgrader_path;
+    }
 }
 
 if (!class_exists('\\Automatic_Upgrader_Skin')) {
-    require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader-skins.php';
+    return;
 }
 
 /**

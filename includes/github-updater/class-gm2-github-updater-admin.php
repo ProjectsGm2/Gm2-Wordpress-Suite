@@ -755,6 +755,12 @@ class Gm2_GitHub_Updater_Admin {
             }
         };
 
+        if (!class_exists(__NAMESPACE__ . '\\Gm2_GitHub_Upgrader_Skin')) {
+            wp_send_json_error([
+                'message' => esc_html__('WordPress upgrader dependencies are unavailable.', 'gm2-wordpress-suite'),
+            ], 500);
+        }
+
         $skin     = new Gm2_GitHub_Upgrader_Skin([
             'plugin' => $plugin_basename,
         ]);
