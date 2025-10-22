@@ -718,6 +718,8 @@ class Gm2_GitHub_Updater_Admin {
 
         list($settings, $unsaved_changes) = $this->resolve_settings_for_action(false);
 
+        error_log('[GM2 GitHub Updater] Manual update initiated.');
+
         if ($settings === null && $unsaved_changes) {
             wp_send_json_error(['message' => esc_html__('Save your changes before using this action.', 'gm2-wordpress-suite')], 400);
         }
@@ -733,10 +735,12 @@ class Gm2_GitHub_Updater_Admin {
 
         $meta = $updater->refresh(true);
         if ($meta instanceof WP_Error) {
+            error_log('[GM2 GitHub Updater] Update failed while refreshing metadata: ' . $meta->get_error_message());
             wp_send_json_error(['message' => $meta->get_error_message()], 500);
         }
 
         if (empty($meta['package'])) {
+            error_log('[GM2 GitHub Updater] Update aborted. No package URL detected for channel ' . $settings['channel'] . '.');
             wp_send_json_error(['message' => esc_html__('No download package URL found for the selected channel.', 'gm2-wordpress-suite')], 500);
         }
 
@@ -765,11 +769,13 @@ class Gm2_GitHub_Updater_Admin {
             'plugin' => $plugin_basename,
         ]);
         $upgrader = new \Plugin_Upgrader($skin);
+        error_log('[GM2 GitHub Updater] Starting upgrade for plugin ' . $plugin_basename . ' using package ' . $meta['package'] . '.');
         $result   = $upgrader->upgrade($plugin_basename);
 
         $log        = $skin->get_log();
         $skin_error = $this->get_skin_error($skin);
         if ($skin_error instanceof WP_Error) {
+            error_log('[GM2 GitHub Updater] Upgrade skin reported an error: ' . $skin_error->get_error_message());
             $reactivate_if_needed();
             wp_send_json_error([
                 'message' => $skin_error->get_error_message(),
@@ -778,6 +784,7 @@ class Gm2_GitHub_Updater_Admin {
         }
 
         if ($result instanceof WP_Error) {
+            error_log('[GM2 GitHub Updater] Plugin upgrader returned an error: ' . $result->get_error_message());
             $reactivate_if_needed();
             wp_send_json_error([
                 'message' => $result->get_error_message(),
@@ -786,6 +793,7 @@ class Gm2_GitHub_Updater_Admin {
         }
 
         if ($result === false || $result === null) {
+            error_log('[GM2 GitHub Updater] Plugin upgrader returned an empty result.');
             $reactivate_if_needed();
             wp_send_json_error([
                 'message' => esc_html__('Plugin upgrade did not complete.', 'gm2-wordpress-suite'),
@@ -793,6 +801,7 @@ class Gm2_GitHub_Updater_Admin {
             ], 500);
         }
 
+        error_log('[GM2 GitHub Updater] Upgrade completed successfully for plugin ' . $plugin_basename . '.');
         $reactivate_if_needed();
 
         $response = [
