@@ -303,6 +303,8 @@ class Gm2_GitHub_Updater_Admin {
             true
         );
 
+        $current_settings = $this->get_option_settings();
+
         wp_localize_script(
             'gm2-github-updater-admin',
             'gm2GitHubUpdaterAdmin',
