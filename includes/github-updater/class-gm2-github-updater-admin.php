@@ -96,7 +96,7 @@ class Gm2_GitHub_Updater_Admin {
             'owner'          => '',
             'repo'           => '',
             'channel'        => 'release',
-            'branch'         => 'main',
+            'branch'         => '',
             'token'          => '',
             'check_interval' => 60,
         ];
@@ -108,7 +108,7 @@ class Gm2_GitHub_Updater_Admin {
         $stored['channel']        = in_array($stored['channel'], ['release', 'branch'], true) ? $stored['channel'] : 'release';
         $stored['branch']         = isset($stored['branch']) && $stored['branch'] !== ''
             ? sanitize_text_field((string) $stored['branch'])
-            : 'main';
+            : '';
         $stored['token']          = isset($stored['token']) ? (string) $stored['token'] : '';
         $stored['check_interval'] = isset($stored['check_interval']) ? absint($stored['check_interval']) : 60;
 
@@ -130,7 +130,7 @@ class Gm2_GitHub_Updater_Admin {
             'owner'          => '',
             'repo'           => '',
             'channel'        => 'release',
-            'branch'         => 'main',
+            'branch'         => '',
             'token'          => '',
             'check_interval' => 60,
         ];
@@ -141,8 +141,14 @@ class Gm2_GitHub_Updater_Admin {
         $channel = isset($input['channel']) ? sanitize_text_field((string) $input['channel']) : 'release';
         $sanitized['channel'] = in_array($channel, ['release', 'branch'], true) ? $channel : 'release';
 
-        $branch = isset($input['branch']) ? sanitize_text_field(trim((string) $input['branch'])) : 'main';
-        $sanitized['branch'] = $branch !== '' ? $branch : 'main';
+        $existing_branch = isset($existing['branch']) ? sanitize_text_field((string) $existing['branch']) : '';
+        $branch          = isset($input['branch']) ? sanitize_text_field(trim((string) $input['branch'])) : '';
+
+        if ($branch === '' && $sanitized['channel'] === 'branch') {
+            $branch = $existing_branch;
+        }
+
+        $sanitized['branch'] = $branch;
 
         $allowed_intervals = [0, 5, 15, 30, 60, 120, 360, 720, 1440];
         $interval          = isset($input['check_interval']) ? absint($input['check_interval']) : 60;
@@ -1013,7 +1019,7 @@ class Gm2_GitHub_Updater_Admin {
             'owner'          => '',
             'repo'           => '',
             'channel'        => 'release',
-            'branch'         => 'main',
+            'branch'         => '',
             'token'          => '',
             'check_interval' => 60,
         ];
@@ -1022,6 +1028,11 @@ class Gm2_GitHub_Updater_Admin {
         if (!in_array($settings['channel'], ['release', 'branch'], true)) {
             $settings['channel'] = 'release';
         }
+
+        if ($settings['channel'] === 'branch' && $settings['branch'] === '') {
+            $settings['branch'] = 'main';
+        }
+
         $settings['token'] = self::reveal_token(isset($settings['token']) ? (string) $settings['token'] : '');
 
         $interval = isset($settings['check_interval']) ? absint($settings['check_interval']) : 60;
