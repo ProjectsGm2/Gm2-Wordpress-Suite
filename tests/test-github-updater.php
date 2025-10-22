@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Gm2\Updater\Gm2_GitHub_Updater;
 use Gm2\Updater\Gm2_GitHub_Updater_Admin;
+use Gm2\Updater\Gm2_GitHub_Upgrader_Skin;
 use PHPUnit\Framework\AssertionFailedError;
 use ReflectionClass;
 use ReflectionMethod;
@@ -585,8 +586,33 @@ class GithubUpdaterTest extends WP_UnitTestCase {
         $this->assertInstanceOf(WP_Error::class, $errorFromMethod);
         $this->assertSame('Upgrade failed via method.', $errorFromMethod->get_error_message());
 
+        $customSkin = new Gm2_GitHub_Upgrader_Skin();
+        $customSkin->error(new WP_Error('gm2_updater_failed', 'Upgrade failed via custom skin.'));
+
+        $customError = $method->invoke($admin, $customSkin);
+        $this->assertInstanceOf(WP_Error::class, $customError);
+        $this->assertSame('Upgrade failed via custom skin.', $customError->get_error_message());
+
         $skinWithoutIssues = new class {};
         $this->assertNull($method->invoke($admin, $skinWithoutIssues));
+    }
+
+    public function test_custom_upgrader_skin_collects_logs_and_errors(): void {
+        $skin = new Gm2_GitHub_Upgrader_Skin();
+
+        $skin->feedback('Downloading update from %s…', 'https://example.com/plugin.zip');
+        $skin->feedback('<strong>Installing</strong> update.');
+        $skin->error(new WP_Error('gm2_updater_failed', 'Install failed & needs attention.'));
+
+        $log = $skin->get_log();
+        $this->assertNotEmpty($log);
+        $this->assertSame('Downloading update from https://example.com/plugin.zip…', $log[0]);
+        $this->assertStringNotContainsString('<strong>', $log[1]);
+
+        $errors = $skin->get_errors();
+        $this->assertInstanceOf(WP_Error::class, $errors);
+        $this->assertTrue($errors->has_errors());
+        $this->assertSame('Install failed & needs attention.', $errors->get_error_message());
     }
 
     /**
