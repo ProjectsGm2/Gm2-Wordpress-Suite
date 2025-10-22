@@ -335,6 +335,7 @@ class Gm2_GitHub_Updater_Admin {
                     'versionLabel' => esc_html__('Version: %s', 'gm2-wordpress-suite'),
                     'updatedLabel' => esc_html__('Published: %s', 'gm2-wordpress-suite'),
                     'dismiss'      => esc_html__('Dismiss this notice.', 'gm2-wordpress-suite'),
+                    'viewLog'      => esc_html__('View detailed log', 'gm2-wordpress-suite'),
                     'oauthPrompt'  => esc_html__('Authorize access to your GitHub account to automatically generate a token.', 'gm2-wordpress-suite'),
                     'oauthPending' => esc_html__('Waiting for GitHub authorization…', 'gm2-wordpress-suite'),
                     'oauthSlowDown'=> esc_html__('GitHub requested a slower polling interval. Retrying…', 'gm2-wordpress-suite'),
@@ -754,26 +755,42 @@ class Gm2_GitHub_Updater_Admin {
             }
         };
 
-        $skin     = new \Automatic_Upgrader_Skin([
+        if (!class_exists(__NAMESPACE__ . '\\Gm2_GitHub_Upgrader_Skin')) {
+            wp_send_json_error([
+                'message' => esc_html__('WordPress upgrader dependencies are unavailable.', 'gm2-wordpress-suite'),
+            ], 500);
+        }
+
+        $skin     = new Gm2_GitHub_Upgrader_Skin([
             'plugin' => $plugin_basename,
         ]);
         $upgrader = new \Plugin_Upgrader($skin);
         $result   = $upgrader->upgrade($plugin_basename);
 
-        $skin_errors = $skin->get_errors();
-        if ($skin_errors instanceof WP_Error && $skin_errors->has_errors()) {
+        $log        = $skin->get_log();
+        $skin_error = $this->get_skin_error($skin);
+        if ($skin_error instanceof WP_Error) {
             $reactivate_if_needed();
-            wp_send_json_error(['message' => $skin_errors->get_error_message()], 500);
+            wp_send_json_error([
+                'message' => $skin_error->get_error_message(),
+                'log'     => $log,
+            ], 500);
         }
 
         if ($result instanceof WP_Error) {
             $reactivate_if_needed();
-            wp_send_json_error(['message' => $result->get_error_message()], 500);
+            wp_send_json_error([
+                'message' => $result->get_error_message(),
+                'log'     => $log,
+            ], 500);
         }
 
         if ($result === false || $result === null) {
             $reactivate_if_needed();
-            wp_send_json_error(['message' => esc_html__('Plugin upgrade did not complete.', 'gm2-wordpress-suite')], 500);
+            wp_send_json_error([
+                'message' => esc_html__('Plugin upgrade did not complete.', 'gm2-wordpress-suite'),
+                'log'     => $log,
+            ], 500);
         }
 
         $reactivate_if_needed();
@@ -789,7 +806,36 @@ class Gm2_GitHub_Updater_Admin {
             }, $messages);
         }
 
-        wp_send_json_success(['update' => $response]);
+        wp_send_json_success([
+            'update' => $response,
+            'log'    => $log,
+        ]);
+    }
+
+    /**
+     * Retrieve a WP_Error instance from the upgrader skin when available.
+     *
+     * @param object $skin Upgrader skin instance.
+     *
+     * @return WP_Error|null
+     */
+    protected function get_skin_error($skin) {
+        if (!is_object($skin)) {
+            return null;
+        }
+
+        if (method_exists($skin, 'get_errors')) {
+            $errors = $skin->get_errors();
+            if ($errors instanceof WP_Error && $errors->has_errors()) {
+                return $errors;
+            }
+        }
+
+        if (isset($skin->result) && $skin->result instanceof WP_Error && $skin->result->has_errors()) {
+            return $skin->result;
+        }
+
+        return null;
     }
 
     /**

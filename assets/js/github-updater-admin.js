@@ -401,13 +401,37 @@
         });
     }
 
-    function renderMessage(type, message) {
+    function renderMessage(type, message, log) {
         var notice = $('<div/>', {
             'class': 'notice notice-' + type + ' is-dismissible',
             'role': 'alert',
             'tabindex': '-1'
         });
         $('<p/>').text(message).appendTo(notice);
+
+        if (Array.isArray(log) && log.length) {
+            var details = $('<details/>', {
+                'class': 'gm2-github-feedback-log'
+            });
+
+            if (type === 'error') {
+                details.attr('open', 'open');
+            }
+
+            $('<summary/>').text(gm2GitHubUpdaterAdmin.i18n.viewLog).appendTo(details);
+
+            var list = $('<ul/>', {
+                'class': 'gm2-github-feedback-log__list'
+            });
+
+            log.forEach(function (entry) {
+                $('<li/>').text(entry).appendTo(list);
+            });
+
+            details.append(list);
+            notice.append(details);
+        }
+
         $('<button/>', {
             'type': 'button',
             'class': 'notice-dismiss'
@@ -561,19 +585,29 @@
             dataType: 'json',
             data: requestData
         }).done(function (response) {
+            var payload = response && response.data ? response.data : {};
+            var logData = Array.isArray(payload.log) ? payload.log : [];
+
             if (response && response.success && typeof successHandler === 'function') {
-                successHandler(response.data || {});
-            } else if (response && response.data && response.data.message) {
-                renderMessage('error', response.data.message);
+                successHandler(payload, logData);
+            } else if (payload && payload.message) {
+                renderMessage('error', payload.message, logData);
             } else {
-                renderMessage('error', gm2GitHubUpdaterAdmin.i18n.unknownError);
+                renderMessage('error', gm2GitHubUpdaterAdmin.i18n.unknownError, logData);
             }
         }).fail(function (jqXHR) {
             var message = gm2GitHubUpdaterAdmin.i18n.unknownError;
-            if (jqXHR.responseJSON && jqXHR.responseJSON.data && jqXHR.responseJSON.data.message) {
-                message = jqXHR.responseJSON.data.message;
+            var logData = [];
+
+            if (jqXHR.responseJSON && jqXHR.responseJSON.data) {
+                if (jqXHR.responseJSON.data.message) {
+                    message = jqXHR.responseJSON.data.message;
+                }
+                if (Array.isArray(jqXHR.responseJSON.data.log)) {
+                    logData = jqXHR.responseJSON.data.log;
+                }
             }
-            renderMessage('error', message);
+            renderMessage('error', message, logData);
         }).always(function () {
             setButtonsDisabled(false);
         });
@@ -592,7 +626,7 @@
             return;
         }
 
-        handleAjax(testButton, testButton.data('action'), gm2GitHubUpdaterAdmin.i18n.testing, function (data) {
+        handleAjax(testButton, testButton.data('action'), gm2GitHubUpdaterAdmin.i18n.testing, function (data, log) {
             var message = gm2GitHubUpdaterAdmin.i18n.testSuccess;
             if (data.repository) {
                 var details = [];
@@ -615,7 +649,7 @@
             if (data.unsaved) {
                 message += ' ' + gm2GitHubUpdaterAdmin.i18n.unsavedTestNotice;
             }
-            renderMessage('success', message);
+            renderMessage('success', message, log);
         }, { settings: settings });
     });
 
@@ -636,7 +670,7 @@
             return;
         }
 
-        handleAjax(checkButton, checkButton.data('action'), gm2GitHubUpdaterAdmin.i18n.checking, function (data) {
+        handleAjax(checkButton, checkButton.data('action'), gm2GitHubUpdaterAdmin.i18n.checking, function (data, log) {
             var message = gm2GitHubUpdaterAdmin.i18n.checkSuccess;
             if (data.metadata) {
                 var parts = [];
@@ -650,7 +684,7 @@
                     message += ' ' + parts.join(' • ');
                 }
             }
-            renderMessage('success', message);
+            renderMessage('success', message, log);
         }, { settings: settings });
     });
 
@@ -672,7 +706,7 @@
                 return;
             }
 
-            handleAjax(updateButton, updateButton.data('action'), gm2GitHubUpdaterAdmin.i18n.updating, function (data) {
+            handleAjax(updateButton, updateButton.data('action'), gm2GitHubUpdaterAdmin.i18n.updating, function (data, log) {
                 var message = gm2GitHubUpdaterAdmin.i18n.updateSuccess;
                 if (data.update && data.update.version) {
                     message += ' ' + gm2GitHubUpdaterAdmin.i18n.versionLabel.replace('%s', data.update.version);
@@ -680,7 +714,7 @@
                 if (data.update && Array.isArray(data.update.messages) && data.update.messages.length) {
                     message += ' ' + data.update.messages.join(' ');
                 }
-                renderMessage('success', message);
+                renderMessage('success', message, log);
             }, { settings: settings });
         });
     }
