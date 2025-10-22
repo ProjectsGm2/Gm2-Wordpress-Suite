@@ -28,19 +28,45 @@
     var loginCode = $('#gm2-github-login-code');
     var loginUrl = $('#gm2-github-login-url');
     var accountStatus = $('#gm2-github-account-status');
-    var initialSettings = $.extend({
-        owner: '',
-        repo: '',
-        channel: 'release',
-        branch: '',
-        check_interval: '60',
-        has_token: false
-    }, gm2GitHubUpdaterAdmin.currentSettings || {});
+    var localizedSettings = gm2GitHubUpdaterAdmin.currentSettings || {};
+    var initialSettings = {
+        owner: ownerInput.length ? ownerInput.val().trim() : '',
+        repo: repoInput.length ? repoInput.val().trim() : '',
+        channel: channelRadios.filter(':checked').val() || '',
+        branch: branchInput.length ? branchInput.val().trim() : '',
+        check_interval: intervalSelect.length ? String(intervalSelect.val()) : '',
+        has_token: tokenStatus.length ? tokenStatus.attr('data-has-token') === '1' : null
+    };
+
+    if (!initialSettings.owner && localizedSettings.owner) {
+        initialSettings.owner = localizedSettings.owner.toString().trim();
+    }
+
+    if (!initialSettings.repo && localizedSettings.repo) {
+        initialSettings.repo = localizedSettings.repo.toString().trim();
+    }
+
+    if (!initialSettings.channel && localizedSettings.channel) {
+        initialSettings.channel = localizedSettings.channel.toString();
+    }
+
+    if (!initialSettings.branch && localizedSettings.branch) {
+        initialSettings.branch = localizedSettings.branch.toString().trim();
+    }
+
+    if (!initialSettings.check_interval && localizedSettings.check_interval !== undefined) {
+        initialSettings.check_interval = String(localizedSettings.check_interval);
+    }
+
+    if (initialSettings.has_token === null) {
+        initialSettings.has_token = !!localizedSettings.has_token;
+    }
+
     initialSettings.owner = (initialSettings.owner || '').toString().trim();
     initialSettings.repo = (initialSettings.repo || '').toString().trim();
-    initialSettings.channel = (initialSettings.channel || 'release').toString();
     initialSettings.branch = (initialSettings.branch || '').toString().trim();
-    initialSettings.check_interval = initialSettings.check_interval !== undefined ? String(initialSettings.check_interval) : '60';
+    initialSettings.channel = (initialSettings.channel || 'release').toString();
+    initialSettings.check_interval = initialSettings.check_interval || '60';
     initialSettings.has_token = !!initialSettings.has_token;
     var initialHasToken = initialSettings.has_token;
     var oauthState = {
