@@ -82,18 +82,49 @@ class Gm2_GitHub_Updater_Admin {
     }
 
     /**
-     * Sanitize and persist updater settings.
-     *
-     * @param array<string, mixed>|null $input Raw input.
+     * Retrieve the stored option in a normalized shape.
      *
      * @return array<string, mixed>
      */
-    public function sanitize_settings($input) {
-        $input    = is_array($input) ? $input : [];
-        $existing = get_option(self::OPTION_KEY, []);
-        if (!is_array($existing)) {
-            $existing = [];
+    protected function get_option_settings() {
+        $stored = get_option(self::OPTION_KEY, []);
+        if (!is_array($stored)) {
+            $stored = [];
         }
+
+        $defaults = [
+            'owner'          => '',
+            'repo'           => '',
+            'channel'        => 'release',
+            'branch'         => 'main',
+            'token'          => '',
+            'check_interval' => 60,
+        ];
+
+        $stored = wp_parse_args($stored, $defaults);
+
+        $stored['owner']          = isset($stored['owner']) ? sanitize_text_field((string) $stored['owner']) : '';
+        $stored['repo']           = isset($stored['repo']) ? sanitize_text_field((string) $stored['repo']) : '';
+        $stored['channel']        = in_array($stored['channel'], ['release', 'branch'], true) ? $stored['channel'] : 'release';
+        $stored['branch']         = isset($stored['branch']) && $stored['branch'] !== ''
+            ? sanitize_text_field((string) $stored['branch'])
+            : 'main';
+        $stored['token']          = isset($stored['token']) ? (string) $stored['token'] : '';
+        $stored['check_interval'] = isset($stored['check_interval']) ? absint($stored['check_interval']) : 60;
+
+        return $stored;
+    }
+
+    /**
+     * Normalize raw settings input without persisting side-effects.
+     *
+     * @param array<string, mixed> $input    Raw settings input.
+     * @param array<string, mixed> $existing Existing stored settings.
+     *
+     * @return array<string, mixed>
+     */
+    protected function normalize_settings(array $input, array $existing) {
+        $existing = is_array($existing) ? $existing : [];
 
         $sanitized = [
             'owner'          => '',
@@ -101,7 +132,6 @@ class Gm2_GitHub_Updater_Admin {
             'channel'        => 'release',
             'branch'         => 'main',
             'token'          => '',
-            'token_keep'     => '',
             'check_interval' => 60,
         ];
 
@@ -124,15 +154,29 @@ class Gm2_GitHub_Updater_Admin {
         $keep_existing = !empty($input['token_keep']);
         $token_value   = isset($input['token']) ? sanitize_text_field(trim((string) $input['token'])) : '';
 
-        if ($keep_existing && empty($token_value)) {
+        if ($keep_existing && $token_value === '') {
             $sanitized['token'] = isset($existing['token']) ? (string) $existing['token'] : '';
+        } elseif ($token_value !== '') {
+            $sanitized['token'] = self::obfuscate_token($token_value);
         } else {
-            if ($token_value !== '') {
-                $sanitized['token'] = self::obfuscate_token($token_value);
-            } else {
-                $sanitized['token'] = '';
-            }
+            $sanitized['token'] = '';
         }
+
+        return $sanitized;
+    }
+
+    /**
+     * Sanitize and persist updater settings.
+     *
+     * @param array<string, mixed>|null $input Raw input.
+     *
+     * @return array<string, mixed>
+     */
+    public function sanitize_settings($input) {
+        $input    = is_array($input) ? $input : [];
+        $existing = $this->get_option_settings();
+
+        $sanitized = $this->normalize_settings($input, $existing);
 
         if ($sanitized['owner'] === '' || $sanitized['repo'] === '') {
             add_settings_error(
@@ -149,9 +193,91 @@ class Gm2_GitHub_Updater_Admin {
             $this->interval_seconds = 0;
         }
 
-        unset($sanitized['token_keep']);
-
         return $sanitized;
+    }
+
+    /**
+     * Extract sanitized settings from the current request payload.
+     *
+     * @return array<string, mixed>|null
+     */
+    protected function get_settings_from_request() {
+        if (!isset($_POST['settings']) || !is_array($_POST['settings'])) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
+            return null;
+        }
+
+        $raw = [];
+        foreach ((array) $_POST['settings'] as $key => $value) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
+            if (is_scalar($value)) {
+                $raw[$key] = (string) wp_unslash($value);
+            }
+        }
+
+        if ($raw === []) {
+            return null;
+        }
+
+        return $this->normalize_settings($raw, $this->get_option_settings());
+    }
+
+    /**
+     * Determine whether submitted settings differ from stored values.
+     *
+     * @param array<string, mixed> $submitted Submitted settings.
+     * @param array<string, mixed> $stored    Stored settings.
+     *
+     * @return bool
+     */
+    protected function has_unsaved_changes(array $submitted, array $stored) {
+        $keys = ['owner', 'repo', 'channel', 'branch', 'token', 'check_interval'];
+
+        foreach ($keys as $key) {
+            $stored_value    = isset($stored[$key]) ? $stored[$key] : '';
+            $submitted_value = isset($submitted[$key]) ? $submitted[$key] : '';
+
+            if ($key === 'check_interval') {
+                $stored_value    = (string) absint($stored_value);
+                $submitted_value = (string) absint($submitted_value);
+            } else {
+                $stored_value    = (string) $stored_value;
+                $submitted_value = (string) $submitted_value;
+            }
+
+            if ($stored_value !== $submitted_value) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Resolve settings for a runtime action, tracking unsaved changes.
+     *
+     * @param bool $allow_unsaved Whether to use submitted values when they differ from stored settings.
+     *
+     * @return array{0: array<string, mixed>|null, 1: bool}
+     */
+    protected function resolve_settings_for_action($allow_unsaved = false) {
+        $stored    = $this->get_option_settings();
+        $submitted = $this->get_settings_from_request();
+        $unsaved   = false;
+
+        if ($submitted !== null) {
+            $unsaved = $this->has_unsaved_changes($submitted, $stored);
+        }
+
+        if ($submitted !== null && ($allow_unsaved || !$unsaved)) {
+            $effective = $submitted;
+        } elseif ($unsaved && !$allow_unsaved) {
+            return [null, true];
+        } else {
+            $effective = $stored;
+        }
+
+        $runtime = self::prepare_settings_for_runtime($effective);
+
+        return [$runtime, $unsaved];
     }
 
     /**
@@ -185,6 +311,7 @@ class Gm2_GitHub_Updater_Admin {
                 'ajaxUrl' => admin_url('admin-ajax.php'),
                 'nonce'   => wp_create_nonce(self::NONCE_ACTION),
                 'oauth'   => $this->get_oauth_localization(),
+                'currentSettings' => $current_settings,
                 'i18n'    => [
                     'testing'      => esc_html__('Testing connection…', 'gm2-wordpress-suite'),
                     'checking'     => esc_html__('Checking for updates…', 'gm2-wordpress-suite'),
@@ -214,6 +341,14 @@ class Gm2_GitHub_Updater_Admin {
                     'oauthEnterCode' => esc_html__('Enter this code on GitHub:', 'gm2-wordpress-suite'),
                     'oauthDisconnectConfirm' => esc_html__('Disconnecting will remove the stored GitHub access token. Continue?', 'gm2-wordpress-suite'),
                     'oauthDisconnected' => esc_html__('GitHub access token removed.', 'gm2-wordpress-suite'),
+                    'missingOwnerRepo' => esc_html__('Enter both the repository owner and name before continuing.', 'gm2-wordpress-suite'),
+                    'missingBranch' => esc_html__('Enter the branch name when using the Branch channel.', 'gm2-wordpress-suite'),
+                    'saveBeforeAction' => esc_html__('Save your changes before using this action.', 'gm2-wordpress-suite'),
+                    'noSettingsConfigured' => esc_html__('Configure the repository settings and save them first.', 'gm2-wordpress-suite'),
+                    'unsavedTestNotice' => esc_html__('Results include unsaved changes.', 'gm2-wordpress-suite'),
+                    'tokenStored' => esc_html__('An access token is currently saved for this site.', 'gm2-wordpress-suite'),
+                    'tokenMissing' => esc_html__('No access token has been saved yet.', 'gm2-wordpress-suite'),
+                    'tokenPending' => esc_html__('Token changes will take effect after saving.', 'gm2-wordpress-suite'),
                 ],
             ]
         );
@@ -263,6 +398,15 @@ class Gm2_GitHub_Updater_Admin {
             return;
         }
 
+        if (isset($_GET['settings-updated'])) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+            add_settings_error(
+                self::OPTION_KEY,
+                'gm2_github_updater_saved',
+                esc_html__('GitHub updater settings saved.', 'gm2-wordpress-suite'),
+                'updated'
+            );
+        }
+
         settings_errors(self::OPTION_KEY);
 
         $notices = get_option('gm2_github_updater_notices', []);
@@ -298,13 +442,13 @@ class Gm2_GitHub_Updater_Admin {
             return;
         }
 
-        $settings   = get_option(self::OPTION_KEY, []);
+        $settings   = $this->get_option_settings();
         $has_token  = !empty($settings['token']);
-        $owner      = isset($settings['owner']) ? $settings['owner'] : '';
-        $repo       = isset($settings['repo']) ? $settings['repo'] : '';
-        $channel    = isset($settings['channel']) ? $settings['channel'] : 'release';
-        $branch     = isset($settings['branch']) ? $settings['branch'] : 'main';
-        $interval   = isset($settings['check_interval']) ? (int) $settings['check_interval'] : 60;
+        $owner      = $settings['owner'];
+        $repo       = $settings['repo'];
+        $channel    = $settings['channel'];
+        $branch     = $settings['branch'];
+        $interval   = (int) $settings['check_interval'];
         $intervals  = [0, 5, 15, 30, 60, 120, 360, 720, 1440];
         if (!in_array($interval, $intervals, true)) {
             $interval = 60;
@@ -312,6 +456,14 @@ class Gm2_GitHub_Updater_Admin {
         $token_keep = $has_token ? '1' : '0';
         $connected_account = $this->get_connected_github_account();
         $is_connected      = $connected_account !== '';
+        $current_settings  = [
+            'owner'          => $owner,
+            'repo'           => $repo,
+            'channel'        => $channel,
+            'branch'         => $branch,
+            'check_interval' => $interval,
+            'has_token'      => $has_token,
+        ];
         ?>
         <div class="wrap">
             <h1><?php esc_html_e('GitHub Updater', 'gm2-wordpress-suite'); ?></h1>
@@ -389,6 +541,15 @@ class Gm2_GitHub_Updater_Admin {
                                 <button type="button" class="button" id="gm2-github-token-toggle" aria-expanded="false">
                                     <?php echo $has_token ? esc_html__('Reveal Token Field', 'gm2-wordpress-suite') : esc_html__('Add Token', 'gm2-wordpress-suite'); ?>
                                 </button>
+                                <p class="description gm2-github-token-status" data-has-token="<?php echo $has_token ? '1' : '0'; ?>">
+                                    <?php
+                                    if ($has_token) {
+                                        esc_html_e('An access token is currently saved for this site.', 'gm2-wordpress-suite');
+                                    } else {
+                                        esc_html_e('No access token has been saved yet.', 'gm2-wordpress-suite');
+                                    }
+                                    ?>
+                                </p>
                                 <div id="gm2-github-token-field" class="gm2-github-token-field" aria-hidden="true" style="display:none;">
                                     <label for="gm2-github-token" class="screen-reader-text"><?php esc_html_e('GitHub Access Token', 'gm2-wordpress-suite'); ?></label>
                                     <input type="password" id="gm2-github-token" name="<?php echo esc_attr(self::OPTION_KEY); ?>[token]" value="" class="regular-text" autocomplete="new-password" disabled />
@@ -436,7 +597,8 @@ class Gm2_GitHub_Updater_Admin {
     public function ajax_test_connection() {
         $this->verify_ajax_permissions();
 
-        $settings = self::prepare_settings_for_runtime(get_option(self::OPTION_KEY, []));
+        list($settings, $unsaved_changes) = $this->resolve_settings_for_action(true);
+
         if (empty($settings['owner']) || empty($settings['repo'])) {
             wp_send_json_error(['message' => esc_html__('Please configure the owner and repository first.', 'gm2-wordpress-suite')], 400);
         }
@@ -488,7 +650,10 @@ class Gm2_GitHub_Updater_Admin {
             $payload['configured_branch'] = sanitize_text_field($settings['branch']);
         }
 
-        wp_send_json_success(['repository' => $payload]);
+        wp_send_json_success([
+            'repository' => $payload,
+            'unsaved'    => $unsaved_changes,
+        ]);
     }
 
     /**
@@ -497,9 +662,19 @@ class Gm2_GitHub_Updater_Admin {
     public function ajax_check_now() {
         $this->verify_ajax_permissions();
 
+        list($settings, $unsaved_changes) = $this->resolve_settings_for_action(false);
+
+        if ($settings === null && $unsaved_changes) {
+            wp_send_json_error(['message' => esc_html__('Save your changes before using this action.', 'gm2-wordpress-suite')], 400);
+        }
+
+        if (!$settings || empty($settings['owner']) || empty($settings['repo'])) {
+            wp_send_json_error(['message' => esc_html__('Configure the repository settings and save them first.', 'gm2-wordpress-suite')], 400);
+        }
+
         $updater = gm2_github_updater(true);
         if (!$updater instanceof Gm2_GitHub_Updater) {
-            wp_send_json_error(['message' => esc_html__('The updater is not configured.', 'gm2-wordpress-suite')], 400);
+            wp_send_json_error(['message' => esc_html__('Configure the repository settings and save them first.', 'gm2-wordpress-suite')], 400);
         }
 
         $meta = $updater->refresh();
@@ -523,9 +698,19 @@ class Gm2_GitHub_Updater_Admin {
     public function ajax_update_now() {
         $this->verify_ajax_permissions();
 
+        list($settings, $unsaved_changes) = $this->resolve_settings_for_action(false);
+
+        if ($settings === null && $unsaved_changes) {
+            wp_send_json_error(['message' => esc_html__('Save your changes before using this action.', 'gm2-wordpress-suite')], 400);
+        }
+
+        if (!$settings || empty($settings['owner']) || empty($settings['repo'])) {
+            wp_send_json_error(['message' => esc_html__('Configure the repository settings and save them first.', 'gm2-wordpress-suite')], 400);
+        }
+
         $updater = gm2_github_updater(true);
         if (!$updater instanceof Gm2_GitHub_Updater) {
-            wp_send_json_error(['message' => esc_html__('The updater is not configured.', 'gm2-wordpress-suite')], 400);
+            wp_send_json_error(['message' => esc_html__('Configure the repository settings and save them first.', 'gm2-wordpress-suite')], 400);
         }
 
         $meta = $updater->refresh(true);
@@ -855,21 +1040,15 @@ class Gm2_GitHub_Updater_Admin {
      * @return int
      */
     protected function determine_interval_seconds() {
-        $settings = get_option(self::OPTION_KEY, []);
-        if (!is_array($settings)) {
-            $settings = [];
+        $settings = $this->get_option_settings();
+        $minutes  = isset($settings['check_interval']) ? absint($settings['check_interval']) : 60;
+
+        if ($minutes === 0) {
+            return 0;
         }
 
-        if (isset($settings['check_interval'])) {
-            $minutes = absint($settings['check_interval']);
-            if ($minutes === 0) {
-                return 0;
-            }
-            if ($minutes < 5) {
-                $minutes = 5;
-            }
-        } else {
-            $minutes = 60;
+        if ($minutes < 5) {
+            $minutes = 5;
         }
 
         return $minutes * MINUTE_IN_SECONDS;

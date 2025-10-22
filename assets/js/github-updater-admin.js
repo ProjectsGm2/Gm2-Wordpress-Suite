@@ -10,6 +10,11 @@
     var tokenFieldWrapper = $('#gm2-github-token-field');
     var tokenInput = $('#gm2-github-token');
     var tokenKeep = $('#gm2-github-token-keep');
+    var ownerInput = $('#gm2-github-owner');
+    var repoInput = $('#gm2-github-repo');
+    var branchInput = $('#gm2-github-branch');
+    var intervalSelect = $('#gm2-github-interval');
+    var tokenStatus = $('.gm2-github-token-status');
     var branchRow = $('#gm2-github-branch-row');
     var channelRadios = $('input[name="' + gm2GitHubUpdaterAdmin.optionKey + '[channel]"]');
     var feedback = $('#gm2-github-updater-feedback');
@@ -23,6 +28,21 @@
     var loginCode = $('#gm2-github-login-code');
     var loginUrl = $('#gm2-github-login-url');
     var accountStatus = $('#gm2-github-account-status');
+    var initialSettings = $.extend({
+        owner: '',
+        repo: '',
+        channel: 'release',
+        branch: '',
+        check_interval: '60',
+        has_token: false
+    }, gm2GitHubUpdaterAdmin.currentSettings || {});
+    initialSettings.owner = (initialSettings.owner || '').toString().trim();
+    initialSettings.repo = (initialSettings.repo || '').toString().trim();
+    initialSettings.channel = (initialSettings.channel || 'release').toString();
+    initialSettings.branch = (initialSettings.branch || '').toString().trim();
+    initialSettings.check_interval = initialSettings.check_interval !== undefined ? String(initialSettings.check_interval) : '60';
+    initialSettings.has_token = !!initialSettings.has_token;
+    var initialHasToken = initialSettings.has_token;
     var oauthState = {
         timer: null,
         interval: 5,
@@ -41,6 +61,124 @@
             return false;
         }
         return accountStatus.attr('data-connected') === '1';
+    }
+
+    function setTokenStatus(state) {
+        if (!tokenStatus.length) {
+            return;
+        }
+
+        var text;
+        if (state === 'stored') {
+            text = gm2GitHubUpdaterAdmin.i18n.tokenStored;
+            tokenStatus.attr('data-has-token', '1');
+        } else if (state === 'pending') {
+            text = gm2GitHubUpdaterAdmin.i18n.tokenPending;
+            tokenStatus.attr('data-has-token', '0');
+        } else {
+            text = gm2GitHubUpdaterAdmin.i18n.tokenMissing;
+            tokenStatus.attr('data-has-token', '0');
+        }
+
+        tokenStatus.text(text);
+    }
+
+    function updateTokenToggleLabel(isVisible) {
+        if (!tokenToggle.length) {
+            return;
+        }
+
+        if (isVisible) {
+            tokenToggle.text(gm2GitHubUpdaterAdmin.i18n.hideToken);
+        } else if (initialHasToken) {
+            tokenToggle.text(gm2GitHubUpdaterAdmin.i18n.showToken);
+        } else if (gm2GitHubUpdaterAdmin.i18n.addToken) {
+            tokenToggle.text(gm2GitHubUpdaterAdmin.i18n.addToken);
+        } else {
+            tokenToggle.text(gm2GitHubUpdaterAdmin.i18n.showToken);
+        }
+
+        tokenToggle.attr('aria-expanded', isVisible ? 'true' : 'false');
+    }
+
+    function updateTokenStatusFromKeep() {
+        if (!tokenStatus.length) {
+            return;
+        }
+
+        if (tokenKeep.val() === '0') {
+            if (initialHasToken || (tokenInput.length && tokenInput.val().trim() !== '')) {
+                setTokenStatus('pending');
+            } else {
+                setTokenStatus('missing');
+            }
+        } else if (initialHasToken) {
+            setTokenStatus('stored');
+        } else {
+            setTokenStatus('missing');
+        }
+    }
+
+    function collectFormSettings() {
+        var channel = channelRadios.filter(':checked').val() || 'release';
+
+        return {
+            owner: ownerInput.length ? ownerInput.val().trim() : '',
+            repo: repoInput.length ? repoInput.val().trim() : '',
+            channel: channel,
+            branch: branchInput.length ? branchInput.val().trim() : '',
+            check_interval: intervalSelect.length ? intervalSelect.val() : '60',
+            token_keep: tokenKeep.val(),
+            token: tokenInput.prop('disabled') ? '' : tokenInput.val().trim()
+        };
+    }
+
+    function validateRequiredSettings(settings) {
+        if (!settings.owner) {
+            return { message: gm2GitHubUpdaterAdmin.i18n.missingOwnerRepo, focus: ownerInput };
+        }
+        if (!settings.repo) {
+            return { message: gm2GitHubUpdaterAdmin.i18n.missingOwnerRepo, focus: repoInput };
+        }
+        if (settings.channel === 'branch' && !settings.branch) {
+            return { message: gm2GitHubUpdaterAdmin.i18n.missingBranch, focus: branchInput };
+        }
+
+        return null;
+    }
+
+    function hasUnsavedChanges(settings) {
+        var currentChannel = initialSettings.channel || 'release';
+        var selectedChannel = settings.channel || 'release';
+
+        if ((settings.owner || '') !== initialSettings.owner) {
+            return true;
+        }
+        if ((settings.repo || '') !== initialSettings.repo) {
+            return true;
+        }
+        if (selectedChannel !== currentChannel) {
+            return true;
+        }
+
+        if ((selectedChannel === 'branch' || currentChannel === 'branch') && (settings.branch || '') !== initialSettings.branch) {
+            return true;
+        }
+
+        if (parseInt(settings.check_interval, 10) !== parseInt(initialSettings.check_interval, 10)) {
+            return true;
+        }
+
+        if (settings.token_keep === '0') {
+            if (initialHasToken) {
+                return true;
+            }
+            if (settings.token && settings.token.trim() !== '') {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     function setOauthBusy(isBusy) {
@@ -137,7 +275,11 @@
         updateAccountStatus(login);
         oauthConfig.connectedUser = login;
 
+        initialHasToken = true;
+        initialSettings.has_token = true;
+        tokenKeep.val('1');
         toggleTokenField(false);
+        updateTokenStatusFromKeep();
         renderMessage('success', message);
     }
 
@@ -230,7 +372,9 @@
 
     function renderMessage(type, message) {
         var notice = $('<div/>', {
-            'class': 'notice notice-' + type + ' is-dismissible'
+            'class': 'notice notice-' + type + ' is-dismissible',
+            'role': 'alert',
+            'tabindex': '-1'
         });
         $('<p/>').text(message).appendTo(notice);
         $('<button/>', {
@@ -243,6 +387,7 @@
             })
         ).appendTo(notice);
         feedback.empty().append(notice);
+        notice.trigger('focus');
     }
 
     function toggleTokenField(show) {
@@ -250,13 +395,13 @@
             tokenFieldWrapper.show().attr('aria-hidden', 'false');
             tokenInput.prop('disabled', false).focus();
             tokenKeep.val('0');
-            tokenToggle.text(gm2GitHubUpdaterAdmin.i18n.hideToken).attr('aria-expanded', 'true');
         } else {
             tokenFieldWrapper.hide().attr('aria-hidden', 'true');
             tokenInput.prop('disabled', true).val('');
             tokenKeep.val('1');
-            tokenToggle.text(gm2GitHubUpdaterAdmin.i18n.showToken).attr('aria-expanded', 'false');
         }
+        updateTokenToggleLabel(!!show);
+        updateTokenStatusFromKeep();
     }
 
     tokenToggle.on('click', function (event) {
@@ -267,9 +412,17 @@
 
     if (tokenKeep.val() === '0') {
         toggleTokenField(true);
-    } else if (tokenFieldWrapper.is(':hidden')) {
-        tokenToggle.text(gm2GitHubUpdaterAdmin.i18n.showToken);
+    } else {
+        toggleTokenField(false);
     }
+
+    updateTokenStatusFromKeep();
+
+    tokenInput.on('input', function () {
+        if (tokenKeep.val() === '0') {
+            updateTokenStatusFromKeep();
+        }
+    });
 
     updateAccountStatus(oauthConfig.connectedUser || '');
     hideOAuthInstructions();
@@ -320,10 +473,11 @@
                     oauthConfig.connectedUser = '';
                     updateAccountStatus('');
                     hideOAuthInstructions();
-                    tokenFieldWrapper.hide().attr('aria-hidden', 'true');
-                    tokenInput.prop('disabled', true).val('');
-                    tokenKeep.val('0');
-                    tokenToggle.text(gm2GitHubUpdaterAdmin.i18n.addToken || gm2GitHubUpdaterAdmin.i18n.showToken).attr('aria-expanded', 'false');
+                    initialHasToken = false;
+                    initialSettings.has_token = false;
+                    tokenKeep.val('1');
+                    toggleTokenField(false);
+                    updateTokenStatusFromKeep();
                 } else if (response && response.data && response.data.message) {
                     renderMessage('error', response.data.message);
                 } else {
@@ -361,18 +515,20 @@
         }
     }
 
-    function handleAjax(button, action, pendingMessage, successHandler) {
+    function handleAjax(button, action, pendingMessage, successHandler, extraData) {
         setButtonsDisabled(true);
         renderMessage('info', pendingMessage);
+
+        var requestData = $.extend({
+            action: action,
+            nonce: gm2GitHubUpdaterAdmin.nonce
+        }, extraData || {});
 
         $.ajax({
             method: 'POST',
             url: gm2GitHubUpdaterAdmin.ajaxUrl,
             dataType: 'json',
-            data: {
-                action: action,
-                nonce: gm2GitHubUpdaterAdmin.nonce
-            }
+            data: requestData
         }).done(function (response) {
             if (response && response.success && typeof successHandler === 'function') {
                 successHandler(response.data || {});
@@ -394,6 +550,17 @@
 
     testButton.on('click', function (event) {
         event.preventDefault();
+        var settings = collectFormSettings();
+        var validation = validateRequiredSettings(settings);
+
+        if (validation) {
+            renderMessage('error', validation.message);
+            if (validation.focus && validation.focus.length) {
+                validation.focus.trigger('focus');
+            }
+            return;
+        }
+
         handleAjax(testButton, testButton.data('action'), gm2GitHubUpdaterAdmin.i18n.testing, function (data) {
             var message = gm2GitHubUpdaterAdmin.i18n.testSuccess;
             if (data.repository) {
@@ -414,12 +581,30 @@
                     message += ' ' + details.join(' • ');
                 }
             }
+            if (data.unsaved) {
+                message += ' ' + gm2GitHubUpdaterAdmin.i18n.unsavedTestNotice;
+            }
             renderMessage('success', message);
-        });
+        }, { settings: settings });
     });
 
     checkButton.on('click', function (event) {
         event.preventDefault();
+        var settings = collectFormSettings();
+
+        if (!initialSettings.owner || !initialSettings.repo) {
+            renderMessage('error', gm2GitHubUpdaterAdmin.i18n.noSettingsConfigured);
+            if (ownerInput.length) {
+                ownerInput.trigger('focus');
+            }
+            return;
+        }
+
+        if (hasUnsavedChanges(settings)) {
+            renderMessage('error', gm2GitHubUpdaterAdmin.i18n.saveBeforeAction);
+            return;
+        }
+
         handleAjax(checkButton, checkButton.data('action'), gm2GitHubUpdaterAdmin.i18n.checking, function (data) {
             var message = gm2GitHubUpdaterAdmin.i18n.checkSuccess;
             if (data.metadata) {
@@ -435,12 +620,27 @@
                 }
             }
             renderMessage('success', message);
-        });
+        }, { settings: settings });
     });
 
     if (updateButton.length) {
         updateButton.on('click', function (event) {
             event.preventDefault();
+            var settings = collectFormSettings();
+
+            if (!initialSettings.owner || !initialSettings.repo) {
+                renderMessage('error', gm2GitHubUpdaterAdmin.i18n.noSettingsConfigured);
+                if (ownerInput.length) {
+                    ownerInput.trigger('focus');
+                }
+                return;
+            }
+
+            if (hasUnsavedChanges(settings)) {
+                renderMessage('error', gm2GitHubUpdaterAdmin.i18n.saveBeforeAction);
+                return;
+            }
+
             handleAjax(updateButton, updateButton.data('action'), gm2GitHubUpdaterAdmin.i18n.updating, function (data) {
                 var message = gm2GitHubUpdaterAdmin.i18n.updateSuccess;
                 if (data.update && data.update.version) {
@@ -450,7 +650,7 @@
                     message += ' ' + data.update.messages.join(' ');
                 }
                 renderMessage('success', message);
-            });
+            }, { settings: settings });
         });
     }
 })(jQuery);
