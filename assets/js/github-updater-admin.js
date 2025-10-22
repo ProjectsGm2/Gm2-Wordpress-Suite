@@ -54,7 +54,7 @@
         initialSettings.branch = localizedSettings.branch.toString().trim();
     }
 
-    if (!initialSettings.check_interval && localizedSettings.check_interval !== undefined) {
+    if (initialSettings.check_interval === '' && localizedSettings.check_interval !== undefined) {
         initialSettings.check_interval = String(localizedSettings.check_interval);
     }
 
@@ -66,7 +66,12 @@
     initialSettings.repo = (initialSettings.repo || '').toString().trim();
     initialSettings.branch = (initialSettings.branch || '').toString().trim();
     initialSettings.channel = (initialSettings.channel || 'release').toString();
-    initialSettings.check_interval = initialSettings.check_interval || '60';
+    initialSettings.check_interval = (initialSettings.check_interval === undefined || initialSettings.check_interval === null)
+        ? ''
+        : String(initialSettings.check_interval).trim();
+    if (initialSettings.check_interval === '') {
+        initialSettings.check_interval = '60';
+    }
     initialSettings.has_token = !!initialSettings.has_token;
     var initialHasToken = initialSettings.has_token;
     var oauthState = {
