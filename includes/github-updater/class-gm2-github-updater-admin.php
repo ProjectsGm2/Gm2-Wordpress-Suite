@@ -833,6 +833,32 @@ class Gm2_GitHub_Updater_Admin {
     }
 
     /**
+     * Retrieve a WP_Error instance from the upgrader skin when available.
+     *
+     * @param object $skin Upgrader skin instance.
+     *
+     * @return WP_Error|null
+     */
+    protected function get_skin_error($skin) {
+        if (!is_object($skin)) {
+            return null;
+        }
+
+        if (method_exists($skin, 'get_errors')) {
+            $errors = $skin->get_errors();
+            if ($errors instanceof WP_Error && $errors->has_errors()) {
+                return $errors;
+            }
+        }
+
+        if (isset($skin->result) && $skin->result instanceof WP_Error && $skin->result->has_errors()) {
+            return $skin->result;
+        }
+
+        return null;
+    }
+
+    /**
      * Start the GitHub device authorization flow.
      */
     public function ajax_oauth_start() {
