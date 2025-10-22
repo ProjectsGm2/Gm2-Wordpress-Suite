@@ -7,6 +7,14 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+if (!class_exists('\\WP_Upgrader_Skin')) {
+    require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
+}
+
+if (!class_exists('\\Automatic_Upgrader_Skin')) {
+    require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader-skins.php';
+}
+
 /**
  * Custom upgrader skin used for AJAX-driven updates.
  */
