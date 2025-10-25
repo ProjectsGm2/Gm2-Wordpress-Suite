@@ -628,7 +628,5 @@ class Gm2_Google_OAuth {
         delete_option('gm2_google_access_token');
         delete_option('gm2_google_expires_at');
         delete_option('gm2_google_profile');
-        delete_option('gm2_ga_measurement_id');
-        delete_option('gm2_gads_customer_id');
     }
 }

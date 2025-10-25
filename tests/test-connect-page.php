@@ -331,4 +331,20 @@ class GoogleConnectPageTest extends WP_UnitTestCase {
         ob_end_clean();
         $this->assertSame('', get_option('gm2_google_refresh_token'));
     }
+
+    public function test_disconnect_does_not_remove_saved_options() {
+        update_option('gm2_google_refresh_token', 'tok');
+        update_option('gm2_ga_measurement_id', 'G-1');
+        update_option('gm2_gads_customer_id', '123');
+
+        $_POST['gm2_google_disconnect'] = wp_create_nonce('gm2_google_disconnect');
+        $admin = new Gm2_SEO_Admin();
+        ob_start();
+        $admin->display_google_connect_page();
+        ob_end_clean();
+
+        $this->assertSame('', get_option('gm2_google_refresh_token'));
+        $this->assertSame('G-1', get_option('gm2_ga_measurement_id'));
+        $this->assertSame('123', get_option('gm2_gads_customer_id'));
+    }
 }
